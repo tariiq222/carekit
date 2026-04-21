@@ -8,6 +8,7 @@ import { ClientCancelBookingHandler } from '../../modules/bookings/client/client
 import { ClientCancelBookingDto } from '../../modules/bookings/client/client-cancel-booking.dto';
 import { ClientRescheduleBookingHandler } from '../../modules/bookings/client/client-reschedule-booking.handler';
 import { ClientRescheduleBookingDto } from '../../modules/bookings/client/client-reschedule-booking.dto';
+import { GetBookingInvoiceHandler } from '../../modules/finance/get-invoice/get-booking-invoice.handler';
 
 @ApiTags('Public / Me')
 @ApiBearerAuth()
@@ -19,6 +20,7 @@ export class PublicMeController {
     private readonly listBookings: ListClientBookingsHandler,
     private readonly cancelBooking: ClientCancelBookingHandler,
     private readonly rescheduleBooking: ClientRescheduleBookingHandler,
+    private readonly getBookingInvoice: GetBookingInvoiceHandler,
   ) {}
 
   @Get()
@@ -50,6 +52,16 @@ export class PublicMeController {
     @Body() body: ClientCancelBookingDto,
   ) {
     return this.cancelBooking.execute({ bookingId: id, clientId: session.id, ...body });
+  }
+
+  @Get('bookings/:id/invoice')
+  @ApiOperation({ summary: 'Get the invoice (with ZATCA QR) for one of the client\'s bookings' })
+  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  async bookingInvoiceEndpoint(
+    @ClientSession() session: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getBookingInvoice.execute(id, session.id);
   }
 
   @Patch('bookings/:id/reschedule')

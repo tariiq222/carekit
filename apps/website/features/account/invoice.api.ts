@@ -21,16 +21,17 @@ export interface InvoiceDetail {
   zatcaStatus: string | null;
 }
 
-export async function getInvoice(
-  invoiceId: string,
-  accessToken: string,
+export async function getMyBookingInvoice(
+  bookingId: string,
+  cookieHeader: string,
 ): Promise<InvoiceDetail> {
-  const res = await fetch(`${getApiBase()}/public/invoices/${encodeURIComponent(invoiceId)}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+  const res = await fetch(
+    `${getApiBase()}/public/me/bookings/${encodeURIComponent(bookingId)}/invoice`,
+    {
+      cache: 'no-store',
+      headers: { cookie: cookieHeader },
     },
-    credentials: 'include',
-  });
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error((err as { message?: string }).message ?? 'Failed to fetch invoice');

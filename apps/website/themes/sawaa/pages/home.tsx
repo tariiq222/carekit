@@ -1,79 +1,64 @@
-'use client';
+import { listPublicEmployees } from '@/features/therapists/public';
+import { getPublicCatalog } from '@/features/public-catalog/public';
+import {
+  fetchSiteSettingsMap,
+  resolveFeatureCards,
+  resolveHeroContent,
+  resolveSectionIntros,
+  type FeatureCards,
+  type HeroContent,
+  type HomeSectionIntros,
+  type SiteSettingsMap,
+} from '@/features/site-content/public';
+import type { PublicEmployee } from '@carekit/api-client';
+import { Blog } from '../components/sections/blog';
+import { Clinics, type ClinicItem } from '../components/sections/clinics';
+import { CTA } from '../components/sections/cta';
+import { FAQ } from '../components/sections/faq';
+import { Features } from '../components/sections/features';
+import { Hero } from '../components/sections/hero';
+import { SupportGroups } from '../components/sections/support-groups';
+import { Team } from '../components/sections/team';
+import { Testimonials } from '../components/sections/testimonials';
 
-import { useBranding } from '@/features/branding/public';
+async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fallback;
+  }
+}
 
-export function SawaaHomePage() {
-  const branding = useBranding();
+export async function SawaaHomePage() {
+  const [therapists, catalog, settings] = await Promise.all([
+    safeFetch<PublicEmployee[]>(() => listPublicEmployees(), []),
+    safeFetch(() => getPublicCatalog(), { departments: [], categories: [], services: [] }),
+    safeFetch<SiteSettingsMap>(() => fetchSiteSettingsMap('home.'), new Map()),
+  ]);
+
+  const hero: HeroContent = resolveHeroContent(settings);
+  const intros: HomeSectionIntros = resolveSectionIntros(settings);
+  const featureCards: FeatureCards = resolveFeatureCards(settings);
+
+  const clinics: ClinicItem[] = catalog.departments.map((d) => ({
+    id: d.id,
+    nameAr: d.nameAr,
+    descriptionAr: d.descriptionAr,
+    icon: d.icon,
+    image: null,
+  }));
 
   return (
-    <main style={{ padding: '4rem 2rem', maxWidth: 960, margin: '0 auto' }}>
-      <section style={{ textAlign: 'center', padding: '4rem 0' }}>
-        <h1
-          style={{
-            fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            color: 'var(--primary-dark)',
-            margin: 0,
-          }}
-        >
-          {branding.organizationNameAr}
-        </h1>
-        {branding.productTagline ? (
-          <p
-            style={{
-              fontSize: '1.25rem',
-              color: 'var(--primary)',
-              marginTop: '1rem',
-            }}
-          >
-            {branding.productTagline}
-          </p>
-        ) : null}
-        <button
-          style={{
-            marginTop: '2rem',
-            padding: '0.875rem 2rem',
-            borderRadius: '9999px',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            boxShadow: '0 8px 24px color-mix(in srgb, var(--primary) 30%, transparent)',
-          }}
-        >
-          احجز جلستك
-        </button>
-      </section>
-
-      <section style={{ padding: '3rem 0' }}>
-        <h2 style={{ color: 'var(--primary-dark)' }}>لماذا نحن</h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '1.5rem',
-            marginTop: '1.5rem',
-          }}
-        >
-          {['خبرة معتمدة', 'سرية تامة', 'مرونة في المواعيد'].map((t) => (
-            <article
-              key={t}
-              style={{
-                padding: '1.5rem',
-                borderRadius: '1rem',
-                background: 'rgba(255,255,255,0.6)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid color-mix(in srgb, var(--primary) 12%, transparent)',
-              }}
-            >
-              <h3 style={{ color: 'var(--primary)', marginTop: 0 }}>{t}</h3>
-              <p style={{ margin: 0, color: '#333' }}>
-                نصّ توضيحي مؤقّت — يُستبدل بمحتوى المرحلة 1.5.
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-    </main>
+    <>
+      <Hero content={hero} />
+      <Features intro={intros.features} cards={featureCards} />
+      <Clinics clinics={clinics} intro={intros.clinics} />
+      <SupportGroups intro={intros.supportGroups} />
+      <Team therapists={therapists} intro={intros.team} />
+      <Testimonials intro={intros.testimonials} />
+      <Blog intro={intros.blog} />
+      <CTA />
+      <FAQ intro={intros.faq} />
+    </>
   );
 }

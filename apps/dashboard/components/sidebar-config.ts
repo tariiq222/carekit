@@ -63,6 +63,7 @@ export const toolsNav: NavItem[] = [
 export const adminNav: NavItem[] = [
   { titleKey: "nav.users", href: "/users", icon: ShieldKeyIcon },
   { titleKey: "nav.branding", href: "/branding", icon: PaintBrush01Icon, permission: "branding:edit" },
+  { titleKey: "nav.content", href: "/content", icon: DocumentValidationIcon },
   { titleKey: "nav.settings", href: "/settings", icon: Settings02Icon },
 ]
 

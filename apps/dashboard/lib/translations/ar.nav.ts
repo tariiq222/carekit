@@ -31,6 +31,7 @@ export const arNav: Record<string, string> = {
   "nav.zatca": "فاتورة",
   "nav.activityLog": "سجل النشاط",
   "nav.branding": "إعداد النظام",
+  "nav.content": "المحتوى",
   "nav.intakeForms": "نماذج المعلومات",
   "nav.groups": "المجموعات",
   "nav.create": "إنشاء",

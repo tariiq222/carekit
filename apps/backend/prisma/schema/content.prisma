@@ -1,0 +1,30 @@
+// Content BC — website CMS content.
+//
+// Phase 1 (MVP): key-value SiteSetting for Hero/Features/Stats/CTA/SiteInfo texts.
+// Future phases will add BlogPost, FaqItem, Testimonial, SupportGroup entities.
+
+// ─── Site Settings (key-value for short-form content) ────────────────────────
+//
+// Keys follow a dotted convention: "<page>.<section>.<field>" e.g.
+//   "home.hero.title.ar"
+//   "home.hero.subtitle.ar"
+//   "home.hero.ctaPrimaryText.ar"
+//   "home.hero.ctaPrimaryHref"
+//   "home.hero.heroImageUrl"
+//   "home.stats.0.value"
+//   "home.stats.0.labelAr"
+//
+// One row per key. The null-safe fields let a key hold either text (ar/en),
+// structured JSON, or a media URL depending on content type.
+
+model SiteSetting {
+  key        String   @id
+  valueText  String?
+  valueAr    String?
+  valueEn    String?
+  valueJson  Json?
+  valueMedia String?
+  updatedAt  DateTime @updatedAt
+
+  @@index([updatedAt])
+}
