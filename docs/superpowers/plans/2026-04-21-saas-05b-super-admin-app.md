@@ -21,6 +21,43 @@ Lessons inherited from the SaaS-0x series (from `docs/superpowers/plans/2026-04-
 5. **`TENANT_ENFORCEMENT=off` must keep working during rollout.** The new admin controllers are organization-agnostic (they read across all orgs); they must use the un-scoped `BasePrismaService` access path, not the Proxy-scoped one.
 6. **Divergence-before-commit** — if any task finds reality doesn't match the plan, STOP, document, propose amendment, resume only after confirmation.
 7. **Prisma extension Proxy** — admin endpoints that read across tenants must use `prisma.$allTenants()` escape hatch (added in Task 4) rather than bypassing the Proxy ad-hoc.
+8. **JWT claims are transport-only; authorization lives in guards + DB.** 02e's Moyasar webhook bypass taught us to gate sensitive primitives with CLS flags (`SYSTEM_CONTEXT_CLS_KEY`) that only specific, audited code paths can set. Plan 05b reuses the same pattern for `$allTenants` — the escape hatch is inert unless the request went through `SuperAdminContextInterceptor`, which only runs AFTER `SuperAdminGuard` has re-verified the user in the DB.
+
+---
+
+## Security invariants — runtime-enforced, not convention
+
+Plan 05b introduces four primitives whose misuse creates cross-tenant data leaks or privilege escalation. For every primitive, the plan converts the implicit convention ("callers must be super-admin") into a **runtime check that throws** when violated. A developer cannot accidentally bypass these by copy-pasting code into the wrong module.
+
+### Invariant 1 — `$allTenants` requires an active super-admin CLS context
+
+- `PrismaService.$allTenants` throws `ForbiddenException('super_admin_context_required')` unless `cls.get(SUPER_ADMIN_CONTEXT_CLS_KEY) === true`.
+- The flag is set **only** by `SuperAdminContextInterceptor`, which runs after `SuperAdminGuard` has re-verified the user against the DB (not the JWT claim alone).
+- Mechanism mirrors Plan 02e's `SYSTEM_CONTEXT_CLS_KEY` + extension bypass — see `tenant-scoping.extension.ts` for the precedent.
+- Attack prevented: a regular request handler (in Comms/Marketing/Dashboard) copy-pasting `this.prisma.$allTenants.x.findMany(...)` immediately throws — no silent cross-tenant read.
+- Task: **§4 is updated** to add CLS guard + interceptor; **§3 guard** is upgraded to re-verify via DB.
+
+### Invariant 2 — Admin-audience routes only accept requests on the admin host
+
+- `AdminHostGuard` runs globally on every controller in `src/api/admin/**` and rejects requests whose `Host` header is not `admin.carekit.app` (or `admin.localhost:5104` in dev).
+- This is belt-and-braces with `SuperAdminGuard`: even if a super-admin's JWT leaks into an attacker's hands, the attacker can only use it against the admin domain (cookie is scoped to `.carekit.app`; CORS is host-locked; the new guard rejects mismatches at the application layer).
+- Attack prevented: leaked admin JWT replayed against `tenant-slug.carekit.app/api/v1/admin/*` is rejected with 403 regardless of claim validity.
+- Task: **§3.5 is new** — adds this guard + registers it globally on the admin audience.
+
+### Invariant 3 — Suspended-org JWTs are rejected within 30 seconds
+
+- `JwtAuthGuard` performs a DB lookup (Redis-cached, 30 s TTL) for `Organization.suspendedAt` after `payload.organizationId` is validated. If non-null, the guard throws `UnauthorizedException('ORG_SUSPENDED')`.
+- Dashboard + website + mobile clients detect the `ORG_SUSPENDED` error code and force-logout to the suspension landing page.
+- 30-second staleness window is the explicit trade-off vs hot-path DB load; acceptable because suspension is rare and the window is documented in the admin UI ("users are signed out within 30 s of suspension").
+- Attack prevented: a reception clerk at a suspended clinic cannot create bookings or take payments past the 30-second window — critical for ZATCA compliance and billing-default enforcement.
+- Task: **§4.5 is new** — adds the check to the existing `JwtAuthGuard` + Redis cache layer + error-code contract for clients.
+
+### Invariant 4 — Impersonation shadow JWTs cannot call admin endpoints
+
+- Impersonation JWT **omits `isSuperAdmin` entirely** (not `false` — absent). `SuperAdminGuard`'s strict `=== true` check therefore rejects the shadow JWT even if `AdminHostGuard` is somehow bypassed.
+- Impersonation JWT also carries a distinct claim `scope: 'impersonation'`; `SuperAdminContextInterceptor` refuses to set the CLS flag when it sees this scope.
+- Attack prevented: a super-admin who starts an impersonation session then (accidentally or maliciously) re-navigates to `admin.carekit.app` with the same browser tab cannot execute admin actions — the shadow JWT lacks the required claim shape.
+- Task: **§7A is amended** — shadow JWT payload omits `isSuperAdmin` and adds `scope: 'impersonation'`; tests assert both.
 
 ---
 
@@ -155,7 +192,10 @@ Paste the following to the owner chat and wait for explicit written approval:
    - organizationId: <target org id>
    - impersonatedBy: <super-admin user id>
    - impersonationSessionId: <uuid>
-   - isSuperAdmin: false   (explicit: impersonation drops super-admin power)
+   - scope: 'impersonation'    (identifies shadow JWT to interceptors)
+   - isSuperAdmin: OMITTED     (security invariant 4 — strict `=== true` check
+     in SuperAdminGuard fails on undefined, so the shadow JWT cannot be
+     replayed against admin routes even if AdminHostGuard is bypassed)
 4. Super-admin is redirected to the tenant dashboard with that JWT.
 5. The dashboard displays a persistent red banner: "Impersonating
    {user.name} @ {org.name} — End session".
@@ -413,24 +453,90 @@ cd apps/backend && npx jest common/guards/super-admin.guard --no-coverage
 
 Expected: fails (guard doesn't exist).
 
-- [ ] **Step 3.3: Implement the guard**
+- [ ] **Step 3.3: Implement the guard — JWT claim + DB re-verification**
 
 Create `apps/backend/src/common/guards/super-admin.guard.ts`:
 
 ```ts
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { PrismaService } from '../../infrastructure/database';
 
+/**
+ * Security invariant 1 (05b): JWT claims are transport-only. The claim
+ * `isSuperAdmin=true` is necessary but NOT sufficient — we re-verify against
+ * the DB on every admin request. A stolen or mis-issued JWT cannot grant
+ * super-admin power because the `User.isSuperAdmin` column must ALSO be true
+ * at the moment of the request.
+ *
+ * This guard must run AFTER `JwtAuthGuard` (which populates `req.user`).
+ */
 @Injectable()
 export class SuperAdminGuard implements CanActivate {
-  canActivate(ctx: ExecutionContext): boolean {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest();
     const user = req.user;
-    if (!user?.isSuperAdmin) {
+
+    // Strict `=== true`: impersonation shadow JWTs OMIT the claim (invariant 4),
+    // so truthy-coercion of `undefined` must reject.
+    if (user?.isSuperAdmin !== true) {
       throw new ForbiddenException('super_admin_required');
     }
+
+    // Impersonation shadow scope must not reach admin routes even if the
+    // claim shape somehow included isSuperAdmin=true.
+    if (user.scope === 'impersonation') {
+      throw new ForbiddenException('admin_route_forbidden_under_impersonation');
+    }
+
+    // DB re-verification. `$allTenants` is safe here because the fetch is by
+    // primary key and we are explicitly looking up a platform-level user row.
+    // Cache this in Redis with 30s TTL if becomes a hot path (Plan 10 tuning).
+    const row = await this.prisma.$allTenantsUnsafe.user.findUnique({
+      where: { id: user.id },
+      select: { isSuperAdmin: true, deletedAt: true },
+    });
+    if (!row || row.deletedAt || row.isSuperAdmin !== true) {
+      throw new ForbiddenException('super_admin_revoked');
+    }
+
     return true;
   }
 }
+```
+
+Note: `$allTenantsUnsafe` is an internal accessor added in Task 4 that skips the CLS check — intended **only** for auth-layer code that runs BEFORE the CLS context could be set (this guard is one of exactly two legitimate callers; the other is `JwtAuthGuard`'s org-suspension check).
+
+Update the spec from Step 3.1 accordingly — the guard is now async and needs a `PrismaService` mock. Add new cases:
+
+```ts
+it('rejects when DB says isSuperAdmin was revoked even if JWT still claims it', async () => {
+  prisma.$allTenantsUnsafe.user.findUnique.mockResolvedValue({
+    isSuperAdmin: false, deletedAt: null,
+  });
+  await expect(guard.canActivate(ctx({ id: 'u1', isSuperAdmin: true })))
+    .rejects.toThrow(/super_admin_revoked/);
+});
+
+it('rejects when DB says user is soft-deleted', async () => {
+  prisma.$allTenantsUnsafe.user.findUnique.mockResolvedValue({
+    isSuperAdmin: true, deletedAt: new Date(),
+  });
+  await expect(guard.canActivate(ctx({ id: 'u1', isSuperAdmin: true })))
+    .rejects.toThrow(/super_admin_revoked/);
+});
+
+it('rejects impersonation shadow scope even with isSuperAdmin=true claim', async () => {
+  await expect(guard.canActivate(ctx({
+    id: 'u1', isSuperAdmin: true, scope: 'impersonation',
+  }))).rejects.toThrow(/impersonation/);
+});
 ```
 
 - [ ] **Step 3.4: Run test — expect pass**
@@ -443,41 +549,359 @@ cd apps/backend && npx jest common/guards/super-admin.guard --no-coverage
 
 ```bash
 git add apps/backend/src/common/guards/super-admin.guard.ts apps/backend/src/common/guards/super-admin.guard.spec.ts
-git commit -m "feat(saas-05b): SuperAdminGuard with unit tests"
+git commit -m "feat(saas-05b): SuperAdminGuard with JWT-claim + DB re-verification (security invariant 1)"
 ```
 
 ---
 
-## Task 4 — Cross-tenant Prisma escape hatch
+## Task 3.5 — AdminHostGuard (security invariant 2)
 
-Admin endpoints read across ALL orgs. The Proxy-based Prisma extension automatically injects `organizationId` from CLS — that's wrong for admin queries. Add an explicit escape hatch.
+Admin routes must only answer on the admin domain. A super-admin JWT leaked to an attacker becomes useless if the attacker cannot route it to `admin.carekit.app` — our CORS + cookie scope already force that, but we add an application-layer check as belt-and-braces.
 
-- [ ] **Step 4.1: Extend PrismaService**
+- [ ] **Step 3.5.1: Failing test**
 
-Edit `apps/backend/src/infrastructure/database/prisma.service.ts`. Add:
+Create `apps/backend/src/common/guards/admin-host.guard.spec.ts`:
+
+```ts
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AdminHostGuard } from './admin-host.guard';
+
+function ctx(host: string): ExecutionContext {
+  return {
+    switchToHttp: () => ({
+      getRequest: () => ({ headers: { host } }),
+    }),
+  } as never;
+}
+
+describe('AdminHostGuard', () => {
+  const config = { get: jest.fn().mockReturnValue('admin.carekit.app,admin.localhost:5104') };
+  const guard = new AdminHostGuard(config as never);
+
+  it('allows admin.carekit.app', () => {
+    expect(guard.canActivate(ctx('admin.carekit.app'))).toBe(true);
+  });
+  it('allows dev admin host', () => {
+    expect(guard.canActivate(ctx('admin.localhost:5104'))).toBe(true);
+  });
+  it('rejects tenant-slug.carekit.app', () => {
+    expect(() => guard.canActivate(ctx('clinic-a.carekit.app')))
+      .toThrow(ForbiddenException);
+  });
+  it('rejects carekit.app root (landing)', () => {
+    expect(() => guard.canActivate(ctx('carekit.app'))).toThrow(ForbiddenException);
+  });
+  it('rejects an empty Host header (protocol violation)', () => {
+    expect(() => guard.canActivate(ctx(''))).toThrow(ForbiddenException);
+  });
+});
+```
+
+- [ ] **Step 3.5.2: Implement**
+
+Create `apps/backend/src/common/guards/admin-host.guard.ts`:
+
+```ts
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+/**
+ * Security invariant 2 (05b): admin-audience routes only accept requests
+ * whose Host header matches an allow-list (production: admin.carekit.app;
+ * dev: admin.localhost:5104). Belt-and-braces with SuperAdminGuard —
+ * even a leaked admin JWT cannot be replayed against tenant-slug.carekit.app.
+ *
+ * Applied globally on every controller in `src/api/admin/**` via
+ * AdminModule.APP_GUARD registration.
+ */
+@Injectable()
+export class AdminHostGuard implements CanActivate {
+  private readonly allowedHosts: Set<string>;
+
+  constructor(config: ConfigService) {
+    const raw = config.get<string>('ADMIN_ALLOWED_HOSTS', 'admin.carekit.app');
+    this.allowedHosts = new Set(raw.split(',').map((h) => h.trim().toLowerCase()));
+  }
+
+  canActivate(ctx: ExecutionContext): boolean {
+    const host = String(
+      ctx.switchToHttp().getRequest().headers?.host ?? '',
+    ).toLowerCase();
+    if (!host || !this.allowedHosts.has(host)) {
+      throw new ForbiddenException('admin_host_required');
+    }
+    return true;
+  }
+}
+```
+
+Register in `AdminModule` (see Task 8) via `{ provide: APP_GUARD, useClass: AdminHostGuard }` scoped to the module, NOT globally (other audiences have their own host expectations).
+
+- [ ] **Step 3.5.3: Environment**
+
+Add to `.env.example`:
+```
+# Super-admin host allow-list (comma-separated). Prod default is admin.carekit.app only.
+ADMIN_ALLOWED_HOSTS=admin.carekit.app,admin.localhost:5104
+```
+
+- [ ] **Step 3.5.4: Commit**
+
+```bash
+git commit -m "feat(saas-05b): AdminHostGuard — admin routes answer only on admin.carekit.app (security invariant 2)"
+```
+
+---
+
+## Task 4 — Cross-tenant Prisma escape hatch (runtime-enforced)
+
+Admin endpoints read across ALL orgs. The Proxy-based Prisma extension automatically injects `organizationId` from CLS — that's wrong for admin queries. Add an explicit escape hatch **gated at runtime** by a CLS flag that only `SuperAdminContextInterceptor` can set (security invariant 1). Mirrors the `SYSTEM_CONTEXT_CLS_KEY` pattern introduced in Plan 02e for the Moyasar webhook.
+
+### 4.1 — CLS flag + interceptor
+
+- [ ] **Step 4.1.1: Add the CLS key**
+
+Edit `apps/backend/src/common/tenant/tenant.constants.ts`:
+
+```ts
+export const SYSTEM_CONTEXT_CLS_KEY = 'systemContext' as const;      // 02e
+export const SUPER_ADMIN_CONTEXT_CLS_KEY = 'superAdminContext' as const; // 05b
+```
+
+- [ ] **Step 4.1.2: `TenantContextService.isSuperAdminContext()`**
+
+Mirrors `isSystemContext()`. Returns `this.cls.get<boolean | undefined>(SUPER_ADMIN_CONTEXT_CLS_KEY) === true`. Include in the existing `tenant-context.service.spec.ts` expectations.
+
+- [ ] **Step 4.1.3: Extension bypass branch**
+
+In `apps/backend/src/common/tenant/tenant-scoping.extension.ts`, add a second bypass branch next to the existing system-context one:
+
+```ts
+if (ctx.isSystemContext()) return query(args);        // 02e
+if (ctx.isSuperAdminContext()) return query(args);    // 05b — new branch
+```
+
+This is the ONLY place the extension is told to ignore scoping. Adding branches here is owner-reviewable; no other code path may skip scoping.
+
+- [ ] **Step 4.1.4: Create `SuperAdminContextInterceptor`**
+
+Create `apps/backend/src/common/interceptors/super-admin-context.interceptor.ts`:
+
+```ts
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { ClsService } from 'nestjs-cls';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../tenant/tenant.constants';
+
+/**
+ * Security invariant 1 (05b): runs AFTER SuperAdminGuard + AdminHostGuard have
+ * both passed. Sets the CLS flag that unlocks `$allTenants` for the duration
+ * of the request. The flag is per-request (CLS), so there is no leakage
+ * across async boundaries in other requests.
+ *
+ * Refuses to activate if the JWT scope is 'impersonation' — a shadow JWT
+ * must never unlock the super-admin escape hatch even if it somehow
+ * reaches an admin route.
+ */
+@Injectable()
+export class SuperAdminContextInterceptor implements NestInterceptor {
+  constructor(private readonly cls: ClsService) {}
+
+  intercept(ctx: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const user = ctx.switchToHttp().getRequest().user;
+    if (user?.scope === 'impersonation') {
+      // Defensive — AdminHostGuard + SuperAdminGuard should already have
+      // rejected, but we refuse to set the flag regardless.
+      return next.handle();
+    }
+    this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+    return next.handle();
+  }
+}
+```
+
+Registered in `AdminModule` (Task 8) via `APP_INTERCEPTOR` in the admin-module-local providers list.
+
+### 4.2 — `$allTenants` getter that throws without the flag
+
+- [ ] **Step 4.2.1: Replace the getter**
+
+Edit `apps/backend/src/infrastructure/database/prisma.service.ts`:
 
 ```ts
 /**
- * Escape hatch for super-admin endpoints that legitimately span tenants.
- * Returns the raw Prisma client (no tenant scoping). Callers MUST be guarded
- * by SuperAdminGuard and MUST log the access via SuperAdminActionLog.
+ * Security invariant 1 (05b). Throws at runtime if the caller did NOT pass
+ * through `SuperAdminContextInterceptor`. Prevents accidental cross-tenant
+ * reads from regular request handlers that copy-pasted this getter.
+ *
+ * For auth-layer bootstrapping that legitimately needs unscoped reads
+ * BEFORE the CLS context can be set (JwtAuthGuard org-suspension check,
+ * SuperAdminGuard DB re-verification), use `$allTenantsUnsafe` instead —
+ * that accessor is internal, grep-auditable, and limited to 2 call sites.
  */
 public get $allTenants(): PrismaClient {
+  if (!this.tenantCtx?.isSuperAdminContext()) {
+    throw new ForbiddenException('super_admin_context_required');
+  }
+  return this.rawClient;
+}
+
+/**
+ * Auth-layer escape hatch. No CLS gate. Only two legitimate callers:
+ *   1. JwtAuthGuard — checks Organization.suspendedAt
+ *   2. SuperAdminGuard — re-verifies User.isSuperAdmin
+ *
+ * ANY other caller is a bug. ESLint rule `no-restricted-syntax` is configured
+ * to reject `$allTenantsUnsafe` outside `src/common/guards/` (see Task 13).
+ */
+public get $allTenantsUnsafe(): PrismaClient {
   return this.rawClient;
 }
 ```
 
-(`rawClient` is the un-proxied client kept internally. If the current code doesn't expose it, refactor to hold both `this.rawClient` and `this.scopedClient` internally, with the default Nest DI injecting `scopedClient` via its existing `get client()` accessor.)
+- [ ] **Step 4.2.2: Tests**
 
-- [ ] **Step 4.2: Test it**
+Write `prisma.service.spec.ts` additions:
 
-Write a unit spec that verifies `$allTenants.booking.findMany({})` does NOT inject `organizationId` in the WHERE clause (use a Prisma mock via `vitest-mock-extended` or the existing test harness in `prisma.service.spec.ts`).
+```ts
+describe('$allTenants (runtime CLS gate)', () => {
+  it('throws ForbiddenException when CLS flag is not set', () => {
+    tenantCtx.isSuperAdminContext = jest.fn().mockReturnValue(false);
+    expect(() => service.$allTenants).toThrow(ForbiddenException);
+  });
 
-- [ ] **Step 4.3: Commit**
+  it('returns raw client when CLS flag is set', () => {
+    tenantCtx.isSuperAdminContext = jest.fn().mockReturnValue(true);
+    expect(() => service.$allTenants).not.toThrow();
+  });
+});
+
+describe('$allTenantsUnsafe (auth-layer only)', () => {
+  it('never checks CLS — returns raw client unconditionally', () => {
+    tenantCtx.isSuperAdminContext = jest.fn().mockReturnValue(false);
+    expect(() => service.$allTenantsUnsafe).not.toThrow();
+  });
+});
+```
+
+Plus an extension spec asserting that when `isSuperAdminContext()` returns true, `findMany` on a scoped model does NOT inject `organizationId`.
+
+### 4.3 — ESLint guard on `$allTenantsUnsafe`
+
+- [ ] **Step 4.3.1: Add rule**
+
+Edit `apps/backend/.eslintrc.json` (or equivalent flat config) — add a `no-restricted-syntax` selector that matches `MemberExpression[property.name="$allTenantsUnsafe"]` and reports unless the filename matches `src/common/guards/**`. Exact rule:
+
+```json
+{
+  "files": ["apps/backend/src/**/*.ts"],
+  "excludedFiles": ["apps/backend/src/common/guards/**"],
+  "rules": {
+    "no-restricted-syntax": ["error", {
+      "selector": "MemberExpression[property.name='$allTenantsUnsafe']",
+      "message": "$allTenantsUnsafe is restricted to src/common/guards/**. Use $allTenants (CLS-gated) in super-admin handlers."
+    }]
+  }
+}
+```
+
+- [ ] **Step 4.3.2: CI check**
+
+The existing `lint` step catches violations. Add an assertion spec in Task 9 that greps the repo for `$allTenantsUnsafe` and reports the file list — if any file outside `src/common/guards/` matches, fail the build.
+
+### 4.4 — Commit
 
 ```bash
-git add apps/backend/src/infrastructure/database/prisma.service.ts apps/backend/src/infrastructure/database/prisma.service.spec.ts
-git commit -m "feat(saas-05b): \$allTenants escape hatch on PrismaService"
+git commit -m "feat(saas-05b): \$allTenants CLS-gated escape hatch + SuperAdminContextInterceptor (security invariant 1)"
+```
+
+---
+
+## Task 4.5 — Organization suspension enforcement in `JwtAuthGuard` (security invariant 3)
+
+`Organization.suspendedAt` is set by Task 6's suspend handler but without a runtime check in the auth path, active JWTs from a suspended org keep working until their natural expiry (typically 15 min). That's unacceptable for ZATCA-compliance and billing-default suspensions.
+
+### 4.5.1 — Redis cache + guard extension
+
+- [ ] **Step 4.5.1.1: Failing test**
+
+Extend `apps/backend/src/common/guards/jwt-auth.guard.spec.ts` with:
+
+```ts
+it('rejects ORG_SUSPENDED when organization.suspendedAt is set', async () => {
+  cache.get.mockResolvedValue(null);
+  prisma.$allTenantsUnsafe.organization.findUnique.mockResolvedValue({
+    suspendedAt: new Date('2026-04-20'),
+  });
+  await expect(guard.canActivate(ctx({ organizationId: 'o1' })))
+    .rejects.toThrow(/ORG_SUSPENDED/);
+});
+
+it('caches the suspension check for 30s', async () => {
+  cache.get.mockResolvedValue('active');
+  await guard.canActivate(ctx({ organizationId: 'o1' }));
+  expect(prisma.$allTenantsUnsafe.organization.findUnique).not.toHaveBeenCalled();
+});
+```
+
+- [ ] **Step 4.5.1.2: Implement**
+
+Extend the existing `JwtAuthGuard` (located in `apps/backend/src/common/guards/jwt-auth.guard.ts`). Add, after the JWT signature + payload validation:
+
+```ts
+// Security invariant 3 (05b) — fail-closed within 30 seconds of org suspension.
+const cacheKey = `org:suspended:${payload.organizationId}`;
+const cached = await this.cache.get(cacheKey); // 'active' | 'suspended' | null
+if (cached === 'suspended') {
+  throw new UnauthorizedException('ORG_SUSPENDED');
+}
+if (cached === null) {
+  const row = await this.prisma.$allTenantsUnsafe.organization.findUnique({
+    where: { id: payload.organizationId },
+    select: { suspendedAt: true },
+  });
+  const next = row?.suspendedAt ? 'suspended' : 'active';
+  await this.cache.set(cacheKey, next, 30); // 30s TTL
+  if (next === 'suspended') {
+    throw new UnauthorizedException('ORG_SUSPENDED');
+  }
+}
+```
+
+- [ ] **Step 4.5.1.3: Cache invalidation**
+
+The `SuspendOrganizationHandler` (Task 6) MUST invalidate the cache key on transition:
+
+```ts
+await this.cache.del(`org:suspended:${targetOrgId}`);
+```
+
+Same in `UnsuspendOrganizationHandler`. Add a spec for each asserting the `cache.del` call.
+
+### 4.5.2 — Client contract
+
+- [ ] **Step 4.5.2.1: Error code documented**
+
+Add to `apps/backend/src/common/errors/error-codes.ts` (or equivalent):
+
+```ts
+export const ERROR_CODES = {
+  // ... existing ...
+  ORG_SUSPENDED: 'ORG_SUSPENDED', // Auth layer: org was suspended by CareKit super-admin
+};
+```
+
+The error response body shape is the standard `{ code, message }`. Front-ends (dashboard, website, mobile) intercept `401 + code=ORG_SUSPENDED` and redirect to `/account/suspended` — route added in Plan 06 dashboard / Plan 08 website pending; for 05b we document the contract in `docs/superpowers/specs/auth-error-codes.md`.
+
+- [ ] **Step 4.5.2.2: Integration test**
+
+Add to the Task 9 e2e: suspend org A; immediately (under 30s) issue a request with org A's JWT; expect 401 `ORG_SUSPENDED`. Then wait for the cache TTL to clear on an unsuspended org; next request passes.
+
+### 4.5.3 — Commit
+
+```bash
+git commit -m "feat(saas-05b): JwtAuthGuard rejects JWTs from suspended orgs with 30s cache (security invariant 3)"
 ```
 
 ---
@@ -600,7 +1024,13 @@ export class ListOrganizationsHandler {
 
 - [ ] **Step 5B.2: Run — fail.**
 
-- [ ] **Step 5B.3: Implement handler** — uses `prisma.$allTenants.organization.update` + creates `SuperAdminActionLog` inside a single `$transaction(async tx => {...})`. Because `tx` bypasses the Proxy, both calls already use the raw client (which is what we want).
+- [ ] **Step 5B.3: Implement handler** — uses `prisma.$allTenants.organization.update` + creates `SuperAdminActionLog` inside a single `$transaction(async tx => {...})`. Because `tx` bypasses the Proxy, both calls already use the raw client (which is what we want). After the transaction commits, MUST invalidate the suspension cache key:
+
+```ts
+await this.cache.del(`org:suspended:${cmd.organizationId}`);
+```
+
+This forces `JwtAuthGuard` (Task 4.5) to re-read on its next hit, closing the 30-second staleness window immediately.
 
 - [ ] **Step 5B.4: Run — pass.**
 
@@ -622,6 +1052,8 @@ Create `apps/backend/src/api/admin/organizations.controller.ts`:
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import { AdminHostGuard } from '../../common/guards/admin-host.guard';
+import { SuperAdminContextInterceptor } from '../../common/interceptors/super-admin-context.interceptor';
 import { ListOrganizationsHandler } from '../../modules/platform/admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from '../../modules/platform/admin/get-organization/get-organization.handler';
 import { SuspendOrganizationHandler } from '../../modules/platform/admin/suspend-organization/suspend-organization.handler';
@@ -629,8 +1061,14 @@ import { ReinstateOrganizationHandler } from '../../modules/platform/admin/reins
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SuspendOrganizationDto } from './dto/suspend-organization.dto';
 
+// Guard order is LOAD-BEARING:
+//   1. AdminHostGuard — reject non-admin Host headers (invariant 2)
+//   2. JwtAuthGuard   — validate JWT + reject ORG_SUSPENDED (invariant 3)
+//   3. SuperAdminGuard — JWT claim + DB re-verification + no impersonation (invariants 1 + 4)
+// SuperAdminContextInterceptor runs AFTER guards and unlocks $allTenants (invariant 1).
 @Controller('api/v1/admin/organizations')
-@UseGuards(JwtAuthGuard, SuperAdminGuard)
+@UseGuards(AdminHostGuard, JwtAuthGuard, SuperAdminGuard)
+@UseInterceptors(SuperAdminContextInterceptor)
 export class AdminOrganizationsController {
   constructor(
     private readonly list: ListOrganizationsHandler,
@@ -756,7 +1194,7 @@ Confirm the written approval is on file. If the approval is older than 14 days, 
 Covers:
 1. Creates `ImpersonationSession` row with correct fields.
 2. Creates `SuperAdminActionLog` with `actionType=IMPERSONATE_START`.
-3. Issues JWT with 15-min TTL carrying `sub`, `organizationId`, `impersonatedBy`, `impersonationSessionId`, `isSuperAdmin: false`, `jti`.
+3. Issues JWT with 15-min TTL carrying `sub`, `organizationId`, `impersonatedBy`, `impersonationSessionId`, `scope: 'impersonation'`, `jti`. **The `isSuperAdmin` claim is OMITTED entirely** (not set to `false` — absent from the payload). This is security invariant 4: `SuperAdminGuard`'s `=== true` check fails on `undefined`, so the shadow JWT cannot be replayed against admin routes. The test MUST assert `!('isSuperAdmin' in decodedPayload)` rather than `decodedPayload.isSuperAdmin === false`.
 4. Stores the JWT `jti` on the session row (for revocation).
 5. Rejects if the super-admin already has an active impersonation session.
 6. Rejects if the target org is suspended (with an override flag `allowSuspended: true` the owner can set).
@@ -810,12 +1248,16 @@ export class StartImpersonationHandler {
     const ttlSeconds = 15 * 60;
     const autoExpiredAt = new Date(Date.now() + ttlSeconds * 1000);
 
+    // Security invariant 4: OMIT isSuperAdmin from the shadow JWT entirely.
+    // SuperAdminGuard checks `user.isSuperAdmin === true` strictly — undefined
+    // (absence) rejects. `scope: 'impersonation'` is the positive marker that
+    // SuperAdminContextInterceptor uses to refuse unlocking $allTenants.
     const shadowJwt = await this.jwt.signAsync({
       sub: cmd.targetUserId,
       organizationId: cmd.targetOrganizationId,
       impersonatedBy: cmd.superAdminUserId,
       impersonationSessionId: sessionId,
-      isSuperAdmin: false,
+      scope: 'impersonation',
       jti,
     }, { expiresIn: ttlSeconds });
 
@@ -1023,6 +1465,27 @@ Covers:
 3. **Super-admin can't have two active impersonation sessions.**
 
 4. **Expired impersonation JWT is rejected** (fake time advance by 16 min via `jest.useFakeTimers`).
+
+5. **Security invariant 1 — `$allTenants` CLS gate:**
+   - From a regular tenant controller (simulate by calling a tenant-audience handler that mistakenly reads `this.prisma.$allTenants.booking.findMany()`), assert `ForbiddenException('super_admin_context_required')` is thrown at runtime. This proves the CLS gate cannot be silently bypassed.
+
+6. **Security invariant 2 — `AdminHostGuard`:**
+   - Issue a valid super-admin JWT. Send request to `GET /api/v1/admin/organizations` with `Host: tenant-slug.carekit.app`. Assert 403 `admin_host_required`.
+   - Same JWT to `Host: admin.carekit.app`. Assert 200.
+
+7. **Security invariant 3 — `ORG_SUSPENDED`:**
+   - Seed org A + a tenant user with JWT issued BEFORE suspension.
+   - Call `POST /api/v1/admin/organizations/:id/suspend` as super-admin → 200.
+   - Immediately (within 30 s) replay the tenant JWT against any tenant-audience route. Assert 401 with body `{ code: 'ORG_SUSPENDED' }`.
+   - The cache invalidation on suspend handler closes the 30-s window to near-zero in the hot case.
+
+8. **Security invariant 4 — impersonation JWT cannot call admin routes:**
+   - Start an impersonation session → receive shadow JWT.
+   - Call `GET /api/v1/admin/organizations` with the shadow JWT on `Host: admin.carekit.app`. Assert 403 `super_admin_required` (guard rejects because `isSuperAdmin` is absent).
+   - Call any admin route with shadow JWT + `Host: admin.carekit.app` → 403 regardless of route.
+
+9. **Security invariant 4 (defense-in-depth) — shadow JWT does NOT unlock `$allTenants`:**
+   - Using the shadow JWT on an admin route, observe the 403 from invariant 8's check before `SuperAdminContextInterceptor` runs. Then directly invoke the interceptor with a shadow JWT request object in a unit-style test and assert the CLS flag is NOT set (`cls.set` was never called with `SUPER_ADMIN_CONTEXT_CLS_KEY`).
 
 - [ ] **Step 9.2: Run**
 
