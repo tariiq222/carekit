@@ -12,38 +12,41 @@
 
 ## 📊 Current Status — updated 2026-04-21
 
-**Progress:** 5 / 18 phases done (28%) · 1 plan ready to execute · 12 plans to write.
+**Progress:** 5 / 18 phases merged (28%) · 2 phases executed awaiting merge · 11 plans written awaiting execution.
 
 ```
-Phase 01  ✅ DONE      Multi-tenancy Foundation
-Phase 02a ✅ DONE      Identity cluster (PR #15)
-Phase 02b ✅ DONE      People cluster (PR #16)
-Phase 02c ✅ DONE      Org-config + singletons (PR #17)
-Phase 02d ✅ DONE      Bookings cluster (PR #18)
-Phase 05a 🟢 READY     packages/ui — plan written, ready to execute (parallel-safe)
-Phase 02e ⚪ PENDING   Finance cluster (plan not yet written; owner-review required)
-Phase 02f ⚪ PENDING   Comms cluster
-Phase 02g ⚪ PENDING   AI + media + ops + platform
-Phase 02h ⚪ PENDING   Strict mode + penetration
-Phase 03  ⚪ PENDING   Verticals system (plan to write after 02e/02f)
-Phase 04  ⚪ PENDING   Billing + subscriptions
-Phase 05b ⚪ PENDING   Super-admin app
-Phase 06  ⚪ PENDING   Dashboard terminology + EN i18n
-Phase 07  ⚪ PENDING   Marketing site + signup
-Phase 08  ⚪ PENDING   Website multi-tenant + themes
-Phase 09  ⚪ PENDING   Custom domain + infra
-Phase 10  ⚪ PENDING   Hardening + launch
+Phase 01  ✅ MERGED     Multi-tenancy Foundation
+Phase 02a ✅ MERGED     Identity cluster (PR #15)
+Phase 02b ✅ MERGED     People cluster (PR #16)
+Phase 02c ✅ MERGED     Org-config + singletons (PR #17)
+Phase 02d ✅ MERGED     Bookings cluster (PR #18)
+Phase 02e 🟡 EXEC       Finance cluster — PR #19 (plan) + PR #21 (impl); owner-review required (ZATCA + Moyasar)
+Phase 05a 🟡 EXEC       packages/ui extraction — PR #20; needs UI QA before merge
+Phase 02f 🟢 WRITTEN    Comms cluster (1071 lines)
+Phase 02g 🟢 WRITTEN    AI + media + ops + platform (1027 lines)
+Phase 02h 🟢 WRITTEN    Strict mode + penetration (771 lines)
+Phase 03  🟢 WRITTEN    Verticals System (1733 lines)
+Phase 04  🟢 WRITTEN    Billing & Subscriptions (1291 lines) — owner-review gate at Task 1
+Phase 05b 🟢 WRITTEN    Super-admin app (1510 lines) — impersonation owner-review gate
+Phase 06  🟢 WRITTEN    Dashboard terminology + EN i18n (1050 lines)
+Phase 07  🟢 WRITTEN    Marketing site + signup (940 lines) — JWT + Moyasar touches
+Phase 08  🟢 WRITTEN    Website multi-tenant + themes (881 lines)
+Phase 09  🟢 WRITTEN    Custom domain + infra (785 lines) — Nginx→Caddy migration
+Phase 10  🟢 WRITTEN    Hardening + launch (760 lines)
 ```
 
-**🎯 Next action (for executor):** merge PR #17 (02c) → merge PR #18 (02d). Plan 05a is parallel-safe.
+**🎯 Next action (for executor):** review + merge PR #19 (plan) → PR #21 (02e impl); run UI QA on PR #20 (05a) then merge. Parallel-safe execution candidates after 02e lands: 02f, 03.
 
-**🔭 Next action (for planner/me):** write Plan 02e (Finance cluster, owner-review) — critical path blocker. After 02e plan is written, 02f + 03 + 04 follow.
+**🔭 Next action (for planner/me):** all 18 plans written. No further plan authorship pending. Monitor execution, propagate lessons, refine plans if divergences surface.
 
 **🚧 Active risks:**
-- Prisma 7 `$extends` via Proxy works (confirmed in 02a) — no further risk.
-- Pre-existing cookie-parser module issue in `test/e2e/public/client-account.e2e-spec.ts` (unrelated, pre-dates SaaS work) — flag but don't block.
-- **`$transaction` callback form bypasses Proxy** — confirmed in 02d: 5 callback-form handlers found (plan predicted 2). Pattern fully documented in Lesson 11. Now resolved for bookings cluster.
-- 02e touches ZATCA + Moyasar (owner-only per root CLAUDE.md) — all changes need explicit owner review.
+- Prisma 7 `$extends` via Proxy works (confirmed in 02a–02e) — no further risk.
+- **`$transaction` callback form bypasses Proxy** — confirmed in 02d (5 handlers) and 02e (2 handlers: apply-coupon, process-payment). Lesson 11 documented.
+- 02e owner-gated (ZATCA + Moyasar) — PR #21 open awaiting owner sign-off on moyasar-webhook 3-stage tenant resolution.
+- 04 (Billing) touches Moyasar subscription charging — separate webhook from 02e's booking webhook; owner-review at Task 1.
+- 05b (Admin) introduces `$allTenants` escape hatch + impersonation flow — owner-review gate at Task 0.
+- 09 (Custom domain) requires Nginx→Caddy swap — 7-day parallel-run mitigates; owner-approval gate before cutover.
+- Pre-existing e2e failures on main (bookings flows, identity login) — triaged separately, not blocking 02e.
 
 **Frontend app topology (post-transformation):**
 ```
