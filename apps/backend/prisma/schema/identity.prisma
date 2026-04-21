@@ -86,7 +86,7 @@ model RefreshToken {
 
 model ClientRefreshToken {
   id             String    @id @default(uuid())
-  organizationId String?
+  organizationId String
   clientId       String
   tokenHash      String    @unique
   tokenSelector  String

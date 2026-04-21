@@ -33,7 +33,7 @@ enum ClientBloodType {
 
 model Client {
   id                String            @id @default(uuid())
-  organizationId    String?
+  organizationId    String
   userId            String?
   // Legacy single-name field kept in sync with first/middle/last on write.
   // Downstream readers that still key off `name` keep working; new code reads the components.
@@ -96,7 +96,7 @@ enum EmploymentType {
 // no Prisma FK relations to Clinic BC. Referential integrity is event-driven.
 model Employee {
   id               String           @id @default(uuid())
-  organizationId   String?
+  organizationId   String
   userId           String?
   name             String
   nameEn           String?
@@ -137,7 +137,7 @@ model Employee {
 
 model EmployeeBranch {
   id             String   @id @default(uuid())
-  organizationId String?
+  organizationId String
   employeeId     String
   employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   branchId       String
@@ -149,7 +149,7 @@ model EmployeeBranch {
 
 model EmployeeService {
   id             String   @id @default(uuid())
-  organizationId String?
+  organizationId String
   employeeId     String
   employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   serviceId      String
@@ -164,7 +164,7 @@ model EmployeeService {
 // A missing dayOfWeek row = weekly off day.
 model EmployeeAvailability {
   id             String   @id @default(uuid())
-  organizationId String?
+  organizationId String
   employeeId     String
   employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   dayOfWeek      Int
@@ -183,7 +183,7 @@ model EmployeeAvailability {
 // No partial-day overrides — adjust EmployeeAvailability instead.
 model EmployeeAvailabilityException {
   id             String   @id @default(uuid())
-  organizationId String?
+  organizationId String
   employeeId     String
   employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   startDate      DateTime @db.Date
