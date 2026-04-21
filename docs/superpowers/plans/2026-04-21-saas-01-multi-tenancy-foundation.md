@@ -1507,8 +1507,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly extended: PrismaClient;
 
   constructor(
-    private readonly config: ConfigService,
-    private readonly tenantCtx: TenantContextService,
+    // `@Optional()` lets isolated test modules instantiate PrismaService
+    // without wiring ConfigModule/TenantModule. In prod both are global and
+    // always present — the optionals exist only for narrow unit-test fixtures.
+    @Optional() private readonly config?: ConfigService,
+    @Optional() private readonly tenantCtx?: TenantContextService,
   ) {
     super({
       adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
