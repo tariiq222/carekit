@@ -2,8 +2,10 @@ import { listPublicEmployees } from '@/features/therapists/public';
 import { getPublicCatalog } from '@/features/public-catalog/public';
 import {
   fetchSiteSettingsMap,
+  resolveFeatureCards,
   resolveHeroContent,
   resolveSectionIntros,
+  type FeatureCards,
   type HeroContent,
   type HomeSectionIntros,
   type SiteSettingsMap,
@@ -36,6 +38,7 @@ export async function SawaaHomePage() {
 
   const hero: HeroContent = resolveHeroContent(settings);
   const intros: HomeSectionIntros = resolveSectionIntros(settings);
+  const featureCards: FeatureCards = resolveFeatureCards(settings);
 
   const clinics: ClinicItem[] = catalog.departments.map((d) => ({
     id: d.id,
@@ -48,7 +51,7 @@ export async function SawaaHomePage() {
   return (
     <>
       <Hero content={hero} />
-      <Features intro={intros.features} />
+      <Features intro={intros.features} cards={featureCards} />
       <Clinics clinics={clinics} intro={intros.clinics} />
       <SupportGroups intro={intros.supportGroups} />
       <Team therapists={therapists} intro={intros.team} />

@@ -7,6 +7,13 @@ export {
   SECTION_INTRO_KEYS,
   settingKey as sectionIntroSettingKey,
 } from './section-intros';
+export {
+  resolveFeatureCards,
+  featureCardKey,
+  FEATURE_CARD_COUNT,
+  FEATURE_CARD_DEFAULTS,
+  FEATURE_CARD_ICONS,
+} from './feature-cards';
 export type {
   SiteSettingRow,
   SiteSettingsMap,
@@ -18,3 +25,9 @@ export type {
   SectionIntroKey,
   HomeSectionIntros,
 } from './section-intros';
+export type {
+  FeatureCard,
+  FeatureCards,
+  FeatureCardIcon,
+  FeatureCardIndex,
+} from './feature-cards';
