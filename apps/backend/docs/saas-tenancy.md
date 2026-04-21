@@ -223,3 +223,95 @@ Reference commits on branch `feat/saas-02b-people-cluster`:
 - `feat(saas-02b): activate Prisma scoping extension for 7 people-cluster models`
 - `feat(saas-02b): enable RLS + tenant_isolation policies on 7 people-cluster tables`
 - `test(saas-02b): people cluster cross-tenant isolation e2e`
+
+## Singleton-conversion pattern (introduced in SaaS-02c)
+
+Some tables that were designed as application-level singletons (`id = 'default'`, one row total) become **per-org singletons** in multi-tenant mode: one row per organization, unique on `organizationId`.
+
+Affected models in Plan 02c: `BrandingConfig`, `OrganizationSettings`.
+
+### Before vs after
+
+| Aspect | Before (global singleton) | After (per-org singleton) |
+|---|---|---|
+| `id` | `@default("default")` | `@default(uuid())` |
+| `organizationId` | absent | `String @unique` |
+| Row count | 1 | 1 per org |
+| Unique constraint | on `id` (implicit) | on `organizationId` |
+| Prisma `upsert` key | `where: { id: 'default' }` | `where: { organizationId }` |
+
+### Schema change
+
+```prisma
+model BrandingConfig {
+  id             String   @id @default(uuid())   // was @default("default")
+  organizationId String   @unique                 // new, NOT NULL, FK → Organization
+  organization   Organization @relation(...)
+  // ... other fields unchanged
+}
+```
+
+### Handler upsert pattern
+
+Read-with-fallback — single upsert in the handler that creates on first access, returns existing on subsequent calls:
+
+```typescript
+async execute() {
+  const organizationId = this.tenant.requireOrganizationId();
+  return this.prisma.brandingConfig.upsert({
+    where:  { organizationId },
+    update: {},                                        // no-op if exists
+    create: { organizationId, /* defaults */ },
+  });
+}
+```
+
+For update handlers:
+
+```typescript
+async execute(dto: UpdateBrandingConfigCommand) {
+  const organizationId = this.tenant.requireOrganizationId();
+  return this.prisma.brandingConfig.upsert({
+    where:  { organizationId },
+    update: { ...dto },
+    create: { organizationId, ...dto },
+  });
+}
+```
+
+### Migration steps
+
+1. Add `organizationId String?` (nullable) + FK + unique index.
+2. Backfill: `UPDATE "BrandingConfig" SET "organizationId" = '<default-org-id>' WHERE "organizationId" IS NULL`.
+3. NOT NULL guard migration (same pattern as non-singleton clusters).
+4. RLS migration (identical policy pattern — `organizationId::uuid = app_current_org_id()`).
+
+### Callsite cleanup
+
+Any code referencing `where: { id: 'default' }` must migrate to `where: { organizationId }`. Search for `id: 'default'` + `id: "default"` before closing the PR.
+
+## Org-config + org-experience cluster (SaaS-02c)
+
+Third cluster to roll out. 14 models scoped:
+
+**Org-config** (direct org ownership): `Branch`, `Department`, `ServiceCategory`, `BusinessHour`, `Holiday`  
+**Org-experience** (direct org ownership): `Service`, `ServiceBookingConfig`, `ServiceDurationOption`, `EmployeeServiceOption`, `IntakeForm`, `IntakeField`, `Rating`  
+**Singletons converted**: `BrandingConfig`, `OrganizationSettings`
+
+Key patterns relative to 02b:
+
+- **Denormalized `organizationId` on child tables**: `BusinessHour`/`Holiday` inherit from `Branch`; `ServiceBookingConfig`/`ServiceDurationOption`/`EmployeeServiceOption` inherit from `Service`; `IntakeField` inherits from `IntakeForm`. Parent handlers pass `organizationId` at create time.
+- **Singleton conversion** for `BrandingConfig` and `OrganizationSettings` — see section above.
+- 14 SCOPED_MODELS entries added; 14 RLS policies created in a single migration.
+
+Reference commits on branch `feat/saas-02c-org-config-singletons`:
+
+- `feat(saas-02c): extend org-config + org-experience schema — 14 models nullable organizationId`
+- `feat(saas-02c): migration — add nullable organizationId to 14 org-config/experience tables`
+- `feat(saas-02c): migration — backfill organizationId on 14 tables`
+- `feat(saas-02c): scope all org-config + org-experience handlers by current org`
+- `feat(saas-02c): migration — NOT NULL organizationId on 14 tables (after backfill)`
+- `feat(saas-02c): activate Prisma scoping extension for 14 org-config/experience models`
+- `feat(saas-02c): enable RLS + tenant_isolation policies on 14 tables`
+- `test(saas-02c): org-config, org-experience, and singleton isolation e2e specs`
+- `docs(saas-02c): singleton-conversion pattern + 02c cluster example`
