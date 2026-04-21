@@ -105,7 +105,7 @@ npm run prisma:studio                # GUI
 
 ## Conventions that catch new contributors
 
-- **Single-organization mode.** The backend serves one clinic per deployment — there is no `tenantId`. Queries are global; do not reintroduce multi-tenant scoping.
+- **Multi-tenancy (transitional).** The backend is migrating to multi-tenant SaaS. As of Plan 01, `Organization` + `Membership` exist and the `TenantContextService` carries tenant identity through CLS. The `TENANT_ENFORCEMENT` env flag defaults to `off` — single-tenant behavior is unchanged at runtime. Cluster-by-cluster rollout begins in Plan 02. See [docs/saas-tenancy.md](./docs/saas-tenancy.md) before adding new queries.
 - **One handler = one public method (`execute`).** Don't add `executeVariant()`; create a new slice.
 - **Tests colocated as `*.handler.spec.ts`** next to the handler, not in a parallel `test/` tree.
 - **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
