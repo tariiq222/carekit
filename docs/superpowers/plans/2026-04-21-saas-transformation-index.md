@@ -15,7 +15,15 @@
 | # | Plan | Scope | Dependencies | Target duration |
 |---|---|---|---|---|
 | 01 | [Multi-tenancy Foundation](./2026-04-21-saas-01-multi-tenancy-foundation.md) | Organization + Membership models, TenantContext service, resolver middleware (dormant), Prisma scoping extension (dormant), RLS scaffolding, isolation test harness | — | 2 weeks |
-| 02 | SaaS-02 Tenant Enforcement Rollout | Add `organizationId` column to every tenant-scoped table. Backfill with default org. Activate middleware + Prisma scoping cluster-by-cluster (identity → people → org-config → org-experience → bookings → finance → comms → ops → ai → media → platform). Convert singletons (BrandingConfig / OrganizationSettings / SiteSetting) to per-org. | 01 | 3 weeks |
+| 02 | **SaaS-02 Tenant Enforcement Rollout** — decomposed into 8 sub-plans, executed in order. Each delivers a PR-ready cluster rollout. | 01 | 3 weeks |
+| 02a | [Identity cluster rollout](./2026-04-21-saas-02a-identity-cluster.md) — RefreshToken, ClientRefreshToken, CustomRole, Permission | 01 | 2–3 days |
+| 02b | People cluster rollout — Client, Employee, EmployeeBranch, EmployeeService, EmployeeAvailability, EmployeeAvailabilityException | 02a | 3 days |
+| 02c | Org-config + org-experience rollout — Branch, Department, ServiceCategory, Service (+ variants), BusinessHour, Holiday, IntakeForm/Field, Rating + convert BrandingConfig & OrganizationSettings singletons | 02b | 4 days |
+| 02d | Bookings cluster rollout — Booking, BookingStatusLog, Waitlist, GroupSession et al + convert BookingSettings singleton | 02c | 3 days |
+| 02e | Finance cluster rollout — Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + convert ZatcaConfig singleton | 02d | 3 days |
+| 02f | Comms cluster rollout — EmailTemplate, Notification, ChatConversation/Message/Session, CommsChatMessage, ContactMessage + convert ChatbotConfig singleton | 02e | 2 days |
+| 02g | AI + media + ops + platform rollout — KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + convert SiteSetting singleton | 02f | 2 days |
+| 02h | Strict mode + penetration tests — flip `TENANT_ENFORCEMENT=strict`; add adversarial cross-tenant test suite | 02g | 2 days |
 | 03 | SaaS-03 Verticals System | `Vertical`, `VerticalSeedService`, `VerticalSeedDepartment` models. Seed 8 vertical templates. Terminology packs infrastructure (`terminology/<pack>.ar.json`, `.en.json`). `useTerminology()` hook. | 02 | 2 weeks |
 | 04 | SaaS-04 Billing & Subscriptions | `Plan`, `Subscription` models. Moyasar subscription adapter. Webhook handler. `PlanLimitsGuard`. Usage metering BullMQ job. Trial + grace-period state machine. | 02 | 2 weeks |
 | 05 | SaaS-05 Super-admin API & Dashboard | `src/api/platform/*` endpoints. `/admin/*` routes in dashboard. Impersonation tokens. Org suspend/resume. Platform metrics (MRR, churn, DAU). | 04 | 1.5 weeks |
