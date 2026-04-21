@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/features/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HeroForm } from "@/components/features/content/hero-form"
+import { FeatureCardsForm } from "@/components/features/content/feature-cards-form"
 import { SectionIntrosForm } from "@/components/features/content/section-intros-form"
 import { useSiteSettings } from "@/hooks/use-site-settings"
 
@@ -33,12 +34,16 @@ export default function ContentHomePage() {
           <TabsList>
             <TabsTrigger value="hero">Hero</TabsTrigger>
             <TabsTrigger value="intros">عناوين الأقسام</TabsTrigger>
+            <TabsTrigger value="features">بطاقات المميزات</TabsTrigger>
           </TabsList>
           <TabsContent value="hero" className="pt-6">
             <HeroForm rows={rows} />
           </TabsContent>
           <TabsContent value="intros" className="pt-6">
             <SectionIntrosForm rows={rows} />
+          </TabsContent>
+          <TabsContent value="features" className="pt-6">
+            <FeatureCardsForm rows={rows} />
           </TabsContent>
         </Tabs>
       )}
