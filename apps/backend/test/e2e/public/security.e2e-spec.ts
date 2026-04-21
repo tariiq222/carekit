@@ -61,7 +61,7 @@ describe('Public — Security Tests (e2e)', () => {
 
     await seedEmployeeService(testPrisma as never, employeeId, serviceId);
     // Employee is assigned to `branchId` only — not to `otherBranchId`.
-    await testPrisma.employeeBranch.create({ data: { employeeId, branchId } });
+    await testPrisma.employeeBranch.create({ data: { organizationId: '00000000-0000-0000-0000-000000000001', employeeId, branchId } });
   });
 
   afterAll(async () => {

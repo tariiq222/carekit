@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
+import { TenantModule } from '../../common/tenant';
 import { OrgExperienceModule } from '../org-experience/org-experience.module';
 import { CreateBookingHandler } from './create-booking/create-booking.handler';
 import { CreateRecurringBookingHandler } from './create-recurring-booking/create-recurring-booking.handler';
@@ -71,7 +72,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, OrgExperienceModule],
+  imports: [DatabaseModule, MessagingModule, TenantModule, OrgExperienceModule],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
   exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler, ClientCancelBookingHandler, ClientRescheduleBookingHandler],

@@ -32,7 +32,7 @@ describe('Public Branding centralization (e2e)', () => {
     await testPrisma.brandingConfig.upsert({
       where: { id: SINGLETON_ID },
       update: { colorPrimary: '#DE0B5C' },
-      create: { id: SINGLETON_ID, organizationNameAr: 'عيادتي', colorPrimary: '#DE0B5C' },
+      create: { id: SINGLETON_ID, organizationId: '00000000-0000-0000-0000-000000000001', organizationNameAr: 'عيادتي', colorPrimary: '#DE0B5C' },
     });
 
     const res = await req.get('/public/branding').expect(200);

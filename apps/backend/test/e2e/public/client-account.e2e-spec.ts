@@ -580,6 +580,7 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
       const hashVal = await bcrypt.hash('ExistingPass1', 10);
       await testPrisma.client.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           email,
           name: 'Existing Client',
           firstName: 'Existing',
@@ -618,6 +619,7 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
       // Guest row: has email set but passwordHash is null
       await testPrisma.client.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           email: guestEmail,
           name: 'Email Guest',
           firstName: 'Email',
@@ -834,6 +836,7 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
 
       const guestClient = await testPrisma.client.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           name: 'Guest',
           firstName: 'Guest',
           lastName: 'User',

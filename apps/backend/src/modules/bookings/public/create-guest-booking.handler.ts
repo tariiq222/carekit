@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { CreateGuestBookingDto } from './create-guest-booking.dto';
@@ -24,11 +25,13 @@ const DEFAULT_VAT_RATE = 0.15;
 export class CreateGuestBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly priceResolver: PriceResolverService,
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   async execute(cmd: CreateGuestBookingCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const scheduledAt = new Date(cmd.startsAt);
     if (scheduledAt <= new Date()) {
       throw new BadRequestException('Booking must be scheduled in the future');
@@ -126,6 +129,7 @@ export class CreateGuestBookingHandler {
       if (!client) {
         client = await tx.client.create({
           data: {
+            organizationId,
             name: cmd.client.name,
             phone: cmd.client.phone,
             email: cmd.client.email,

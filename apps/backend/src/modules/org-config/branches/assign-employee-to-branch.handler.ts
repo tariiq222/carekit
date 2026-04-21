@@ -33,6 +33,7 @@ export class AssignEmployeeToBranchHandler {
     try {
       return await this.prisma.employeeBranch.create({
         data: {
+          organizationId,
           branchId: dto.branchId,
           employeeId: dto.employeeId,
         },
