@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { SetEmployeeServiceOptionsDto } from './set-employee-service-options.dto';
 
 export type SetEmployeeServiceOptionsCommand = SetEmployeeServiceOptionsDto & {
@@ -8,9 +9,13 @@ export type SetEmployeeServiceOptionsCommand = SetEmployeeServiceOptionsDto & {
 
 @Injectable()
 export class SetEmployeeServiceOptionsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: SetEmployeeServiceOptionsCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     const optionIds = dto.options.map((o) => o.durationOptionId);
     const validOptions = await this.prisma.serviceDurationOption.findMany({
       where: { id: { in: optionIds } },
@@ -32,6 +37,7 @@ export class SetEmployeeServiceOptionsHandler {
         },
         create: {
           employeeServiceId: dto.employeeServiceId,
+          organizationId,
           durationOptionId: opt.durationOptionId,
           priceOverride: opt.priceOverride ?? null,
           durationOverride: opt.durationOverride ?? null,

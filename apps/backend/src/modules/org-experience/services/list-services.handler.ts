@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { toListResponse } from '../../../common/dto';
 import { ListServicesDto } from './list-services.dto';
 
@@ -7,14 +8,19 @@ export type ListServicesCommand = ListServicesDto;
 
 @Injectable()
 export class ListServicesHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: ListServicesCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;
 
     const where = {
+      organizationId,
       archivedAt: null,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       // إخفاء الخدمات المخفية افتراضياً ما لم يُطلب تضمينها صراحةً
