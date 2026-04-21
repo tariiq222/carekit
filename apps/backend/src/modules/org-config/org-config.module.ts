@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
+import { TenantModule } from '../../common/tenant';
 import {
   DashboardOrganizationBranchesController,
   DashboardOrganizationDepartmentsController,
@@ -52,7 +53,7 @@ const hoursHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, TenantModule],
   controllers: [
     DashboardOrganizationBranchesController,
     DashboardOrganizationDepartmentsController,

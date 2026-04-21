@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { AssignEmployeeToBranchDto } from './assign-employee-to-branch.dto';
 
 export type AssignEmployeeToBranchCommand = AssignEmployeeToBranchDto & {
@@ -9,16 +10,20 @@ export type AssignEmployeeToBranchCommand = AssignEmployeeToBranchDto & {
 
 @Injectable()
 export class AssignEmployeeToBranchHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: AssignEmployeeToBranchCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     const [branch, employee] = await Promise.all([
       this.prisma.branch.findFirst({
-        where: { id: dto.branchId },
+        where: { id: dto.branchId, organizationId },
         select: { id: true },
       }),
       this.prisma.employee.findFirst({
-        where: { id: dto.employeeId },
+        where: { id: dto.employeeId, organizationId },
         select: { id: true },
       }),
     ]);
