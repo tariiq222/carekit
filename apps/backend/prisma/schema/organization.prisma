@@ -5,7 +5,7 @@
 
 model Branch {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   nameAr         String
   nameEn         String?
   phone          String?
@@ -32,7 +32,7 @@ model Branch {
 // isVisible = false → يُخفى القسم في الواجهة وتُعرض فئاته مباشرة تحت الجذر.
 model Department {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   nameAr         String // was @unique globally
   nameEn         String?
   descriptionAr  String?
@@ -56,7 +56,7 @@ model Department {
 // departmentId nullable لدعم فئات بلا قسم (hierarchy مسطح).
 model ServiceCategory {
   id             String      @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   departmentId   String?
   department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   nameAr         String
@@ -84,7 +84,7 @@ enum RecurringPattern {
 
 model Service {
   id             String           @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   categoryId     String?
   category       ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   nameAr         String
@@ -148,7 +148,7 @@ model Service {
 // BookingType enum is defined in bookings.prisma.
 model ServiceBookingConfig {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c (denormalized from Service)
+  organizationId String // SaaS-02c (denormalized from Service)
   serviceId      String
   service        Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   // bookingType stores dashboard values: 'in_person' | 'online'
@@ -172,7 +172,7 @@ model ServiceBookingConfig {
 // BookingType enum is defined in bookings.prisma — shared across BCs.
 model ServiceDurationOption {
   id             String       @id @default(uuid())
-  organizationId String? // SaaS-02c (denormalized from Service)
+  organizationId String // SaaS-02c (denormalized from Service)
   serviceId      String
   service        Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   bookingType    BookingType?
@@ -203,7 +203,7 @@ model ServiceDurationOption {
 // Resolution order (PriceResolverService): (1) priceOverride → (2) ServiceDurationOption.price → (3) Service.price
 model EmployeeServiceOption {
   id                String                @id @default(uuid())
-  organizationId    String? // SaaS-02c (denormalized from ServiceDurationOption)
+  organizationId    String // SaaS-02c (denormalized from ServiceDurationOption)
   employeeServiceId String // FK to people.EmployeeService (plain string, cross-BC)
   durationOptionId  String
   durationOption    ServiceDurationOption @relation(fields: [durationOptionId], references: [id], onDelete: Cascade)
@@ -224,7 +224,7 @@ model EmployeeServiceOption {
 // dayOfWeek: 0=Sunday … 6=Saturday
 model BusinessHour {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c (denormalized from Branch)
+  organizationId String // SaaS-02c (denormalized from Branch)
   branchId       String
   branch         Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   dayOfWeek      Int
@@ -243,7 +243,7 @@ model BusinessHour {
 
 model Holiday {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c (denormalized from Branch)
+  organizationId String // SaaS-02c (denormalized from Branch)
   branchId       String
   branch         Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   date           DateTime @db.Date
@@ -265,7 +265,7 @@ enum WebsiteTheme {
 
 model BrandingConfig {
   id             String  @id @default(uuid()) // SaaS-02c: was @default("default")
-  organizationId String? @unique // SaaS-02c: one row per org
+  organizationId String @unique // SaaS-02c: one row per org
 
   organizationNameAr String
   organizationNameEn String?
@@ -320,7 +320,7 @@ enum IntakeFormScope {
 
 model IntakeForm {
   id             String          @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   nameAr         String
   nameEn         String?
   type           IntakeFormType  @default(PRE_SESSION)
@@ -337,7 +337,7 @@ model IntakeForm {
 
 model IntakeField {
   id             String          @id @default(uuid())
-  organizationId String? // SaaS-02c (denormalized from IntakeForm)
+  organizationId String // SaaS-02c (denormalized from IntakeForm)
   formId         String
   form           IntakeForm      @relation(fields: [formId], references: [id], onDelete: Cascade)
   labelAr        String
@@ -357,7 +357,7 @@ model IntakeField {
 
 model Rating {
   id             String   @id @default(uuid())
-  organizationId String? // SaaS-02c
+  organizationId String // SaaS-02c
   bookingId      String   @unique // one rating per booking
   clientId       String
   employeeId     String
@@ -375,7 +375,7 @@ model Rating {
 
 model OrganizationSettings {
   id                     String   @id @default(uuid()) // SaaS-02c: was @default("default")
-  organizationId         String?  @unique // SaaS-02c: one row per org
+  organizationId         String   @unique // SaaS-02c: one row per org
   companyNameAr          String?
   companyNameEn          String?
   businessRegistration   String?
