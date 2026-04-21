@@ -299,7 +299,9 @@ Create the file `apps/backend/prisma/migrations/<TS>_saas01_backfill_memberships
 
 ```sql
 -- Backfill: one Membership per existing User under the default organization.
--- Maps User.role (text) -> MembershipRole enum. Unknown roles default to RECEPTIONIST.
+-- Maps User.role (UserRole enum) -> MembershipRole enum. Unknown roles default to RECEPTIONIST.
+-- CLIENT users are excluded — they are website clients, not clinic staff, and
+-- must not receive a staff membership under the default org.
 -- Idempotent: ON CONFLICT DO NOTHING uses the (userId, organizationId) unique.
 
 INSERT INTO "Membership" (id, "userId", "organizationId", role, "isActive", "acceptedAt", "createdAt", "updatedAt")
@@ -320,8 +322,11 @@ SELECT
   NOW(),
   NOW()
 FROM "User" u
+WHERE u.role::text <> 'CLIENT'
 ON CONFLICT ("userId", "organizationId") DO NOTHING;
 ```
+
+**Amendment 2026-04-21:** Added `WHERE u.role::text <> 'CLIENT'`. `UserRole` has a `CLIENT` member (website users). Per [backend CLAUDE.md "Client Auth" section](../../apps/backend/CLAUDE.md), client auth is a fully isolated token namespace; client users must not receive a clinic-staff membership. The plan's original `ELSE 'RECEPTIONIST'` would have mapped every CLIENT user to a receptionist, which is wrong.
 
 - [ ] **Step 4.3: Register the migration in Prisma's history**
 
