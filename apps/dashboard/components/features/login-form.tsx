@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { useAuth } from "@/components/providers/auth-provider"
 import { HugeiconsIcon } from "@hugeicons/react"

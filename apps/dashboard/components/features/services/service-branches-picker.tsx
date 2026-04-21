@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { Label } from "@carekit/ui"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { RadioGroup, RadioGroupItem } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Building04Icon } from "@hugeicons/core-free-icons"

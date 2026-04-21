@@ -14,9 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import { useChatbotMutations } from "@/hooks/use-chatbot"
 import {
   createKbEntrySchema,

@@ -16,7 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 
 import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"

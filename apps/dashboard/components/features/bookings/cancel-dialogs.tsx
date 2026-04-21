@@ -15,10 +15,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
+} from "@carekit/ui"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import type { RefundType } from "@/lib/types/booking"
 import { useLocale } from "@/components/locale-provider"
 

@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 
 interface GreetingHeaderProps {

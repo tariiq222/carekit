@@ -9,12 +9,12 @@ import {
   Certificate01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@carekit/ui"
-import { AvatarUpload } from "@/components/ui/avatar-upload"
+import { AvatarUpload } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { SectionHeader } from "@/components/features/section-header"
 import { EmployeeStatusDialog } from "@/components/features/employees/employee-status-dialog"

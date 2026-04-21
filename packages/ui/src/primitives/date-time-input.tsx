@@ -5,7 +5,7 @@
  * DateTimeInput — مكون موحد لحقول التاريخ والوقت معاً (datetime-local)
  *
  * الاستخدام الصحيح:
- *   import { DateTimeInput } from "@/components/ui/date-time-input"
+ *   import { DateTimeInput } from "./date-time-input"
  *   <DateTimeInput value={value} onChange={onChange} />
  *
  * مع react-hook-form:
@@ -19,7 +19,7 @@
  */
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/cn"
 
 export interface DateTimeInputProps {
   /** ISO datetime string: "YYYY-MM-DDTHH:mm" or full ISO */

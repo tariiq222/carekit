@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 
 import type { Booking } from "@/lib/types/booking"
 import { useBookingMutations } from "@/hooks/use-bookings"

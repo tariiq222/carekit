@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBranchEmployees, useBranchEmployeeMutations } from "@/hooks/use-branches"

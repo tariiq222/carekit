@@ -15,14 +15,14 @@ import {
   DialogFooter,
 } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 
 import { usePaymentMutations } from "@/hooks/use-payments"
 import {

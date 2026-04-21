@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -15,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useIntakeFormMutations } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import type { IntakeFieldApi } from "@/lib/types/intake-form-api"

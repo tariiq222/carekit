@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import { HugeiconsIcon } from "@hugeicons/react"

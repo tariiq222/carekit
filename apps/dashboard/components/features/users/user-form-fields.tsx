@@ -8,8 +8,8 @@ import {
   SmartPhone01Icon,
   UserCheck01Icon,
 } from "@hugeicons/core-free-icons"
-import { Input } from "@/components/ui/input"
-import { PhoneInput } from "@/components/ui/phone-input"
+import { Input } from "@carekit/ui"
+import { PhoneInput } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Card, CardContent } from "@carekit/ui"
 import {
@@ -18,7 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 

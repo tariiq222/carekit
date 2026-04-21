@@ -1,6 +1,6 @@
 "use client"
 
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@carekit/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { Badge } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"

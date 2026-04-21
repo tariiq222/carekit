@@ -2,17 +2,17 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { StarIcon, UploadSquare01Icon } from "@hugeicons/core-free-icons"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@carekit/ui"
+import { Checkbox } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import type { FieldType } from "@/lib/types/intake-form"

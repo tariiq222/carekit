@@ -12,7 +12,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Switch } from "@/components/ui/switch"

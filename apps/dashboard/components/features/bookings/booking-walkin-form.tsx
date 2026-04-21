@@ -18,12 +18,12 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { NationalitySelect } from "@/components/ui/nationality-select"
 import { Label } from "@carekit/ui"
-import { PhoneInput } from "@/components/ui/phone-input"
+import { PhoneInput } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 
 import { createWalkInClient } from "@/lib/api/clients"
 import { cn } from "@/lib/utils"

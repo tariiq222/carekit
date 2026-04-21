@@ -8,9 +8,9 @@ import {
   Alert02Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { NationalitySelect } from "@/components/ui/nationality-select"
-import { PhoneInput } from "@/components/ui/phone-input"
+import { PhoneInput } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Card, CardContent } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"

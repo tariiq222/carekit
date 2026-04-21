@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useForm, Controller, type Path } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import {
   Select,
@@ -12,8 +12,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@carekit/ui"
+import { Textarea } from "@carekit/ui"
 import {
   featureCardsSchema,
   type FeatureCardsSchema,

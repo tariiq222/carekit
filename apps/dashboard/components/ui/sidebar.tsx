@@ -5,7 +5,7 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import {
   Sheet,

@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Delete02Icon, ArrowDown01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@carekit/ui"

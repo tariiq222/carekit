@@ -1,6 +1,6 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { IntakeFormDraft, FormType, FormScope } from "@/lib/types/intake-form"
 import {

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon, ArrowDown01Icon, Building01Icon, Tick01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import {
   DropdownMenu,

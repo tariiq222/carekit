@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
   Card,
@@ -18,7 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useCategories } from "@/hooks/use-services"
 import { useDepartmentOptions } from "@/hooks/use-departments"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"

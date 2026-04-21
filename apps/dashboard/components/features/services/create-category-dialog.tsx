@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import {
   Select,
@@ -22,7 +22,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useCategoryMutations } from "@/hooks/use-services"
 import { useDepartmentOptions } from "@/hooks/use-departments"
 import { useLocale } from "@/components/locale-provider"

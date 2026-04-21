@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ImageUploadIcon, UserIcon, Add01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/cn"
 
 interface AvatarUploadProps {
   value?: string

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet"
 import { Badge } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { useChatSession, useChatbotMutations } from "@/hooks/use-chatbot"
 import { useLocale } from "@/components/locale-provider"

@@ -14,7 +14,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { changePassword } from "@/lib/api/auth"

@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 
 import { getActivityLogColumns } from "@/components/features/activity-log/activity-log-columns"

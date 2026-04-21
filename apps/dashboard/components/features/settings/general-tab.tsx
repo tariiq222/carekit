@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Card, CardContent } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import {
@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"

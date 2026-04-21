@@ -3,10 +3,10 @@
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/cn"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Tick02Icon, ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons"
-import { useDocumentDir } from "@/hooks/use-document-dir"
+import { useDocumentDir } from "../hooks/use-document-dir"
 
 function Select({
   dir,

@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"

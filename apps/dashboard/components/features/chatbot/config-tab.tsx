@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"

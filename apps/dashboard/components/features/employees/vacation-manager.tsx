@@ -19,7 +19,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Label } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   AlertDialog,

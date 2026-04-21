@@ -4,7 +4,7 @@ import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Search01Icon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons"
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@carekit/ui"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 import { useClients } from "@/hooks/use-clients"

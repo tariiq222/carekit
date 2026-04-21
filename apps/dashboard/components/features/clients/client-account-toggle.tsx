@@ -15,7 +15,7 @@ import {
 } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Badge } from "@carekit/ui"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useSetClientActiveWithToast } from "@/hooks/use-set-client-active"

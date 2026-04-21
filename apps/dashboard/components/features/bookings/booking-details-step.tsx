@@ -20,7 +20,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 
 import { useEmployees } from "@/hooks/use-employees"

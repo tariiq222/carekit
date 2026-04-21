@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Clock01Icon } from "@hugeicons/core-free-icons"
 import { useWaitlistMutations } from "@/hooks/use-waitlist"
