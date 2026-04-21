@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { toListResponse } from '../../../common/dto';
 import { ListCategoriesDto } from './list-categories.dto';
 
@@ -8,14 +9,19 @@ export type ListCategoriesQuery = ListCategoriesDto;
 
 @Injectable()
 export class ListCategoriesHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: ListCategoriesQuery) {
+    const organizationId = this.tenant.requireOrganizationId();
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;
 
     const where: Prisma.ServiceCategoryWhereInput = {
+      organizationId,
       ...(dto.departmentId !== undefined && { departmentId: dto.departmentId }),
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.search && {

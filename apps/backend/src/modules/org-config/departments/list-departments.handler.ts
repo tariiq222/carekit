@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { toListResponse } from '../../../common/dto';
 import { ListDepartmentsDto } from './list-departments.dto';
 
@@ -7,14 +8,19 @@ export type ListDepartmentsQuery = ListDepartmentsDto;
 
 @Injectable()
 export class ListDepartmentsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: ListDepartmentsQuery) {
+    const organizationId = this.tenant.requireOrganizationId();
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;
 
     const where = {
+      organizationId,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.search && {
         OR: [
