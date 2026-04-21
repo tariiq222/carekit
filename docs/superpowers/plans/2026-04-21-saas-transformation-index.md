@@ -80,19 +80,20 @@ Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pen
 | 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/carekit/pull/16) | 02a | 3 days |
 | 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/carekit/pull/17) | 02b | 4 days |
 | 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | ✅ DONE (2026-04-21) | [#18](https://github.com/tariiq222/carekit/pull/18) | 02c | 3 days |
-| 02e | Finance cluster rollout (Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + ZatcaConfig singleton) ⚠️ owner-review required | ⚪ PENDING | — | 02d | 3 days |
-| 02f | Comms cluster rollout (EmailTemplate, Notification, ChatConversation/Message/Session, CommsChatMessage, ContactMessage + ChatbotConfig singleton) | ⚪ PENDING | — | 02e | 2 days |
-| 02g | AI + media + ops + platform rollout (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | ⚪ PENDING | — | 02f | 2 days |
-| 02h | Strict mode + penetration tests (flip `TENANT_ENFORCEMENT=strict`; adversarial cross-tenant suite) | ⚪ PENDING | — | 02g | 2 days |
-| 03 | Verticals System (`Vertical`, `VerticalSeedService`, `VerticalSeedDepartment` models + 8 templates + terminology packs infra + `useTerminology()` hook) | ⚪ PENDING | — | 02 | 2 weeks |
-| 04 | Billing & Subscriptions (`Plan`, `Subscription` + Moyasar adapter + webhook + `PlanLimitsGuard` + usage metering BullMQ + state machine) | ⚪ PENDING | — | 02 | 2 weeks |
-| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) — extract 35 shadcn primitives into `packages/ui/`. Parallel-safe with 02f/02g. | 🟢 READY | — | 02a | 3 days |
-| 05b | Super-admin App (`apps/admin/` on `admin.carekit.app` + impersonation + suspend + metrics) | ⚪ PENDING | — | 04, 05a | 2 weeks |
-| 06 | Dashboard Terminology + EN i18n (full `t()`/`tp()` refactor + EN translation + RTL/LTR toggle + feature gating + tenant switcher + billing UI) | ⚪ PENDING | — | 03, 04, 05a | 3 weeks |
-| 07 | Marketing Site + Signup Wizard (`apps/landing/` on `carekit.app` + 8 vertical landings + 5-step signup + Moyasar checkout) | ⚪ PENDING | — | 03, 04, 05a | 3 weeks |
-| 08 | Website Multi-tenant + Vertical Themes (refactor `apps/website/themes/` → `visual/` + `vertical/` × 4 families, conditional routing, multi-tenant host middleware, bilingual SEO, embed widget) | ⚪ PENDING | — | 06 | 4 weeks |
-| 09 | Custom Domain + Infra (Caddy on-demand TLS, wildcard `*.carekit.app`, DNS verification worker, `/settings/domain` UI) | ⚪ PENDING | — | 08 | 1.5 weeks |
-| 10 | Hardening & Launch (isolation penetration, per-tenant rate limiting, Sentry tags + Prometheus labels, performance audit, load test 100 orgs × 10k bookings, data export per-org, runbook) | ⚪ PENDING | — | 01–09 | 3 weeks |
+| 02e | [Finance cluster rollout](./2026-04-21-saas-02e-finance-cluster.md) (Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + ZatcaConfig singleton) ⚠️ owner-review required | 🟡 EXEC | [#21](https://github.com/tariiq222/carekit/pull/21) | 02d | 3 days |
+| 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) (EmailTemplate, Notification, ChatConversation/Message/Session + ChatbotConfig singleton) | 🟢 WRITTEN | — | 02e | 2 days |
+| 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | 🟢 WRITTEN | — | 02f | 2 days |
+| 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) (Unifonic + Taqnyat adapters + `OrganizationSmsConfig` singleton) — required before Plan 04 | 🟢 WRITTEN | — | 02f | 2 days |
+| 02h | [Strict mode + penetration tests](./2026-04-21-saas-02h-strict-mode-penetration.md) (flip `TENANT_ENFORCEMENT=strict`; adversarial cross-tenant suite) ⚠️ owner-gated (blast radius = payments outage; canary + per-module rollback) | 🟢 WRITTEN | — | 02g, 02g-sms | 2 days |
+| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) (`Vertical`, `VerticalSeedDepartment`, `VerticalSeedServiceCategory`, `VerticalTerminologyOverride` + 11 seeds across 4 families + terminology packs + `useTerminology()` hook) | 🟢 WRITTEN | — | 02e | 2 weeks |
+| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) (`Plan`, `Subscription` + platform Moyasar adapter + webhook + hybrid `PlanLimitsGuard`/`@TrackUsage` + metered overage + 2-day grace) ⚠️ owner-review gate Task 1 | 🟢 WRITTEN | — | 02e, 02g-sms | 2 weeks |
+| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) — extract 33 shadcn primitives into `packages/ui/`. Parallel-safe with 02f/02g. | 🟡 EXEC | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
+| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) (`apps/admin/` on `admin.carekit.app` + impersonation shadow-JWT + `$allTenants` CLS-gated escape hatch + suspend + metrics) ⚠️ Task 0 owner-review gate | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
+| 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) (full `t()`/`tp()` refactor + EN parity + RTL/LTR toggle + feature gating + tenant switcher + billing UI) | 🟢 WRITTEN | — | 03, 04, 05a | 3 weeks |
+| 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) (`apps/landing/` on `carekit.app` + 8 vertical landings + 5-step signup + Moyasar checkout) ⚠️ JWT `organizationSlug` claim Task 0 owner-review | 🟢 WRITTEN | — | 03, 04, 05a, 02e | 3 weeks |
+| 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) (refactor `apps/website/themes/` → `visual/` × `vertical/` × 4 families, conditional routing, multi-tenant host middleware, bilingual SEO, embed widget) | 🟢 WRITTEN | — | 02g, 03, 06 | 4 weeks |
+| 09 | [Custom Domain + Infra](./2026-04-21-saas-09-custom-domain-infra.md) (Caddy on-demand TLS, wildcard `*.carekit.app`, DNS verification worker, `/settings/domain` UI) ⚠️ owner-gated Nginx→Caddy cutover | 🟢 WRITTEN | — | 08 | 1.5 weeks |
+| 10 | [Hardening & Launch](./2026-04-21-saas-10-hardening-launch.md) (isolation penetration extension, per-tenant rate limiting, Sentry tags + Prometheus labels, performance audit, load test 100 orgs × 10k bookings, data export per-org, runbook) | 🟢 WRITTEN | — | 01–09 | 3 weeks |
 
 ---
 

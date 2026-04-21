@@ -4,6 +4,26 @@
 
 ---
 
+## 📌 Owner decisions integrated 2026-04-22 (executor: read before Task 0)
+
+Plan body below reflects these decisions. Listed here for reviewer orientation:
+
+1. **Hybrid billing (flat + metered overage).** `BRANCHES` and `EMPLOYEES` stay hard-capped (block with 403 on upgrade). `BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB` are metered — overage billed at period end via `compute-overage.cron.ts` bundled into next Moyasar charge. Hard-block vs metered split implemented via `@EnforceLimit` vs `@TrackUsage` decorators (Task 8).
+2. **Grace period = 2 days** (`SAAS_GRACE_PERIOD_DAYS` env, default 2). `Subscription.pastDueSince` set on ACTIVE→PAST_DUE; `enforce-grace-period.cron.ts` runs hourly and transitions to SUSPENDED when expired. State-machine event renamed `retriesExhausted → graceExpired`. `retryCount` kept for analytics only.
+3. **SMS/notifications NOT platform-billable.** Each tenant brings their own SMS provider (Unifonic/Taqnyat) with own API keys, pays their provider directly. No `NOTIFICATIONS_PER_MONTH` metric, no `Plan.maxNotificationsPerMonth`. Per-tenant SMS refactor deferred to **Plan 02g-sms (new)** — must land before Plan 04 execution.
+4. **Two Moyasars, strictly separated.** Platform Moyasar (`MOYASAR_PLATFORM_SECRET_KEY` + `MOYASAR_PLATFORM_WEBHOOK_SECRET`) used only by `src/modules/platform/billing/`. Tenant Moyasar (`OrganizationPaymentConfig.moyasarSecretKey`, encrypted) is Plan 02e's domain. Independent webhook routes + secrets; code-review check for no cross-imports between `finance/moyasar-api/` and `platform/billing/`.
+5. **Authoritative tier prices (SAR):** Basic 299/2999, Pro 799/7999, Enterprise 1999/19999 (annual ≈ 17% discount). Included quotas + overage rates seeded in Task 4.5.
+6. **Trial 14 days, no card required.** Sign-up flow (Plan 07) creates `status=TRIALING` with `moyasarCustomerId=null`. Day 13 email reminder. TRIALING→ACTIVE requires first tokenized card charge success. Parent plan's `start-subscription.handler.ts` (Task 7A) must accept null payment method during trial.
+
+**New tasks added to this plan body:**
+- **Task 8B** — `UsageTrackerInterceptor` + `@TrackUsage()` decorator (runs alongside Task 8's `PlanLimitsGuard`).
+- **Task 9B** — `compute-overage.cron.ts` (period-end; writes overage line items into next invoice).
+- **Task 9C** — `enforce-grace-period.cron.ts` (hourly; enforces 2-day grace).
+
+(See Tasks 8B / 9B / 9C sections below for full step-by-step content.)
+
+---
+
 ## ⚠️ OWNER-REVIEW GATE (read first)
 
 Plan 04 extends the **Moyasar payment gateway** integration for SaaS subscription billing (charging clinic owners on a recurring schedule). This is **distinct** from Plan 02e's booking-payment flow (clinic charging its clients) but shares the same Moyasar SDK adapter. Per root `CLAUDE.md` "Security Sensitivity Tiers", payments and ZATCA are **owner-only** (`@tariq`).
@@ -26,7 +46,15 @@ This is called out for explicit owner confirmation in Task 1.
 
 ---
 
-**Goal:** Introduce SaaS subscription billing. Each `Organization` has at most one active `Subscription` linked to a `Plan` (starter / professional / enterprise). Plans carry feature limits (max branches, max employees, max bookings/month, feature flags). A `PlanLimitsGuard` enforces the limits on create-* endpoints. A BullMQ cron meters usage daily and emits `UsageRecord` rows. Dunning flow via Moyasar subscription webhook drives state transitions (TRIALING → ACTIVE → PAST_DUE → SUSPENDED → CANCELED). Dashboard skeleton route `/settings/billing` shows current plan + usage bars (full UI in Plan 06).
+**Goal:** Introduce SaaS subscription billing with **hybrid pricing (flat fee + metered overage)**. Each `Organization` has at most one active `Subscription` linked to a `Plan` (basic / pro / enterprise). Plans carry two categories of limits:
+- **Hard-capped** (`BRANCHES`, `EMPLOYEES` staff seats) — enforced by `PlanLimitsGuard` on create-* endpoints; going over requires plan upgrade.
+- **Metered overage** (`BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB`) — never blocks the request; usage is counted, and at period-end `compute-overage.cron.ts` bills the excess as line items on the next `SubscriptionInvoice` (bundled with flat fee into a single Moyasar charge).
+
+Dunning flow: Moyasar subscription webhook drives state transitions (TRIALING → ACTIVE → PAST_DUE → SUSPENDED → CANCELED). **Grace period is 2 days from first charge failure** (`SAAS_GRACE_PERIOD_DAYS=2`, env-driven), not a retry count. Dashboard skeleton route `/settings/billing` shows current plan, usage bars, and projected overage (full UI in Plan 06).
+
+**SMS is NOT billed by platform.** Per `saas_sms_architecture` memory, each tenant brings their own SMS provider API keys (Unifonic / Taqnyat) and pays their provider directly. Plan 04 tracks no `NOTIFICATIONS_PER_MONTH` metric. Per-tenant SMS provider refactor lives in Plan 02g-sms (separate, must land before Plan 04 execution).
+
+**Two Moyasar integrations, strictly separated.** Platform Moyasar (`MOYASAR_PLATFORM_SECRET_KEY` env) charges clinics for SaaS subscriptions — used ONLY by `src/modules/platform/billing/`. Tenant Moyasar (`OrganizationPaymentConfig.moyasarSecretKey`, encrypted) is Plan 02e's domain — clinic charges its own clients. Independent webhook signing secrets; no cross-imports.
 
 **Architecture:** Strangler pattern — all new code is additive. `Plan` and `SubscriptionInvoice` are **platform-level** (not tenant-scoped — they describe CareKit's catalog and CareKit's receivables). `Subscription` and `UsageRecord` are tenant-scoped (belong to an org, scoped via the existing Prisma `$extends` Proxy). A new module `src/modules/platform/billing/` holds all handlers. A second Moyasar webhook endpoint (`POST /api/v1/public/billing/webhooks/moyasar`) handles subscription events — separate route, separate signing secret from Plan 02e's booking webhook. Moyasar does not currently support native recurring subscriptions; we store Moyasar customer + tokenized card references and drive billing cycles via a BullMQ cron (`charge-due-subscriptions.cron.ts`). The webhook handles async payment confirmations and failures.
 
@@ -89,7 +117,11 @@ const SCOPED_MODELS = new Set<string>([
 - `meter-usage/meter-usage.cron.ts` + `.spec.ts` (BullMQ Processor / @Cron)
 - `charge-due-subscriptions/charge-due-subscriptions.cron.ts` + `.spec.ts`
 - `enforce-limits.guard.ts` (`PlanLimitsGuard`) + `.spec.ts`
-- `plan-limits.decorator.ts` (`@EnforceLimit('BRANCHES' | 'EMPLOYEES' | 'BOOKINGS_PER_MONTH' | 'STORAGE_MB' | 'NOTIFICATIONS_PER_MONTH')`)
+- `plan-limits.decorator.ts` (`@EnforceLimit('BRANCHES' | 'EMPLOYEES')` — hard-capped only)
+- `track-usage.decorator.ts` (`@TrackUsage('BOOKINGS_PER_MONTH' | 'CLIENTS' | 'STORAGE_MB')` — metered overage)
+- `usage-tracker.interceptor.ts` + `.spec.ts`
+- `compute-overage.cron.ts` + `.spec.ts` (runs at period-end; builds `SubscriptionInvoice` with flat + overage line items)
+- `enforce-grace-period.cron.ts` + `.spec.ts` (runs hourly; transitions `PAST_DUE → SUSPENDED` when `pastDueSince + 2 days <= now()`)
 - `subscription-cache.service.ts` (in-memory cache keyed by orgId → Plan limits, invalidated on plan change)
 - `subscription-cache.service.spec.ts`
 - `dto/start-subscription.dto.ts`
@@ -201,18 +233,23 @@ Do NOT proceed to Task 2 until owner posts `/approve saas-04` in the PR.
 `apps/backend/src/config/env.validation.ts`:
 
 ```ts
-// Billing (SaaS-04)
-MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET: Joi.string().min(16).required(),
+// Billing (SaaS-04) — PLATFORM Moyasar (charges clinics for SaaS subscription).
+// Distinct from OrganizationPaymentConfig.moyasar* (tenant Moyasar, Plan 02e).
+MOYASAR_PLATFORM_SECRET_KEY: Joi.string().min(16).required(),
+MOYASAR_PLATFORM_WEBHOOK_SECRET: Joi.string().min(16).required(),
 SAAS_TRIAL_DAYS: Joi.number().integer().min(0).max(90).default(14),
+SAAS_GRACE_PERIOD_DAYS: Joi.number().integer().min(0).max(30).default(2),
 BILLING_CRON_ENABLED: Joi.boolean().default(false),
 ```
 
 - [ ] **Step 2.2: Update `.env.example`**
 
 ```
-# Billing (SaaS-04)
-MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET=change-me-in-production
+# Billing (SaaS-04) — PLATFORM Moyasar (NOT tenant Moyasar)
+MOYASAR_PLATFORM_SECRET_KEY=sk_test_change-me
+MOYASAR_PLATFORM_WEBHOOK_SECRET=change-me-in-production
 SAAS_TRIAL_DAYS=14
+SAAS_GRACE_PERIOD_DAYS=2
 BILLING_CRON_ENABLED=false
 ```
 
@@ -262,14 +299,14 @@ Transition table (source of truth):
 | From | Event | To | Preconditions |
 |---|---|---|---|
 | — | `startSubscription` | TRIALING | plan exists, org has no active sub |
-| TRIALING | `chargeSuccess` | ACTIVE | Moyasar payment confirmed |
-| TRIALING | `trialExpired + chargeFailure` | PAST_DUE | retry counter < max |
+| TRIALING | `chargeSuccess` | ACTIVE | Moyasar payment confirmed; clear `pastDueSince` |
+| TRIALING | `trialExpired + chargeFailure` | PAST_DUE | set `pastDueSince=now()` |
 | TRIALING | `cancel` | CANCELED | — |
-| ACTIVE | `chargeFailure` | PAST_DUE | retry counter < max |
+| ACTIVE | `chargeFailure` | PAST_DUE | set `pastDueSince=now()` |
 | ACTIVE | `cancel` | CANCELED | — |
 | ACTIVE | `upgrade/downgrade` | ACTIVE | new plan valid; prorated invoice issued |
-| PAST_DUE | `chargeSuccess` | ACTIVE | — |
-| PAST_DUE | `retriesExhausted` | SUSPENDED | retry count >= max (default 3) |
+| PAST_DUE | `chargeSuccess` | ACTIVE | clear `pastDueSince` |
+| PAST_DUE | `graceExpired` | SUSPENDED | `now() >= pastDueSince + SAAS_GRACE_PERIOD_DAYS` (default 2 days) |
 | PAST_DUE | `cancel` | CANCELED | — |
 | SUSPENDED | `resume + chargeSuccess` | ACTIVE | owner-initiated resume |
 | SUSPENDED | `cancel` | CANCELED | — |
@@ -297,8 +334,8 @@ describe('SubscriptionStateMachine', () => {
     expect(sm.transition('PAST_DUE', { type: 'chargeSuccess' })).toBe('ACTIVE');
   });
 
-  it('transitions PAST_DUE → SUSPENDED when retryCount >= max', () => {
-    expect(sm.transition('PAST_DUE', { type: 'retriesExhausted' })).toBe('SUSPENDED');
+  it('transitions PAST_DUE → SUSPENDED when grace period expires', () => {
+    expect(sm.transition('PAST_DUE', { type: 'graceExpired' })).toBe('SUSPENDED');
   });
 
   it('transitions SUSPENDED → ACTIVE on resume + chargeSuccess', () => {
@@ -326,7 +363,7 @@ import { SubscriptionStatus } from '@prisma/client';
 export type SubscriptionEvent =
   | { type: 'chargeSuccess' }
   | { type: 'chargeFailure' }
-  | { type: 'retriesExhausted' }
+  | { type: 'graceExpired' }
   | { type: 'resumeSuccess' }
   | { type: 'cancel' }
   | { type: 'upgrade' }
@@ -338,7 +375,7 @@ type TransitionMap = Record<SubscriptionStatus, Partial<Record<SubscriptionEvent
 const TRANSITIONS: TransitionMap = {
   TRIALING: { chargeSuccess: 'ACTIVE', chargeFailure: 'PAST_DUE', trialExpired: 'PAST_DUE', cancel: 'CANCELED' },
   ACTIVE: { chargeFailure: 'PAST_DUE', cancel: 'CANCELED', upgrade: 'ACTIVE', downgrade: 'ACTIVE' },
-  PAST_DUE: { chargeSuccess: 'ACTIVE', retriesExhausted: 'SUSPENDED', cancel: 'CANCELED' },
+  PAST_DUE: { chargeSuccess: 'ACTIVE', graceExpired: 'SUSPENDED', cancel: 'CANCELED' },
   SUSPENDED: { resumeSuccess: 'ACTIVE', cancel: 'CANCELED' },
   CANCELED: {},
 };
@@ -381,8 +418,8 @@ Append to `apps/backend/prisma/schema/platform.prisma`:
 // Subscription, UsageRecord = tenant-scoped (belong to an org).
 
 enum PlanSlug {
-  STARTER
-  PROFESSIONAL
+  BASIC
+  PRO
   ENTERPRISE
 }
 
@@ -408,11 +445,13 @@ enum SubscriptionInvoiceStatus {
 }
 
 enum UsageMetric {
-  BOOKINGS
-  EMPLOYEES
+  // Hard-capped (enforced by PlanLimitsGuard; no overage)
   BRANCHES
+  EMPLOYEES
+  // Metered overage (never blocked; billed at period-end)
+  BOOKINGS_PER_MONTH
+  CLIENTS
   STORAGE_MB
-  NOTIFICATIONS_SENT
 }
 
 model Plan {
@@ -424,7 +463,12 @@ model Plan {
   priceAnnual        Decimal      @db.Decimal(12, 2)
   currency           String       @default("SAR")
   moyasarProductId   String?      // optional future Moyasar native subscriptions
-  limits             Json         // { maxBranches, maxEmployees, maxBookingsPerMonth, maxStorageMB, maxNotificationsPerMonth, websiteEnabled, customDomainEnabled, chatbotEnabled, zatcaEnabled, ratingsEnabled }
+  // limits JSON shape:
+  //   { maxBranches, maxEmployees,                        // hard-capped quotas (-1 = unlimited)
+  //     maxBookingsPerMonth, maxClients, maxStorageMB,    // metered overage quotas (-1 = unlimited)
+  //     overageRateBookings, overageRateClients, overageRateStorageGB,  // SAR per unit above quota
+  //     websiteEnabled, customDomainEnabled, chatbotEnabled, zatcaEnabled, ratingsEnabled }
+  limits             Json
   isActive           Boolean      @default(true)
   sortOrder          Int          @default(0)
   createdAt          DateTime     @default(now())
@@ -447,8 +491,9 @@ model Subscription {
   trialEndsAt          DateTime?
   canceledAt           DateTime?
   cancelReason         String?
-  retryCount           Int                @default(0)
-  maxRetries           Int                @default(3)
+  pastDueSince         DateTime?          // set when transitioning ACTIVE → PAST_DUE; drives 2-day grace
+  retryCount           Int                @default(0)  // analytics only; not used for state decisions
+  maxRetries           Int                @default(3)  // charging attempts within grace window
   moyasarCustomerRef   String?            // Moyasar customer id
   moyasarCardTokenRef  String?            // tokenized saved card
   moyasarSubscriptionRef String?          // reserved for future native recurring
@@ -471,7 +516,14 @@ model SubscriptionInvoice {
   subscriptionId     String
   subscription       Subscription              @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
   organizationId     String                    // denormalized for analytics; NOT a SCOPED_MODEL — this is CareKit's receivable
-  amount             Decimal                   @db.Decimal(12, 2)
+  amount             Decimal                   @db.Decimal(12, 2)  // flat + Σ(overage)
+  flatAmount         Decimal                   @db.Decimal(12, 2)
+  overageAmount      Decimal                   @db.Decimal(12, 2)  @default(0)
+  // lineItems shape:
+  //   [{ kind: 'FLAT_FEE', description, amount },
+  //    { kind: 'OVERAGE', metric: 'BOOKINGS_PER_MONTH'|'CLIENTS'|'STORAGE_MB',
+  //      included, used, overage, rate, amount }]
+  lineItems          Json                      @default("[]")
   currency           String                    @default("SAR")
   status             SubscriptionInvoiceStatus @default(DRAFT)
   billingCycle       BillingCycle
@@ -538,15 +590,17 @@ Create migration `<ts>_saas_04_seed_plans/migration.sql`:
 
 ```sql
 INSERT INTO "Plan" (id, slug, "nameAr", "nameEn", "priceMonthly", "priceAnnual", currency, limits, "isActive", "sortOrder", "createdAt", "updatedAt") VALUES
-  ('00000000-0000-0000-0000-00000000p001', 'STARTER',      'الباقة الأساسية',    'Starter',      99,    999,   'SAR',
-    '{"maxBranches":1,"maxEmployees":5,"maxBookingsPerMonth":200,"maxStorageMB":1024,"maxNotificationsPerMonth":500,"websiteEnabled":false,"customDomainEnabled":false,"chatbotEnabled":false,"zatcaEnabled":true,"ratingsEnabled":true}',
+  ('00000000-0000-0000-0000-00000000p001', 'BASIC',      'الأساسية',    'Basic',       299,  2999,  'SAR',
+    '{"maxBranches":1,"maxEmployees":5,"maxBookingsPerMonth":500,"maxClients":1000,"maxStorageMB":5120,"overageRateBookings":0.5,"overageRateClients":0.1,"overageRateStorageGB":5,"websiteEnabled":false,"customDomainEnabled":false,"chatbotEnabled":false,"zatcaEnabled":true,"ratingsEnabled":true}',
     true, 10, NOW(), NOW()),
-  ('00000000-0000-0000-0000-00000000p002', 'PROFESSIONAL', 'الباقة الاحترافية',  'Professional', 299,   2999,  'SAR',
-    '{"maxBranches":5,"maxEmployees":25,"maxBookingsPerMonth":2000,"maxStorageMB":10240,"maxNotificationsPerMonth":5000,"websiteEnabled":true,"customDomainEnabled":false,"chatbotEnabled":true,"zatcaEnabled":true,"ratingsEnabled":true}',
+  ('00000000-0000-0000-0000-00000000p002', 'PRO',        'الاحترافية',  'Professional', 799,  7999,  'SAR',
+    '{"maxBranches":3,"maxEmployees":15,"maxBookingsPerMonth":2000,"maxClients":5000,"maxStorageMB":25600,"overageRateBookings":0.5,"overageRateClients":0.1,"overageRateStorageGB":5,"websiteEnabled":true,"customDomainEnabled":false,"chatbotEnabled":true,"zatcaEnabled":true,"ratingsEnabled":true}',
     true, 20, NOW(), NOW()),
-  ('00000000-0000-0000-0000-00000000p003', 'ENTERPRISE',   'الباقة المؤسسية',   'Enterprise',   899,   8999,  'SAR',
-    '{"maxBranches":-1,"maxEmployees":-1,"maxBookingsPerMonth":-1,"maxStorageMB":-1,"maxNotificationsPerMonth":-1,"websiteEnabled":true,"customDomainEnabled":true,"chatbotEnabled":true,"zatcaEnabled":true,"ratingsEnabled":true}',
+  ('00000000-0000-0000-0000-00000000p003', 'ENTERPRISE', 'المؤسسية',   'Enterprise',   1999, 19999, 'SAR',
+    '{"maxBranches":-1,"maxEmployees":-1,"maxBookingsPerMonth":-1,"maxClients":-1,"maxStorageMB":102400,"overageRateBookings":0,"overageRateClients":0,"overageRateStorageGB":5,"websiteEnabled":true,"customDomainEnabled":true,"chatbotEnabled":true,"zatcaEnabled":true,"ratingsEnabled":true}',
     true, 30, NOW(), NOW());
+-- Pricing rationale: annual ≈ 17% discount vs 12× monthly. Enterprise still charges storage overage above 100 GB.
+-- Overage rates (SAR): booking=0.50, client=0.10, storage=5/GB. No overage on BRANCHES/EMPLOYEES — hard-capped; upgrade required.
 ```
 
 (`-1` = unlimited, handled in guard.)
@@ -788,17 +842,20 @@ Internal — invoked by the webhook. Input: `{ moyasarPaymentId, subscriptionId,
 
 ---
 
-## Task 8 — `PlanLimitsGuard` + `@EnforceLimit()` decorator
+## Task 8 — `PlanLimitsGuard` (hard-cap) + `UsageTrackerInterceptor` (metered overage)
+
+**Two separate mechanisms:**
+
+1. **`PlanLimitsGuard` + `@EnforceLimit()`** — used ONLY for `BRANCHES` and `EMPLOYEES`. Blocks with `ForbiddenException` when at/over quota. Tenant must upgrade plan to proceed.
+2. **`UsageTrackerInterceptor` + `@TrackUsage()`** — used for `BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB`. NEVER blocks a request (unless subscription is `SUSPENDED`/`CANCELED`, in which case both mechanisms deny). Increments an in-memory usage counter that is flushed daily by `meter-usage.cron.ts` into `UsageRecord`. Overage is billed at period-end by `compute-overage.cron.ts` (Task 9B, new).
 
 - [ ] **Step 8.1: TDD guard spec**
 
-Tests for each metric:
+Tests for hard-capped metrics:
 - `BRANCHES`: allows when `count < maxBranches`; throws `ForbiddenException` at `count >= maxBranches`; `-1` means unlimited.
 - `EMPLOYEES`: same pattern via `prisma.employee.count()`.
-- `BOOKINGS_PER_MONTH`: counts bookings with `createdAt >= currentPeriodStart`.
-- `STORAGE_MB`: sums `prisma.file.aggregate({ _sum: { sizeBytes } })` / (1024*1024).
-- `NOTIFICATIONS_PER_MONTH`: counts notifications since period start.
 - When subscription status is `SUSPENDED` or `CANCELED`: always deny (regardless of limit).
+- Metered metrics (`BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB`) are NOT handled by this guard — ensure an `@EnforceLimit('BOOKINGS_PER_MONTH')` raises a compile-time type error.
 
 - [ ] **Step 8.2: Decorator**
 
@@ -806,7 +863,8 @@ Tests for each metric:
 // plan-limits.decorator.ts
 import { SetMetadata } from '@nestjs/common';
 
-export type LimitKind = 'BRANCHES' | 'EMPLOYEES' | 'BOOKINGS_PER_MONTH' | 'STORAGE_MB' | 'NOTIFICATIONS_PER_MONTH';
+// Hard-capped metrics ONLY. Metered metrics go through @TrackUsage (Task 8B).
+export type LimitKind = 'BRANCHES' | 'EMPLOYEES';
 export const ENFORCE_LIMIT_KEY = 'plan-limits:enforce';
 export const EnforceLimit = (kind: LimitKind) => SetMetadata(ENFORCE_LIMIT_KEY, kind);
 ```
@@ -856,33 +914,15 @@ export class PlanLimitsGuard implements CanActivate {
     switch (kind) {
       case 'BRANCHES': return Number(limits.maxBranches ?? 0);
       case 'EMPLOYEES': return Number(limits.maxEmployees ?? 0);
-      case 'BOOKINGS_PER_MONTH': return Number(limits.maxBookingsPerMonth ?? 0);
-      case 'STORAGE_MB': return Number(limits.maxStorageMB ?? 0);
-      case 'NOTIFICATIONS_PER_MONTH': return Number(limits.maxNotificationsPerMonth ?? 0);
     }
   }
 
   private async currentUsage(kind: LimitKind, organizationId: string): Promise<number> {
-    // Extension auto-injects organizationId for scoped models. We keep the predicate explicit for auditability.
     switch (kind) {
       case 'BRANCHES':
         return this.prisma.branch.count({ where: { organizationId, isActive: true } });
       case 'EMPLOYEES':
         return this.prisma.employee.count({ where: { organizationId } });
-      case 'BOOKINGS_PER_MONTH': {
-        const sub = await this.prisma.subscription.findFirst({ where: { organizationId } });
-        if (!sub) return Number.POSITIVE_INFINITY;
-        return this.prisma.booking.count({ where: { organizationId, createdAt: { gte: sub.currentPeriodStart } } });
-      }
-      case 'STORAGE_MB': {
-        const agg = await this.prisma.file.aggregate({ where: { organizationId }, _sum: { sizeBytes: true } });
-        return Math.ceil(Number(agg._sum.sizeBytes ?? 0) / (1024 * 1024));
-      }
-      case 'NOTIFICATIONS_PER_MONTH': {
-        const sub = await this.prisma.subscription.findFirst({ where: { organizationId } });
-        if (!sub) return Number.POSITIVE_INFINITY;
-        return this.prisma.notification.count({ where: { organizationId, createdAt: { gte: sub.currentPeriodStart } } });
-      }
     }
   }
 }
@@ -894,7 +934,105 @@ export class PlanLimitsGuard implements CanActivate {
 git add apps/backend/src/modules/platform/billing/enforce-limits.guard.ts \
         apps/backend/src/modules/platform/billing/enforce-limits.guard.spec.ts \
         apps/backend/src/modules/platform/billing/plan-limits.decorator.ts
-git commit -m "feat(saas-04): PlanLimitsGuard + @EnforceLimit decorator"
+git commit -m "feat(saas-04): PlanLimitsGuard + @EnforceLimit decorator (hard-cap only)"
+```
+
+---
+
+## Task 8B — `UsageTrackerInterceptor` + `@TrackUsage()` decorator
+
+Purpose: count usage on successful create-* requests for metered metrics (`BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB`) WITHOUT blocking the request. Denies only when subscription is `SUSPENDED`/`CANCELED`. Counter increments go to an in-memory aggregator flushed by `meter-usage.cron.ts` (Task 9A) into `UsageRecord`.
+
+- [ ] **Step 8B.1: TDD interceptor spec**
+
+```ts
+// usage-tracker.interceptor.spec.ts
+describe('UsageTrackerInterceptor', () => {
+  it('allows + increments counter on successful BOOKINGS_PER_MONTH create', async () => {
+    // mock subscription ACTIVE, call next.handle() → increment called with (orgId, 'BOOKINGS_PER_MONTH', 1)
+  });
+  it('does NOT increment on thrown error', async () => { /* next emits error → no increment */ });
+  it('denies when subscription is SUSPENDED', async () => { /* throws ForbiddenException */ });
+  it('denies when subscription is CANCELED', async () => { /* throws ForbiddenException */ });
+  it('allows unlimited (maxBookingsPerMonth=-1) without overage tracking for Enterprise', async () => {
+    // still increments for analytics but never charged
+  });
+  it('STORAGE_MB increments by Math.ceil(file.sizeBytes/1MB) from response body', async () => { /* ... */ });
+});
+```
+
+- [ ] **Step 8B.2: Decorator**
+
+```ts
+// track-usage.decorator.ts
+import { SetMetadata } from '@nestjs/common';
+
+export type UsageMetricKind = 'BOOKINGS_PER_MONTH' | 'CLIENTS' | 'STORAGE_MB';
+export const TRACK_USAGE_KEY = 'usage-tracker:metric';
+export const TrackUsage = (kind: UsageMetricKind) => SetMetadata(TRACK_USAGE_KEY, kind);
+```
+
+- [ ] **Step 8B.3: Interceptor**
+
+```ts
+// usage-tracker.interceptor.ts
+import { CallHandler, ExecutionContext, ForbiddenException, Injectable, NestInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Observable, tap } from 'rxjs';
+import { TenantContextService } from '../../../common/tenant';
+import { SubscriptionCacheService } from './subscription-cache.service';
+import { UsageAggregatorService } from './usage-aggregator.service';
+import { TRACK_USAGE_KEY, UsageMetricKind } from './track-usage.decorator';
+
+@Injectable()
+export class UsageTrackerInterceptor implements NestInterceptor {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly tenant: TenantContextService,
+    private readonly cache: SubscriptionCacheService,
+    private readonly aggregator: UsageAggregatorService,
+  ) {}
+
+  async intercept(ctx: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
+    const kind = this.reflector.get<UsageMetricKind>(TRACK_USAGE_KEY, ctx.getHandler());
+    if (!kind) return next.handle();
+
+    const organizationId = this.tenant.requireOrganizationId();
+    const cached = await this.cache.get(organizationId);
+    if (!cached) throw new ForbiddenException('No active subscription');
+    if (cached.status === 'SUSPENDED' || cached.status === 'CANCELED') {
+      throw new ForbiddenException(`Subscription is ${cached.status}`);
+    }
+
+    return next.handle().pipe(
+      tap((response) => {
+        const delta = kind === 'STORAGE_MB'
+          ? Math.ceil(Number((response as { sizeBytes?: number })?.sizeBytes ?? 0) / (1024 * 1024))
+          : 1;
+        if (delta > 0) this.aggregator.increment(organizationId, kind, delta);
+      }),
+    );
+  }
+}
+```
+
+- [ ] **Step 8B.4: `usage-aggregator.service.ts`** — in-memory `Map<orgId, Map<metric, count>>`; exposes `flush(): Promise<{orgId, metric, count}[]>` called by `meter-usage.cron.ts`. Lives in the same module.
+
+- [ ] **Step 8B.5: Register interceptor globally**
+
+In the billing module:
+```ts
+{ provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor }
+```
+
+- [ ] **Step 8B.6: Commit**
+
+```bash
+git add apps/backend/src/modules/platform/billing/usage-tracker.interceptor.ts \
+        apps/backend/src/modules/platform/billing/usage-tracker.interceptor.spec.ts \
+        apps/backend/src/modules/platform/billing/track-usage.decorator.ts \
+        apps/backend/src/modules/platform/billing/usage-aggregator.service.ts
+git commit -m "feat(saas-04): UsageTrackerInterceptor + @TrackUsage decorator (metered metrics)"
 ```
 
 ---
@@ -923,13 +1061,70 @@ Runs hourly. Finds subscriptions where `currentPeriodEnd <= now()` and `status I
 
 - [ ] **Step 9B.1: TDD + implement.**
 
-### 9C — Commit each
+### 9C — `compute-overage.cron.ts`
+
+Runs on period-end boundary (triggered from within `charge-due-subscriptions.cron.ts`, before issuing the next `SubscriptionInvoice`). For the period that just closed:
+
+- For each metered metric (`BOOKINGS_PER_MONTH`, `CLIENTS`, `STORAGE_MB`):
+  - Read `UsageRecord.count` for that metric + `periodStart`.
+  - Compute `overage = max(0, count - plan.limits['max<Metric>'])`. If plan limit is `-1` (unlimited), overage = 0.
+  - `overageAmount = overage * plan.limits['overageRate<Metric>']` (SAR).
+- Append overage line items to the `SubscriptionInvoice.lineItems` JSON (alongside the flat-fee line).
+- `SubscriptionInvoice.amount = flatFee + Σ(overageAmount)`.
+- Bundled into ONE Moyasar charge, not separate invoice.
+
+- [ ] **Step 9C.1: TDD spec**
+
+```ts
+describe('computeOverage', () => {
+  it('returns 0 overage for all metrics when under quota', () => { /* ... */ });
+  it('charges 0.50 SAR per booking above maxBookingsPerMonth on Basic plan', () => {
+    // plan.limits.maxBookingsPerMonth = 500, count = 612 → overage = 112 → 56 SAR
+  });
+  it('returns 0 overage for Enterprise bookings/clients (-1 = unlimited, rate 0)', () => { /* ... */ });
+  it('Enterprise still charges STORAGE_MB overage above 100GB at 5 SAR/GB', () => { /* ... */ });
+  it('CLIENTS overage uses cumulative active clients count, not per-period delta', () => { /* ... */ });
+});
+```
+
+- [ ] **Step 9C.2: Implement.** Commit.
+
+### 9D — `enforce-grace-period.cron.ts`
+
+Runs hourly. Finds subscriptions where `status='PAST_DUE'` AND `pastDueSince + (SAAS_GRACE_PERIOD_DAYS || 2) * 1 day <= now()`.
+
+For each:
+- Transition via state machine: `{ type: 'graceExpired' }` → `SUSPENDED`.
+- Update `Subscription.status = 'SUSPENDED'`.
+- **Revoke all active `RefreshToken` + `ClientRefreshToken` rows for that `organizationId`** (forces re-login on next request; backend routes will deny authenticated requests from suspended orgs at the guard level).
+- Emit `SubscriptionSuspendedEvent` (triggers email to owner + banner in dashboard).
+- Log to `ActivityLog` with `actorType='SYSTEM'`.
+
+- [ ] **Step 9D.1: TDD spec**
+
+```ts
+describe('enforceGracePeriodCron', () => {
+  it('does nothing for PAST_DUE subs within grace window', async () => { /* pastDueSince = now - 1 day, grace=2 */ });
+  it('suspends PAST_DUE sub after grace expires', async () => { /* pastDueSince = now - 3 days, grace=2 */ });
+  it('revokes refresh tokens on suspend', async () => { /* ... */ });
+  it('respects SAAS_GRACE_PERIOD_DAYS env override', async () => { /* grace=7 → sub not suspended at day 3 */ });
+  it('does not touch ACTIVE/TRIALING/CANCELED subs', async () => { /* ... */ });
+});
+```
+
+- [ ] **Step 9D.2: Implement.** Guarded by `BILLING_CRON_ENABLED`. Commit.
+
+### 9E — Commit each cron
 
 ```bash
 git add apps/backend/src/modules/platform/billing/meter-usage/
 git commit -m "feat(saas-04): meter-usage cron + UsageRecord upserts"
 git add apps/backend/src/modules/platform/billing/charge-due-subscriptions/
 git commit -m "feat(saas-04): charge-due-subscriptions cron + Moyasar charge flow"
+git add apps/backend/src/modules/platform/billing/compute-overage/
+git commit -m "feat(saas-04): compute-overage cron + bundled invoice line items"
+git add apps/backend/src/modules/platform/billing/enforce-grace-period/
+git commit -m "feat(saas-04): enforce-grace-period cron (2-day grace → SUSPENDED)"
 ```
 
 ---
@@ -951,6 +1146,8 @@ Add to the existing global guard stack in `app.module.ts` (or wherever `JwtGuard
 - [ ] **Step 10.3: Annotate endpoints**
 
 ```ts
+// Hard-capped (blocks with 403 when quota reached):
+
 // src/api/dashboard/org-config.controller.ts — createBranch
 @Post('branches')
 @EnforceLimit('BRANCHES')
@@ -961,31 +1158,35 @@ createBranch(@Body() dto: CreateBranchDto) { ... }
 @EnforceLimit('EMPLOYEES')
 createEmployee(...) { ... }
 
+// Metered overage (never blocks; tracks usage for end-of-period overage billing):
+
 // src/api/dashboard/bookings.controller.ts + mobile + public — createBooking
 @Post('bookings')
-@EnforceLimit('BOOKINGS_PER_MONTH')
+@TrackUsage('BOOKINGS_PER_MONTH')
 createBooking(...) { ... }
+
+// src/api/dashboard/people.controller.ts — createClient
+@Post('clients')
+@TrackUsage('CLIENTS')
+createClient(...) { ... }
 
 // src/api/dashboard/media.controller.ts — upload
 @Post('files')
-@EnforceLimit('STORAGE_MB')
+@TrackUsage('STORAGE_MB')   // interceptor increments by file.sizeBytes/1MB on success
 uploadFile(...) { ... }
-
-// src/api/dashboard/comms.controller.ts — send notification
-@Post('notifications/send')
-@EnforceLimit('NOTIFICATIONS_PER_MONTH')
-sendNotification(...) { ... }
 ```
+
+Note: no notification/SMS endpoint annotation. Per-tenant SMS providers live in Plan 02g-sms (not platform-billable).
 
 - [ ] **Step 10.4: Run unit tests**
 
-Tests for each annotated endpoint should still pass — guards short-circuit on test module setup with `{ provide: PlanLimitsGuard, useValue: { canActivate: () => true } }` or the existing testing utility.
+Tests for each annotated endpoint should still pass — guards/interceptors short-circuit in test modules with `{ provide: PlanLimitsGuard, useValue: { canActivate: () => true } }` and `{ provide: UsageTrackerInterceptor, useValue: { intercept: (_, next) => next.handle() } }`.
 
 - [ ] **Step 10.5: Commit**
 
 ```bash
 git add apps/backend/src/app.module.ts apps/backend/src/api/
-git commit -m "feat(saas-04): enforce plan limits on 5 create-* endpoints"
+git commit -m "feat(saas-04): enforce hard-caps (2) + track metered usage (3) on create endpoints"
 ```
 
 ---

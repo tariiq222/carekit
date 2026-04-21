@@ -1,6 +1,16 @@
 # Strict Mode + Cross-Tenant Penetration Tests — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **⚠️ OWNER-GATED — promoted 2026-04-22.** Flipping `TENANT_ENFORCEMENT=strict` has a potential blast radius equal to a payments outage (any un-scoped code path in a critical flow becomes a 500). Before execution, owner MUST approve the canary-first rollout plan (Task 0 added 2026-04-22):
+>
+> 1. **Canary mode**: `TENANT_ENFORCEMENT=canary` flag ships BEFORE strict — logs violations to Sentry + Prometheus counter `tenant_enforcement_violations_total{module,handler}`, never throws. Bake for 48h on staging + 1 week on prod with a single canary tenant.
+> 2. **Per-module rollback**: add `TENANT_ENFORCEMENT_STRICT_MODULES` allowlist env. Strict throws ONLY for listed modules. Start with one cluster (e.g. `identity`), widen cluster-by-cluster, revert individual modules without redeploying.
+> 3. **Zero-violation gate**: promotion from canary→strict blocked until `violations_total == 0` for 24h across all clusters.
+> 4. **Rollback SLA**: `TENANT_ENFORCEMENT=permissive` env override returns to 02a behavior in < 30 seconds (no code revert, just env flip + pod restart).
+> 5. **Alerting**: Sentry alert on any violation event during canary; PagerDuty on any strict-mode throw during rollout window.
+>
+> Owner signs off with `/approve saas-02h` in PR body. No other task runs until approval.
 
 **Goal:** Close out the SaaS-02 rollout by flipping `TENANT_ENFORCEMENT` from `permissive` (the 02a default) to `strict` as the platform default, and adding an adversarial cross-tenant penetration e2e suite that exercises every known attack vector: direct id probe, IDOR in update/delete, foreign-key injection, coupon code collision (must succeed per 02e design), Moyasar webhook with forged metadata, raw-SQL `$queryRaw` reads bypass, and Postgres RLS backstop. No new schema changes.
 

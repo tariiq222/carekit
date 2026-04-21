@@ -12,6 +12,20 @@
 
 ---
 
+## 📌 Owner decisions integrated 2026-04-22 (executor: read before Task 0)
+
+The `organizationSlug` JWT claim introduced by this plan needs a sub-spec. Task 0 (new) enforces:
+
+1. **Display-only — authorization NEVER uses `slug`.** All authz continues to use `organizationId`. Any guard/CASL rule that reads `slug` from the JWT = bug.
+2. **Refresh-flow re-lookup.** `POST /api/v1/auth/refresh` must re-query `Organization.slug` from the DB (not copy from the old access token). Stale window ≤ one access-token TTL (15 min).
+3. **Migration for pre-07 tokens.** Guard treats missing claim as "look up once by `organizationId`", proceeds. Next refresh adds the claim. No forced re-login.
+4. **Token-size budget.** Slugs ≤ 48 chars (enforced in `slug-available`). JWT grows ≤ 60 bytes.
+5. **Suspended-org guard stays on `organizationId`.** The `JwtAuthGuard.checkSuspended()` lookup (shared with Plan 05b) queries `Organization.suspendedAt` by `organizationId`, never by slug.
+
+Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-spec + the Moyasar charge-then-refund-on-tx-failure flow.
+
+---
+
 ## Critical lessons carried forward
 
 1. **`$transaction` callback form bypasses the Proxy** (Lesson 11 from index). The signup orchestration runs inside `$transaction(async tx => {...})` creating Organization + Membership + User + Subscription + seeded rows. `organizationId` must be set explicitly on every `tx.*.create` for SCOPED_MODELS. The brand-new organization has no tenant context yet — use the newly-created `organization.id` directly.
