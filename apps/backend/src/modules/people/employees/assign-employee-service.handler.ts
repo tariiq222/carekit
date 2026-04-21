@@ -19,7 +19,11 @@ export class AssignEmployeeServiceHandler {
     if (existing) throw new ConflictException('Service already assigned to employee');
 
     return this.prisma.employeeService.create({
-      data: { employeeId: cmd.employeeId, serviceId: cmd.serviceId },
+      data: {
+        employeeId: cmd.employeeId,
+        serviceId: cmd.serviceId,
+        organizationId: employee.organizationId,
+      },
     });
   }
 }

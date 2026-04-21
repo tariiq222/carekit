@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
+// Default org id — matches the seed planted in the SaaS-01 migration.
+// Keep every seed row under this org so per-org uniques remain deterministic.
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
 export async function seedUser(
   prisma: PrismaClient,
   overrides: Partial<{
@@ -40,6 +44,7 @@ export async function seedClient(
   const [firstToken, ...rest] = name.split(' ');
   return prisma.client.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       name,
       firstName: overrides.firstName ?? firstToken ?? 'Test',
       lastName: overrides.lastName ?? (rest.join(' ') || 'Client'),
@@ -56,6 +61,7 @@ export async function seedEmployee(
 ) {
   return prisma.employee.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       name: overrides.name ?? 'Test Employee',
       isActive: overrides.isActive ?? true,
       employmentType: 'FULL_TIME',
@@ -99,6 +105,7 @@ export async function seedEmployeeService(
 ) {
   return prisma.employeeService.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       employeeId,
       serviceId,
     },

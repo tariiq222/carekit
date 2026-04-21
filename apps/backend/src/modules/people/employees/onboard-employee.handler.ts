@@ -1,15 +1,21 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { OnboardEmployeeDto } from './onboard-employee.dto';
 
 export type OnboardEmployeeCommand = OnboardEmployeeDto;
 
 @Injectable()
 export class OnboardEmployeeHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: OnboardEmployeeCommand) {
-    const existing = await this.prisma.employee.findUnique({
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    const existing = await this.prisma.employee.findFirst({
       where: { email: dto.email },
     });
     if (existing) throw new ConflictException('Email already registered for this employee');
@@ -33,6 +39,7 @@ export class OnboardEmployeeHandler {
         experience: dto.experience,
         avatarUrl: dto.avatarUrl ?? undefined,
         isActive: dto.isActive ?? true,
+        organizationId,
       },
       include: { branches: true, services: true },
     });

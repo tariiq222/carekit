@@ -25,6 +25,7 @@ export class CreateEmployeeExceptionHandler {
     return this.prisma.employeeAvailabilityException.create({
       data: {
         employeeId: cmd.employeeId,
+        organizationId: employee.organizationId,
         startDate: start,
         endDate: end,
         reason: cmd.reason,

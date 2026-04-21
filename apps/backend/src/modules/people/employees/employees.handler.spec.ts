@@ -3,6 +3,7 @@ import { ConflictException } from '@nestjs/common';
 import { EmployeeGender, EmploymentType } from '@prisma/client';
 import { CreateEmployeeHandler } from './create-employee.handler';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 const mockEmployee = {
   id: 'e1',
@@ -33,8 +34,12 @@ describe('Employees handlers', () => {
         {
           provide: PrismaService,
           useValue: {
-            employee: { findUnique: jest.fn(), create: jest.fn() },
+            employee: { findFirst: jest.fn(), create: jest.fn() },
           },
+        },
+        {
+          provide: TenantContextService,
+          useValue: { requireOrganizationIdOrDefault: () => 'org-test' },
         },
       ],
     }).compile();
@@ -45,7 +50,7 @@ describe('Employees handlers', () => {
 
   describe('CreateEmployeeHandler', () => {
     it('creates employee successfully', async () => {
-      prisma.employee.findUnique.mockResolvedValue(null);
+      prisma.employee.findFirst.mockResolvedValue(null);
       prisma.employee.create.mockResolvedValue(mockEmployee);
 
       const result = await createHandler.execute({
@@ -57,14 +62,17 @@ describe('Employees handlers', () => {
       expect(result.id).toBe('e1');
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ name: 'د. سارة الأحمد' }),
+          data: expect.objectContaining({
+            name: 'د. سارة الأحمد',
+            organizationId: 'org-test',
+          }),
           include: { branches: true, services: true },
         }),
       );
     });
 
     it('creates employee with branches + services', async () => {
-      prisma.employee.findUnique.mockResolvedValue(null);
+      prisma.employee.findFirst.mockResolvedValue(null);
       prisma.employee.create.mockResolvedValue({
         ...mockEmployee,
         branches: [{ id: 'eb1', branchId: 'br1', employeeId: 'e1' }],
@@ -79,7 +87,8 @@ describe('Employees handlers', () => {
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            branches: { create: [{ branchId: 'br1' }] },
+            organizationId: 'org-test',
+            branches: { create: [{ branchId: 'br1', organizationId: 'org-test' }] },
           }),
         }),
       );
@@ -90,11 +99,11 @@ describe('Employees handlers', () => {
 
       await createHandler.execute({ name: 'موظف بدون إيميل' });
 
-      expect(prisma.employee.findUnique).not.toHaveBeenCalled();
+      expect(prisma.employee.findFirst).not.toHaveBeenCalled();
     });
 
     it('throws ConflictException when email already registered', async () => {
-      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         createHandler.execute({ name: 'آخر', email: 'sara@clinic.com' }),

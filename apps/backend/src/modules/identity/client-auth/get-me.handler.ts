@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 export interface ClientProfile {
   id: string;
@@ -15,11 +16,16 @@ export interface ClientProfile {
 
 @Injectable()
 export class GetMeHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(clientId: string): Promise<ClientProfile> {
-    const client = await this.prisma.client.findUnique({
-      where: { id: clientId, deletedAt: null },
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, organizationId, deletedAt: null },
       select: {
         id: true,
         name: true,

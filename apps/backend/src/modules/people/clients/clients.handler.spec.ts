@@ -8,6 +8,7 @@ import { GetClientHandler } from './get-client.handler';
 import { DeleteClientHandler } from './delete-client.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
+import { TenantContextService } from '../../../common/tenant';
 
 const mockClient = {
   id: 'c1',
@@ -72,6 +73,10 @@ describe('Clients handlers', () => {
           },
         },
         { provide: EventBusService, useValue: { publish: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: TenantContextService,
+          useValue: { requireOrganizationIdOrDefault: () => 'org-test' },
+        },
       ],
     }).compile();
 
@@ -104,6 +109,7 @@ describe('Clients handlers', () => {
             name: 'أحمد محمد',
             firstName: 'أحمد',
             lastName: 'محمد',
+            organizationId: 'org-test',
           }),
         }),
       );

@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { PasswordService } from '../shared/password.service';
 import { ClientTokenService } from '../shared/client-token.service';
+import { TenantContextService } from '../../../common/tenant';
 
 describe('ClientLoginHandler', () => {
   let handler: ClientLoginHandler;
@@ -52,6 +53,7 @@ describe('ClientLoginHandler', () => {
         { provide: RedisService, useValue: mockRedis },
         { provide: PasswordService, useValue: mockPasswords },
         { provide: ClientTokenService, useValue: mockClientTokens },
+        { provide: TenantContextService, useValue: { requireOrganizationIdOrDefault: () => 'org-test' } },
       ],
     }).compile();
 
@@ -85,10 +87,10 @@ describe('ClientLoginHandler', () => {
         where: { id: 'cl-1' },
         data: { lastLoginAt: expect.any(Date) },
       });
-      expect(mockClientTokens.issueTokenPair).toHaveBeenCalledWith({
-        id: 'cl-1',
-        email: 'test@example.com',
-      });
+      expect(mockClientTokens.issueTokenPair).toHaveBeenCalledWith(
+        { id: 'cl-1', email: 'test@example.com' },
+        expect.objectContaining({ organizationId: expect.any(String) }),
+      );
     });
 
     it('throws Unauthorized for non-existent client', async () => {

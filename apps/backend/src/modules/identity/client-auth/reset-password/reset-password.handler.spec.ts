@@ -5,6 +5,7 @@ import { ResetPasswordHandler } from './reset-password.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 import { OtpSessionService } from '../../otp/otp-session.service';
 import { PasswordService } from '../../shared/password.service';
+import { TenantContextService } from '../../../../common/tenant';
 
 describe('ResetPasswordHandler', () => {
   let handler: ResetPasswordHandler;
@@ -42,6 +43,7 @@ describe('ResetPasswordHandler', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: OtpSessionService, useValue: mockOtpSession },
         { provide: PasswordService, useValue: mockPasswords },
+        { provide: TenantContextService, useValue: { requireOrganizationIdOrDefault: () => 'org-test' } },
       ],
     }).compile();
 
@@ -66,7 +68,7 @@ describe('ResetPasswordHandler', () => {
         data: expect.objectContaining({ passwordHash: 'new-hash', loginAttempts: 0, lockoutUntil: null }),
       });
       expect(mockTx.clientRefreshToken.updateMany).toHaveBeenCalledWith({
-        where: { clientId: 'client-1', revokedAt: null },
+        where: { clientId: 'client-1', organizationId: 'org-test', revokedAt: null },
         data: { revokedAt: expect.any(Date) },
       });
     });
@@ -126,7 +128,7 @@ describe('ResetPasswordHandler', () => {
       await handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' });
 
       expect(mockTx.client.findFirst).toHaveBeenCalledWith({
-        where: { phone: '+966500000001', deletedAt: null },
+        where: { organizationId: 'org-test', phone: '+966500000001', deletedAt: null },
       });
     });
   });

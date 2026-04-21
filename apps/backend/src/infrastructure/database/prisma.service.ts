@@ -20,6 +20,14 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'RefreshToken',
   'CustomRole',
   'Permission',
+  // SaaS-02b — people cluster + ClientRefreshToken.
+  'Client',
+  'ClientRefreshToken',
+  'Employee',
+  'EmployeeBranch',
+  'EmployeeService',
+  'EmployeeAvailability',
+  'EmployeeAvailabilityException',
 ]);
 
 /**
