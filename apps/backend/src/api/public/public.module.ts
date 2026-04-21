@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
 import { BookingsModule } from '../../modules/bookings/bookings.module';
 import { OrgExperienceModule } from '../../modules/org-experience/org-experience.module';
+import { ContentModule } from '../../modules/content/content.module';
 import { IdentityModule } from '../../modules/identity/identity.module';
 import { PeopleModule } from '../../modules/people/people.module';
 import { CommsModule } from '../../modules/comms/comms.module';
@@ -21,10 +22,11 @@ import { PublicPaymentsController } from './payments.controller';
 import { PublicBranchesController } from './branches.controller';
 import { PublicInvoicesController } from './invoices.controller';
 import { PublicRefundsController } from './refunds.controller';
+import { PublicContentController } from './content.controller';
 import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule],
-  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController],
 })
 export class PublicModule {}
