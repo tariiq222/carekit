@@ -46,6 +46,7 @@ enum RecurringFrequency {
 
 model Booking {
   id               String              @id @default(uuid())
+  organizationId   String // SaaS-02d
   branchId         String
   clientId         String
   employeeId       String
@@ -86,13 +87,15 @@ model Booking {
   @@index([employeeId, scheduledAt])
   @@index([employeeId, endsAt])
   @@index([recurringGroupId])
+  @@index([organizationId])
 }
 
 // ─── Waitlist ─────────────────────────────────────────────────────────────────
 
 model WaitlistEntry {
-  id            String         @id @default(uuid())
-  clientId      String
+  id             String         @id @default(uuid())
+  organizationId String // SaaS-02d
+  clientId       String
   employeeId    String
   serviceId     String
   branchId      String
@@ -107,6 +110,7 @@ model WaitlistEntry {
   @@index([clientId])
   @@index([employeeId])
   @@index([status])
+  @@index([organizationId])
 }
 
 // ─── Group Session ────────────────────────────────────────────────────────────
@@ -120,6 +124,7 @@ enum GroupSessionStatus {
 
 model GroupSession {
   id                  String             @id @default(uuid())
+  organizationId      String // SaaS-02d
   branchId            String
   employeeId          String
   serviceId           String
@@ -149,10 +154,12 @@ model GroupSession {
   @@index([employeeId])
   @@index([scheduledAt])
   @@index([isPublic])
+  @@index([organizationId])
 }
 
 model GroupEnrollment {
   id             String       @id @default(uuid())
+  organizationId String // SaaS-02d (denormalized from GroupSession)
   groupSessionId String
   groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
   clientId       String
@@ -161,10 +168,12 @@ model GroupEnrollment {
 
   @@unique([groupSessionId, clientId])
   @@index([clientId])
+  @@index([organizationId])
 }
 
 model GroupSessionWaitlist {
   id             String       @id @default(uuid())
+  organizationId String // SaaS-02d (denormalized from GroupSession)
   groupSessionId String
   groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
   clientId       String
@@ -174,13 +183,15 @@ model GroupSessionWaitlist {
   @@unique([groupSessionId, clientId])
   @@index([groupSessionId])
   @@index([clientId])
+  @@index([organizationId])
 }
 
 // ─── BookingStatusLog ─────────────────────────────────────────────────────────
 
 model BookingStatusLog {
-  id         String         @id @default(uuid())
-  bookingId  String
+  id             String         @id @default(uuid())
+  organizationId String // SaaS-02d (denormalized from Booking)
+  bookingId      String
   fromStatus BookingStatus?
   toStatus   BookingStatus
   changedBy  String
@@ -189,6 +200,7 @@ model BookingStatusLog {
 
   @@index([bookingId])
   @@index([createdAt])
+  @@index([organizationId])
 }
 
 // ─── BookingSettings ──────────────────────────────────────────────────────────
@@ -200,8 +212,9 @@ enum RefundType {
 }
 
 model BookingSettings {
-  id       String  @id @default(uuid())
-  branchId String? @unique // null = global default; one settings row per branch
+  id             String  @id @default(uuid())
+  organizationId String // SaaS-02d
+  branchId       String? // null = global default; one settings row per branch
 
   bufferMinutes           Int        @default(0)
   freeCancelBeforeHours   Int        @default(24)
@@ -227,4 +240,7 @@ model BookingSettings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, branchId])
+  @@index([organizationId])
 }
