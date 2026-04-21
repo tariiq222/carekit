@@ -47,3 +47,62 @@ model FeatureFlag {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// ─── Organization (SaaS-01) ──────────────────────────────────────────────────
+// Top-level tenant. Every tenant-scoped row in every cluster will FK to this
+// once Plan 02 rolls out. For now only User memberships reference it; the
+// default org (id = DEFAULT_ORGANIZATION_ID env var) owns all historical data.
+
+enum OrganizationStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  ARCHIVED
+}
+
+model Organization {
+  id              String             @id @default(uuid())
+  slug            String             @unique
+  nameAr          String
+  nameEn          String?
+  status          OrganizationStatus @default(ACTIVE)
+  trialEndsAt     DateTime?
+  suspendedAt     DateTime?
+  suspendedReason String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  memberships Membership[]
+
+  @@index([status])
+}
+
+// ─── Membership (SaaS-01) ────────────────────────────────────────────────────
+// Join table — a User can belong to N organizations with different roles in
+// each. Existing JWT `role` claim becomes per-membership (Plan 02 wires this).
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  RECEPTIONIST
+  ACCOUNTANT
+  EMPLOYEE
+}
+
+model Membership {
+  id             String         @id @default(uuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(RECEPTIONIST)
+  isActive       Boolean        @default(true)
+  acceptedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
