@@ -12,7 +12,6 @@ const buildPrisma = () => {
     };
     invoice: {
       findFirst: jest.Mock;
-      findUnique: jest.Mock;
       update: jest.Mock;
     };
     $transaction: jest.Mock;

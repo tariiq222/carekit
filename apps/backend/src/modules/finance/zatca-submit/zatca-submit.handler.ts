@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { ZatcaSubmissionStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { ZatcaSubmitDto } from './zatca-submit.dto';
 
 export type ZatcaSubmitCommand = ZatcaSubmitDto;
@@ -26,9 +27,12 @@ export class ZatcaSubmitHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(cmd: ZatcaSubmitCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    // Proxy auto-scopes findFirst by organizationId via CLS
     const invoice = await this.prisma.invoice.findFirst({
       where: { id: cmd.invoiceId },
     });
@@ -39,7 +43,8 @@ export class ZatcaSubmitHandler {
       throw new BadRequestException(`Invoice must be PAID before ZATCA submission (status: ${invoice.status})`);
     }
 
-    const existing = await this.prisma.zatcaSubmission.findUnique({
+    // findFirst — Proxy auto-scopes by organizationId via CLS
+    const existing = await this.prisma.zatcaSubmission.findFirst({
       where: { invoiceId: cmd.invoiceId },
     });
     if (existing?.status === ZatcaSubmissionStatus.ACCEPTED) return existing;
@@ -54,6 +59,7 @@ export class ZatcaSubmitHandler {
         })
       : await this.prisma.zatcaSubmission.create({
           data: {
+            organizationId,
             invoiceId: cmd.invoiceId,
             status: ZatcaSubmissionStatus.PENDING,
             xmlHash,
