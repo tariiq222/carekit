@@ -3,6 +3,7 @@ import { ConflictException } from '@nestjs/common';
 import { EmployeeGender, EmploymentType } from '@prisma/client';
 import { CreateEmployeeHandler } from './create-employee.handler';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 const mockEmployee = {
   id: 'e1',
@@ -36,6 +37,10 @@ describe('Employees handlers', () => {
             employee: { findFirst: jest.fn(), create: jest.fn() },
           },
         },
+        {
+          provide: TenantContextService,
+          useValue: { requireOrganizationIdOrDefault: () => 'org-test' },
+        },
       ],
     }).compile();
 
@@ -57,7 +62,10 @@ describe('Employees handlers', () => {
       expect(result.id).toBe('e1');
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ name: 'د. سارة الأحمد' }),
+          data: expect.objectContaining({
+            name: 'د. سارة الأحمد',
+            organizationId: 'org-test',
+          }),
           include: { branches: true, services: true },
         }),
       );
@@ -79,7 +87,8 @@ describe('Employees handlers', () => {
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            branches: { create: [{ branchId: 'br1' }] },
+            organizationId: 'org-test',
+            branches: { create: [{ branchId: 'br1', organizationId: 'org-test' }] },
           }),
         }),
       );

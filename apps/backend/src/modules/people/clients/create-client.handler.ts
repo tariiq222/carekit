@@ -1,6 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
+import { TenantContextService } from '../../../common/tenant';
 import { ClientEnrolledEvent } from '../events/client-enrolled.event';
 import { CreateClientDto } from './create-client.dto';
 import { serializeClient } from './client.serializer';
@@ -16,9 +17,12 @@ export class CreateClientHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(dto: CreateClientCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
     if (dto.phone) {
       const existing = await this.prisma.client.findFirst({
         where: { phone: dto.phone, deletedAt: null },
@@ -56,6 +60,7 @@ export class CreateClientHandler {
         accountType: dto.accountType,
         isActive: dto.isActive ?? true,
         userId: dto.userId,
+        organizationId,
       },
     });
 

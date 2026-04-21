@@ -52,6 +52,8 @@ export class UpdateAvailabilityHandler {
       throw new NotFoundException(`Employee ${employeeId} not found`);
     }
 
+    const organizationId = employee.organizationId;
+
     const [createdWindows, updatedExceptions] = await this.prisma.$transaction(
       async (tx: Parameters<Parameters<typeof this.prisma.$transaction>[0]>[0]) => {
         await tx.employeeAvailability.deleteMany({ where: { employeeId } });
@@ -59,6 +61,7 @@ export class UpdateAvailabilityHandler {
         await tx.employeeAvailability.createMany({
           data: windows.map((w) => ({
             employeeId,
+            organizationId,
             dayOfWeek: w.dayOfWeek,
             startTime: w.startTime,
             endTime: w.endTime,
@@ -72,6 +75,7 @@ export class UpdateAvailabilityHandler {
           await tx.employeeAvailabilityException.createMany({
             data: exceptions.map((e) => ({
               employeeId,
+              organizationId,
               startDate: new Date(e.startDate),
               endDate: new Date(e.endDate),
               reason: e.reason ?? null,

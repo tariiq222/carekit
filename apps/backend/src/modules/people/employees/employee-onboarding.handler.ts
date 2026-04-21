@@ -62,6 +62,7 @@ export class EmployeeOnboardingHandler {
             await (tx[config.table] as any).createMany({
               data: ids.map((id) => ({
                 employeeId: cmd.employeeId,
+                organizationId: employee.organizationId,
                 [config.idField]: id,
               })),
             });
