@@ -3,7 +3,7 @@ import { couponSchema } from "@/lib/schemas/coupon.schema"
 
 const validCoupon = {
   code: "SAVE20",
-  discountType: "percentage" as const,
+  discountType: "PERCENTAGE" as const,
   discountValue: 20,
   isActive: true,
 }
@@ -30,7 +30,7 @@ describe("couponSchema", () => {
   })
 
   it("accepts fixed discount type", () => {
-    const result = couponSchema.safeParse({ ...validCoupon, discountType: "fixed" })
+    const result = couponSchema.safeParse({ ...validCoupon, discountType: "FIXED" })
     expect(result.success).toBe(true)
   })
 

@@ -3,6 +3,44 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
+// Reactive URL-state mock for next/navigation. The hook reads search params from
+// the URL and writes via router.replace; we simulate that here so useEmployees
+// behaves end-to-end in jsdom.
+const navState = vi.hoisted(() => ({
+  params: new URLSearchParams(),
+  listeners: new Set<() => void>(),
+  notify() { this.listeners.forEach((l) => l()) },
+  reset() { this.params = new URLSearchParams(); this.listeners.clear() },
+}))
+
+vi.mock("next/navigation", async () => {
+  const { useState, useEffect } = await import("react")
+  return {
+    useRouter: () => ({
+      replace: (url: string) => {
+        const q = url.indexOf("?")
+        navState.params = new URLSearchParams(q >= 0 ? url.slice(q + 1) : "")
+        navState.notify()
+      },
+      push: vi.fn(),
+      refresh: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      prefetch: vi.fn(),
+    }),
+    usePathname: () => "/employees",
+    useSearchParams: () => {
+      const [, force] = useState(0)
+      useEffect(() => {
+        const fn = () => force((n) => n + 1)
+        navState.listeners.add(fn)
+        return () => { navState.listeners.delete(fn) }
+      }, [])
+      return navState.params
+    },
+  }
+})
+
 const {
   fetchEmployees,
   fetchEmployee,
@@ -72,7 +110,7 @@ function makeWrapper() {
 }
 
 describe("useEmployees", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches employees and returns items", async () => {
     const items = [{ id: "p-1", firstName: "Ali", lastName: "Hassan" }]
@@ -195,7 +233,7 @@ describe("useEmployees", () => {
 })
 
 describe("useEmployee", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches employee by id", async () => {
     const employee = { id: "p-1", firstName: "Ali" }
@@ -217,7 +255,7 @@ describe("useEmployee", () => {
 })
 
 describe("useEmployeeAvailability", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches availability when id is provided", async () => {
     const availability = [{ day: "MONDAY", startTime: "09:00" }]
@@ -241,7 +279,7 @@ describe("useEmployeeAvailability", () => {
 })
 
 describe("useEmployeeBreaks", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches breaks when id is provided", async () => {
     fetchBreaks.mockResolvedValueOnce([{ id: "br-1" }])
@@ -262,7 +300,7 @@ describe("useEmployeeBreaks", () => {
 })
 
 describe("useEmployeeVacations", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches vacations when id is provided", async () => {
     fetchVacations.mockResolvedValueOnce([{ id: "vac-1" }])
@@ -283,7 +321,7 @@ describe("useEmployeeVacations", () => {
 })
 
 describe("useEmployeeServices", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches services when id is provided", async () => {
     fetchEmployeeServices.mockResolvedValueOnce([{ id: "svc-1" }])
@@ -304,7 +342,7 @@ describe("useEmployeeServices", () => {
 })
 
 describe("useEmployeeServiceTypes", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches service types when both ids are provided", async () => {
     fetchEmployeeServiceTypes.mockResolvedValueOnce([{ bookingType: "IN_PERSON" }])
