@@ -1,16 +1,21 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { SetBusinessHoursDto } from './set-business-hours.dto';
 
 export type SetBusinessHoursCommand = SetBusinessHoursDto;
 
 @Injectable()
 export class SetBusinessHoursHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: SetBusinessHoursCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId },
+      where: { id: dto.branchId, organizationId },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
@@ -20,12 +25,12 @@ export class SetBusinessHoursHandler {
       }
     }
 
-    // Upsert each day in a transaction
     await this.prisma.$transaction(
       dto.schedule.map((slot) =>
         this.prisma.businessHour.upsert({
           where: { branchId_dayOfWeek: { branchId: dto.branchId, dayOfWeek: slot.dayOfWeek } },
           create: {
+            organizationId,
             branchId: dto.branchId,
             dayOfWeek: slot.dayOfWeek,
             startTime: slot.startTime,
@@ -42,7 +47,7 @@ export class SetBusinessHoursHandler {
     );
 
     return this.prisma.businessHour.findMany({
-      where: { branchId: dto.branchId },
+      where: { branchId: dto.branchId, organizationId },
       orderBy: { dayOfWeek: 'asc' },
     });
   }
