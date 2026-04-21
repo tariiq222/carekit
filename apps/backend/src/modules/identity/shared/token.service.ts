@@ -11,8 +11,8 @@ export interface TokenPair {
 }
 
 /**
- * SaaS-01 — optional per-session tenant identity merged into the JWT payload.
- * Callers that pass no `tenantClaims` produce the legacy token shape.
+ * SaaS-02a — per-session tenant identity merged into the JWT payload.
+ * Required: every session belongs to exactly one organization.
  */
 export interface TenantClaims {
   organizationId: string;
@@ -27,7 +27,9 @@ export interface JwtPayload {
   customRoleId: string | null;
   permissions: Array<{ action: string; subject: string }>;
   features: string[];
-  // SaaS-01 — optional during rollout; Plan 02 makes them required.
+  // Newly issued tokens always carry these three (SaaS-02a onward). Kept
+  // optional because a decoded JwtPayload might represent a pre-rollout
+  // token still in circulation during the rollout window.
   organizationId?: string;
   membershipId?: string;
   isSuperAdmin?: boolean;
@@ -49,7 +51,7 @@ export class TokenService {
       customRoleId: string | null;
       customRole: { permissions: Array<{ action: string; subject: string }> } | null;
     },
-    tenantClaims?: TenantClaims,
+    tenantClaims: TenantClaims,
   ): Promise<TokenPair> {
     const permissions = user.customRole?.permissions ?? [];
     const payload: JwtPayload = {
@@ -59,11 +61,9 @@ export class TokenService {
       customRoleId: user.customRoleId,
       permissions,
       features: [],
-      // SaaS-01 — tenant claims are opt-in; legacy callers that pass no second
-      // arg produce exactly the same token as before this change.
-      ...(tenantClaims?.organizationId ? { organizationId: tenantClaims.organizationId } : {}),
-      ...(tenantClaims?.membershipId ? { membershipId: tenantClaims.membershipId } : {}),
-      ...(tenantClaims?.isSuperAdmin ? { isSuperAdmin: true } : {}),
+      organizationId: tenantClaims.organizationId,
+      membershipId: tenantClaims.membershipId,
+      isSuperAdmin: tenantClaims.isSuperAdmin ?? false,
     };
 
     const accessToken = this.jwt.sign(payload, {
@@ -78,7 +78,13 @@ export class TokenService {
     const expiresAt = new Date(Date.now() + this.parseTtlMs(ttl));
 
     await this.prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash, tokenSelector, expiresAt },
+      data: {
+        userId: user.id,
+        organizationId: tenantClaims.organizationId,
+        tokenHash,
+        tokenSelector,
+        expiresAt,
+      },
     });
 
     return { accessToken, refreshToken: rawRefresh };

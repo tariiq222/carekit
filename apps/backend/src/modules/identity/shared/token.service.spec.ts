@@ -5,6 +5,11 @@ const mockUser = {
   role: 'ADMIN', customRoleId: null, customRole: null,
 };
 
+const tenantClaims = {
+  organizationId: 'org-1',
+  membershipId: 'mem-1',
+};
+
 const buildJwt = () => ({
   sign: jest.fn().mockReturnValue('signed.access.token'),
 });
@@ -36,7 +41,7 @@ describe('TokenService.issueTokenPair', () => {
   it('returns accessToken and refreshToken', async () => {
     const jwt = buildJwt();
     const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
-    const result = await service.issueTokenPair(mockUser);
+    const result = await service.issueTokenPair(mockUser, tenantClaims);
 
     expect(result.accessToken).toBe('signed.access.token');
     expect(typeof result.refreshToken).toBe('string');
@@ -46,7 +51,7 @@ describe('TokenService.issueTokenPair', () => {
   it('signs JWT with ACCESS secret', async () => {
     const jwt = buildJwt();
     const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
-    await service.issueTokenPair(mockUser);
+    await service.issueTokenPair(mockUser, tenantClaims);
 
     expect(jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({ sub: 'user-1', email: 'admin@clinic.sa' }),
@@ -54,22 +59,55 @@ describe('TokenService.issueTokenPair', () => {
     );
   });
 
-  it('stores hashed refresh token in DB', async () => {
+  it('stores hashed refresh token in DB with organizationId', async () => {
     const prisma = buildPrisma();
     const service = new TokenService(buildJwt() as never, buildConfig() as never, prisma as never);
-    await service.issueTokenPair(mockUser);
+    await service.issueTokenPair(mockUser, tenantClaims);
 
     expect(prisma.refreshToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ userId: 'user-1' }),
+        data: expect.objectContaining({
+          userId: 'user-1',
+          organizationId: 'org-1',
+        }),
       }),
+    );
+  });
+
+  it('signs JWT with organizationId + membershipId + isSuperAdmin claims', async () => {
+    const jwt = buildJwt();
+    const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
+    await service.issueTokenPair(mockUser, {
+      organizationId: 'org-1',
+      membershipId: 'mem-1',
+      isSuperAdmin: true,
+    });
+
+    expect(jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: 'org-1',
+        membershipId: 'mem-1',
+        isSuperAdmin: true,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('defaults isSuperAdmin to false when tenantClaims omits it', async () => {
+    const jwt = buildJwt();
+    const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
+    await service.issueTokenPair(mockUser, { organizationId: 'org-1' });
+
+    expect(jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({ isSuperAdmin: false }),
+      expect.anything(),
     );
   });
 
   it('JWT payload permissions defaults to [] for users with no customRole', async () => {
     const jwt = buildJwt();
     const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
-    await service.issueTokenPair({ ...mockUser, customRole: null });
+    await service.issueTokenPair({ ...mockUser, customRole: null }, tenantClaims);
 
     expect(jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({ permissions: [] }),
@@ -81,7 +119,7 @@ describe('TokenService.issueTokenPair', () => {
     const jwt = buildJwt();
     const userWithRole = { ...mockUser, customRoleId: 'role-1', customRole: { permissions: [{ action: 'read', subject: 'Booking' }] } };
     const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
-    await service.issueTokenPair(userWithRole);
+    await service.issueTokenPair(userWithRole, tenantClaims);
 
     expect(jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({ permissions: [{ action: 'read', subject: 'Booking' }] }),
