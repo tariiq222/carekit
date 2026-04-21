@@ -10,7 +10,7 @@ export class CreateEmployeeHandler {
 
   async execute(dto: CreateEmployeeCommand) {
     if (dto.email) {
-      const existing = await this.prisma.employee.findUnique({
+      const existing = await this.prisma.employee.findFirst({
         where: { email: dto.email },
       });
       if (existing) throw new ConflictException('Email already registered for this employee');
