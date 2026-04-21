@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { GroupSessionMinReachedHandler } from '../group-session-min-reached/group-session-min-reached.handler';
@@ -20,12 +21,14 @@ export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expir
 export class CreateBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly priceResolver: PriceResolverService,
     private readonly settingsHandler: GetBookingSettingsHandler,
     private readonly groupMinReachedHandler: GroupSessionMinReachedHandler,
   ) {}
 
   async execute(dto: CreateBookingCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const scheduledAt = new Date(dto.scheduledAt);
     if (scheduledAt <= new Date()) {
       throw new BadRequestException('Booking must be scheduled in the future');
@@ -132,6 +135,7 @@ export class CreateBookingHandler {
           // Individual bookings: hard overlap check
           const conflict = await tx.booking.findFirst({
             where: {
+              organizationId,
               employeeId: dto.employeeId,
               status: { in: ['PENDING', 'CONFIRMED'] },
               scheduledAt: { lt: endsAt },
@@ -146,6 +150,7 @@ export class CreateBookingHandler {
           // Group bookings: check capacity
           const slotCount = await tx.booking.count({
             where: {
+              organizationId,
               serviceId: dto.serviceId,
               employeeId: dto.employeeId,
               scheduledAt,
@@ -159,6 +164,7 @@ export class CreateBookingHandler {
 
         return tx.booking.create({
           data: {
+            organizationId,
             branchId: dto.branchId,
             clientId: dto.clientId,
             employeeId: dto.employeeId,

@@ -2,6 +2,8 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { RecurringFrequency } from '@prisma/client';
 import { CreateRecurringBookingHandler } from './create-recurring-booking.handler';
 
+const mockTenant = { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('00000000-0000-0000-0000-000000000001') };
+
 const future = new Date(Date.now() + 86400_000); // tomorrow
 const mockBooking = (scheduledAt: Date, id = 'book-1') => ({
   id,
@@ -47,14 +49,14 @@ const baseDto = {
 describe('CreateRecurringBookingHandler', () => {
   describe('input validation', () => {
     it('throws BadRequestException when neither occurrences nor until is provided', async () => {
-      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never, mockTenant as never);
       await expect(
         handler.execute({ ...baseDto, frequency: RecurringFrequency.WEEKLY }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when both occurrences and until are provided', async () => {
-      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never, mockTenant as never);
       await expect(
         handler.execute({
           ...baseDto,
@@ -66,21 +68,21 @@ describe('CreateRecurringBookingHandler', () => {
     });
 
     it('throws BadRequestException for CUSTOM frequency without customDates', async () => {
-      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never, mockTenant as never);
       await expect(
         handler.execute({ ...baseDto, frequency: RecurringFrequency.CUSTOM, occurrences: 3 }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when occurrences < 1', async () => {
-      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never, mockTenant as never);
       await expect(
         handler.execute({ ...baseDto, frequency: RecurringFrequency.WEEKLY, occurrences: 0 }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when intervalDays is 0', async () => {
-      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never, mockTenant as never);
       await expect(
         handler.execute({
           ...baseDto,
@@ -95,7 +97,7 @@ describe('CreateRecurringBookingHandler', () => {
   describe('WEEKLY recurrence', () => {
     it('creates N bookings sharing the same recurringGroupId', async () => {
       const prisma = buildPrisma();
-      const handler = new CreateRecurringBookingHandler(prisma as never);
+      const handler = new CreateRecurringBookingHandler(prisma as never, mockTenant as never);
       const result = await handler.execute({
         ...baseDto,
         frequency: RecurringFrequency.WEEKLY,
@@ -108,7 +110,7 @@ describe('CreateRecurringBookingHandler', () => {
 
     it('schedules each booking 7 days apart', async () => {
       const prisma = buildPrisma();
-      const handler = new CreateRecurringBookingHandler(prisma as never);
+      const handler = new CreateRecurringBookingHandler(prisma as never, mockTenant as never);
       const calls: Date[] = [];
       prisma.booking.create = jest.fn().mockImplementation(({ data }) => {
         calls.push(data.scheduledAt);
@@ -132,7 +134,7 @@ describe('CreateRecurringBookingHandler', () => {
         calls.push(data.scheduledAt);
         return Promise.resolve(mockBooking(data.scheduledAt));
       });
-      await new CreateRecurringBookingHandler(prisma as never).execute({
+      await new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
         ...baseDto,
         frequency: RecurringFrequency.DAILY,
         occurrences: 3,
@@ -147,7 +149,7 @@ describe('CreateRecurringBookingHandler', () => {
         calls.push(data.scheduledAt);
         return Promise.resolve(mockBooking(data.scheduledAt));
       });
-      await new CreateRecurringBookingHandler(prisma as never).execute({
+      await new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
         ...baseDto,
         frequency: RecurringFrequency.DAILY,
         intervalDays: 2,
@@ -168,7 +170,7 @@ describe('CreateRecurringBookingHandler', () => {
         calls.push(data.scheduledAt);
         return Promise.resolve(mockBooking(data.scheduledAt));
       });
-      await new CreateRecurringBookingHandler(prisma as never).execute({
+      await new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
         ...baseDto,
         frequency: RecurringFrequency.CUSTOM,
         customDates: [d1, d2, d3],
@@ -189,7 +191,7 @@ describe('CreateRecurringBookingHandler', () => {
         calls.push(data.scheduledAt);
         return Promise.resolve(mockBooking(data.scheduledAt));
       });
-      await new CreateRecurringBookingHandler(prisma as never).execute({
+      await new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
         ...baseDto,
         frequency: RecurringFrequency.WEEKLY,
         until,
@@ -205,7 +207,7 @@ describe('CreateRecurringBookingHandler', () => {
       const prisma = buildPrisma({
         findFirst: jest.fn().mockResolvedValue({ id: 'existing' }),
       });
-      const handler = new CreateRecurringBookingHandler(prisma as never);
+      const handler = new CreateRecurringBookingHandler(prisma as never, mockTenant as never);
       await expect(
         handler.execute({ ...baseDto, frequency: RecurringFrequency.WEEKLY, occurrences: 3 }),
       ).rejects.toThrow(ConflictException);
@@ -226,7 +228,7 @@ describe('CreateRecurringBookingHandler', () => {
         ),
       });
       await expect(
-        new CreateRecurringBookingHandler(prisma as never).execute({
+        new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
           ...baseDto,
           frequency: RecurringFrequency.WEEKLY,
           occurrences: 3,
@@ -247,7 +249,7 @@ describe('CreateRecurringBookingHandler', () => {
           Promise.resolve(mockBooking(data.scheduledAt)),
         ),
       });
-      const result = await new CreateRecurringBookingHandler(prisma as never).execute({
+      const result = await new CreateRecurringBookingHandler(prisma as never, mockTenant as never).execute({
         ...baseDto,
         frequency: RecurringFrequency.WEEKLY,
         occurrences: 3,
