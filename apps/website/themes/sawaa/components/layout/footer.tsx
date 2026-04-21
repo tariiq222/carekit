@@ -3,7 +3,16 @@
 import Link from 'next/link';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { useBranding } from '@/features/branding/public';
-import { CLINICS, NAV_LINKS, PAYMENT_METHODS, SITE, SUPPORT_GROUPS } from '../../lib/constants';
+import { NAV_LINKS, PAYMENT_METHODS, SITE, SUPPORT_GROUPS } from '../../lib/constants';
+
+export interface FooterClinic {
+  id: string;
+  nameAr: string;
+}
+
+interface FooterProps {
+  clinics?: FooterClinic[];
+}
 
 function SocialIcon({
   href,
@@ -46,7 +55,7 @@ function ColumnHeader({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Footer() {
+export function Footer({ clinics = [] }: FooterProps) {
   const branding = useBranding();
   const brandName = branding.organizationNameAr || SITE.name;
   const tagline = branding.productTagline || SITE.desc;
@@ -145,18 +154,20 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <ColumnHeader>العيادات</ColumnHeader>
-            <ul className="space-y-3">
-              {CLINICS.map((c) => (
-                <li key={c.slug}>
-                  <span className="text-[0.813rem]" style={{ color: 'var(--sw-neutral-500)' }}>
-                    {c.name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {clinics.length > 0 ? (
+            <div>
+              <ColumnHeader>العيادات</ColumnHeader>
+              <ul className="space-y-3">
+                {clinics.map((c) => (
+                  <li key={c.id}>
+                    <span className="text-[0.813rem]" style={{ color: 'var(--sw-neutral-500)' }}>
+                      {c.nameAr}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div>
             <ColumnHeader>مجموعات الدعم</ColumnHeader>

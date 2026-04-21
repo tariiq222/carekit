@@ -24,10 +24,11 @@ export function Navbar() {
   return (
     <>
       <nav
-        className="sw-nav-glass fixed top-4 start-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-[1260px] rounded-full px-3 py-2 flex items-center justify-between transition-all duration-300"
+        className="sw-nav-glass fixed top-4 left-1/2 z-[1000] w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-[1260px] rounded-full px-3 py-2 flex items-center justify-between transition-all duration-300"
         style={{
+          transform: 'translateX(-50%)',
           background: scrolled ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.35)',
-          borderInlineStart: '1px solid rgba(255,255,255,0.5)',
+          border: '1px solid rgba(255,255,255,0.5)',
         }}
       >
         <Link href="/" className="flex items-center gap-2.5 ps-1 pe-3">

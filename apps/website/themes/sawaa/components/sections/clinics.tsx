@@ -1,10 +1,24 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
-import { CLINICS } from '../../lib/constants';
+import * as Icons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+
+export interface ClinicItem {
+  id: string;
+  slug?: string;
+  nameAr: string;
+  descriptionAr: string | null;
+  icon: string | null;
+  image?: string | null;
+}
+
+interface Props {
+  clinics: ClinicItem[];
+}
 
 interface Tone {
   accent: string;
@@ -34,7 +48,14 @@ const TONES: Tone[] = [
   },
 ];
 
-export function Clinics() {
+function resolveIcon(name: string | null): LucideIcon {
+  if (!name) return Sparkles;
+  const key = name.charAt(0).toUpperCase() + name.slice(1);
+  const iconMap = Icons as unknown as Record<string, LucideIcon>;
+  return iconMap[key] ?? Sparkles;
+}
+
+export function Clinics({ clinics }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -64,6 +85,8 @@ export function Clinics() {
     });
   };
 
+  if (clinics.length === 0) return null;
+
   return (
     <section id="clinics" className="py-20 md:py-24 relative sw-section-mint">
       <div className="max-w-[1260px] mx-auto px-5 sm:px-6 md:px-8">
@@ -86,10 +109,11 @@ export function Clinics() {
             dir="rtl"
             className="sw-no-scrollbar flex gap-5 overflow-x-auto overflow-y-visible scroll-smooth pt-4 pb-12 px-6"
           >
-            {CLINICS.map((c, i) => {
+            {clinics.map((c, i) => {
               const t = TONES[i % TONES.length]!;
+              const Icon = resolveIcon(c.icon);
               return (
-                <AnimatedSection key={c.slug} delay={i * 40} className="flex-shrink-0">
+                <AnimatedSection key={c.id} delay={i * 40} className="flex-shrink-0">
                   <div
                     className="group w-[300px] bg-white rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1"
                     style={{
@@ -98,21 +122,34 @@ export function Clinics() {
                     }}
                   >
                     <div
-                      className="relative w-full h-[160px] rounded-xl overflow-hidden mb-4"
-                      style={{ boxShadow: `0 0 0 1px ${t.ring}` }}
+                      className="relative w-full h-[160px] rounded-xl overflow-hidden mb-4 flex items-center justify-center"
+                      style={{
+                        boxShadow: `0 0 0 1px ${t.ring}`,
+                        background: c.image
+                          ? undefined
+                          : `linear-gradient(135deg, ${t.soft} 0%, ${t.ring} 100%)`,
+                      }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={c.image}
-                        alt={c.name}
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
+                      {c.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.image}
+                          alt={c.nameAr}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <Icon
+                          className="w-16 h-16"
+                          style={{ color: t.accent }}
+                          strokeWidth={1.5}
+                        />
+                      )}
                       <span
                         className="absolute top-2 end-2 text-[0.625rem] font-extrabold bg-white/95 backdrop-blur px-2 py-0.5 rounded-full"
                         style={{ color: t.softText }}
                       >
-                        0{i + 1}
+                        {String(i + 1).padStart(2, '0')}
                       </span>
                     </div>
 
@@ -127,16 +164,16 @@ export function Clinics() {
                     </div>
 
                     <h3
-                      className="text-base font-bold mb-1.5 leading-tight transition-colors line-clamp-1"
+                      className="text-base font-bold mb-1.5 leading-tight line-clamp-1"
                       style={{ color: 'var(--sw-secondary-700)' }}
                     >
-                      {c.name}
+                      {c.nameAr}
                     </h3>
                     <p
                       className="text-[0.8rem] leading-relaxed mb-3 line-clamp-2"
                       style={{ color: 'var(--sw-neutral-600)' }}
                     >
-                      {c.desc}
+                      {c.descriptionAr ?? 'عيادة متخصصة بفريق معتمد.'}
                     </p>
 
                     <span

@@ -1,8 +1,13 @@
 import Link from 'next/link';
 import { ChevronDown, Star, UserRound, Users } from 'lucide-react';
-import { THERAPISTS } from '../../lib/constants';
+import type { PublicEmployee } from '@carekit/api-client';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+
+interface Props {
+  therapists: PublicEmployee[];
+  totalCount?: number;
+}
 
 const PALETTE: { bg: string; icon: string }[] = [
   { bg: 'var(--sw-primary-50)',   icon: 'var(--sw-primary-600)' },
@@ -12,8 +17,16 @@ const PALETTE: { bg: string; icon: string }[] = [
 
 const VISIBLE_COUNT = 12;
 
-export function Team() {
-  const visible = THERAPISTS.slice(0, VISIBLE_COUNT);
+function firstLetter(name: string | null): string {
+  if (!name) return '?';
+  const cleaned = name.replace(/^(د\.|أ\.|Dr\.)\s*/i, '').trim();
+  return cleaned.charAt(0) || '?';
+}
+
+export function Team({ therapists, totalCount }: Props) {
+  if (therapists.length === 0) return null;
+  const visible = therapists.slice(0, VISIBLE_COUNT);
+  const total = totalCount ?? therapists.length;
 
   return (
     <section id="team" className="py-20 md:py-24 relative sw-section-cream">
@@ -34,10 +47,13 @@ export function Team() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {visible.map((t, i) => {
             const c = PALETTE[i % PALETTE.length]!;
+            const href = t.slug ? `/therapists/${t.slug}` : '/therapists';
+            const name = t.nameAr ?? t.nameEn ?? '—';
+            const role = t.specialtyAr ?? t.title ?? '';
             return (
-              <AnimatedSection key={t.slug} delay={i * 30}>
+              <AnimatedSection key={t.id} delay={i * 30}>
                 <Link
-                  href="/therapists"
+                  href={href}
                   className="group relative block h-full bg-white rounded-2xl transition-all duration-300 hover:-translate-y-1 px-3 pt-9 pb-7 text-center overflow-hidden"
                   style={{
                     border: '1px solid var(--sw-neutral-100)',
@@ -62,24 +78,26 @@ export function Team() {
                   </span>
 
                   <div
-                    className="relative w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 transition-transform duration-300 group-hover:scale-105"
+                    className="relative w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 transition-transform duration-300 group-hover:scale-105 flex items-center justify-center"
                     style={{
                       background: c.bg,
-                      boxShadow:
-                        '0 0 0 3px #fff, var(--sw-shadow-md)',
+                      boxShadow: '0 0 0 3px #fff, var(--sw-shadow-md)',
                     }}
                   >
-                    {t.image ? (
+                    {t.publicImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={t.image} alt={t.name} className="w-full h-full object-cover" />
+                      <img
+                        src={t.publicImageUrl}
+                        alt={name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <UserRound
-                          className="w-8 h-8"
-                          style={{ color: c.icon }}
-                          strokeWidth={1.5}
-                        />
-                      </div>
+                      <span
+                        className="text-2xl font-extrabold"
+                        style={{ color: c.icon }}
+                      >
+                        {firstLetter(name)}
+                      </span>
                     )}
                   </div>
 
@@ -87,13 +105,13 @@ export function Team() {
                     className="relative text-[0.813rem] font-extrabold mb-0.5 leading-tight tracking-tight line-clamp-1"
                     style={{ color: 'var(--sw-secondary-700)' }}
                   >
-                    {t.name}
+                    {name}
                   </h3>
                   <p
                     className="relative text-[0.688rem] font-semibold mb-2.5 line-clamp-1"
                     style={{ color: 'var(--sw-neutral-500)' }}
                   >
-                    {t.role}
+                    {role}
                   </p>
 
                   <span
@@ -106,9 +124,20 @@ export function Team() {
               </AnimatedSection>
             );
           })}
+          {visible.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <UserRound
+                className="w-12 h-12 mx-auto mb-3"
+                style={{ color: 'var(--sw-neutral-400)' }}
+              />
+              <p className="text-sm" style={{ color: 'var(--sw-neutral-500)' }}>
+                لم يُضَف أي معالج بعد.
+              </p>
+            </div>
+          ) : null}
         </div>
 
-        {THERAPISTS.length > VISIBLE_COUNT ? (
+        {total > VISIBLE_COUNT ? (
           <div className="relative z-10 flex justify-center mt-8">
             <Link
               href="/therapists"
@@ -125,7 +154,7 @@ export function Team() {
               >
                 <ChevronDown className="w-4 h-4" strokeWidth={2.5} />
               </span>
-              عرض كل المعالجين ({THERAPISTS.length})
+              عرض كل المعالجين ({total})
             </Link>
           </div>
         ) : null}

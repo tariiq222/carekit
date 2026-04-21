@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -8,35 +6,9 @@ interface Props {
   delay?: number;
 }
 
-export function AnimatedSection({ children, className = '', delay = 0 }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      { threshold: 0.1, rootMargin: '-40px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`sw-reveal${visible ? ' is-visible' : ''} ${className}`}
-      style={{ ['--sw-reveal-delay' as string]: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
+// Content is always visible. The `delay` prop is accepted for API compatibility
+// with the tempsawaa source but is unused — we keep this a static, SSR-friendly
+// wrapper to avoid content being hidden below the fold.
+export function AnimatedSection({ children, className = '', delay: _delay = 0 }: Props) {
+  return <div className={className}>{children}</div>;
 }
