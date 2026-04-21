@@ -7,7 +7,7 @@ import { ClientTokenService } from '../shared/client-token.service';
 import { PasswordService } from '../shared/password.service';
 import { RegisterDto } from './register.dto';
 import { OtpPurpose, OtpChannel } from '@prisma/client';
-import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
+import { TenantContextService } from '../../../common/tenant';
 
 @Injectable()
 export class RegisterHandler {
@@ -18,6 +18,7 @@ export class RegisterHandler {
     private readonly otpSession: OtpSessionService,
     private readonly clientTokens: ClientTokenService,
     private readonly passwords: PasswordService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(dto: RegisterDto, rawRequest: Request) {
@@ -39,13 +40,13 @@ export class RegisterHandler {
 
     const isEmailChannel = payload.channel === OtpChannel.EMAIL;
     const identifier = payload.identifier;
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
-    const PASSWORD_HASH_ROUNDS = 12;
     const passwordHash = await this.passwords.hash(dto.password);
 
     const existing = isEmailChannel
-      ? await this.prisma.client.findFirst({ where: { email: identifier } })
-      : await this.prisma.client.findFirst({ where: { phone: identifier } });
+      ? await this.prisma.client.findFirst({ where: { organizationId, email: identifier } })
+      : await this.prisma.client.findFirst({ where: { organizationId, phone: identifier } });
 
     let clientId: string;
 
@@ -70,6 +71,7 @@ export class RegisterHandler {
     } else {
       const created = await this.prisma.client.create({
         data: {
+          organizationId,
           email: isEmailChannel ? identifier : null,
           phone: !isEmailChannel ? identifier : null,
           name: dto.name ?? identifier,
@@ -86,7 +88,7 @@ export class RegisterHandler {
 
     const tokens = await this.clientTokens.issueTokenPair(
       { id: clientId, email: isEmailChannel ? identifier : null },
-      { organizationId: DEFAULT_ORGANIZATION_ID },
+      { organizationId },
     );
 
     return {

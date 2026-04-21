@@ -4,7 +4,7 @@ import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { PasswordService } from '../shared/password.service';
 import { ClientTokenService } from '../shared/client-token.service';
 import { ClientLoginDto } from './client-login.dto';
-import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
+import { TenantContextService } from '../../../common/tenant';
 
 const MAX_EMAIL_ATTEMPTS = 5;
 const MAX_IP_ATTEMPTS = 20;
@@ -20,11 +20,14 @@ export class ClientLoginHandler {
     private readonly redis: RedisService,
     private readonly passwords: PasswordService,
     private readonly clientTokens: ClientTokenService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(dto: ClientLoginDto, ip = 'unknown') {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
     const client = await this.prisma.client.findFirst({
-      where: { email: dto.email, deletedAt: null },
+      where: { organizationId, email: dto.email, deletedAt: null },
     });
 
     if (!client || !client.passwordHash) {
@@ -91,7 +94,7 @@ export class ClientLoginHandler {
 
     const tokens = await this.clientTokens.issueTokenPair(
       { id: client.id, email: client.email },
-      { organizationId: client.organizationId ?? DEFAULT_ORGANIZATION_ID },
+      { organizationId },
     );
 
     this.logger.log(`Client login: ${client.id} (${client.email})`);

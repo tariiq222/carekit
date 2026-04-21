@@ -6,6 +6,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { OtpSessionService } from '../otp/otp-session.service';
 import { ClientTokenService } from '../shared/client-token.service';
 import { PasswordService } from '../shared/password.service';
+import { TenantContextService } from '../../../common/tenant';
 
 describe('RegisterHandler', () => {
   let handler: RegisterHandler;
@@ -32,6 +33,7 @@ describe('RegisterHandler', () => {
         { provide: OtpSessionService, useValue: mockOtpSession },
         { provide: ClientTokenService, useValue: mockClientTokens },
         { provide: PasswordService, useValue: mockPasswords },
+        { provide: TenantContextService, useValue: { requireOrganizationIdOrDefault: () => 'org-test' } },
       ],
     }).compile();
 
@@ -66,6 +68,7 @@ describe('RegisterHandler', () => {
       expect(result.clientId).toBe('cl-new');
       expect(mockPrisma.client.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
+          organizationId: 'org-test',
           email: 'test@example.com',
           name: 'Ahmed',
           passwordHash: 'hashed_pw',
@@ -73,6 +76,13 @@ describe('RegisterHandler', () => {
           accountType: 'FULL',
         }),
       });
+      expect(mockPrisma.client.findFirst).toHaveBeenCalledWith({
+        where: expect.objectContaining({ organizationId: 'org-test', email: 'test@example.com' }),
+      });
+      expect(mockClientTokens.issueTokenPair).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'cl-new' }),
+        { organizationId: 'org-test' },
+      );
     });
 
     it('merges guest account when phone already exists', async () => {
