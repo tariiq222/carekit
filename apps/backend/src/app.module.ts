@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ClsModule } from 'nestjs-cls';
 import { envValidationSchema } from './config/env.validation';
+import { TenantModule } from './common/tenant';
 import { DatabaseModule } from './infrastructure/database';
 import { MessagingModule } from './infrastructure/messaging.module';
 import { AiInfraModule } from './infrastructure/ai';
@@ -35,6 +37,11 @@ import { PublicModule } from './api/public/public.module';
         allowUnknown: true,
       },
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+    }),
+    TenantModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1_000_000 }]),
     DatabaseModule,
     MessagingModule,
