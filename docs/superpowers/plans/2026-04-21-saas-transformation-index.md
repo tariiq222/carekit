@@ -12,20 +12,20 @@
 
 ## 📊 Current Status — updated 2026-04-21
 
-**Progress:** 2 / 18 phases done (11%) · 2 plans ready to execute · 14 plans to write.
+**Progress:** 4 / 18 phases done (22%) · 2 plans ready to execute · 12 plans to write.
 
 ```
 Phase 01  ✅ DONE      Multi-tenancy Foundation
 Phase 02a ✅ DONE      Identity cluster (PR #15)
-Phase 02b 🟢 READY     People cluster — plan written, ready to execute
+Phase 02b ✅ DONE      People cluster (PR #16)
+Phase 02c ✅ DONE      Org-config + singletons (PR #17)
+Phase 02d 🟢 READY     Bookings cluster — plan written, ready to execute
 Phase 05a 🟢 READY     packages/ui — plan written, ready to execute (parallel-safe)
-Phase 02c ⚪ PENDING   Org-config + first singletons (plan not yet written)
-Phase 02d ⚪ PENDING   Bookings cluster
-Phase 02e ⚪ PENDING   Finance cluster
+Phase 02e ⚪ PENDING   Finance cluster (plan not yet written; owner-review required)
 Phase 02f ⚪ PENDING   Comms cluster
 Phase 02g ⚪ PENDING   AI + media + ops + platform
 Phase 02h ⚪ PENDING   Strict mode + penetration
-Phase 03  ⚪ PENDING   Verticals system
+Phase 03  ⚪ PENDING   Verticals system (plan to write after 02e/02f)
 Phase 04  ⚪ PENDING   Billing + subscriptions
 Phase 05b ⚪ PENDING   Super-admin app
 Phase 06  ⚪ PENDING   Dashboard terminology + EN i18n
@@ -35,14 +35,14 @@ Phase 09  ⚪ PENDING   Custom domain + infra
 Phase 10  ⚪ PENDING   Hardening + launch
 ```
 
-**🎯 Next action (for executor):** merge PR #15, then execute Plan 02b on `feat/saas-02b-people-cluster`. Run pre-flight checks before Task 1.
+**🎯 Next action (for executor):** merge PR #17 (02c), then execute Plan 02d on `feat/saas-02d-bookings-cluster`. Run pre-flight checks before Task 1. Plan 05a is parallel-safe.
 
-**🔭 Next action (for planner/me):** monitor 02b execution for divergences; when it merges, write Plans 02c + 03 + 04 based on lessons. Plan 05a already written and parallelizable with 02b.
+**🔭 Next action (for planner/me):** monitor 02d execution; write Plan 02e (Finance, owner-review) in parallel. After 02e lands, write Plans 02f + 03 + 04.
 
 **🚧 Active risks:**
 - Prisma 7 `$extends` via Proxy works (confirmed in 02a) — no further risk.
 - Pre-existing cookie-parser module issue in `test/e2e/public/client-account.e2e-spec.ts` (unrelated, pre-dates SaaS work) — flag but don't block.
-- 02c introduces **first singleton conversion** (BrandingConfig, OrganizationSettings) — new pattern, no prior art. Extra care + larger review.
+- **`$transaction` callback form bypasses Proxy** — `tx` inside `async tx => {}` is a raw client; explicit `organizationId` required in ALL `tx.*.create()` and `tx.*.findFirst()` calls. Bookings cluster uses this form heavily (02d critical path).
 - 02e touches ZATCA + Moyasar (owner-only per root CLAUDE.md) — all changes need explicit owner review.
 
 **Frontend app topology (post-transformation):**
@@ -71,9 +71,9 @@ Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pen
 |---|---|---|---|---|---|
 | 01 | [Multi-tenancy Foundation](./2026-04-21-saas-01-multi-tenancy-foundation.md) | ✅ DONE (2026-04-21) | — | — | 2 weeks |
 | 02a | [Identity cluster rollout](./2026-04-21-saas-02a-identity-cluster.md) | ✅ DONE (2026-04-21) | [#15](https://github.com/tariiq222/carekit/pull/15) | 01 | 2–3 days |
-| 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | 🟢 READY | — | 02a | 3 days |
-| 02c | Org-config + org-experience rollout (Branch, Department, ServiceCategory, Service + variants, BusinessHour, Holiday, IntakeForm/Field, Rating + first singleton conversions: BrandingConfig, OrganizationSettings) | ⚪ PENDING | — | 02b | 4 days |
-| 02d | Bookings cluster rollout (Booking, BookingStatusLog, Waitlist, GroupSession et al + BookingSettings singleton) | ⚪ PENDING | — | 02c | 3 days |
+| 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/carekit/pull/16) | 02a | 3 days |
+| 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/carekit/pull/17) | 02b | 4 days |
+| 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | 🟢 READY | — | 02c | 3 days |
 | 02e | Finance cluster rollout (Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + ZatcaConfig singleton) ⚠️ owner-review required | ⚪ PENDING | — | 02d | 3 days |
 | 02f | Comms cluster rollout (EmailTemplate, Notification, ChatConversation/Message/Session, CommsChatMessage, ContactMessage + ChatbotConfig singleton) | ⚪ PENDING | — | 02e | 2 days |
 | 02g | AI + media + ops + platform rollout (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | ⚪ PENDING | — | 02f | 2 days |
@@ -126,6 +126,11 @@ Pre-flight checks that every cluster-rollout plan MUST perform before committing
 4. **`npx prisma migrate dev` can conflict with pgvector hooks** — if it refuses to generate SQL cleanly, write the migration file manually following Prisma's conventions.
 5. **RLS tests need a non-superuser Postgres role** — PG superusers bypass RLS even with `FORCE ROW LEVEL SECURITY`. Isolation e2e specs that exercise policies via raw SQL must connect (or `SET ROLE`) to a non-superuser.
 6. **Divergence-before-commit protocol:** if reality disagrees with the plan, STOP, document the divergence, propose amendments, execute only after confirmation. Commits authored on bad assumptions are expensive to unwind.
+7. **Dropping a single-field `@unique` to replace with `@@unique([orgId, field])` breaks `findUnique` callsites** — when the uniqueness key changes, audit every `findUnique` that used the old constraint name and switch to `findFirst` with the composite where clause. Example from 02b: `employee.email @unique` → `@@unique([organizationId, email], name: "employee_org_email")` broke two callers.
+8. **Prisma extension covers `where` (reads) not `data` (writes)** — the Proxy-based extension auto-injects `organizationId` into WHERE clauses for scoped models, but NOT into `data` objects. Every `create()` and any explicit `update()` that sets organizationId must specify it manually.
+9. **`runAs` / CLS callbacks must be `async () => {}`** — sync callbacks returning a Promise lose AsyncLocalStorage context before the Prisma extension fires. Always use `async () => { ... }` not `() => somePromise`.
+10. **Singleton conversion (upsert-on-read) pattern established in 02c** — for models that are one-per-org (BrandingConfig, OrganizationSettings): `id @default(uuid())` + `organizationId @unique`. Get handler uses `prisma.model.upsert({ where: { organizationId }, update: {}, create: { organizationId, ...defaults } })`. Update handler uses `prisma.model.update({ where: { organizationId }, data: { ...fields } })`.
+11. **`$transaction` callback form bypasses the Proxy** — inside `this.prisma.$transaction(async (tx) => { ... })`, `tx` is a raw Prisma transaction client that does NOT go through the NestJS DI Proxy. Explicit `organizationId` is required in EVERY `tx.*.create()` AND `tx.*.findFirst()` / `tx.*.findUnique()` call within the callback. Array-form transactions `this.prisma.$transaction([op1, op2])` are fine because the operations are pre-built through the Proxy.
 
 ---
 
@@ -137,6 +142,8 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 |---|---|---|---|
 | 2026-04-21 | 01 — Multi-tenancy Foundation | — | Organization + Membership + TenantContext + dormant scoping. 923/923 tests. Flag off → runtime unchanged. |
 | 2026-04-21 | 02a — Identity cluster | [#15](https://github.com/tariiq222/carekit/pull/15) | 3 models scoped + Proxy-based Prisma 7 $extends confirmed working + 5 divergences resolved pre-commit + playbook authored in `docs/saas-tenancy.md`. 934/934 tests. |
+| 2026-04-21 | 02b — People cluster | [#16](https://github.com/tariiq222/carekit/pull/16) | 7 models scoped (Client + ClientRefreshToken + Employee + 4 child tables). Client auth tenant-aware. 3 divergences: findUnique→findFirst on composite keys, extension covers where not data, CLS async callback requirement. 941/941 tests, 18/18 isolation e2e. |
+| 2026-04-21 | 02c — Org-config + singletons | [#17](https://github.com/tariiq222/carekit/pull/17) | 14 models scoped (Branch, Dept, ServiceCategory, Service + 5 sub-models, BusinessHour, Holiday, IntakeForm/Field, Rating) + BrandingConfig + OrganizationSettings singleton conversion (upsert-on-read pattern). 953/953 tests, 14 isolation e2e. No divergences reported. |
 
 ---
 

@@ -2,6 +2,19 @@
 
 Single-organization mode: one deployment serves one clinic. No tenant layer — a clinic can still have multiple physical branches.
 
+## Orchestration: Maestro v10
+
+This repo uses **Maestro v10** to orchestrate multi-agent work. For anything touching 2+ files, route through Maestro first. Entry points:
+
+- `MAESTRO.md` — activation modes (`/plan`, `/execute`, `/verify`, `/maestro`, `/output-style maestro`)
+- `AGENTS.md` — agent roster + flow (Yazid/Fahad/Sultan + Sonnet team + Abdullah/Omar)
+- `PATHS.md` — FAST / STANDARD / DEEP budgets, gates, and npm scripts
+- `WORKTREES.md` — DEEP path worktree protocol (ports 5110 / 5120 / 5130)
+- `QUICK_REFERENCE.md` — cheat sheet
+- `.claude/agents/*.md` — per-agent specs (router, maestro, explorer, architect, backend, frontend, tester, type-checker, security, refactor, docs, devops, historian)
+- `.claude/commands/*.md` — `/plan`, `/execute`, `/verify`, `/maestro`
+- `.claude/output-styles/maestro.md` — persistent Maestro mode
+
 ## Tech Stack
 
 - **Monorepo**: npm workspaces + Turborepo

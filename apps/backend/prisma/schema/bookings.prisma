@@ -143,7 +143,7 @@ model GroupSession {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
-  enrollments  GroupEnrollment[]
+  enrollments     GroupEnrollment[]
   waitlistEntries GroupSessionWaitlist[]
 
   @@index([employeeId])
@@ -155,7 +155,7 @@ model GroupEnrollment {
   id             String       @id @default(uuid())
   groupSessionId String
   groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
-  clientId      String
+  clientId       String
   bookingId      String       @unique
   enrolledAt     DateTime     @default(now())
 
@@ -164,12 +164,12 @@ model GroupEnrollment {
 }
 
 model GroupSessionWaitlist {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   groupSessionId String
   groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
   clientId       String
   position       Int
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
 
   @@unique([groupSessionId, clientId])
   @@index([groupSessionId])
