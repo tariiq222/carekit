@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { ChevronDown, Star, UserRound, Users } from 'lucide-react';
 import type { PublicEmployee } from '@carekit/api-client';
+import type { SectionIntro } from '@/features/site-content/public';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
 
 interface Props {
   therapists: PublicEmployee[];
+  intro: SectionIntro;
   totalCount?: number;
 }
 
@@ -23,7 +26,7 @@ function firstLetter(name: string | null): string {
   return cleaned.charAt(0) || '?';
 }
 
-export function Team({ therapists, totalCount }: Props) {
+export function Team({ therapists, intro, totalCount }: Props) {
   if (therapists.length === 0) return null;
   const visible = therapists.slice(0, VISIBLE_COUNT);
   const total = totalCount ?? therapists.length;
@@ -33,14 +36,10 @@ export function Team({ therapists, totalCount }: Props) {
       <div className="max-w-[1260px] mx-auto px-5 sm:px-6 md:px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="فريقنا"
+            tag={intro.tag}
             tagIcon={<Users className="w-3.5 h-3.5" />}
-            title={
-              <>
-                خبراء <span style={{ color: 'var(--sw-primary-500)' }}>في خدمتك</span>
-              </>
-            }
-            subtitle="فريق من المتخصصين المؤهلين في الصحة النفسية والاستشارات الأسرية"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

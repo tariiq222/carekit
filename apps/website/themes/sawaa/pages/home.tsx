@@ -3,7 +3,9 @@ import { getPublicCatalog } from '@/features/public-catalog/public';
 import {
   fetchSiteSettingsMap,
   resolveHeroContent,
+  resolveSectionIntros,
   type HeroContent,
+  type HomeSectionIntros,
   type SiteSettingsMap,
 } from '@/features/site-content/public';
 import type { PublicEmployee } from '@carekit/api-client';
@@ -33,6 +35,7 @@ export async function SawaaHomePage() {
   ]);
 
   const hero: HeroContent = resolveHeroContent(settings);
+  const intros: HomeSectionIntros = resolveSectionIntros(settings);
 
   const clinics: ClinicItem[] = catalog.departments.map((d) => ({
     id: d.id,
@@ -45,14 +48,14 @@ export async function SawaaHomePage() {
   return (
     <>
       <Hero content={hero} />
-      <Features />
-      <Clinics clinics={clinics} />
-      <SupportGroups />
-      <Team therapists={therapists} />
-      <Testimonials />
-      <Blog />
+      <Features intro={intros.features} />
+      <Clinics clinics={clinics} intro={intros.clinics} />
+      <SupportGroups intro={intros.supportGroups} />
+      <Team therapists={therapists} intro={intros.team} />
+      <Testimonials intro={intros.testimonials} />
+      <Blog intro={intros.blog} />
       <CTA />
-      <FAQ />
+      <FAQ intro={intros.faq} />
     </>
   );
 }

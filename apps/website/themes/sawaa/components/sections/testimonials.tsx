@@ -1,7 +1,13 @@
 import { MessageCircle, Quote, Star } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { TESTIMONIALS } from '../../lib/constants';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
+
+interface Props {
+  intro: SectionIntro;
+}
 
 const AVATAR_TONES = [
   { bg: 'var(--sw-primary-50)',   text: 'var(--sw-primary-700)' },
@@ -9,21 +15,16 @@ const AVATAR_TONES = [
   { bg: 'var(--sw-secondary-50)', text: 'var(--sw-secondary-700)' },
 ];
 
-export function Testimonials() {
+export function Testimonials({ intro }: Props) {
   return (
     <section id="testimonials" className="py-20 md:py-24 relative sw-section-mint">
       <div className="max-w-[1260px] mx-auto px-5 sm:px-6 md:px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="آراء عملائنا"
+            tag={intro.tag}
             tagIcon={<MessageCircle className="w-3.5 h-3.5" />}
-            title={
-              <>
-                ماذا يقول{' '}
-                <span style={{ color: 'var(--sw-primary-500)' }}>عملاؤنا؟</span>
-              </>
-            }
-            subtitle="تجارب حقيقية من أشخاص بدأوا رحلة تعافيهم معنا"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

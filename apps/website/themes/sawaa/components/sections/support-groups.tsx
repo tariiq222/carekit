@@ -1,8 +1,14 @@
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock, UserCheck, Users } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { SUPPORT_GROUPS } from '../../lib/constants';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
+
+interface Props {
+  intro: SectionIntro;
+}
 
 interface Tone {
   accent: string;
@@ -32,21 +38,16 @@ const TONES: Tone[] = [
   },
 ];
 
-export function SupportGroups() {
+export function SupportGroups({ intro }: Props) {
   return (
     <section id="support-groups" className="py-20 md:py-24 relative">
       <div className="max-w-[1260px] mx-auto px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="مجموعات الدعم"
+            tag={intro.tag}
             tagIcon={<Users className="w-3.5 h-3.5" />}
-            title={
-              <>
-                مجموعات دعم{' '}
-                <span style={{ color: 'var(--sw-primary-500)' }}>متخصصة</span>
-              </>
-            }
-            subtitle="بيئة آمنة للمشاركة والتعافي مع مجموعة صغيرة بإشراف متخصصين"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

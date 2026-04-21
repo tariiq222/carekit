@@ -2,11 +2,17 @@
 
 import { useState } from 'react';
 import { HelpCircle, Plus } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { FAQS } from '../../lib/constants';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
 
-export function FAQ() {
+interface Props {
+  intro: SectionIntro;
+}
+
+export function FAQ({ intro }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -14,15 +20,10 @@ export function FAQ() {
       <div className="max-w-[860px] mx-auto px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="الأسئلة الشائعة"
+            tag={intro.tag}
             tagIcon={<HelpCircle className="w-3.5 h-3.5" />}
-            title={
-              <>
-                أسئلة{' '}
-                <span style={{ color: 'var(--sw-primary-500)' }}>يطرحها الكثير</span>
-              </>
-            }
-            subtitle="إجابات سريعة عن أكثر ما يهمّك قبل الحجز"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

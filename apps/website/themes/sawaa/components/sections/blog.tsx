@@ -1,22 +1,24 @@
 import { ArrowLeft, FileText } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { BLOG_POSTS } from '../../lib/constants';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
 
-export function Blog() {
+interface Props {
+  intro: SectionIntro;
+}
+
+export function Blog({ intro }: Props) {
   return (
     <section id="blog" className="py-20 md:py-24 relative sw-section-cream">
       <div className="max-w-[1260px] mx-auto px-5 sm:px-6 md:px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="المدونة"
+            tag={intro.tag}
             tagIcon={<FileText className="w-3.5 h-3.5" />}
-            title={
-              <>
-                مقالات <span style={{ color: 'var(--sw-primary-500)' }}>ونصائح</span>
-              </>
-            }
-            subtitle="محتوى متخصص من فريقنا لمساعدتك على فهم نفسك وتطوير حياتك"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

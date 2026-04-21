@@ -1,6 +1,12 @@
 import { Activity, BadgeCheck, Clock, ShieldCheck } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
+
+interface Props {
+  intro: SectionIntro;
+}
 
 interface FeatureTone {
   label: string;
@@ -42,23 +48,16 @@ const FEATURES: FeatureTone[] = [
   },
 ];
 
-export function Features() {
+export function Features({ intro }: Props) {
   return (
     <section id="features" className="py-20 md:py-24 relative">
       <div className="max-w-[1260px] mx-auto px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="ميزاتنا"
+            tag={intro.tag}
             tagIcon={<Activity className="w-3.5 h-3.5" />}
-            title={
-              <>
-                كل ما يخص{' '}
-                <span style={{ color: 'var(--sw-primary-500)' }}>صحتك النفسية</span>
-                <br />
-                في مكان واحد
-              </>
-            }
-            subtitle="نقدم خدمات متكاملة تجمع بين الاستشارات النفسية والأسرية وعلاج الإدمان"
+            title={<IntroTitle intro={intro} breakBeforeSuffix />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 

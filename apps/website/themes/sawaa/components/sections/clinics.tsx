@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
+import type { SectionIntro } from '@/features/site-content/public';
 import { AnimatedSection } from '../ui/animated-section';
 import { SectionHeader } from '../ui/section-header';
+import { IntroTitle } from '../ui/intro-title';
 
 export interface ClinicItem {
   id: string;
@@ -18,6 +20,7 @@ export interface ClinicItem {
 
 interface Props {
   clinics: ClinicItem[];
+  intro: SectionIntro;
 }
 
 interface Tone {
@@ -55,7 +58,7 @@ function resolveIcon(name: string | null): LucideIcon {
   return iconMap[key] ?? Sparkles;
 }
 
-export function Clinics({ clinics }: Props) {
+export function Clinics({ clinics, intro }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -92,14 +95,10 @@ export function Clinics({ clinics }: Props) {
       <div className="max-w-[1260px] mx-auto px-5 sm:px-6 md:px-8">
         <AnimatedSection>
           <SectionHeader
-            tag="عياداتنا"
+            tag={intro.tag}
             tagIcon={<Heart className="w-3.5 h-3.5" />}
-            title={
-              <>
-                عيادات <span style={{ color: 'var(--sw-primary-500)' }}>متخصصة</span>
-              </>
-            }
-            subtitle="كل عيادة صُممت لتغطية احتياج محدد بأعلى جودة"
+            title={<IntroTitle intro={intro} />}
+            subtitle={intro.subtitle}
           />
         </AnimatedSection>
 
