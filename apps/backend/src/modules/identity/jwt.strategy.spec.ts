@@ -40,4 +40,48 @@ describe('JwtStrategy', () => {
       strategy.validate({ sub: 'u1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, permissions: [], features: [] }),
     ).rejects.toThrow(UnauthorizedException);
   });
+
+  it('propagates organizationId and membershipId when present in payload', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+      organizationId: 'org-1', membershipId: 'mem-1',
+    });
+    expect(result.organizationId).toBe('org-1');
+    expect(result.membershipId).toBe('mem-1');
+    expect(result.isSuperAdmin).toBe(false);
+  });
+
+  it('treats missing tenant claims as undefined (backward compat)', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+    });
+    expect(result.organizationId).toBeUndefined();
+    expect(result.membershipId).toBeUndefined();
+    expect(result.isSuperAdmin).toBe(false);
+  });
+
+  it('marks isSuperAdmin true when the DB user has role SUPER_ADMIN', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN',
+      customRoleId: null, permissions: [], features: [],
+    });
+    expect(result.isSuperAdmin).toBe(true);
+  });
 });

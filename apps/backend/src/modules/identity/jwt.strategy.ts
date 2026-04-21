@@ -40,6 +40,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return actions.map((a) => ({ action: String(a), subject: String(r.subject) }));
       }),
       features: payload.features ?? [],
+      // SaaS-01 — tenant claims passed through from JWT. Undefined in off/legacy tokens.
+      organizationId: payload.organizationId,
+      membershipId: payload.membershipId,
+      isSuperAdmin: payload.isSuperAdmin === true || user.role === 'SUPER_ADMIN',
     };
   }
 }

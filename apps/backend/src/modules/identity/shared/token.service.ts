@@ -17,6 +17,10 @@ export interface JwtPayload {
   customRoleId: string | null;
   permissions: Array<{ action: string; subject: string }>;
   features: string[];
+  // SaaS-01 — optional during rollout; Plan 02 makes them required.
+  organizationId?: string;
+  membershipId?: string;
+  isSuperAdmin?: boolean;
 }
 
 @Injectable()
