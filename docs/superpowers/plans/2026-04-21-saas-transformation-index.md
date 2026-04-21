@@ -12,14 +12,14 @@
 
 ## 📊 Current Status — updated 2026-04-21
 
-**Progress:** 4 / 18 phases done (22%) · 2 plans ready to execute · 12 plans to write.
+**Progress:** 5 / 18 phases done (28%) · 1 plan ready to execute · 12 plans to write.
 
 ```
 Phase 01  ✅ DONE      Multi-tenancy Foundation
 Phase 02a ✅ DONE      Identity cluster (PR #15)
 Phase 02b ✅ DONE      People cluster (PR #16)
 Phase 02c ✅ DONE      Org-config + singletons (PR #17)
-Phase 02d 🟢 READY     Bookings cluster — plan written, ready to execute
+Phase 02d ✅ DONE      Bookings cluster (PR #18)
 Phase 05a 🟢 READY     packages/ui — plan written, ready to execute (parallel-safe)
 Phase 02e ⚪ PENDING   Finance cluster (plan not yet written; owner-review required)
 Phase 02f ⚪ PENDING   Comms cluster
@@ -35,14 +35,14 @@ Phase 09  ⚪ PENDING   Custom domain + infra
 Phase 10  ⚪ PENDING   Hardening + launch
 ```
 
-**🎯 Next action (for executor):** merge PR #17 (02c), then execute Plan 02d on `feat/saas-02d-bookings-cluster`. Run pre-flight checks before Task 1. Plan 05a is parallel-safe.
+**🎯 Next action (for executor):** merge PR #17 (02c) → merge PR #18 (02d). Plan 05a is parallel-safe.
 
-**🔭 Next action (for planner/me):** monitor 02d execution; write Plan 02e (Finance, owner-review) in parallel. After 02e lands, write Plans 02f + 03 + 04.
+**🔭 Next action (for planner/me):** write Plan 02e (Finance cluster, owner-review) — critical path blocker. After 02e plan is written, 02f + 03 + 04 follow.
 
 **🚧 Active risks:**
 - Prisma 7 `$extends` via Proxy works (confirmed in 02a) — no further risk.
 - Pre-existing cookie-parser module issue in `test/e2e/public/client-account.e2e-spec.ts` (unrelated, pre-dates SaaS work) — flag but don't block.
-- **`$transaction` callback form bypasses Proxy** — `tx` inside `async tx => {}` is a raw client; explicit `organizationId` required in ALL `tx.*.create()` and `tx.*.findFirst()` calls. Bookings cluster uses this form heavily (02d critical path).
+- **`$transaction` callback form bypasses Proxy** — confirmed in 02d: 5 callback-form handlers found (plan predicted 2). Pattern fully documented in Lesson 11. Now resolved for bookings cluster.
 - 02e touches ZATCA + Moyasar (owner-only per root CLAUDE.md) — all changes need explicit owner review.
 
 **Frontend app topology (post-transformation):**
@@ -73,7 +73,7 @@ Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pen
 | 02a | [Identity cluster rollout](./2026-04-21-saas-02a-identity-cluster.md) | ✅ DONE (2026-04-21) | [#15](https://github.com/tariiq222/carekit/pull/15) | 01 | 2–3 days |
 | 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/carekit/pull/16) | 02a | 3 days |
 | 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/carekit/pull/17) | 02b | 4 days |
-| 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | 🟢 READY | — | 02c | 3 days |
+| 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | ✅ DONE (2026-04-21) | [#18](https://github.com/tariiq222/carekit/pull/18) | 02c | 3 days |
 | 02e | Finance cluster rollout (Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + ZatcaConfig singleton) ⚠️ owner-review required | ⚪ PENDING | — | 02d | 3 days |
 | 02f | Comms cluster rollout (EmailTemplate, Notification, ChatConversation/Message/Session, CommsChatMessage, ContactMessage + ChatbotConfig singleton) | ⚪ PENDING | — | 02e | 2 days |
 | 02g | AI + media + ops + platform rollout (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | ⚪ PENDING | — | 02f | 2 days |
@@ -144,6 +144,7 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 | 2026-04-21 | 02a — Identity cluster | [#15](https://github.com/tariiq222/carekit/pull/15) | 3 models scoped + Proxy-based Prisma 7 $extends confirmed working + 5 divergences resolved pre-commit + playbook authored in `docs/saas-tenancy.md`. 934/934 tests. |
 | 2026-04-21 | 02b — People cluster | [#16](https://github.com/tariiq222/carekit/pull/16) | 7 models scoped (Client + ClientRefreshToken + Employee + 4 child tables). Client auth tenant-aware. 3 divergences: findUnique→findFirst on composite keys, extension covers where not data, CLS async callback requirement. 941/941 tests, 18/18 isolation e2e. |
 | 2026-04-21 | 02c — Org-config + singletons | [#17](https://github.com/tariiq222/carekit/pull/17) | 14 models scoped (Branch, Dept, ServiceCategory, Service + 5 sub-models, BusinessHour, Holiday, IntakeForm/Field, Rating) + BrandingConfig + OrganizationSettings singleton conversion (upsert-on-read pattern). 953/953 tests, 14 isolation e2e. No divergences reported. |
+| 2026-04-21 | 02d — Bookings cluster | [#18](https://github.com/tariiq222/carekit/pull/18) | 7 models scoped: Booking, BookingStatusLog, WaitlistEntry, GroupSession, GroupEnrollment, GroupSessionWaitlist, BookingSettings. 2 amendments: group-session-min-reached creates BookingStatusLog (plan missed); 5 callback-form $transaction handlers found (plan predicted 2). BookingSettings hierarchical singleton via findFirst. 953/953 unit + 6 new + 32 prior isolation e2e. Typecheck clean. |
 
 ---
 
