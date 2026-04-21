@@ -16,35 +16,34 @@ describe('GetBookingSettingsHandler', () => {
     const branchSettings = { ...dbSettings, id: 'settings-branch', branchId: 'branch-1', bufferMinutes: 10 };
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValueOnce(branchSettings),
+      findFirst: jest.fn().mockResolvedValueOnce(branchSettings),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
     const result = await handler.execute({ branchId: 'branch-1' });
 
     expect((result as typeof branchSettings).bufferMinutes).toBe(10);
-    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
+    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to global settings when no branch-level row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValue(null),
-      findFirst: jest.fn().mockResolvedValue(dbSettings),
+      findFirst: jest.fn()
+        .mockResolvedValueOnce(null)      // branch lookup returns null
+        .mockResolvedValueOnce(dbSettings), // global lookup returns settings
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
     const result = await handler.execute({ branchId: 'branch-1' });
 
     expect((result as typeof dbSettings).bufferMinutes).toBe(0);
-    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
-    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledTimes(1);
+    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledTimes(2);
   });
 
   it('returns hardcoded defaults when no DB row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValue(null),
       findFirst: jest.fn().mockResolvedValue(null),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelRejectedEvent } from '../events/booking-cancel-rejected.event';
 
@@ -18,10 +19,12 @@ export interface RejectCancelBookingCommand {
 export class RejectCancelBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly eventBus: EventBusService,
   ) {}
 
   async execute(cmd: RejectCancelBookingCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await this.prisma.booking.findFirst({
       where: { id: cmd.bookingId },
     });
@@ -45,6 +48,7 @@ export class RejectCancelBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
+          organizationId,
           bookingId: cmd.bookingId,
           fromStatus: 'CANCEL_REQUESTED' as BookingStatus,
           toStatus: BookingStatus.CONFIRMED,

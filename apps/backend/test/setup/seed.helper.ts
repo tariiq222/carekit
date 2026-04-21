@@ -130,6 +130,7 @@ export async function seedBooking(
 
   return prisma.booking.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       clientId: opts.clientId,
       employeeId: opts.employeeId,
       serviceId: opts.serviceId,

@@ -6,6 +6,8 @@ import { EventBusService } from '../../../src/infrastructure/events';
 import { ConfigService } from '@nestjs/config';
 import { PaymentStatus } from '@prisma/client';
 
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
 const TEST_SECRET = 'webhook-test-secret';
 
 function sign(rawBody: string, secret = TEST_SECRET) {
@@ -50,6 +52,7 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
 
     const booking = await testPrisma.booking.create({
       data: {
+        organizationId: DEFAULT_ORG_ID,
         clientId,
         employeeId,
         serviceId,

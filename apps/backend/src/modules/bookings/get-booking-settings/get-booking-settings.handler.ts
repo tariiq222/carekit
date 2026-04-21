@@ -33,7 +33,7 @@ export class GetBookingSettingsHandler {
 
   async execute(query: GetBookingSettingsQuery): Promise<BookingSettings | ResolvedBookingSettings> {
     if (query.branchId) {
-      const branchRow = await this.prisma.bookingSettings.findUnique({
+      const branchRow = await this.prisma.bookingSettings.findFirst({
         where: { branchId: query.branchId },
       });
       if (branchRow) return branchRow;

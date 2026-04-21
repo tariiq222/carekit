@@ -1,5 +1,5 @@
 import { UpsertBookingSettingsHandler } from './upsert-booking-settings.handler';
-import { buildPrisma } from '../testing/booking-test-helpers';
+import { buildPrisma, buildTenant } from '../testing/booking-test-helpers';
 
 const dbSettings = {
   id: 'settings-1', branchId: null,
@@ -15,14 +15,14 @@ describe('UpsertBookingSettingsHandler', () => {
   it('creates settings when none exist for branchId', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValue(null),
+      findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ ...dbSettings, branchId: 'branch-1', bufferMinutes: 15 }),
     };
-    const handler = new UpsertBookingSettingsHandler(prisma as never);
+    const handler = new UpsertBookingSettingsHandler(prisma as never, buildTenant() as never);
 
     const result = await handler.execute({ branchId: 'branch-1', bufferMinutes: 15 });
 
-    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledWith({
+    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledWith({
       where: { branchId: 'branch-1' },
     });
     expect((prisma as any).bookingSettings.create).toHaveBeenCalledWith({
@@ -37,7 +37,7 @@ describe('UpsertBookingSettingsHandler', () => {
       findFirst: jest.fn().mockResolvedValue(dbSettings),
       update: jest.fn().mockResolvedValue({ ...dbSettings, bufferMinutes: 5 }),
     };
-    const handler = new UpsertBookingSettingsHandler(prisma as never);
+    const handler = new UpsertBookingSettingsHandler(prisma as never, buildTenant() as never);
 
     await handler.execute({ branchId: null, bufferMinutes: 5 });
 
