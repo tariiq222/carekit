@@ -1,14 +1,19 @@
 import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { SubmitRatingDto } from './submit-rating.dto';
 
 export type SubmitRatingCommand = SubmitRatingDto;
 
 @Injectable()
 export class SubmitRatingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: SubmitRatingCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     if (dto.score < 1 || dto.score > 5) {
       throw new BadRequestException('Score must be between 1 and 5');
     }
@@ -20,6 +25,7 @@ export class SubmitRatingHandler {
 
     return this.prisma.rating.create({
       data: {
+        organizationId,
         bookingId: dto.bookingId,
         clientId: dto.clientId,
         employeeId: dto.employeeId,

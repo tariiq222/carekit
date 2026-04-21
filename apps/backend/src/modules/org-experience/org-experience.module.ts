@@ -3,6 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MediaModule } from '../media/media.module';
+import { TenantModule } from '../../common/tenant';
 import { DashboardOrganizationSettingsController } from '../../api/dashboard/organization-settings.controller';
 import { UploadLogoHandler } from './branding/upload-logo/upload-logo.handler';
 import { CreateServiceHandler } from './services/create-service.handler';
@@ -38,7 +39,7 @@ const serviceHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MediaModule, MulterModule.register({ storage: memoryStorage() })],
+  imports: [DatabaseModule, MediaModule, TenantModule, MulterModule.register({ storage: memoryStorage() })],
   controllers: [DashboardOrganizationSettingsController],
   providers: [
     ...serviceHandlers,

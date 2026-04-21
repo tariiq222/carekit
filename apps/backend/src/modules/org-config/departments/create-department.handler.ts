@@ -1,36 +1,42 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { CreateDepartmentDto } from './create-department.dto';
 
 export type CreateDepartmentCommand = CreateDepartmentDto;
 
 @Injectable()
 export class CreateDepartmentHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: CreateDepartmentCommand) {
-    try {
-      return await this.prisma.department.create({
-        data: {
-          nameAr: dto.nameAr,
-          nameEn: dto.nameEn,
-          descriptionAr: dto.descriptionAr,
-          descriptionEn: dto.descriptionEn,
-          icon: dto.icon,
-          isActive: dto.isActive ?? true,
-          isVisible: dto.isVisible ?? true,
-          sortOrder: dto.sortOrder ?? 0,
-        },
+    const organizationId = this.tenant.requireOrganizationId();
+
+    const existing = await this.prisma.department.findUnique({
+      where: { dept_org_nameAr: { organizationId, nameAr: dto.nameAr } },
+    });
+    if (existing) {
+      throw new ConflictException({
+        error: 'DEPARTMENT_NAME_EXISTS',
+        message: 'Department with this Arabic name already exists',
       });
-    } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        throw new ConflictException({
-          error: 'DEPARTMENT_NAME_EXISTS',
-          message: 'Department with this Arabic name already exists',
-        });
-      }
-      throw err;
     }
+
+    return this.prisma.department.create({
+      data: {
+        organizationId,
+        nameAr: dto.nameAr,
+        nameEn: dto.nameEn,
+        descriptionAr: dto.descriptionAr,
+        descriptionEn: dto.descriptionEn,
+        icon: dto.icon,
+        isActive: dto.isActive ?? true,
+        isVisible: dto.isVisible ?? true,
+        sortOrder: dto.sortOrder ?? 0,
+      },
+    });
   }
 }

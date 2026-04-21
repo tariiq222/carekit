@@ -1,8 +1,12 @@
 import { GetOrgSettingsHandler } from './get-org-settings.handler';
 import { UpsertOrgSettingsHandler } from './upsert-org-settings.handler';
+import { TenantContextService } from '../../../common/tenant';
+
+const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
 const mockConfig = {
-  id: 'default',
+  id: 'some-uuid',
+  organizationId: DEFAULT_ORG,
   companyNameAr: 'Clinic KSA',
   companyNameEn: 'Clinic KSA',
   businessRegistration: null,
@@ -53,31 +57,50 @@ const buildPrisma = () => ({
   },
 });
 
+const buildTenant = (organizationId = DEFAULT_ORG) =>
+  ({
+    requireOrganizationId: jest.fn().mockReturnValue(organizationId),
+    requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+  }) as unknown as TenantContextService;
+
 describe('GetOrgSettingsHandler', () => {
-  it('returns the singleton row, creating it on first call', async () => {
+  it('returns the org-scoped row via upsert-on-read', async () => {
     const prisma = buildPrisma();
-    const handler = new GetOrgSettingsHandler(prisma as never);
-    const result = await handler.execute();
+    const handler = new GetOrgSettingsHandler(prisma as never, buildTenant());
+    await handler.execute();
     expect(prisma.organizationSettings.upsert).toHaveBeenCalledWith({
-      where: { id: 'default' },
-      create: expect.objectContaining({ id: 'default' }),
+      where: { organizationId: DEFAULT_ORG },
+      create: expect.objectContaining({ organizationId: DEFAULT_ORG }),
       update: {},
     });
-    expect(result.id).toBe('default');
   });
 });
 
 describe('UpsertOrgSettingsHandler', () => {
-  it('upserts singleton config with id=default', async () => {
+  it('upserts settings scoped by organizationId', async () => {
     const prisma = buildPrisma();
-    const handler = new UpsertOrgSettingsHandler(prisma as never);
+    const handler = new UpsertOrgSettingsHandler(prisma as never, buildTenant());
     const dto = { companyNameAr: 'New Clinic' };
-    const result = await handler.execute(dto);
+    await handler.execute(dto);
     expect(prisma.organizationSettings.upsert).toHaveBeenCalledWith({
-      where: { id: 'default' },
-      create: expect.objectContaining({ id: 'default', companyNameAr: 'New Clinic' }),
+      where: { organizationId: DEFAULT_ORG },
+      create: expect.objectContaining({ organizationId: DEFAULT_ORG, companyNameAr: 'New Clinic' }),
       update: { companyNameAr: 'New Clinic' },
     });
-    expect(result.id).toBe('default');
+  });
+
+  it('two orgs can have different settings simultaneously', async () => {
+    const prismaA = buildPrisma();
+    const prismaB = buildPrisma();
+    const handlerA = new UpsertOrgSettingsHandler(prismaA as never, buildTenant('org-A'));
+    const handlerB = new UpsertOrgSettingsHandler(prismaB as never, buildTenant('org-B'));
+    await handlerA.execute({ companyNameAr: 'عيادة أ' });
+    await handlerB.execute({ companyNameAr: 'عيادة ب' });
+    expect(prismaA.organizationSettings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: 'org-A' } }),
+    );
+    expect(prismaB.organizationSettings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: 'org-B' } }),
+    );
   });
 });

@@ -2,7 +2,9 @@ import { BadRequestException } from '@nestjs/common';
 import { UploadLogoHandler } from './upload-logo.handler';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 import { PrismaService } from '../../../../infrastructure/database';
+import { TenantContextService } from '../../../../common/tenant';
 
+const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const MOCK_FILE_ROW = {
   id: 'file-7',
@@ -11,8 +13,8 @@ const MOCK_FILE_ROW = {
   url: 'https://cdn/new-logo.png',
 };
 
-function makeHandler(overrides: { uploadResult?: typeof MOCK_FILE_ROW } = {}) {
-  const brandingUpsert = jest.fn().mockResolvedValue({ id: 'default' });
+function makeHandler(overrides: { uploadResult?: typeof MOCK_FILE_ROW; orgId?: string } = {}) {
+  const brandingUpsert = jest.fn().mockResolvedValue({ id: 'some-uuid', organizationId: overrides.orgId ?? DEFAULT_ORG });
   const prisma = {
     brandingConfig: { upsert: brandingUpsert },
   } as unknown as PrismaService;
@@ -20,8 +22,11 @@ function makeHandler(overrides: { uploadResult?: typeof MOCK_FILE_ROW } = {}) {
     overrides.uploadResult ?? MOCK_FILE_ROW,
   );
   const uploadFile = { execute: uploadFileExecute } as unknown as UploadFileHandler;
+  const tenant = {
+    requireOrganizationId: jest.fn().mockReturnValue(overrides.orgId ?? DEFAULT_ORG),
+  } as unknown as TenantContextService;
   return {
-    handler: new UploadLogoHandler(prisma, uploadFile),
+    handler: new UploadLogoHandler(prisma, uploadFile, tenant),
     brandingUpsert,
     uploadFileExecute,
   };
@@ -49,21 +54,18 @@ describe('UploadLogoHandler', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('on happy path: calls uploadFile then upserts branding.logoUrl', async () => {
+  it('on happy path: calls uploadFile then upserts branding.logoUrl scoped by org', async () => {
     const { handler, uploadFileExecute, brandingUpsert } = makeHandler();
 
     const res = await handler.execute(validCmd, Buffer.alloc(2048));
 
     expect(uploadFileExecute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ownerType: 'branding',
-      }),
+      expect.objectContaining({ ownerType: 'branding' }),
       expect.any(Buffer),
     );
     expect(brandingUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'default' },
-        create: expect.objectContaining({ id: 'default', organizationNameAr: 'منظمتي' }),
+        where: { organizationId: DEFAULT_ORG },
         update: { logoUrl: MOCK_FILE_ROW.url },
       }),
     );

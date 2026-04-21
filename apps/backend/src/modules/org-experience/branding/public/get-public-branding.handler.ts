@@ -1,17 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import type { PublicBranding } from '@carekit/shared';
 import { PrismaService } from '../../../../infrastructure/database';
-
-const SINGLETON_ID = 'default';
+import { TenantContextService } from '../../../../common/tenant';
 
 @Injectable()
 export class GetPublicBrandingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(): Promise<PublicBranding> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const row = await this.prisma.brandingConfig.upsert({
-      where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, organizationNameAr: 'منظمتي' },
+      where: { organizationId },
+      create: { organizationId, organizationNameAr: 'منظمتي' },
       update: {},
     });
 

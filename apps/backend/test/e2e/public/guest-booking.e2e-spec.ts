@@ -56,7 +56,7 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
     branchId = branch.id;
 
     await seedEmployeeService(testPrisma as never, employeeId, serviceId);
-    await testPrisma.employeeBranch.create({ data: { employeeId, branchId } });
+    await testPrisma.employeeBranch.create({ data: { organizationId: '00000000-0000-0000-0000-000000000001', employeeId, branchId } });
   });
 
   afterAll(async () => {

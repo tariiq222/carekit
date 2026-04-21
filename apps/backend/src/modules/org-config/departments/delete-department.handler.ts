@@ -1,15 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 export type DeleteDepartmentCommand = { departmentId: string };
 
 @Injectable()
 export class DeleteDepartmentHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: DeleteDepartmentCommand) {
+    const organizationId = this.tenant.requireOrganizationId();
     const result = await this.prisma.department.deleteMany({
-      where: { id: dto.departmentId },
+      where: { id: dto.departmentId, organizationId },
     });
 
     if (result.count === 0) throw new NotFoundException('Department not found');

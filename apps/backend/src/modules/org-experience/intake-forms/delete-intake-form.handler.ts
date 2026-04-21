@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 export interface DeleteIntakeFormCommand {
   formId: string;
@@ -7,11 +8,15 @@ export interface DeleteIntakeFormCommand {
 
 @Injectable()
 export class DeleteIntakeFormHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute({ formId }: DeleteIntakeFormCommand): Promise<void> {
+    const organizationId = this.tenant.requireOrganizationId();
     const form = await this.prisma.intakeForm.findFirst({
-      where: { id: formId },
+      where: { id: formId, organizationId },
       select: { id: true },
     });
 

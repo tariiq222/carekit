@@ -75,6 +75,7 @@ export async function seedService(
 ) {
   return prisma.service.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       nameAr: overrides.nameAr ?? 'Test Service',
       nameEn: overrides.nameEn,
       durationMins: overrides.durationMins ?? 60,
@@ -91,6 +92,7 @@ export async function seedBranch(
 ) {
   return prisma.branch.create({
     data: {
+      organizationId: DEFAULT_ORG_ID,
       nameAr: overrides.nameAr ?? 'Main Branch',
       nameEn: overrides.nameEn,
       isActive: true,

@@ -42,7 +42,7 @@ describe('GET /public/branches (e2e)', () => {
   it('excludes inactive branches', async () => {
     await seedBranch(testPrisma as never, { nameAr: 'فرع نشط' });
     await testPrisma.branch.create({
-      data: { nameAr: 'فرع مغلق', isActive: false },
+      data: { nameAr: 'فرع مغلق', organizationId: '00000000-0000-0000-0000-000000000001', isActive: false },
     });
 
     const res = await req.get('/public/branches').expect(200);

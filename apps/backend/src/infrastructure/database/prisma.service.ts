@@ -28,6 +28,21 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'EmployeeService',
   'EmployeeAvailability',
   'EmployeeAvailabilityException',
+  // SaaS-02c — org-config + org-experience cluster.
+  'Branch',
+  'Department',
+  'ServiceCategory',
+  'Service',
+  'ServiceBookingConfig',
+  'ServiceDurationOption',
+  'EmployeeServiceOption',
+  'BusinessHour',
+  'Holiday',
+  'BrandingConfig',
+  'IntakeForm',
+  'IntakeField',
+  'Rating',
+  'OrganizationSettings',
 ]);
 
 /**
