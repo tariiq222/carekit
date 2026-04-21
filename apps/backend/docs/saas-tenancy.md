@@ -125,3 +125,61 @@ it('reading org A booking from org B context is forbidden', async () => {
 - Cross-cluster event payloads missing `organizationId`.
 - Super-admin-only endpoints that forget to set `isSuperAdmin: true` in JWT claims.
 - Background jobs that don't bootstrap the tenant context before running handlers.
+
+## Cluster rollout playbook
+
+Use this checklist when extending tenant enforcement to a new cluster (SaaS-02b through 02g follow this pattern, derived from the SaaS-02a identity cluster rollout).
+
+### Phase 1 — Schema (additive)
+1. Add `organizationId String?` to every tenant-scoped model in the cluster's `.prisma` file.
+2. Add `@@index([organizationId])`.
+3. Update any `@unique` that should be per-org → composite `@@unique([organizationId, ...])`.
+4. Denormalize `organizationId` on child tables where the parent has it — the Prisma scoping extension can't traverse joins, so children need their own column.
+5. Generate the migration SQL manually (Prisma `migrate dev` conflicts with the pgvector hooks on this repo; write the ALTER TABLE / FK statements by hand). Mirror the structure of the SaaS-02a `saas02a_identity_add_org_nullable` migration.
+
+### Phase 2 — Backfill
+6. Write a second migration that sets `organizationId = '00000000-0000-0000-0000-000000000001'` (the default org seeded in SaaS-01) for every existing row. Idempotent via `WHERE "organizationId" IS NULL`.
+7. Verify counts: `SELECT COUNT(*) FROM "<table>" WHERE "organizationId" IS NULL` must return 0 post-backfill.
+
+### Phase 3 — Code updates
+8. Every handler that reads/writes these models injects `TenantContextService` and calls `requireOrganizationIdOrDefault()`. The `-OrDefault` variant falls back to `DEFAULT_ORGANIZATION_ID` when no CLS context is set, which keeps `TENANT_ENFORCEMENT=off` mode working.
+9. Cross-model queries filter explicitly (don't rely on the Prisma extension alone — write `where: { organizationId }` in handler code so intent is visible in the diff).
+10. `updateMany` and `deleteMany` must include `organizationId` in `where` even though the extension handles it — defensive depth.
+11. `$queryRaw` calls must either include an explicit `organizationId` predicate or run inside an RLS-wrapped transaction (`SET LOCAL app.current_org_id = ...`).
+
+### Phase 4 — Activate
+12. Add the model names to `SCOPED_MODELS` in `src/infrastructure/database/prisma.service.ts`.
+13. Replace any `findUnique` that used the old single-field unique with the composite key's Prisma-generated name (e.g., `organizationId_name`). Verify the generated name via `npx prisma generate` output if uncertain.
+14. Write a third migration: `ALTER COLUMN "organizationId" SET NOT NULL`, gated by a guard DO-block that aborts if any NULL rows remain.
+
+### Phase 5 — RLS
+15. Fourth migration: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY; FORCE ROW LEVEL SECURITY;` for each table.
+16. `CREATE POLICY tenant_isolation_<table> ON "..." USING ("organizationId"::uuid = app_current_org_id() OR app_current_org_id() IS NULL);` — the `OR ... IS NULL` clause keeps background jobs and migrations working when the GUC isn't set. Plan 02h tightens this.
+
+### Phase 6 — Isolation tests
+17. Add a `<cluster>.e2e-spec.ts` under `test/tenant-isolation/` proving:
+    - Cross-org read returns null / empty.
+    - Cross-org update/delete is blocked (NotFound path in handlers).
+    - RLS hides rows at the SQL level when the GUC differs.
+    - Super-admin context bypasses scoping.
+
+### Phase 7 — Commits
+Each of the above phases is a separate commit prefixed `feat(saas-02X):` / `test(saas-02X):` / `docs(saas-02X):`, matching the granularity used in SaaS-02a.
+
+## Identity cluster example (SaaS-02a)
+
+The first cluster to roll out. Reference commits on branch `feat/saas-02a-identity-cluster`:
+
+- `feat(saas-02a): extend identity schema with organizationId (nullable) on 3 models`
+- `feat(saas-02a): migration — add nullable organizationId to identity models + FK + indexes`
+- `feat(saas-02a): migration — backfill organizationId=default on identity models`
+- `feat(saas-02a): TokenService requires tenantClaims + persists organizationId on RefreshToken`
+- `feat(saas-02a): RefreshTokenHandler round-trips organizationId through refresh flow`
+- `feat(saas-02a): LogoutHandler scopes revocation by current org`
+- `feat(saas-02a): scope all role + permission handlers by current org`
+- `feat(saas-02a): migration — NOT NULL organizationId on identity models (after backfill)`
+- `feat(saas-02a): activate Prisma scoping extension for identity models`
+- `feat(saas-02a): enable RLS + tenant_isolation policies on 3 identity tables`
+- `test(saas-02a): identity cluster cross-tenant isolation e2e`
+- `chore(saas-02a): default TENANT_ENFORCEMENT=permissive in dev+test`
+- `docs(saas-02a): cluster rollout playbook + identity cluster example`
