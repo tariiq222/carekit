@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
 import { GroupSessionMinReachedEvent } from '../events/group-session-min-reached.event';
 
@@ -25,10 +26,12 @@ export interface GroupSessionMinReachedCommand {
 export class GroupSessionMinReachedHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly eventBus: EventBusService,
   ) {}
 
   async execute(cmd: GroupSessionMinReachedCommand): Promise<void> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
     const expiresAt = new Date(Date.now() + PAYMENT_WINDOW_MS);
     const groupSessionKey = `${cmd.employeeId}:${cmd.serviceId}:${cmd.scheduledAt.toISOString()}`;
@@ -59,6 +62,7 @@ export class GroupSessionMinReachedHandler {
       ...bookingIds.map((bookingId) =>
         this.prisma.bookingStatusLog.create({
           data: {
+            organizationId,
             bookingId,
             fromStatus: BookingStatus.PENDING_GROUP_FILL,
             toStatus: BookingStatus.AWAITING_PAYMENT,

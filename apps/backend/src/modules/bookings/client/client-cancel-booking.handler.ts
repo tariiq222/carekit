@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { ClientCancelBookingDto } from './client-cancel-booking.dto';
 
@@ -13,10 +14,12 @@ export type ClientCancelCommand = ClientCancelBookingDto & {
 export class ClientCancelBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   async execute(cmd: ClientCancelCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await this.prisma.booking.findUnique({
       where: { id: cmd.bookingId },
     });
@@ -52,6 +55,7 @@ export class ClientCancelBookingHandler {
         }),
         this.prisma.bookingStatusLog.create({
           data: {
+            organizationId,
             bookingId: cmd.bookingId,
             fromStatus: booking.status,
             toStatus: BookingStatus.CANCEL_REQUESTED,
@@ -75,6 +79,7 @@ export class ClientCancelBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
+          organizationId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.CANCELLED,

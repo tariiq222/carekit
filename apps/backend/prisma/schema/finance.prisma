@@ -166,19 +166,19 @@ enum RefundStatus {
 }
 
 model RefundRequest {
-  id              String        @id @default(uuid())
-  invoiceId       String
-  paymentId       String
-  clientId        String
-  amount          Decimal       @db.Decimal(12, 2)
-  reason          String?
-  status          RefundStatus  @default(PENDING_REVIEW)
-  processedAt     DateTime?
-  processedBy     String?
-  denialReason    String?
-  gatewayRef      String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id           String       @id @default(uuid())
+  invoiceId    String
+  paymentId    String
+  clientId     String
+  amount       Decimal      @db.Decimal(12, 2)
+  reason       String?
+  status       RefundStatus @default(PENDING_REVIEW)
+  processedAt  DateTime?
+  processedBy  String?
+  denialReason String?
+  gatewayRef   String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@index([clientId])
   @@index([invoiceId])

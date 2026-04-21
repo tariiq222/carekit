@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant/tenant.constants';
 import { EventBusService } from '../../../infrastructure/events';
 
 interface PaymentCompletedPayload {
@@ -33,6 +34,9 @@ export class PaymentCompletedEventHandler {
           if (!booking) return;
           if (booking.status !== 'PENDING' && booking.status !== 'AWAITING_PAYMENT') return;
 
+          // Use the booking's own organizationId (event handlers run outside request CLS context)
+          const organizationId = (booking as Record<string, unknown>).organizationId as string ?? DEFAULT_ORGANIZATION_ID;
+
           await this.prisma.$transaction([
             this.prisma.booking.update({
               where: { id: bookingId },
@@ -40,6 +44,7 @@ export class PaymentCompletedEventHandler {
             }),
             this.prisma.bookingStatusLog.create({
               data: {
+                organizationId,
                 bookingId,
                 fromStatus: booking.status,
                 toStatus: 'CONFIRMED',

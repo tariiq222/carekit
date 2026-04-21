@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { RescheduleBookingDto } from './reschedule-booking.dto';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
@@ -15,10 +16,12 @@ export type RescheduleBookingCommand = Omit<RescheduleBookingDto, 'newScheduledA
 export class RescheduleBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   async execute(cmd: RescheduleBookingCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.PENDING, BookingStatus.CONFIRMED], 'rescheduled');
 
     const newScheduledAt = new Date(cmd.newScheduledAt);
@@ -47,6 +50,7 @@ export class RescheduleBookingHandler {
       async (tx) => {
         const conflict = await tx.booking.findFirst({
           where: {
+            organizationId,
             employeeId: booking.employeeId,
             id: { not: cmd.bookingId },
             status: { in: ['PENDING', 'CONFIRMED'] },
@@ -66,6 +70,7 @@ export class RescheduleBookingHandler {
           }),
           tx.bookingStatusLog.create({
             data: {
+              organizationId,
               bookingId: cmd.bookingId,
               fromStatus: booking.status,
               toStatus: booking.status,

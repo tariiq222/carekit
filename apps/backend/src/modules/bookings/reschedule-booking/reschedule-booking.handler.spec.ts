@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { RescheduleBookingHandler } from './reschedule-booking.handler';
-import { buildPrisma, mockBooking } from '../testing/booking-test-helpers';
+import { buildPrisma, buildTenant, mockBooking } from '../testing/booking-test-helpers';
 
 const defaultRescheduleSettings = {
   execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }),
@@ -12,7 +12,7 @@ describe('RescheduleBookingHandler', () => {
 
   it('reschedules booking when new slot is free', async () => {
     const prisma = buildPrisma();
-    await new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
+    await new RescheduleBookingHandler(prisma as never, buildTenant() as never, defaultRescheduleSettings as never).execute({
       bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
@@ -24,7 +24,7 @@ describe('RescheduleBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
-      new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
+      new RescheduleBookingHandler(prisma as never, buildTenant() as never, defaultRescheduleSettings as never).execute({
         bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -36,7 +36,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const prisma = buildPrisma();
     (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(2);
     const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
-    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const handler = new RescheduleBookingHandler(prisma as never, buildTenant() as never, settingsHandler as never);
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
     await expect(
@@ -48,7 +48,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const prisma = buildPrisma();
     (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(3);
     const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
-    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const handler = new RescheduleBookingHandler(prisma as never, buildTenant() as never, settingsHandler as never);
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
     await expect(
@@ -60,7 +60,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const prisma = buildPrisma();
     (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(0);
     const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
-    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const handler = new RescheduleBookingHandler(prisma as never, buildTenant() as never, settingsHandler as never);
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
     await handler.execute({ bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' });

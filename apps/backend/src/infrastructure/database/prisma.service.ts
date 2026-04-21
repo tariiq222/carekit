@@ -43,6 +43,10 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'IntakeField',
   'Rating',
   'OrganizationSettings',
+  // 02d — bookings
+  'Booking', 'BookingStatusLog', 'WaitlistEntry',
+  'GroupSession', 'GroupEnrollment', 'GroupSessionWaitlist',
+  'BookingSettings',
 ]);
 
 /**

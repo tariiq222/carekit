@@ -102,3 +102,10 @@ export const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undef
 export const buildZoomHandler = () => ({
   execute: jest.fn().mockResolvedValue({ joinUrl: 'https://zoom.example/join' }),
 });
+
+export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+/** Minimal TenantContextService mock — always returns the default org id. */
+export const buildTenant = () => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(DEFAULT_ORG_ID),
+});

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface ExpireBookingCommand {
@@ -10,9 +11,13 @@ export interface ExpireBookingCommand {
 
 @Injectable()
 export class ExpireBookingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: ExpireBookingCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await fetchBookingOrFail(
       this.prisma,
       cmd.bookingId,
@@ -27,6 +32,7 @@ export class ExpireBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
+          organizationId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.EXPIRED,

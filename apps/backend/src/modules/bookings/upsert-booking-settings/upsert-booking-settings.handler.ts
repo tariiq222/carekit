@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { BookingSettings, RefundType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 export interface UpsertBookingSettingsCommand {
   branchId: string | null;
@@ -22,9 +23,13 @@ export interface UpsertBookingSettingsCommand {
 
 @Injectable()
 export class UpsertBookingSettingsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: UpsertBookingSettingsCommand): Promise<BookingSettings> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const { branchId, ...fields } = cmd;
 
     const updateData = Object.fromEntries(
@@ -32,7 +37,7 @@ export class UpsertBookingSettingsHandler {
     );
 
     const existing = branchId
-      ? await this.prisma.bookingSettings.findUnique({ where: { branchId } })
+      ? await this.prisma.bookingSettings.findFirst({ where: { branchId } })
       : await this.prisma.bookingSettings.findFirst({ where: { branchId: null } });
 
     if (existing) {
@@ -43,7 +48,7 @@ export class UpsertBookingSettingsHandler {
     }
 
     return this.prisma.bookingSettings.create({
-      data: { branchId, ...updateData },
+      data: { organizationId, branchId, ...updateData },
     });
   }
 }

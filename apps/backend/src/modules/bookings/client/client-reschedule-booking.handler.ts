@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { ClientRescheduleBookingDto } from './client-reschedule-booking.dto';
 
@@ -13,10 +14,12 @@ export type ClientRescheduleCommand = ClientRescheduleBookingDto & {
 export class ClientRescheduleBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   async execute(cmd: ClientRescheduleCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await this.prisma.booking.findUnique({
       where: { id: cmd.bookingId },
     });
@@ -64,6 +67,7 @@ export class ClientRescheduleBookingHandler {
       async (tx: Prisma.TransactionClient) => {
         const conflict = await tx.booking.findFirst({
           where: {
+            organizationId,
             employeeId: booking.employeeId,
             id: { not: cmd.bookingId },
             status: { in: ['PENDING', 'CONFIRMED'] },
@@ -83,6 +87,7 @@ export class ClientRescheduleBookingHandler {
           }),
           tx.bookingStatusLog.create({
             data: {
+              organizationId,
               bookingId: cmd.bookingId,
               fromStatus: booking.status,
               toStatus: booking.status,
