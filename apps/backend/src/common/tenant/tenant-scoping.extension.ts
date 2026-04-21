@@ -67,6 +67,13 @@ export function buildTenantScopingExtension(
           if (!model || !scopedModels.has(model)) return query(args);
           if (!SCOPED_OPERATIONS.has(operation)) return query(args);
 
+          // External-entry bypass: payment-gateway webhooks, FCM DLQ, cron
+          // triggered from outside the app arrive with no tenant. The
+          // receiving handler opts in via `cls.set('systemContext', true)`
+          // inside a `cls.run`, resolves the tenant from the payload, then
+          // re-runs the rest of the work under a normal tenant context.
+          if (ctx.isSystemContext()) return query(args);
+
           const current = ctx.get();
           // Super-admins see everything.
           if (current?.isSuperAdmin) return query(args);
