@@ -107,6 +107,7 @@ export class CreateGuestBookingHandler {
 
       const conflict = await tx.booking.findFirst({
         where: {
+          organizationId,
           employeeId: cmd.employeeId,
           status: { in: ['PENDING', 'CONFIRMED', 'AWAITING_PAYMENT'] },
           scheduledAt: { lt: endsAt },
@@ -120,6 +121,7 @@ export class CreateGuestBookingHandler {
 
       let client = await tx.client.findFirst({
         where: {
+          organizationId,
           OR: [{ phone: cmd.client.phone }, { email: cmd.client.email }],
         },
       });
@@ -151,6 +153,7 @@ export class CreateGuestBookingHandler {
 
       const booking = await tx.booking.create({
         data: {
+          organizationId,
           branchId: cmd.branchId,
           clientId: client.id,
           employeeId: cmd.employeeId,
@@ -171,6 +174,7 @@ export class CreateGuestBookingHandler {
       const vatAmt = parseFloat((subtotal * DEFAULT_VAT_RATE).toFixed(2));
       const total = subtotal + vatAmt;
 
+      // TODO(02e): add organizationId once Finance cluster is scoped
       const invoice = await tx.invoice.create({
         data: {
           branchId: cmd.branchId,
