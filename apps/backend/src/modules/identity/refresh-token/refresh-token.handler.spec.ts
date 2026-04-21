@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { RefreshTokenHandler } from './refresh-token.handler';
 import { TokenService } from '../shared/token.service';
 import { PrismaService } from '../../../infrastructure/database';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
 
 describe('RefreshTokenHandler', () => {
   let handler: RefreshTokenHandler;
@@ -35,7 +36,7 @@ describe('RefreshTokenHandler', () => {
 
   it('issues new token pair when refresh token is valid', async () => {
     prisma.refreshToken.findMany.mockResolvedValue([
-      { id: 'rt-1', userId: 'user-1', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+      { id: 'rt-1', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
     ]);
     jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
     prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null, isActive: true });
@@ -51,5 +52,56 @@ describe('RefreshTokenHandler', () => {
     await expect(
       handler.execute({ userId: 'user-1', rawToken: 'bad' }),
     ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('carries organizationId from old refresh token into new token pair', async () => {
+    prisma.refreshToken.findMany.mockResolvedValue([
+      { id: 'rt-1', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+    ]);
+    jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'RECEPTIONIST', customRoleId: null, customRole: null, isActive: true });
+    prisma.refreshToken.update.mockResolvedValue({});
+    tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+
+    await handler.execute({ userId: 'user-1', rawToken: 'raw' });
+
+    expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1' }),
+      expect.objectContaining({ organizationId: 'org-A', isSuperAdmin: false }),
+    );
+  });
+
+  it('falls back to DEFAULT_ORGANIZATION_ID when old token has no organizationId', async () => {
+    prisma.refreshToken.findMany.mockResolvedValue([
+      { id: 'rt-1', userId: 'user-1', organizationId: null, tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+    ]);
+    jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'RECEPTIONIST', customRoleId: null, customRole: null, isActive: true });
+    prisma.refreshToken.update.mockResolvedValue({});
+    tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+
+    await handler.execute({ userId: 'user-1', rawToken: 'raw' });
+
+    expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ organizationId: DEFAULT_ORGANIZATION_ID }),
+    );
+  });
+
+  it('marks isSuperAdmin=true when user role is SUPER_ADMIN', async () => {
+    prisma.refreshToken.findMany.mockResolvedValue([
+      { id: 'rt-1', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+    ]);
+    jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'SUPER_ADMIN', customRoleId: null, customRole: null, isActive: true });
+    prisma.refreshToken.update.mockResolvedValue({});
+    tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+
+    await handler.execute({ userId: 'user-1', rawToken: 'raw' });
+
+    expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ isSuperAdmin: true }),
+    );
   });
 });

@@ -10,6 +10,16 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+/**
+ * SaaS-02a — per-session tenant identity merged into the JWT payload.
+ * Required: every session belongs to exactly one organization.
+ */
+export interface TenantClaims {
+  organizationId: string;
+  membershipId?: string;
+  isSuperAdmin?: boolean;
+}
+
 export interface JwtPayload {
   sub: string;
   email: string;
@@ -17,6 +27,12 @@ export interface JwtPayload {
   customRoleId: string | null;
   permissions: Array<{ action: string; subject: string }>;
   features: string[];
+  // Newly issued tokens always carry these three (SaaS-02a onward). Kept
+  // optional because a decoded JwtPayload might represent a pre-rollout
+  // token still in circulation during the rollout window.
+  organizationId?: string;
+  membershipId?: string;
+  isSuperAdmin?: boolean;
 }
 
 @Injectable()
@@ -27,13 +43,16 @@ export class TokenService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async issueTokenPair(user: {
-    id: string;
-    email: string;
-    role: string;
-    customRoleId: string | null;
-    customRole: { permissions: Array<{ action: string; subject: string }> } | null;
-  }): Promise<TokenPair> {
+  async issueTokenPair(
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      customRoleId: string | null;
+      customRole: { permissions: Array<{ action: string; subject: string }> } | null;
+    },
+    tenantClaims: TenantClaims,
+  ): Promise<TokenPair> {
     const permissions = user.customRole?.permissions ?? [];
     const payload: JwtPayload = {
       sub: user.id,
@@ -42,6 +61,9 @@ export class TokenService {
       customRoleId: user.customRoleId,
       permissions,
       features: [],
+      organizationId: tenantClaims.organizationId,
+      membershipId: tenantClaims.membershipId,
+      isSuperAdmin: tenantClaims.isSuperAdmin ?? false,
     };
 
     const accessToken = this.jwt.sign(payload, {
@@ -56,7 +78,13 @@ export class TokenService {
     const expiresAt = new Date(Date.now() + this.parseTtlMs(ttl));
 
     await this.prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash, tokenSelector, expiresAt },
+      data: {
+        userId: user.id,
+        organizationId: tenantClaims.organizationId,
+        tokenHash,
+        tokenSelector,
+        expiresAt,
+      },
     });
 
     return { accessToken, refreshToken: rawRefresh };

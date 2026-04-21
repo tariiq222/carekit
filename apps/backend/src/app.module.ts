@@ -1,8 +1,11 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ClsModule } from 'nestjs-cls';
 import { envValidationSchema } from './config/env.validation';
+import { TenantModule } from './common/tenant';
+import { TenantResolverMiddleware } from './common/tenant/tenant-resolver.middleware';
 import { DatabaseModule } from './infrastructure/database';
 import { MessagingModule } from './infrastructure/messaging.module';
 import { AiInfraModule } from './infrastructure/ai';
@@ -35,6 +38,11 @@ import { PublicModule } from './api/public/public.module';
         allowUnknown: true,
       },
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+    }),
+    TenantModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1_000_000 }]),
     DatabaseModule,
     MessagingModule,
@@ -57,6 +65,15 @@ import { PublicModule } from './api/public/public.module';
     MobileEmployeeModule,
     PublicModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    TenantResolverMiddleware,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    // Apply after Passport populates req.user. Wildcard covers all routes;
+    // unauthenticated routes simply skip enforcement in 'off' mode (default).
+    consumer.apply(TenantResolverMiddleware).forRoutes('*');
+  }
+}

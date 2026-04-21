@@ -13,6 +13,7 @@ import { RefreshTokenDto } from '../../modules/identity/refresh-token/refresh-to
 import { LogoutDto } from '../../modules/identity/logout/logout.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../../modules/identity/shared/token.service';
+import { DEFAULT_ORGANIZATION_ID } from '../../common/tenant';
 import { UserId } from '../../common/auth/user-id.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
@@ -106,7 +107,10 @@ export class AuthController {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
-    const tokens = await this.tokens.issueTokenPair(user);
+    const tokens = await this.tokens.issueTokenPair(user, {
+      organizationId: record.organizationId ?? DEFAULT_ORGANIZATION_ID,
+      isSuperAdmin: user.role === 'SUPER_ADMIN',
+    });
     return {
       ...tokens,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),

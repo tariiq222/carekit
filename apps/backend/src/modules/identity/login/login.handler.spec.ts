@@ -34,10 +34,18 @@ describe('LoginHandler', () => {
         LoginHandler,
         {
           provide: PrismaService,
-          useValue: { user: { findUnique: jest.fn() } } as unknown as PrismaService,
+          useValue: {
+            user: { findUnique: jest.fn() },
+            membership: { findFirst: jest.fn().mockResolvedValue(null) },
+          } as unknown as PrismaService,
         },
         { provide: PasswordService, useValue: { verify: jest.fn() } },
-        { provide: TokenService, useValue: { issueTokenPair: jest.fn() } },
+        {
+          provide: TokenService,
+          useValue: {
+            issueTokenPair: jest.fn().mockResolvedValue({ accessToken: 'acc', refreshToken: 'ref' }),
+          },
+        },
       ],
     }).compile();
 
@@ -78,5 +86,56 @@ describe('LoginHandler', () => {
     await expect(
       handler.execute({ email: 'admin@clinic.sa', password: 'secret' }),
     ).rejects.toThrow(UnauthorizedException);
+  });
+
+  describe('SaaS-01 tenant claims', () => {
+    it('passes the active membership to TokenService.issueTokenPair', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser as never);
+      passwordService.verify.mockResolvedValue(true);
+      prisma.membership.findFirst.mockResolvedValue({
+        id: 'mem-1',
+        organizationId: '00000000-0000-0000-0000-000000000001',
+      });
+
+      await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
+
+      expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user-1' }),
+        {
+          organizationId: '00000000-0000-0000-0000-000000000001',
+          membershipId: 'mem-1',
+          isSuperAdmin: false,
+        },
+      );
+    });
+
+    it('falls back to DEFAULT_ORGANIZATION_ID when user has no membership row', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser as never);
+      passwordService.verify.mockResolvedValue(true);
+      prisma.membership.findFirst.mockResolvedValue(null);
+
+      await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
+
+      expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          organizationId: '00000000-0000-0000-0000-000000000001',
+          membershipId: undefined,
+        }),
+      );
+    });
+
+    it('marks isSuperAdmin true when user.role is SUPER_ADMIN', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, role: 'SUPER_ADMIN' } as never);
+      passwordService.verify.mockResolvedValue(true);
+      prisma.membership.findFirst.mockResolvedValue(null);
+
+      await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
+
+      expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ isSuperAdmin: true }),
+      );
+    });
   });
 });

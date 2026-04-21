@@ -71,4 +71,8 @@ export const envValidationSchema = Joi.object({
   // Moyasar (Finance BC) — optional until Phase 7
   MOYASAR_API_KEY: Joi.string().allow('').optional(),
   MOYASAR_WEBHOOK_SECRET: Joi.string().allow('').optional(),
+
+  // Multi-tenancy (SaaS-01) — flag defaults OFF until Plan 02 rollout
+  TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('off'),
+  DEFAULT_ORGANIZATION_ID: Joi.string().uuid().default('00000000-0000-0000-0000-000000000001'),
 }).unknown(true);

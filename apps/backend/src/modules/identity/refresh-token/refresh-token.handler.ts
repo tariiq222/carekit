@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../infrastructure/database';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
 import { TokenService, TokenPair } from '../shared/token.service';
 import type { RefreshTokenCommand } from './refresh-token.command';
 
@@ -32,6 +33,12 @@ export class RefreshTokenHandler {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
-    return this.tokens.issueTokenPair(user);
+    // Carry the tenant through the refresh cycle. DEFAULT_ORGANIZATION_ID is
+    // the safety net for tokens issued before the SaaS-02a backfill — should
+    // be zero in prod once the backfill migration runs.
+    return this.tokens.issueTokenPair(user, {
+      organizationId: matched.organizationId ?? DEFAULT_ORGANIZATION_ID,
+      isSuperAdmin: user.role === 'SUPER_ADMIN',
+    });
   }
 }

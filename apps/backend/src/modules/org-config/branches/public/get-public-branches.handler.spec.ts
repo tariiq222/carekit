@@ -1,6 +1,6 @@
-import { GetPublicBranchesHandler } from './get-public-branches.handler';
+import { GetPublicBranchesHandler, PublicBranchItem } from './get-public-branches.handler';
 
-const activeBranch = {
+const activeBranch: PublicBranchItem = {
   id: 'branch-1',
   nameAr: 'الفرع الرئيسي',
   nameEn: 'Main Branch',
@@ -8,7 +8,7 @@ const activeBranch = {
   addressAr: 'شارع الملك فهد',
 };
 
-const inactiveBranch = {
+const inactiveBranch: PublicBranchItem = {
   id: 'branch-2',
   nameAr: 'الفرع المغلق',
   nameEn: 'Closed Branch',
@@ -16,7 +16,7 @@ const inactiveBranch = {
   addressAr: null,
 };
 
-const buildPrisma = (rows: typeof activeBranch[]) => ({
+const buildPrisma = (rows: PublicBranchItem[]) => ({
   branch: {
     findMany: jest.fn().mockResolvedValue(rows),
   },
@@ -67,7 +67,7 @@ describe('GetPublicBranchesHandler', () => {
 
     const result = await handler.execute();
 
-    const item = result[0] as Record<string, unknown>;
+    const item = result[0] as unknown as Record<string, unknown>;
     expect(item).not.toHaveProperty('phone');
     expect(item).not.toHaveProperty('isActive');
     expect(item).not.toHaveProperty('createdAt');
