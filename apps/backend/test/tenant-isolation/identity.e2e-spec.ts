@@ -31,6 +31,13 @@ describe('SaaS-02a — identity cluster isolation', () => {
       select: { id: true },
     });
 
+    // Give the user a membership in orgA — matches real staff users and keeps
+    // the SaaS-01 foundation invariant ("every non-CLIENT user has ≥1 active
+    // membership") green when both specs run together.
+    await h.prisma.membership.create({
+      data: { userId: user.id, organizationId: orgA.id, role: 'ADMIN', isActive: true },
+    });
+
     let tokenId: string;
 
     // Seed a token under org A
