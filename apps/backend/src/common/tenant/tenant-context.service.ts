@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
-import { TENANT_CLS_KEY } from './tenant.constants';
+import { DEFAULT_ORGANIZATION_ID, TENANT_CLS_KEY } from './tenant.constants';
 
 export interface TenantContext {
   organizationId: string;
@@ -39,6 +39,17 @@ export class TenantContextService {
     const id = this.getOrganizationId();
     if (!id) throw new Error('Tenant context not set — no organizationId available');
     return id;
+  }
+
+  /**
+   * Returns the current tenant's organizationId, or falls back to
+   * DEFAULT_ORGANIZATION_ID when no context is set. Use this from handlers
+   * that must keep working under `TENANT_ENFORCEMENT=off` (no middleware
+   * populates CLS in that mode) while still writing/reading a concrete
+   * organizationId. Never returns undefined.
+   */
+  requireOrganizationIdOrDefault(): string {
+    return this.getOrganizationId() ?? DEFAULT_ORGANIZATION_ID;
   }
 
   isSuperAdmin(): boolean {

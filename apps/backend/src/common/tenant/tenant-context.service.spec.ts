@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ClsModule, ClsService } from 'nestjs-cls';
 import { TenantContextService, TenantContext } from './tenant-context.service';
+import { DEFAULT_ORGANIZATION_ID } from './tenant.constants';
 
 describe('TenantContextService', () => {
   let cls: ClsService;
@@ -65,6 +66,19 @@ describe('TenantContextService', () => {
     cls.run(() => {
       svc.set(ctx);
       expect(svc.requireOrganizationId()).toBe('org-1');
+    });
+  });
+
+  it('requireOrganizationIdOrDefault falls back to DEFAULT_ORGANIZATION_ID when no context', () => {
+    cls.run(() => {
+      expect(svc.requireOrganizationIdOrDefault()).toBe(DEFAULT_ORGANIZATION_ID);
+    });
+  });
+
+  it('requireOrganizationIdOrDefault returns the current org when set', () => {
+    cls.run(() => {
+      svc.set(ctx);
+      expect(svc.requireOrganizationIdOrDefault()).toBe('org-1');
     });
   });
 });
