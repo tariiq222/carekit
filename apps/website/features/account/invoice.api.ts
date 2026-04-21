@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
+import { getApiBase } from '@/lib/api-base';
 
 export interface InvoiceDetail {
   id: string;
@@ -25,7 +25,7 @@ export async function getInvoice(
   invoiceId: string,
   accessToken: string,
 ): Promise<InvoiceDetail> {
-  const res = await fetch(`${API_BASE}/public/invoices/${encodeURIComponent(invoiceId)}`, {
+  const res = await fetch(`${getApiBase()}/public/invoices/${encodeURIComponent(invoiceId)}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

@@ -1,10 +1,7 @@
 import type { AvailableSlot, GuestBookingPayload, GuestBookingResponse } from '@carekit/shared';
 import type { PublicEmployee } from '@carekit/api-client';
 
-const API_BASE =
-  process.env.INTERNAL_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:5100';
+import { getApiBase } from '@/lib/api-base';
 
 export interface PublicBranch {
   id: string;
@@ -14,15 +11,9 @@ export interface PublicBranch {
   addressAr: string | null;
 }
 
-/**
- * Fetches active branches from GET /public/branches.
- * NOTE: This endpoint does not yet exist in the backend (backend gap — needs a
- * PublicBranchesController under src/api/public/).
- * Returns [] on any non-OK response so the wizard can fall back gracefully.
- */
 export async function getPublicBranches(): Promise<PublicBranch[]> {
   try {
-    const res = await fetch(`${API_BASE}/public/branches`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBase()}/public/branches`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return (json.data ?? json) as PublicBranch[];
@@ -39,7 +30,7 @@ export async function getPublicAvailability(
   const params = new URLSearchParams({ date });
   if (serviceId) params.set('serviceId', serviceId);
   const res = await fetch(
-    `${API_BASE}/public/employees/${employeeId}/availability?${params}`,
+    `${getApiBase()}/public/employees/${employeeId}/availability?${params}`,
     { cache: 'no-store' },
   );
   if (!res.ok) throw new Error(`Failed to fetch availability: ${res.status}`);
@@ -48,7 +39,7 @@ export async function getPublicAvailability(
 }
 
 export async function listPublicEmployees(): Promise<PublicEmployee[]> {
-  const res = await fetch(`${API_BASE}/public/employees`, {
+  const res = await fetch(`${getApiBase()}/public/employees`, {
     next: { revalidate: 60, tags: ['public-employees'] },
   });
   if (!res.ok) throw new Error(`Failed to fetch employees: ${res.status}`);
@@ -60,7 +51,7 @@ export async function createGuestBooking(
   payload: GuestBookingPayload,
   sessionToken: string,
 ): Promise<GuestBookingResponse> {
-  const res = await fetch(`${API_BASE}/public/bookings`, {
+  const res = await fetch(`${getApiBase()}/public/bookings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -80,7 +71,7 @@ export async function initGuestPayment(
   bookingId: string,
   sessionToken: string,
 ): Promise<{ paymentId: string; redirectUrl: string }> {
-  const res = await fetch(`${API_BASE}/public/payments/init`, {
+  const res = await fetch(`${getApiBase()}/public/payments/init`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

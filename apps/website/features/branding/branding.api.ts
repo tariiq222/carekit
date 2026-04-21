@@ -1,16 +1,11 @@
 import type { PublicBranding } from '@carekit/shared';
 
+import { getApiBase } from '@/lib/api-base';
+
 export async function getPublicBrandingForSsr(): Promise<PublicBranding> {
-  const base =
-    process.env.INTERNAL_API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    'http://localhost:5100';
-  const response = await fetch(
-    `${base}/api/v1/public/branding`,
-    {
-      next: { revalidate: 60, tags: ['branding'] },
-    },
-  );
+  const response = await fetch(`${getApiBase()}/public/branding`, {
+    next: { revalidate: 60, tags: ['branding'] },
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch public branding: ${response.status}`);

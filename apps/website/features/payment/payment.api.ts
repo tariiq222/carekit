@@ -1,13 +1,10 @@
-const API_BASE =
-  process.env.INTERNAL_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:5100';
+import { getApiBase } from '@/lib/api-base';
 
 export async function initGuestPayment(
   bookingId: string,
   sessionToken: string,
 ): Promise<{ paymentId: string; redirectUrl: string }> {
-  const res = await fetch(`${API_BASE}/public/payments/init`, {
+  const res = await fetch(`${getApiBase()}/public/payments/init`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -24,7 +21,7 @@ export async function initGuestPayment(
 }
 
 export async function getPublicBranding(): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/public/branding`, { next: { revalidate: 60 } });
+  const res = await fetch(`${getApiBase()}/public/branding`, { next: { revalidate: 60 } });
   if (!res.ok) throw new Error(`Failed to fetch branding: ${res.status}`);
   return res.json();
 }

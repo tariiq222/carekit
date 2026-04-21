@@ -1,13 +1,10 @@
 import { OtpChannel, OtpPurpose } from '@carekit/shared';
 import type { OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse } from '@carekit/shared';
 
-const API_BASE =
-  process.env.INTERNAL_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:5100';
+import { getApiBase } from '@/lib/api-base';
 
 export async function requestOtp(payload: OtpRequestPayload): Promise<void> {
-  const res = await fetch(`${API_BASE}/public/otp/request`, {
+  const res = await fetch(`${getApiBase()}/public/otp/request`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -29,7 +26,7 @@ export async function verifyOtp(
     code,
     purpose,
   };
-  const res = await fetch(`${API_BASE}/public/otp/verify`, {
+  const res = await fetch(`${getApiBase()}/public/otp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

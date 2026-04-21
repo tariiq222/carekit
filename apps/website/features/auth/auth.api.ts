@@ -6,15 +6,12 @@ import type {
   ClientBookingListResponse,
 } from '@carekit/shared';
 
-const API_BASE =
-  process.env.INTERNAL_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:5100';
+import { getApiBase } from '@/lib/api-base';
 
 export async function clientLoginApi(
   payload: ClientLoginPayload,
 ): Promise<ClientAuthResponse> {
-  const res = await fetch(`${API_BASE}/public/auth/login`, {
+  const res = await fetch(`${getApiBase()}/public/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -31,7 +28,7 @@ export async function clientLoginApi(
 export async function clientRegisterApi(
   payload: ClientRegisterPayload,
 ): Promise<ClientAuthResponse> {
-  const res = await fetch(`${API_BASE}/public/auth/register`, {
+  const res = await fetch(`${getApiBase()}/public/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -49,7 +46,7 @@ export async function clientRegisterApi(
 }
 
 export async function getMeApi(): Promise<ClientProfile> {
-  const res = await fetch(`${API_BASE}/public/me`, {
+  const res = await fetch(`${getApiBase()}/public/me`, {
     credentials: 'include',
   });
   if (res.status === 401) {
@@ -68,7 +65,7 @@ export async function getMyBookingsApi(
   pageSize = 10,
 ): Promise<ClientBookingListResponse> {
   const res = await fetch(
-    `${API_BASE}/public/me/bookings?page=${page}&pageSize=${pageSize}`,
+    `${getApiBase()}/public/me/bookings?page=${page}&pageSize=${pageSize}`,
     { credentials: 'include' },
   );
   if (res.status === 401) {
@@ -86,7 +83,7 @@ export async function cancelMyBookingApi(
   bookingId: string,
   reason?: string,
 ): Promise<{ status: string; requiresApproval: boolean }> {
-  const res = await fetch(`${API_BASE}/public/me/bookings/${bookingId}/cancel`, {
+  const res = await fetch(`${getApiBase()}/public/me/bookings/${bookingId}/cancel`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -105,7 +102,7 @@ export async function rescheduleMyBookingApi(
   newScheduledAt: string,
   newDurationMins?: number,
 ): Promise<{ booking: unknown }> {
-  const res = await fetch(`${API_BASE}/public/me/bookings/${bookingId}/reschedule`, {
+  const res = await fetch(`${getApiBase()}/public/me/bookings/${bookingId}/reschedule`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -120,7 +117,7 @@ export async function rescheduleMyBookingApi(
 }
 
 export async function clientLogoutApi(): Promise<void> {
-  await fetch(`${API_BASE}/public/auth/logout`, {
+  await fetch(`${getApiBase()}/public/auth/logout`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -130,7 +127,7 @@ export async function clientResetPasswordApi(payload: {
   sessionToken: string;
   newPassword: string;
 }): Promise<void> {
-  const res = await fetch(`${API_BASE}/public/auth/reset-password`, {
+  const res = await fetch(`${getApiBase()}/public/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
