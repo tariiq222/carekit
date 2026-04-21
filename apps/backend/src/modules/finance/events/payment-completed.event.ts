@@ -6,6 +6,9 @@ export interface PaymentCompletedPayload {
   bookingId: string;
   amount: number;
   currency: string;
+  // SaaS-02e — optional during rollout; made required in 02f once all
+  // producers (moyasar webhook, bank-transfer, process-payment) set it.
+  organizationId?: string;
 }
 
 /**

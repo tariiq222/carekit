@@ -10,6 +10,9 @@ export interface PaymentFailedPayload {
   clientEmail?: string;
   clientName?: string;
   fcmToken?: string;
+  // SaaS-02e — optional during rollout; made required in 02f once all
+  // producers set it.
+  organizationId?: string;
 }
 
 /**
