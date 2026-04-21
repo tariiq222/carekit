@@ -69,7 +69,7 @@ model RefreshToken {
   id             String    @id @default(uuid())
   userId         String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId String?
+  organizationId String
   tokenHash      String    @unique
   // First 8 chars of the raw UUID used as a fast lookup key.
   // Lets us do an indexed DB lookup to a single row before the bcrypt compare,
@@ -99,7 +99,7 @@ model ClientRefreshToken {
 
 model CustomRole {
   id             String       @id @default(uuid())
-  organizationId String?
+  organizationId String
   name           String
   permissions    Permission[]
   users          User[]
@@ -115,7 +115,7 @@ model Permission {
   customRoleId   String
   customRole     CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
   // Denormalized from CustomRole — Prisma scoping extension cannot traverse joins.
-  organizationId String?
+  organizationId String
   action         String
   subject        String
   createdAt      DateTime   @default(now())
