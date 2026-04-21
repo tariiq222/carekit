@@ -10,6 +10,7 @@ export interface ClientJwtPayload {
   email: string;
   namespace: 'client';
   jti: string;
+  organizationId?: string;
 }
 
 @Injectable()
@@ -51,6 +52,7 @@ export class ClientJwtStrategy extends PassportStrategy(Strategy, 'client-jwt') 
       id: client.id,
       email: client.email,
       phone: client.phone,
+      organizationId: payload.organizationId ?? client.organizationId ?? null,
     };
   }
 }
