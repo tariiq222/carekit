@@ -24,7 +24,6 @@ const buildPrisma = () => {
     },
     invoice: {
       findFirst: jest.fn(),
-      findUnique: jest.fn(),
       update: jest.fn(),
     },
     $transaction: jest.fn(async (fn) => fn(prisma)),
@@ -107,11 +106,6 @@ describe('VerifyPaymentHandler', () => {
     });
     prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: 230 } });
     prisma.invoice.update.mockResolvedValue({ id: INVOICE_ID, status: InvoiceStatus.PAID });
-    prisma.invoice.findUnique.mockResolvedValue({
-      id: INVOICE_ID,
-      bookingId: 'book-1',
-      currency: 'SAR',
-    });
 
     const handler = new VerifyPaymentHandler(prisma as never, eventBus as never);
     const result = await handler.execute({

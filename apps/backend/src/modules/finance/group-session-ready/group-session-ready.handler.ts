@@ -90,7 +90,7 @@ export class GroupSessionReadyHandler {
       } catch (err) {
         // ConflictException (409) = invoice already exists — fetch it
         if ((err as { status?: number }).status === 409) {
-          invoice = await this.prisma.invoice.findUnique({
+          invoice = await this.prisma.invoice.findFirst({
             where: { bookingId: booking.id },
           });
         } else {

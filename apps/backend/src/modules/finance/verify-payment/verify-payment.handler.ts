@@ -61,8 +61,10 @@ export class VerifyPaymentHandler {
           throw new NotFoundException(`Invoice ${payment.invoiceId} not found`);
         }
 
+        // payment.organizationId is available from the Proxy-scoped findFirst above.
+        // Pass it explicitly because tx bypasses the tenant Proxy.
         const totalPaid = await tx.payment.aggregate({
-          where: { invoiceId: payment.invoiceId, status: PaymentStatus.COMPLETED },
+          where: { invoiceId: payment.invoiceId, organizationId: payment.organizationId, status: PaymentStatus.COMPLETED },
           _sum: { amount: true },
         });
 
@@ -84,7 +86,7 @@ export class VerifyPaymentHandler {
     );
 
     if (newInvoiceStatus === InvoiceStatus.PAID) {
-      const invoice = await this.prisma.invoice.findUnique({
+      const invoice = await this.prisma.invoice.findFirst({
         where: { id: payment.invoiceId },
         select: { id: true, bookingId: true, currency: true },
       });
