@@ -9,8 +9,8 @@ import {
   EyeIcon,
 } from "@hugeicons/core-free-icons"
 import { Badge } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Switch } from "@carekit/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import {
   AlertDialog,
   AlertDialogAction,

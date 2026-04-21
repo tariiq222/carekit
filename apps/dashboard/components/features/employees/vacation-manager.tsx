@@ -17,7 +17,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Textarea } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"

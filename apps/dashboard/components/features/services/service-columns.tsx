@@ -16,7 +16,7 @@ import {
 } from "@carekit/ui"
 
 import { Badge } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import type { Service } from "@/lib/types/service"
 import { ServiceAvatar } from "./service-avatar"

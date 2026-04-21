@@ -4,7 +4,7 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@carekit/ui"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@carekit/ui"
 import { getInitials } from "@/lib/utils"
 import type { ActivityLog } from "@/lib/types/activity-log"
 

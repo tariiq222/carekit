@@ -8,7 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { Card } from "@carekit/ui"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@carekit/ui"
 import { Badge } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { cn, formatName, getInitials, getAvatarGradientStyle } from "@/lib/utils"

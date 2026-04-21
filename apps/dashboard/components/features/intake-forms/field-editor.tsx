@@ -20,7 +20,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import {
   Select,
   SelectContent,

@@ -6,13 +6,13 @@ import { MoreHorizontalIcon, PencilEdit01Icon, Delete02Icon } from "@hugeicons/c
 
 import { Badge } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import type { Coupon } from "@/lib/types/coupon"

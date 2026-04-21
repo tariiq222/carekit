@@ -8,7 +8,7 @@ import { Add01Icon, Delete02Icon, ArrowDown01Icon, PencilEdit01Icon } from "@hug
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import { Badge } from "@carekit/ui"
 import { useIntakeForms, useIntakeFormMutations } from "@/hooks/use-services"

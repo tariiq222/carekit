@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@carekit/ui"
 import { cn, formatClinicDate, formatClinicTime } from "@/lib/utils"
 import type { DateFormat, TimeFormat } from "@/lib/utils"
 import type { Booking } from "@/lib/types/booking"

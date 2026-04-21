@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 
 import { useRoles, usePermissions, useRoleMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"

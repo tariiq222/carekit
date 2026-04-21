@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import {
   Select,

@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useFeatureFlags, useFeatureFlagMutation } from "@/hooks/use-feature-flags"

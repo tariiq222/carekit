@@ -7,7 +7,7 @@ import { Download04Icon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { FilterBar } from "@/components/features/filter-bar"

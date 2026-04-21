@@ -14,7 +14,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 import {
   useEmployeeAvailability,
   useEmployeeBreaks,

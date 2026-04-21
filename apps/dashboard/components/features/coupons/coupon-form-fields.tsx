@@ -11,7 +11,7 @@ import {
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { DateTimeInput } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { Card, CardContent } from "@carekit/ui"
 import {
   Select,

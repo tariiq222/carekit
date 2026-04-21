@@ -9,8 +9,8 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@carekit/ui"
+import { ScrollArea } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"

@@ -14,10 +14,10 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Input } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useServiceBookingTypes } from "@/hooks/use-services"
 import {

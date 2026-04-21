@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 
 import { useLocale } from "@/components/locale-provider"
 import type { Invoice } from "@/lib/types/invoice"

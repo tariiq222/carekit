@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 import { Badge } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"

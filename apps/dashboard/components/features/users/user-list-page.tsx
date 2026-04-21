@@ -21,7 +21,7 @@ import { DeleteUserDialog } from "@/components/features/users/delete-user-dialog
 import { CreateRoleDialog } from "@/components/features/users/create-role-dialog"
 import { Button } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
 import { useUsers, useRoles, useUserMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"
 import type { User } from "@/lib/types/user"

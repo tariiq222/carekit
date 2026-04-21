@@ -27,7 +27,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 
 import { useZatcaConfig, useOnboardingStatus, useZatcaMutations } from "@/hooks/use-zatca"
 import { useLocale } from "@/components/locale-provider"

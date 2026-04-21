@@ -8,7 +8,7 @@ import { Add01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import {
   useDurationOptions,

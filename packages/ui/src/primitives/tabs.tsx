@@ -4,8 +4,8 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
-import { useDocumentDir } from "@/hooks/use-document-dir"
+import { cn } from "../lib/cn"
+import { useDocumentDir } from "../hooks/use-document-dir"
 
 function Tabs({
   className,

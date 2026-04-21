@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 
 /* ─── Saudi Banks — full SAMA licensed list ─── */
 export interface SaudiBank {

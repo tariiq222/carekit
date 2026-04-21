@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@carekit/ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
 
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"

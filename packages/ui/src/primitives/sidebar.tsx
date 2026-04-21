@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/cn"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
@@ -13,7 +13,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "./sheet"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons"
 import { SIDEBAR_WIDTH_MOBILE, useSidebar } from "./sidebar-context"

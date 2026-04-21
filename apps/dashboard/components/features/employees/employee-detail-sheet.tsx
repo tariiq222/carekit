@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetBody,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 import { Badge } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"

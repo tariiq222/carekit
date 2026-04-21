@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import type { Payment } from "@/lib/types/payment"
 import { formatClinicDate } from "@/lib/utils"
 import type { DateFormat } from "@/lib/utils"

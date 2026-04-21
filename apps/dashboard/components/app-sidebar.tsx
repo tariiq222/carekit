@@ -20,12 +20,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@carekit/ui"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

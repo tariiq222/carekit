@@ -19,7 +19,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { EmptyState } from "@/components/features/empty-state"
 import { useLocale } from "@/components/locale-provider"

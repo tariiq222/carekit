@@ -11,8 +11,8 @@ import {
   DialogFooter,
 } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
+import { ScrollArea } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { FieldEditor } from "@/components/features/intake-forms/field-editor"
 import { FormInfoTab } from "@/components/features/intake-forms/form-info-tab"
