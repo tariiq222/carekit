@@ -12,15 +12,15 @@ enum OtpPurpose {
 }
 
 model OtpCode {
-  id          String     @id @default(uuid())
-  channel     OtpChannel
-  identifier  String
-  codeHash    String
-  purpose     OtpPurpose
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  attempts    Int        @default(0)
-  createdAt   DateTime   @default(now())
+  id         String     @id @default(uuid())
+  channel    OtpChannel
+  identifier String
+  codeHash   String
+  purpose    OtpPurpose
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int        @default(0)
+  createdAt  DateTime   @default(now())
 
   @@index([identifier, purpose])
   @@index([expiresAt])
@@ -66,20 +66,22 @@ model User {
 }
 
 model RefreshToken {
-  id            String    @id @default(uuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash     String    @unique
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String?
+  tokenHash      String    @unique
   // First 8 chars of the raw UUID used as a fast lookup key.
   // Lets us do an indexed DB lookup to a single row before the bcrypt compare,
   // avoiding a full-table scan over all active tokens.
-  tokenSelector String
-  expiresAt     DateTime
-  revokedAt     DateTime?
-  createdAt     DateTime  @default(now())
+  tokenSelector  String
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
 
   @@index([userId])
   @@index([tokenSelector])
+  @@index([organizationId])
 }
 
 model ClientRefreshToken {
@@ -96,21 +98,28 @@ model ClientRefreshToken {
 }
 
 model CustomRole {
-  id          String       @id @default(uuid())
-  name        String       @unique
-  permissions Permission[]
-  users       User[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             String       @id @default(uuid())
+  organizationId String?
+  name           String
+  permissions    Permission[]
+  users          User[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
 }
 
 model Permission {
-  id           String     @id @default(uuid())
-  customRoleId String
-  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
-  action       String
-  subject      String
-  createdAt    DateTime   @default(now())
+  id             String     @id @default(uuid())
+  customRoleId   String
+  customRole     CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  // Denormalized from CustomRole — Prisma scoping extension cannot traverse joins.
+  organizationId String?
+  action         String
+  subject        String
+  createdAt      DateTime   @default(now())
 
   @@unique([customRoleId, action, subject])
+  @@index([organizationId])
 }
