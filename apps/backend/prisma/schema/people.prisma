@@ -33,6 +33,7 @@ enum ClientBloodType {
 
 model Client {
   id                String            @id @default(uuid())
+  organizationId    String?
   userId            String?
   // Legacy single-name field kept in sync with first/middle/last on write.
   // Downstream readers that still key off `name` keep working; new code reads the components.
@@ -40,7 +41,7 @@ model Client {
   firstName         String?
   middleName        String?
   lastName          String?
-  phone             String?           @unique
+  phone             String?
   email             String?
   emailVerified     DateTime?
   phoneVerified     DateTime?
@@ -67,9 +68,11 @@ model Client {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
+  @@unique([organizationId, phone], name: "client_org_phone")
   @@index([userId])
   @@index([deletedAt])
   @@index([phone])
+  @@index([organizationId])
 }
 
 enum EmployeeGender {
@@ -93,6 +96,7 @@ enum EmploymentType {
 // no Prisma FK relations to Clinic BC. Referential integrity is event-driven.
 model Employee {
   id               String           @id @default(uuid())
+  organizationId   String?
   userId           String?
   name             String
   nameEn           String?
@@ -101,7 +105,7 @@ model Employee {
   specialty        String?
   specialtyAr      String?
   phone            String?
-  email            String?          @unique
+  email            String?
   gender           EmployeeGender?
   avatarUrl        String?
   bio              String?
@@ -112,7 +116,7 @@ model Employee {
   employmentType   EmploymentType   @default(FULL_TIME)
   onboardingStatus OnboardingStatus @default(PENDING)
   isActive         Boolean          @default(true)
-  slug             String?          @unique
+  slug             String?
   isPublic         Boolean          @default(false)
   publicBioAr      String?
   publicBioEn      String?
@@ -125,57 +129,68 @@ model Employee {
   availability EmployeeAvailability[]
   exceptions   EmployeeAvailabilityException[]
 
+  @@unique([organizationId, email], name: "employee_org_email")
+  @@unique([organizationId, slug], name: "employee_org_slug")
   @@index([userId])
+  @@index([organizationId])
 }
 
 model EmployeeBranch {
-  id         String   @id @default(uuid())
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  branchId   String
+  id             String   @id @default(uuid())
+  organizationId String?
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  branchId       String
 
   @@unique([employeeId, branchId])
   @@index([employeeId])
+  @@index([organizationId])
 }
 
 model EmployeeService {
-  id         String   @id @default(uuid())
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  serviceId  String
+  id             String   @id @default(uuid())
+  organizationId String?
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  serviceId      String
 
   @@unique([employeeId, serviceId])
   @@index([employeeId])
+  @@index([organizationId])
 }
 
 // Multiple rows per (employeeId, dayOfWeek) represent split shifts
 // (e.g. 09:00-13:00 then 16:00-21:00). The gap between shifts IS the break.
 // A missing dayOfWeek row = weekly off day.
 model EmployeeAvailability {
-  id         String   @id @default(uuid())
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  dayOfWeek  Int
-  startTime  String
-  endTime    String
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(uuid())
+  organizationId String?
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([employeeId, dayOfWeek])
+  @@index([organizationId])
 }
 
 // Date-range exception — employee is off from startDate to endDate (inclusive).
 // Single-day leave: startDate == endDate. Annual leave: multi-day range.
 // No partial-day overrides — adjust EmployeeAvailability instead.
 model EmployeeAvailabilityException {
-  id         String   @id @default(uuid())
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  startDate  DateTime @db.Date
-  endDate    DateTime @db.Date
-  reason     String?
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  organizationId String?
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  reason         String?
+  createdAt      DateTime @default(now())
 
   @@index([employeeId, startDate, endDate])
+  @@index([organizationId])
 }
