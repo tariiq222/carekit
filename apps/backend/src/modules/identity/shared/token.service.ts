@@ -10,6 +10,16 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+/**
+ * SaaS-01 — optional per-session tenant identity merged into the JWT payload.
+ * Callers that pass no `tenantClaims` produce the legacy token shape.
+ */
+export interface TenantClaims {
+  organizationId: string;
+  membershipId?: string;
+  isSuperAdmin?: boolean;
+}
+
 export interface JwtPayload {
   sub: string;
   email: string;
@@ -31,13 +41,16 @@ export class TokenService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async issueTokenPair(user: {
-    id: string;
-    email: string;
-    role: string;
-    customRoleId: string | null;
-    customRole: { permissions: Array<{ action: string; subject: string }> } | null;
-  }): Promise<TokenPair> {
+  async issueTokenPair(
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      customRoleId: string | null;
+      customRole: { permissions: Array<{ action: string; subject: string }> } | null;
+    },
+    tenantClaims?: TenantClaims,
+  ): Promise<TokenPair> {
     const permissions = user.customRole?.permissions ?? [];
     const payload: JwtPayload = {
       sub: user.id,
@@ -46,6 +59,11 @@ export class TokenService {
       customRoleId: user.customRoleId,
       permissions,
       features: [],
+      // SaaS-01 — tenant claims are opt-in; legacy callers that pass no second
+      // arg produce exactly the same token as before this change.
+      ...(tenantClaims?.organizationId ? { organizationId: tenantClaims.organizationId } : {}),
+      ...(tenantClaims?.membershipId ? { membershipId: tenantClaims.membershipId } : {}),
+      ...(tenantClaims?.isSuperAdmin ? { isSuperAdmin: true } : {}),
     };
 
     const accessToken = this.jwt.sign(payload, {

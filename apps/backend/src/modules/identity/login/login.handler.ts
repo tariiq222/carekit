@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
 import { PasswordService } from '../shared/password.service';
 import { TokenService, TokenPair } from '../shared/token.service';
 import type { LoginCommand } from './login.command';
@@ -24,6 +25,19 @@ export class LoginHandler {
     const valid = await this.password.verify(cmd.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    return this.tokens.issueTokenPair(user);
+    // SaaS-01 — resolve active membership and forward as tenant claims.
+    // Fallback to DEFAULT_ORGANIZATION_ID keeps legacy users (no backfilled
+    // membership) able to log in without crashing.
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: user.id, isActive: true },
+      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, organizationId: true },
+    });
+
+    return this.tokens.issueTokenPair(user, {
+      organizationId: membership?.organizationId ?? DEFAULT_ORGANIZATION_ID,
+      membershipId: membership?.id,
+      isSuperAdmin: user.role === 'SUPER_ADMIN',
+    });
   }
 }
