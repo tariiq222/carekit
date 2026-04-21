@@ -183,3 +183,43 @@ The first cluster to roll out. Reference commits on branch `feat/saas-02a-identi
 - `test(saas-02a): identity cluster cross-tenant isolation e2e`
 - `chore(saas-02a): default TENANT_ENFORCEMENT=permissive in dev+test`
 - `docs(saas-02a): cluster rollout playbook + identity cluster example`
+
+## Client auth tenancy (added in SaaS-02b)
+
+Client JWT carries `organizationId` just like staff JWT. Differences:
+
+- Client tenant resolution happens at registration / login time — which organization is the website currently serving? Until Plan 09 ships subdomain routing, client requests in dev/test fall back to `DEFAULT_ORGANIZATION_ID`. Override in tests via `runAs({ organizationId })` helper.
+- Clients with the same phone or email may exist in multiple orgs — uniques are `(organizationId, phone)` / `(organizationId, email)`, not the bare column.
+- `ClientRefreshToken.organizationId` mirrors `Client.organizationId`. Inconsistency = bug.
+- `ClientJwtStrategy.validate()` propagates `organizationId` into `req.user`, falling back to the stored `Client.organizationId` for tokens issued pre-02b.
+
+### Adding a new client-auth handler
+
+1. Inject `TenantContextService`.
+2. Call `tenant.requireOrganizationIdOrDefault()` — uses default org when context is unset (client-facing endpoints predate JwtGuard in the request lifecycle for login/register).
+3. When creating a `Client`, pass `organizationId` in `data`.
+4. When creating a `ClientRefreshToken`, pass `organizationId` from the parent `Client`.
+5. For reads/updates by `id`, use `findFirst({ where: { id, organizationId } })` — not `findUnique` — so the handler-level scoping composes cleanly with the Prisma extension.
+
+## People cluster example (SaaS-02b)
+
+Second cluster to roll out. 7 models scoped: `Client`, `Employee`, `EmployeeBranch`, `EmployeeService`, `EmployeeAvailability`, `EmployeeAvailabilityException`, `ClientRefreshToken`. Key new patterns relative to 02a:
+
+- **Per-org uniques** replacing previously-global unique columns: `Client.phone`, `Employee.email`, `Employee.slug`. Composite unique names (`client_org_phone`, `employee_org_email`, `employee_org_slug`) are passed explicitly via `name:` so `findUnique({ where: { client_org_phone: { organizationId, phone } } })` is stable.
+- **Denormalized `organizationId` on child tables** (`EmployeeBranch/Service/Availability/AvailabilityException`). The Prisma scoping extension cannot traverse joins, so children carry their own column. Child-row creates inherit from the parent Employee at write time — no direct `TenantContextService` call needed in those handlers.
+- **Client auth** (`register`, `client-login`, `client-refresh`, `client-logout`, `get-me`, `reset-password`) becomes tenant-aware. Uses `requireOrganizationIdOrDefault()` because no JWT guard runs before login/register.
+
+Reference commits on branch `feat/saas-02b-people-cluster`:
+
+- `feat(saas-02b): add organizationId to 7 people-cluster models (nullable) + per-org uniques`
+- `feat(saas-02b): migration — add nullable organizationId + FK + per-org uniques on 7 tables`
+- `feat(saas-02b): migration — backfill organizationId on 7 people-cluster tables`
+- `feat(saas-02b): ClientTokenService requires tenantClaims + persists organizationId`
+- `feat(saas-02b): ClientJwtStrategy propagates organizationId to req.user`
+- `feat(saas-02b): client register + login scope + set organizationId on Client`
+- `feat(saas-02b): client refresh/logout/get-me/reset-password all scope by current org`
+- `feat(saas-02b): scope all people-cluster handlers by current org`
+- `feat(saas-02b): migration — NOT NULL organizationId on people cluster (after backfill)`
+- `feat(saas-02b): activate Prisma scoping extension for 7 people-cluster models`
+- `feat(saas-02b): enable RLS + tenant_isolation policies on 7 people-cluster tables`
+- `test(saas-02b): people cluster cross-tenant isolation e2e`
