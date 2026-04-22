@@ -7,23 +7,39 @@ const makeCtx = (user: object | undefined) =>
   }) as unknown as ExecutionContext;
 
 describe('SuperAdminGuard', () => {
-  it('returns true when req.user.isSuperAdmin is true', () => {
-    const ctx = makeCtx({ isSuperAdmin: true });
-    expect(new SuperAdminGuard().canActivate(ctx)).toBe(true);
+  const prisma = {
+    user: {
+      findUnique: jest.fn(),
+    },
+  };
+
+  const guard = new SuperAdminGuard(prisma as never);
+
+  beforeEach(() => {
+    prisma.user.findUnique.mockReset();
   });
 
-  it('throws ForbiddenException when isSuperAdmin is false', () => {
-    const ctx = makeCtx({ isSuperAdmin: false });
-    expect(() => new SuperAdminGuard().canActivate(ctx)).toThrow(ForbiddenException);
+  it('returns true for a super-admin user re-verified from the database', async () => {
+    prisma.user.findUnique.mockResolvedValue({ isSuperAdmin: true });
+
+    await expect(guard.canActivate(makeCtx({ sub: 'u-super', isSuperAdmin: true }))).resolves.toBe(true);
   });
 
-  it('throws ForbiddenException when isSuperAdmin is absent', () => {
-    const ctx = makeCtx({ id: 'u-1' });
-    expect(() => new SuperAdminGuard().canActivate(ctx)).toThrow(ForbiddenException);
+  it('rejects a regular user', async () => {
+    await expect(guard.canActivate(makeCtx({ sub: 'u-regular', isSuperAdmin: false }))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
-  it('throws ForbiddenException when there is no user object', () => {
-    const ctx = makeCtx(undefined);
-    expect(() => new SuperAdminGuard().canActivate(ctx)).toThrow(ForbiddenException);
+  it('rejects an expired or missing authenticated request', async () => {
+    await expect(guard.canActivate(makeCtx(undefined))).rejects.toThrow(ForbiddenException);
+  });
+
+  it('rejects when the JWT still claims super-admin but the database flag was revoked', async () => {
+    prisma.user.findUnique.mockResolvedValue({ isSuperAdmin: false });
+
+    await expect(guard.canActivate(makeCtx({ sub: 'u-super', isSuperAdmin: true }))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
