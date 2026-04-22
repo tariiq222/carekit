@@ -220,4 +220,5 @@ export const enSettings: Record<string, string> = {
   "settings.payment.atClinicClientOn": "Shown to clients during booking",
   "settings.payment.atClinicClientOff": "Hidden from clients during booking",
   "settings.payment.atClinicToggleHint": "This toggle only controls whether clients see this option in the widget and app — it never affects staff.",
+  "settings.branches.examplePlaceholder": "Main branch",
 }

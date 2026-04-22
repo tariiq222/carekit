@@ -220,4 +220,5 @@ export const arSettings: Record<string, string> = {
   "settings.payment.atClinicClientOn": "يظهر للمريض عند الحجز",
   "settings.payment.atClinicClientOff": "مخفي عن المريض عند الحجز",
   "settings.payment.atClinicToggleHint": "السويتش يتحكم فقط في ظهور هذا الخيار للمريض في الويدجت والتطبيق — لا يؤثر على الموظفين أبداً.",
+  "settings.branches.examplePlaceholder": "الفرع الرئيسي",
 }

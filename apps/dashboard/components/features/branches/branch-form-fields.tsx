@@ -57,7 +57,7 @@ export function BranchFormFields({ form, isEdit, mode }: BranchFormFieldsProps) 
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>{t("branches.field.nameAr")} *</Label>
-              <Input {...form.register("nameAr")} dir="rtl" placeholder={isEdit ? undefined : "الفرع الرئيسي"} />
+              <Input {...form.register("nameAr")} dir="rtl" placeholder={isEdit ? undefined : t("settings.branches.examplePlaceholder")} />
               {form.formState.errors.nameAr && (
                 <p className="text-xs text-destructive">{form.formState.errors.nameAr.message as string}</p>
               )}
