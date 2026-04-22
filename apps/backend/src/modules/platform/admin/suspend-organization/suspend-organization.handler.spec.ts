@@ -1,0 +1,105 @@
+import { Test } from '@nestjs/testing';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { SuspendOrganizationHandler } from './suspend-organization.handler';
+import { PrismaService } from '../../../../infrastructure/database';
+import { RedisService } from '../../../../infrastructure/cache';
+
+describe('SuspendOrganizationHandler', () => {
+  let handler: SuspendOrganizationHandler;
+  let orgFindUnique: jest.Mock;
+  let orgUpdate: jest.Mock;
+  let logCreate: jest.Mock;
+  let redisDel: jest.Mock;
+
+  beforeEach(async () => {
+    orgFindUnique = jest.fn();
+    orgUpdate = jest.fn();
+    logCreate = jest.fn();
+    redisDel = jest.fn().mockResolvedValue(1);
+
+    const tx = {
+      organization: { findUnique: orgFindUnique, update: orgUpdate },
+      superAdminActionLog: { create: logCreate },
+    };
+
+    const prismaMock = {
+      $allTenants: {
+        $transaction: jest.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
+      },
+    } as unknown as PrismaService;
+
+    const redisMock = {
+      getClient: () => ({ del: redisDel }),
+    } as unknown as RedisService;
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        SuspendOrganizationHandler,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: RedisService, useValue: redisMock },
+      ],
+    }).compile();
+
+    handler = moduleRef.get(SuspendOrganizationHandler);
+  });
+
+  const cmd = {
+    organizationId: 'o1',
+    superAdminUserId: 'sa1',
+    reason: 'Non-payment for 90 days',
+    ipAddress: '1.2.3.4',
+    userAgent: 'jest',
+  };
+
+  it('suspends an active org and writes audit log', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: null });
+    orgUpdate.mockResolvedValue({});
+    logCreate.mockResolvedValue({});
+
+    await handler.execute(cmd);
+
+    expect(orgUpdate).toHaveBeenCalledWith({
+      where: { id: 'o1' },
+      data: expect.objectContaining({
+        suspendedAt: expect.any(Date),
+        suspendedReason: cmd.reason,
+        status: 'SUSPENDED',
+      }),
+    });
+    expect(logCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        actionType: 'SUSPEND_ORG',
+        organizationId: 'o1',
+        superAdminUserId: 'sa1',
+        reason: cmd.reason,
+        ipAddress: '1.2.3.4',
+      }),
+    });
+  });
+
+  it('invalidates suspension cache after commit', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: null });
+    orgUpdate.mockResolvedValue({});
+    logCreate.mockResolvedValue({});
+
+    await handler.execute(cmd);
+
+    expect(redisDel).toHaveBeenCalledWith('org-suspension:o1');
+  });
+
+  it('throws NotFoundException when org does not exist', async () => {
+    orgFindUnique.mockResolvedValue(null);
+
+    await expect(handler.execute(cmd)).rejects.toBeInstanceOf(NotFoundException);
+    expect(orgUpdate).not.toHaveBeenCalled();
+    expect(redisDel).not.toHaveBeenCalled();
+  });
+
+  it('throws ConflictException when org already suspended', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: new Date() });
+
+    await expect(handler.execute(cmd)).rejects.toBeInstanceOf(ConflictException);
+    expect(orgUpdate).not.toHaveBeenCalled();
+    expect(redisDel).not.toHaveBeenCalled();
+  });
+});

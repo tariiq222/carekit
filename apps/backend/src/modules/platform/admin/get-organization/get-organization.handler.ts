@@ -1,0 +1,42 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../../../infrastructure/database';
+
+export interface GetOrganizationQuery {
+  id: string;
+}
+
+@Injectable()
+export class GetOrganizationHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(q: GetOrganizationQuery) {
+    const org = await this.prisma.$allTenants.organization.findUnique({
+      where: { id: q.id },
+    });
+    if (!org) throw new NotFoundException('organization_not_found');
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [memberCount, bookingCount30d, revenueAggregate] = await Promise.all([
+      this.prisma.$allTenants.membership.count({
+        where: { organizationId: q.id, isActive: true },
+      }),
+      this.prisma.$allTenants.booking.count({
+        where: { organizationId: q.id, createdAt: { gte: thirtyDaysAgo } },
+      }),
+      this.prisma.$allTenants.subscriptionInvoice.aggregate({
+        where: { organizationId: q.id, status: 'PAID' },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      ...org,
+      stats: {
+        memberCount,
+        bookingCount30d,
+        totalRevenue: revenueAggregate._sum.amount ?? 0,
+      },
+    };
+  }
+}

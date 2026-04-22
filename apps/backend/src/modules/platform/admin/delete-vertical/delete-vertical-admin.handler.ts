@@ -1,0 +1,49 @@
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { SuperAdminActionType } from '@prisma/client';
+import { PrismaService } from '../../../../infrastructure/database';
+
+export interface DeleteVerticalAdminCommand {
+  verticalId: string;
+  superAdminUserId: string;
+  reason: string;
+  ipAddress: string;
+  userAgent: string;
+}
+
+// Soft-delete: flip isActive to false. We never hard-delete because
+// Organizations reference verticalId for terminology + identity.
+@Injectable()
+export class DeleteVerticalAdminHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(cmd: DeleteVerticalAdminCommand) {
+    return this.prisma.$allTenants.$transaction(async (tx) => {
+      const vertical = await tx.vertical.findUnique({
+        where: { id: cmd.verticalId },
+        select: { id: true, isActive: true, _count: { select: { organizations: true } } },
+      });
+      if (!vertical) throw new NotFoundException('vertical_not_found');
+      if (!vertical.isActive) throw new ConflictException('vertical_already_inactive');
+      if (vertical._count.organizations > 0) {
+        throw new ConflictException('vertical_in_use_by_organizations');
+      }
+
+      await tx.vertical.update({
+        where: { id: cmd.verticalId },
+        data: { isActive: false },
+      });
+
+      await tx.superAdminActionLog.create({
+        data: {
+          superAdminUserId: cmd.superAdminUserId,
+          actionType: SuperAdminActionType.VERTICAL_DELETE,
+          organizationId: null,
+          reason: cmd.reason,
+          metadata: { verticalId: cmd.verticalId, softDelete: true },
+          ipAddress: cmd.ipAddress,
+          userAgent: cmd.userAgent,
+        },
+      });
+    });
+  }
+}

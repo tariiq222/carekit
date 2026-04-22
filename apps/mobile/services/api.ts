@@ -13,6 +13,8 @@ import {
   deleteSecureItem,
 } from '@/stores/secure-storage';
 
+const ORG_SUSPENDED_CODE = 'ORG_SUSPENDED';
+
 const api = axios.create({
   baseURL: API_URL,
   timeout: 15000,
@@ -42,6 +44,17 @@ api.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+    const responseCode =
+      error.response?.data?.error ??
+      error.response?.data?.message ??
+      error.response?.data?.errorCode;
+
+    if (error.response?.status === 401 && responseCode === ORG_SUSPENDED_CODE) {
+      await deleteSecureItem('accessToken');
+      await deleteSecureItem('refreshToken');
+      store.dispatch(logout());
+      return Promise.reject(error);
+    }
 
     // Handle 401 — attempt token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {

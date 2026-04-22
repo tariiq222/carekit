@@ -18,6 +18,7 @@ export interface TenantClaims {
   organizationId: string;
   membershipId?: string;
   isSuperAdmin?: boolean;
+  scope?: string;
 }
 
 export interface JwtPayload {
@@ -33,6 +34,7 @@ export interface JwtPayload {
   organizationId?: string;
   membershipId?: string;
   isSuperAdmin?: boolean;
+  scope?: string;
 }
 
 @Injectable()
@@ -64,6 +66,7 @@ export class TokenService {
       organizationId: tenantClaims.organizationId,
       membershipId: tenantClaims.membershipId,
       isSuperAdmin: tenantClaims.isSuperAdmin ?? false,
+      scope: tenantClaims.scope,
     };
 
     const accessToken = this.jwt.sign(payload, {

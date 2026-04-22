@@ -20,6 +20,8 @@ import { MeterUsageCron } from '../platform/billing/meter-usage/meter-usage.cron
 import { ChargeDueSubscriptionsCron } from '../platform/billing/charge-due-subscriptions/charge-due-subscriptions.cron';
 import { ComputeOverageCron } from '../platform/billing/compute-overage/compute-overage.cron';
 import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period/enforce-grace-period.cron';
+import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+import { RedisService } from '../../infrastructure/cache/redis.service';
 import { UsageAggregatorService } from '../platform/billing/usage-aggregator.service';
 import { SubscriptionStateMachine } from '../platform/billing/subscription-state-machine';
 import { SubscriptionCacheService } from '../platform/billing/subscription-cache.service';
@@ -43,6 +45,8 @@ const cronHandlers = [
   ChargeDueSubscriptionsCron,
   ComputeOverageCron,
   EnforceGracePeriodCron,
+  // Admin crons
+  ExpireImpersonationSessionsCron,
 ];
 
 const billingServices = [
@@ -54,7 +58,7 @@ const billingServices = [
 @Module({
   imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule],
   controllers: [DashboardOpsController],
-  providers: [...handlers, ...cronHandlers, ...billingServices, CronTasksService],
+  providers: [...handlers, ...cronHandlers, ...billingServices, RedisService, CronTasksService],
   exports: [...handlers],
 })
 export class OpsModule implements OnModuleInit {

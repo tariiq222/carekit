@@ -10,6 +10,7 @@ import { MeterUsageCron } from '../../platform/billing/meter-usage/meter-usage.c
 import { ChargeDueSubscriptionsCron } from '../../platform/billing/charge-due-subscriptions/charge-due-subscriptions.cron';
 import { ComputeOverageCron } from '../../platform/billing/compute-overage/compute-overage.cron';
 import { EnforceGracePeriodCron } from '../../platform/billing/enforce-grace-period/enforce-grace-period.cron';
+import { ExpireImpersonationSessionsCron } from '../../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -23,6 +24,7 @@ export const CRON_JOBS = {
   METER_USAGE: 'meter-usage',
   CHARGE_DUE_SUBSCRIPTIONS: 'charge-due-subscriptions',
   ENFORCE_GRACE_PERIOD: 'enforce-grace-period',
+  EXPIRE_IMPERSONATION_SESSIONS: 'expire-impersonation-sessions',
 } as const;
 
 @Injectable()
@@ -41,6 +43,7 @@ export class CronTasksService implements OnModuleInit {
     private readonly chargeDueSubscriptions: ChargeDueSubscriptionsCron,
     private readonly computeOverage: ComputeOverageCron,
     private readonly enforceGracePeriod: EnforceGracePeriodCron,
+    private readonly expireImpersonationSessions: ExpireImpersonationSessionsCron,
   ) {}
 
   onModuleInit(): void {
@@ -61,6 +64,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.METER_USAGE, cron: '0 2 * * *' },           // daily at 02:00 AST
       { name: CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS, cron: '0 * * * *' }, // hourly
       { name: CRON_JOBS.ENFORCE_GRACE_PERIOD, cron: '0 * * * *' },   // hourly
+      { name: CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, cron: '* * * * *' }, // every minute
     ];
 
     for (const { name, cron } of jobs) {
@@ -103,6 +107,9 @@ export class CronTasksService implements OnModuleInit {
           break;
         case CRON_JOBS.ENFORCE_GRACE_PERIOD:
           await this.enforceGracePeriod.execute();
+          break;
+        case CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS:
+          await this.expireImpersonationSessions.execute();
           break;
         default:
           this.logger.warn(`Unknown cron job: ${job.name}`);

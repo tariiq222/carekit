@@ -75,6 +75,17 @@ export default defineConfig([
 
       // Require @ApiOperation on every NestJS HTTP handler.
       "carekit/require-api-operation": "error",
+
+      // `$allTenantsUnsafe` is reserved for CLI/bootstrap code (seed/scripts).
+      // Application code must go through the CLS-gated `$allTenants` escape hatch.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[property.name='$allTenantsUnsafe']",
+          message:
+            "Use PrismaService.$allTenants only inside a SuperAdminContextInterceptor-protected request. $allTenantsUnsafe is reserved for seed/scripts code.",
+        },
+      ],
     },
   },
 

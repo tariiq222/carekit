@@ -4,17 +4,38 @@ import { ClsModule } from 'nestjs-cls';
 import { PlatformModule } from './platform.module';
 import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { DatabaseModule } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/cache/redis.service';
+import { MailModule } from '../../infrastructure/mail';
 
 describe('PlatformModule', () => {
   it('resolves ListFeatureFlagsHandler', async () => {
     const module = await Test.createTestingModule({
       imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({
+          isGlobal: true,
+          ignoreEnvFile: true,
+          load: [
+            () => ({
+              REDIS_HOST: 'localhost',
+              REDIS_PORT: 6379,
+              REDIS_DB: 0,
+              JWT_ACCESS_SECRET: 'test-secret-for-platform-module-spec',
+              // SMTP_HOST intentionally absent — SmtpService logs a warning
+              // and stays in the disabled-but-resolvable state.
+            }),
+          ],
+        }),
         ClsModule.forRoot({ global: true, middleware: { mount: false } }),
         DatabaseModule,
+        MailModule,
         PlatformModule,
       ],
-    }).compile();
+    })
+      // RedisService instantiates an ioredis client in its ctor; the bare
+      // module test does not need a live connection — stub the provider.
+      .overrideProvider(RedisService)
+      .useValue({ getClient: () => ({ del: jest.fn() }) })
+      .compile();
     expect(module.get(ListFeatureFlagsHandler)).toBeDefined();
   });
 });

@@ -81,7 +81,7 @@ describe('tenant-scoping extension', () => {
     });
   });
 
-  it('bypasses scoping for super-admin context', async () => {
+  it('still scopes super-admin requests unless they explicitly opt into $allTenants', async () => {
     await buildCtx('permissive');
     const ext = buildTenantScopingExtension(ctx, 'permissive', new Set(['User']));
     const hook = ext.query!.$allModels.$allOperations!;
@@ -97,7 +97,7 @@ describe('tenant-scoping extension', () => {
         });
         const query = jest.fn().mockResolvedValue([]);
         await hook({ model: 'User', operation: 'findMany', args: { where: {} }, query } as never);
-        expect(query).toHaveBeenCalledWith({ where: {} });
+        expect(query).toHaveBeenCalledWith({ where: { organizationId: 'org-1' } });
         done();
       });
     });

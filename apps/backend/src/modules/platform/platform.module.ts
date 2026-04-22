@@ -1,8 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DashboardVerticalsController } from '../../api/dashboard/verticals.controller';
+import { AdminOrganizationsController } from '../../api/admin/organizations.controller';
+import { AdminUsersController } from '../../api/admin/users.controller';
+import { AdminPlansController } from '../../api/admin/plans.controller';
+import { AdminVerticalsController } from '../../api/admin/verticals.controller';
+import { AdminMetricsController } from '../../api/admin/metrics.controller';
+import { AdminAuditLogController } from '../../api/admin/audit-log.controller';
+import { AdminImpersonationController } from '../../api/admin/impersonation.controller';
+import { SuperAdminContextInterceptor } from '../../common/interceptors';
+import { AdminHostGuard, SuperAdminGuard } from '../../common/guards';
 import { DatabaseModule } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/cache/redis.service';
 import { TenantModule } from '../../common/tenant';
+import { PasswordService } from '../identity/shared/password.service';
 import { VerticalsModule } from './verticals/verticals.module';
 import { CreateProblemReportHandler } from './problem-reports/create-problem-report.handler';
 import { ListProblemReportsHandler } from './problem-reports/list-problem-reports.handler';
@@ -12,11 +25,80 @@ import { ListIntegrationsHandler } from './integrations/list-integrations.handle
 import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
 import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
+import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
+import { GetOrganizationHandler } from './admin/get-organization/get-organization.handler';
+import { SuspendOrganizationHandler } from './admin/suspend-organization/suspend-organization.handler';
+import { ReinstateOrganizationHandler } from './admin/reinstate-organization/reinstate-organization.handler';
+import { SearchUsersHandler } from './admin/search-users/search-users.handler';
+import { ResetUserPasswordHandler } from './admin/reset-user-password/reset-user-password.handler';
+import { ListPlansAdminHandler } from './admin/list-plans/list-plans-admin.handler';
+import { CreatePlanHandler } from './admin/create-plan/create-plan.handler';
+import { UpdatePlanHandler } from './admin/update-plan/update-plan.handler';
+import { DeletePlanHandler } from './admin/delete-plan/delete-plan.handler';
+import { ListVerticalsAdminHandler } from './admin/list-verticals/list-verticals-admin.handler';
+import { CreateVerticalAdminHandler } from './admin/create-vertical/create-vertical-admin.handler';
+import { UpdateVerticalAdminHandler } from './admin/update-vertical/update-vertical-admin.handler';
+import { DeleteVerticalAdminHandler } from './admin/delete-vertical/delete-vertical-admin.handler';
+import { GetPlatformMetricsHandler } from './admin/get-platform-metrics/get-platform-metrics.handler';
+import { ListAuditLogHandler } from './admin/list-audit-log/list-audit-log.handler';
+import { StartImpersonationHandler } from './admin/start-impersonation/start-impersonation.handler';
+import { EndImpersonationHandler } from './admin/end-impersonation/end-impersonation.handler';
+import { ListImpersonationSessionsHandler } from './admin/list-impersonation-sessions/list-impersonation-sessions.handler';
+import { ExpireImpersonationSessionsCron } from './admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+
+const ADMIN_HANDLERS = [
+  ListOrganizationsHandler,
+  GetOrganizationHandler,
+  SuspendOrganizationHandler,
+  ReinstateOrganizationHandler,
+  SearchUsersHandler,
+  ResetUserPasswordHandler,
+  ListPlansAdminHandler,
+  CreatePlanHandler,
+  UpdatePlanHandler,
+  DeletePlanHandler,
+  ListVerticalsAdminHandler,
+  CreateVerticalAdminHandler,
+  UpdateVerticalAdminHandler,
+  DeleteVerticalAdminHandler,
+  GetPlatformMetricsHandler,
+  ListAuditLogHandler,
+  StartImpersonationHandler,
+  EndImpersonationHandler,
+  ListImpersonationSessionsHandler,
+  ExpireImpersonationSessionsCron,
+];
 
 @Module({
-  imports: [DatabaseModule, TenantModule, VerticalsModule],
-  controllers: [DashboardPlatformController, DashboardVerticalsController],
+  imports: [
+    DatabaseModule,
+    TenantModule,
+    VerticalsModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      }),
+    }),
+  ],
+  controllers: [
+    DashboardPlatformController,
+    DashboardVerticalsController,
+    AdminOrganizationsController,
+    AdminUsersController,
+    AdminPlansController,
+    AdminVerticalsController,
+    AdminMetricsController,
+    AdminAuditLogController,
+    AdminImpersonationController,
+  ],
   providers: [
+    SuperAdminContextInterceptor,
+    AdminHostGuard,
+    SuperAdminGuard,
+    RedisService,
+    PasswordService,
     CreateProblemReportHandler,
     ListProblemReportsHandler,
     UpdateProblemReportStatusHandler,
@@ -25,6 +107,7 @@ import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.ha
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
+    ...ADMIN_HANDLERS,
   ],
   exports: [
     CreateProblemReportHandler,
@@ -35,6 +118,7 @@ import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.ha
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
+    ...ADMIN_HANDLERS,
   ],
 })
 export class PlatformModule {}

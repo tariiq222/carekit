@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Patch, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CreateVerticalDto } from '../../modules/platform/verticals/dto/create-vertical.dto';
 import { UpdateVerticalDto } from '../../modules/platform/verticals/dto/update-vertical.dto';
 import { UpsertTerminologyOverrideDto } from '../../modules/platform/verticals/dto/upsert-terminology-override.dto';
@@ -18,6 +19,7 @@ import { UpsertSeedServiceCategoryHandler } from '../../modules/platform/vertica
 @ApiTags('Dashboard / Platform')
 @ApiBearerAuth()
 @UseGuards(JwtGuard, SuperAdminGuard)
+@UseInterceptors(SuperAdminContextInterceptor)
 @Controller('dashboard/verticals')
 export class DashboardVerticalsController {
   constructor(
