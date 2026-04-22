@@ -198,4 +198,40 @@ export const enMisc: Record<string, string> = {
 
   // — Common: Permissions —
   "common.noPermission": "You don't have permission to access this page",
+
+  // — Login form —
+  "login.welcome": "Welcome back",
+  "login.subtitle": "Enter your credentials to sign in",
+  "login.emailLabel": "Email",
+  "login.passwordLabel": "Password",
+  "login.showPassword": "Show password",
+  "login.hidePassword": "Hide password",
+  "login.signingIn": "Signing in...",
+  "login.signIn": "Sign in",
+
+  // — Error banner —
+  "common.retry": "Retry",
+
+  // — Header —
+  "header.toggleLanguage": "العربية",
+
+  // — Command palette —
+  "cmd.quickActions": "Quick Actions",
+  "cmd.navigate": "Navigate",
+  "cmd.noResults": "No results found.",
+  "cmd.hint": "Press ↵ to navigate",
+  "cmd.placeholder": "Search commands...",
+  "cmd.newBooking": "New Booking",
+  "cmd.searchClients": "Search Clients",
+  "cmd.todaySchedule": "Today's Schedule",
+  "cmd.navDashboard": "Dashboard",
+  "cmd.navBookings": "Bookings",
+  "cmd.navClients": "Clients",
+  "cmd.navEmployees": "Employees",
+  "cmd.navReports": "Reports",
+  "cmd.navSettings": "Settings",
+
+  // — Shared UI —
+  "common.sarAlt": "Riyal",
+  "common.removeColor": "Remove color",
 }

@@ -17,8 +17,8 @@ export function ErrorBanner({
   retryLabel,
   className,
 }: ErrorBannerProps) {
-  const { locale } = useLocale()
-  const label = retryLabel ?? (locale === "ar" ? "إعادة المحاولة" : "Retry")
+  const { t } = useLocale()
+  const label = retryLabel ?? t("common.retry")
 
   return (
     <div

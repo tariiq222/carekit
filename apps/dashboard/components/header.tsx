@@ -118,7 +118,7 @@ export function Header() {
             >
               <span>{t("header.language")}</span>
               <span className="text-xs font-medium text-primary">
-                {locale === "en" ? "العربية" : "English"}
+                {t("header.toggleLanguage")}
               </span>
             </button>
             <DropdownMenuSeparator />

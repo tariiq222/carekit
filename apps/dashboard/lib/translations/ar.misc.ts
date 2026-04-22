@@ -198,4 +198,40 @@ export const arMisc: Record<string, string> = {
 
   // — Common: Permissions —
   "common.noPermission": "ليس لديك صلاحية للوصول لهذه الصفحة",
+
+  // — Login form —
+  "login.welcome": "مرحباً بعودتك",
+  "login.subtitle": "أدخل بياناتك لتسجيل الدخول",
+  "login.emailLabel": "البريد الإلكتروني",
+  "login.passwordLabel": "كلمة المرور",
+  "login.showPassword": "إظهار كلمة المرور",
+  "login.hidePassword": "إخفاء كلمة المرور",
+  "login.signingIn": "جارٍ تسجيل الدخول...",
+  "login.signIn": "تسجيل الدخول",
+
+  // — Error banner —
+  "common.retry": "إعادة المحاولة",
+
+  // — Header —
+  "header.toggleLanguage": "English",
+
+  // — Command palette —
+  "cmd.quickActions": "إجراءات سريعة",
+  "cmd.navigate": "التنقل",
+  "cmd.noResults": "لا توجد نتائج.",
+  "cmd.hint": "اضغط ↵ للانتقال",
+  "cmd.placeholder": "ابحث عن أمر...",
+  "cmd.newBooking": "حجز جديد",
+  "cmd.searchClients": "البحث عن مرضى",
+  "cmd.todaySchedule": "جدول اليوم",
+  "cmd.navDashboard": "لوحة التحكم",
+  "cmd.navBookings": "الحجوزات",
+  "cmd.navClients": "المرضى",
+  "cmd.navEmployees": "الأطباء",
+  "cmd.navReports": "التقارير",
+  "cmd.navSettings": "الإعدادات",
+
+  // — Shared UI —
+  "common.sarAlt": "ريال",
+  "common.removeColor": "إزالة اللون",
 }
