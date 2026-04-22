@@ -32,6 +32,7 @@ function resolveUrl(endpoint: string): string {
 
 let accessToken: string | null = null
 let refreshPromise: Promise<void> | null = null
+const ORG_SUSPENDED_CODE = "ORG_SUSPENDED"
 
 export function setAccessToken(token: string | null) {
   accessToken = token
@@ -39,6 +40,14 @@ export function setAccessToken(token: string | null) {
 
 export function getAccessToken(): string | null {
   return accessToken
+}
+
+function clearAuthState() {
+  accessToken = null
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("carekit_user")
+    localStorage.removeItem("carekit_refresh_token")
+  }
 }
 
 /* ─── Core Fetch ─── */
@@ -102,16 +111,34 @@ async function request<T>(
     credentials: "include",
   })
 
+  const parseErrorBody = async () => {
+    const body = await res.clone().json().catch(() => ({}))
+    const nestedError =
+      body?.message && typeof body.message === "object" && !Array.isArray(body.message)
+        ? body.message
+        : null
+    const code = nestedError?.error ?? body?.error?.code ?? body?.error ?? body?.message ?? "UNKNOWN"
+    const rawMessage = nestedError?.message ?? body?.message
+    const message = Array.isArray(rawMessage)
+      ? rawMessage.join(", ")
+      : (rawMessage ?? res.statusText)
+
+    return { body, code, message }
+  }
+
   /* ─── 401 Auto-Refresh ─── */
   if (res.status === 401 && !isRetry) {
+    const { code, message } = await parseErrorBody()
+    if (code === ORG_SUSPENDED_CODE) {
+      clearAuthState()
+      throw new ApiError(401, ORG_SUSPENDED_CODE, message)
+    }
+
     if (!refreshPromise) {
       refreshPromise = tryRefreshToken()
         .then((ok) => {
           if (!ok) {
-            accessToken = null
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("carekit_user")
-            }
+            clearAuthState()
             throw new ApiError(401, "UNAUTHORIZED", "Session expired")
           }
         })
@@ -126,20 +153,11 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
+    const { code, message } = await parseErrorBody()
     // NestJS returns: { statusCode, message, error: string }
     // Our custom exceptions return: { statusCode, message, error: string (code) }
     // Custom conflicts return { statusCode, message: { error, message } }
     // NestJS default returns { statusCode, message: string | string[], error: string }
-    const nestedError =
-      body?.message && typeof body.message === "object" && !Array.isArray(body.message)
-        ? body.message
-        : null
-    const code = nestedError?.error ?? body?.error?.code ?? body?.error ?? "UNKNOWN"
-    const rawMessage = nestedError?.message ?? body?.message
-    const message = Array.isArray(rawMessage)
-      ? rawMessage.join(", ")
-      : (rawMessage ?? res.statusText)
     throw new ApiError(res.status, code, message)
   }
 
