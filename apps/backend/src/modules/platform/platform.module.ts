@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DashboardVerticalsController } from '../../api/dashboard/verticals.controller';
+import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { DatabaseModule } from '../../infrastructure/database';
 import { TenantModule } from '../../common/tenant';
 import { VerticalsModule } from './verticals/verticals.module';
@@ -17,6 +18,7 @@ import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.ha
   imports: [DatabaseModule, TenantModule, VerticalsModule],
   controllers: [DashboardPlatformController, DashboardVerticalsController],
   providers: [
+    SuperAdminContextInterceptor,
     CreateProblemReportHandler,
     ListProblemReportsHandler,
     UpdateProblemReportStatusHandler,

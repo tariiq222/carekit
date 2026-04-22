@@ -7,6 +7,7 @@ export const DEFAULT_ORGANIZATION_SLUG = 'default';
 
 export const TENANT_CLS_KEY = 'tenant' as const;
 export const SYSTEM_CONTEXT_CLS_KEY = 'systemContext' as const;
+export const SUPER_ADMIN_CONTEXT_CLS_KEY = 'superAdminContext' as const;
 
 export const TENANT_ERROR_CODES = {
   RESOLUTION_FAILED: 'TENANT_RESOLUTION_FAILED',

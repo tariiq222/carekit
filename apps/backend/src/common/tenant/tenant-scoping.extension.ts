@@ -75,8 +75,6 @@ export function buildTenantScopingExtension(
           if (ctx.isSystemContext()) return query(args);
 
           const current = ctx.get();
-          // Super-admins see everything.
-          if (current?.isSuperAdmin) return query(args);
           // No tenant context (e.g., system jobs pre-context) — skip scoping.
           // Plan 02 tightens this: cluster rollout enables strict-mode crash.
           if (!current?.organizationId) return query(args);

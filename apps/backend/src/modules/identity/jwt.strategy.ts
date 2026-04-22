@@ -44,6 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       organizationId: payload.organizationId,
       membershipId: payload.membershipId,
       isSuperAdmin: payload.isSuperAdmin === true || user.role === 'SUPER_ADMIN',
+      scope: payload.scope,
     };
   }
 }

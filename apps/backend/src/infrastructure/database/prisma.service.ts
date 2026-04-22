@@ -1,13 +1,17 @@
-import { Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { TenantContextService } from '../../common/tenant/tenant-context.service';
 import {
   buildTenantScopingExtension,
   TenantScopedModelRegistry,
 } from '../../common/tenant/tenant-scoping.extension';
-import { TenantEnforcementMode } from '../../common/tenant/tenant.constants';
+import {
+  SUPER_ADMIN_CONTEXT_CLS_KEY,
+  TenantEnforcementMode,
+} from '../../common/tenant/tenant.constants';
 
 /**
  * Populated cluster-by-cluster as each cluster gains `organizationId` columns.
@@ -104,6 +108,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
+  private readonly basePrisma: PrismaClient;
   private readonly extended: PrismaClient;
 
   constructor(
@@ -111,11 +116,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // without wiring ConfigModule/TenantModule. In prod both are global and
     // always present — the optionals are only for narrow unit-test fixtures.
     @Optional() private readonly config?: ConfigService,
+    @Optional() private readonly cls?: ClsService,
     @Optional() private readonly tenantCtx?: TenantContextService,
   ) {
     super({
       adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
     });
+    this.basePrisma = this as unknown as PrismaClient;
     const mode = (this.config?.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict') ??
       'strict') as TenantEnforcementMode;
 
@@ -123,7 +130,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // back to the base client unchanged — the extension would have nothing to
     // scope anyway because there is no tenant context. Prod always has DI.
     if (mode === 'off' || !this.tenantCtx) {
-      this.extended = this as unknown as PrismaClient;
+      this.extended = this.basePrisma;
       return;
     }
 
@@ -134,7 +141,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     // Proxy reads for model accessors and $-methods go to the extended client;
     // lifecycle + internal fields stay on the base class.
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return new Proxy(this, {
       get(target, prop, receiver) {
@@ -143,8 +149,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           prop === 'onModuleDestroy' ||
           prop === 'logger' ||
           prop === 'config' ||
+          prop === 'cls' ||
           prop === 'tenantCtx' ||
+          prop === 'basePrisma' ||
           prop === 'extended' ||
+          prop === '$allTenants' ||
+          prop === '$allTenantsUnsafe' ||
           prop === '$connect' ||
           prop === '$disconnect'
         ) {
@@ -169,5 +179,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy(): Promise<void> {
     await this.$disconnect();
     this.logger.log('Prisma disconnected');
+  }
+
+  get $allTenants(): PrismaClient {
+    if (this.cls?.get<boolean | undefined>(SUPER_ADMIN_CONTEXT_CLS_KEY) !== true) {
+      throw new ForbiddenException('super_admin_context_required');
+    }
+    return this.basePrisma;
+  }
+
+  get $allTenantsUnsafe(): PrismaClient {
+    return this.basePrisma;
   }
 }
