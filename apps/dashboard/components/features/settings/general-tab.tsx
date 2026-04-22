@@ -20,20 +20,10 @@ import { useLocale } from "@/components/locale-provider"
 
 type TabId = "contact" | "regional"
 
-const WEEK_START_OPTIONS = [
-  { value: "sunday", label: "الأحد (Sunday)" },
-  { value: "monday", label: "الاثنين (Monday)" },
-]
-
 const DATE_FORMAT_OPTIONS = [
   { value: "Y-m-d", label: "2026-03-24 (Y-m-d)" },
   { value: "d/m/Y", label: "24/03/2026 (d/m/Y)" },
   { value: "m/d/Y", label: "03/24/2026 (m/d/Y)" },
-]
-
-const TIME_FORMAT_OPTIONS = [
-  { value: "24h", label: "24 ساعة (24h)" },
-  { value: "12h", label: "12 ساعة (12h)" },
 ]
 
 const TIMEZONE_OPTIONS = [
@@ -54,6 +44,16 @@ const TIMEZONE_OPTIONS = [
 export function GeneralTab() {
   const { t } = useLocale()
   const { data: settings, isLoading } = useOrganizationSettings()
+
+  const WEEK_START_OPTIONS = [
+    { value: "sunday", label: t("settings.weekStart.sunday") },
+    { value: "monday", label: t("settings.weekStart.monday") },
+  ]
+
+  const TIME_FORMAT_OPTIONS = [
+    { value: "24h", label: t("settings.timeFormat.24h") },
+    { value: "12h", label: t("settings.timeFormat.12h") },
+  ]
   const updateSettings = useUpdateOrganizationSettings()
 
   const [activeTab, setActiveTab] = useState<TabId>("contact")

@@ -111,7 +111,7 @@ export function HolidaysSection({ t }: Props) {
                 <Input
                   value={nameAr}
                   onChange={(e) => setNameAr(e.target.value)}
-                  placeholder="عيد الفطر"
+                  placeholder={t("settings.holidays.examplePlaceholder")}
                   dir="rtl"
                 />
               </div>

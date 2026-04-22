@@ -15,17 +15,18 @@ import type { OrganizationHour } from "@/lib/api/organization"
 import { useOrganizationHours, useOrganizationHoursMutation } from "@/hooks/use-organization-settings"
 import { HolidaysSection } from "./holidays-section"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
+import { useLocale } from "@/components/locale-provider"
 
 /* ─── Constants ─── */
 
 const DAYS_BASE = [
-  { value: 0, en: "Sunday", ar: "الأحد" },
-  { value: 1, en: "Monday", ar: "الاثنين" },
-  { value: 2, en: "Tuesday", ar: "الثلاثاء" },
-  { value: 3, en: "Wednesday", ar: "الأربعاء" },
-  { value: 4, en: "Thursday", ar: "الخميس" },
-  { value: 5, en: "Friday", ar: "الجمعة" },
-  { value: 6, en: "Saturday", ar: "السبت" },
+  { value: 0, en: "Sunday",    tKey: "settings.day.sunday" },
+  { value: 1, en: "Monday",    tKey: "settings.day.monday" },
+  { value: 2, en: "Tuesday",   tKey: "settings.day.tuesday" },
+  { value: 3, en: "Wednesday", tKey: "settings.day.wednesday" },
+  { value: 4, en: "Thursday",  tKey: "settings.day.thursday" },
+  { value: 5, en: "Friday",    tKey: "settings.day.friday" },
+  { value: 6, en: "Saturday",  tKey: "settings.day.saturday" },
 ]
 
 function getOrderedDays(weekStart: 0 | 1) {
@@ -127,10 +128,11 @@ function DayRow({
   hour,
   onChange,
 }: {
-  day: { value: number; en: string; ar: string }
+  day: { value: number; en: string; tKey: string }
   hour: OrganizationHour
   onChange: (patch: Partial<OrganizationHour>) => void
 }) {
+  const { t } = useLocale()
   return (
     <div
       className={cn(
@@ -141,8 +143,7 @@ function DayRow({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Switch checked={hour.isActive} onCheckedChange={(v) => onChange({ isActive: v })} />
         <Label className="cursor-pointer select-none text-sm font-medium">
-          <span className={hour.isActive ? "text-foreground" : "text-muted-foreground"}>{day.en}</span>
-          <span className="ms-1 text-xs text-muted-foreground">({day.ar})</span>
+          <span className={hour.isActive ? "text-foreground" : "text-muted-foreground"}>{t(day.tKey)}</span>
         </Label>
       </div>
       <div className="flex shrink-0 items-center gap-2">

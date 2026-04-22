@@ -221,4 +221,40 @@ export const enSettings: Record<string, string> = {
   "settings.payment.atClinicClientOff": "Hidden from clients during booking",
   "settings.payment.atClinicToggleHint": "This toggle only controls whether clients see this option in the widget and app — it never affects staff.",
   "settings.branches.examplePlaceholder": "Main branch",
+  // Entity tab
+  "settings.entity.warning": "Legal entity data is used in invoices and official reports. Make sure it is accurate.",
+  "settings.entity.companyNameAr": "Company Name (Arabic)",
+  "settings.entity.companyNameEn": "Company Name (English)",
+  "settings.entity.businessRegistration": "Business Registration (CR)",
+  "settings.entity.vatRegistration": "VAT Registration Number",
+  "settings.entity.vatRate": "VAT Rate %",
+  "settings.entity.sellerAddress": "Seller Address",
+  "settings.entity.organizationCity": "City",
+  "settings.entity.postalCode": "Postal Code",
+  // Legal content tab
+  "settings.legal.about": "About the Clinic",
+  "settings.legal.privacy": "Privacy Policy",
+  "settings.legal.terms": "Terms & Conditions",
+  "settings.legal.cancellation": "Cancellation Policy",
+  // Common bilingual labels
+  "common.arabic": "Arabic",
+  "common.english": "English",
+  // Cancellation tab — placeholder
+  "settings.cancellation.policyArPlaceholder": "Cancellation policy displayed to clients (Arabic)...",
+  // Holidays section — example placeholder
+  "settings.holidays.examplePlaceholder": "Eid Al-Fitr",
+  // Week start day options
+  "settings.weekStart.sunday": "Sunday",
+  "settings.weekStart.monday": "Monday",
+  // Time format options
+  "settings.timeFormat.24h": "24-hour",
+  "settings.timeFormat.12h": "12-hour",
+  // Day names (working hours grid)
+  "settings.day.sunday": "Sunday",
+  "settings.day.monday": "Monday",
+  "settings.day.tuesday": "Tuesday",
+  "settings.day.wednesday": "Wednesday",
+  "settings.day.thursday": "Thursday",
+  "settings.day.friday": "Friday",
+  "settings.day.saturday": "Saturday",
 }

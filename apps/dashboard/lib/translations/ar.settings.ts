@@ -221,4 +221,40 @@ export const arSettings: Record<string, string> = {
   "settings.payment.atClinicClientOff": "مخفي عن المريض عند الحجز",
   "settings.payment.atClinicToggleHint": "السويتش يتحكم فقط في ظهور هذا الخيار للمريض في الويدجت والتطبيق — لا يؤثر على الموظفين أبداً.",
   "settings.branches.examplePlaceholder": "الفرع الرئيسي",
+  // Entity tab
+  "settings.entity.warning": "بيانات الكيان القانوني تُستخدم في الفواتير والتقارير الرسمية. تأكد من صحتها.",
+  "settings.entity.companyNameAr": "اسم الشركة (عربي)",
+  "settings.entity.companyNameEn": "اسم الشركة (إنجليزي)",
+  "settings.entity.businessRegistration": "السجل التجاري",
+  "settings.entity.vatRegistration": "رقم التسجيل الضريبي",
+  "settings.entity.vatRate": "نسبة الضريبة %",
+  "settings.entity.sellerAddress": "عنوان البائع",
+  "settings.entity.organizationCity": "المدينة",
+  "settings.entity.postalCode": "الرمز البريدي",
+  // Legal content tab
+  "settings.legal.about": "عن العيادة",
+  "settings.legal.privacy": "سياسة الخصوصية",
+  "settings.legal.terms": "الشروط والأحكام",
+  "settings.legal.cancellation": "سياسة الإلغاء",
+  // Common bilingual labels
+  "common.arabic": "عربي",
+  "common.english": "English",
+  // Cancellation tab — placeholder
+  "settings.cancellation.policyArPlaceholder": "سياسة الإلغاء المعروضة للمرضى...",
+  // Holidays section — example placeholder
+  "settings.holidays.examplePlaceholder": "عيد الفطر",
+  // Week start day options
+  "settings.weekStart.sunday": "الأحد (Sunday)",
+  "settings.weekStart.monday": "الاثنين (Monday)",
+  // Time format options
+  "settings.timeFormat.24h": "24 ساعة (24h)",
+  "settings.timeFormat.12h": "12 ساعة (12h)",
+  // Day names (working hours grid)
+  "settings.day.sunday": "الأحد",
+  "settings.day.monday": "الاثنين",
+  "settings.day.tuesday": "الثلاثاء",
+  "settings.day.wednesday": "الأربعاء",
+  "settings.day.thursday": "الخميس",
+  "settings.day.friday": "الجمعة",
+  "settings.day.saturday": "السبت",
 }

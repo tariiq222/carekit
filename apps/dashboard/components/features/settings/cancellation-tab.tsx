@@ -67,7 +67,7 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="space-y-2 pt-3 pb-2">
           <Label>{t("settings.policyTextAr")}</Label>
-          <Textarea value={policyAr} rows={3} dir="rtl" placeholder="سياسة الإلغاء المعروضة للمرضى..."
+          <Textarea value={policyAr} rows={3} dir="rtl" placeholder={t("settings.cancellation.policyArPlaceholder")}
             onChange={(e) => { setPolicyAr(e.target.value); scheduleSave() }} />
         </CardContent></Card>
       </div>
