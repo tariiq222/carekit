@@ -84,10 +84,5 @@ export const enIntakeForms: Record<string, string> = {
   "intakeForms.delete.title": "Delete Form",
   "intakeForms.delete.confirm": "Are you sure you want to delete this form? This action cannot be undone.",
 
-  // — Placeholders & dynamic scope labels —
-  "intakeForms.field.labelArPlaceholder": "e.g. ما مستوى ألمك؟",
-  "intakeForms.field.labelEnPlaceholder": "e.g. What is your pain level?",
-  "intakeForms.info.nameArPlaceholder": "e.g. استبيان ما قبل الجلسة",
-  "intakeForms.info.nameEnPlaceholder": "e.g. Pre-Session Health Form",
   "intakeForms.info.selectScope": "Select {scope}",
 }

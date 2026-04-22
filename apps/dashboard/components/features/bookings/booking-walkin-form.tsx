@@ -115,6 +115,7 @@ const step1Fields = ["firstName", "lastName", "phone"] as const
 /* ── Main form ── */
 
 export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
+  const { t } = useLocale()
   const form = useForm<WalkInClientFormData>({ resolver: zodResolver(walkInClientSchema) })
   const [step, setStep] = useState<1 | 2>(1)
   const [creating, setCreating] = useState(false)
@@ -130,10 +131,10 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
     setCreating(true)
     try {
       const res = await createWalkInClient(data)
-      toast.success(res.isExisting ? "تم العثور على المريض" : "تم إنشاء حساب المريض")
+      toast.success(res.isExisting ? t("bookings.walkin.toast.existing") : t("bookings.walkin.toast.created"))
       onSelect(res.id, `${data.firstName} ${data.lastName}`)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "فشل إنشاء المريض")
+      toast.error(err instanceof Error ? err.message : t("bookings.walkin.toast.error"))
     } finally {
       setCreating(false)
     }
@@ -142,28 +143,28 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
   return (
     <form onSubmit={handleCreate} className="flex flex-col gap-3">
 
-      <StepIndicator step={step} />
+      <StepIndicator step={step} labels={[t("bookings.walkin.step.personal"), t("bookings.walkin.step.medical")]} />
 
       {/* Step 1: Personal info + Contact */}
       {step === 1 && (
         <>
           <div className={card}>
-            <div className={cardHeader}><p className={cardTitle}>المعلومات الشخصية</p></div>
+            <div className={cardHeader}><p className={cardTitle}>{t("bookings.walkin.section.personalInfo")}</p></div>
             <div className={cardBody}>
               <div className="grid grid-cols-3 gap-3">
-                <FormField label="الاسم الأول *" icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />} error={form.formState.errors.firstName?.message}>
-                  <Input {...form.register("firstName")} placeholder="محمد" className="bg-surface-muted" />
+                <FormField label={t("bookings.walkin.field.firstName")} icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />} error={form.formState.errors.firstName?.message}>
+                  <Input {...form.register("firstName")} placeholder={t("bookings.walkin.placeholder.firstName")} className="bg-surface-muted" />
                 </FormField>
-                <FormField label="الاسم الأوسط" icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />}>
-                  <Input {...form.register("middleName")} placeholder="عبدالله" className="bg-surface-muted" />
+                <FormField label={t("bookings.walkin.field.middleName")} icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />}>
+                  <Input {...form.register("middleName")} placeholder={t("bookings.walkin.placeholder.middleName")} className="bg-surface-muted" />
                 </FormField>
-                <FormField label="اسم العائلة *" icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />} error={form.formState.errors.lastName?.message}>
-                  <Input {...form.register("lastName")} placeholder="الأحمد" className="bg-surface-muted" />
+                <FormField label={t("bookings.walkin.field.lastName")} icon={<HugeiconsIcon icon={User03Icon} size={13} className="shrink-0" />} error={form.formState.errors.lastName?.message}>
+                  <Input {...form.register("lastName")} placeholder={t("bookings.walkin.placeholder.lastName")} className="bg-surface-muted" />
                 </FormField>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <FormField label="الجنس" icon={<HugeiconsIcon icon={UserCircleIcon} size={13} className="shrink-0" />}>
+                <FormField label={t("bookings.walkin.field.gender")} icon={<HugeiconsIcon icon={UserCircleIcon} size={13} className="shrink-0" />}>
                   <Controller control={form.control} name="gender" render={({ field }) => (
                     <div className="flex gap-2">
                       {(["male", "female"] as const).map((g) => (
@@ -178,18 +179,18 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
                               : "border-border bg-surface-muted text-muted-foreground hover:border-border-strong"
                           )}
                         >
-                          {g === "male" ? "ذكر" : "أنثى"}
+                          {t(g === "male" ? "bookings.walkin.field.male" : "bookings.walkin.field.female")}
                         </button>
                       ))}
                     </div>
                   )} />
                 </FormField>
-                <FormField label="تاريخ الميلاد">
+                <FormField label={t("bookings.walkin.field.dateOfBirth")}>
                   <Controller control={form.control} name="dateOfBirth" render={({ field }) => (
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="اختياري" className="w-full bg-surface-muted" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder={t("bookings.walkin.placeholder.optional")} className="w-full bg-surface-muted" />
                   )} />
                 </FormField>
-                <FormField label="الجنسية" icon={<HugeiconsIcon icon={Location04Icon} size={13} className="shrink-0" />}>
+                <FormField label={t("bookings.walkin.field.nationality")} icon={<HugeiconsIcon icon={Location04Icon} size={13} className="shrink-0" />}>
                   <Controller control={form.control} name="nationality" defaultValue="السعودية" render={({ field }) => (
                     <NationalitySelect
                       value={field.value ?? "السعودية"}
@@ -201,10 +202,10 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="رقم الهوية / الإقامة" icon={<HugeiconsIcon icon={IdentificationIcon} size={13} className="shrink-0" />}>
+                <FormField label={t("bookings.walkin.field.nationalId")} icon={<HugeiconsIcon icon={IdentificationIcon} size={13} className="shrink-0" />}>
                   <Input {...form.register("nationalId")} placeholder="1XXXXXXXXX" className="bg-surface-muted" dir="ltr" />
                 </FormField>
-                <FormField label="رقم الجوال *" icon={<HugeiconsIcon icon={Call02Icon} size={13} className="shrink-0" />} error={form.formState.errors.phone?.message}>
+                <FormField label={t("bookings.walkin.field.phone")} icon={<HugeiconsIcon icon={Call02Icon} size={13} className="shrink-0" />} error={form.formState.errors.phone?.message}>
                   <Controller control={form.control} name="phone" render={({ field }) => (
                     <PhoneInput value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} />
                   )} />
@@ -212,10 +213,10 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="اسم جهة الطوارئ">
-                  <Input {...form.register("emergencyName")} placeholder="اختياري" className="bg-surface-muted" />
+                <FormField label={t("bookings.walkin.field.emergencyName")}>
+                  <Input {...form.register("emergencyName")} placeholder={t("bookings.walkin.placeholder.optional")} className="bg-surface-muted" />
                 </FormField>
-                <FormField label="جوال الطوارئ" error={form.formState.errors.emergencyPhone?.message}>
+                <FormField label={t("bookings.walkin.field.emergencyPhone")} error={form.formState.errors.emergencyPhone?.message}>
                   <Controller control={form.control} name="emergencyPhone" render={({ field }) => (
                     <PhoneInput value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} />
                   )} />
@@ -226,7 +227,7 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
 
           <div className="flex justify-end">
             <Button type="button" size="sm" onClick={goNext}>
-              التالي
+              {t("bookings.walkin.button.next")}
               <HugeiconsIcon icon={ArrowLeft01Icon} size={14} className="ms-1.5" />
             </Button>
           </div>
@@ -237,9 +238,9 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
       {step === 2 && (
         <>
           <div className={card}>
-            <div className={cardHeader}><p className={cardTitle}>المعلومات الطبية</p></div>
+            <div className={cardHeader}><p className={cardTitle}>{t("bookings.walkin.section.medicalInfo")}</p></div>
             <div className={cardBody}>
-              <FormField label="فصيلة الدم" icon={<HugeiconsIcon icon={BloodIcon} size={13} className="shrink-0" />}>
+              <FormField label={t("bookings.walkin.field.bloodType")} icon={<HugeiconsIcon icon={BloodIcon} size={13} className="shrink-0" />}>
                 <div className="grid grid-cols-4 gap-2">
                   {BLOOD_TYPES.filter((b) => b !== "UNKNOWN").map((b) => (
                     <button
@@ -258,11 +259,11 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
                   ))}
                 </div>
               </FormField>
-              <FormField label="الحساسية">
-                <Textarea {...form.register("allergies")} placeholder="اذكر أي حساسية دوائية أو غذائية..." rows={2} className="bg-surface-muted resize-none" />
+              <FormField label={t("bookings.walkin.field.allergies")}>
+                <Textarea {...form.register("allergies")} placeholder={t("bookings.walkin.placeholder.allergies")} rows={2} className="bg-surface-muted resize-none" />
               </FormField>
-              <FormField label="الأمراض المزمنة">
-                <Textarea {...form.register("chronicConditions")} placeholder="مثال: السكري، ضغط الدم..." rows={2} className="bg-surface-muted resize-none" />
+              <FormField label={t("bookings.walkin.field.chronic")}>
+                <Textarea {...form.register("chronicConditions")} placeholder={t("bookings.walkin.placeholder.chronic")} rows={2} className="bg-surface-muted resize-none" />
               </FormField>
             </div>
           </div>
@@ -270,11 +271,11 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
           <div className="flex items-center justify-between">
             <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)} className="text-muted-foreground hover:text-foreground">
               <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="me-1.5" />
-              السابق
+              {t("bookings.walkin.button.previous")}
             </Button>
             <Button type="submit" size="sm" disabled={creating}>
               <HugeiconsIcon icon={UserAdd01Icon} size={14} className="me-1.5" />
-              {creating ? "جاري الإنشاء..." : "إنشاء المريض والمتابعة"}
+              {creating ? t("bookings.walkin.button.creating") : t("bookings.walkin.button.createAndContinue")}
             </Button>
           </div>
         </>
