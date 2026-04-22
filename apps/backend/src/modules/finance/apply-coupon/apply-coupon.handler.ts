@@ -38,6 +38,18 @@ export class ApplyCouponHandler {
     });
     if (existing) throw new BadRequestException(`Coupon already applied to this invoice`);
 
+    // maxUsesPerUser enforcement: count this user's redemptions of this coupon
+    if (coupon.maxUsesPerUser !== null) {
+      const userRedemptionCount = await this.prisma.couponRedemption.count({
+        where: { couponId: coupon.id, clientId: cmd.clientId },
+      });
+      if (userRedemptionCount >= coupon.maxUsesPerUser) {
+        throw new BadRequestException(
+          `Coupon ${cmd.code} has reached its per-user limit of ${coupon.maxUsesPerUser} uses`,
+        );
+      }
+    }
+
     const discount =
       coupon.discountType === 'PERCENTAGE'
         ? parseFloat(((Number(invoice.subtotal) * Number(coupon.discountValue)) / 100).toFixed(2))
