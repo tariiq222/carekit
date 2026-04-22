@@ -79,6 +79,10 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'SmsDelivery',
   // 02g — platform cluster
   'Membership',
+  // 04 — billing (Plan and SubscriptionInvoice are deliberately PLATFORM-level
+  // and NOT scoped — they describe CareKit's catalog / receivables respectively).
+  'Subscription',
+  'UsageRecord',
 ]);
 
 /**

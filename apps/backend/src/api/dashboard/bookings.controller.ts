@@ -35,6 +35,7 @@ import { RemoveWaitlistEntryHandler } from '../../modules/bookings/remove-waitli
 import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
 import { ListBookingStatusLogHandler } from '../../modules/bookings/list-booking-status-log/list-booking-status-log.handler';
+import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
 
 @ApiTags('Dashboard / Bookings')
 @ApiBearerAuth()
@@ -61,6 +62,7 @@ export class DashboardBookingsController {
   ) {}
 
   @Post()
+  @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
   @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
   createBooking(@UserId() userId: string, @Body() body: CreateBookingDto) {
@@ -73,6 +75,7 @@ export class DashboardBookingsController {
   }
 
   @Post('recurring')
+  @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a recurring booking series' })
   @ApiCreatedResponse({ description: 'Recurring booking series created', schema: { type: 'object' } })
   createRecurringBooking(

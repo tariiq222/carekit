@@ -267,4 +267,12 @@ export const queryKeys = {
     list: (prefix?: string) => ["site-settings", "list", prefix ?? ""] as const,
   },
 
+
+  /* ─── Billing ─── */
+  billing: {
+    all: ["billing"] as const,
+    subscription: () => ["billing", "subscription"] as const,
+    plans: () => ["billing", "plans"] as const,
+  },
+
 } as const

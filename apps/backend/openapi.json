@@ -422,6 +422,10 @@
         ],
         "type": "object"
       },
+      "ChangePlanDto": {
+        "properties": {},
+        "type": "object"
+      },
       "ChatCompletionDto": {
         "properties": {
           "clientId": {
@@ -2644,6 +2648,10 @@
         ],
         "type": "object"
       },
+      "StartSubscriptionDto": {
+        "properties": {},
+        "type": "object"
+      },
       "SubmitRatingDto": {
         "properties": {
           "bookingId": {
@@ -2687,6 +2695,47 @@
           "clientId",
           "employeeId",
           "score"
+        ],
+        "type": "object"
+      },
+      "TaqnyatCredentialsDto": {
+        "properties": {
+          "apiToken": {
+            "description": "Taqnyat API token (Bearer)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiToken"
+        ],
+        "type": "object"
+      },
+      "TestSmsConfigDto": {
+        "properties": {
+          "toPhone": {
+            "description": "Phone number to send the test SMS to (E.164)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "toPhone"
+        ],
+        "type": "object"
+      },
+      "UnifonicCredentialsDto": {
+        "properties": {
+          "apiKey": {
+            "description": "Unifonic API key (Bearer token)",
+            "type": "string"
+          },
+          "appSid": {
+            "description": "Unifonic App SID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appSid",
+          "apiKey"
         ],
         "type": "object"
       },
@@ -3853,6 +3902,32 @@
         },
         "type": "object"
       },
+      "UpsertOrgSmsConfigDto": {
+        "properties": {
+          "provider": {
+            "enum": [
+              "NONE",
+              "UNIFONIC",
+              "TAQNYAT"
+            ],
+            "type": "string"
+          },
+          "senderId": {
+            "description": "Registered sender ID (alphanumeric brand)",
+            "type": "string"
+          },
+          "taqnyat": {
+            "$ref": "#/components/schemas/TaqnyatCredentialsDto"
+          },
+          "unifonic": {
+            "$ref": "#/components/schemas/UnifonicCredentialsDto"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "type": "object"
+      },
       "UpsertSeedDepartmentDto": {
         "properties": {
           "nameAr": {
@@ -4924,6 +4999,456 @@
         "summary": "Update a knowledge-base document",
         "tags": [
           "Dashboard / AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/plans": {
+      "get": {
+        "operationId": "BillingController_plans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List available subscription plans",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription": {
+      "get": {
+        "operationId": "BillingController_subscription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current subscription",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/cancel": {
+      "post": {
+        "operationId": "BillingController_cancelSub",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel subscription",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/downgrade": {
+      "post": {
+        "operationId": "BillingController_downgradePlan",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Downgrade subscription plan",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/resume": {
+      "post": {
+        "operationId": "BillingController_resumeSub",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resume a suspended subscription",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/start": {
+      "post": {
+        "operationId": "BillingController_start",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSubscriptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a new subscription (TRIALING)",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/upgrade": {
+      "post": {
+        "operationId": "BillingController_upgradePlan",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upgrade subscription plan",
+        "tags": [
+          "Dashboard / Billing"
         ]
       }
     },
@@ -7453,6 +7978,264 @@
           }
         ],
         "summary": "Get unread notification count for the current staff user",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/settings/sms": {
+      "get": {
+        "operationId": "DashboardCommsController_getSmsConfigEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OrganizationSmsConfig view (no secrets)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get SMS provider configuration (owner-scoped)",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardCommsController_upsertSmsConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgSmsConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated OrganizationSmsConfig view"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upsert SMS provider configuration",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/settings/sms/deliveries": {
+      "get": {
+        "operationId": "DashboardCommsController_listSmsDeliveriesEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Recent SmsDelivery rows (owner-scoped)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the 50 most recent SMS deliveries",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/settings/sms/test": {
+      "post": {
+        "operationId": "DashboardCommsController_testSmsConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestSmsConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Test result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test SMS via the configured provider",
         "tags": [
           "Dashboard / Comms"
         ]
@@ -19520,6 +20303,30 @@
         ]
       }
     },
+    "/api/v1/public/billing/webhooks/moyasar": {
+      "post": {
+        "operationId": "BillingWebhookController_handle",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-moyasar-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Moyasar subscription payment webhook",
+        "tags": [
+          "Public / Billing"
+        ]
+      }
+    },
     "/api/v1/public/bookings": {
       "post": {
         "operationId": "PublicBookingsController_create",
@@ -20455,6 +21262,43 @@
         "summary": "Get public service catalog (departments, categories, services)",
         "tags": [
           "Public / Catalog"
+        ]
+      }
+    },
+    "/api/v1/public/sms/webhooks/{provider}/{organizationId}": {
+      "post": {
+        "operationId": "PublicSmsWebhooksController_handle",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "enum": [
+                "UNIFONIC",
+                "TAQNYAT"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Owning tenant id",
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Inbound SMS delivery-receipt webhook",
+        "tags": [
+          "Public / SMS Webhooks"
         ]
       }
     },
