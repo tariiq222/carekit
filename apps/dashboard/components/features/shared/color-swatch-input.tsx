@@ -2,6 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { useLocale } from "@/components/locale-provider";
 
 interface ColorSwatchInputProps {
   id?: string;
@@ -20,6 +21,7 @@ export function ColorSwatchInput({
   showHex = false,
   defaultColor = "#354FD8",
 }: ColorSwatchInputProps) {
+  const { t } = useLocale()
   return (
     <div className="flex items-center gap-3">
       <div className="relative h-9 w-9 shrink-0">
@@ -39,7 +41,7 @@ export function ColorSwatchInput({
             type="button"
             onClick={onClear}
             className="absolute -end-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-error text-white shadow-sm hover:bg-error/80 transition-colors"
-            aria-label="إزالة اللون"
+            aria-label={t("common.removeColor")}
           >
             <HugeiconsIcon icon={Delete02Icon} size={10} color="currentColor" />
           </button>
