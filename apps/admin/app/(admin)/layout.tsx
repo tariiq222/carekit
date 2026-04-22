@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Sidebar } from '@/components/sidebar';
-import { LogoutButton } from '@/components/logout-button';
+import { Sidebar } from '@/shell/sidebar';
+import { LogoutButton } from '@/shell/logout-button';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (

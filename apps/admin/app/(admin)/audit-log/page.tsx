@@ -1,49 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
-import { Input } from '@carekit/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@carekit/ui/primitives/select';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@carekit/ui/primitives/table';
-import { adminApi, type AuditLogPage } from '@/lib/api';
-
-const ACTION_TYPES = [
-  'SUSPEND_ORG',
-  'REINSTATE_ORG',
-  'IMPERSONATE_START',
-  'IMPERSONATE_END',
-  'RESET_PASSWORD',
-  'PLAN_CREATE',
-  'PLAN_UPDATE',
-  'PLAN_DELETE',
-  'VERTICAL_CREATE',
-  'VERTICAL_UPDATE',
-  'VERTICAL_DELETE',
-];
+import { useListAuditLog } from '@/features/audit-log/list-audit-log/use-list-audit-log';
+import { AuditLogFilterBar } from '@/features/audit-log/list-audit-log/audit-log-filter-bar';
+import { AuditLogTable } from '@/features/audit-log/list-audit-log/audit-log-table';
 
 export default function AuditLogPage() {
   const [page, setPage] = useState(1);
   const [actionType, setActionType] = useState<string>('all');
   const [organizationId, setOrganizationId] = useState('');
 
-  const params = new URLSearchParams({ page: String(page), perPage: '50' });
-  if (actionType !== 'all') params.set('actionType', actionType);
-  if (organizationId.trim()) params.set('organizationId', organizationId.trim());
-
-  const { data, isLoading, error } = useQuery<AuditLogPage>({
-    queryKey: ['audit-log', page, actionType, organizationId],
-    queryFn: () => adminApi.listAuditLog(params),
-    placeholderData: (prev) => prev,
+  const { data, isLoading, error } = useListAuditLog({
+    page,
+    perPage: 50,
+    actionType,
+    organizationId,
   });
 
   return (
@@ -55,47 +27,23 @@ export default function AuditLogPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
-        <Select
-          value={actionType}
-          onValueChange={(v) => {
-            setActionType(v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Action type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All action types</SelectItem>
-            {ACTION_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Organization ID (UUID)"
-          value={organizationId}
-          onChange={(e) => {
-            setOrganizationId(e.target.value);
-            setPage(1);
-          }}
-          className="max-w-sm font-mono text-xs"
-        />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setActionType('all');
-            setOrganizationId('');
-            setPage(1);
-          }}
-        >
-          Reset
-        </Button>
-      </div>
+      <AuditLogFilterBar
+        actionType={actionType}
+        onActionTypeChange={(v) => {
+          setActionType(v);
+          setPage(1);
+        }}
+        organizationId={organizationId}
+        onOrganizationIdChange={(v) => {
+          setOrganizationId(v);
+          setPage(1);
+        }}
+        onReset={() => {
+          setActionType('all');
+          setOrganizationId('');
+          setPage(1);
+        }}
+      />
 
       {error ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
@@ -103,53 +51,7 @@ export default function AuditLogPage() {
         </div>
       ) : null}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>When</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead>IP</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && !data
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={5}>
-                    <Skeleton className="h-6" />
-                  </TableCell>
-                </TableRow>
-              ))
-            : data?.items.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {entry.actionType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {entry.organizationId ?? '—'}
-                  </TableCell>
-                  <TableCell className="max-w-md truncate text-sm">{entry.reason}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {entry.ipAddress || '—'}
-                  </TableCell>
-                </TableRow>
-              ))}
-          {!isLoading && data?.items.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                No audit entries match the current filters.
-              </TableCell>
-            </TableRow>
-          ) : null}
-        </TableBody>
-      </Table>
+      <AuditLogTable items={data?.items} isLoading={isLoading} />
 
       {data && data.meta.totalPages > 1 ? (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
