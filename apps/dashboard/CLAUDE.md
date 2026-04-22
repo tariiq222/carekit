@@ -154,3 +154,21 @@ Dashboard e2e is manual via **Chrome DevTools MCP** — this is the required pre
 □ npm run i18n:verify        # AR/EN parity
 □ Tenant switcher still hides for the common single-org user
 ```
+
+## Billing UI (SaaS-06 Path A)
+
+- Subscription state is exposed through `useBilling()` from
+  `lib/billing/billing-context.tsx`; use `useCurrentPlan()` when a
+  component only needs `{ plan, limits, status, isLoading }`.
+- Subscription-aware page gating is done with
+  `<FeatureGate feature="chatbot">...</FeatureGate>` or the
+  `useFeatureEnabled(feature)` hook. This is separate from the legacy
+  sidebar `featureFlag` config.
+- Sidebar billing summary lives in
+  `components/billing-usage-widget.tsx` and intentionally renders
+  nothing when usage counters are absent instead of guessing.
+- Billing copy belongs in `lib/translations/ar.billing.ts` and
+  `lib/translations/en.billing.ts`.
+- `/settings/billing` is the canonical billing screen. Keep
+  `app/(dashboard)/settings/billing/page.tsx` orchestration-only and
+  push view logic into the billing components folder.

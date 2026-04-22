@@ -32,6 +32,7 @@ export interface Subscription {
   pastDueSince?: string | null
   plan: Plan
   invoices?: SubscriptionInvoice[]
+  usage?: Partial<Record<string, number>>
 }
 
 export interface SubscriptionInvoice {

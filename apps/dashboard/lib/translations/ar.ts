@@ -18,6 +18,7 @@ import { arMisc } from "./ar.misc"
 import { arIntakeForms } from "./ar.intake-forms"
 import { arBranding } from "./ar.branding"
 import { arDepartments } from "./ar.departments"
+import { arBilling } from "./ar.billing"
 
 export const ar: Record<string, string> = {
   ...arNav,
@@ -33,4 +34,5 @@ export const ar: Record<string, string> = {
   ...arIntakeForms,
   ...arBranding,
   ...arDepartments,
+  ...arBilling,
 }
