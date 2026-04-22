@@ -1,44 +1,26 @@
 "use client"
 
 import { Badge, Card, Skeleton } from "@carekit/ui"
-import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
+import { cn } from "@/lib/utils"
+import { formatBillingDate } from "@/lib/billing/utils"
 import type { InvoiceStatus, SubscriptionInvoice } from "@/lib/types/billing"
 
-/* ─── Status badge ─── */
-
-const invoiceStatusStyles: Record<InvoiceStatus, { bg: string; text: string; border: string; label: { ar: string; en: string } }> = {
-  PAID:  { bg: "bg-success/10",     text: "text-success",        border: "border-success/30",     label: { ar: "مدفوعة",  en: "Paid"    } },
-  DUE:   { bg: "bg-destructive/10", text: "text-destructive",    border: "border-destructive/30", label: { ar: "مستحقة",  en: "Due"     } },
-  FAILED:{ bg: "bg-destructive/10", text: "text-destructive",    border: "border-destructive/30", label: { ar: "فشل",     en: "Failed"  } },
-  DRAFT: { bg: "bg-muted",          text: "text-muted-foreground", border: "border-border",       label: { ar: "مسودة",   en: "Draft"   } },
-  VOID:  { bg: "bg-muted",          text: "text-muted-foreground", border: "border-border",       label: { ar: "ملغاة",   en: "Void"    } },
+const statusKeyMap: Record<InvoiceStatus, string> = {
+  PAID: "billing.invoices.status.paid",
+  DUE: "billing.invoices.status.due",
+  FAILED: "billing.invoices.status.failed",
+  DRAFT: "billing.invoices.status.draft",
+  VOID: "billing.invoices.status.void",
 }
 
-function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
-  const s = invoiceStatusStyles[status]
-  return (
-    <Badge variant="outline" className={cn("font-medium", s.bg, s.text, s.border)}>
-      {isAr ? s.label.ar : s.label.en}
-    </Badge>
-  )
+const statusClassNames: Record<InvoiceStatus, string> = {
+  PAID: "border-success/30 bg-success/10 text-success",
+  DUE: "border-warning/30 bg-warning/10 text-warning",
+  FAILED: "border-error/30 bg-error/10 text-error",
+  DRAFT: "border-border bg-muted text-muted-foreground",
+  VOID: "border-border bg-muted text-muted-foreground",
 }
-
-/* ─── Helpers ─── */
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-SA", {
-    year: "numeric", month: "short", day: "numeric",
-  })
-}
-
-function formatPeriod(start: string, end: string) {
-  return `${formatDate(start)} – ${formatDate(end)}`
-}
-
-/* ─── Main component ─── */
 
 interface InvoicesTableProps {
   invoices?: SubscriptionInvoice[]
@@ -46,15 +28,14 @@ interface InvoicesTableProps {
 }
 
 export function InvoicesTable({ invoices, isLoading }: InvoicesTableProps) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t, locale } = useLocale()
 
   if (isLoading) {
     return (
-      <Card className="p-6 space-y-4">
+      <Card className="space-y-4 p-6">
         <Skeleton className="h-5 w-36" />
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="h-12 w-full" />
         ))}
       </Card>
     )
@@ -63,14 +44,14 @@ export function InvoicesTable({ invoices, isLoading }: InvoicesTableProps) {
   const rows = invoices ?? []
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="space-y-4 p-6">
       <h3 className="text-base font-semibold text-foreground">
-        {isAr ? "الفواتير" : "Invoices"}
+        {t("billing.invoices.title")}
       </h3>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">
-          {isAr ? "لا توجد فواتير بعد" : "No invoices yet"}
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          {t("billing.invoices.empty")}
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -78,34 +59,40 @@ export function InvoicesTable({ invoices, isLoading }: InvoicesTableProps) {
             <thead>
               <tr className="border-b border-border text-muted-foreground">
                 <th className="pb-2 text-start font-medium ps-0">
-                  {isAr ? "التاريخ" : "Date"}
+                  {t("billing.invoices.date")}
                 </th>
                 <th className="pb-2 text-start font-medium">
-                  {isAr ? "الفترة" : "Period"}
+                  {t("billing.invoices.period")}
                 </th>
                 <th className="pb-2 text-end font-medium">
-                  {isAr ? "المبلغ" : "Amount"}
+                  {t("billing.invoices.amount")}
                 </th>
                 <th className="pb-2 text-end font-medium pe-0">
-                  {isAr ? "الحالة" : "Status"}
+                  {t("billing.invoices.status")}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rows.map((inv) => (
-                <tr key={inv.id} className="group">
+              {rows.map((invoice) => (
+                <tr key={invoice.id}>
                   <td className="py-3 text-foreground ps-0">
-                    {formatDate(inv.dueDate)}
+                    {formatBillingDate(invoice.dueDate, locale)}
                   </td>
                   <td className="py-3 text-muted-foreground">
-                    {formatPeriod(inv.periodStart, inv.periodEnd)}
+                    {formatBillingDate(invoice.periodStart, locale)} -{" "}
+                    {formatBillingDate(invoice.periodEnd, locale)}
                   </td>
                   <td className="py-3 text-end font-medium tabular-nums text-foreground">
-                    {inv.currency} {inv.amount}
+                    {invoice.currency} {invoice.amount}
                   </td>
                   <td className="py-3 text-end pe-0">
                     <div className="flex justify-end">
-                      <InvoiceStatusBadge status={inv.status} />
+                      <Badge
+                        variant="outline"
+                        className={cn("font-medium", statusClassNames[invoice.status])}
+                      >
+                        {t(statusKeyMap[invoice.status])}
+                      </Badge>
                     </div>
                   </td>
                 </tr>

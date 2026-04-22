@@ -121,7 +121,7 @@ describe("useUserMutations", () => {
     await result.current.deactivateMut.mutateAsync("u-1")
 
     const invalidations = spy.mock.calls.map((c) => c[0])
-    expect(invalidations.every((i) => JSON.stringify(i.queryKey) === JSON.stringify(["users"]))).toBe(true)
+    expect(invalidations.every((i) => JSON.stringify(i!.queryKey) === JSON.stringify(["users"]))).toBe(true)
     expect(spy).toHaveBeenCalledTimes(5)
   })
 

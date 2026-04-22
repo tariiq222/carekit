@@ -11,7 +11,7 @@ import type { Notification } from "@/lib/types/notification"
 const base: Notification = {
   id: "n-1",
   recipientId: "u-1",
-  recipientType: "USER" as Notification["recipientType"],
+  recipientType: "CLIENT" as Notification["recipientType"],
   type: "booking.confirmed",
   title: "New booking confirmed",
   body: "Sara Ali booked Cardiology at 10:00.",
@@ -19,6 +19,7 @@ const base: Notification = {
   isRead: false,
   readAt: null,
   createdAt: new Date(Date.now() - 60_000).toISOString(),
+  updatedAt: new Date(Date.now() - 60_000).toISOString(),
 }
 
 describe("NotificationCard", () => {

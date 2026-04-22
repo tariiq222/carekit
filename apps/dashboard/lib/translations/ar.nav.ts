@@ -83,4 +83,8 @@ export const arNav: Record<string, string> = {
   "table.pagination.of": "من",
   "table.pagination.previous": "السابق",
   "table.pagination.next": "التالي",
+  "tenantSwitcher.selectOrg": "اختر العيادة",
+  "tenantSwitcher.switchOrg": "تبديل العيادة",
+  "tenantSwitcher.switching": "جاري التبديل…",
+  "tenantSwitcher.switchFailed": "تعذّر تبديل العيادة",
 }

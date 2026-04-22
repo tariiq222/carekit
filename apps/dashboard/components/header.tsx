@@ -29,6 +29,7 @@ import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useUnreadCount } from "@/hooks/use-notifications"
 import { ChangePasswordDialog } from "@/components/features/change-password-dialog"
+import { TenantSwitcher } from "@/components/tenant-switcher"
 import { cn } from "@/lib/utils"
 
 type FontSize = "S" | "M" | "L"
@@ -56,6 +57,9 @@ export function Header() {
       <SidebarTrigger className="hover:text-primary hover:bg-primary/8" />
 
       <div className="flex-1" />
+
+      {/* Tenant switcher — hides itself when user has ≤1 membership */}
+      <TenantSwitcher />
 
       {/* Theme toggle */}
       <Button

@@ -112,3 +112,63 @@ npm run build        # Production build
 ## QA Gate
 
 Dashboard e2e is manual via **Chrome DevTools MCP** — this is the required pre-merge check for any page change. Playwright was removed on 2026-04-16; tagged test reports are not the source of truth for dashboard UI.
+
+## i18n + terminology + tenant switcher (SaaS-06)
+
+- **i18n runtime is custom, not next-intl.** The source of truth is
+  `components/locale-provider.tsx` (`LocaleProvider` → `useLocale()` →
+  `t(key)` backed by a flat `translations[locale][key]` map assembled in
+  `lib/translations.ts` from `lib/translations/{ar,en}.*.ts` modules).
+  `next-intl` is installed but unused at runtime; do NOT migrate partial
+  pages to `useTranslations('<namespace>')` without a deliberate plan —
+  it would fork the system.
+- **Every user-facing string goes through `t('<key>')`** from `useLocale()`.
+  Keys are flat dot-namespaced strings (e.g. `"nav.bookings"`,
+  `"bookings.confirmStatus"`). Plurals are currently handled with
+  per-case keys (there is no ICU plural helper yet).
+- **AR/EN parity is gated** by `npm run i18n:verify` (runs
+  `scripts/verify-translation-parity.mjs`). It compares the key set of
+  each `ar.*.ts` module against its `en.*.ts` sibling and exits non-zero
+  on drift. Run it before every PR that touches translations.
+- **Vertical-aware terminology** goes through the shipped
+  `useTerminology(verticalSlug)` hook (`hooks/use-terminology.ts`,
+  backed by `GET /public/verticals/:slug/terminology`). Use its own
+  `t(key)` return value, distinct from `useLocale().t` — different
+  dictionaries, different purposes.
+- **RTL/LTR direction** is already wired: `LocaleProvider` flips
+  `document.documentElement.dir` *and* wraps children in
+  `@radix-ui/react-direction`'s `DirectionProvider`. Never hardcode
+  `left`/`right`; always use logical Tailwind classes (`ps-`/`pe-`/
+  `ms-`/`me-`).
+- **Tenant switcher** (`components/tenant-switcher.tsx`) reads
+  `useMemberships()` (`GET /auth/memberships`) and hides itself when
+  the user has ≤1 active membership. On selection it calls
+  `useSwitchOrganization()` (`POST /auth/switch-org`) → fresh
+  access+refresh token pair → `queryClient.clear()` → `router.refresh()`.
+  Mounted in `components/header.tsx` between the sidebar trigger and
+  the theme toggle.
+
+**Pre-PR checklist additions:**
+
+```
+□ npm run i18n:verify        # AR/EN parity
+□ Tenant switcher still hides for the common single-org user
+```
+
+## Billing UI (SaaS-06 Path A)
+
+- Subscription state is exposed through `useBilling()` from
+  `lib/billing/billing-context.tsx`; use `useCurrentPlan()` when a
+  component only needs `{ plan, limits, status, isLoading }`.
+- Subscription-aware page gating is done with
+  `<FeatureGate feature="chatbot">...</FeatureGate>` or the
+  `useFeatureEnabled(feature)` hook. This is separate from the legacy
+  sidebar `featureFlag` config.
+- Sidebar billing summary lives in
+  `components/billing-usage-widget.tsx` and intentionally renders
+  nothing when usage counters are absent instead of guessing.
+- Billing copy belongs in `lib/translations/ar.billing.ts` and
+  `lib/translations/en.billing.ts`.
+- `/settings/billing` is the canonical billing screen. Keep
+  `app/(dashboard)/settings/billing/page.tsx` orchestration-only and
+  push view logic into the billing components folder.

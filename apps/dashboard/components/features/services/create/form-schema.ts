@@ -16,6 +16,8 @@ export const createServiceSchema = z.object({
   iconBgColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   bufferMinutes: z.coerce.number().int().min(0).max(120).optional(),
+  bufferBeforeMinutes: z.coerce.number().int().min(0).max(120).nullable().optional(),
+  bufferAfterMinutes: z.coerce.number().int().min(0).max(120).nullable().optional(),
   depositEnabled: z.boolean().optional(),
   depositAmount: z.coerce.number().min(0).nullable().optional(),
   allowRecurring: z.boolean().optional(),

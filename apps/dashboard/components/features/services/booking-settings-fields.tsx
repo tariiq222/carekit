@@ -14,7 +14,7 @@ export function NumberField({ id, label, value, onChange, unit, min, max, hint }
   onChange: (v: number | null) => void
   unit: string
   min: number
-  max: number
+  max?: number
   hint?: string
 }) {
   return (
@@ -86,7 +86,7 @@ export function OverrideField({ id, label, description, value, defaultValue: _de
   unit: string
   globalHint: string
   min: number
-  max: number
+  max?: number
   onEnable: () => void
   onDisable: () => void
   onChange: (v: number | null) => void

@@ -18,7 +18,7 @@ export function buildPayload(data: CreateServiceFormData) {
     imageUrl: data.imageUrl?.startsWith("blob:") ? undefined : (data.imageUrl ?? null),
     bufferMinutes: data.bufferMinutes,
     depositEnabled: data.depositEnabled,
-    depositAmount: data.depositEnabled ? data.depositAmount : undefined,
+    depositAmount: data.depositEnabled ? (data.depositAmount ?? undefined) : undefined,
     allowRecurring: data.allowRecurring,
     allowedRecurringPatterns: data.allowedRecurringPatterns as import("@/lib/types/service").RecurringPattern[] | undefined,
     maxRecurrences: data.maxRecurrences,
