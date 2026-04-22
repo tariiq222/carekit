@@ -152,32 +152,37 @@ describe("BillingPage", () => {
     })
   })
 
+  function mockBillingFor(
+    status: "ACTIVE" | "PAST_DUE" | "SUSPENDED" | "CANCELED" | "TRIALING",
+    planOverride?: { id: string; slug: "BASIC" | "PRO"; nameEn: string; nameAr: string; priceMonthly: string; priceAnnual: string; limits: Record<string, number>; sortOrder: number },
+  ) {
+    const plan = planOverride ?? {
+      id: "basic",
+      slug: "BASIC" as const,
+      nameEn: "Basic",
+      nameAr: "أساسي",
+      priceMonthly: "99",
+      priceAnnual: "999",
+      limits: { maxBookingsPerMonth: 50 },
+      sortOrder: 1,
+    }
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status,
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      plan: { ...plan, currency: "SAR" },
+      usage: { BOOKINGS_PER_MONTH: 25 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status, subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+  }
+
   it("shows the past-due banner", () => {
-    useBilling.mockReturnValue({ status: "PAST_DUE" })
-    useCurrentSubscription.mockReturnValue({
-      isLoading: false,
-      data: {
-        id: "sub-1",
-        organizationId: "org-1",
-        status: "PAST_DUE",
-        billingCycle: "MONTHLY",
-        currentPeriodStart: "2026-04-01T00:00:00.000Z",
-        currentPeriodEnd: "2026-05-01T00:00:00.000Z",
-        plan: {
-          id: "basic",
-          slug: "BASIC",
-          nameAr: "أساسي",
-          nameEn: "Basic",
-          priceMonthly: "99",
-          priceAnnual: "999",
-          currency: "SAR",
-          limits: { maxBookingsPerMonth: 50 },
-          sortOrder: 1,
-        },
-        usage: { BOOKINGS_PER_MONTH: 25 },
-        invoices: [],
-      },
-    })
+    mockBillingFor("PAST_DUE")
 
     render(<BillingPage />)
 
@@ -185,31 +190,7 @@ describe("BillingPage", () => {
   })
 
   it("opens the plan dialog and submits an upgrade", async () => {
-    useBilling.mockReturnValue({ status: "ACTIVE" })
-    useCurrentSubscription.mockReturnValue({
-      isLoading: false,
-      data: {
-        id: "sub-1",
-        organizationId: "org-1",
-        status: "ACTIVE",
-        billingCycle: "MONTHLY",
-        currentPeriodStart: "2026-04-01T00:00:00.000Z",
-        currentPeriodEnd: "2026-05-01T00:00:00.000Z",
-        plan: {
-          id: "basic",
-          slug: "BASIC",
-          nameAr: "أساسي",
-          nameEn: "Basic",
-          priceMonthly: "99",
-          priceAnnual: "999",
-          currency: "SAR",
-          limits: { maxBookingsPerMonth: 50 },
-          sortOrder: 1,
-        },
-        usage: { BOOKINGS_PER_MONTH: 25 },
-        invoices: [],
-      },
-    })
+    mockBillingFor("ACTIVE")
 
     render(<BillingPage />)
 
@@ -226,32 +207,19 @@ describe("BillingPage", () => {
     )
   })
 
+  const proPlan = {
+    id: "pro",
+    slug: "PRO" as const,
+    nameAr: "محترف",
+    nameEn: "Pro",
+    priceMonthly: "199",
+    priceAnnual: "1999",
+    limits: { maxBookingsPerMonth: 100 },
+    sortOrder: 2,
+  }
+
   it("opens the cancel dialog and submits the cancellation", async () => {
-    useBilling.mockReturnValue({ status: "ACTIVE" })
-    useCurrentSubscription.mockReturnValue({
-      isLoading: false,
-      data: {
-        id: "sub-1",
-        organizationId: "org-1",
-        status: "ACTIVE",
-        billingCycle: "MONTHLY",
-        currentPeriodStart: "2026-04-01T00:00:00.000Z",
-        currentPeriodEnd: "2026-05-01T00:00:00.000Z",
-        plan: {
-          id: "pro",
-          slug: "PRO",
-          nameAr: "محترف",
-          nameEn: "Pro",
-          priceMonthly: "199",
-          priceAnnual: "1999",
-          currency: "SAR",
-          limits: { maxBookingsPerMonth: 100 },
-          sortOrder: 2,
-        },
-        usage: { BOOKINGS_PER_MONTH: 25 },
-        invoices: [],
-      },
-    })
+    mockBillingFor("ACTIVE", proPlan)
 
     render(<BillingPage />)
 
@@ -263,31 +231,7 @@ describe("BillingPage", () => {
   })
 
   it("shows the resume action for suspended subscriptions", async () => {
-    useBilling.mockReturnValue({ status: "SUSPENDED" })
-    useCurrentSubscription.mockReturnValue({
-      isLoading: false,
-      data: {
-        id: "sub-1",
-        organizationId: "org-1",
-        status: "SUSPENDED",
-        billingCycle: "MONTHLY",
-        currentPeriodStart: "2026-04-01T00:00:00.000Z",
-        currentPeriodEnd: "2026-05-01T00:00:00.000Z",
-        plan: {
-          id: "pro",
-          slug: "PRO",
-          nameAr: "محترف",
-          nameEn: "Pro",
-          priceMonthly: "199",
-          priceAnnual: "1999",
-          currency: "SAR",
-          limits: { maxBookingsPerMonth: 100 },
-          sortOrder: 2,
-        },
-        usage: { BOOKINGS_PER_MONTH: 25 },
-        invoices: [],
-      },
-    })
+    mockBillingFor("SUSPENDED", proPlan)
 
     render(<BillingPage />)
     await userEvent.click(screen.getByRole("button", { name: "Resume subscription" }))
