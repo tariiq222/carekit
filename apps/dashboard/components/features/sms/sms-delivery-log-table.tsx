@@ -42,7 +42,7 @@ function StatusBadge({ status }: { status: SmsDeliveryStatus }) {
 }
 
 export function SmsDeliveryLogTable() {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const isAr = locale === "ar"
   const { deliveries, loading } = useSmsDeliveries()
 
@@ -60,28 +60,22 @@ export function SmsDeliveryLogTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {isAr ? "سجل الإرسال" : "Delivery log"}
-        </CardTitle>
+        <CardTitle>{t("sms.log.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-muted-foreground">
-            {isAr ? "جارٍ التحميل..." : "Loading..."}
-          </p>
+          <p className="text-muted-foreground">{t("sms.log.loading")}</p>
         ) : deliveries.length === 0 ? (
-          <p className="text-muted-foreground">
-            {isAr ? "لا توجد رسائل مرسلة بعد" : "No messages sent yet"}
-          </p>
+          <p className="text-muted-foreground">{t("sms.log.empty")}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{isAr ? "الرقم" : "Phone"}</TableHead>
-                <TableHead>{isAr ? "المزود" : "Provider"}</TableHead>
-                <TableHead>{isAr ? "الحالة" : "Status"}</TableHead>
-                <TableHead>{isAr ? "التاريخ" : "Sent"}</TableHead>
-                <TableHead>{isAr ? "التسليم" : "Delivered"}</TableHead>
+                <TableHead>{t("sms.log.col.phone")}</TableHead>
+                <TableHead>{t("sms.log.col.provider")}</TableHead>
+                <TableHead>{t("sms.log.col.status")}</TableHead>
+                <TableHead>{t("sms.log.col.sent")}</TableHead>
+                <TableHead>{t("sms.log.col.delivered")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
