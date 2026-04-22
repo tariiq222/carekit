@@ -1,7 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { DEFAULT_ORGANIZATION_ID, SYSTEM_CONTEXT_CLS_KEY, TENANT_CLS_KEY } from './tenant.constants';
 import { UnauthorizedTenantAccessError } from './tenant.errors';
+
+/**
+ * Interface the billing module's `SubscriptionCacheService` satisfies. Declared
+ * here (rather than importing the class directly) to keep the tenant layer
+ * free of module-level imports from `src/modules/*`. The billing module wires
+ * the concrete implementation via `SUBSCRIPTION_CACHE_TOKEN`.
+ */
+export interface SubscriptionCacheLookup {
+  get(organizationId: string): Promise<{
+    planSlug: string;
+    status: string;
+    limits: Record<string, number | boolean>;
+  } | null>;
+}
+
+export const SUBSCRIPTION_CACHE_TOKEN = Symbol('TenantContext.SubscriptionCache');
 
 export interface TenantContext {
   organizationId: string;
@@ -18,7 +34,12 @@ export interface TenantContext {
 
 @Injectable()
 export class TenantContextService {
-  constructor(private readonly cls: ClsService) {}
+  constructor(
+    private readonly cls: ClsService,
+    @Optional()
+    @Inject(SUBSCRIPTION_CACHE_TOKEN)
+    private readonly subscriptionCache?: SubscriptionCacheLookup,
+  ) {}
 
   set(ctx: TenantContext): void {
     this.cls.set(TENANT_CLS_KEY, ctx);
@@ -72,5 +93,21 @@ export class TenantContextService {
 
   clear(): void {
     this.cls.set(TENANT_CLS_KEY, undefined);
+  }
+
+  /**
+   * Returns the current tenant's cached plan limits (SaaS-04). Returns null
+   * when no subscription exists for the org yet (pre-signup, fresh seed data)
+   * OR when the billing module hasn't wired the cache (early-boot / tests
+   * that don't load BillingModule). Callers must treat null as "no limits
+   * known — permit by default" so the billing rollout is additive.
+   */
+  async currentPlanLimits(): Promise<{
+    planSlug: string;
+    status: string;
+    limits: Record<string, number | boolean>;
+  } | null> {
+    if (!this.subscriptionCache) return null;
+    return this.subscriptionCache.get(this.requireOrganizationIdOrDefault());
   }
 }

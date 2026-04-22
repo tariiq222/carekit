@@ -200,3 +200,152 @@ model VerticalTerminologyOverride {
   @@unique([verticalId, tokenKey])
   @@index([verticalId])
 }
+
+// ─── Billing (SaaS-04) ───────────────────────────────────────────────────────
+// Plan, SubscriptionInvoice = platform-level (CareKit's catalog / receivables).
+// Subscription, UsageRecord   = tenant-scoped (belong to an org).
+
+enum PlanSlug {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+}
+
+enum SubscriptionInvoiceStatus {
+  DRAFT
+  DUE
+  PAID
+  FAILED
+  VOID
+}
+
+enum UsageMetric {
+  // Hard-capped (enforced by PlanLimitsGuard; no overage billing)
+  BRANCHES
+  EMPLOYEES
+  // Metered overage (never blocked; billed at period end)
+  BOOKINGS_PER_MONTH
+  CLIENTS
+  STORAGE_MB
+}
+
+model Plan {
+  id               String   @id @default(uuid())
+  slug             PlanSlug @unique
+  nameAr           String
+  nameEn           String
+  priceMonthly     Decimal  @db.Decimal(12, 2)
+  priceAnnual      Decimal  @db.Decimal(12, 2)
+  currency         String   @default("SAR")
+  moyasarProductId String? // optional future Moyasar native subscriptions
+  // limits JSON shape:
+  //   { maxBranches, maxEmployees,                         // hard-capped quotas (-1 = unlimited)
+  //     maxBookingsPerMonth, maxClients, maxStorageMB,     // metered overage quotas (-1 = unlimited)
+  //     overageRateBookings, overageRateClients, overageRateStorageGB, // SAR per unit above quota
+  //     websiteEnabled, customDomainEnabled, chatbotEnabled, zatcaEnabled, ratingsEnabled }
+  limits           Json
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([isActive, sortOrder])
+}
+
+model Subscription {
+  id                     String             @id @default(uuid())
+  organizationId         String             @unique // one active sub per org (SaaS-04 scoped)
+  planId                 String
+  plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  status                 SubscriptionStatus @default(TRIALING)
+  billingCycle           BillingCycle       @default(MONTHLY)
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  trialEndsAt            DateTime?
+  canceledAt             DateTime?
+  cancelReason           String?
+  pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
+  retryCount             Int                @default(0) // analytics only; not used for state decisions
+  maxRetries             Int                @default(3) // charging attempts within grace window
+  moyasarCustomerRef     String? // Moyasar customer id
+  moyasarCardTokenRef    String? // tokenized saved card
+  moyasarSubscriptionRef String? // reserved for future native recurring
+  lastPaymentAt          DateTime?
+  lastFailureReason      String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  invoices     SubscriptionInvoice[]
+  usageRecords UsageRecord[]
+
+  @@index([planId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+}
+
+model SubscriptionInvoice {
+  id               String                    @id @default(uuid())
+  subscriptionId   String
+  subscription     Subscription              @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  organizationId   String // denormalized for analytics; NOT SCOPED — this is CareKit's receivable
+  amount           Decimal                   @db.Decimal(12, 2) // flat + Σ(overage)
+  flatAmount       Decimal                   @db.Decimal(12, 2)
+  overageAmount    Decimal                   @default(0) @db.Decimal(12, 2)
+  // lineItems shape:
+  //   [{ kind: 'FLAT_FEE', description, amount },
+  //    { kind: 'OVERAGE', metric: 'BOOKINGS_PER_MONTH'|'CLIENTS'|'STORAGE_MB',
+  //      included, used, overage, rate, amount }]
+  lineItems        Json                      @default("[]")
+  currency         String                    @default("SAR")
+  status           SubscriptionInvoiceStatus @default(DRAFT)
+  billingCycle     BillingCycle
+  periodStart      DateTime
+  periodEnd        DateTime
+  dueDate          DateTime
+  issuedAt         DateTime?
+  paidAt           DateTime?
+  moyasarPaymentId String?                   @unique
+  failureReason    String?
+  attemptCount     Int                       @default(0)
+  receiptUrl       String?
+  pdfUrl           String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([subscriptionId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model UsageRecord {
+  id             String       @id @default(uuid())
+  organizationId String // SaaS-04 scoped
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  metric         UsageMetric
+  count          Int
+  periodStart    DateTime
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@unique([subscriptionId, metric, periodStart])
+  @@index([organizationId])
+  @@index([subscriptionId])
+  @@index([metric])
+}
