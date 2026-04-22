@@ -197,7 +197,7 @@ export function useEmployeeForm({
       } catch { stepErrors.push(t("employees.form.stepErrorServices")) }
     }
     if (stepErrors.length > 0) {
-      toast.warning(`${t("employees.edit.success")} (${t("common.warnings")}: ${[...new Set(stepErrors)].join(", ")})`)
+      toast.warning(`${t("employees.edit.success")} (${t("common.warnings")}: ${[...new Set(stepErrors)].join(t("common.listSep"))})`)
     } else {
       toast.success(t("employees.edit.success"))
     }
