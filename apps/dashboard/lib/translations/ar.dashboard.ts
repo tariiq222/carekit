@@ -76,4 +76,5 @@ export const arDashboard: Record<string, string> = {
   "dashboard.recentPayments.unknownClient": "غير محدد",
   "dashboard.currency": "ر.س",
   "dashboard.noRevenueData": "لا توجد بيانات إيرادات بعد",
+  "dashboard.greeting.hello": "{greeting}، {name} 👋",
 }

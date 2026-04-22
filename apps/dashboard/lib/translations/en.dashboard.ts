@@ -76,4 +76,5 @@ export const enDashboard: Record<string, string> = {
   "dashboard.recentPayments.unknownClient": "Unknown",
   "dashboard.currency": "SAR",
   "dashboard.noRevenueData": "No revenue data yet",
+  "dashboard.greeting.hello": "{greeting}, {name} 👋",
 }
