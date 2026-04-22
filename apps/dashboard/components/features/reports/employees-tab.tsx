@@ -35,7 +35,7 @@ export function EmployeesTab({ dateFrom, dateTo, employeeId }: EmployeesTabProps
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-sm text-muted-foreground">
-          {t("reports.employeeSearchHint") ?? "ابحث عن طبيب بالاسم أو ID لعرض تقريره"}
+          {t("reports.employeeSearchHint")}
         </p>
       </div>
     )

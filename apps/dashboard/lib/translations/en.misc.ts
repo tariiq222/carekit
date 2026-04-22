@@ -19,7 +19,7 @@ export const enMisc: Record<string, string> = {
   "reports.bookings.byType": "By Type",
   "reports.exportCsv": "Export CSV",
   "reports.employeeSearch": "Search employee by name or ID...",
-  "reports.employeeSearchHint": "Search for a employee to view their report",
+  "reports.employeeSearchHint": "Search for an employee to view their report",
 
   // — Notifications —
   "notifications.title": "Notifications",
