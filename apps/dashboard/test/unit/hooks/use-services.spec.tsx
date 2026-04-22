@@ -185,8 +185,8 @@ describe("useServiceMutations / useCategoryMutations", () => {
     const { Wrapper, qc } = makeWrapper()
     const spy = vi.spyOn(qc, "invalidateQueries")
     const { result } = renderHook(() => useServiceMutations(), { wrapper: Wrapper })
-    await result.current.createMut.mutateAsync({ nameAr: "قلب" })
-    expect(servicesApi.createService).toHaveBeenCalledWith({ nameAr: "قلب" }, expect.anything())
+    await result.current.createMut.mutateAsync({ nameAr: "قلب", durationMins: 30, price: 0 })
+    expect(servicesApi.createService).toHaveBeenCalledWith({ nameAr: "قلب", durationMins: 30, price: 0 }, expect.anything())
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ["services"] }))
   })
 

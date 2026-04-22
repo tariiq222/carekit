@@ -25,10 +25,10 @@ describe("useInvoiceMutations", () => {
     createInvoice.mockResolvedValue({ id: "inv-1" })
     const { Wrapper } = makeWrapper()
     const { result } = renderHook(() => useInvoiceMutations(), { wrapper: Wrapper })
-    await result.current.createMut.mutateAsync({ bookingId: "bk-1" })
+    await result.current.createMut.mutateAsync({ paymentId: "pay-1" })
     // TanStack v5 passes a { client, meta, mutationKey } context as the 2nd arg
     // when mutationFn is used directly (no arrow wrapper).
-    expect(createInvoice).toHaveBeenCalledWith({ bookingId: "bk-1" }, expect.anything())
+    expect(createInvoice).toHaveBeenCalledWith({ paymentId: "pay-1" }, expect.anything())
   })
 
   it("invalidates the invoices.all cache on success", async () => {
@@ -36,7 +36,7 @@ describe("useInvoiceMutations", () => {
     const { Wrapper, qc } = makeWrapper()
     const spy = vi.spyOn(qc, "invalidateQueries")
     const { result } = renderHook(() => useInvoiceMutations(), { wrapper: Wrapper })
-    await result.current.createMut.mutateAsync({ bookingId: "bk-1" })
+    await result.current.createMut.mutateAsync({ paymentId: "pay-1" })
     expect(spy).toHaveBeenCalledWith({ queryKey: ["invoices"] })
   })
 
@@ -44,6 +44,6 @@ describe("useInvoiceMutations", () => {
     createInvoice.mockRejectedValue(new Error("duplicate"))
     const { Wrapper } = makeWrapper()
     const { result } = renderHook(() => useInvoiceMutations(), { wrapper: Wrapper })
-    await expect(result.current.createMut.mutateAsync({ bookingId: "x" })).rejects.toThrow("duplicate")
+    await expect(result.current.createMut.mutateAsync({ paymentId: "x" })).rejects.toThrow("duplicate")
   })
 })
