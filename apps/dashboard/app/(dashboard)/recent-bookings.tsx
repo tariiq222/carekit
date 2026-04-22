@@ -3,8 +3,8 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/features/data-table"
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { useTodayBookings } from "@/hooks/use-bookings"
 import type { Booking } from "@/lib/types/booking"
 

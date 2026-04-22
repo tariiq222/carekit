@@ -2,7 +2,7 @@
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { useLocale } from "@/components/locale-provider"
 

@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 
 import { Controller } from "react-hook-form"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,
@@ -17,9 +17,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Textarea } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   AlertDialog,
@@ -30,7 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@carekit/ui"
 import {
   useEmployeeVacations,
   useVacationMutations,

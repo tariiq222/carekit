@@ -10,10 +10,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+} from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useIntakeForm } from "@/hooks/use-intake-forms"
 import type { IntakeForm, FormField, FieldType } from "@/lib/types/intake-form"

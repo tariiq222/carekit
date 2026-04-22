@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,
@@ -15,10 +15,10 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+} from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Switch } from "@carekit/ui"
 import {
   useEmployeeAvailability,
   useSetAvailability,

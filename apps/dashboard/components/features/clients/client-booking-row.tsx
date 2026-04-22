@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@carekit/ui"
 import type { ClientBookingPreview } from "@/lib/types/client"
 
 const STATUS_STYLES: Record<string, string> = {

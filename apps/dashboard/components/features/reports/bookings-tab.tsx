@@ -5,8 +5,8 @@ import { ErrorBanner } from "@/components/features/error-banner"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchBookingReport } from "@/lib/api/reports"
 import { useLocale } from "@/components/locale-provider"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 
 interface BookingsTabProps {
   dateFrom: string

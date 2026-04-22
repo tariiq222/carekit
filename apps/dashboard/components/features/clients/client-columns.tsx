@@ -12,9 +12,9 @@ import {
   MailValidation01Icon,
   Delete02Icon,
 } from "@hugeicons/core-free-icons"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Avatar, AvatarFallback, AvatarImage } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import type { Client } from "@/lib/types/client"
 
 interface ClientColumnOptions {

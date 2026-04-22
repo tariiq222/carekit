@@ -12,11 +12,11 @@ import {
   DialogDescription,
   DialogBody,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+} from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Textarea } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 
 import { useRoleMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"

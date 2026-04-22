@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { useEmployeeBreaks } from "@/hooks/use-employees"
 import { BreaksEditor } from "./breaks-editor"
 

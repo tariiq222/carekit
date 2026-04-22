@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@carekit/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import type { ClientBookingPreview } from "@/lib/types/client"
 

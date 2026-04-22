@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Alert02Icon,
   ArrowReloadHorizontalIcon,

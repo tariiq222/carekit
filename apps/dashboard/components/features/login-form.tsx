@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import { useAuth } from "@/components/providers/auth-provider"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EyeIcon, ScanEyeIcon } from "@hugeicons/core-free-icons"

@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import { StatusBadge } from "@/components/features/status-badge"
 import { cn } from "@/lib/utils"
 import type { Booking } from "@/lib/types/booking"

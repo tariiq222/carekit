@@ -11,16 +11,16 @@ import {
   UserCheck01Icon,
   UserBlock01Icon,
 } from "@hugeicons/core-free-icons"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import type { User } from "@/lib/types/user"
 
 interface UserColumnCallbacks {

@@ -1,6 +1,6 @@
 "use client"
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@carekit/ui"
 
 export function MobileSidebarTrigger() {
   return (

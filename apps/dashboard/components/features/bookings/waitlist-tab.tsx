@@ -8,8 +8,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+} from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Clock01Icon } from "@hugeicons/core-free-icons"
 import { useWaitlistMutations } from "@/hooks/use-waitlist"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"

@@ -12,15 +12,15 @@ import {
   Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import type { Branch } from "@/lib/types/branch"
 
 type TFn = (key: string) => string

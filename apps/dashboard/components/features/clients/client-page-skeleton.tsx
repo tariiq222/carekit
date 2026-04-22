@@ -1,6 +1,6 @@
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 
 export function ClientPageSkeleton() {
   return (

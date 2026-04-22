@@ -1,17 +1,17 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Switch } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { IntakeFormDraft, FormType, FormScope } from "@/lib/types/intake-form"
 import {

@@ -8,15 +8,15 @@ import {
   Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import type { ServiceCategory } from "@/lib/types/service"
 
 type TFn = (key: string) => string

@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 

@@ -17,13 +17,13 @@ import {
   ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@carekit/ui"
+import { Input } from "@carekit/ui"
 import { NationalitySelect } from "@/components/ui/nationality-select"
-import { Label } from "@/components/ui/label"
-import { PhoneInput } from "@/components/ui/phone-input"
+import { Label } from "@carekit/ui"
+import { PhoneInput } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@carekit/ui"
 
 import { createWalkInClient } from "@/lib/api/clients"
 import { cn } from "@/lib/utils"

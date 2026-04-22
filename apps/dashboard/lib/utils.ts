@@ -1,10 +1,9 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 import type { CSSProperties } from "react"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+// cn() moved to @carekit/ui/lib/cn as of SaaS-05a.
+// Re-exported here for backward compatibility across the dashboard workspace;
+// new code should import { cn } from "@carekit/ui" directly.
+export { cn } from "@carekit/ui/lib/cn"
 
 /**
  * Returns the numeric value only (no symbol).

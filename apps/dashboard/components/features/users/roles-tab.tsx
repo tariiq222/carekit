@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 
 import { useRoles, usePermissions, useRoleMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"

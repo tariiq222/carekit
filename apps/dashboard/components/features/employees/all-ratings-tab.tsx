@@ -5,18 +5,18 @@ import { useQuery } from "@tanstack/react-query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { StarIcon } from "@hugeicons/core-free-icons"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 
 import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"

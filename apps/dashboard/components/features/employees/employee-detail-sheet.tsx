@@ -7,10 +7,10 @@ import {
   SheetHeader,
   SheetBody,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { useEmployee } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"

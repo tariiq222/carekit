@@ -8,7 +8,7 @@ import {
   Tick02Icon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons"
-import { Card } from "@/components/ui/card"
+import { Card } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { BookingStats } from "@/lib/types/booking"
 

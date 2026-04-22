@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useClientMutations } from "@/hooks/use-clients"
 import type { Client } from "@/lib/types/client"

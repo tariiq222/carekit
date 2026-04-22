@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { Header } from "@/components/header"
 import { MobileSidebarTrigger } from "@/components/mobile-sidebar-trigger"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@carekit/ui"
 import { LocaleProvider } from "@/components/locale-provider"
 import { AuthGate } from "@/components/providers/auth-gate"
 import { CommandPalette } from "@/components/features/command-palette"

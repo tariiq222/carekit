@@ -9,10 +9,10 @@ import {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-} from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { fetchPayments } from "@/lib/api/payments"
 import { queryKeys } from "@/lib/query-keys"

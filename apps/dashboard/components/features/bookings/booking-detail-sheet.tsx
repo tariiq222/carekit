@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@carekit/ui"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
 
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"

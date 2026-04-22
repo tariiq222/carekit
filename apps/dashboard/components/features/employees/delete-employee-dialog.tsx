@@ -12,7 +12,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { deleteEmployee } from "@/lib/api/employees"
 import { queryKeys } from "@/lib/query-keys"

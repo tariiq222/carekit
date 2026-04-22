@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 
 import type { Payment } from "@/lib/types/payment"
 import { RefundDialog } from "./refund-dialog"

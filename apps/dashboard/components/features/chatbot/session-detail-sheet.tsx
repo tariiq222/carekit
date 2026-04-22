@@ -12,11 +12,11 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { useChatSession, useChatbotMutations } from "@/hooks/use-chatbot"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

@@ -3,15 +3,15 @@
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon, ArrowDown01Icon, Building01Icon, Tick01Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 
 /* ─── Saudi Banks — full SAMA licensed list ─── */
 export interface SaudiBank {

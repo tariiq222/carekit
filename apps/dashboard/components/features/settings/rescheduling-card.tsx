@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Switch } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
 import type { BookingSettings } from "@/lib/api/booking-settings"
 
 interface Props {

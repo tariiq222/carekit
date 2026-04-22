@@ -1,19 +1,19 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { useBranding } from "@/components/providers/branding-provider"
 import { isValidHex, hexToRgb, contrastRatio, pickForeground } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"

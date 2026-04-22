@@ -7,14 +7,14 @@ import {
   ViewIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@carekit/ui"
 import type { Invoice } from "@/lib/types/invoice"
 import { formatClinicDate } from "@/lib/utils"
 import type { DateFormat } from "@/lib/utils"

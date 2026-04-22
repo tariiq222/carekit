@@ -8,17 +8,17 @@ import {
   SmartPhone01Icon,
   UserCheck01Icon,
 } from "@hugeicons/core-free-icons"
-import { Input } from "@/components/ui/input"
-import { PhoneInput } from "@/components/ui/phone-input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@carekit/ui"
+import { PhoneInput } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Card, CardContent } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 

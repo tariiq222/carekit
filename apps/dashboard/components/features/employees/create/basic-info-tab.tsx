@@ -10,12 +10,12 @@ import {
   Certificate01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent } from "@/components/ui/card"
-import { AvatarUpload } from "@/components/ui/avatar-upload"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Textarea } from "@carekit/ui"
+import { Switch } from "@carekit/ui"
+import { Card, CardContent } from "@carekit/ui"
+import { AvatarUpload } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateEmployeeFormData } from "./form-schema"

@@ -7,7 +7,8 @@
     "apps/dashboard",
     "apps/website",
     "packages/shared",
-    "packages/api-client"
+    "packages/api-client",
+    "packages/ui"
   ],
   "scripts": {
     "dev:backend": "turbo run dev --filter=backend",

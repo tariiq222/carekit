@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { BookingTypeRow } from "../booking-type-row"
 import type { DraftBookingType, DraftDurationOption } from "../booking-types-editor"

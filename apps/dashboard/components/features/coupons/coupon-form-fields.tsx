@@ -8,18 +8,18 @@ import {
   TextAlignLeftIcon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { DateTimeInput } from "@/components/ui/date-time-input"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { DateTimeInput } from "@carekit/ui"
+import { Switch } from "@carekit/ui"
+import { Card, CardContent } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { BookingWizard } from "./booking-wizard"
 

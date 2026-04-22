@@ -2,15 +2,15 @@
 
 import { DataTable } from "@/components/features/data-table"
 import { ErrorBanner } from "@/components/features/error-banner"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
+import { Skeleton } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 
 import { getActivityLogColumns } from "@/components/features/activity-log/activity-log-columns"

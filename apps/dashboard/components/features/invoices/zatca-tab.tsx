@@ -13,12 +13,12 @@ import {
 
 import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Input } from "@carekit/ui"
+import { Label } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -27,7 +27,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
+} from "@carekit/ui"
 
 import { useZatcaConfig, useOnboardingStatus, useZatcaMutations } from "@/hooks/use-zatca"
 import { useLocale } from "@/components/locale-provider"

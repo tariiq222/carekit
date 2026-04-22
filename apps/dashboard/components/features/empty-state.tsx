@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { InboxIcon } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 
 interface EmptyStateProps {
   icon?: IconSvgElement
