@@ -13,6 +13,7 @@
     "test:cov": "vitest run --coverage",
     "test:watch": "vitest",
     "test:report": "py ../../test-reports/scripts/generate_html_report.py",
+    "i18n:verify": "node scripts/verify-translation-parity.mjs",
     "openapi:generate": "openapi-typescript ../../apps/backend/openapi.json -o lib/types/api.generated.ts"
   },
   "dependencies": {

@@ -167,6 +167,8 @@ export const arSettings: Record<string, string> = {
   "settings.holidayRecurring": "تتكرر سنوياً",
   "settings.deleteHoliday": "حذف العطلة",
   "settings.noHolidays": "لا توجد عطلات محددة",
+  "settings.adminOutsideHours": "السماح للمسؤولين بالحجز خارج ساعات العمل",
+  "settings.adminOutsideHoursDesc": "يستطيع المسؤولون إنشاء حجوزات خارج ساعات عمل العيادة والموظفين",
   "settings.features.title": "إدارة الميزات",
   "settings.features.description": "فعّل أو عطّل ميزات المنصة. الميزات المعطّلة تختفي من لوحة التحكم وتطبيق المستفيدين.",
   "settings.features.enabled": "هذه الميزة مفعّلة حالياً.",

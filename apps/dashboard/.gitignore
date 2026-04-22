@@ -39,3 +39,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 test/e2e/setup/.auth/
+
+# SaaS-06 local i18n audit scratch
+.i18n-audit/
