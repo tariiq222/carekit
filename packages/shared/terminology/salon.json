@@ -1,0 +1,21 @@
+{
+  "employee.singular": { "ar": "مصفف", "en": "Stylist" },
+  "employee.plural": { "ar": "المصففون", "en": "Stylists" },
+  "employee.possessive": { "ar": "مصففك", "en": "your stylist" },
+  "service.singular": { "ar": "خدمة", "en": "Service" },
+  "service.plural": { "ar": "الخدمات", "en": "Services" },
+  "client.singular": { "ar": "عميل", "en": "Client" },
+  "client.plural": { "ar": "العملاء", "en": "Clients" },
+  "booking.singular": { "ar": "حجز", "en": "Booking" },
+  "booking.plural": { "ar": "الحجوزات", "en": "Bookings" },
+  "appointment.singular": { "ar": "موعد", "en": "Appointment" },
+  "appointment.plural": { "ar": "المواعيد", "en": "Appointments" },
+  "department.singular": { "ar": "قسم", "en": "Section" },
+  "department.plural": { "ar": "الأقسام", "en": "Sections" },
+  "category.singular": { "ar": "فئة", "en": "Category" },
+  "category.plural": { "ar": "الفئات", "en": "Categories" },
+  "branch.singular": { "ar": "فرع", "en": "Location" },
+  "branch.plural": { "ar": "الفروع", "en": "Locations" },
+  "session.singular": { "ar": "جلسة", "en": "Session" },
+  "session.plural": { "ar": "الجلسات", "en": "Sessions" }
+}

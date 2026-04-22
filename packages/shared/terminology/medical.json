@@ -1,0 +1,21 @@
+{
+  "employee.singular": { "ar": "طبيب", "en": "Doctor" },
+  "employee.plural": { "ar": "الأطباء", "en": "Doctors" },
+  "employee.possessive": { "ar": "طبيبك", "en": "your doctor" },
+  "service.singular": { "ar": "خدمة", "en": "Service" },
+  "service.plural": { "ar": "الخدمات", "en": "Services" },
+  "client.singular": { "ar": "مريض", "en": "Patient" },
+  "client.plural": { "ar": "المرضى", "en": "Patients" },
+  "booking.singular": { "ar": "حجز", "en": "Booking" },
+  "booking.plural": { "ar": "الحجوزات", "en": "Bookings" },
+  "appointment.singular": { "ar": "موعد", "en": "Appointment" },
+  "appointment.plural": { "ar": "المواعيد", "en": "Appointments" },
+  "department.singular": { "ar": "قسم", "en": "Department" },
+  "department.plural": { "ar": "الأقسام", "en": "Departments" },
+  "category.singular": { "ar": "فئة", "en": "Category" },
+  "category.plural": { "ar": "الفئات", "en": "Categories" },
+  "branch.singular": { "ar": "فرع", "en": "Branch" },
+  "branch.plural": { "ar": "الفروع", "en": "Branches" },
+  "session.singular": { "ar": "جلسة", "en": "Session" },
+  "session.plural": { "ar": "الجلسات", "en": "Sessions" }
+}

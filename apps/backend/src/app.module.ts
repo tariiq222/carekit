@@ -13,6 +13,7 @@ import { StorageModule } from './infrastructure/storage';
 import { MailModule } from './infrastructure/mail';
 import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformModule } from './modules/platform/platform.module';
+import { VerticalsModule } from './modules/platform/verticals/verticals.module';
 import { PeopleModule } from './modules/people/people.module';
 import { MediaModule } from './modules/media/media.module';
 import { OrgConfigModule } from './modules/org-config/org-config.module';
@@ -51,6 +52,7 @@ import { PublicModule } from './api/public/public.module';
     MailModule,
     IdentityModule,
     PlatformModule,
+    VerticalsModule,
     PeopleModule,
     MediaModule,
     OrgConfigModule,

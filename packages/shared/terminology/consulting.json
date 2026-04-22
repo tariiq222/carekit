@@ -1,0 +1,21 @@
+{
+  "employee.singular": { "ar": "مستشار", "en": "Consultant" },
+  "employee.plural": { "ar": "المستشارون", "en": "Consultants" },
+  "employee.possessive": { "ar": "مستشارك", "en": "your consultant" },
+  "service.singular": { "ar": "استشارة", "en": "Consultation" },
+  "service.plural": { "ar": "الاستشارات", "en": "Consultations" },
+  "client.singular": { "ar": "عميل", "en": "Client" },
+  "client.plural": { "ar": "العملاء", "en": "Clients" },
+  "booking.singular": { "ar": "حجز", "en": "Booking" },
+  "booking.plural": { "ar": "الحجوزات", "en": "Bookings" },
+  "appointment.singular": { "ar": "موعد", "en": "Appointment" },
+  "appointment.plural": { "ar": "المواعيد", "en": "Appointments" },
+  "department.singular": { "ar": "قسم", "en": "Department" },
+  "department.plural": { "ar": "الأقسام", "en": "Departments" },
+  "category.singular": { "ar": "مجال", "en": "Area" },
+  "category.plural": { "ar": "المجالات", "en": "Areas" },
+  "branch.singular": { "ar": "مكتب", "en": "Office" },
+  "branch.plural": { "ar": "المكاتب", "en": "Offices" },
+  "session.singular": { "ar": "جلسة", "en": "Session" },
+  "session.plural": { "ar": "الجلسات", "en": "Sessions" }
+}
