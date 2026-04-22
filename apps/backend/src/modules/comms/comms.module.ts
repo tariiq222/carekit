@@ -34,11 +34,20 @@ import { ListContactMessagesHandler } from './contact-messages/list-contact-mess
 import { UpdateContactMessageStatusHandler } from './contact-messages/update-contact-message-status.handler';
 import { CAPTCHA_VERIFIER, createCaptchaVerifier } from './contact-messages/captcha.verifier';
 import { NotificationChannelModule } from './notification-channel/notification-channel.module';
+import { SmsModule } from '../../infrastructure/sms/sms.module';
+import { GetOrgSmsConfigHandler } from './org-sms-config/get-org-sms-config.handler';
+import { UpsertOrgSmsConfigHandler } from './org-sms-config/upsert-org-sms-config.handler';
+import { TestSmsConfigHandler } from './org-sms-config/test-sms-config.handler';
+import { SmsDlrHandler } from './sms-dlr/sms-dlr.handler';
 
 const handlers = [
   SendPushHandler,
   SendSmsHandler,
   SendEmailHandler,
+  GetOrgSmsConfigHandler,
+  UpsertOrgSmsConfigHandler,
+  TestSmsConfigHandler,
+  SmsDlrHandler,
   SendNotificationHandler,
   CreateNotificationHandler,
   ListNotificationsHandler,
@@ -70,7 +79,7 @@ const eventHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule],
+  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule, SmsModule],
   controllers: [DashboardCommsController],
   providers: [...handlers, ...eventHandlers, { provide: CAPTCHA_VERIFIER, useFactory: () => createCaptchaVerifier() }],
   exports: [...handlers, NotificationChannelModule],

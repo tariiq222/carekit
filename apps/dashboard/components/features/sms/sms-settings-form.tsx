@@ -1,0 +1,219 @@
+"use client"
+
+// SaaS-02g-sms — provider picker + credential form for /settings/sms.
+
+import { useEffect, useState } from "react"
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@carekit/ui"
+import { useLocale } from "@/components/locale-provider"
+import {
+  useSmsConfig,
+  useTestSms,
+  useUpsertSmsConfig,
+} from "@/hooks/use-sms-config"
+import type {
+  SmsProvider,
+  UpsertSmsConfigInput,
+} from "@/lib/types/sms"
+
+export function SmsSettingsForm() {
+  const { locale } = useLocale()
+  const isAr = locale === "ar"
+  const { config, loading } = useSmsConfig()
+  const upsert = useUpsertSmsConfig()
+  const test = useTestSms()
+
+  const [provider, setProvider] = useState<SmsProvider>("NONE")
+  const [senderId, setSenderId] = useState<string>("")
+  const [appSid, setAppSid] = useState<string>("")
+  const [apiKey, setApiKey] = useState<string>("")
+  const [apiToken, setApiToken] = useState<string>("")
+  const [testPhone, setTestPhone] = useState<string>("")
+  const [testMessage, setTestMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (config) {
+      setProvider(config.provider)
+      setSenderId(config.senderId ?? "")
+    }
+  }, [config])
+
+  const onSave = async () => {
+    const input: UpsertSmsConfigInput = { provider }
+    if (senderId.trim()) input.senderId = senderId.trim()
+    if (provider === "UNIFONIC") input.unifonic = { appSid, apiKey }
+    if (provider === "TAQNYAT") input.taqnyat = { apiToken }
+    await upsert.mutateAsync(input)
+    setAppSid("")
+    setApiKey("")
+    setApiToken("")
+  }
+
+  const onTest = async () => {
+    if (!testPhone.trim()) return
+    const result = await test.mutateAsync(testPhone.trim())
+    if (result.ok) {
+      setTestMessage(
+        isAr
+          ? `تم الإرسال بنجاح (${result.providerMessageId})`
+          : `Sent successfully (${result.providerMessageId})`,
+      )
+    } else {
+      const err = result.error
+      setTestMessage(
+        err ? (isAr ? err.ar : err.en) : isAr ? "فشل" : "Failed",
+      )
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {isAr ? "إعدادات الرسائل النصية" : "SMS settings"}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {loading ? (
+          <p className="text-muted-foreground">
+            {isAr ? "جارٍ التحميل..." : "Loading..."}
+          </p>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="sms-provider">
+                {isAr ? "المزود" : "Provider"}
+              </Label>
+              <Select
+                value={provider}
+                onValueChange={(v) => setProvider(v as SmsProvider)}
+              >
+                <SelectTrigger id="sms-provider">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">
+                    {isAr ? "بدون مزود" : "None"}
+                  </SelectItem>
+                  <SelectItem value="UNIFONIC">Unifonic</SelectItem>
+                  <SelectItem value="TAQNYAT">Taqnyat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {provider !== "NONE" && (
+              <div className="space-y-2">
+                <Label htmlFor="sms-sender">
+                  {isAr ? "معرف المرسل" : "Sender ID"}
+                </Label>
+                <Input
+                  id="sms-sender"
+                  value={senderId}
+                  onChange={(e) => setSenderId(e.target.value)}
+                  placeholder="CareKit"
+                />
+              </div>
+            )}
+
+            {provider === "UNIFONIC" && (
+              <div className="space-y-3 rounded-md border p-4">
+                <p className="text-sm text-muted-foreground">
+                  {isAr
+                    ? "أدخل بيانات الاعتماد الجديدة لحفظها (لن تُعرض مرة أخرى)"
+                    : "Enter new credentials to save (will not be shown again)"}
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="u-appsid">App SID</Label>
+                  <Input
+                    id="u-appsid"
+                    value={appSid}
+                    onChange={(e) => setAppSid(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="u-apikey">API Key</Label>
+                  <Input
+                    id="u-apikey"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {provider === "TAQNYAT" && (
+              <div className="space-y-3 rounded-md border p-4">
+                <p className="text-sm text-muted-foreground">
+                  {isAr
+                    ? "أدخل بيانات الاعتماد الجديدة لحفظها (لن تُعرض مرة أخرى)"
+                    : "Enter new credentials to save (will not be shown again)"}
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="t-apitoken">API Token</Label>
+                  <Input
+                    id="t-apitoken"
+                    type="password"
+                    value={apiToken}
+                    onChange={(e) => setApiToken(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Button onClick={onSave} disabled={upsert.isPending}>
+                {isAr ? "حفظ" : "Save"}
+              </Button>
+              {config?.credentialsConfigured && (
+                <span className="text-xs text-success">
+                  {isAr
+                    ? "بيانات الاعتماد محفوظة"
+                    : "Credentials saved"}
+                </span>
+              )}
+            </div>
+
+            {config?.credentialsConfigured && provider !== "NONE" && (
+              <div className="rounded-md border p-4 space-y-3">
+                <Label htmlFor="test-phone">
+                  {isAr ? "رقم الاختبار" : "Test phone"}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="test-phone"
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.target.value)}
+                    placeholder="+9665..."
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={onTest}
+                    disabled={test.isPending || !testPhone.trim()}
+                  >
+                    {isAr ? "إرسال اختبار" : "Send test"}
+                  </Button>
+                </div>
+                {testMessage && (
+                  <p className="text-sm">{testMessage}</p>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

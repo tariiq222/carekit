@@ -36,6 +36,13 @@ import { ListContactMessagesHandler } from '../../modules/comms/contact-messages
 import { ListContactMessagesDto } from '../../modules/comms/contact-messages/list-contact-messages.dto';
 import { UpdateContactMessageStatusHandler } from '../../modules/comms/contact-messages/update-contact-message-status.handler';
 import { UpdateContactMessageStatusDto } from '../../modules/comms/contact-messages/update-contact-message-status.dto';
+import { GetOrgSmsConfigHandler } from '../../modules/comms/org-sms-config/get-org-sms-config.handler';
+import { UpsertOrgSmsConfigHandler } from '../../modules/comms/org-sms-config/upsert-org-sms-config.handler';
+import { UpsertOrgSmsConfigDto } from '../../modules/comms/org-sms-config/upsert-org-sms-config.dto';
+import { TestSmsConfigHandler } from '../../modules/comms/org-sms-config/test-sms-config.handler';
+import { TestSmsConfigDto } from '../../modules/comms/org-sms-config/test-sms-config.dto';
+import { PrismaService } from '../../infrastructure/database';
+import { TenantContextService } from '../../common/tenant';
 
 @ApiTags('Dashboard / Comms')
 @ApiBearerAuth()
@@ -59,7 +66,61 @@ export class DashboardCommsController {
     private readonly sendStaffMessage: SendStaffMessageHandler,
     private readonly listContactMessages: ListContactMessagesHandler,
     private readonly updateContactMessageStatus: UpdateContactMessageStatusHandler,
+    private readonly getOrgSmsConfig: GetOrgSmsConfigHandler,
+    private readonly upsertOrgSmsConfig: UpsertOrgSmsConfigHandler,
+    private readonly testSmsConfig: TestSmsConfigHandler,
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
   ) {}
+
+  // ── SMS Settings (SaaS-02g-sms) ────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Get SMS provider configuration (owner-scoped)' })
+  @ApiOkResponse({ description: 'OrganizationSmsConfig view (no secrets)' })
+  @Get('settings/sms')
+  getSmsConfigEndpoint() {
+    return this.getOrgSmsConfig.execute();
+  }
+
+  @ApiOperation({ summary: 'Upsert SMS provider configuration' })
+  @ApiOkResponse({ description: 'Updated OrganizationSmsConfig view' })
+  @HttpCode(HttpStatus.OK)
+  @Post('settings/sms')
+  upsertSmsConfigEndpoint(@Body() dto: UpsertOrgSmsConfigDto) {
+    return this.upsertOrgSmsConfig.execute(dto);
+  }
+
+  @ApiOperation({ summary: 'Send a test SMS via the configured provider' })
+  @ApiOkResponse({ description: 'Test result' })
+  @HttpCode(HttpStatus.OK)
+  @Post('settings/sms/test')
+  testSmsConfigEndpoint(@Body() dto: TestSmsConfigDto) {
+    return this.testSmsConfig.execute(dto);
+  }
+
+  @ApiOperation({ summary: 'List the 50 most recent SMS deliveries' })
+  @ApiOkResponse({ description: 'Recent SmsDelivery rows (owner-scoped)' })
+  @Get('settings/sms/deliveries')
+  async listSmsDeliveriesEndpoint() {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const rows = await this.prisma.smsDelivery.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        provider: true,
+        toPhone: true,
+        status: true,
+        providerMessageId: true,
+        errorMessage: true,
+        sentAt: true,
+        deliveredAt: true,
+        createdAt: true,
+      },
+    });
+    return { items: rows };
+  }
 
   // ── Contact Messages ───────────────────────────────────────────────────────
 

@@ -46,6 +46,9 @@ export async function createTestApp(): Promise<{
   process.env.JWT_CLIENT_REFRESH_SECRET = 'test-client-refresh-secret-32chars';
   process.env.JWT_CLIENT_ACCESS_TTL = '15m';
   process.env.JWT_CLIENT_REFRESH_TTL = '30d';
+  process.env.SMS_PROVIDER_ENCRYPTION_KEY =
+    process.env.SMS_PROVIDER_ENCRYPTION_KEY ??
+    Buffer.alloc(32, 1).toString('base64');
 
   await ensureTestUsers();
 

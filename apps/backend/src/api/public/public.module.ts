@@ -24,11 +24,12 @@ import { PublicInvoicesController } from './invoices.controller';
 import { PublicRefundsController } from './refunds.controller';
 import { PublicContentController } from './content.controller';
 import { PublicVerticalsController } from './verticals.controller';
+import { PublicSmsWebhooksController } from './sms-webhooks.controller';
 import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 import { VerticalsModule } from '../../modules/platform/verticals/verticals.module';
 
 @Module({
   imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule],
-  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController],
 })
 export class PublicModule {}
