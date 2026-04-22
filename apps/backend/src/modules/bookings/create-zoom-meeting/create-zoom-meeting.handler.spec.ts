@@ -12,7 +12,7 @@ function buildPrismaWithZoom(bookingOverride = onlineBooking, integrationOverrid
   const prisma = buildPrisma();
   prisma.booking.findFirst = jest.fn().mockResolvedValue(bookingOverride);
   (prisma as unknown as Record<string, unknown>).integration = {
-    findUnique: jest.fn().mockResolvedValue(integrationOverride),
+    findFirst: jest.fn().mockResolvedValue(integrationOverride),
   };
   prisma.booking.update = jest.fn().mockResolvedValue({ ...bookingOverride, zoomMeetingId: '12345' });
   return prisma;

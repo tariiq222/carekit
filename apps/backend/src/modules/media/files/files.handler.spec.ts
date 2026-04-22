@@ -8,6 +8,7 @@ import { DeleteFileHandler } from './delete-file.handler';
 import { GeneratePresignedUrlHandler } from './generate-presigned-url.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
+import { TenantContextService } from '../../../common/tenant';
 
 const mockFile = {
   id: 'f1',
@@ -63,6 +64,10 @@ describe('Media files handlers', () => {
         {
           provide: ConfigService,
           useValue: { getOrThrow: jest.fn().mockReturnValue('carekit') },
+        },
+        {
+          provide: TenantContextService,
+          useValue: { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') },
         },
       ],
     }).compile();

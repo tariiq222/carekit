@@ -2,6 +2,12 @@ import { Test } from '@nestjs/testing';
 import { UpsertIntegrationHandler } from './upsert-integration.handler';
 import { ListIntegrationsHandler } from './list-integrations.handler';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
+
+const tenantProvider = {
+  provide: TenantContextService,
+  useValue: { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') },
+};
 
 describe('Integration handlers', () => {
   let upsert: UpsertIntegrationHandler;
@@ -17,6 +23,7 @@ describe('Integration handlers', () => {
           provide: PrismaService,
           useValue: { integration: { upsert: jest.fn(), findMany: jest.fn() } },
         },
+        tenantProvider,
       ],
     }).compile();
 
@@ -30,7 +37,9 @@ describe('Integration handlers', () => {
     const result = await upsert.execute({ provider: 'zoom', config: { apiKey: 'key' } });
     expect(result.id).toBe('int-1');
     expect(prisma.integration.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { provider: 'zoom' } }),
+      expect.objectContaining({
+        where: { organizationId_provider: { organizationId: 'org-A', provider: 'zoom' } },
+      }),
     );
   });
 

@@ -38,7 +38,8 @@ export class CreateZoomMeetingHandler {
       );
     }
 
-    const integration = await this.prisma.integration.findUnique({
+    // SaaS-02g: Integration.provider is composite-unique per org; findFirst + Proxy auto-scopes.
+    const integration = await this.prisma.integration.findFirst({
       where: { provider: 'zoom' },
     });
     if (!integration || !integration.isActive) {

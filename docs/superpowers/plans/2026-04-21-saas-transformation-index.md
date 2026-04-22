@@ -23,7 +23,7 @@ Phase 02d ✅ MERGED     Bookings cluster (PR #18)
 Phase 02e 🟡 EXEC       Finance cluster — PR #19 (plan) + PR #21 (impl); owner-review required (ZATCA + Moyasar)
 Phase 05a 🟡 EXEC       packages/ui extraction — PR #20; needs UI QA before merge
 Phase 02f 🟡 EXEC       Comms cluster — PR #24 (impl); 8 models scoped, ChatbotConfig singleton; ready-for-review
-Phase 02g 🟢 WRITTEN    AI + media + ops + platform (1027 lines)
+Phase 02g 🟡 EXEC       AI + media + ops + platform — feat/saas-02g-ai-media-ops-platform (impl); 6 models scoped + SiteSetting composite PK + pgvector org predicate; 1025/1025 unit green; PR pending
 Phase 02h 🟢 WRITTEN    Strict mode + penetration (771 lines)
 Phase 03  🟡 EXEC       Verticals System — PR #25 (impl); 60 unit + 22 e2e green; ready-for-review
 Phase 04  🟢 WRITTEN    Billing & Subscriptions (1291 lines) — owner-review gate at Task 1

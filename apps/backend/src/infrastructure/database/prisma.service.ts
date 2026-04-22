@@ -64,6 +64,16 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'ChatMessage',
   'ContactMessage',
   'ChatbotConfig',
+  // 02g — AI + media + ops + platform + content
+  'KnowledgeDocument',
+  'DocumentChunk',
+  'File',
+  'ActivityLog',
+  'Report',
+  'ProblemReport',
+  'Integration',
+  'FeatureFlag',
+  'SiteSetting',
 ]);
 
 /**

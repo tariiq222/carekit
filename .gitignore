@@ -80,6 +80,7 @@ performance/k6/results/
 
 # Claude Code local config (not for repo)
 .claude/
+.kilo/
 
 # Playwright MCP artifacts
 .playwright-mcp/
