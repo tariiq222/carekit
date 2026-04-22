@@ -10,9 +10,9 @@
 
 ---
 
-## 📊 Current Status — updated 2026-04-22
+## 📊 Current Status — updated 2026-04-22 (late)
 
-**Progress:** 11 / 20 phases merged (55%) · 3 phases in-flight (PRs open) · 6 plans written awaiting execution.
+**Progress:** 14 / 20 phases merged (70%) · 1 phase in-flight (PR #31) · 5 plans written — some to be reshaped per 2026-04-22 strategy revision (see below).
 
 ```
 Phase 01      ✅ MERGED     Multi-tenancy Foundation
@@ -20,41 +20,52 @@ Phase 02a     ✅ MERGED     Identity cluster (PR #15)
 Phase 02b     ✅ MERGED     People cluster (PR #16)
 Phase 02c     ✅ MERGED     Org-config + singletons (PR #17)
 Phase 02d     ✅ MERGED     Bookings cluster (PR #18)
-Phase 02e     ✅ MERGED     Finance cluster (PR #21) — 7 models + ZatcaConfig + Moyasar tenant resolution
-Phase 02f     ✅ MERGED     Comms cluster (PR #24) — 8 models + ChatbotConfig singleton
-Phase 02g     ✅ MERGED     AI/media/ops/platform (PR #27+#28) — 9 models + SiteSetting + pgvector
-Phase 02g-sms ✅ MERGED     Per-tenant SMS (PR #29) — Unifonic/Taqnyat + AES-GCM + DLR webhook
-Phase 02h     🟡 PR OPEN   Strict mode + penetration (PR #35 — owner-review pending) — TENANT_ENFORCEMENT=strict + 4 security e2e suites
+Phase 02e     ✅ MERGED     Finance cluster (PR #21)
+Phase 02f     ✅ MERGED     Comms cluster (PR #24)
+Phase 02g     ✅ MERGED     AI/media/ops/platform (PR #27+#28)
+Phase 02g-sms ✅ MERGED     Per-tenant SMS (PR #29)
+Phase 02h     ✅ MERGED     Strict mode + penetration (PR #32) — TENANT_ENFORCEMENT=strict + 4 security e2e suites
 Phase 03      ✅ MERGED     Verticals System (PR #25) — 11 seeds × 4 families + terminology
-Phase 04      🟡 PR OPEN   Billing & Subscriptions (PR #30 DRAFT) — Tasks 2-6 done (35%); Tasks 7-15 pending
+Phase 04      ✅ MERGED     Billing & Subscriptions (PR #30 + PR #38 e2e follow-up) — backend complete
 Phase 05a     ✅ MERGED     packages/ui extraction (PR #20) — 33 shadcn primitives
-Phase 05b     🟢 WRITTEN    Super-admin app (1510 lines) — impersonation owner-review gate
-Phase 06      🟡 PR OPEN   Dashboard terminology + EN i18n (PR #31 DRAFT) — tenant switcher + parity script done (~15%)
-Phase 06a     🟢 WRITTEN    Dashboard literal refactor (new plan 2026-04-22) — parallel-safe with 06
-Phase 07      🟢 WRITTEN    Marketing site + signup (940 lines) — JWT + Moyasar touches
-Phase 08      🟢 WRITTEN    Website multi-tenant + themes (881 lines)
-Phase 09      🟢 WRITTEN    Custom domain + infra (785 lines) — Nginx→Caddy migration
-Phase 10      🟢 WRITTEN    Hardening + launch (760 lines)
+Phase 05b     🟢 WRITTEN    Super-admin app (1510 lines) — NOW PRIORITY 1
+Phase 06      🟡 PR OPEN   Dashboard terminology + EN i18n (PR #31 DRAFT ~15%) — NOW PRIORITY 2
+Phase 06a     🟢 WRITTEN    Dashboard literal refactor — parallel-safe with 06
+Phase 07      🟢 WRITTEN    Marketing site + signup — DEFERRED TO END (only needed for mass acquisition)
+Phase 08      🔄 RESHAPE   Client-facing website — original booking-heavy plan to be replaced with minimal info-only site (no booking logic). Booking moves to mobile + future marketplace themes
+Phase 09      🟢 WRITTEN    Custom domain + infra — needed whenever a clinic asks for a custom domain
+Phase 10      🟢 WRITTEN    Hardening + launch
 ```
 
-**🎯 Next actions (executor):**
-1. `/approve saas-02h` on PR #35 → merge (owner-gated; prerequisite for Plan 10 canary)
-2. `/approve saas-04` on PR #30 → complete Tasks 7-15 (handlers + crons + webhook + e2e)
-3. Merge PR #34 (data-integrity fixes — no owner gate needed)
+### 🧭 Strategy revision — 2026-04-22 (owner-confirmed)
 
-**🔭 Next action (planner):** 20 plans written. No new authorship needed until 05b/07 pre-execution review.
+Product direction adjusted. **Booking stays inside the dashboard + mobile app — not a public client website.** The client-facing site becomes purely informational. A multi-template marketplace (clinic picks a website template and a mobile app template) is the long-term productization path.
+
+**Immediate priorities:**
+1. **Plan 05b — Super-admin panel** (the SaaS control plane we own)
+2. **Plan 06 — Dashboard i18n + terminology** (clinic staff daily tool) — PR #31 open, finish it
+3. **Mobile app** (apps/mobile wiring to new multi-tenant API) — after dashboard
+4. **Minimal clinic info site** — static landing per tenant, NO booking integration
+
+**Deferred / reshaped:**
+- Plan 07 (CareKit marketing + signup wizard) → last. Manual onboarding until we scale.
+- Plan 08 (client booking website) → reshape into marketplace theme + redefine as info-only skeleton.
+- "apps/website" and "apps/mobile" folders exist — leave alone until their priority window.
+
+**🎯 Next actions (executor):**
+1. Complete Plan 06 (PR #31) — terminology/t() refactor + EN parity + remaining dashboard surfaces
+2. Start Plan 05b (Super-admin) — pending owner gate on Task 0 (impersonation shadow-JWT)
 
 **🚧 Active risks:**
-- **04 (Billing) Tasks 7-15 pending** — handlers, 4 BullMQ crons, Moyasar subscription webhook, dashboard skeleton, 4 e2e suites. Estimated ~10 more days.
-- **04 owner-gate still open** — Task 1 `/approve saas-04` not yet posted. No finance/Moyasar code may merge without @tariq approval.
-- **06 incomplete** — PR #31 has tenant switcher + parity script only; full t()/tp() refactor + EN parity + billing UI remain.
+- **06 incomplete** — PR #31 has tenant switcher + parity script only; ~85% of t()/tp() refactor + EN parity remain.
 - **05b** introduces `$allTenants` CLS-gated escape hatch + impersonation shadow-JWT — owner-review gate at Task 0.
-- 07 (Marketing + signup) — `organizationSlug` JWT claim needs sub-spec before executing Task 0.
+- **Plan 08 reshape** — needs a new short plan (or amendment) defining "info-only tenant site" before Task 0 of 08 can execute under the revised scope.
 - 09 (Custom domain) requires Nginx→Caddy swap — owner-approval gate before cutover.
-- ~~Prisma 7 `$extends` via Proxy~~ — confirmed working 02a–02g, no further risk.
-- ~~`$transaction` callback bypasses Proxy~~ — Lesson 11 documented; all handlers corrected.
-- ~~02h strict mode blast radius~~ — resolved: dev-stage flip only; canary deferred to Plan 10.
-- ~~02g-sms~~ — DONE (PR #29 merged).
+- ~~Prisma 7 extensions / CLS / strict mode~~ — all proven in 02a–02h.
+- ~~02h~~ — DONE (PR #32 merged).
+- ~~04 billing~~ — DONE (PR #30 + PR #38).
+- ~~04 e2e gap~~ — closed (PR #38: 15 tests across 4 specs).
+- ~~PasswordHistory out-of-scope scoping~~ — resolved (PR #34, PasswordHistory now in SCOPED_MODELS).
 
 **Frontend app topology (post-transformation):**
 ```
@@ -89,15 +100,15 @@ Status legend: ✅ merged · 🟡 PR open / in-flight · 🟢 plan ready, not st
 | 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) | ✅ DONE (2026-04-22) | [#24](https://github.com/tariiq222/carekit/pull/24) | 02e | 2 days |
 | 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) | ✅ DONE (2026-04-22) | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 02f | 2 days |
 | 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) | ✅ DONE (2026-04-22) | [#29](https://github.com/tariiq222/carekit/pull/29) | 02f | 2 days |
-| 02h | [Strict mode + penetration tests](./2026-04-22-saas-02h-strict-mode-penetration.md) ⚠️ owner-review `/approve saas-02h` | 🟡 PR #35 | [#35](https://github.com/tariiq222/carekit/pull/35) | 02g, 02g-sms | 2 days |
+| 02h | [Strict mode + penetration tests](./2026-04-22-saas-02h-strict-mode-penetration.md) | ✅ DONE (2026-04-22) | [#32](https://github.com/tariiq222/carekit/pull/32) | 02g, 02g-sms | 2 days |
 | 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) | ✅ DONE (2026-04-22) | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
-| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) ⚠️ owner-review `/approve saas-04` — Tasks 2-6 done; Tasks 7-15 pending | 🟡 PR #30 | [#30](https://github.com/tariiq222/carekit/pull/30) | 02e, 02g-sms | 2 weeks |
+| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) — backend complete incl. 15 e2e tests (Task 14 gap filled in PR #38 after audit) | ✅ DONE (2026-04-22) | [#30](https://github.com/tariiq222/carekit/pull/30) + [#38](https://github.com/tariiq222/carekit/pull/38) | 02e, 02g-sms | 2 weeks |
 | 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) | ✅ DONE (2026-04-22) | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
 | 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) ⚠️ owner-review gate Task 0 | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
 | 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) — tenant switcher done (~15%); full refactor pending | 🟡 PR #31 | [#31](https://github.com/tariiq222/carekit/pull/31) | 03, 04, 05a | 3 weeks |
 | 06a | [Dashboard Literal Refactor](./2026-04-22-saas-06a-dashboard-literal-refactor.md) — parallel-safe with 06 | 🟢 WRITTEN | — | 05a | 1 week |
-| 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) ⚠️ JWT `organizationSlug` owner-review Task 0 | 🟢 WRITTEN | — | 03, 04, 05a, 02e | 3 weeks |
-| 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) | 🟢 WRITTEN | — | 02g, 03, 06 | 4 weeks |
+| 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) ⚠️ **DEFERRED TO END** — only needed for mass acquisition; manual onboarding until then | 🟢 WRITTEN (deferred) | — | 03, 04, 05a, 02e | 3 weeks |
+| 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) ⚠️ **RESHAPE** — 2026-04-22 revision: booking REMOVED from client website. Replace with info-only tenant site (about, services, contact, download app). Booking moves to mobile + future marketplace themes | 🔄 RESHAPE NEEDED | — | 02g, 03, 06 | TBD |
 | 09 | [Custom Domain + Infra](./2026-04-21-saas-09-custom-domain-infra.md) ⚠️ owner-gated Nginx→Caddy cutover | 🟢 WRITTEN | — | 08 | 1.5 weeks |
 | 10 | [Hardening & Launch](./2026-04-21-saas-10-hardening-launch.md) | 🟢 WRITTEN | — | 01–09 | 3 weeks |
 
@@ -164,6 +175,10 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 | 2026-04-22 | 03 — Verticals System | [#25](https://github.com/tariiq222/carekit/pull/25) | Vertical primitive + 11 seeds × 4 families + terminology packs + useTerminology() hook. 60 unit + 22 e2e + 5 dashboard tests. |
 | 2026-04-22 | 02g — AI/media/ops/platform | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 9 models scoped + SiteSetting composite PK + pgvector org predicate. 1025/1025 unit. 6 isolation e2e suites. |
 | 2026-04-22 | 02g-sms — Per-tenant SMS | [#29](https://github.com/tariiq222/carekit/pull/29) | OrganizationSmsConfig singleton + SmsDelivery audit + Unifonic/Taqnyat adapters + AES-GCM creds + DLR webhook. 1060 unit + 6 isolation e2e. |
+| 2026-04-22 | 02h — Strict mode + penetration | [#32](https://github.com/tariiq222/carekit/pull/32) | TENANT_ENFORCEMENT=strict default + 4 penetration specs (18 tests) + carekit_rls_probe DB role + RlsHelper dual-GUC fix. |
+| 2026-04-22 | 04 — Billing & Subscriptions | [#30](https://github.com/tariiq222/carekit/pull/30) | Plan/Subscription/SubscriptionInvoice/UsageRecord + state machine + PlanLimitsGuard on 5 create-paths + UsageTrackerInterceptor + 4 BullMQ crons + Moyasar subscription webhook (3-stage) + dashboard billing skeleton. |
+| 2026-04-22 | 04 e2e follow-up | [#38](https://github.com/tariiq222/carekit/pull/38) | Closed Task 14 gap (PR #30 shipped without e2e; audit 2026-04-22 caught it). 15 tests across 4 specs: subscription-lifecycle, plan-limits-enforcement, usage-metering, moyasar-subscription-webhook. Admin-merged while GitHub Actions billing locked. |
+| 2026-04-22 | data-integrity hardening | [#34](https://github.com/tariiq222/carekit/pull/34) | CHECK constraints + OTP lockout + PasswordHistory fully scoped (added to SCOPED_MODELS — closed silent-scoping risk flagged by audit) + apply-coupon per-user limit. |
 
 ---
 
