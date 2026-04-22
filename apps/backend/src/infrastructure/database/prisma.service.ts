@@ -77,8 +77,8 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // 02g-sms — per-tenant SMS provider
   'OrganizationSmsConfig',
   'SmsDelivery',
-  // Password history
-  'PasswordHistory',
+  // 02g — platform cluster
+  'Membership',
 ]);
 
 /**

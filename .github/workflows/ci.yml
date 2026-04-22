@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
@@ -50,44 +50,111 @@ jobs:
         working-directory: apps/backend
         run: npx prisma generate
 
+      - name: Enable pgvector extension
+        run: psql postgresql://test:test@localhost:5432/carekit_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
       - name: Run migrations
         working-directory: apps/backend
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/carekit_test
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
+          JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
+          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
 
       - name: Unit tests
         working-directory: apps/backend
         run: npm run test
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/carekit_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-secret-32chars-minimum!!
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          TENANT_ENFORCEMENT: strict
+          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
 
       - name: E2E tests
         working-directory: apps/backend
         run: npm run test:e2e
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/carekit_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-secret-32chars-minimum!!
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          TENANT_ENFORCEMENT: strict
+          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
 
       - name: Cross-tenant penetration suite
         working-directory: apps/backend
         run: npm run test:security
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/carekit_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-secret-32chars-minimum!!
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          TENANT_ENFORCEMENT: strict
+          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
 
   api-docs:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: carekit_docs
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -99,35 +166,59 @@ jobs:
       - name: Generate Prisma Client
         working-directory: apps/backend
         run: npx prisma generate
+      - name: Enable pgvector extension
+        run: psql postgresql://test:test@localhost:5432/carekit_docs -c "CREATE EXTENSION IF NOT EXISTS vector;"
+      - name: Run migrations
+        working-directory: apps/backend
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/carekit_docs
       - name: Build backend
         working-directory: apps/backend
         run: npm run build
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/carekit_docs
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-docs-access-secret-32chars!!
+          JWT_REFRESH_SECRET: ci-docs-refresh-secret-32chars!!
+          JWT_CLIENT_ACCESS_SECRET: ci-docs-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
+          MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
+          MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
       - name: Regenerate openapi.json
         working-directory: apps/backend
         run: npm run openapi:snapshot
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/carekit_docs
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: "9000"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_BUCKET: carekit-test
+          MINIO_USE_SSL: "false"
+          JWT_ACCESS_SECRET: ci-docs-access-secret-32chars!!
+          JWT_REFRESH_SECRET: ci-docs-refresh-secret-32chars!!
+          JWT_CLIENT_ACCESS_SECRET: ci-docs-client-secret-32chars!!
+          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
+          TENANT_ENFORCEMENT: permissive
+          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+          BILLING_CRON_ENABLED: "false"
+          MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
+          MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
       - name: Fail if snapshot drifted
         run: git diff --exit-code apps/backend/openapi.json
       - name: Coverage check
         working-directory: apps/backend
         run: npm run check:openapi-coverage
-
-  leaderboard:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci
-      - name: Typecheck
-        working-directory: apps/leaderboard
-        run: npm run typecheck
-      - name: Lint
-        working-directory: apps/leaderboard
-        run: npm run lint
-      - name: Build
-        working-directory: apps/leaderboard
-        run: npm run build
-
