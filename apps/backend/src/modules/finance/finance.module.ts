@@ -5,6 +5,7 @@ import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { StorageModule } from '../../infrastructure/storage';
 import { TenantModule } from '../../common/tenant';
+import { BillingModule } from '../platform/billing/billing.module';
 import { CreateInvoiceHandler } from './create-invoice/create-invoice.handler';
 import { BookingConfirmedHandler } from './create-invoice/booking-confirmed.handler';
 import { ProcessPaymentHandler } from './process-payment/process-payment.handler';
@@ -29,6 +30,8 @@ import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 import { GroupSessionReadyHandler } from './group-session-ready/group-session-ready.handler';
 import { MoyasarApiClient } from './moyasar-api/moyasar-api.client';
+import { MoyasarSubscriptionClient } from './moyasar-api/moyasar-subscription.client';
+import { MoyasarSubscriptionWebhookHandler } from './moyasar-api/moyasar-subscription-webhook.handler';
 import { InitGuestPaymentHandler } from './payments/public/init-guest-payment/init-guest-payment.handler';
 import { RequestRefundHandler } from './refund-payment/request-refund.handler';
 import { ApproveRefundHandler } from './refund-payment/approve-refund.handler';
@@ -66,10 +69,17 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, StorageModule, TenantModule],
+  imports: [DatabaseModule, MessagingModule, StorageModule, TenantModule, BillingModule],
   controllers: [DashboardFinanceController, RefundsController],
-  providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler, MoyasarApiClient],
-  exports: [...handlers, MoyasarApiClient],
+  providers: [
+    ...handlers,
+    BookingConfirmedHandler,
+    GroupSessionReadyHandler,
+    MoyasarApiClient,
+    MoyasarSubscriptionClient,
+    MoyasarSubscriptionWebhookHandler,
+  ],
+  exports: [...handlers, MoyasarApiClient, MoyasarSubscriptionClient, MoyasarSubscriptionWebhookHandler],
 })
 export class FinanceModule implements OnModuleInit {
   constructor(

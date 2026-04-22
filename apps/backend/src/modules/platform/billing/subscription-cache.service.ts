@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
@@ -51,7 +51,7 @@ export class SubscriptionCacheService {
   private readonly ttlMs: number;
   private readonly clock: Clock;
 
-  constructor(private readonly prisma: PrismaService, options?: { ttlMs?: number; clock?: Clock }) {
+  constructor(private readonly prisma: PrismaService, @Optional() options?: { ttlMs?: number; clock?: Clock }) {
     this.ttlMs = options?.ttlMs ?? 60_000;
     this.clock = options?.clock ?? { now: () => Date.now() };
   }
