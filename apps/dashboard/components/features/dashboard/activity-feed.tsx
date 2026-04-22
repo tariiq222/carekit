@@ -20,46 +20,40 @@ const typeColors: Record<string, string> = {
   general: "bg-muted-foreground",
 }
 
-function timeAgo(dateStr: string, locale: string): string {
+function timeAgo(
+  dateStr: string,
+  t: (key: string) => string,
+): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (locale === "ar") {
-    if (mins < 1) return "الآن"
-    if (mins < 60) return `منذ ${mins} د`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `منذ ${hours} س`
-    return `منذ ${Math.floor(hours / 24)} ي`
-  }
-  if (mins < 1) return "Just now"
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return t("dashboard.timeAgo.now")
+  if (mins < 60) return t("dashboard.timeAgo.minutes").replace("{mins}", String(mins))
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
+  if (hours < 24) return t("dashboard.timeAgo.hours").replace("{hours}", String(hours))
+  return t("dashboard.timeAgo.days").replace("{days}", String(Math.floor(hours / 24)))
 }
 
 export function ActivityFeed({ notifications }: ActivityFeedProps) {
-  const { locale } = useLocale()
+  const { t } = useLocale()
 
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">
-          {locale === "ar" ? "آخر الأحداث" : "Recent Activity"}
+          {t("dashboard.recentActivity")}
         </h2>
         <Link
           href="/notifications"
           className="text-xs font-medium text-primary hover:underline"
         >
-          {locale === "ar" ? "الكل" : "All"}
+          {t("dashboard.activity.all")}
           <span className="inline-block rtl:rotate-180 ms-1">→</span>
         </Link>
       </div>
 
       {notifications.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          {locale === "ar"
-            ? "لا يوجد أحداث حديثة"
-            : "No recent activity"}
+          {t("dashboard.noActivity")}
         </p>
       ) : (
         <div className="flex flex-col gap-4">
@@ -73,7 +67,7 @@ export function ActivityFeed({ notifications }: ActivityFeedProps) {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-foreground">{n.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {timeAgo(n.createdAt, locale)}
+                    {timeAgo(n.createdAt, t)}
                   </p>
                 </div>
               </div>

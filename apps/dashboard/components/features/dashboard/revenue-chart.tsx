@@ -25,7 +25,7 @@ function formatDayLabel(dateStr: string, locale: string): string {
 }
 
 export function RevenueChart() {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const { dateFrom, dateTo } = getWeekRange()
 
   const { data, isLoading, isError } = useQuery({
@@ -40,13 +40,13 @@ export function RevenueChart() {
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">
-          {locale === "ar" ? "إيرادات الأسبوع" : "Weekly Revenue"}
+          {t("dashboard.weeklyRevenue")}
         </h2>
         <Link
           href="/reports"
           className="text-xs font-medium text-primary hover:underline"
         >
-          {locale === "ar" ? "التقرير الكامل ←" : "Full report →"}
+          {t("dashboard.fullReport")}
         </Link>
       </div>
 
@@ -64,15 +64,11 @@ export function RevenueChart() {
         </div>
       ) : isError ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          {locale === "ar"
-            ? "تعذّر تحميل بيانات الإيرادات"
-            : "Failed to load revenue data"}
+          {t("dashboard.error.revenue")}
         </p>
       ) : days.length === 0 || maxAmount === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          {locale === "ar"
-            ? "لا توجد بيانات إيرادات بعد"
-            : "No revenue data yet"}
+          {t("dashboard.noRevenueData")}
         </p>
       ) : (
         <div className="flex h-[180px] items-end gap-3">

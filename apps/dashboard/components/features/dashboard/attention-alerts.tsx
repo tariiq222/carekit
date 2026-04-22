@@ -17,10 +17,8 @@ interface AttentionAlertsProps {
 const alerts = [
   {
     key: "payments",
-    titleAr: "مدفوعات معلقة",
-    titleEn: "Pending Payments",
-    descAr: "تحويلات بنكية بانتظار المراجعة",
-    descEn: "Bank transfers awaiting review",
+    titleKey: "alerts.pendingPayments",
+    descKey: "alerts.pendingPaymentsDesc",
     icon: InvoiceIcon,
     severity: "warning" as const,
     href: "/payments",
@@ -28,10 +26,8 @@ const alerts = [
   },
   {
     key: "cancel",
-    titleAr: "طلبات إلغاء",
-    titleEn: "Cancellation Requests",
-    descAr: "مرضى يطلبون إلغاء حجوزاتهم",
-    descEn: "Clients requesting cancellation",
+    titleKey: "alerts.cancelRequests",
+    descKey: "alerts.cancelRequestsDesc",
     icon: CancelCircleIcon,
     severity: "error" as const,
     href: "/bookings",
@@ -58,7 +54,7 @@ const severityStyles = {
 } as const
 
 export function AttentionAlerts(props: AttentionAlertsProps) {
-  const { locale } = useLocale()
+  const { t } = useLocale()
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -90,10 +86,10 @@ export function AttentionAlerts(props: AttentionAlertsProps) {
                         {count}{" "}
                       </span>
                     )}
-                    {locale === "ar" ? alert.titleAr : alert.titleEn}
+                    {t(alert.titleKey)}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {locale === "ar" ? alert.descAr : alert.descEn}
+                    {t(alert.descKey)}
                   </p>
                 </div>
               </div>
