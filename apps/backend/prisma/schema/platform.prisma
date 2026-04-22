@@ -72,6 +72,20 @@ enum OrganizationStatus {
   ARCHIVED
 }
 
+enum SuperAdminActionType {
+  SUSPEND_ORG
+  REINSTATE_ORG
+  IMPERSONATE_START
+  IMPERSONATE_END
+  RESET_PASSWORD
+  PLAN_CREATE
+  PLAN_UPDATE
+  PLAN_DELETE
+  VERTICAL_CREATE
+  VERTICAL_UPDATE
+  VERTICAL_DELETE
+}
+
 model Organization {
   id              String             @id @default(uuid())
   slug            String             @unique
@@ -90,6 +104,46 @@ model Organization {
 
   @@index([status])
   @@index([verticalId])
+}
+
+model ImpersonationSession {
+  id               String    @id @default(cuid())
+  superAdminUserId String
+  targetUserId     String
+  organizationId   String
+  reason           String    @db.Text
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  expiresAt        DateTime
+  endedReason      String?
+  ipAddress        String
+  userAgent        String    @db.Text
+  createdAt        DateTime  @default(now())
+
+  @@index([superAdminUserId])
+  @@index([targetUserId])
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@index([endedAt])
+}
+
+model SuperAdminActionLog {
+  id                     String               @id @default(cuid())
+  superAdminUserId       String
+  actionType             SuperAdminActionType
+  organizationId         String?
+  impersonationSessionId String?
+  reason                 String               @db.Text
+  metadata               Json
+  ipAddress              String
+  userAgent              String               @db.Text
+  createdAt              DateTime             @default(now())
+
+  @@index([superAdminUserId])
+  @@index([actionType])
+  @@index([organizationId])
+  @@index([impersonationSessionId])
+  @@index([createdAt])
 }
 
 // ─── Membership (SaaS-01) ────────────────────────────────────────────────────

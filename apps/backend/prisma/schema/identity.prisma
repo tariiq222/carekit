@@ -12,17 +12,17 @@ enum OtpPurpose {
 }
 
 model OtpCode {
-  id         String     @id @default(uuid())
-  channel    OtpChannel
-  identifier String
-  codeHash   String
-  purpose    OtpPurpose
-  expiresAt  DateTime
-  consumedAt DateTime?
-  attempts   Int        @default(0)
-  maxAttempts Int       @default(5)
+  id          String     @id @default(uuid())
+  channel     OtpChannel
+  identifier  String
+  codeHash    String
+  purpose     OtpPurpose
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
   lockedUntil DateTime?
-  createdAt  DateTime   @default(now())
+  createdAt   DateTime   @default(now())
 
   @@index([identifier, purpose])
   @@index([expiresAt])
@@ -54,6 +54,7 @@ enum UserGender {
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
+  isSuperAdmin  Boolean        @default(false)
   passwordHash  String
   name          String
   phone         String?
@@ -66,6 +67,8 @@ model User {
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([isSuperAdmin])
 }
 
 model RefreshToken {
