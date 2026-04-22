@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { DEFAULT_ORGANIZATION_ID, SYSTEM_CONTEXT_CLS_KEY, TENANT_CLS_KEY } from './tenant.constants';
+import { UnauthorizedTenantAccessError } from './tenant.errors';
 
 export interface TenantContext {
   organizationId: string;
@@ -37,7 +38,7 @@ export class TenantContextService {
 
   requireOrganizationId(): string {
     const id = this.getOrganizationId();
-    if (!id) throw new Error('Tenant context not set — no organizationId available');
+    if (!id) throw new UnauthorizedTenantAccessError();
     return id;
   }
 

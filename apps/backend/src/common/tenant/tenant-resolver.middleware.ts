@@ -25,7 +25,7 @@ export class TenantResolverMiddleware implements NestMiddleware {
   ) {}
 
   use(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
-    const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'off');
+    const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
     if (mode === 'off') {
       return next();
