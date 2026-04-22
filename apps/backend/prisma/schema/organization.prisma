@@ -120,16 +120,18 @@ model Service {
   depositEnabled Boolean  @default(false)
   depositAmount  Decimal? @db.Decimal(12, 2)
 
+  // ─── Participants (group sessions) ───────────────────────────────────────
+  // minParticipants <= maxParticipants — enforced via CHECK constraint in migration SQL
+  minParticipants       Int     @default(1)
+  maxParticipants       Int     @default(1)
+
   // ─── التكرار ─────────────────────────────────────────────────────────────
   allowRecurring           Boolean            @default(false)
   allowedRecurringPatterns RecurringPattern[] @default([])
   maxRecurrences           Int?
 
   // ─── الجلسات الجماعية ────────────────────────────────────────────────────
-  // minParticipants <= maxParticipants — enforced via CHECK constraint in migration SQL
   // reserveWithoutPayment: payment deferred until minParticipants is reached (24h window)
-  minParticipants       Int     @default(1)
-  maxParticipants       Int     @default(1)
   reserveWithoutPayment Boolean @default(false)
 
   durationOptions ServiceDurationOption[]

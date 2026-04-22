@@ -6,25 +6,34 @@ import { PrismaService } from '../../../../infrastructure/database';
 import { OtpSessionService } from '../../otp/otp-session.service';
 import { PasswordService } from '../../shared/password.service';
 import { TenantContextService } from '../../../../common/tenant';
+import { PasswordHistoryService } from '../shared/password-history.service';
 
 describe('ResetPasswordHandler', () => {
   let handler: ResetPasswordHandler;
 
   const mockTx = {
     client: {
-      findFirst: jest.fn(),
       update: jest.fn(),
     },
     usedOtpSession: { create: jest.fn() },
     clientRefreshToken: { updateMany: jest.fn() },
+    passwordHistory: { create: jest.fn(), findMany: jest.fn().mockResolvedValue([]), deleteMany: jest.fn() },
   };
 
-  const mockPrisma = {
+  const mockPrisma: {
+    $transaction: jest.Mock;
+    client: { findFirst: jest.Mock };
+  } = {
+    client: { findFirst: jest.fn() },
     $transaction: jest.fn((cb: (tx: typeof mockTx) => Promise<void>) => cb(mockTx)),
   };
 
   const mockOtpSession = { verifySession: jest.fn() };
   const mockPasswords = { hash: jest.fn() };
+  const mockPasswordHistory = {
+    assertNotReused: jest.fn().mockResolvedValue(undefined),
+    record: jest.fn().mockResolvedValue(undefined),
+  };
 
   const validSession = {
     identifier: 'user@example.com',
@@ -36,6 +45,8 @@ describe('ResetPasswordHandler', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockPasswordHistory.assertNotReused.mockResolvedValue(undefined);
+    mockPasswordHistory.record.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,6 +55,7 @@ describe('ResetPasswordHandler', () => {
         { provide: OtpSessionService, useValue: mockOtpSession },
         { provide: PasswordService, useValue: mockPasswords },
         { provide: TenantContextService, useValue: { requireOrganizationIdOrDefault: () => 'org-test' } },
+        { provide: PasswordHistoryService, useValue: mockPasswordHistory },
       ],
     }).compile();
 
@@ -54,7 +66,7 @@ describe('ResetPasswordHandler', () => {
     it('resets password and revokes refresh tokens on success', async () => {
       mockOtpSession.verifySession.mockReturnValue(validSession);
       mockPasswords.hash.mockResolvedValue('new-hash');
-      mockTx.client.findFirst.mockResolvedValue({ id: 'client-1', email: 'user@example.com' });
+      mockPrisma.client.findFirst.mockResolvedValue({ id: 'client-1', email: 'user@example.com', passwordHash: 'old-hash' });
       mockTx.usedOtpSession.create.mockResolvedValue({});
       mockTx.client.update.mockResolvedValue({});
       mockTx.clientRefreshToken.updateMany.mockResolvedValue({ count: 2 });
@@ -63,10 +75,17 @@ describe('ResetPasswordHandler', () => {
         handler.execute({ sessionToken: 'valid-token', newPassword: 'NewPass123' }),
       ).resolves.toBeUndefined();
 
+      expect(mockPasswordHistory.assertNotReused).toHaveBeenCalledWith(
+        'client-1',
+        'org-test',
+        'NewPass123',
+        'old-hash',
+      );
       expect(mockTx.client.update).toHaveBeenCalledWith({
         where: { id: 'client-1' },
         data: expect.objectContaining({ passwordHash: 'new-hash', loginAttempts: 0, lockoutUntil: null }),
       });
+      expect(mockPasswordHistory.record).toHaveBeenCalledWith(mockTx, 'client-1', 'org-test', 'new-hash');
       expect(mockTx.clientRefreshToken.updateMany).toHaveBeenCalledWith({
         where: { clientId: 'client-1', organizationId: 'org-test', revokedAt: null },
         data: { revokedAt: expect.any(Date) },
@@ -94,8 +113,7 @@ describe('ResetPasswordHandler', () => {
 
     it('throws Unauthorized when client not found for identifier', async () => {
       mockOtpSession.verifySession.mockReturnValue(validSession);
-      mockPasswords.hash.mockResolvedValue('new-hash');
-      mockTx.client.findFirst.mockResolvedValue(null);
+      mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
         handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' }),
@@ -105,12 +123,23 @@ describe('ResetPasswordHandler', () => {
     it('throws Unauthorized when OTP session jti is already burned (replay)', async () => {
       mockOtpSession.verifySession.mockReturnValue(validSession);
       mockPasswords.hash.mockResolvedValue('new-hash');
-      mockTx.client.findFirst.mockResolvedValue({ id: 'client-1', email: 'user@example.com' });
+      mockPrisma.client.findFirst.mockResolvedValue({ id: 'client-1', email: 'user@example.com', passwordHash: 'old-hash' });
       mockTx.usedOtpSession.create.mockRejectedValue(new Error('Unique constraint failed'));
 
       await expect(
         handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('rejects when new password is in history', async () => {
+      mockOtpSession.verifySession.mockReturnValue(validSession);
+      mockPrisma.client.findFirst.mockResolvedValue({ id: 'client-1', email: 'user@example.com', passwordHash: 'old-hash' });
+      mockPasswordHistory.assertNotReused.mockRejectedValue(new Error('PASSWORD_REUSED'));
+
+      await expect(
+        handler.execute({ sessionToken: 'token', newPassword: 'ReusedPass1' }),
+      ).rejects.toThrow('PASSWORD_REUSED');
+      expect(mockTx.client.update).not.toHaveBeenCalled();
     });
 
     it('looks up client by phone for SMS channel', async () => {
@@ -120,14 +149,14 @@ describe('ResetPasswordHandler', () => {
         channel: OtpChannel.SMS,
       });
       mockPasswords.hash.mockResolvedValue('new-hash');
-      mockTx.client.findFirst.mockResolvedValue({ id: 'client-2', phone: '+966500000001' });
+      mockPrisma.client.findFirst.mockResolvedValue({ id: 'client-2', phone: '+966500000001', passwordHash: null });
       mockTx.usedOtpSession.create.mockResolvedValue({});
       mockTx.client.update.mockResolvedValue({});
       mockTx.clientRefreshToken.updateMany.mockResolvedValue({ count: 0 });
 
       await handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' });
 
-      expect(mockTx.client.findFirst).toHaveBeenCalledWith({
+      expect(mockPrisma.client.findFirst).toHaveBeenCalledWith({
         where: { organizationId: 'org-test', phone: '+966500000001', deletedAt: null },
       });
     });

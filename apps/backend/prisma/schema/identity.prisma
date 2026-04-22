@@ -20,10 +20,13 @@ model OtpCode {
   expiresAt  DateTime
   consumedAt DateTime?
   attempts   Int        @default(0)
+  maxAttempts Int       @default(5)
+  lockedUntil DateTime?
   createdAt  DateTime   @default(now())
 
   @@index([identifier, purpose])
   @@index([expiresAt])
+  @@index([lockedUntil])
 }
 
 model UsedOtpSession {

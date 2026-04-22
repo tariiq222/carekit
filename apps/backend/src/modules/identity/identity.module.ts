@@ -41,6 +41,7 @@ import { ClientRefreshHandler } from './client-auth/client-refresh.handler';
 import { ClientLogoutHandler } from './client-auth/client-logout.handler';
 import { GetMeHandler } from './client-auth/get-me.handler';
 import { ResetPasswordHandler } from './client-auth/reset-password/reset-password.handler';
+import { PasswordHistoryService } from './client-auth/shared/password-history.service';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -78,6 +79,7 @@ const handlers = [
     JwtStrategy,
     ClientJwtStrategy,
     PasswordService,
+    PasswordHistoryService,
     TokenService,
     ClientTokenService,
     RedisService,

@@ -19,7 +19,7 @@ const buildPrisma = () => {
   const db: {
     invoice: { findFirst: jest.Mock; update: jest.Mock };
     coupon: { findFirst: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
-    couponRedemption: { findUnique: jest.Mock; create: jest.Mock };
+    couponRedemption: { findUnique: jest.Mock; count: jest.Mock; create: jest.Mock };
     $transaction: jest.Mock;
   } = {
     invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },

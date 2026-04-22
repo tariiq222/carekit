@@ -180,17 +180,32 @@ model EmployeeAvailability {
 
 // Date-range exception — employee is off from startDate to endDate (inclusive).
 // Single-day leave: startDate == endDate. Annual leave: multi-day range.
-// No partial-day overrides — adjust EmployeeAvailability instead.
+// endTime + isStartTimeOnly support partial-day leave (e.g. 2:00 PM to 5:00 PM).
 model EmployeeAvailabilityException {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String
   employeeId     String
-  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  startDate      DateTime @db.Date
-  endDate        DateTime @db.Date
+  employee       Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  startDate      DateTime  @db.Date
+  endDate        DateTime  @db.Date
+  endTime        DateTime? // nullable — null means end of day (23:59:59.999)
+  isStartTimeOnly Boolean  @default(false) // when true, only startTime matters (full-day leave)
   reason         String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([employeeId, startDate, endDate])
+  @@index([organizationId])
+}
+
+// Password history for Client — prevents password reuse within N previous passwords.
+// Used for password reset/change flows to enforce history policy.
+model PasswordHistory {
+  id             String   @id @default(uuid())
+  organizationId String
+  clientId       String
+  passwordHash   String
+  createdAt      DateTime @default(now())
+
+  @@index([clientId, createdAt])
   @@index([organizationId])
 }

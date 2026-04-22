@@ -44,7 +44,7 @@ model Integration {
 }
 
 model FeatureFlag {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   organizationId String // SaaS-02g
   key            String // now composite-unique per (orgId, key)
   enabled        Boolean  @default(true)

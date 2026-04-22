@@ -47,6 +47,8 @@ describe('VerifyOtpHandler', () => {
     mockPrisma.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',
       attempts: 5,
+      maxAttempts: 5,
+      lockedUntil: null,
       codeHash: await bcrypt.hash('123456', 10),
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
@@ -63,11 +65,68 @@ describe('VerifyOtpHandler', () => {
     })).rejects.toThrow(BadRequestException);
   });
 
+  it('should throw BadRequestException when code is locked out', async () => {
+    mockPrisma.otpCode.findFirst.mockResolvedValue({
+      id: 'otp-1',
+      attempts: 5,
+      maxAttempts: 5,
+      lockedUntil: new Date(Date.now() + 5 * 60 * 1000),
+      codeHash: await bcrypt.hash('123456', 10),
+      channel: OtpChannel.EMAIL,
+      identifier: 'test@example.com',
+      purpose: OtpPurpose.GUEST_BOOKING,
+      expiresAt: new Date(Date.now() + 60000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    await expect(handler.execute({
+      channel: OtpChannel.EMAIL,
+      identifier: 'test@example.com',
+      code: '123456',
+      purpose: OtpPurpose.GUEST_BOOKING,
+    })).rejects.toThrow('OTP_LOCKED_OUT');
+  });
+
+  it('should set lockedUntil when attempts reach maxAttempts on wrong code', async () => {
+    mockPrisma.otpCode.findFirst.mockResolvedValue({
+      id: 'otp-1',
+      attempts: 4,
+      maxAttempts: 5,
+      lockedUntil: null,
+      codeHash: await bcrypt.hash('000000', 10),
+      channel: OtpChannel.EMAIL,
+      identifier: 'test@example.com',
+      purpose: OtpPurpose.GUEST_BOOKING,
+      expiresAt: new Date(Date.now() + 60000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    mockPrisma.otpCode.update.mockResolvedValue({} as never);
+    await expect(handler.execute({
+      channel: OtpChannel.EMAIL,
+      identifier: 'test@example.com',
+      code: '123456',
+      purpose: OtpPurpose.GUEST_BOOKING,
+    })).rejects.toThrow(UnauthorizedException);
+
+    expect(mockPrisma.otpCode.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'otp-1' },
+        data: expect.objectContaining({
+          attempts: { increment: 1 },
+          lockedUntil: expect.any(Date),
+        }),
+      }),
+    );
+  });
+
   it('should throw UnauthorizedException for wrong code', async () => {
     const wrongHash = await bcrypt.hash('000000', 10);
     mockPrisma.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',
       attempts: 0,
+      maxAttempts: 5,
+      lockedUntil: null,
       codeHash: wrongHash,
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
@@ -91,6 +150,8 @@ describe('VerifyOtpHandler', () => {
     mockPrisma.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',
       attempts: 0,
+      maxAttempts: 5,
+      lockedUntil: null,
       codeHash: correctHash,
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
