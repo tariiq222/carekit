@@ -11,6 +11,8 @@ import * as bcrypt from 'bcryptjs';
 
 const ADMIN_EMAIL    = process.env.SEED_EMAIL    ?? 'admin@carekit-test.com';
 const ADMIN_PASSWORD = process.env.SEED_PASSWORD ?? 'Admin@1234';
+const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL;
+const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 async function main() {
@@ -31,6 +33,29 @@ async function main() {
       isActive: true,
     },
     update: {},
+  });
+
+  if (!SUPER_ADMIN_EMAIL || !SUPER_ADMIN_PASSWORD) {
+    throw new Error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD are required to seed the initial super-admin user');
+  }
+
+  const superAdminPasswordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+  await prisma.user.upsert({
+    where: { email: SUPER_ADMIN_EMAIL },
+    create: {
+      email: SUPER_ADMIN_EMAIL,
+      passwordHash: superAdminPasswordHash,
+      name: 'Platform Admin',
+      role: 'SUPER_ADMIN',
+      isSuperAdmin: true,
+      isActive: true,
+    },
+    update: {
+      passwordHash: superAdminPasswordHash,
+      role: 'SUPER_ADMIN',
+      isSuperAdmin: true,
+      isActive: true,
+    },
   });
 
   // 2. Branding singleton (org-unique per SaaS-02c)
@@ -73,6 +98,7 @@ async function main() {
 
   console.log('─────────────────────────────────────────────');
   console.log(`✔  Admin  : ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log(`✔  Super admin: ${SUPER_ADMIN_EMAIL}`);
   console.log(`✔  Branding singleton ready`);
   console.log(`✔  OrganizationSettings singleton ready`);
   console.log(`✔  Main branch created`);
