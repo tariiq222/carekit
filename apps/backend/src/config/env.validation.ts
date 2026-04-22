@@ -43,6 +43,10 @@ export const envValidationSchema = Joi.object({
   JWT_ACCESS_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TTL: Joi.string().default('30d'),
 
+  // Client JWT — separate namespace for website clients
+  JWT_CLIENT_ACCESS_SECRET: Joi.string().min(16).required(),
+  JWT_CLIENT_ACCESS_TTL: Joi.string().default('7d'),
+
   // License Server (Platform BC) — optional until Phase 3
   LICENSE_SERVER_URL: Joi.string().uri().allow('').optional(),
   LICENSE_KEY: Joi.string().allow('').optional(),
