@@ -239,6 +239,81 @@ export const arEmployees: Record<string, string> = {
   "schedule.suspended": "الجدول معطّل — الممارس في إجازة",
   "schedule.setHours": "حدد ساعات العمل والاستراحات لكل يوم",
 
+  // — Day Names —
+  "employees.day.0": "الأحد",
+  "employees.day.1": "الاثنين",
+  "employees.day.2": "الثلاثاء",
+  "employees.day.3": "الأربعاء",
+  "employees.day.4": "الخميس",
+  "employees.day.5": "الجمعة",
+  "employees.day.6": "السبت",
+
+  // — Create / Edit Basic Info —
+  "employees.create.personalInfo": "المعلومات الشخصية",
+  "employees.create.personalInfoDesc": "بيانات الحساب والتخصص",
+  "employees.create.qualificationsProfile": "المؤهلات والملف الشخصي",
+  "employees.create.qualificationsProfileDesc": "الخبرة والتعليم والصورة وحالة الحساب",
+  "employees.create.placeholderNameAr": "مثال: أحمد الشمري",
+  "employees.create.placeholderSpecialtyAr": "مثال: معالج إدمان",
+  "employees.create.secondWindow": "+ فترة ثانية",
+
+  // — Chart: Periods —
+  "employees.chart.period1m": "شهر",
+  "employees.chart.period3m": "3 أشهر",
+  "employees.chart.period6m": "6 أشهر",
+
+  // — Chart: Booking Status Labels —
+  "employees.chart.status.completed": "مكتملة",
+  "employees.chart.status.confirmed": "مؤكدة",
+  "employees.chart.status.pending": "معلقة",
+  "employees.chart.status.cancelled": "ملغاة",
+  "employees.chart.status.pendingCancellation": "طلب إلغاء",
+  "employees.chart.status.noShow": "لم يحضر",
+  "employees.chart.status.checkedIn": "وصل",
+  "employees.chart.status.inProgress": "جارية",
+  "employees.chart.status.expired": "منتهية",
+
+  // — Chart: Booking Type Labels —
+  "employees.chart.type.inPerson": "عيادة",
+  "employees.chart.type.online": "عن بُعد",
+  "employees.chart.type.walkIn": "مباشر",
+
+  // — Column helpers —
+  "employees.col.experienceYrs": "سنة",
+
+  // — Detail Page Tabs —
+  "employees.detail.overview": "نظرة عامة",
+  "employees.detail.services": "الخدمات",
+  "employees.detail.schedule": "الجدول",
+  "employees.detail.ratingsTab": "التقييمات",
+  "employees.detail.public": "الملف العام",
+  "employees.detail.inactive": "غير نشط",
+  "employees.detail.home": "الرئيسية",
+
+  // — Public Profile Tab —
+  "employees.public.showInDirectory": "عرض في الموقع العام",
+  "employees.public.showDirectoryDesc": "اجعل هذا المعالج مرئياً في صفحات الموقع",
+  "employees.public.slug": "الرابط الفريد",
+  "employees.public.imageUrl": "صورة الملف العام",
+  "employees.public.bioAr": "نبذة عامة (عربي)",
+  "employees.public.bioEn": "نبذة عامة (إنجليزي)",
+  "employees.public.saving": "جاري الحفظ...",
+  "employees.public.save": "حفظ",
+
+  // — Form Validation Messages —
+  "employees.form.validation.nameEnRequired": "الاسم الكامل بالإنجليزية مطلوب",
+  "employees.form.validation.nameArRequired": "الاسم الكامل بالعربية مطلوب",
+  "employees.form.validation.emailInvalid": "البريد الإلكتروني غير صالح",
+  "employees.form.validation.phoneInvalid": "رقم الجوال غير صالح",
+  "employees.form.validation.specialtyRequired": "التخصص مطلوب",
+
+  // — Form Step Errors —
+  "employees.form.stepErrorSchedule": "جدول المواعيد",
+  "employees.form.stepErrorBreaks": "فترات الاستراحة",
+  "employees.form.stepErrorVacation": "الإجازة",
+  "employees.form.stepErrorServices": "الخدمات",
+  "employees.form.createPartialSuccess": "تم إنشاء الممارس الصحي، لكن فشل حفظ: {steps}",
+
   // — Vacation Manager —
   "vacation.validation.startRequired": "تاريخ البداية مطلوب",
   "vacation.validation.endRequired": "تاريخ النهاية مطلوب",

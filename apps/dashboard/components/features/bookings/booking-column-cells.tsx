@@ -9,17 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "@carekit/ui"
 import { StatusBadge } from "@/components/features/status-badge"
+import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { Booking } from "@/lib/types/booking"
 
-/* Quick status actions available per status */
-const quickStatusActions: Record<string, {
+type QuickStatusAction = {
   action: "confirm" | "noshow"
-  label: string
+  labelKey: string
   icon: typeof Tick01Icon
   destructive?: boolean
-}[]> = {
-  pending:   [{ action: "confirm", label: "تأكيد الحجز", icon: Tick01Icon }],
+}
+
+/* Quick status actions available per status */
+const quickStatusActions: Record<string, QuickStatusAction[]> = {
+  pending:   [{ action: "confirm", labelKey: "bookings.col.quickAction.confirm", icon: Tick01Icon }],
   confirmed: [],
 }
 
@@ -66,6 +69,7 @@ export function StatusCell({
   booking: Booking
   onStatusAction: (booking: Booking, action: "confirm" | "noshow") => void
 }) {
+  const { t } = useLocale()
   const actions = quickStatusActions[booking.status]
   if (!actions?.length) return <StatusBadge status={booking.status} />
 
@@ -77,14 +81,14 @@ export function StatusCell({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44">
-        {actions.map(({ action, label, icon, destructive }) => (
+        {actions.map(({ action, labelKey, icon, destructive }) => (
           <DropdownMenuItem
             key={action}
             onSelect={() => onStatusAction(booking, action)}
             className={destructive ? "text-destructive focus:text-destructive focus:bg-destructive/10" : ""}
           >
             <HugeiconsIcon icon={icon} size={15} className="me-2 shrink-0" />
-            {label}
+            {t(labelKey)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

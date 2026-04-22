@@ -324,4 +324,35 @@ export const enServices: Record<string, string> = {
   "services.branches.clearConfirmDesc": "This will remove all branch restrictions and make the service available at every branch. This cannot be undone.",
   "services.branches.clearConfirmAction": "Yes, make available everywhere",
   "services.branches.saving": "Saving...",
+
+  /* ── Avatar Picker ── */
+  "services.avatar.iconTab": "Icon",
+  "services.avatar.imageTab": "Image",
+  "services.avatar.iconSearch": "Search icons...",
+  "services.avatar.bgColor": "Background color",
+  "services.avatar.customColor": "Custom color",
+  "services.avatar.clear": "Clear avatar",
+  "services.avatar.deleteImage": "Delete image",
+  "services.avatar.uploadHint": "Click to upload image",
+  "services.avatar.uploadFormats": "PNG, JPG, WebP — up to 5MB",
+
+  /* ── Basic Info Tab extras ── */
+  "services.create.requiredFields": "required fields",
+  "services.create.department": "Department",
+  "services.create.allDepartments": "All departments",
+  "services.create.noCategories": "No categories found",
+  "services.create.calendarColor": "Calendar Color",
+
+  /* ── Intake footnote (create mode) ── */
+  "services.intake.createHintFootnote": "After creating the service, you can link forms from the service edit page.",
+
+  /* ── Intake field type labels ── */
+  "services.fields.type.text": "Text",
+  "services.fields.type.textarea": "Textarea",
+  "services.fields.type.number": "Number",
+  "services.fields.type.select": "Dropdown",
+  "services.fields.type.checkbox": "Checkbox",
+  "services.fields.type.date": "Date",
+  "services.fields.type.time": "Time",
+  "services.fields.type.staticText": "Static Text",
 }

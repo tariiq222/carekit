@@ -109,7 +109,7 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
             <CardDescription>
               {t("services.create.tabs.basicDesc")} &mdash;{" "}
               <span className="text-destructive">*</span>{" "}
-              {locale === "ar" ? "حقول إلزامية" : "required fields"}
+              {t("services.create.requiredFields")}
             </CardDescription>
             <p className="text-xs text-muted-foreground">{t("services.create.avatarHint")}</p>
           </div>
@@ -141,7 +141,7 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
           {/* Department filter — only shown when departments exist */}
           {hasDepts && (
             <div className="flex flex-col gap-1.5">
-              <Label>{locale === "ar" ? "القسم" : "Department"}</Label>
+              <Label>{t("services.create.department")}</Label>
               <Select
                 value={selectedDeptId || "__none__"}
                 onValueChange={(v) => {
@@ -154,10 +154,10 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={locale === "ar" ? "جميع الأقسام" : "All departments"} />
+                  <SelectValue placeholder={t("services.create.allDepartments")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">{locale === "ar" ? "جميع الأقسام" : "All departments"}</SelectItem>
+                  <SelectItem value="__none__">{t("services.create.allDepartments")}</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {locale === "ar" ? d.nameAr : d.nameEn}
@@ -183,7 +183,7 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
               <SelectContent>
                 {visibleCategories.length === 0 ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">
-                    {locale === "ar" ? "لا يوجد فئات" : "No categories found"}
+                    {t("services.create.noCategories")}
                   </div>
                 ) : (
                   visibleCategories.map((c) => (

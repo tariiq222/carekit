@@ -10,18 +10,13 @@ import { SmsSettingsForm } from "@/components/features/sms/sms-settings-form"
 import { useLocale } from "@/components/locale-provider"
 
 export default function SmsSettingsPage() {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
   return (
     <ListPageShell>
       <Breadcrumbs />
       <PageHeader
-        title={isAr ? "إعدادات الرسائل النصية" : "SMS settings"}
-        description={
-          isAr
-            ? "اختر مزود الرسائل النصية الخاص بعيادتك وأدخل بيانات الاعتماد."
-            : "Choose your clinic's SMS provider and enter credentials."
-        }
+        title={t("sms.page.title")}
+        description={t("sms.page.description")}
       />
       <SmsSettingsForm />
       <SmsDeliveryLogTable />

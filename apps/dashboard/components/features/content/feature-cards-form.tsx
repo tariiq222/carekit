@@ -32,15 +32,9 @@ import {
 } from "@/lib/types/feature-cards"
 import type { SiteSettingRow } from "@/lib/types/site-settings"
 import { useUpsertSiteSettings } from "@/hooks/use-site-settings"
+import { useLocale } from "@/components/locale-provider"
 
 const CARD_INDICES: readonly FeatureCardIndex[] = [0, 1, 2]
-
-const FIELD_LABELS: Record<FeatureCardField, string> = {
-  label: "الوسم (أعلى البطاقة)",
-  title: "العنوان",
-  desc:  "الوصف",
-  icon:  "الأيقونة",
-}
 
 function rowToText(row: SiteSettingRow | undefined, fallback: string): string {
   if (!row) return fallback
@@ -106,6 +100,7 @@ interface Props {
 }
 
 export function FeatureCardsForm({ rows }: Props) {
+  const { t } = useLocale()
   const mutation = useUpsertSiteSettings()
   const form = useForm<FeatureCardsSchema>({
     resolver: zodResolver(featureCardsSchema),
@@ -123,7 +118,7 @@ export function FeatureCardsForm({ rows }: Props) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
       {CARD_INDICES.map((idx) => (
-        <CardPanel key={idx} form={form} index={idx} />
+        <CardPanel key={idx} form={form} index={idx} t={t} />
       ))}
 
       <div className="flex justify-end gap-2 pt-4 border-t border-border">
@@ -132,10 +127,10 @@ export function FeatureCardsForm({ rows }: Props) {
           variant="outline"
           onClick={() => form.reset(buildInitial(rows))}
         >
-          استعادة
+          {t("content.form.reset")}
         </Button>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "جاري الحفظ…" : "حفظ التعديلات"}
+          {mutation.isPending ? t("content.form.saving") : t("content.form.save")}
         </Button>
       </div>
     </form>
@@ -145,15 +140,16 @@ export function FeatureCardsForm({ rows }: Props) {
 interface PanelProps {
   form: ReturnType<typeof useForm<FeatureCardsSchema>>
   index: FeatureCardIndex
+  t: (key: string, vars?: Record<string, string | number>) => string
 }
 
-function CardPanel({ form, index }: PanelProps) {
+function CardPanel({ form, index, t }: PanelProps) {
   const errs = form.formState.errors.cards?.[index]
 
   return (
     <section className="rounded-lg border border-border p-5 space-y-4">
       <h3 className="text-sm font-semibold text-muted-foreground">
-        البطاقة {index + 1} من {FEATURE_CARD_COUNT}
+        {t("content.cards.cardHeading", { index: index + 1, total: FEATURE_CARD_COUNT })}
       </h3>
       <div className="grid gap-4 md:grid-cols-2">
         {FEATURE_CARD_FIELDS.map((field) => {
@@ -165,14 +161,14 @@ function CardPanel({ form, index }: PanelProps) {
             const iconPath = `cards.${index}.icon` as const
             return (
               <div key={field} className="space-y-2">
-                <Label htmlFor={inputId}>{FIELD_LABELS[field]}</Label>
+                <Label htmlFor={inputId}>{t(`content.cards.field.${field}`)}</Label>
                 <Controller
                   control={form.control}
                   name={iconPath}
                   render={({ field: ctl }) => (
                     <Select value={ctl.value} onValueChange={ctl.onChange}>
                       <SelectTrigger id={inputId}>
-                        <SelectValue placeholder="اختر أيقونة" />
+                        <SelectValue placeholder={t("content.cards.iconPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
                         {FEATURE_CARD_ICON_OPTIONS.map((name) => (
@@ -197,7 +193,7 @@ function CardPanel({ form, index }: PanelProps) {
               key={field}
               className={`space-y-2 ${multiline ? "md:col-span-2" : ""}`}
             >
-              <Label htmlFor={inputId}>{FIELD_LABELS[field]}</Label>
+              <Label htmlFor={inputId}>{t(`content.cards.field.${field}`)}</Label>
               {multiline ? (
                 <Textarea id={inputId} rows={3} {...form.register(path)} />
               ) : (

@@ -13,16 +13,16 @@ import { useLocale } from "@/components/locale-provider"
 import { useContactMessages, useUpdateContactMessageStatus } from "@/hooks/use-contact-messages"
 import type { ContactMessageStatus } from "@/lib/api/contact-messages"
 
-const STATUS_OPTIONS: { value: ContactMessageStatus | "ALL"; labelAr: string; labelEn: string }[] = [
-  { value: "ALL", labelAr: "الكل", labelEn: "All" },
-  { value: "NEW", labelAr: "جديد", labelEn: "New" },
-  { value: "READ", labelAr: "مقروء", labelEn: "Read" },
-  { value: "REPLIED", labelAr: "تم الرد", labelEn: "Replied" },
-  { value: "ARCHIVED", labelAr: "مؤرشف", labelEn: "Archived" },
+const STATUS_OPTIONS: { value: ContactMessageStatus | "ALL"; labelKey: string }[] = [
+  { value: "ALL", labelKey: "contactMessages.status.all" },
+  { value: "NEW", labelKey: "contactMessages.status.new" },
+  { value: "READ", labelKey: "contactMessages.status.read" },
+  { value: "REPLIED", labelKey: "contactMessages.status.replied" },
+  { value: "ARCHIVED", labelKey: "contactMessages.status.archived" },
 ]
 
 export default function ContactMessagesPage() {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const isAr = locale === "ar"
   const [statusFilter, setStatusFilter] = useState<ContactMessageStatus | "ALL">("ALL")
 
@@ -33,16 +33,16 @@ export default function ContactMessagesPage() {
   const update = useUpdateContactMessageStatus()
 
   const breadcrumbItems = [
-    { label: isAr ? "الرئيسية" : "Home", href: "/" },
-    { label: isAr ? "رسائل التواصل" : "Contact Messages" },
+    { label: t("contactMessages.breadcrumbHome"), href: "/" },
+    { label: t("contactMessages.breadcrumbCurrent") },
   ]
 
   return (
     <ListPageShell>
       <Breadcrumbs items={breadcrumbItems} />
       <PageHeader
-        title={isAr ? "رسائل التواصل" : "Contact Messages"}
-        description={isAr ? "الرسائل المرسلة من نموذج تواصل معنا" : "Messages from the public contact form"}
+        title={t("contactMessages.title")}
+        description={t("contactMessages.description")}
       />
       {error && <ErrorBanner message={(error as Error).message} />}
 
@@ -54,7 +54,7 @@ export default function ContactMessagesPage() {
           <SelectContent>
             {STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {isAr ? opt.labelAr : opt.labelEn}
+                {t(opt.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -64,20 +64,20 @@ export default function ContactMessagesPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{isAr ? "الاسم" : "Name"}</TableHead>
-            <TableHead>{isAr ? "التواصل" : "Contact"}</TableHead>
-            <TableHead>{isAr ? "الموضوع" : "Subject"}</TableHead>
-            <TableHead>{isAr ? "الرسالة" : "Body"}</TableHead>
-            <TableHead>{isAr ? "الحالة" : "Status"}</TableHead>
-            <TableHead>{isAr ? "التاريخ" : "Date"}</TableHead>
-            <TableHead>{isAr ? "إجراءات" : "Actions"}</TableHead>
+            <TableHead>{t("contactMessages.table.name")}</TableHead>
+            <TableHead>{t("contactMessages.table.contact")}</TableHead>
+            <TableHead>{t("contactMessages.table.subject")}</TableHead>
+            <TableHead>{t("contactMessages.table.body")}</TableHead>
+            <TableHead>{t("contactMessages.table.status")}</TableHead>
+            <TableHead>{t("contactMessages.table.date")}</TableHead>
+            <TableHead>{t("contactMessages.table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && (
             <TableRow>
               <TableCell colSpan={7} className="text-center text-muted-foreground">
-                {isAr ? "جاري التحميل..." : "Loading..."}
+                {t("contactMessages.loading")}
               </TableCell>
             </TableRow>
           )}
@@ -108,7 +108,7 @@ export default function ContactMessagesPage() {
                         variant="outline"
                         onClick={() => update.mutate({ id: msg.id, status: "READ" })}
                       >
-                        {isAr ? "مقروء" : "Read"}
+                        {t("contactMessages.actions.markRead")}
                       </Button>
                     )}
                     {msg.status !== "REPLIED" && msg.status !== "ARCHIVED" && (
@@ -117,7 +117,7 @@ export default function ContactMessagesPage() {
                         variant="outline"
                         onClick={() => update.mutate({ id: msg.id, status: "REPLIED" })}
                       >
-                        {isAr ? "تم الرد" : "Replied"}
+                        {t("contactMessages.actions.markReplied")}
                       </Button>
                     )}
                     {msg.status !== "ARCHIVED" && (
@@ -126,7 +126,7 @@ export default function ContactMessagesPage() {
                         variant="ghost"
                         onClick={() => update.mutate({ id: msg.id, status: "ARCHIVED" })}
                       >
-                        {isAr ? "أرشفة" : "Archive"}
+                        {t("contactMessages.actions.archive")}
                       </Button>
                     )}
                   </div>
@@ -136,7 +136,7 @@ export default function ContactMessagesPage() {
           {!isLoading && (data?.items?.length ?? 0) === 0 && (
             <TableRow>
               <TableCell colSpan={7} className="text-center text-muted-foreground">
-                {isAr ? "لا توجد رسائل" : "No messages"}
+                {t("contactMessages.empty")}
               </TableCell>
             </TableRow>
           )}

@@ -10,6 +10,7 @@ import { Input } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { ServiceAvatar } from "./service-avatar"
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/components/locale-provider"
 
 /* ─── Icon list ─── */
 const ALL_ICON_NAMES: string[] = Object.keys(HugeIcons).filter(
@@ -44,6 +45,7 @@ export function ServiceAvatarPicker({
   onImageChange,
   onClear,
 }: ServiceAvatarPickerProps) {
+  const { t } = useLocale()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [selectedIcon, setSelectedIcon] = useState<string | null>(iconName ?? null)
@@ -113,14 +115,14 @@ export function ServiceAvatarPicker({
         <PopoverContent className="w-80 p-0" align="start">
           <Tabs defaultValue="icon">
             <TabsList className="w-full rounded-none border-b border-border">
-              <TabsTrigger value="icon" className="flex-1">أيقونة</TabsTrigger>
-              <TabsTrigger value="image" className="flex-1">صورة</TabsTrigger>
+              <TabsTrigger value="icon" className="flex-1">{t("services.avatar.iconTab")}</TabsTrigger>
+              <TabsTrigger value="image" className="flex-1">{t("services.avatar.imageTab")}</TabsTrigger>
             </TabsList>
 
             {/* ── Icon Tab ── */}
             <TabsContent value="icon" className="p-3 space-y-3">
               <Input
-                placeholder="ابحث عن أيقونة..."
+                placeholder={t("services.avatar.iconSearch")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-8 text-sm"
@@ -159,7 +161,7 @@ export function ServiceAvatarPicker({
               {/* Color Swatches */}
               {selectedIcon && (
                 <div className="space-y-1.5">
-                  <p className="text-xs text-muted-foreground">لون الخلفية</p>
+                  <p className="text-xs text-muted-foreground">{t("services.avatar.bgColor")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {BG_COLORS.map((color) => (
                       <button
@@ -188,7 +190,7 @@ export function ServiceAvatarPicker({
                             : "border-dashed border-muted-foreground/40 hover:scale-105 hover:border-muted-foreground"
                         )}
                         style={!BG_COLORS.includes(selectedColor) ? { backgroundColor: selectedColor } : undefined}
-                        aria-label="لون مخصص"
+                        aria-label={t("services.avatar.customColor")}
                       >
                         {BG_COLORS.includes(selectedColor) && (
                           <span className="text-[10px] font-bold text-muted-foreground leading-none">+</span>
@@ -214,7 +216,7 @@ export function ServiceAvatarPicker({
                 className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => { onClear(); setSelectedIcon(null); setPreviewUrl(undefined); setOpen(false) }}
               >
-                مسح الأفاتار
+                {t("services.avatar.clear")}
               </Button>
             </TabsContent>
 
@@ -235,7 +237,7 @@ export function ServiceAvatarPicker({
                     className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => { setPreviewUrl(undefined); onClear(); setOpen(false) }}
                   >
-                    حذف الصورة
+                    {t("services.avatar.deleteImage")}
                   </Button>
                 </div>
               ) : (
@@ -244,8 +246,8 @@ export function ServiceAvatarPicker({
                   onClick={() => fileInputRef.current?.click()}
                   className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
                 >
-                  <span className="text-sm">اضغط لرفع صورة</span>
-                  <span className="text-xs opacity-60">PNG, JPG, WebP — حتى 5MB</span>
+                  <span className="text-sm">{t("services.avatar.uploadHint")}</span>
+                  <span className="text-xs opacity-60">{t("services.avatar.uploadFormats")}</span>
                 </button>
               )}
               <input

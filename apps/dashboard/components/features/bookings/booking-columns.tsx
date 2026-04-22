@@ -29,10 +29,16 @@ function getGradient(name: string): string {
   return avatarGradients[Math.abs(hash) % avatarGradients.length]
 }
 
-const typeConfig: Record<string, { dot: string; label: string }> = {
-  in_person:           { dot: "bg-primary",          label: "زيارة حضورية"    },
-  online:              { dot: "bg-accent",            label: "عن بعد"          },
-  walk_in:             { dot: "bg-success",           label: "زيارة مباشرة"    },
+const typeDotConfig: Record<string, string> = {
+  in_person: "bg-primary",
+  online: "bg-accent",
+  walk_in: "bg-success",
+}
+
+const typeLabelKey: Record<string, string> = {
+  in_person: "bookings.col.type.inPerson",
+  online: "bookings.col.type.online",
+  walk_in: "bookings.col.type.walkIn",
 }
 
 /* ── Column definitions ── */
@@ -56,7 +62,7 @@ export function getBookingColumns(
     },
     {
       id: "client",
-      header: "المريض",
+      header: t("bookings.col.header.client"),
       cell: ({ row }) => {
         const p = row.original.client
         if (!p) return <span className="text-muted-foreground">—</span>
@@ -84,33 +90,36 @@ export function getBookingColumns(
     },
     {
       id: "employee",
-      header: "الممارس",
+      header: t("bookings.col.header.employee"),
       cell: ({ row }) => {
         const u = row.original.employee?.user
         if (!u) return <span className="text-muted-foreground">—</span>
         return (
           <span className="text-sm font-medium text-foreground">
-            د. {u.firstName} {u.lastName}
+            {t("bookings.info.drPrefix")} {u.firstName} {u.lastName}
           </span>
         )
       },
     },
     {
       accessorKey: "type",
-      header: "النوع",
+      header: t("bookings.col.header.type"),
       cell: ({ row }) => {
-        const cfg = typeConfig[row.original.type] ?? { dot: "bg-muted-foreground", label: row.original.type }
+        const type = row.original.type
+        const dot = typeDotConfig[type] ?? "bg-muted-foreground"
+        const labelKey = typeLabelKey[type]
+        const label = labelKey ? t(labelKey) : type
         return (
           <div className="flex items-center gap-2">
-            <span className={cn("size-2 shrink-0 rounded-full", cfg.dot)} />
-            <span className="text-[13px] font-medium text-foreground">{cfg.label}</span>
+            <span className={cn("size-2 shrink-0 rounded-full", dot)} />
+            <span className="text-[13px] font-medium text-foreground">{label}</span>
           </div>
         )
       },
     },
     {
       id: "datetime",
-      header: "التاريخ والوقت",
+      header: t("bookings.col.header.datetime"),
       // TODO: pass dateFormat/timeFormat from parent when columns accept config
       cell: ({ row }) => (
         <div className="font-numeric">
@@ -123,7 +132,7 @@ export function getBookingColumns(
     },
     {
       id: "amount",
-      header: "المبلغ",
+      header: t("bookings.col.header.amount"),
       cell: ({ row }) => {
         const payment = row.original.payment
         if (!payment) return <span className="text-muted-foreground">—</span>
@@ -132,14 +141,14 @@ export function getBookingColumns(
     },
     {
       accessorKey: "status",
-      header: "الحالة",
+      header: t("bookings.col.header.status"),
       cell: ({ row }) => (
         <StatusCell booking={row.original} onStatusAction={onStatusAction} />
       ),
     },
     {
       id: "actions",
-      header: "إجراءات",
+      header: t("bookings.col.header.actions"),
       cell: ({ row }) => (
         <ActionsCell
           booking={row.original}

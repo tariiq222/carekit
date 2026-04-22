@@ -16,7 +16,6 @@ import {
   SECTION_INTRO_DEFAULTS,
   SECTION_INTRO_FIELDS,
   SECTION_INTRO_KEYS,
-  SECTION_INTRO_LABELS,
   sectionIntroKey,
   type SectionIntroKey,
   type SectionIntroValues,
@@ -24,14 +23,8 @@ import {
   type SiteSettingRow,
 } from "@/lib/types/site-settings"
 import { useUpsertSiteSettings } from "@/hooks/use-site-settings"
+import { useLocale } from "@/components/locale-provider"
 
-const FIELD_LABELS: Record<keyof SectionIntroValues, string> = {
-  tag:            "الوسم",
-  titlePrefix:    "بداية العنوان",
-  titleHighlight: "النص المميّز (ملوّن)",
-  titleSuffix:    "نهاية العنوان (اختياري)",
-  subtitle:       "الوصف",
-}
 
 function rowToText(row: SiteSettingRow | undefined, fallback: string): string {
   if (!row) return fallback
@@ -70,6 +63,7 @@ interface Props {
 }
 
 export function SectionIntrosForm({ rows }: Props) {
+  const { t } = useLocale()
   const mutation = useUpsertSiteSettings()
   const form = useForm<SectionIntrosSchema>({
     resolver: zodResolver(sectionIntrosSchema),
@@ -90,14 +84,14 @@ export function SectionIntrosForm({ rows }: Props) {
         <TabsList>
           {SECTION_INTRO_KEYS.map((section) => (
             <TabsTrigger key={section} value={section}>
-              {SECTION_INTRO_LABELS[section]}
+              {t(`content.intros.section.${section}`)}
             </TabsTrigger>
           ))}
         </TabsList>
 
         {SECTION_INTRO_KEYS.map((section) => (
           <TabsContent key={section} value={section} className="pt-4">
-            <SectionPanel form={form} section={section} />
+            <SectionPanel form={form} section={section} t={t} />
           </TabsContent>
         ))}
       </Tabs>
@@ -108,10 +102,10 @@ export function SectionIntrosForm({ rows }: Props) {
           variant="outline"
           onClick={() => form.reset(buildInitial(rows))}
         >
-          استعادة
+          {t("content.form.reset")}
         </Button>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "جاري الحفظ…" : "حفظ التعديلات"}
+          {mutation.isPending ? t("content.form.saving") : t("content.form.save")}
         </Button>
       </div>
     </form>
@@ -121,9 +115,10 @@ export function SectionIntrosForm({ rows }: Props) {
 interface PanelProps {
   form: ReturnType<typeof useForm<SectionIntrosSchema>>
   section: SectionIntroKey
+  t: (key: string) => string
 }
 
-function SectionPanel({ form, section }: PanelProps) {
+function SectionPanel({ form, section, t }: PanelProps) {
   const errs = form.formState.errors[section]
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -134,7 +129,7 @@ function SectionPanel({ form, section }: PanelProps) {
         const multiline = field === "subtitle"
         return (
           <div key={field} className="space-y-2">
-            <Label htmlFor={inputId}>{FIELD_LABELS[field]}</Label>
+            <Label htmlFor={inputId}>{t(`content.intros.field.${field}`)}</Label>
             {multiline ? (
               <Textarea id={inputId} rows={3} {...form.register(path)} />
             ) : (

@@ -142,11 +142,11 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           </div>
           <div className="space-y-2">
             <Label>{t("branding.organizationNameAr")}</Label>
-            <Input value={organizationNameAr} onChange={(e) => setOrganizationNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
+            <Input value={organizationNameAr} onChange={(e) => setOrganizationNameAr(e.target.value)} dir="rtl" placeholder={t("branding.organizationNamePlaceholderAr")} />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>{t("branding.productTagline")}</Label>
-            <Input value={productTagline} onChange={(e) => setProductTagline(e.target.value)} placeholder="نحو رعاية أفضل" />
+            <Input value={productTagline} onChange={(e) => setProductTagline(e.target.value)} placeholder={t("branding.productTaglinePlaceholder")} />
           </div>
         </div>
 
@@ -267,7 +267,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
             <Separator />
             <div className="space-y-3">
               <Label className="text-xs text-muted-foreground">
-                {t("settings.preview") ?? "معاينة"}
+                {t("settings.preview")}
               </Label>
 
               {/* Color swatches row */}
@@ -311,16 +311,16 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
                     >
                       Badge
                     </div>
-                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label="Accent على الخلفية" />
+                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.accentOnBg")} />
                   </div>
                 )}
 
                 {/* Foreground text preview */}
                 <div className="flex items-center gap-3">
                   <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-                    نص أساسي — Primary text
+                    {t("branding.preview.primaryText")}
                   </p>
-                  <ContrastBadge ratio={contrastRatio("#1a1a1a", isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label="نص على الخلفية" />
+                  <ContrastBadge ratio={contrastRatio("#1a1a1a", isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.textOnBg")} />
                 </div>
               </div>
             </div>

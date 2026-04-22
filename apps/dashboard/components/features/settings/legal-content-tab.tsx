@@ -29,7 +29,7 @@ function BilingualTextCard({ title, field, onChange, t }: {
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>{t("common.arabic") ?? "عربي"}</Label>
+            <Label>{t("common.arabic")}</Label>
             <Textarea
               value={field.ar}
               onChange={(e) => onChange({ ...field, ar: e.target.value })}
@@ -106,25 +106,25 @@ export function LegalContentTab() {
   return (
     <div className="space-y-6">
       <BilingualTextCard
-        title={t("settings.legal.about") ?? "عن العيادة"}
+        title={t("settings.legal.about")}
         field={about}
         onChange={setAbout}
         t={t}
       />
       <BilingualTextCard
-        title={t("settings.legal.privacy") ?? "سياسة الخصوصية"}
+        title={t("settings.legal.privacy")}
         field={privacy}
         onChange={setPrivacy}
         t={t}
       />
       <BilingualTextCard
-        title={t("settings.legal.terms") ?? "الشروط والأحكام"}
+        title={t("settings.legal.terms")}
         field={terms}
         onChange={setTerms}
         t={t}
       />
       <BilingualTextCard
-        title={t("settings.legal.cancellation") ?? "سياسة الإلغاء"}
+        title={t("settings.legal.cancellation")}
         field={cancellation}
         onChange={setCancellation}
         t={t}

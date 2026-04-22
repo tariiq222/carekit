@@ -87,4 +87,5 @@ export const enNav: Record<string, string> = {
   "tenantSwitcher.switchOrg": "Switch organization",
   "tenantSwitcher.switching": "Switching…",
   "tenantSwitcher.switchFailed": "Failed to switch organization",
+  "common.listSep": ", ",
 }

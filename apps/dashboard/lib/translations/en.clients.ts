@@ -87,6 +87,7 @@ export const enClients: Record<string, string> = {
   "clients.form.allergiesPlaceholder": "e.g. Penicillin, peanuts...",
   "clients.form.chronicConditions": "Chronic Conditions",
   "clients.form.chronicPlaceholder": "e.g. Diabetes, hypertension...",
+  "clients.form.defaultNationality": "Saudi Arabia",
 
   // ── Account status toggle ──
   "clients.account.status": "Account status",

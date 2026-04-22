@@ -37,6 +37,13 @@ export const enFinance: Record<string, string> = {
   "payments.method.mada": "Mada",
   "payments.method.applePay": "Apple Pay",
   "payments.method.visa": "Visa",
+  "payments.method.cash": "Cash",
+  "payments.status.paid": "Paid",
+  "payments.status.pending": "Pending",
+  "payments.status.refunded": "Refunded",
+  "payments.status.failed": "Failed",
+  "payments.status.waiting": "Waiting",
+  "payments.status.rejected": "Rejected",
 
   // — Refund Dialog —
   "refund.title": "Refund Payment",

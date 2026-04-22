@@ -22,14 +22,14 @@ import type { IntakeFieldApi } from "@/lib/types/intake-form-api"
 import type { FieldType } from "@/lib/types/intake-form-shared"
 
 const FIELD_TYPES = [
-  { value: "text", labelEn: "Text", labelAr: "نص" },
-  { value: "textarea", labelEn: "Textarea", labelAr: "نص طويل" },
-  { value: "number", labelEn: "Number", labelAr: "رقم" },
-  { value: "select", labelEn: "Dropdown", labelAr: "قائمة منسدلة" },
-  { value: "checkbox", labelEn: "Checkbox", labelAr: "مربع اختيار" },
-  { value: "date", labelEn: "Date", labelAr: "تاريخ" },
-  { value: "time", labelEn: "Time", labelAr: "وقت" },
-  { value: "static_text", labelEn: "Static Text", labelAr: "نص ثابت" },
+  { value: "text", labelKey: "services.fields.type.text" },
+  { value: "textarea", labelKey: "services.fields.type.textarea" },
+  { value: "number", labelKey: "services.fields.type.number" },
+  { value: "select", labelKey: "services.fields.type.select" },
+  { value: "checkbox", labelKey: "services.fields.type.checkbox" },
+  { value: "date", labelKey: "services.fields.type.date" },
+  { value: "time", labelKey: "services.fields.type.time" },
+  { value: "static_text", labelKey: "services.fields.type.staticText" },
 ] as const
 
 interface DraftField {
@@ -46,7 +46,6 @@ interface Props {
   formId: string
   serviceId: string
   initialFields: IntakeFieldApi[]
-  locale: string
 }
 
 let keyCounter = 0
@@ -54,9 +53,8 @@ function nextKey() {
   return `field-${++keyCounter}`
 }
 
-export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }: Props) {
+export function IntakeFieldsEditor({ formId, serviceId, initialFields }: Props) {
   const { t } = useLocale()
-  const isAr = locale === "ar"
   const [fields, setFields] = useState<DraftField[]>([])
   const [dirty, setDirty] = useState(false)
   const { setFieldsMut } = useIntakeFormMutations(serviceId)
@@ -139,7 +137,6 @@ export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }:
         <FieldRow
           key={field.key}
           field={field}
-          isAr={isAr}
           t={t}
           onUpdate={(k, v) => updateField(field.key, k, v)}
           onRemove={() => removeField(field.key)}
@@ -178,13 +175,11 @@ export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }:
 
 function FieldRow({
   field,
-  isAr,
   t,
   onUpdate,
   onRemove,
 }: {
   field: DraftField
-  isAr: boolean
   t: (key: string) => string
   onUpdate: (key: keyof DraftField, value: unknown) => void
   onRemove: () => void
@@ -223,7 +218,7 @@ function FieldRow({
           <SelectContent>
             {FIELD_TYPES.map((ft) => (
               <SelectItem key={ft.value} value={ft.value}>
-                {isAr ? ft.labelAr : ft.labelEn}
+                {t(ft.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>

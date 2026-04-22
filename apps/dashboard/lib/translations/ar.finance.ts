@@ -37,6 +37,13 @@ export const arFinance: Record<string, string> = {
   "payments.method.mada": "مدى",
   "payments.method.applePay": "Apple Pay",
   "payments.method.visa": "فيزا",
+  "payments.method.cash": "نقدي",
+  "payments.status.paid": "مدفوع",
+  "payments.status.pending": "معلق",
+  "payments.status.refunded": "مُسترجع",
+  "payments.status.failed": "فشل",
+  "payments.status.waiting": "في الانتظار",
+  "payments.status.rejected": "مرفوض",
 
   // — Refund Dialog —
   "refund.title": "استرجاع الدفعة",

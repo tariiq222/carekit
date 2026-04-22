@@ -25,7 +25,7 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ stats }: DashboardStatsProps) {
-  const { locale } = useLocale()
+  const { t } = useLocale()
 
   const todayBookings = stats?.total ?? 0
   const newClients = stats?.confirmed ?? 0
@@ -34,29 +34,29 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   return (
     <StatsGrid>
       <StatCard
-        title={locale === "ar" ? "حجوزات اليوم" : "Today's Bookings"}
+        title={t("dashboard.todayBookings")}
         value={todayBookings}
         icon={Calendar03Icon}
         iconColor="primary"
       />
       <StatCard
-        title={locale === "ar" ? "مرضى جدد" : "New Clients"}
+        title={t("dashboard.newClients")}
         value={newClients}
         icon={UserMultiple02Icon}
         iconColor="success"
       />
       <StatCard
-        title={locale === "ar" ? "بانتظار الموافقة" : "Awaiting Approval"}
+        title={t("dashboard.awaitingApproval")}
         value={pendingCount}
         icon={Clock01Icon}
         iconColor="warning"
       />
       <StatCard
-        title={locale === "ar" ? "إيرادات اليوم" : "Today's Revenue"}
+        title={t("dashboard.todayRevenue")}
         value="—"
         icon={MoneyReceiveSquareIcon}
         iconColor="accent"
-        description={locale === "ar" ? "ر.س" : "SAR"}
+        description={t("dashboard.currency")}
       />
     </StatsGrid>
   )

@@ -30,6 +30,8 @@ export const arIntakeForms: Record<string, string> = {
   "intakeForms.field.option": "خيار",
   "intakeForms.field.removeOption": "حذف الخيار",
   "intakeForms.field.addOption": "أضف خيار",
+  "intakeForms.field.labelArPlaceholder": "مثال: ما مستوى ألمك؟",
+  "intakeForms.field.labelEnPlaceholder": "e.g. What is your pain level?",
 
   // — Condition Editor —
   "intakeForms.condition.logic": "منطق شرطي",
@@ -49,6 +51,8 @@ export const arIntakeForms: Record<string, string> = {
   "intakeForms.info.select": "اختر...",
   "intakeForms.info.active": "النموذج نشط",
   "intakeForms.info.activeShort": "النموذج نشط",
+  "intakeForms.info.nameArPlaceholder": "مثال: استبيان ما قبل الجلسة",
+  "intakeForms.info.nameEnPlaceholder": "e.g. Pre-Session Health Form",
 
   // — Form Page —
   "intakeForms.page.editTitle": "تعديل النموذج",
@@ -79,4 +83,6 @@ export const arIntakeForms: Record<string, string> = {
   "intakeForms.input.fileUpload": "انقر لرفع ملف (معاينة فقط)",
   "intakeForms.delete.title": "حذف النموذج",
   "intakeForms.delete.confirm": "هل أنت متأكد من حذف هذا النموذج؟ لا يمكن التراجع عن هذا الإجراء.",
+
+  "intakeForms.info.selectScope": "اختر {scope}",
 }

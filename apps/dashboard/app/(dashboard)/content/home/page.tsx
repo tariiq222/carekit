@@ -8,9 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
 import { HeroForm } from "@/components/features/content/hero-form"
 import { FeatureCardsForm } from "@/components/features/content/feature-cards-form"
 import { SectionIntrosForm } from "@/components/features/content/section-intros-form"
+import { useLocale } from "@/components/locale-provider"
 import { useSiteSettings } from "@/hooks/use-site-settings"
 
 export default function ContentHomePage() {
+  const { t } = useLocale()
   const { data, isLoading } = useSiteSettings("home.")
   const rows = data ?? []
 
@@ -18,8 +20,8 @@ export default function ContentHomePage() {
     <ListPageShell>
       <Breadcrumbs />
       <PageHeader
-        title="الصفحة الرئيسية"
-        description="محرّر محتوى الصفحة الرئيسية — التعديلات تنعكس على الموقع خلال 60 ثانية"
+        title={t("content.home.title")}
+        description={t("content.home.description")}
       />
 
       {isLoading ? (
@@ -32,9 +34,9 @@ export default function ContentHomePage() {
       ) : (
         <Tabs defaultValue="hero">
           <TabsList>
-            <TabsTrigger value="hero">Hero</TabsTrigger>
-            <TabsTrigger value="intros">عناوين الأقسام</TabsTrigger>
-            <TabsTrigger value="features">بطاقات المميزات</TabsTrigger>
+            <TabsTrigger value="hero">{t("content.home.tab.hero")}</TabsTrigger>
+            <TabsTrigger value="intros">{t("content.home.tab.intros")}</TabsTrigger>
+            <TabsTrigger value="features">{t("content.home.tab.features")}</TabsTrigger>
           </TabsList>
           <TabsContent value="hero" className="pt-6">
             <HeroForm rows={rows} />

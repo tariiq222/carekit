@@ -5,10 +5,12 @@ import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useLocale } from "@/components/locale-provider"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EyeIcon, ScanEyeIcon } from "@hugeicons/core-free-icons"
 
 export function LoginForm() {
+  const { t } = useLocale()
   const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -75,9 +77,9 @@ export function LoginForm() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-foreground">مرحباً بعودتك</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("login.welcome")}</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              أدخل بياناتك لتسجيل الدخول
+              {t("login.subtitle")}
             </p>
           </div>
         </div>
@@ -94,7 +96,7 @@ export function LoginForm() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email" className="text-sm font-medium text-foreground">
-              البريد الإلكتروني
+              {t("login.emailLabel")}
             </Label>
             <Input
               id="email"
@@ -110,7 +112,7 @@ export function LoginForm() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password" className="text-sm font-medium text-foreground">
-              كلمة المرور
+              {t("login.passwordLabel")}
             </Label>
             <div className="relative">
               <Input
@@ -127,7 +129,7 @@ export function LoginForm() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
               >
                 <HugeiconsIcon
                   icon={showPassword ? ScanEyeIcon : EyeIcon}
@@ -142,7 +144,7 @@ export function LoginForm() {
             disabled={loading}
             className="mt-1 h-11 w-full text-sm font-semibold shadow-primary"
           >
-            {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
+            {loading ? t("login.signingIn") : t("login.signIn")}
           </Button>
 
           {showDevLogin && (

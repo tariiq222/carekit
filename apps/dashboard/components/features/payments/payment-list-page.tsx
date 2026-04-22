@@ -55,7 +55,7 @@ export function PaymentListPage() {
       ) : null}
 
       <FilterBar
-        search={{ value: search, onChange: setSearch, placeholder: t("payments.searchPlaceholder") ?? "بحث باسم المريض، رقم الفاتورة..." }}
+        search={{ value: search, onChange: setSearch, placeholder: t("payments.searchPlaceholder") }}
         selects={[
           { key: "status", value: status, placeholder: t("payments.filters.status"), options: [{ value: "all", label: t("payments.filters.allStatuses") }, { value: "pending", label: t("payments.filters.pending") }, { value: "paid", label: t("payments.filters.paid") }, { value: "refunded", label: t("payments.filters.refunded") }, { value: "failed", label: t("payments.filters.failed") }], onValueChange: (v) => setStatus(v as typeof status) },
           { key: "method", value: method, placeholder: t("payments.filters.method"), options: [{ value: "all", label: t("payments.filters.allMethods") }, { value: "moyasar", label: "Moyasar" }, { value: "bank_transfer", label: t("payments.filters.bankTransfer") }], onValueChange: (v) => setMethod(v as typeof method) },

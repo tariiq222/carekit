@@ -18,16 +18,11 @@ interface GreetingHeaderProps {
   bookingsCount: number
 }
 
-function getGreeting(locale: string): string {
+function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours()
-  if (locale === "ar") {
-    if (hour < 12) return "صباح الخير"
-    if (hour < 18) return "مساء الخير"
-    return "مساء الخير"
-  }
-  if (hour < 12) return "Good morning"
-  if (hour < 18) return "Good afternoon"
-  return "Good evening"
+  if (hour < 12) return t("dashboard.goodMorning")
+  if (hour < 18) return t("dashboard.goodAfternoon")
+  return t("dashboard.goodEvening")
 }
 
 export function GreetingHeader({
@@ -35,19 +30,17 @@ export function GreetingHeader({
   dateLabel,
   bookingsCount,
 }: GreetingHeaderProps) {
-  const { t, locale } = useLocale()
-  const greeting = getGreeting(locale)
+  const { t } = useLocale()
+  const greeting = getGreeting(t)
 
   const safeCount = Number.isFinite(bookingsCount) && bookingsCount >= 0 ? bookingsCount : 0
-  const subtitle = locale === "ar"
-    ? `${dateLabel} — لديك ${safeCount} حجز اليوم`
-    : `${dateLabel} — You have ${safeCount} bookings today`
+  const subtitle = `${dateLabel} — ${t("dashboard.greeting.summary").replace("{count}", String(safeCount))}`
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="min-w-0">
         <h1 className="truncate text-2xl font-bold text-foreground">
-          {greeting}، {userName} 👋
+          {t("dashboard.greeting.hello").replace("{greeting}", greeting).replace("{name}", userName)}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       </div>
@@ -69,7 +62,7 @@ export function GreetingHeader({
 
         {/* Notification bell */}
         <button
-          aria-label={locale === "ar" ? "الإشعارات" : "Notifications"}
+          aria-label={t("dashboard.notifications")}
           className="relative flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:text-primary"
         >
           <HugeiconsIcon icon={Notification03Icon} size={20} />
@@ -80,7 +73,7 @@ export function GreetingHeader({
         <Button asChild className="gap-2 rounded-full">
           <Link href="/bookings">
             <HugeiconsIcon icon={Add01Icon} size={16} />
-            <span>{locale === "ar" ? "حجز جديد" : "New Booking"}</span>
+            <span>{t("actions.newBooking")}</span>
           </Link>
         </Button>
       </div>

@@ -8,11 +8,11 @@ import { Badge } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { DraftService } from "./services-tab"
 
-/* ─── Booking type labels ─── */
+/* ─── Booking type translation keys ─── */
 
-const TYPE_LABELS: Record<string, { en: string; ar: string }> = {
-  in_person: { en: "In Person", ar: "حضوري" },
-  online: { en: "Online", ar: "عن بعد" },
+const TYPE_KEYS: Record<string, string> = {
+  in_person: "employees.services.inPerson",
+  online: "employees.services.online",
 }
 
 /* ─── Props ─── */
@@ -25,8 +25,7 @@ interface ServiceSummaryCardProps {
 /* ─── Component ─── */
 
 export function ServiceSummaryCard({ draft, onRemove }: ServiceSummaryCardProps) {
-  const { t, locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
 
   return (
     <div className="flex items-start justify-between rounded-lg border border-border p-3">
@@ -37,9 +36,7 @@ export function ServiceSummaryCard({ draft, onRemove }: ServiceSummaryCardProps)
         <div className="flex flex-wrap gap-1.5">
           {draft.availableTypes.map((bt) => (
             <Badge key={bt} variant="secondary" className="text-[10px]">
-              {isAr
-                ? TYPE_LABELS[bt]?.ar ?? bt
-                : TYPE_LABELS[bt]?.en ?? bt}
+              {TYPE_KEYS[bt] ? t(TYPE_KEYS[bt]) : bt}
             </Badge>
           ))}
         </div>

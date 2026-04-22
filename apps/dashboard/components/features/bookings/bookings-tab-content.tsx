@@ -99,7 +99,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
       <FilterBar
-        search={{ value: search, onChange: setSearch, placeholder: t("bookings.searchPlaceholder") ?? "بحث بالاسم، رقم الحجز..." }}
+        search={{ value: search, onChange: setSearch, placeholder: t("bookings.searchPlaceholder") }}
         tabs={{
           items: [
             { key: "all", label: t("bookings.filters.allTime") },

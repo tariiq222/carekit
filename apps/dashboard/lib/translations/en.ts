@@ -19,6 +19,9 @@ import { enIntakeForms } from "./en.intake-forms"
 import { enBranding } from "./en.branding"
 import { enDepartments } from "./en.departments"
 import { enBilling } from "./en.billing"
+import { enContent } from "./en.content"
+import { enSms } from "./en.sms"
+import { enOps } from "./en.ops"
 
 export const en: Record<string, string> = {
   ...enNav,
@@ -35,4 +38,7 @@ export const en: Record<string, string> = {
   ...enBranding,
   ...enDepartments,
   ...enBilling,
+  ...enContent,
+  ...enSms,
+  ...enOps,
 }

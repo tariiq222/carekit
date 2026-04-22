@@ -49,7 +49,7 @@ export function FormInfoPanel({ draft, scopeOptions, availableScopes, onUpdate, 
           <Input
             value={draft.nameAr}
             onChange={(e) => onUpdate({ nameAr: e.target.value })}
-            placeholder="مثال: استبيان ما قبل الجلسة"
+            placeholder={t("intakeForms.info.nameArPlaceholder")}
             dir="rtl"
           />
         </div>
@@ -59,7 +59,7 @@ export function FormInfoPanel({ draft, scopeOptions, availableScopes, onUpdate, 
           <Input
             value={draft.nameEn}
             onChange={(e) => onUpdate({ nameEn: e.target.value })}
-            placeholder="e.g. Pre-Session Health Form"
+            placeholder={t("intakeForms.info.nameEnPlaceholder")}
             dir="ltr"
           />
         </div>
@@ -105,9 +105,12 @@ export function FormInfoPanel({ draft, scopeOptions, availableScopes, onUpdate, 
         {draft.scope !== "global" && (
           <div className="flex flex-col gap-1.5">
             <Label>
-              {isAr
-                ? `اختر ${FORM_SCOPE_LABELS[draft.scope].ar}`
-                : `Select ${FORM_SCOPE_LABELS[draft.scope].en}`}
+              {t("intakeForms.info.selectScope").replace(
+                "{scope}",
+                isAr
+                  ? FORM_SCOPE_LABELS[draft.scope].ar
+                  : FORM_SCOPE_LABELS[draft.scope].en,
+              )}
             </Label>
             <Select
               value={draft.scopeId}

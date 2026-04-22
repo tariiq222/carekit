@@ -29,7 +29,7 @@ import type {
 } from "@/lib/types/sms"
 
 export function SmsSettingsForm() {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const isAr = locale === "ar"
   const { config, loading } = useSmsConfig()
   const upsert = useUpsertSmsConfig()
@@ -66,14 +66,12 @@ export function SmsSettingsForm() {
     const result = await test.mutateAsync(testPhone.trim())
     if (result.ok) {
       setTestMessage(
-        isAr
-          ? `تم الإرسال بنجاح (${result.providerMessageId})`
-          : `Sent successfully (${result.providerMessageId})`,
+        t("sms.form.testSent").replace("{id}", result.providerMessageId ?? ""),
       )
     } else {
       const err = result.error
       setTestMessage(
-        err ? (isAr ? err.ar : err.en) : isAr ? "فشل" : "Failed",
+        err ? (isAr ? err.ar : err.en) : t("sms.form.testFailed"),
       )
     }
   }
@@ -81,21 +79,15 @@ export function SmsSettingsForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {isAr ? "إعدادات الرسائل النصية" : "SMS settings"}
-        </CardTitle>
+        <CardTitle>{t("sms.form.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {loading ? (
-          <p className="text-muted-foreground">
-            {isAr ? "جارٍ التحميل..." : "Loading..."}
-          </p>
+          <p className="text-muted-foreground">{t("sms.form.loading")}</p>
         ) : (
           <>
             <div className="space-y-2">
-              <Label htmlFor="sms-provider">
-                {isAr ? "المزود" : "Provider"}
-              </Label>
+              <Label htmlFor="sms-provider">{t("sms.form.provider")}</Label>
               <Select
                 value={provider}
                 onValueChange={(v) => setProvider(v as SmsProvider)}
@@ -105,7 +97,7 @@ export function SmsSettingsForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="NONE">
-                    {isAr ? "بدون مزود" : "None"}
+                    {t("sms.form.providerNone")}
                   </SelectItem>
                   <SelectItem value="UNIFONIC">Unifonic</SelectItem>
                   <SelectItem value="TAQNYAT">Taqnyat</SelectItem>
@@ -115,9 +107,7 @@ export function SmsSettingsForm() {
 
             {provider !== "NONE" && (
               <div className="space-y-2">
-                <Label htmlFor="sms-sender">
-                  {isAr ? "معرف المرسل" : "Sender ID"}
-                </Label>
+                <Label htmlFor="sms-sender">{t("sms.form.senderId")}</Label>
                 <Input
                   id="sms-sender"
                   value={senderId}
@@ -130,9 +120,7 @@ export function SmsSettingsForm() {
             {provider === "UNIFONIC" && (
               <div className="space-y-3 rounded-md border p-4">
                 <p className="text-sm text-muted-foreground">
-                  {isAr
-                    ? "أدخل بيانات الاعتماد الجديدة لحفظها (لن تُعرض مرة أخرى)"
-                    : "Enter new credentials to save (will not be shown again)"}
+                  {t("sms.form.credsHint")}
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="u-appsid">App SID</Label>
@@ -157,9 +145,7 @@ export function SmsSettingsForm() {
             {provider === "TAQNYAT" && (
               <div className="space-y-3 rounded-md border p-4">
                 <p className="text-sm text-muted-foreground">
-                  {isAr
-                    ? "أدخل بيانات الاعتماد الجديدة لحفظها (لن تُعرض مرة أخرى)"
-                    : "Enter new credentials to save (will not be shown again)"}
+                  {t("sms.form.credsHint")}
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="t-apitoken">API Token</Label>
@@ -175,22 +161,18 @@ export function SmsSettingsForm() {
 
             <div className="flex items-center gap-2">
               <Button onClick={onSave} disabled={upsert.isPending}>
-                {isAr ? "حفظ" : "Save"}
+                {t("sms.form.save")}
               </Button>
               {config?.credentialsConfigured && (
                 <span className="text-xs text-success">
-                  {isAr
-                    ? "بيانات الاعتماد محفوظة"
-                    : "Credentials saved"}
+                  {t("sms.form.credsSaved")}
                 </span>
               )}
             </div>
 
             {config?.credentialsConfigured && provider !== "NONE" && (
               <div className="rounded-md border p-4 space-y-3">
-                <Label htmlFor="test-phone">
-                  {isAr ? "رقم الاختبار" : "Test phone"}
-                </Label>
+                <Label htmlFor="test-phone">{t("sms.form.testPhone")}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="test-phone"
@@ -203,7 +185,7 @@ export function SmsSettingsForm() {
                     onClick={onTest}
                     disabled={test.isPending || !testPhone.trim()}
                   >
-                    {isAr ? "إرسال اختبار" : "Send test"}
+                    {t("sms.form.sendTest")}
                   </Button>
                 </div>
                 {testMessage && (

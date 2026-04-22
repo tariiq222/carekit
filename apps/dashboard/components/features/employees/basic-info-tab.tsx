@@ -32,7 +32,8 @@ interface BasicInfoTabProps {
 /* ─── Component ─── */
 
 export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInfoTabProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const isAr = locale === "ar"
   const [pendingValue, setPendingValue] = useState<boolean | null>(null)
 
   const displayName = employeeName ?? form.watch("nameEn") ?? ""
@@ -191,7 +192,7 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
               </Label>
               <Input
                 {...form.register("nameAr")}
-                placeholder="مثال: أحمد الشمري"
+                placeholder={t("employees.create.placeholderNameAr")}
                 dir="rtl"
               />
               {form.formState.errors.nameAr && (
@@ -235,7 +236,7 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
                 <Label className="truncate">{t("employees.create.specialty")} (AR)</Label>
                 <Input
                   {...form.register("specialtyAr")}
-                  placeholder="مثال: معالج إدمان"
+                  placeholder={t("employees.create.placeholderSpecialtyAr")}
                   dir="rtl"
                 />
               </div>

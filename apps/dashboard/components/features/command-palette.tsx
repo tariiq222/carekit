@@ -27,39 +27,32 @@ import { useLocale } from "@/components/locale-provider"
 
 type CommandEntry = {
   id: string
-  labelEn: string
-  labelAr: string
+  labelKey: string
+  searchTerms: string
   href: string
   icon: typeof Home01Icon
   shortcut?: string
 }
 
 const QUICK_ACTIONS: CommandEntry[] = [
-  { id: "new-booking", labelEn: "New Booking", labelAr: "حجز جديد", href: "/bookings?new=1", icon: Add01Icon, shortcut: "⌘N" },
-  { id: "search-clients", labelEn: "Search Clients", labelAr: "البحث عن مرضى", href: "/clients", icon: UserMultiple02Icon },
-  { id: "today-schedule", labelEn: "Today's Schedule", labelAr: "جدول اليوم", href: "/bookings?tab=today", icon: Calendar03Icon },
+  { id: "new-booking", labelKey: "cmd.newBooking", searchTerms: "new booking حجز جديد", href: "/bookings?new=1", icon: Add01Icon, shortcut: "⌘N" },
+  { id: "search-clients", labelKey: "cmd.searchClients", searchTerms: "search clients البحث مرضى", href: "/clients", icon: UserMultiple02Icon },
+  { id: "today-schedule", labelKey: "cmd.todaySchedule", searchTerms: "today schedule جدول اليوم", href: "/bookings?tab=today", icon: Calendar03Icon },
 ]
 
 const NAV_COMMANDS: CommandEntry[] = [
-  { id: "nav-dashboard", labelEn: "Dashboard", labelAr: "لوحة التحكم", href: "/", icon: Home01Icon },
-  { id: "nav-bookings", labelEn: "Bookings", labelAr: "الحجوزات", href: "/bookings", icon: Calendar03Icon },
-  { id: "nav-clients", labelEn: "Clients", labelAr: "المرضى", href: "/clients", icon: UserMultiple02Icon },
-  { id: "nav-employees", labelEn: "Employees", labelAr: "الأطباء", href: "/employees", icon: Stethoscope02Icon },
-  { id: "nav-reports", labelEn: "Reports", labelAr: "التقارير", href: "/reports", icon: AnalyticsUpIcon },
-  { id: "nav-settings", labelEn: "Settings", labelAr: "الإعدادات", href: "/settings", icon: Settings02Icon },
+  { id: "nav-dashboard", labelKey: "cmd.navDashboard", searchTerms: "dashboard لوحة التحكم", href: "/", icon: Home01Icon },
+  { id: "nav-bookings", labelKey: "cmd.navBookings", searchTerms: "bookings الحجوزات", href: "/bookings", icon: Calendar03Icon },
+  { id: "nav-clients", labelKey: "cmd.navClients", searchTerms: "clients المرضى", href: "/clients", icon: UserMultiple02Icon },
+  { id: "nav-employees", labelKey: "cmd.navEmployees", searchTerms: "employees الأطباء", href: "/employees", icon: Stethoscope02Icon },
+  { id: "nav-reports", labelKey: "cmd.navReports", searchTerms: "reports التقارير", href: "/reports", icon: AnalyticsUpIcon },
+  { id: "nav-settings", labelKey: "cmd.navSettings", searchTerms: "settings الإعدادات", href: "/settings", icon: Settings02Icon },
 ]
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const router = useRouter()
-  const { locale } = useLocale()
-
-  const isAr = locale === "ar"
-  const quickActionsLabel = isAr ? "إجراءات سريعة" : "Quick Actions"
-  const navigateLabel = isAr ? "التنقل" : "Navigate"
-  const emptyLabel = isAr ? "لا توجد نتائج." : "No results found."
-  const hintLabel = isAr ? "اضغط ↵ للانتقال" : "Press ↵ to navigate"
-  const placeholder = isAr ? "ابحث عن أمر..." : "Search commands..."
+  const { t } = useLocale()
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -81,23 +74,23 @@ export function CommandPalette() {
   )
 
   const renderItem = (cmd: CommandEntry) => (
-    <CommandItem key={cmd.id} value={`${cmd.labelEn} ${cmd.labelAr}`} onSelect={() => run(cmd.href)}>
+    <CommandItem key={cmd.id} value={cmd.searchTerms} onSelect={() => run(cmd.href)}>
       <HugeiconsIcon icon={cmd.icon} size={16} className="me-2 shrink-0 text-muted-foreground" />
-      <span>{isAr ? cmd.labelAr : cmd.labelEn}</span>
+      <span>{t(cmd.labelKey)}</span>
       {cmd.shortcut && <CommandShortcut>{cmd.shortcut}</CommandShortcut>}
     </CommandItem>
   )
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen} className="max-w-[520px]">
-      <CommandInput placeholder={placeholder} />
+      <CommandInput placeholder={t("cmd.placeholder")} />
       <CommandList>
-        <CommandEmpty>{emptyLabel}</CommandEmpty>
-        <CommandGroup heading={quickActionsLabel}>{QUICK_ACTIONS.map(renderItem)}</CommandGroup>
+        <CommandEmpty>{t("cmd.noResults")}</CommandEmpty>
+        <CommandGroup heading={t("cmd.quickActions")}>{QUICK_ACTIONS.map(renderItem)}</CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading={navigateLabel}>{NAV_COMMANDS.map(renderItem)}</CommandGroup>
+        <CommandGroup heading={t("cmd.navigate")}>{NAV_COMMANDS.map(renderItem)}</CommandGroup>
       </CommandList>
-      <div className="border-t px-3 py-2 text-xs text-muted-foreground">{hintLabel}</div>
+      <div className="border-t px-3 py-2 text-xs text-muted-foreground">{t("cmd.hint")}</div>
     </CommandDialog>
   )
 }

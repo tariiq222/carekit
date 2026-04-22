@@ -92,7 +92,7 @@ export function getEmployeeColumns(
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-foreground">
           {row.original.experience != null
-            ? `${row.original.experience} ${locale === "ar" ? "سنة" : "yrs"}`
+            ? `${row.original.experience} ${t?.("employees.col.experienceYrs") ?? "yrs"}`
             : "\u2014"}
         </span>
       ),

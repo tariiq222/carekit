@@ -70,7 +70,7 @@ export function EntityTab() {
     <div className="space-y-4">
       <div className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3">
         <p className="text-sm text-warning-foreground">
-          {t("settings.entity.warning") ?? "بيانات الكيان القانوني تُستخدم في الفواتير والتقارير الرسمية. تأكد من صحتها."}
+          {t("settings.entity.warning")}
         </p>
       </div>
 
@@ -78,35 +78,35 @@ export function EntityTab() {
         <CardContent className="pt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>{t("settings.entity.companyNameAr") ?? "اسم الشركة (عربي)"}</Label>
+              <Label>{t("settings.entity.companyNameAr")}</Label>
               <Input value={companyNameAr} onChange={(e) => setCompanyNameAr(e.target.value)} dir="rtl" />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.companyNameEn") ?? "اسم الشركة (إنجليزي)"}</Label>
+              <Label>{t("settings.entity.companyNameEn")}</Label>
               <Input value={companyNameEn} onChange={(e) => setCompanyNameEn(e.target.value)} dir="ltr" />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.businessRegistration") ?? "السجل التجاري"}</Label>
+              <Label>{t("settings.entity.businessRegistration")}</Label>
               <Input value={businessRegistration} onChange={(e) => setBusinessRegistration(e.target.value)} dir="ltr" />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.vatRegistration") ?? "رقم التسجيل الضريبي"}</Label>
+              <Label>{t("settings.entity.vatRegistration")}</Label>
               <Input value={vatRegistrationNumber} onChange={(e) => setVatRegistrationNumber(e.target.value)} dir="ltr" />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.vatRate") ?? "نسبة الضريبة %"}</Label>
+              <Label>{t("settings.entity.vatRate")}</Label>
               <Input value={vatRate} onChange={(e) => setVatRate(e.target.value)} type="number" min="0" max="100" dir="ltr" />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.sellerAddress") ?? "عنوان البائع"}</Label>
+              <Label>{t("settings.entity.sellerAddress")}</Label>
               <Input value={sellerAddress} onChange={(e) => setSellerAddress(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.organizationCity") ?? "المدينة"}</Label>
+              <Label>{t("settings.entity.organizationCity")}</Label>
               <Input value={organizationCity} onChange={(e) => setClinicCity(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.postalCode") ?? "الرمز البريدي"}</Label>
+              <Label>{t("settings.entity.postalCode")}</Label>
               <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} dir="ltr" />
             </div>
           </div>

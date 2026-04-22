@@ -239,6 +239,81 @@ export const enEmployees: Record<string, string> = {
   "schedule.suspended": "Schedule suspended — employee on vacation",
   "schedule.setHours": "Set working hours and breaks for each day",
 
+  // — Day Names —
+  "employees.day.0": "Sunday",
+  "employees.day.1": "Monday",
+  "employees.day.2": "Tuesday",
+  "employees.day.3": "Wednesday",
+  "employees.day.4": "Thursday",
+  "employees.day.5": "Friday",
+  "employees.day.6": "Saturday",
+
+  // — Create / Edit Basic Info —
+  "employees.create.personalInfo": "Personal Info",
+  "employees.create.personalInfoDesc": "Account details & specialty",
+  "employees.create.qualificationsProfile": "Qualifications & Profile",
+  "employees.create.qualificationsProfileDesc": "Experience, education, photo & status",
+  "employees.create.placeholderNameAr": "e.g. Ahmed Al-Shammari",
+  "employees.create.placeholderSpecialtyAr": "e.g. Addiction Counselor",
+  "employees.create.secondWindow": "+ Second window",
+
+  // — Chart: Periods —
+  "employees.chart.period1m": "1M",
+  "employees.chart.period3m": "3M",
+  "employees.chart.period6m": "6M",
+
+  // — Chart: Booking Status Labels —
+  "employees.chart.status.completed": "Completed",
+  "employees.chart.status.confirmed": "Confirmed",
+  "employees.chart.status.pending": "Pending",
+  "employees.chart.status.cancelled": "Cancelled",
+  "employees.chart.status.pendingCancellation": "Cancel Req.",
+  "employees.chart.status.noShow": "No Show",
+  "employees.chart.status.checkedIn": "Checked In",
+  "employees.chart.status.inProgress": "In Progress",
+  "employees.chart.status.expired": "Expired",
+
+  // — Chart: Booking Type Labels —
+  "employees.chart.type.inPerson": "In-Person",
+  "employees.chart.type.online": "Online",
+  "employees.chart.type.walkIn": "Walk-in",
+
+  // — Column helpers —
+  "employees.col.experienceYrs": "yrs",
+
+  // — Detail Page Tabs —
+  "employees.detail.overview": "Overview",
+  "employees.detail.services": "Services",
+  "employees.detail.schedule": "Schedule",
+  "employees.detail.ratingsTab": "Ratings",
+  "employees.detail.public": "Public",
+  "employees.detail.inactive": "Inactive",
+  "employees.detail.home": "Home",
+
+  // — Public Profile Tab —
+  "employees.public.showInDirectory": "Show in public directory",
+  "employees.public.showDirectoryDesc": "Make this therapist visible on the public site",
+  "employees.public.slug": "Slug",
+  "employees.public.imageUrl": "Public image URL",
+  "employees.public.bioAr": "Public bio (Arabic)",
+  "employees.public.bioEn": "Public bio (English)",
+  "employees.public.saving": "Saving...",
+  "employees.public.save": "Save",
+
+  // — Form Validation Messages —
+  "employees.form.validation.nameEnRequired": "Full name in English is required",
+  "employees.form.validation.nameArRequired": "Full name in Arabic is required",
+  "employees.form.validation.emailInvalid": "Invalid email address",
+  "employees.form.validation.phoneInvalid": "Invalid phone number",
+  "employees.form.validation.specialtyRequired": "Specialty is required",
+
+  // — Form Step Errors —
+  "employees.form.stepErrorSchedule": "schedule",
+  "employees.form.stepErrorBreaks": "breaks",
+  "employees.form.stepErrorVacation": "vacation",
+  "employees.form.stepErrorServices": "services",
+  "employees.form.createPartialSuccess": "Employee created, but failed to save: {steps}",
+
   // — Vacation Manager —
   "vacation.validation.startRequired": "Start date is required",
   "vacation.validation.endRequired": "End date is required",

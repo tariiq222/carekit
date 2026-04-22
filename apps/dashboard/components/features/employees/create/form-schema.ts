@@ -5,29 +5,40 @@ import { z } from "zod"
 export const EMPLOYEE_GENDERS = ["MALE", "FEMALE"] as const
 export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT"] as const
 
-export const createEmployeeSchema = z.object({
-  title: z.string().optional(),
-  nameEn: z.string().min(1, "الاسم الكامل بالإنجليزية مطلوب").max(255),
-  nameAr: z.string().min(1, "الاسم الكامل بالعربية مطلوب").max(255),
-  email: z.string().email("البريد الإلكتروني غير صالح"),
-  phone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, "رقم الجوال غير صالح").optional().or(z.literal("")),
-  gender: z.enum(EMPLOYEE_GENDERS).optional(),
-  employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
-  specialty: z.string().min(1, "التخصص مطلوب"),
-  specialtyAr: z.string().optional(),
-  bio: z.string().optional(),
-  bioAr: z.string().optional(),
-  experience: z.coerce.number().int().min(0).optional(),
-  education: z.string().optional(),
-  educationAr: z.string().optional(),
-  avatarUrl: z.string().url().optional().or(z.literal("")),
-  avatarFile: z.instanceof(File).optional(),
-  branchIds: z.array(z.string()).optional(),
-  serviceIds: z.array(z.string()).optional(),
-  isActive: z.boolean(),
-})
+/**
+ * Schema factory — accepts a `t` function so validation messages are
+ * translated at call time. Falls back to English if called without `t`
+ * (e.g. tests or server-side code that doesn't have locale context).
+ */
+export function createEmployeeSchema(t?: (key: string) => string) {
+  const msg = (key: string, fallback: string) => t ? t(key) : fallback
+  return z.object({
+    title: z.string().optional(),
+    nameEn: z.string().min(1, msg("employees.form.validation.nameEnRequired", "Full name in English is required")).max(255),
+    nameAr: z.string().min(1, msg("employees.form.validation.nameArRequired", "Full name in Arabic is required")).max(255),
+    email: z.string().email(msg("employees.form.validation.emailInvalid", "Invalid email address")),
+    phone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, msg("employees.form.validation.phoneInvalid", "Invalid phone number")).optional().or(z.literal("")),
+    gender: z.enum(EMPLOYEE_GENDERS).optional(),
+    employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
+    specialty: z.string().min(1, msg("employees.form.validation.specialtyRequired", "Specialty is required")),
+    specialtyAr: z.string().optional(),
+    bio: z.string().optional(),
+    bioAr: z.string().optional(),
+    experience: z.coerce.number().int().min(0).optional(),
+    education: z.string().optional(),
+    educationAr: z.string().optional(),
+    avatarUrl: z.string().url().optional().or(z.literal("")),
+    avatarFile: z.instanceof(File).optional(),
+    branchIds: z.array(z.string()).optional(),
+    serviceIds: z.array(z.string()).optional(),
+    isActive: z.boolean(),
+  })
+}
 
-export type CreateEmployeeFormData = z.infer<typeof createEmployeeSchema>
+/** Convenience: static schema instance (no translated messages) */
+export const createEmployeeSchemaStatic = createEmployeeSchema()
+
+export type CreateEmployeeFormData = z.infer<ReturnType<typeof createEmployeeSchema>>
 
 /* ─── Default Values ─── */
 

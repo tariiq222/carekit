@@ -22,7 +22,7 @@ export default function BrandingPage() {
       <ListPageShell>
         <Breadcrumbs />
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-medium text-muted-foreground">{t("common.noPermission") ?? "ليس لديك صلاحية للوصول لهذه الصفحة"}</p>
+          <p className="text-lg font-medium text-muted-foreground">{t("common.noPermission")}</p>
         </div>
       </ListPageShell>
     )

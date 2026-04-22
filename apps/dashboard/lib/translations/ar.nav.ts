@@ -87,4 +87,5 @@ export const arNav: Record<string, string> = {
   "tenantSwitcher.switchOrg": "تبديل العيادة",
   "tenantSwitcher.switching": "جاري التبديل…",
   "tenantSwitcher.switchFailed": "تعذّر تبديل العيادة",
+  "common.listSep": "، ",
 }

@@ -64,7 +64,7 @@ export default function DashboardPage() {
       <section className="flex flex-col gap-4">
         <SectionHeader
           icon={FlashIcon}
-          title={locale === "ar" ? "إجراءات سريعة" : "Quick Actions"}
+          title={t("dashboard.quickActions")}
         />
         <QuickActions />
       </section>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       <section className="flex flex-col gap-5">
         <SectionHeader
           icon={Analytics01Icon}
-          title={locale === "ar" ? "لوحة العمليات" : "Operations"}
+          title={t("dashboard.operations")}
           variant="accent"
         />
 
