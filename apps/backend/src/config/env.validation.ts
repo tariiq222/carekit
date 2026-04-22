@@ -87,4 +87,14 @@ export const envValidationSchema = Joi.object({
   // Webhook base URL is the public origin registered with providers for DLR callbacks.
   SMS_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
   SMS_WEBHOOK_URL_BASE: Joi.string().uri().allow('').optional(),
+
+  // Billing (SaaS-04) — PLATFORM Moyasar (charges clinics for SaaS subscriptions).
+  // Distinct from OrganizationPaymentConfig.moyasar* (tenant Moyasar, Plan 02e).
+  // Optional at boot so dev/test environments without billing can still start;
+  // billing handlers/crons assert presence at use-time.
+  MOYASAR_PLATFORM_SECRET_KEY: Joi.string().min(16).allow('').optional(),
+  MOYASAR_PLATFORM_WEBHOOK_SECRET: Joi.string().min(16).allow('').optional(),
+  SAAS_TRIAL_DAYS: Joi.number().integer().min(0).max(90).default(14),
+  SAAS_GRACE_PERIOD_DAYS: Joi.number().integer().min(0).max(30).default(2),
+  BILLING_CRON_ENABLED: Joi.boolean().default(false),
 }).unknown(true);
