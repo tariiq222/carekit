@@ -1,12 +1,14 @@
 // Terminology packs drive vertical-aware wording across dashboard and website.
 // Each key has both Arabic and English values. The base pack is the template
-// family's JSON; a Vertical may override individual keys via
+// family's pack; a Vertical may override individual keys via
 // VerticalTerminologyOverride rows in the DB.
-
-import medical from './medical.json' with { type: 'json' };
-import consulting from './consulting.json' with { type: 'json' };
-import salon from './salon.json' with { type: 'json' };
-import fitness from './fitness.json' with { type: 'json' };
+//
+// The per-family packs were previously JSON files. They were inlined here so
+// the package loads cleanly on Node 22+ without JSON import attributes — Node
+// native TS stripping runs via ESM, which rejects .json imports without
+// `with { type: 'json' }`, and that syntax is in turn rejected by
+// TypeScript's `module: commonjs` output used by the backend. Inlining
+// sidesteps both constraints — pure TS, no JSON, no attributes.
 
 export const TEMPLATE_FAMILIES = ['MEDICAL', 'CONSULTING', 'SALON', 'FITNESS'] as const;
 export type TemplateFamily = (typeof TEMPLATE_FAMILIES)[number];
@@ -42,11 +44,99 @@ export interface TerminologyValue {
 
 export type TerminologyPack = Record<TerminologyKey, TerminologyValue>;
 
+const medical: TerminologyPack = {
+  'employee.singular': { ar: 'طبيب', en: 'Doctor' },
+  'employee.plural': { ar: 'الأطباء', en: 'Doctors' },
+  'employee.possessive': { ar: 'طبيبك', en: 'your doctor' },
+  'service.singular': { ar: 'خدمة', en: 'Service' },
+  'service.plural': { ar: 'الخدمات', en: 'Services' },
+  'client.singular': { ar: 'مريض', en: 'Patient' },
+  'client.plural': { ar: 'المرضى', en: 'Patients' },
+  'booking.singular': { ar: 'حجز', en: 'Booking' },
+  'booking.plural': { ar: 'الحجوزات', en: 'Bookings' },
+  'appointment.singular': { ar: 'موعد', en: 'Appointment' },
+  'appointment.plural': { ar: 'المواعيد', en: 'Appointments' },
+  'department.singular': { ar: 'قسم', en: 'Department' },
+  'department.plural': { ar: 'الأقسام', en: 'Departments' },
+  'category.singular': { ar: 'فئة', en: 'Category' },
+  'category.plural': { ar: 'الفئات', en: 'Categories' },
+  'branch.singular': { ar: 'فرع', en: 'Branch' },
+  'branch.plural': { ar: 'الفروع', en: 'Branches' },
+  'session.singular': { ar: 'جلسة', en: 'Session' },
+  'session.plural': { ar: 'الجلسات', en: 'Sessions' },
+};
+
+const consulting: TerminologyPack = {
+  'employee.singular': { ar: 'مستشار', en: 'Consultant' },
+  'employee.plural': { ar: 'المستشارون', en: 'Consultants' },
+  'employee.possessive': { ar: 'مستشارك', en: 'your consultant' },
+  'service.singular': { ar: 'استشارة', en: 'Consultation' },
+  'service.plural': { ar: 'الاستشارات', en: 'Consultations' },
+  'client.singular': { ar: 'عميل', en: 'Client' },
+  'client.plural': { ar: 'العملاء', en: 'Clients' },
+  'booking.singular': { ar: 'حجز', en: 'Booking' },
+  'booking.plural': { ar: 'الحجوزات', en: 'Bookings' },
+  'appointment.singular': { ar: 'موعد', en: 'Appointment' },
+  'appointment.plural': { ar: 'المواعيد', en: 'Appointments' },
+  'department.singular': { ar: 'قسم', en: 'Department' },
+  'department.plural': { ar: 'الأقسام', en: 'Departments' },
+  'category.singular': { ar: 'مجال', en: 'Area' },
+  'category.plural': { ar: 'المجالات', en: 'Areas' },
+  'branch.singular': { ar: 'مكتب', en: 'Office' },
+  'branch.plural': { ar: 'المكاتب', en: 'Offices' },
+  'session.singular': { ar: 'جلسة', en: 'Session' },
+  'session.plural': { ar: 'الجلسات', en: 'Sessions' },
+};
+
+const salon: TerminologyPack = {
+  'employee.singular': { ar: 'مصفف', en: 'Stylist' },
+  'employee.plural': { ar: 'المصففون', en: 'Stylists' },
+  'employee.possessive': { ar: 'مصففك', en: 'your stylist' },
+  'service.singular': { ar: 'خدمة', en: 'Service' },
+  'service.plural': { ar: 'الخدمات', en: 'Services' },
+  'client.singular': { ar: 'عميل', en: 'Client' },
+  'client.plural': { ar: 'العملاء', en: 'Clients' },
+  'booking.singular': { ar: 'حجز', en: 'Booking' },
+  'booking.plural': { ar: 'الحجوزات', en: 'Bookings' },
+  'appointment.singular': { ar: 'موعد', en: 'Appointment' },
+  'appointment.plural': { ar: 'المواعيد', en: 'Appointments' },
+  'department.singular': { ar: 'قسم', en: 'Section' },
+  'department.plural': { ar: 'الأقسام', en: 'Sections' },
+  'category.singular': { ar: 'فئة', en: 'Category' },
+  'category.plural': { ar: 'الفئات', en: 'Categories' },
+  'branch.singular': { ar: 'فرع', en: 'Location' },
+  'branch.plural': { ar: 'الفروع', en: 'Locations' },
+  'session.singular': { ar: 'جلسة', en: 'Session' },
+  'session.plural': { ar: 'الجلسات', en: 'Sessions' },
+};
+
+const fitness: TerminologyPack = {
+  'employee.singular': { ar: 'مدرب', en: 'Trainer' },
+  'employee.plural': { ar: 'المدربون', en: 'Trainers' },
+  'employee.possessive': { ar: 'مدربك', en: 'your trainer' },
+  'service.singular': { ar: 'برنامج', en: 'Program' },
+  'service.plural': { ar: 'البرامج', en: 'Programs' },
+  'client.singular': { ar: 'متدرب', en: 'Member' },
+  'client.plural': { ar: 'المتدربون', en: 'Members' },
+  'booking.singular': { ar: 'حجز', en: 'Booking' },
+  'booking.plural': { ar: 'الحجوزات', en: 'Bookings' },
+  'appointment.singular': { ar: 'موعد', en: 'Session' },
+  'appointment.plural': { ar: 'المواعيد', en: 'Sessions' },
+  'department.singular': { ar: 'قسم', en: 'Division' },
+  'department.plural': { ar: 'الأقسام', en: 'Divisions' },
+  'category.singular': { ar: 'فئة', en: 'Category' },
+  'category.plural': { ar: 'الفئات', en: 'Categories' },
+  'branch.singular': { ar: 'فرع', en: 'Gym' },
+  'branch.plural': { ar: 'الفروع', en: 'Gyms' },
+  'session.singular': { ar: 'حصة', en: 'Class' },
+  'session.plural': { ar: 'الحصص', en: 'Classes' },
+};
+
 export const BASE_PACKS: Record<TemplateFamily, TerminologyPack> = {
-  MEDICAL: medical as TerminologyPack,
-  CONSULTING: consulting as TerminologyPack,
-  SALON: salon as TerminologyPack,
-  FITNESS: fitness as TerminologyPack,
+  MEDICAL: medical,
+  CONSULTING: consulting,
+  SALON: salon,
+  FITNESS: fitness,
 };
 
 export function mergeOverrides(
