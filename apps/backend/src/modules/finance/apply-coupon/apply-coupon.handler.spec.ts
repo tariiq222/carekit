@@ -11,6 +11,7 @@ const mockInvoice = {
 const mockCoupon = {
   id: 'coupon-1', code: 'SAVE10', isActive: true,
   discountType: 'PERCENTAGE', discountValue: 10, expiresAt: null, maxUses: null, usedCount: 0, minOrderAmt: null,
+  maxUsesPerUser: null,
 };
 const mockRedemption = { id: 'red-1', couponId: 'coupon-1', invoiceId: 'inv-1', discount: 20 };
 
@@ -29,6 +30,7 @@ const buildPrisma = () => {
     },
     couponRedemption: {
       findUnique: jest.fn().mockResolvedValue(null),
+      count: jest.fn().mockResolvedValue(0),
       create: jest.fn().mockResolvedValue(mockRedemption),
     },
     $transaction: jest.fn(),
