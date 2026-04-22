@@ -26,8 +26,7 @@ function slugify(raw: string): string {
 }
 
 export function PublicProfileTab({ employee }: Props) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
   const { updateMutation } = useEmployeeMutations()
 
   const [form, setForm] = useState({
@@ -60,10 +59,10 @@ export function PublicProfileTab({ employee }: Props) {
         <div className="flex items-center justify-between">
           <div>
             <Label className="text-base font-semibold">
-              {isAr ? "عرض في الموقع العام" : "Show in public directory"}
+              {t("employees.public.showInDirectory")}
             </Label>
             <p className="text-sm text-muted-foreground">
-              {isAr ? "اجعل هذا المعالج مرئياً في صفحات الموقع" : "Make this therapist visible on the public site"}
+              {t("employees.public.showDirectoryDesc")}
             </p>
           </div>
           <Switch
@@ -74,7 +73,7 @@ export function PublicProfileTab({ employee }: Props) {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label>{isAr ? "الرابط الفريد" : "Slug"}</Label>
+            <Label>{t("employees.public.slug")}</Label>
             <Input
               value={form.slug}
               onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value) }))}
@@ -82,7 +81,7 @@ export function PublicProfileTab({ employee }: Props) {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>{isAr ? "صورة الملف العام" : "Public image URL"}</Label>
+            <Label>{t("employees.public.imageUrl")}</Label>
             <Input
               value={form.publicImageUrl}
               onChange={(e) => setForm((f) => ({ ...f, publicImageUrl: e.target.value }))}
@@ -92,7 +91,7 @@ export function PublicProfileTab({ employee }: Props) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label>{isAr ? "نبذة عامة (عربي)" : "Public bio (Arabic)"}</Label>
+          <Label>{t("employees.public.bioAr")}</Label>
           <Textarea
             rows={4}
             value={form.publicBioAr}
@@ -101,7 +100,7 @@ export function PublicProfileTab({ employee }: Props) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label>{isAr ? "نبذة عامة (إنجليزي)" : "Public bio (English)"}</Label>
+          <Label>{t("employees.public.bioEn")}</Label>
           <Textarea
             rows={4}
             value={form.publicBioEn}
@@ -111,7 +110,7 @@ export function PublicProfileTab({ employee }: Props) {
 
         <div className="flex justify-end">
           <Button onClick={save} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? (isAr ? "جاري الحفظ..." : "Saving...") : (isAr ? "حفظ" : "Save")}
+            {updateMutation.isPending ? t("employees.public.saving") : t("employees.public.save")}
           </Button>
         </div>
       </CardContent>

@@ -45,7 +45,7 @@ interface Props {
 
 export function EmployeeDetailPage({ employeeId }: Props) {
   const router = useRouter()
-  const { locale } = useLocale()
+  const { t, locale } = useLocale()
   const isAr = locale === "ar"
 
   const { data: employee, isLoading, error } = useEmployee(employeeId)
@@ -56,10 +56,10 @@ export function EmployeeDetailPage({ employeeId }: Props) {
     return (
       <ListPageShell>
         <Breadcrumbs />
-        <ErrorBanner message={isAr ? "لم يتم العثور على الطبيب" : "Employee not found"} />
+        <ErrorBanner message={t("employees.detail.notFound")} />
         <Button variant="outline" onClick={() => router.push("/employees")}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
-          {isAr ? "العودة للأطباء" : "Back to Employees"}
+          {t("employees.detail.backToEmployees")}
         </Button>
       </ListPageShell>
     )
@@ -76,8 +76,8 @@ export function EmployeeDetailPage({ employeeId }: Props) {
   const education = (isAr ? p.educationAr : p.education) ?? (isAr ? p.education : p.educationAr)
 
   const breadcrumbItems = [
-    { label: isAr ? "الرئيسية" : "Home", href: "/" },
-    { label: isAr ? "الممارسون" : "Employees", href: "/employees" },
+    { label: t("employees.detail.home"), href: "/" },
+    { label: t("employees.title"), href: "/employees" },
     { label: fullName },
   ]
 
@@ -91,7 +91,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
           onClick={() => router.push(`/employees/${employeeId}/edit`)}
         >
           <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
-          {isAr ? "تعديل" : "Edit"}
+          {t("employees.detail.edit")}
         </Button>
       </PageHeader>
 
@@ -116,7 +116,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
                 }`}
               >
                 <span className={`size-1.5 rounded-full ${p.isActive ? "bg-success" : "bg-muted-foreground"}`} />
-                {p.isActive ? (isAr ? "نشط" : "Active") : (isAr ? "غير نشط" : "Inactive")}
+                {p.isActive ? t("employees.detail.status.active") : t("employees.detail.inactive")}
               </span>
               {p.isAcceptingBookings !== undefined && (
                 <span
@@ -126,8 +126,8 @@ export function EmployeeDetailPage({ employeeId }: Props) {
                 >
                   <span className={`size-1.5 rounded-full ${p.isAcceptingBookings ? "bg-primary" : "bg-muted-foreground"}`} />
                   {p.isAcceptingBookings
-                    ? (isAr ? "يقبل الحجوزات" : "Accepting Bookings")
-                    : (isAr ? "لا يقبل حجوزات" : "Not Accepting")}
+                    ? t("employees.detail.acceptingBookings")
+                    : t("employees.detail.notAccepting")}
                 </span>
               )}
             </div>
@@ -145,14 +145,14 @@ export function EmployeeDetailPage({ employeeId }: Props) {
                 </span>
               </div>
               <span className="text-sm tabular-nums text-muted-foreground">
-                {p._count?.ratings ?? 0} {isAr ? "تقييم" : "reviews"}
+                {p._count?.ratings ?? 0} {t("employees.detail.reviews")}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-2xl font-bold tabular-nums text-foreground">
                 {p._count?.bookings ?? 0}
               </span>
-              <span className="text-sm text-muted-foreground">{isAr ? "حجز" : "bookings"}</span>
+              <span className="text-sm text-muted-foreground">{t("employees.detail.bookings")}</span>
             </div>
           </div>
         </CardContent>
@@ -160,28 +160,28 @@ export function EmployeeDetailPage({ employeeId }: Props) {
 
       <StatsGrid>
         <StatCard
-          title={isAr ? "متوسط التقييم" : "Avg. Rating"}
+          title={t("employees.detail.stats.avgRating")}
           value={p.averageRating != null ? p.averageRating.toFixed(1) : "—"}
-          description={`${p._count?.ratings ?? 0} ${isAr ? "تقييم" : "reviews"}`}
+          description={`${p._count?.ratings ?? 0} ${t("employees.detail.reviews")}`}
           icon={StarIcon}
           iconColor="warning"
         />
         <StatCard
-          title={isAr ? "إجمالي الحجوزات" : "Total Bookings"}
+          title={t("employees.detail.stats.totalBookings")}
           value={p._count?.bookings ?? 0}
           icon={Calendar03Icon}
           iconColor="primary"
         />
         <StatCard
-          title={isAr ? "سنوات الخبرة" : "Experience"}
+          title={t("employees.detail.stats.experience")}
           value={p.experience != null ? String(p.experience) : "—"}
-          description={isAr ? "سنة" : "years"}
+          description={t("employees.detail.stats.years")}
           icon={Stethoscope02Icon}
           iconColor="accent"
         />
         <StatCard
-          title={isAr ? "الحالة" : "Status"}
-          value={p.isActive ? (isAr ? "نشط" : "Active") : (isAr ? "غير نشط" : "Inactive")}
+          title={t("employees.detail.stats.status")}
+          value={p.isActive ? t("employees.detail.status.active") : t("employees.detail.inactive")}
           icon={p.isActive ? CheckmarkCircle02Icon : Cancel01Icon}
           iconColor={p.isActive ? "success" : "warning"}
         />
@@ -189,11 +189,11 @@ export function EmployeeDetailPage({ employeeId }: Props) {
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">{isAr ? "نظرة عامة" : "Overview"}</TabsTrigger>
-          <TabsTrigger value="services">{isAr ? "الخدمات" : "Services"}</TabsTrigger>
-          <TabsTrigger value="schedule">{isAr ? "الجدول" : "Schedule"}</TabsTrigger>
-          <TabsTrigger value="ratings">{isAr ? "التقييمات" : "Ratings"}</TabsTrigger>
-          <TabsTrigger value="public">{isAr ? "الملف العام" : "Public"}</TabsTrigger>
+          <TabsTrigger value="overview">{t("employees.detail.overview")}</TabsTrigger>
+          <TabsTrigger value="services">{t("employees.detail.services")}</TabsTrigger>
+          <TabsTrigger value="schedule">{t("employees.detail.schedule")}</TabsTrigger>
+          <TabsTrigger value="ratings">{t("employees.detail.ratingsTab")}</TabsTrigger>
+          <TabsTrigger value="public">{t("employees.detail.public")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">

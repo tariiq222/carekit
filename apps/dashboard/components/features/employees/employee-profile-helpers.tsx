@@ -23,6 +23,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
+import { useLocale } from "@/components/locale-provider"
 import { Skeleton } from "@carekit/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
@@ -111,13 +112,15 @@ interface CombinedInfoCardProps {
   createdAt: string
   updatedAt: string
   locale: string
-  isAr: boolean
+  /** @deprecated unused — component uses useLocale() internally */
+  isAr?: boolean
 }
 
 export function CombinedInfoCard({
   email, phone, specialty, experience, education,
-  createdAt, updatedAt, locale, isAr,
+  createdAt, updatedAt, locale,
 }: CombinedInfoCardProps) {
+  const { t } = useLocale()
   const dateLocale = locale === "ar" ? "ar-SA" : "en-US"
   return (
     <Card>
@@ -129,10 +132,10 @@ export function CombinedInfoCard({
             <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
               <HugeiconsIcon icon={UserIcon} size={13} className="text-primary" />
             </div>
-            {isAr ? "بيانات التواصل" : "Contact Info"}
+            {t("employees.detail.contactInfo")}
           </span>
-          <InfoRow icon={Mail01Icon} label={isAr ? "البريد الإلكتروني" : "Email"} value={email ?? "—"} />
-          <InfoRow icon={SmartPhone01Icon} label={isAr ? "رقم الجوال" : "Phone"} value={phone ?? "—"} numeric />
+          <InfoRow icon={Mail01Icon} label={t("employees.detail.email")} value={email ?? "—"} />
+          <InfoRow icon={SmartPhone01Icon} label={t("employees.detail.phone")} value={phone ?? "—"} numeric />
         </div>
 
         {/* Professional */}
@@ -141,16 +144,16 @@ export function CombinedInfoCard({
             <div className="flex size-6 items-center justify-center rounded-md bg-accent/10">
               <HugeiconsIcon icon={Stethoscope02Icon} size={13} className="text-accent" />
             </div>
-            {isAr ? "المعلومات المهنية" : "Professional"}
+            {t("employees.detail.professional")}
           </span>
-          <InfoRow icon={Stethoscope02Icon} label={isAr ? "التخصص" : "Specialty"} value={specialty ?? "—"} />
+          <InfoRow icon={Stethoscope02Icon} label={t("employees.detail.specialty")} value={specialty ?? "—"} />
           <InfoRow
             icon={BookOpen01Icon}
-            label={isAr ? "سنوات الخبرة" : "Experience"}
-            value={experience != null ? `${experience} ${isAr ? "سنة" : "yrs"}` : "—"}
+            label={t("employees.detail.experience")}
+            value={experience != null ? `${experience} ${t("employees.detail.experienceYrs")}` : "—"}
             numeric
           />
-          <InfoRow icon={GraduateMaleIcon} label={isAr ? "المؤهل العلمي" : "Education"} value={education ?? "—"} />
+          <InfoRow icon={GraduateMaleIcon} label={t("employees.detail.education")} value={education ?? "—"} />
         </div>
 
         {/* Account */}
@@ -159,17 +162,17 @@ export function CombinedInfoCard({
             <div className="flex size-6 items-center justify-center rounded-md bg-surface-muted">
               <HugeiconsIcon icon={Calendar03Icon} size={13} className="text-muted-foreground" />
             </div>
-            {isAr ? "معلومات الحساب" : "Account Info"}
+            {t("employees.detail.accountInfo")}
           </span>
           <InfoRow
             icon={Calendar03Icon}
-            label={isAr ? "تاريخ التسجيل" : "Registered"}
+            label={t("employees.detail.registered")}
             value={new Date(createdAt).toLocaleDateString(dateLocale)}
             numeric
           />
           <InfoRow
             icon={Calendar03Icon}
-            label={isAr ? "آخر تحديث" : "Last Updated"}
+            label={t("employees.detail.lastUpdated")}
             value={new Date(updatedAt).toLocaleDateString(dateLocale)}
             numeric
           />
@@ -187,9 +190,11 @@ interface PricingCardProps {
   pricePhone: number | null
   priceVideo: number | null
   locale: string
-  isAr: boolean
+  /** @deprecated unused — component uses useLocale() internally */
+  isAr?: boolean
 }
-export function PricingCard({ priceClinic, pricePhone, priceVideo, locale, isAr }: PricingCardProps) {
+export function PricingCard({ priceClinic, pricePhone, priceVideo, locale }: PricingCardProps) {
+  const { t } = useLocale()
   const loc = locale === "ar" ? "ar" : "en"
   // priceClinic/Phone/Video stored in SAR (not halalat), multiply by 100 for FormattedCurrency
   const fmt = (v: number | null) => v != null
@@ -202,13 +207,13 @@ export function PricingCard({ priceClinic, pricePhone, priceVideo, locale, isAr 
           <div className="flex size-7 items-center justify-center rounded-md bg-success/10">
             <HugeiconsIcon icon={Building04Icon} size={16} className="text-success" />
           </div>
-          {isAr ? "الأسعار" : "Pricing"}
+          {t("employees.detail.pricing")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <PricingRow icon={Building04Icon} label={isAr ? "زيارة العيادة" : "Clinic Visit"} value={fmt(priceClinic)} color="text-primary" bg="bg-primary/10" />
-        <PricingRow icon={CallIcon} label={isAr ? "استشارة هاتفية" : "Phone Consultation"} value={fmt(pricePhone)} color="text-success" bg="bg-success/10" />
-        <PricingRow icon={Video01Icon} label={isAr ? "استشارة فيديو" : "Video Consultation"} value={fmt(priceVideo)} color="text-info" bg="bg-info/10" />
+        <PricingRow icon={Building04Icon} label={t("employees.detail.clinicVisit")} value={fmt(priceClinic)} color="text-primary" bg="bg-primary/10" />
+        <PricingRow icon={CallIcon} label={t("employees.detail.phoneConsultation")} value={fmt(pricePhone)} color="text-success" bg="bg-success/10" />
+        <PricingRow icon={Video01Icon} label={t("employees.detail.videoConsultation")} value={fmt(priceVideo)} color="text-info" bg="bg-info/10" />
       </CardContent>
     </Card>
   )

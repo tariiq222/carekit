@@ -25,17 +25,21 @@ const TYPE_HEX: Record<BookingType, string> = {
   in_person: "hsl(var(--primary))", online: "hsl(var(--info))",
   walk_in: "hsl(var(--accent))",
 }
-const STATUS_LABEL: Record<BookingStatus, { ar: string; en: string }> = {
-  completed: { ar: "مكتملة", en: "Completed" }, confirmed: { ar: "مؤكدة", en: "Confirmed" },
-  pending: { ar: "معلقة", en: "Pending" }, cancelled: { ar: "ملغاة", en: "Cancelled" },
-  pending_cancellation: { ar: "طلب إلغاء", en: "Cancel Req." }, no_show: { ar: "لم يحضر", en: "No Show" },
-  checked_in: { ar: "وصل", en: "Checked In" }, in_progress: { ar: "جارية", en: "In Progress" },
-  expired: { ar: "منتهية", en: "Expired" },
+const STATUS_KEY: Record<BookingStatus, string> = {
+  completed: "employees.chart.status.completed",
+  confirmed: "employees.chart.status.confirmed",
+  pending: "employees.chart.status.pending",
+  cancelled: "employees.chart.status.cancelled",
+  pending_cancellation: "employees.chart.status.pendingCancellation",
+  no_show: "employees.chart.status.noShow",
+  checked_in: "employees.chart.status.checkedIn",
+  in_progress: "employees.chart.status.inProgress",
+  expired: "employees.chart.status.expired",
 }
-const TYPE_LABEL: Record<BookingType, { ar: string; en: string }> = {
-  in_person: { ar: "عيادة", en: "In-Person" },
-  online: { ar: "عن بُعد", en: "Online" },
-  walk_in: { ar: "مباشر", en: "Walk-in" },
+const TYPE_KEY: Record<BookingType, string> = {
+  in_person: "employees.chart.type.inPerson",
+  online: "employees.chart.type.online",
+  walk_in: "employees.chart.type.walkIn",
 }
 const STATUSES: BookingStatus[] = ["completed", "confirmed", "pending", "cancelled", "no_show", "pending_cancellation"]
 const TYPES: BookingType[] = ["in_person", "online", "walk_in"]
@@ -81,7 +85,7 @@ function fmtRevenue(halalat: number, locale: string): string {
 interface Props { employeeId: string }
 
 export function EmployeeBookingsChart({ employeeId }: Props) {
-  const { locale } = useLocale()
+  const { t, locale } = useLocale()
   const isAr = locale === "ar"
 
   const [donutPeriod, setDonutPeriod] = useState<Period>("1m")
@@ -111,12 +115,12 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
   const statusSegs = STATUSES.map((s) => ({
     value: donutBookings.filter((b) => b.status === s).length,
     color: STATUS_HEX[s],
-    label: isAr ? STATUS_LABEL[s].ar : STATUS_LABEL[s].en,
+    label: t(STATUS_KEY[s]),
   }))
-  const typeSegs = TYPES.map((t) => ({
-    value: donutBookings.filter((b) => b.type === t).length,
-    color: TYPE_HEX[t],
-    label: isAr ? TYPE_LABEL[t].ar : TYPE_LABEL[t].en,
+  const typeSegs = TYPES.map((type) => ({
+    value: donutBookings.filter((b) => b.type === type).length,
+    color: TYPE_HEX[type],
+    label: t(TYPE_KEY[type]),
   }))
 
   const barByDay = groupByDay(barBookings)
@@ -142,7 +146,7 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
                 <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
                   <HugeiconsIcon icon={Calendar03Icon} size={13} className="text-primary" />
                 </div>
-                {isAr ? "الحجوزات حسب الحالة" : "Bookings by Status"}
+                {t("employees.chart.bookingsByStatus")}
               </CardTitle>
               <PeriodSelector value={donutPeriod} onChange={setDonutPeriod} isAr={isAr} />
             </div>
@@ -150,7 +154,7 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
           <CardContent>
             {donutLoading
               ? <Skeleton className="mx-auto size-[120px] rounded-full" />
-              : <DonutChart segments={statusSegs} total={donutBookings.length} emptyLabel={isAr ? "لا توجد حجوزات" : "No bookings"} />
+              : <DonutChart segments={statusSegs} total={donutBookings.length} emptyLabel={t("employees.chart.noBookings")} />
             }
           </CardContent>
         </Card>
@@ -162,7 +166,7 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
                 <div className="flex size-6 items-center justify-center rounded-md bg-accent/10">
                   <HugeiconsIcon icon={Calendar03Icon} size={13} className="text-accent" />
                 </div>
-                {isAr ? "الحجوزات حسب النوع" : "Bookings by Type"}
+                {t("employees.chart.bookingsByType")}
               </CardTitle>
               <PeriodSelector value={donutPeriod} onChange={setDonutPeriod} isAr={isAr} />
             </div>
@@ -170,7 +174,7 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
           <CardContent>
             {donutLoading
               ? <Skeleton className="mx-auto size-[120px] rounded-full" />
-              : <DonutChart segments={typeSegs} total={donutBookings.length} emptyLabel={isAr ? "لا توجد حجوزات" : "No bookings"} />
+              : <DonutChart segments={typeSegs} total={donutBookings.length} emptyLabel={t("employees.chart.noBookings")} />
             }
           </CardContent>
         </Card>
@@ -187,11 +191,11 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
                 <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
                   <HugeiconsIcon icon={Calendar03Icon} size={13} className="text-primary" />
                 </div>
-                {isAr ? "الحجوزات" : "Bookings"}
+                {t("employees.chart.bookings")}
               </CardTitle>
               <div className="flex items-center gap-3">
                 <span className="text-xs tabular-nums font-semibold text-foreground">
-                  {barBookings.length} {isAr ? "حجز" : "total"}
+                  {barBookings.length} {t("employees.chart.total")}
                 </span>
                 <PeriodSelector value={barPeriod} onChange={setBarPeriod} isAr={isAr} />
               </div>
@@ -201,14 +205,14 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
             {barLoading ? (
               <Skeleton className="h-[100px] w-full rounded-md" />
             ) : barByDay.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">{isAr ? "لا توجد بيانات" : "No data yet"}</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("employees.chart.noData")}</p>
             ) : (
               <>
                 <div className="flex items-end gap-0.5" style={{ height: 100 }}>
                   {barByDay.map((d, i) => (
                     <div key={i} className="flex flex-1 flex-col" style={{ height: "100%" }}>
                       <div
-                        title={`${fmtDate(d.date, locale, barPeriod)}: ${d.count} ${isAr ? "حجز" : "bookings"}`}
+                        title={`${fmtDate(d.date, locale, barPeriod)}: ${d.count} ${t("employees.chart.bookings")}`}
                         className="w-full rounded-t-sm bg-primary/60 transition-all hover:bg-primary cursor-default"
                         style={{ height: `${Math.max(3, Math.round((d.count / maxCount) * 100))}%`, marginTop: "auto" }}
                       />
@@ -232,11 +236,11 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
                 <div className="flex size-6 items-center justify-center rounded-md bg-success/10">
                   <HugeiconsIcon icon={Money01Icon} size={13} className="text-success" />
                 </div>
-                {isAr ? "الإيرادات" : "Revenue"}
+                {t("employees.chart.revenue")}
               </CardTitle>
               <div className="flex items-center gap-3">
                 <span className="text-xs tabular-nums font-semibold text-success">
-                  {fmtRevenue(totalRevenue, locale)} {isAr ? "ر.س" : "SAR"}
+                  {fmtRevenue(totalRevenue, locale)} {t("employees.chart.sar")}
                 </span>
                 <PeriodSelector value={linePeriod} onChange={setLinePeriod} isAr={isAr} />
               </div>
@@ -246,14 +250,14 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
             {lineLoading ? (
               <Skeleton className="h-[100px] w-full rounded-md" />
             ) : linePoints.length < 2 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">{isAr ? "لا توجد إيرادات بعد" : "No revenue yet"}</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("employees.chart.noRevenue")}</p>
             ) : (
               <>
                 <LineChart
                   points={linePoints}
                   color="hsl(var(--success))"
                   height={100}
-                  formatValue={(v) => `${fmtRevenue(v, locale)} ${isAr ? "ر.س" : "SAR"}`}
+                  formatValue={(v) => `${fmtRevenue(v, locale)} ${t("employees.chart.sar")}`}
                 />
                 <div className="mt-1.5 flex justify-between">
                   <span className="text-[10px] tabular-nums text-muted-foreground">{fmtDate(lineByDay[0].date, locale, linePeriod)}</span>

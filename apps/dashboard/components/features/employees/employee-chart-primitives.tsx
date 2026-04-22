@@ -5,28 +5,31 @@
  * — DonutChart, LineChart, PeriodSelector
  */
 
+import { useLocale } from "@/components/locale-provider"
+
 /* ─── Period Selector ─── */
 
 export type Period = "1m" | "3m" | "6m"
 
-export const PERIODS: { key: Period; ar: string; en: string }[] = [
-  { key: "1m", ar: "شهر", en: "1M" },
-  { key: "3m", ar: "3 أشهر", en: "3M" },
-  { key: "6m", ar: "6 أشهر", en: "6M" },
+export const PERIOD_KEYS: { key: Period; tKey: string }[] = [
+  { key: "1m", tKey: "employees.chart.period1m" },
+  { key: "3m", tKey: "employees.chart.period3m" },
+  { key: "6m", tKey: "employees.chart.period6m" },
 ]
 
 export function PeriodSelector({
   value,
   onChange,
-  isAr,
 }: {
   value: Period
   onChange: (p: Period) => void
-  isAr: boolean
+  /** @deprecated pass nothing — component uses useLocale() internally */
+  isAr?: boolean
 }) {
+  const { t } = useLocale()
   return (
     <div className="flex items-center gap-1 rounded-lg bg-surface-muted p-0.5">
-      {PERIODS.map((p) => (
+      {PERIOD_KEYS.map((p) => (
         <button
           key={p.key}
           onClick={() => onChange(p.key)}
@@ -36,7 +39,7 @@ export function PeriodSelector({
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          {isAr ? p.ar : p.en}
+          {t(p.tKey)}
         </button>
       ))}
     </div>
