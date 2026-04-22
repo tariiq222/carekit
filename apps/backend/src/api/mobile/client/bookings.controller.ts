@@ -26,6 +26,7 @@ import { CreateBookingHandler } from '../../../modules/bookings/create-booking/c
 import { CancelBookingHandler } from '../../../modules/bookings/cancel-booking/cancel-booking.handler';
 import { RescheduleBookingHandler } from '../../../modules/bookings/reschedule-booking/reschedule-booking.handler';
 import { RescheduleBookingDto } from '../../../modules/bookings/reschedule-booking/reschedule-booking.dto';
+import { TrackUsage } from '../../../modules/platform/billing/track-usage.decorator';
 
 export class MobileCreateBookingDto {
   @ApiProperty({ description: 'Branch where the booking takes place', example: '00000000-0000-0000-0000-000000000000' })
@@ -81,6 +82,7 @@ export class MobileClientBookingsController {
   ) {}
 
   @Post()
+  @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
   @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
   createBooking(

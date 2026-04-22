@@ -43,6 +43,8 @@ import { Type } from 'class-transformer';
 import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
 import { AssignEmployeeServiceHandler } from '../../modules/people/employees/assign-employee-service.handler';
 import { RemoveEmployeeServiceHandler } from '../../modules/people/employees/remove-employee-service.handler';
+import { EnforceLimit } from '../../modules/platform/billing/plan-limits.decorator';
+import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
 import { ListEmployeeExceptionsHandler } from '../../modules/people/employees/list-employee-exceptions.handler';
 import { CreateEmployeeExceptionHandler } from '../../modules/people/employees/create-employee-exception.handler';
 import { CreateEmployeeExceptionDto } from '../../modules/people/employees/create-employee-exception.dto';
@@ -99,6 +101,7 @@ export class DashboardPeopleController {
   // ── Clients ────────────────────────────────────────────────────────────────
   @Post('clients')
   @HttpCode(HttpStatus.CREATED)
+  @TrackUsage('CLIENTS')
   @ApiOperation({ summary: 'Create a client' })
   @ApiCreatedResponse({ description: 'Client created' })
   createClientEndpoint(@Body() body: CreateClientDto) {
@@ -180,6 +183,7 @@ export class DashboardPeopleController {
   // ── Employees ──────────────────────────────────────────────────────────────
   @Post('employees')
   @HttpCode(HttpStatus.CREATED)
+  @EnforceLimit('EMPLOYEES')
   @ApiOperation({ summary: 'Create an employee' })
   @ApiCreatedResponse({ description: 'Employee created' })
   createEmployeeEndpoint(@Body() body: CreateEmployeeDto) {

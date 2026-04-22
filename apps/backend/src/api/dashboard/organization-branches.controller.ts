@@ -9,6 +9,7 @@ import {
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
+import { EnforceLimit } from '../../modules/platform/billing/plan-limits.decorator';
 import { CreateBranchHandler } from '../../modules/org-config/branches/create-branch.handler';
 import { CreateBranchDto } from '../../modules/org-config/branches/create-branch.dto';
 import { UpdateBranchHandler } from '../../modules/org-config/branches/update-branch.handler';
@@ -40,6 +41,7 @@ export class DashboardOrganizationBranchesController {
   ) {}
 
   @Post('branches')
+  @EnforceLimit('BRANCHES')
   @ApiOperation({ summary: 'Create a branch' })
   @ApiCreatedResponse({ description: 'Branch created' })
   createBranchEndpoint(@Body() body: CreateBranchDto) {

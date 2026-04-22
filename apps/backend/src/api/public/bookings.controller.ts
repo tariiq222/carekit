@@ -13,6 +13,7 @@ import { GetPublicGroupSessionHandler } from '../../modules/bookings/public/get-
 import { BookGroupSessionHandler } from '../../modules/bookings/public/book-group-session.handler';
 import type { OtpSessionPayload } from '../../modules/identity/otp/otp-session.service';
 import type { Request } from 'express';
+import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
 
 @ApiTags('Public / Bookings')
 @ApiPublicResponses()
@@ -57,6 +58,7 @@ export class PublicBookingsController {
   @UseGuards(OtpSessionGuard)
   @Throttle({ default: { ttl: 60_000, limit: 1 } })
   @Post()
+  @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a guest booking (requires OTP session)' })
   async create(
     @Body() dto: CreateGuestBookingDto,

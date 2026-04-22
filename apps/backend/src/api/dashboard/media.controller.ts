@@ -12,6 +12,7 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ApiStandardResponses } from '../../common/swagger';
 import { UploadFileHandler } from '../../modules/media/files/upload-file.handler';
+import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
 import { UploadFileDto } from '../../modules/media/files/upload-file.dto';
 import { GetFileHandler } from '../../modules/media/files/get-file.handler';
 import { DeleteFileHandler } from '../../modules/media/files/delete-file.handler';
@@ -33,6 +34,7 @@ export class DashboardMediaController {
 
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
+  @TrackUsage('STORAGE_MB')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a file to object storage' })
   @ApiConsumes('multipart/form-data')
