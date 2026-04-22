@@ -18,9 +18,9 @@ import {
 } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { z } from "zod"
-import { createEmployeeSchema } from "@/components/features/employees/create/form-schema"
+import { createEmployeeSchemaStatic } from "@/components/features/employees/create/form-schema"
 
-const _editEmployeeSchema = createEmployeeSchema.partial().extend({
+const _editEmployeeSchema = createEmployeeSchemaStatic.partial().extend({
   isActive: z.boolean(),
 })
 type EditEmployeeFormData = z.infer<typeof _editEmployeeSchema>
@@ -161,7 +161,7 @@ export function useEmployeeForm({
     const activeSlots = schedule.filter((s) => s.isActive)
     if (activeSlots.length > 0) {
       try { await setAvailabilityMut.mutateAsync({ id, schedule: activeSlots }) }
-      catch { stepErrors.push("جدول المواعيد") }
+      catch { stepErrors.push(t("employees.form.stepErrorSchedule")) }
     }
     if (breaks.length > 0) {
       try {
@@ -171,7 +171,7 @@ export function useEmployeeForm({
             dayOfWeek, startTime, endTime,
           })),
         })
-      } catch { stepErrors.push("فترات الاستراحة") }
+      } catch { stepErrors.push(t("employees.form.stepErrorBreaks")) }
     }
     if (vacation.enabled && vacation.startDate && vacation.endDate) {
       try {
@@ -180,7 +180,7 @@ export function useEmployeeForm({
           endDate: vacation.endDate,
           reason: vacation.reason || undefined,
         })
-      } catch { stepErrors.push("الإجازة") }
+      } catch { stepErrors.push(t("employees.form.stepErrorVacation")) }
     }
     const existingIds = new Set((existingServices ?? []).map((ps) => ps.serviceId))
     for (const ds of draftServices) {
@@ -194,7 +194,7 @@ export function useEmployeeForm({
         } else {
           await assignService(id, { serviceId: ds.serviceId, ...payload })
         }
-      } catch { stepErrors.push("الخدمات") }
+      } catch { stepErrors.push(t("employees.form.stepErrorServices")) }
     }
     if (stepErrors.length > 0) {
       toast.warning(`${t("employees.edit.success")} (${t("common.warnings")}: ${[...new Set(stepErrors)].join("، ")})`)
@@ -236,7 +236,7 @@ export function useEmployeeForm({
     const activeSlots = schedule.filter((s) => s.isActive)
     if (activeSlots.length > 0) {
       try { await setAvailabilityMut.mutateAsync({ id: newId, schedule: activeSlots }) }
-      catch { stepErrors.push("جدول المواعيد") }
+      catch { stepErrors.push(t("employees.form.stepErrorSchedule")) }
     }
     if (breaks.length > 0) {
       try {
@@ -246,7 +246,7 @@ export function useEmployeeForm({
             dayOfWeek, startTime, endTime,
           })),
         })
-      } catch { stepErrors.push("فترات الاستراحة") }
+      } catch { stepErrors.push(t("employees.form.stepErrorBreaks")) }
     }
     if (vacation.enabled && vacation.startDate && vacation.endDate) {
       try {
@@ -254,7 +254,7 @@ export function useEmployeeForm({
           startDate: vacation.startDate, endDate: vacation.endDate,
           reason: vacation.reason || undefined,
         })
-      } catch { stepErrors.push("الإجازة") }
+      } catch { stepErrors.push(t("employees.form.stepErrorVacation")) }
     }
     if (draftServices.length > 0) {
       try {
@@ -266,11 +266,11 @@ export function useEmployeeForm({
             }),
           ),
         )
-      } catch { stepErrors.push("الخدمات") }
+      } catch { stepErrors.push(t("employees.form.stepErrorServices")) }
     }
     setIsSubmitting(false)
     if (stepErrors.length > 0) {
-      toast.warning(`تم إنشاء الممارس الصحي، لكن فشل حفظ: ${stepErrors.join("، ")}`)
+      toast.warning(t("employees.form.createPartialSuccess").replace("{steps}", stepErrors.join(", ")))
     } else {
       toast.success(t("employees.create.success"))
     }

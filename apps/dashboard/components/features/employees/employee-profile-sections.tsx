@@ -21,27 +21,22 @@ import {
   useEmployeeVacations,
 } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
+import { DAY_NAME_KEYS } from "./create/schedule-types"
 import { EmployeeServicesSection } from "./employee-services-section"
 
 /* ─── Re-export Ratings so page imports from one place ─── */
 export { EmployeeRatingsSection } from "./employee-ratings-section"
-
-/* ─── Constants ─── */
-
-const DAY_NAMES_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
-const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 /* ─── Availability Section ─── */
 
 interface WithId { employeeId: string }
 
 export function EmployeeAvailabilitySection({ employeeId }: WithId) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
   const { data: schedule, isLoading } = useEmployeeAvailability(employeeId)
 
   const activeSlots = schedule?.filter((s) => s.isActive) ?? []
-  const dayNames = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
+  const dayNames = DAY_NAME_KEYS.map((key) => t(key))
 
   return (
     <Card>
@@ -50,7 +45,7 @@ export function EmployeeAvailabilitySection({ employeeId }: WithId) {
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
             <HugeiconsIcon icon={Clock01Icon} size={16} className="text-primary" />
           </div>
-          {isAr ? "أوقات العمل" : "Working Hours"}
+          {t("employees.detail.workingHours")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -62,7 +57,7 @@ export function EmployeeAvailabilitySection({ employeeId }: WithId) {
           </div>
         ) : activeSlots.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            {isAr ? "لم يتم تحديد أوقات العمل بعد" : "No working hours set yet"}
+            {t("employees.detail.noWorkingHours")}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-2">
@@ -89,8 +84,7 @@ export function EmployeeAvailabilitySection({ employeeId }: WithId) {
 /* ─── Vacations Section ─── */
 
 export function EmployeeVacationsSection({ employeeId }: WithId) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t, locale } = useLocale()
   const { data: vacations, isLoading } = useEmployeeVacations(employeeId)
 
   const upcoming = (vacations ?? []).filter((v) => new Date(v.endDate) >= new Date())
@@ -102,7 +96,7 @@ export function EmployeeVacationsSection({ employeeId }: WithId) {
           <div className="flex size-7 items-center justify-center rounded-md bg-warning/10">
             <HugeiconsIcon icon={Calendar03Icon} size={16} className="text-warning" />
           </div>
-          {isAr ? "الإجازات القادمة" : "Upcoming Vacations"}
+          {t("employees.detail.upcomingVacations")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -116,7 +110,7 @@ export function EmployeeVacationsSection({ employeeId }: WithId) {
           <div className="flex items-center gap-2 py-4">
             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-success" />
             <p className="text-sm text-muted-foreground">
-              {isAr ? "لا إجازات مجدولة" : "No upcoming vacations"}
+              {t("employees.detail.noVacations")}
             </p>
           </div>
         ) : (
@@ -149,8 +143,7 @@ export function EmployeeVacationsSection({ employeeId }: WithId) {
 /* ─── Services Card Wrapper ─── */
 
 export function EmployeeServicesSectionCard({ employeeId }: WithId) {
-  const { locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
 
   return (
     <Card>
@@ -159,7 +152,7 @@ export function EmployeeServicesSectionCard({ employeeId }: WithId) {
           <div className="flex size-7 items-center justify-center rounded-md bg-accent/10">
             <HugeiconsIcon icon={Building04Icon} size={16} className="text-accent" />
           </div>
-          {isAr ? "الخدمات المتاحة" : "Available Services"}
+          {t("employees.detail.availableServices")}
         </CardTitle>
       </CardHeader>
       <CardContent>

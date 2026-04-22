@@ -55,8 +55,7 @@ function SectionHeader({
 /* ─── Component ─── */
 
 export function BasicInfoTab({ form }: BasicInfoTabProps) {
-  const { t, locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -65,8 +64,8 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
         <CardContent className="pt-6">
           <SectionHeader
             icon={UserIcon}
-            title={isAr ? "المعلومات الشخصية" : "Personal Info"}
-            description={isAr ? "بيانات الحساب والتخصص" : "Account details & specialty"}
+            title={t("employees.create.personalInfo")}
+            description={t("employees.create.personalInfoDesc")}
           />
 
           <div className="space-y-4">
@@ -76,20 +75,20 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 <Label htmlFor="create-title">
                   <span className="flex items-center gap-1.5">
                     <HugeiconsIcon icon={Certificate01Icon} className="h-3.5 w-3.5 text-muted-foreground" />
-                    {isAr ? "اللقب" : "Title"}
+                    {t("employees.create.titleLabel")}
                   </span>
                 </Label>
                 <Input
                   id="create-title"
                   {...form.register("title")}
-                  placeholder={isAr ? "دكتور، أخصائي" : "Dr., Specialist"}
+                  placeholder={t("employees.create.titlePlaceholder")}
                 />
               </div>
               <div className="col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="create-email">
                   <span className="flex items-center gap-1.5">
                     <HugeiconsIcon icon={Mail01Icon} className="h-3.5 w-3.5 text-muted-foreground" />
-                    {isAr ? "البريد الإلكتروني" : "Email"} *
+                    {t("employees.create.emailLabel")} *
                   </span>
                 </Label>
                 <Input
@@ -110,7 +109,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
             {/* Full Name EN (50%) + AR (50%) */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="create-nameEn">{isAr ? "الاسم الكامل (EN)" : "Full Name (EN)"} *</Label>
+                <Label htmlFor="create-nameEn">{t("employees.create.nameEn")} *</Label>
                 <Input
                   id="create-nameEn"
                   {...form.register("nameEn")}
@@ -124,11 +123,11 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="create-nameAr">{isAr ? "الاسم الكامل (AR)" : "Full Name (AR)"} *</Label>
+                <Label htmlFor="create-nameAr">{t("employees.create.nameAr")} *</Label>
                 <Input
                   id="create-nameAr"
                   {...form.register("nameAr")}
-                  placeholder="مثال: أحمد الشمري"
+                  placeholder={t("employees.create.placeholderNameAr")}
                   dir="rtl"
                 />
                 {form.formState.errors.nameAr && (
@@ -145,7 +144,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 <Label>{t("employees.create.specialty")} *</Label>
                 <Input
                   {...form.register("specialty")}
-                  placeholder={isAr ? "مثال: معالج إدمان" : "e.g. Addiction Counselor"}
+                  placeholder={t("employees.create.placeholderSpecialtyAr")}
                 />
                 {form.formState.errors.specialty && (
                   <p className="text-xs text-destructive">
@@ -157,7 +156,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 <Label>{t("employees.create.specialty")} (AR)</Label>
                 <Input
                   {...form.register("specialtyAr")}
-                  placeholder="مثال: معالج إدمان"
+                  placeholder={t("employees.create.placeholderSpecialtyAr")}
                   dir="rtl"
                 />
               </div>
@@ -171,8 +170,8 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
         <CardContent className="pt-6">
           <SectionHeader
             icon={Award01Icon}
-            title={isAr ? "المؤهلات والملف الشخصي" : "Qualifications & Profile"}
-            description={isAr ? "الخبرة والتعليم والصورة وحالة الحساب" : "Experience, education, photo & status"}
+            title={t("employees.create.qualificationsProfile")}
+            description={t("employees.create.qualificationsProfileDesc")}
           />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -182,7 +181,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 type="number"
                 min={0}
                 {...form.register("experience")}
-                placeholder={isAr ? "مثال: 5" : "e.g. 5"}
+                placeholder="e.g. 5"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -236,8 +235,8 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
         <CardContent className="pt-6">
           <SectionHeader
             icon={TextAlignLeftIcon}
-            title={isAr ? "النبذة التعريفية" : "Bio"}
-            description={isAr ? "وصف مختصر عن الممارس" : "Short description about the employee"}
+            title={t("employees.create.bioSection")}
+            description={t("employees.create.bioDescription")}
           />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

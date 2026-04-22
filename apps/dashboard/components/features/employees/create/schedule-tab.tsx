@@ -10,7 +10,7 @@ import {
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import type { AvailabilitySlot } from "@/lib/types/employee"
-import { DAY_NAMES_EN, DAY_NAMES_AR } from "./schedule-types"
+import { DAY_NAME_KEYS } from "./schedule-types"
 import type { LocalBreak, LocalVacation } from "./schedule-types"
 import { nextBreakKey } from "./schedule-types"
 import { VacationCard } from "./vacation-card"
@@ -52,7 +52,7 @@ export function ScheduleTab({
     return [0, 1, 2, 3, 4, 5, 6]
   })()
 
-  const dayNames = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
+  const dayNames = DAY_NAME_KEYS.map((key) => t(key))
 
   /* Split-shift helpers: a day can have multiple slots. */
   const slotsByDay = (day: number) =>
@@ -139,7 +139,7 @@ export function ScheduleTab({
                   dayName={dayNames[day]}
                   dayBreaks={breaksByDay(day)}
                   addBreakLabel={t("employees.create.addBreak")}
-                  addSecondWindowLabel={isAr ? "+ فترة ثانية" : "+ Second window"}
+                  addSecondWindowLabel={t("employees.create.secondWindow")}
                   onSlotChange={(field, value) => updateSlotAt(primary.idx, field, value)}
                   onExtraSlotChange={(idx, field, value) => updateSlotAt(idx, field, value)}
                   onAddSecondWindow={() => addSecondWindow(day)}

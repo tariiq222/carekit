@@ -24,6 +24,7 @@ import {
 } from "@/components/features/employees/create/services-tab"
 import {
   createEmployeeSchema,
+  createEmployeeSchemaStatic,
   createEmployeeDefaults,
   type CreateEmployeeFormData,
 } from "@/components/features/employees/create/form-schema"
@@ -39,7 +40,7 @@ import { useEmployeeForm } from "@/components/features/employees/use-employee-fo
 
 /* ─── Edit Schema ─── */
 
-const editEmployeeSchema = createEmployeeSchema.partial().extend({
+const editEmployeeSchema = createEmployeeSchemaStatic.partial().extend({
   isActive: z.boolean(),
 })
 
@@ -73,8 +74,9 @@ export function EmployeeFormPage(props: Props) {
   const [draftServices, setDraftServices] = useState<DraftService[]>([])
   const [vacation, setVacation] = useState<LocalVacation>({ enabled: false, startDate: "", endDate: "", reason: "" })
 
+  const translatedSchema = createEmployeeSchema(t)
   const form = useForm<CreateEmployeeFormData>({
-      resolver: zodResolver(isEdit ? (editEmployeeSchema as unknown as typeof createEmployeeSchema) : createEmployeeSchema) as never,
+      resolver: zodResolver(isEdit ? (editEmployeeSchema as unknown as ReturnType<typeof createEmployeeSchema>) : translatedSchema) as never,
     defaultValues: isEdit ? undefined : createEmployeeDefaults,
   })
 
