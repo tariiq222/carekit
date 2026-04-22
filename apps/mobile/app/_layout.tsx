@@ -8,6 +8,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 
 import { store, persistor } from '@/stores/store';
 import { ThemeProvider } from '@/theme/ThemeProvider';
+import { DirContext, buildDirState } from '@/hooks/useDir';
 import '@/i18n';
 
 export default function RootLayout() {
@@ -17,15 +18,19 @@ export default function RootLayout() {
     }
   }, []);
 
+  const dirState = buildDirState('ar');
+
   return (
     <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <ThemeProvider language="ar">
-          <SafeAreaProvider>
-            <Slot />
-            <StatusBar style="dark" />
-          </SafeAreaProvider>
-        </ThemeProvider>
+        <DirContext.Provider value={dirState}>
+          <ThemeProvider language="ar">
+            <SafeAreaProvider>
+              <Slot />
+              <StatusBar style="dark" />
+            </SafeAreaProvider>
+          </ThemeProvider>
+        </DirContext.Provider>
       </PersistGate>
     </ReduxProvider>
   );
