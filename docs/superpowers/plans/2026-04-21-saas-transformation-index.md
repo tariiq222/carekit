@@ -25,7 +25,7 @@ Phase 05a 🟡 EXEC       packages/ui extraction — PR #20; needs UI QA before 
 Phase 02f 🟡 EXEC       Comms cluster — PR #24 (impl); 8 models scoped, ChatbotConfig singleton; ready-for-review
 Phase 02g 🟢 WRITTEN    AI + media + ops + platform (1027 lines)
 Phase 02h 🟢 WRITTEN    Strict mode + penetration (771 lines)
-Phase 03  🟢 WRITTEN    Verticals System (1733 lines)
+Phase 03  🟡 EXEC       Verticals System — PR #25 (impl); 60 unit + 22 e2e green; ready-for-review
 Phase 04  🟢 WRITTEN    Billing & Subscriptions (1291 lines) — owner-review gate at Task 1
 Phase 05b 🟢 WRITTEN    Super-admin app (1510 lines) — impersonation owner-review gate
 Phase 06  🟢 WRITTEN    Dashboard terminology + EN i18n (1050 lines)
@@ -85,7 +85,7 @@ Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pen
 | 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | 🟢 WRITTEN | — | 02f | 2 days |
 | 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) (Unifonic + Taqnyat adapters + `OrganizationSmsConfig` singleton) — required before Plan 04 | 🟢 WRITTEN | — | 02f | 2 days |
 | 02h | [Strict mode + penetration tests](./2026-04-21-saas-02h-strict-mode-penetration.md) (flip `TENANT_ENFORCEMENT=strict`; adversarial cross-tenant suite) ⚠️ owner-gated (blast radius = payments outage; canary + per-module rollback) | 🟢 WRITTEN | — | 02g, 02g-sms | 2 days |
-| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) (`Vertical`, `VerticalSeedDepartment`, `VerticalSeedServiceCategory`, `VerticalTerminologyOverride` + 11 seeds across 4 families + terminology packs + `useTerminology()` hook) | 🟢 WRITTEN | — | 02e | 2 weeks |
+| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) (`Vertical`, `VerticalSeedDepartment`, `VerticalSeedServiceCategory`, `VerticalTerminologyOverride` + 11 seeds across 4 families + terminology packs + `useTerminology()` hook) | 🟡 EXEC | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
 | 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) (`Plan`, `Subscription` + platform Moyasar adapter + webhook + hybrid `PlanLimitsGuard`/`@TrackUsage` + metered overage + 2-day grace) ⚠️ owner-review gate Task 1 | 🟢 WRITTEN | — | 02e, 02g-sms | 2 weeks |
 | 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) — extract 33 shadcn primitives into `packages/ui/`. Parallel-safe with 02f/02g. | 🟡 EXEC | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
 | 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) (`apps/admin/` on `admin.carekit.app` + impersonation shadow-JWT + `$allTenants` CLS-gated escape hatch + suspend + metrics) ⚠️ Task 0 owner-review gate | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
