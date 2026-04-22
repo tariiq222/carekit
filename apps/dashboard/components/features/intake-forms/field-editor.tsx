@@ -145,7 +145,7 @@ export function FieldEditor({
           <Input
             value={field.labelAr}
             onChange={(e) => update({ labelAr: e.target.value })}
-            placeholder="e.g. ما مستوى ألمك؟"
+            placeholder={t("intakeForms.field.labelArPlaceholder")}
             dir="rtl"
           />
         </div>
@@ -154,7 +154,7 @@ export function FieldEditor({
           <Input
             value={field.labelEn}
             onChange={(e) => update({ labelEn: e.target.value })}
-            placeholder="e.g. What is your pain level?"
+            placeholder={t("intakeForms.field.labelEnPlaceholder")}
             dir="ltr"
           />
         </div>
