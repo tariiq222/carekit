@@ -6,14 +6,14 @@ import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { useLocale } from "@/components/locale-provider"
 
-const SECTIONS = [
+const SECTIONS: { href: string; titleKey: string; descKey: string; disabled?: boolean }[] = [
   { href: "/content/home", titleKey: "content.landing.section.home.title", descKey: "content.landing.section.home.desc" },
   { href: "/content/blog", titleKey: "content.landing.section.blog.title", descKey: "content.landing.section.blog.desc", disabled: true },
   { href: "/content/faq", titleKey: "content.landing.section.faq.title", descKey: "content.landing.section.faq.desc", disabled: true },
   { href: "/content/testimonials", titleKey: "content.landing.section.testimonials.title", descKey: "content.landing.section.testimonials.desc", disabled: true },
   { href: "/content/support-groups", titleKey: "content.landing.section.supportGroups.title", descKey: "content.landing.section.supportGroups.desc", disabled: true },
   { href: "/content/media", titleKey: "content.landing.section.media.title", descKey: "content.landing.section.media.desc", disabled: true },
-] as const
+]
 
 export default function ContentLandingPage() {
   const { t } = useLocale()

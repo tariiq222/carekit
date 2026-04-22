@@ -15,6 +15,7 @@ import {
   type SiteSettingRow,
 } from "@/lib/types/site-settings"
 import { useUpsertSiteSettings } from "@/hooks/use-site-settings"
+import { useLocale } from "@/components/locale-provider"
 
 function rowToText(row: SiteSettingRow | undefined, fallback: string): string {
   if (!row) return fallback
@@ -71,6 +72,7 @@ export function HeroForm({ rows }: Props) {
     mutation.mutate({ entries })
   }
 
+  const { t } = useLocale()
   const reg = form.register
   const errs = form.formState.errors
 
@@ -99,26 +101,26 @@ export function HeroForm({ rows }: Props) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
       <section className="grid gap-6 md:grid-cols-2">
-        <Field label="نص الشارة (أعلى العنوان)" field="badgeText" />
-        <Field label="الوصف" field="subtitle" multiline />
-        <Field label="بداية العنوان" field="titlePrefix" />
-        <Field label="النص المميّز (ملوّن)" field="titleHighlight" />
-        <Field label="نهاية العنوان" field="titleSuffix" />
-        <Field label="رابط الصورة الرئيسية" field="heroImageUrl" />
+        <Field label={t("content.hero.badgeText")} field="badgeText" />
+        <Field label={t("content.hero.subtitle")} field="subtitle" multiline />
+        <Field label={t("content.hero.titlePrefix")} field="titlePrefix" />
+        <Field label={t("content.hero.titleHighlight")} field="titleHighlight" />
+        <Field label={t("content.hero.titleSuffix")} field="titleSuffix" />
+        <Field label={t("content.hero.heroImageUrl")} field="heroImageUrl" />
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
-        <Field label="نص الزر الرئيسي" field="ctaPrimaryText" />
-        <Field label="رابط الزر الرئيسي" field="ctaPrimaryHref" />
-        <Field label="نص الزر الثانوي" field="ctaSecondaryText" />
-        <Field label="رابط الزر الثانوي" field="ctaSecondaryHref" />
+        <Field label={t("content.hero.ctaPrimaryText")} field="ctaPrimaryText" />
+        <Field label={t("content.hero.ctaPrimaryHref")} field="ctaPrimaryHref" />
+        <Field label={t("content.hero.ctaSecondaryText")} field="ctaSecondaryText" />
+        <Field label={t("content.hero.ctaSecondaryHref")} field="ctaSecondaryHref" />
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
-        <Field label="الشارة العلوية — العنوان" field="badgeFloatTopLabel" />
-        <Field label="الشارة العلوية — القيمة" field="badgeFloatTopValue" />
-        <Field label="الشارة السفلية — العنوان" field="badgeFloatBottomLabel" />
-        <Field label="الشارة السفلية — القيمة" field="badgeFloatBottomValue" />
+        <Field label={t("content.hero.badgeFloatTopLabel")} field="badgeFloatTopLabel" />
+        <Field label={t("content.hero.badgeFloatTopValue")} field="badgeFloatTopValue" />
+        <Field label={t("content.hero.badgeFloatBottomLabel")} field="badgeFloatBottomLabel" />
+        <Field label={t("content.hero.badgeFloatBottomValue")} field="badgeFloatBottomValue" />
       </section>
 
       <div className="flex justify-end gap-2 pt-4 border-t border-border">
@@ -127,10 +129,10 @@ export function HeroForm({ rows }: Props) {
           variant="outline"
           onClick={() => form.reset(buildInitial(rows))}
         >
-          استعادة
+          {t("content.form.reset")}
         </Button>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "جاري الحفظ…" : "حفظ التعديلات"}
+          {mutation.isPending ? t("content.form.saving") : t("content.form.save")}
         </Button>
       </div>
     </form>
