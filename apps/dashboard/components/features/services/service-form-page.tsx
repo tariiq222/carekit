@@ -305,9 +305,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
                 </p>
                 <div className="border-t border-border pt-3">
                   <p className="text-xs text-muted-foreground">
-                    {locale === "ar"
-                      ? "بعد إنشاء الخدمة، ستجد خيار ربط النماذج في صفحة تعديل الخدمة."
-                      : "After creating the service, you can link forms from the service edit page."}
+                    {t("services.intake.createHintFootnote")}
                   </p>
                 </div>
               </div>

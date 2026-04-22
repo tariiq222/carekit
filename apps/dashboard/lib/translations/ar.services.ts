@@ -324,4 +324,35 @@ export const arServices: Record<string, string> = {
   "services.branches.clearConfirmDesc": "سيتم حذف القيود الحالية وإتاحة الخدمة في جميع الفروع. لا يمكن التراجع عن هذا الإجراء.",
   "services.branches.clearConfirmAction": "نعم، أتح للجميع",
   "services.branches.saving": "جارٍ الحفظ...",
+
+  /* ── Avatar Picker ── */
+  "services.avatar.iconTab": "أيقونة",
+  "services.avatar.imageTab": "صورة",
+  "services.avatar.iconSearch": "ابحث عن أيقونة...",
+  "services.avatar.bgColor": "لون الخلفية",
+  "services.avatar.customColor": "لون مخصص",
+  "services.avatar.clear": "مسح الأفاتار",
+  "services.avatar.deleteImage": "حذف الصورة",
+  "services.avatar.uploadHint": "اضغط لرفع صورة",
+  "services.avatar.uploadFormats": "PNG, JPG, WebP — حتى 5MB",
+
+  /* ── Basic Info Tab extras ── */
+  "services.create.requiredFields": "حقول إلزامية",
+  "services.create.department": "القسم",
+  "services.create.allDepartments": "جميع الأقسام",
+  "services.create.noCategories": "لا يوجد فئات",
+  "services.create.calendarColor": "لون التقويم",
+
+  /* ── Intake footnote (create mode) ── */
+  "services.intake.createHintFootnote": "بعد إنشاء الخدمة، ستجد خيار ربط النماذج في صفحة تعديل الخدمة.",
+
+  /* ── Intake field type labels ── */
+  "services.fields.type.text": "نص",
+  "services.fields.type.textarea": "نص طويل",
+  "services.fields.type.number": "رقم",
+  "services.fields.type.select": "قائمة منسدلة",
+  "services.fields.type.checkbox": "مربع اختيار",
+  "services.fields.type.date": "تاريخ",
+  "services.fields.type.time": "وقت",
+  "services.fields.type.staticText": "نص ثابت",
 }

@@ -23,8 +23,7 @@ interface DisplaySettingsTabProps {
 /* ─── Component ─── */
 
 export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
-  const { t, locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
 
   return (
     <Card>
@@ -39,7 +38,7 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
         <div className="grid grid-cols-3 gap-3">
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <Label htmlFor="create-hidden" className="cursor-pointer text-xs">
-              {isAr ? "إخفاء الخدمة" : "Hide Service"}
+              {t("services.display.hideService")}
             </Label>
             <Switch
               id="create-hidden"
@@ -50,7 +49,7 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <Label htmlFor="create-hide-price" className="cursor-pointer text-xs">
-              {isAr ? "إخفاء السعر عند الحجز" : "Hide Price"}
+              {t("services.display.hidePrice")}
             </Label>
             <Switch
               id="create-hide-price"
@@ -61,7 +60,7 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <Label htmlFor="create-hide-duration" className="cursor-pointer text-xs">
-              {isAr ? "إخفاء المدة عند الحجز" : "Hide Duration"}
+              {t("services.display.hideDuration")}
             </Label>
             <Switch
               id="create-hide-duration"
@@ -74,7 +73,7 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
         {/* Calendar Color */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="create-calendar-color">
-            {isAr ? "لون التقويم" : "Calendar Color"}
+            {t("services.create.calendarColor")}
           </Label>
           <div className="flex items-center gap-3">
             <input
@@ -95,7 +94,7 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
                 className="h-7 text-xs"
                 onClick={() => form.setValue("calendarColor", null)}
               >
-                {isAr ? "إزالة" : "Clear"}
+                {t("services.display.clear")}
               </Button>
             )}
           </div>

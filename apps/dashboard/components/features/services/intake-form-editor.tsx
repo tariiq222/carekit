@@ -198,7 +198,6 @@ function FormCard({
           formId={form.id}
           serviceId={serviceId}
           initialFields={form.fields}
-          locale={locale}
         />
       )}
     </div>
