@@ -55,6 +55,15 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'RefundRequest',
   'ZatcaSubmission',
   'ZatcaConfig',
+  // 02f — comms + ai
+  'EmailTemplate',
+  'Notification',
+  'ChatConversation',
+  'CommsChatMessage',
+  'ChatSession',
+  'ChatMessage',
+  'ContactMessage',
+  'ChatbotConfig',
 ]);
 
 /**

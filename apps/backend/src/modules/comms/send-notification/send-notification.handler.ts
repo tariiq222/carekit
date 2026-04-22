@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { SendPushHandler } from '../send-push/send-push.handler';
 import { SendEmailHandler } from '../send-email/send-email.handler';
 import { SendSmsHandler } from '../send-sms/send-sms.handler';
 import { SendNotificationDto } from './send-notification.dto';
 
-export type SendNotificationCommand = SendNotificationDto;
+export type SendNotificationCommand = SendNotificationDto & {
+  /** Explicit override for background-bus event handlers where CLS isn't set. */
+  organizationId?: string;
+};
 
 @Injectable()
 export class SendNotificationHandler {
@@ -14,15 +18,18 @@ export class SendNotificationHandler {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly push: SendPushHandler,
     private readonly email: SendEmailHandler,
     private readonly sms: SendSmsHandler,
   ) {}
 
   async execute(dto: SendNotificationCommand): Promise<void> {
+    const organizationId = dto.organizationId ?? this.tenant.requireOrganizationIdOrDefault();
     try {
       await this.prisma.notification.create({
         data: {
+          organizationId, // SaaS-02f
           recipientId: dto.recipientId,
           recipientType: dto.recipientType,
           type: dto.type,

@@ -99,8 +99,8 @@ describe('SendStaffMessageHandler', () => {
     handler = new SendStaffMessageHandler(prisma as never);
   });
 
-  it('creates a staff message and updates lastMessageAt', async () => {
-    const conv = { id: conversationId, status: ConversationStatus.OPEN };
+  it('creates a staff message tagged with the conversation organizationId and updates lastMessageAt', async () => {
+    const conv = { id: conversationId, status: ConversationStatus.OPEN, organizationId: 'org-A' };
     const message = { id: 'msg-1', body: 'Hello', senderType: MessageSenderType.EMPLOYEE };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
     prisma.commsChatMessage.create.mockResolvedValue(message);
@@ -115,6 +115,7 @@ describe('SendStaffMessageHandler', () => {
     expect(result).toEqual(message);
     expect(prisma.commsChatMessage.create).toHaveBeenCalledWith({
       data: {
+        organizationId: 'org-A',
         conversationId,
         senderType: MessageSenderType.EMPLOYEE,
         senderId: 'staff-1',

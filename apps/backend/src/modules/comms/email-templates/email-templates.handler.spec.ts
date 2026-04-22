@@ -17,13 +17,20 @@ const buildPrisma = () => ({
   },
 });
 
+const buildTenant = (organizationId = 'org-A') => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+});
+
 // ─── CreateEmailTemplateHandler ──────────────────────────────────────────────
 describe('CreateEmailTemplateHandler', () => {
-  it('creates an email template when slug is free', async () => {
+  it('creates an email template tagged with organizationId when slug is free', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce(null);
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     prisma.emailTemplate.create.mockResolvedValueOnce({ id: 'tpl-1', slug: 'welcome' });
-    const handler = new CreateEmailTemplateHandler(prisma as unknown as PrismaService);
+    const handler = new CreateEmailTemplateHandler(
+      prisma as unknown as PrismaService,
+      buildTenant('org-A') as never,
+    );
     const result = await handler.execute({
       slug: 'welcome',
       nameAr: 'ترحيب',
@@ -35,14 +42,18 @@ describe('CreateEmailTemplateHandler', () => {
       data: expect.objectContaining({
         slug: 'welcome',
         subjectAr: 'مرحباً',
+        organizationId: 'org-A',
       }),
     });
   });
 
-  it('throws ConflictException when slug already exists', async () => {
+  it('throws ConflictException when slug already exists within this org', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce({ id: 'tpl-existing' });
-    const handler = new CreateEmailTemplateHandler(prisma as unknown as PrismaService);
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce({ id: 'tpl-existing' });
+    const handler = new CreateEmailTemplateHandler(
+      prisma as unknown as PrismaService,
+      buildTenant('org-A') as never,
+    );
     await expect(
       handler.execute({
         slug: 'welcome',

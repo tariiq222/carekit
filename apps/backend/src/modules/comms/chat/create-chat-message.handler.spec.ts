@@ -15,7 +15,7 @@ const buildPrisma = () => ({
 describe('CreateChatMessageHandler', () => {
   it('creates message and updates lastMessageAt on conversation', async () => {
     const prisma = buildPrisma();
-    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1', status: 'OPEN' });
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1', status: 'OPEN', organizationId: 'org-A' });
     const handler = new CreateChatMessageHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
       conversationId: 'conv-1',

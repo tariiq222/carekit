@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { ChatAdapter } from '../../../infrastructure/ai';
 import { SemanticSearchHandler } from '../semantic-search/semantic-search.handler';
 import { ChatCompletionDto, ChatCompletionResult } from './chat-completion.dto';
@@ -19,6 +20,7 @@ ${context || '(No relevant information found in the knowledge base for this ques
 export class ChatCompletionHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly search: SemanticSearchHandler,
     private readonly chat: ChatAdapter,
   ) {}
@@ -27,6 +29,8 @@ export class ChatCompletionHandler {
     if (!this.chat.isAvailable()) {
       throw new BadRequestException('ChatAdapter is not available — set OPENROUTER_API_KEY');
     }
+
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
     const chunks = await this.search.execute({
       query: dto.userMessage,
@@ -46,6 +50,7 @@ export class ChatCompletionHandler {
     if (!sessionId) {
       const session = await this.prisma.chatSession.create({
         data: {
+          organizationId, // SaaS-02f
           clientId: dto.clientId,
           userId: dto.userId,
         },
@@ -55,8 +60,8 @@ export class ChatCompletionHandler {
 
     await this.prisma.chatMessage.createMany({
       data: [
-        { sessionId, role: 'user', content: dto.userMessage },
-        { sessionId, role: 'assistant', content: reply },
+        { organizationId, sessionId, role: 'user', content: dto.userMessage },
+        { organizationId, sessionId, role: 'assistant', content: reply },
       ],
     });
 
