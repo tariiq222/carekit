@@ -11,6 +11,7 @@ import * as bcrypt from 'bcryptjs';
 
 const ADMIN_EMAIL    = process.env.SEED_EMAIL    ?? 'admin@carekit-test.com';
 const ADMIN_PASSWORD = process.env.SEED_PASSWORD ?? 'Admin@1234';
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 async function main() {
   const prisma = new PrismaClient({
@@ -32,11 +33,11 @@ async function main() {
     update: {},
   });
 
-  // 2. Branding singleton
+  // 2. Branding singleton (org-unique per SaaS-02c)
   await prisma.brandingConfig.upsert({
-    where: { id: 'default' },
+    where: { organizationId: DEFAULT_ORG_ID },
     create: {
-      id: 'default',
+      organizationId: DEFAULT_ORG_ID,
       organizationNameAr: 'منظمتي',
       organizationNameEn: 'My Organization',
       colorPrimary: '#354FD8',
@@ -45,10 +46,10 @@ async function main() {
     update: {},
   });
 
-  // 3. Organization settings singleton
+  // 3. Organization settings singleton (org-unique per SaaS-02c)
   await prisma.organizationSettings.upsert({
-    where: { id: 'default' },
-    create: { id: 'default' },
+    where: { organizationId: DEFAULT_ORG_ID },
+    create: { organizationId: DEFAULT_ORG_ID },
     update: {},
   });
 
@@ -57,6 +58,7 @@ async function main() {
     where: { id: 'main-branch' },
     create: {
       id:       'main-branch',
+      organizationId: DEFAULT_ORG_ID,
       nameAr:   'الفرع الرئيسي',
       nameEn:   'Main Branch',
       isActive: true,
