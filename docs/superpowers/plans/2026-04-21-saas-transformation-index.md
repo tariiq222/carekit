@@ -10,46 +10,51 @@
 
 ---
 
-## 📊 Current Status — updated 2026-04-21
+## 📊 Current Status — updated 2026-04-22
 
-**Progress:** 5 / 18 phases merged (28%) · 3 phases executed awaiting merge · 10 plans written awaiting execution.
+**Progress:** 11 / 20 phases merged (55%) · 3 phases in-flight (PRs open) · 6 plans written awaiting execution.
 
 ```
-Phase 01  ✅ MERGED     Multi-tenancy Foundation
-Phase 02a ✅ MERGED     Identity cluster (PR #15)
-Phase 02b ✅ MERGED     People cluster (PR #16)
-Phase 02c ✅ MERGED     Org-config + singletons (PR #17)
-Phase 02d ✅ MERGED     Bookings cluster (PR #18)
-Phase 02e 🟡 EXEC       Finance cluster — PR #19 (plan) + PR #21 (impl); owner-review required (ZATCA + Moyasar)
-Phase 05a 🟡 EXEC       packages/ui extraction — PR #20; needs UI QA before merge
-Phase 02f 🟡 EXEC       Comms cluster — PR #24 (impl); 8 models scoped, ChatbotConfig singleton; ready-for-review
-Phase 02g 🟡 EXEC       AI + media + ops + platform — feat/saas-02g-ai-media-ops-platform (impl); 6 models scoped + SiteSetting composite PK + pgvector org predicate; 1025/1025 unit green; PR pending
-Phase 02h ✅ DONE       Strict mode + penetration — feat/saas-02h-strict-mode-penetration; TENANT_ENFORCEMENT=strict default + 4 penetration specs (18/18 pass) + carekit_rls_probe role + bookings RLS backfill + RlsHelper dual-GUC fix; closes Phase 02
-Phase 03  🟡 EXEC       Verticals System — PR #25 (impl); 60 unit + 22 e2e green; ready-for-review
-Phase 04  🟢 WRITTEN    Billing & Subscriptions (1291 lines) — owner-review gate at Task 1
-Phase 05b 🟢 WRITTEN    Super-admin app (1510 lines) — impersonation owner-review gate
-Phase 06  🟢 WRITTEN    Dashboard terminology + EN i18n (1050 lines)
-Phase 07  🟢 WRITTEN    Marketing site + signup (940 lines) — JWT + Moyasar touches
-Phase 08  🟢 WRITTEN    Website multi-tenant + themes (881 lines)
-Phase 09  🟢 WRITTEN    Custom domain + infra (785 lines) — Nginx→Caddy migration
-Phase 10  🟢 WRITTEN    Hardening + launch (760 lines)
+Phase 01      ✅ MERGED     Multi-tenancy Foundation
+Phase 02a     ✅ MERGED     Identity cluster (PR #15)
+Phase 02b     ✅ MERGED     People cluster (PR #16)
+Phase 02c     ✅ MERGED     Org-config + singletons (PR #17)
+Phase 02d     ✅ MERGED     Bookings cluster (PR #18)
+Phase 02e     ✅ MERGED     Finance cluster (PR #21) — 7 models + ZatcaConfig + Moyasar tenant resolution
+Phase 02f     ✅ MERGED     Comms cluster (PR #24) — 8 models + ChatbotConfig singleton
+Phase 02g     ✅ MERGED     AI/media/ops/platform (PR #27+#28) — 9 models + SiteSetting + pgvector
+Phase 02g-sms ✅ MERGED     Per-tenant SMS (PR #29) — Unifonic/Taqnyat + AES-GCM + DLR webhook
+Phase 02h     🟡 PR OPEN   Strict mode + penetration (PR #35 — owner-review pending) — TENANT_ENFORCEMENT=strict + 4 security e2e suites
+Phase 03      ✅ MERGED     Verticals System (PR #25) — 11 seeds × 4 families + terminology
+Phase 04      🟡 PR OPEN   Billing & Subscriptions (PR #30 DRAFT) — Tasks 2-6 done (35%); Tasks 7-15 pending
+Phase 05a     ✅ MERGED     packages/ui extraction (PR #20) — 33 shadcn primitives
+Phase 05b     🟢 WRITTEN    Super-admin app (1510 lines) — impersonation owner-review gate
+Phase 06      🟡 PR OPEN   Dashboard terminology + EN i18n (PR #31 DRAFT) — tenant switcher + parity script done (~15%)
+Phase 06a     🟢 WRITTEN    Dashboard literal refactor (new plan 2026-04-22) — parallel-safe with 06
+Phase 07      🟢 WRITTEN    Marketing site + signup (940 lines) — JWT + Moyasar touches
+Phase 08      🟢 WRITTEN    Website multi-tenant + themes (881 lines)
+Phase 09      🟢 WRITTEN    Custom domain + infra (785 lines) — Nginx→Caddy migration
+Phase 10      🟢 WRITTEN    Hardening + launch (760 lines)
 ```
 
-**🎯 Next action (for executor):** review + merge PR #19 (plan) → PR #21 (02e impl); run UI QA on PR #20 (05a) then merge; review PR #24 (02f comms impl). Parallel-safe execution candidates after 02e + 02f land: 02g, 03.
+**🎯 Next actions (executor):**
+1. `/approve saas-02h` on PR #35 → merge (owner-gated; prerequisite for Plan 10 canary)
+2. `/approve saas-04` on PR #30 → complete Tasks 7-15 (handlers + crons + webhook + e2e)
+3. Merge PR #34 (data-integrity fixes — no owner gate needed)
 
-**🔭 Next action (for planner/me):** all 18 plans written. No further plan authorship pending. Monitor execution, propagate lessons, refine plans if divergences surface.
+**🔭 Next action (planner):** 20 plans written. No new authorship needed until 05b/07 pre-execution review.
 
 **🚧 Active risks:**
-- Prisma 7 `$extends` via Proxy works (confirmed in 02a–02e) — no further risk.
-- **`$transaction` callback form bypasses Proxy** — confirmed in 02d (5 handlers) and 02e (2 handlers: apply-coupon, process-payment). Lesson 11 documented.
-- 02e owner-gated (ZATCA + Moyasar) — PR #21 open awaiting owner sign-off on moyasar-webhook 3-stage tenant resolution.
-- 04 (Billing) touches Moyasar subscription charging — separate webhook from 02e's booking webhook; owner-review at Task 1. **Owner decisions integrated into plan body 2026-04-22** (see top-of-plan "Owner decisions integrated" section): hybrid overage model (Tasks 8/8B/9C), 2-day grace period (Task 9D), `CLIENTS` metric + `Plan.maxClients`, `NOTIFICATIONS_PER_MONTH` removed (SMS deferred to Plan 02g-sms), two-Moyasar separation, authoritative tier prices (Basic 299 / Pro 799 / Enterprise 1999 SAR monthly).
-- 05b (Admin) introduces `$allTenants` escape hatch + impersonation flow — owner-review gate at Task 0. **Security invariants integrated 2026-04-22** into Plan 05b (new "Security invariants — runtime-enforced, not convention" section + Tasks 3/3.5/4/4.5 + §7A shadow-JWT shape): (1) `$allTenants` CLS-gated via `SUPER_ADMIN_CONTEXT_CLS_KEY` (mirrors 02e `SYSTEM_CONTEXT_CLS_KEY`); (2) `AdminHostGuard` rejects non-admin hosts; (3) `JwtAuthGuard` checks `Organization.suspendedAt` with Redis 30-s cache + `ORG_SUSPENDED` error code; (4) impersonation shadow JWT OMITS `isSuperAdmin` and carries `scope: 'impersonation'`. ESLint rule restricts `$allTenantsUnsafe` to `src/common/guards/**`. Owner-review gate at Task 0 still mandatory.
-- ~~02h (Strict mode)~~ — **DONE 2026-04-22**. Dev-stage binary flip (no canary — deferred to Plan 10 launch hardening). 18/18 penetration specs pass. Phase 02 CLOSED — shared-DB multi-tenant isolation proven end-to-end.
-- 07 (Marketing + signup) — `organizationSlug` JWT claim needs sub-spec: refresh-flow re-lookup from DB, migration/invalidation path for pre-07 tokens, explicit "display-only, authz uses tenantId" rule. Integrate into Plan 07 Task 0 before executing.
-- ~~**Plan 02g-sms (NEW, not yet written)**~~ — **DONE 2026-04-22** on `feat/saas-02g-sms-per-tenant`. Per-tenant SMS provider refactor delivered: `OrganizationSmsConfig` singleton + `SmsDelivery` audit + Unifonic/Taqnyat adapters + AES-GCM creds + 3-stage DLR webhook + `/settings/sms` dashboard. Plan 04 SMS-billing blocker cleared.
-- 09 (Custom domain) requires Nginx→Caddy swap — 7-day parallel-run mitigates; owner-approval gate before cutover.
-- Pre-existing e2e failures on main (bookings flows, identity login) — triaged separately, not blocking 02e.
+- **04 (Billing) Tasks 7-15 pending** — handlers, 4 BullMQ crons, Moyasar subscription webhook, dashboard skeleton, 4 e2e suites. Estimated ~10 more days.
+- **04 owner-gate still open** — Task 1 `/approve saas-04` not yet posted. No finance/Moyasar code may merge without @tariq approval.
+- **06 incomplete** — PR #31 has tenant switcher + parity script only; full t()/tp() refactor + EN parity + billing UI remain.
+- **05b** introduces `$allTenants` CLS-gated escape hatch + impersonation shadow-JWT — owner-review gate at Task 0.
+- 07 (Marketing + signup) — `organizationSlug` JWT claim needs sub-spec before executing Task 0.
+- 09 (Custom domain) requires Nginx→Caddy swap — owner-approval gate before cutover.
+- ~~Prisma 7 `$extends` via Proxy~~ — confirmed working 02a–02g, no further risk.
+- ~~`$transaction` callback bypasses Proxy~~ — Lesson 11 documented; all handlers corrected.
+- ~~02h strict mode blast radius~~ — resolved: dev-stage flip only; canary deferred to Plan 10.
+- ~~02g-sms~~ — DONE (PR #29 merged).
 
 **Frontend app topology (post-transformation):**
 ```
@@ -71,7 +76,7 @@ packages/
 
 ## Phase map
 
-Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pending (I'll write when upstream lands)
+Status legend: ✅ merged · 🟡 PR open / in-flight · 🟢 plan ready, not started · ⚪ pending
 
 | # | Plan | Status | PR | Dependencies | Duration |
 |---|---|---|---|---|---|
@@ -80,20 +85,21 @@ Status legend: ✅ done · 🟢 plan ready · 🟡 plan being written · ⚪ pen
 | 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/carekit/pull/16) | 02a | 3 days |
 | 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/carekit/pull/17) | 02b | 4 days |
 | 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | ✅ DONE (2026-04-21) | [#18](https://github.com/tariiq222/carekit/pull/18) | 02c | 3 days |
-| 02e | [Finance cluster rollout](./2026-04-21-saas-02e-finance-cluster.md) (Invoice, Payment, Coupon, RefundRequest, ZatcaSubmission + ZatcaConfig singleton) ⚠️ owner-review required | 🟡 EXEC | [#21](https://github.com/tariiq222/carekit/pull/21) | 02d | 3 days |
-| 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) (EmailTemplate, Notification, ChatConversation/Message/Session + ChatbotConfig singleton) | 🟢 WRITTEN | — | 02e | 2 days |
-| 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) (KnowledgeDocument, DocumentChunk, File, ActivityLog, Report, FeatureFlag, Integration, ProblemReport + SiteSetting singleton) | 🟢 WRITTEN | — | 02f | 2 days |
-| 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) (Unifonic + Taqnyat adapters + `OrganizationSmsConfig` singleton) | 🟡 EXEC | feat/saas-02g-sms-per-tenant | 02f | DONE 2026-04-22 — 1060 unit + 6 isolation e2e green |
-| 02h | [Strict mode + penetration tests](./2026-04-21-saas-02h-strict-mode-penetration.md) (flip `TENANT_ENFORCEMENT=strict`; adversarial cross-tenant suite) ⚠️ owner-gated (blast radius = payments outage; canary + per-module rollback) | 🟢 WRITTEN | — | 02g, 02g-sms | 2 days |
-| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) (`Vertical`, `VerticalSeedDepartment`, `VerticalSeedServiceCategory`, `VerticalTerminologyOverride` + 11 seeds across 4 families + terminology packs + `useTerminology()` hook) | 🟡 EXEC | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
-| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) (`Plan`, `Subscription` + platform Moyasar adapter + webhook + hybrid `PlanLimitsGuard`/`@TrackUsage` + metered overage + 2-day grace) ⚠️ owner-review gate Task 1 | 🟢 WRITTEN | — | 02e, 02g-sms | 2 weeks |
-| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) — extract 33 shadcn primitives into `packages/ui/`. Parallel-safe with 02f/02g. | 🟡 EXEC | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
-| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) (`apps/admin/` on `admin.carekit.app` + impersonation shadow-JWT + `$allTenants` CLS-gated escape hatch + suspend + metrics) ⚠️ Task 0 owner-review gate | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
-| 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) (full `t()`/`tp()` refactor + EN parity + RTL/LTR toggle + feature gating + tenant switcher + billing UI) | 🟢 WRITTEN | — | 03, 04, 05a | 3 weeks |
-| 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) (`apps/landing/` on `carekit.app` + 8 vertical landings + 5-step signup + Moyasar checkout) ⚠️ JWT `organizationSlug` claim Task 0 owner-review | 🟢 WRITTEN | — | 03, 04, 05a, 02e | 3 weeks |
-| 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) (refactor `apps/website/themes/` → `visual/` × `vertical/` × 4 families, conditional routing, multi-tenant host middleware, bilingual SEO, embed widget) | 🟢 WRITTEN | — | 02g, 03, 06 | 4 weeks |
-| 09 | [Custom Domain + Infra](./2026-04-21-saas-09-custom-domain-infra.md) (Caddy on-demand TLS, wildcard `*.carekit.app`, DNS verification worker, `/settings/domain` UI) ⚠️ owner-gated Nginx→Caddy cutover | 🟢 WRITTEN | — | 08 | 1.5 weeks |
-| 10 | [Hardening & Launch](./2026-04-21-saas-10-hardening-launch.md) (isolation penetration extension, per-tenant rate limiting, Sentry tags + Prometheus labels, performance audit, load test 100 orgs × 10k bookings, data export per-org, runbook) | 🟢 WRITTEN | — | 01–09 | 3 weeks |
+| 02e | [Finance cluster rollout](./2026-04-21-saas-02e-finance-cluster.md) | ✅ DONE (2026-04-21) | [#21](https://github.com/tariiq222/carekit/pull/21) | 02d | 3 days |
+| 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) | ✅ DONE (2026-04-22) | [#24](https://github.com/tariiq222/carekit/pull/24) | 02e | 2 days |
+| 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) | ✅ DONE (2026-04-22) | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 02f | 2 days |
+| 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) | ✅ DONE (2026-04-22) | [#29](https://github.com/tariiq222/carekit/pull/29) | 02f | 2 days |
+| 02h | [Strict mode + penetration tests](./2026-04-22-saas-02h-strict-mode-penetration.md) ⚠️ owner-review `/approve saas-02h` | 🟡 PR #35 | [#35](https://github.com/tariiq222/carekit/pull/35) | 02g, 02g-sms | 2 days |
+| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) | ✅ DONE (2026-04-22) | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
+| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) ⚠️ owner-review `/approve saas-04` — Tasks 2-6 done; Tasks 7-15 pending | 🟡 PR #30 | [#30](https://github.com/tariiq222/carekit/pull/30) | 02e, 02g-sms | 2 weeks |
+| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) | ✅ DONE (2026-04-22) | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
+| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) ⚠️ owner-review gate Task 0 | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
+| 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) — tenant switcher done (~15%); full refactor pending | 🟡 PR #31 | [#31](https://github.com/tariiq222/carekit/pull/31) | 03, 04, 05a | 3 weeks |
+| 06a | [Dashboard Literal Refactor](./2026-04-22-saas-06a-dashboard-literal-refactor.md) — parallel-safe with 06 | 🟢 WRITTEN | — | 05a | 1 week |
+| 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) ⚠️ JWT `organizationSlug` owner-review Task 0 | 🟢 WRITTEN | — | 03, 04, 05a, 02e | 3 weeks |
+| 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) | 🟢 WRITTEN | — | 02g, 03, 06 | 4 weeks |
+| 09 | [Custom Domain + Infra](./2026-04-21-saas-09-custom-domain-infra.md) ⚠️ owner-gated Nginx→Caddy cutover | 🟢 WRITTEN | — | 08 | 1.5 weeks |
+| 10 | [Hardening & Launch](./2026-04-21-saas-10-hardening-launch.md) | 🟢 WRITTEN | — | 01–09 | 3 weeks |
 
 ---
 
@@ -152,6 +158,12 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 | 2026-04-21 | 02b — People cluster | [#16](https://github.com/tariiq222/carekit/pull/16) | 7 models scoped (Client + ClientRefreshToken + Employee + 4 child tables). Client auth tenant-aware. 3 divergences: findUnique→findFirst on composite keys, extension covers where not data, CLS async callback requirement. 941/941 tests, 18/18 isolation e2e. |
 | 2026-04-21 | 02c — Org-config + singletons | [#17](https://github.com/tariiq222/carekit/pull/17) | 14 models scoped (Branch, Dept, ServiceCategory, Service + 5 sub-models, BusinessHour, Holiday, IntakeForm/Field, Rating) + BrandingConfig + OrganizationSettings singleton conversion (upsert-on-read pattern). 953/953 tests, 14 isolation e2e. No divergences reported. |
 | 2026-04-21 | 02d — Bookings cluster | [#18](https://github.com/tariiq222/carekit/pull/18) | 7 models scoped: Booking, BookingStatusLog, WaitlistEntry, GroupSession, GroupEnrollment, GroupSessionWaitlist, BookingSettings. 2 amendments: group-session-min-reached creates BookingStatusLog (plan missed); 5 callback-form $transaction handlers found (plan predicted 2). BookingSettings hierarchical singleton via findFirst. 953/953 unit + 6 new + 32 prior isolation e2e. Typecheck clean. |
+| 2026-04-21 | 02e — Finance cluster | [#21](https://github.com/tariiq222/carekit/pull/21) | 7 models scoped (Invoice, Payment, Coupon, CouponRedemption, RefundRequest, ZatcaSubmission + ZatcaConfig singleton). Moyasar 3-stage tenant resolution. 964 unit tests. |
+| 2026-04-21 | 05a — packages/ui extraction | [#20](https://github.com/tariiq222/carekit/pull/20) | 33 shadcn primitives + 2 hooks moved to `packages/ui`. Manual QA 9/9 PASS. |
+| 2026-04-22 | 02f — Comms cluster | [#24](https://github.com/tariiq222/carekit/pull/24) | 8 models scoped + ChatbotConfig singleton + EmailTemplate composite slug unique. 964 unit + 5 new isolation e2e. |
+| 2026-04-22 | 03 — Verticals System | [#25](https://github.com/tariiq222/carekit/pull/25) | Vertical primitive + 11 seeds × 4 families + terminology packs + useTerminology() hook. 60 unit + 22 e2e + 5 dashboard tests. |
+| 2026-04-22 | 02g — AI/media/ops/platform | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 9 models scoped + SiteSetting composite PK + pgvector org predicate. 1025/1025 unit. 6 isolation e2e suites. |
+| 2026-04-22 | 02g-sms — Per-tenant SMS | [#29](https://github.com/tariiq222/carekit/pull/29) | OrganizationSmsConfig singleton + SmsDelivery audit + Unifonic/Taqnyat adapters + AES-GCM creds + DLR webhook. 1060 unit + 6 isolation e2e. |
 
 ---
 
