@@ -5,6 +5,7 @@ import { extname } from 'node:path';
 import { File, FileVisibility } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
+import { TenantContextService } from '../../../common/tenant';
 import { UploadFileDto } from './upload-file.dto';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
@@ -34,6 +35,7 @@ export class UploadFileHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: MinioService,
+    private readonly tenant: TenantContextService,
     config: ConfigService,
   ) {
     this.defaultBucket = config.getOrThrow<string>('MINIO_BUCKET');
@@ -55,11 +57,13 @@ export class UploadFileHandler {
 
     const ext = extname(cmd.filename).toLowerCase();
     const storageKey = `${randomUUID()}${ext}`;
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
     const url = await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
 
     const file = await this.prisma.file.create({
       data: {
+        organizationId,
         bucket: this.defaultBucket,
         storageKey,
         filename: cmd.filename,

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ReportType, ReportFormat, ReportStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { GenerateReportDto } from './generate-report.dto';
 import { buildRevenueReport } from './revenue-report.builder';
 import { buildActivityReport } from './activity-report.builder';
@@ -10,7 +11,10 @@ export type GenerateReportCommand = GenerateReportDto;
 
 @Injectable()
 export class GenerateReportHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: GenerateReportCommand): Promise<{
     reportId: string;
@@ -28,9 +32,11 @@ export class GenerateReportHandler {
     }
 
     const format = dto.format ?? ReportFormat.JSON;
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
     const report = await this.prisma.report.create({
       data: {
+        organizationId,
         type: dto.type,
         format,
         status: ReportStatus.PENDING,

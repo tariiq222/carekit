@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ActivityAction, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 export interface LogActivityCommand {
   userId?: string;
@@ -16,11 +17,16 @@ export interface LogActivityCommand {
 
 @Injectable()
 export class LogActivityHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: LogActivityCommand): Promise<void> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     await this.prisma.activityLog.create({
       data: {
+        organizationId,
         userId: cmd.userId,
         userEmail: cmd.userEmail,
         action: cmd.action,

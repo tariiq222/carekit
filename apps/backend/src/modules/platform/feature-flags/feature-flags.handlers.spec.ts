@@ -4,6 +4,12 @@ import { ListFeatureFlagsHandler } from './list-feature-flags.handler';
 import { GetFeatureFlagMapHandler } from './get-feature-flag-map.handler';
 import { UpdateFeatureFlagHandler } from './update-feature-flag.handler';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
+
+const tenantProvider = {
+  provide: TenantContextService,
+  useValue: { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') },
+};
 
 const mockFlag = {
   id: 'f1', key: 'multi_branch', enabled: true,
@@ -51,29 +57,35 @@ describe('GetFeatureFlagMapHandler', () => {
 
 describe('UpdateFeatureFlagHandler', () => {
   let handler: UpdateFeatureFlagHandler;
-  let prisma: { featureFlag: { findUnique: jest.Mock; update: jest.Mock } };
+  let prisma: { featureFlag: { findFirst: jest.Mock; update: jest.Mock } };
 
   beforeEach(async () => {
     prisma = {
       featureFlag: {
-        findUnique: jest.fn().mockResolvedValue(mockFlag),
+        findFirst: jest.fn().mockResolvedValue(mockFlag),
         update: jest.fn().mockResolvedValue({ ...mockFlag, enabled: false }),
       },
     };
     const module = await Test.createTestingModule({
-      providers: [UpdateFeatureFlagHandler, { provide: PrismaService, useValue: prisma }],
+      providers: [UpdateFeatureFlagHandler, { provide: PrismaService, useValue: prisma }, tenantProvider],
     }).compile();
     handler = module.get(UpdateFeatureFlagHandler);
   });
 
   it('throws NotFoundException when flag not found', async () => {
-    prisma.featureFlag.findUnique.mockResolvedValue(null);
+    prisma.featureFlag.findFirst.mockResolvedValue(null);
     await expect(handler.execute({ key: 'x', enabled: false })).rejects.toThrow(NotFoundException);
   });
 
-  it('updates flag enabled status', async () => {
+  it('updates flag enabled status scoped to current org', async () => {
     const result = await handler.execute({ key: 'multi_branch', enabled: false });
     expect(result.enabled).toBe(false);
-    expect(prisma.featureFlag.findUnique).toHaveBeenCalledWith({ where: { key: 'multi_branch' } });
+    expect(prisma.featureFlag.findFirst).toHaveBeenCalledWith({
+      where: { key: 'multi_branch', organizationId: 'org-A' },
+    });
+    expect(prisma.featureFlag.update).toHaveBeenCalledWith({
+      where: { organizationId_key: { organizationId: 'org-A', key: 'multi_branch' } },
+      data: { enabled: false },
+    });
   });
 });

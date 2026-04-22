@@ -44,7 +44,8 @@ export class CreateBookingHandler {
     }
 
     if ((dto.bookingType as string) === 'ONLINE') {
-      const zoomIntegration = await this.prisma.integration.findUnique({
+      // SaaS-02g: Integration.provider is now composite-unique per org; findFirst + Proxy auto-scopes.
+      const zoomIntegration = await this.prisma.integration.findFirst({
         where: { provider: 'zoom' },
       });
       if (!zoomIntegration || !zoomIntegration.isActive) {

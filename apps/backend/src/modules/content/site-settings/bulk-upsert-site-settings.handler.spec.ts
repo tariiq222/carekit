@@ -1,5 +1,9 @@
 import { BulkUpsertSiteSettingsHandler } from './bulk-upsert-site-settings.handler';
 
+const buildTenant = (organizationId = 'org-A') => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+});
+
 const buildPrisma = () => {
   const upsert = jest.fn().mockResolvedValue({});
   return {
@@ -14,7 +18,7 @@ const buildPrisma = () => {
 describe('BulkUpsertSiteSettingsHandler', () => {
   it('upserts every entry inside a single transaction', async () => {
     const { prisma, upsert } = buildPrisma();
-    const handler = new BulkUpsertSiteSettingsHandler(prisma as never);
+    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never);
     const result = await handler.execute({
       entries: [
         { key: 'home.hero.title.ar', valueAr: 'عنوان' },
@@ -25,8 +29,8 @@ describe('BulkUpsertSiteSettingsHandler', () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(upsert).toHaveBeenCalledTimes(2);
     expect(upsert).toHaveBeenNthCalledWith(1, {
-      where: { key: 'home.hero.title.ar' },
-      create: expect.objectContaining({ key: 'home.hero.title.ar', valueAr: 'عنوان' }),
+      where: { organizationId_key: { organizationId: 'org-A', key: 'home.hero.title.ar' } },
+      create: expect.objectContaining({ organizationId: 'org-A', key: 'home.hero.title.ar', valueAr: 'عنوان' }),
       update: expect.objectContaining({ valueAr: 'عنوان' }),
     });
     expect(result).toEqual({ updated: 2 });
@@ -34,7 +38,7 @@ describe('BulkUpsertSiteSettingsHandler', () => {
 
   it('normalizes missing values to null', async () => {
     const { prisma, upsert } = buildPrisma();
-    const handler = new BulkUpsertSiteSettingsHandler(prisma as never);
+    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never);
     await handler.execute({ entries: [{ key: 'k' }] });
     const args = upsert.mock.calls[0]![0];
     expect(args.create.valueText).toBeNull();

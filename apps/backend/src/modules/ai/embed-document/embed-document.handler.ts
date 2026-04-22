@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EmbeddingAdapter } from '../../../infrastructure/ai';
+import { TenantContextService } from '../../../common/tenant';
 import { EmbedDocumentDto } from './embed-document.dto';
 
 export type EmbedDocumentCommand = EmbedDocumentDto;
@@ -25,6 +26,7 @@ export class EmbedDocumentHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly embedding: EmbeddingAdapter,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(dto: EmbedDocumentCommand) {
@@ -32,8 +34,11 @@ export class EmbedDocumentHandler {
       throw new BadRequestException('EmbeddingAdapter is not available — set OPENAI_API_KEY');
     }
 
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
     const doc = await this.prisma.knowledgeDocument.create({
       data: {
+        organizationId,
         title: dto.title,
         sourceType: dto.sourceType,
         sourceRef: dto.sourceRef,
@@ -50,6 +55,7 @@ export class EmbedDocumentHandler {
       await this.prisma.$transaction(async (tx) => {
         await tx.documentChunk.createMany({
           data: chunks.map((content, i) => ({
+            organizationId,
             documentId: doc.id,
             content,
             chunkIndex: i,
@@ -57,7 +63,6 @@ export class EmbedDocumentHandler {
           })),
         });
 
-        // Batch-update all embeddings in one round-trip using UNNEST
         const indices = chunks.map((_, i) => i);
         const vectorLiterals = vectors.map((v) => `[${v.join(',')}]`);
 

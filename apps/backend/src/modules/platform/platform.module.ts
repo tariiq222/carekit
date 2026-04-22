@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DashboardVerticalsController } from '../../api/dashboard/verticals.controller';
 import { DatabaseModule } from '../../infrastructure/database';
+import { TenantModule } from '../../common/tenant';
 import { VerticalsModule } from './verticals/verticals.module';
 import { CreateProblemReportHandler } from './problem-reports/create-problem-report.handler';
 import { ListProblemReportsHandler } from './problem-reports/list-problem-reports.handler';
@@ -13,7 +14,7 @@ import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.h
 import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
 
 @Module({
-  imports: [DatabaseModule, VerticalsModule],
+  imports: [DatabaseModule, TenantModule, VerticalsModule],
   controllers: [DashboardPlatformController, DashboardVerticalsController],
   providers: [
     CreateProblemReportHandler,
