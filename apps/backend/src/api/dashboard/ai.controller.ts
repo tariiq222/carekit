@@ -79,19 +79,18 @@ export class DashboardAiController {
   // ── Chatbot Config ────────────────────────────────────────────────────────
 
   @Get('chatbot-config')
-  @ApiOperation({ summary: 'Get chatbot configuration' })
-  @ApiQuery({ name: 'category', required: false, description: 'Filter config entries by category', example: 'general' })
-  @ApiOkResponse({ description: 'Chatbot configuration entries' })
-  getChatbotConfigEndpoint(@Query('category') category?: string) {
-    return this.getChatbotConfig.execute({ category });
+  @ApiOperation({ summary: 'Get chatbot configuration (org-unique singleton)' })
+  @ApiOkResponse({ description: 'Chatbot configuration for the current org (created on first read)' })
+  getChatbotConfigEndpoint() {
+    return this.getChatbotConfig.execute();
   }
 
   @Patch('chatbot-config')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Upsert chatbot configuration' })
+  @ApiOperation({ summary: 'Upsert chatbot configuration (org-unique singleton)' })
   @ApiOkResponse({ description: 'Updated chatbot configuration' })
   upsertChatbotConfigEndpoint(@Body() body: UpsertChatbotConfigDto) {
-    return this.upsertChatbotConfig.execute({ configs: body.configs });
+    return this.upsertChatbotConfig.execute(body);
   }
 
   // ── Chat Completion ────────────────────────────────────────────────────────

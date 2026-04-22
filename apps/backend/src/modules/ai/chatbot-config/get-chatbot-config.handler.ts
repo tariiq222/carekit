@@ -1,20 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-
-export interface GetChatbotConfigCommand {
-  category?: string;
-}
+import { TenantContextService } from '../../../common/tenant';
 
 @Injectable()
 export class GetChatbotConfigHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
-  execute(cmd: GetChatbotConfigCommand) {
-    return this.prisma.chatbotConfig.findMany({
-      where: {
-        ...(cmd.category ? { category: cmd.category } : {}),
-      },
-      orderBy: { createdAt: 'asc' },
+  /**
+   * SaaS-02f: ChatbotConfig is now an org-unique singleton.
+   * Upsert-on-read: the first call per org lazily creates the row.
+   * Mirrors BrandingConfig (02c) and ZatcaConfig (02e).
+   */
+  async execute() {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    return this.prisma.chatbotConfig.upsert({
+      where: { organizationId },
+      update: {},
+      create: { organizationId },
     });
   }
 }

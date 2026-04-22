@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { CreateContactMessageDto } from './create-contact-message.dto';
 import { CAPTCHA_VERIFIER, type CaptchaVerifier } from './captcha.verifier';
 
@@ -7,6 +8,7 @@ import { CAPTCHA_VERIFIER, type CaptchaVerifier } from './captcha.verifier';
 export class CreateContactMessageHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     @Inject(CAPTCHA_VERIFIER) private readonly captcha: CaptchaVerifier,
   ) {}
 
@@ -18,8 +20,14 @@ export class CreateContactMessageHandler {
     const ok = await this.captcha.verify(dto.captchaToken);
     if (!ok) throw new UnauthorizedException('Captcha verification failed');
 
+    // SaaS-02f: public endpoint — tenant is resolved by TenantResolverMiddleware
+    // (Host-based) before this handler runs. Fall back to DEFAULT_ORG if middleware
+    // didn't set CLS (single-tenant legacy deployments).
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
     return this.prisma.contactMessage.create({
       data: {
+        organizationId,
         name: dto.name,
         phone: dto.phone,
         email: dto.email,

@@ -1,5 +1,4 @@
 import { CreateNotificationHandler } from './create-notification.handler';
-import type { PrismaService } from '../../../infrastructure/database';
 import { NotificationType, RecipientType } from '@prisma/client';
 
 const buildPrisma = () => ({
@@ -8,10 +7,15 @@ const buildPrisma = () => ({
   },
 });
 
+const buildTenant = (organizationId = 'org-A') => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+});
+
 describe('CreateNotificationHandler', () => {
-  it('creates a notification record', async () => {
+  it('creates a notification record tagged with organizationId', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateNotificationHandler(prisma as unknown as PrismaService);
+    const tenant = buildTenant('org-A');
+    const handler = new CreateNotificationHandler(prisma as never, tenant as never);
     const result = await handler.execute({
       recipientId: 'client-1',
       recipientType: RecipientType.CLIENT,
@@ -21,7 +25,7 @@ describe('CreateNotificationHandler', () => {
     });
     expect(result.id).toBe('notif-1');
     expect(prisma.notification.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ recipientId: 'client-1' }),
+      data: expect.objectContaining({ recipientId: 'client-1', organizationId: 'org-A' }),
     });
   });
 });

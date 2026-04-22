@@ -12,7 +12,7 @@
 
 ## 📊 Current Status — updated 2026-04-21
 
-**Progress:** 5 / 18 phases merged (28%) · 2 phases executed awaiting merge · 11 plans written awaiting execution.
+**Progress:** 5 / 18 phases merged (28%) · 3 phases executed awaiting merge · 10 plans written awaiting execution.
 
 ```
 Phase 01  ✅ MERGED     Multi-tenancy Foundation
@@ -22,7 +22,7 @@ Phase 02c ✅ MERGED     Org-config + singletons (PR #17)
 Phase 02d ✅ MERGED     Bookings cluster (PR #18)
 Phase 02e 🟡 EXEC       Finance cluster — PR #19 (plan) + PR #21 (impl); owner-review required (ZATCA + Moyasar)
 Phase 05a 🟡 EXEC       packages/ui extraction — PR #20; needs UI QA before merge
-Phase 02f 🟢 WRITTEN    Comms cluster (1071 lines)
+Phase 02f 🟡 EXEC       Comms cluster — PR #24 (impl); 8 models scoped, ChatbotConfig singleton; ready-for-review
 Phase 02g 🟢 WRITTEN    AI + media + ops + platform (1027 lines)
 Phase 02h 🟢 WRITTEN    Strict mode + penetration (771 lines)
 Phase 03  🟢 WRITTEN    Verticals System (1733 lines)
@@ -35,7 +35,7 @@ Phase 09  🟢 WRITTEN    Custom domain + infra (785 lines) — Nginx→Caddy mi
 Phase 10  🟢 WRITTEN    Hardening + launch (760 lines)
 ```
 
-**🎯 Next action (for executor):** review + merge PR #19 (plan) → PR #21 (02e impl); run UI QA on PR #20 (05a) then merge. Parallel-safe execution candidates after 02e lands: 02f, 03.
+**🎯 Next action (for executor):** review + merge PR #19 (plan) → PR #21 (02e impl); run UI QA on PR #20 (05a) then merge; review PR #24 (02f comms impl). Parallel-safe execution candidates after 02e + 02f land: 02g, 03.
 
 **🔭 Next action (for planner/me):** all 18 plans written. No further plan authorship pending. Monitor execution, propagate lessons, refine plans if divergences surface.
 

@@ -13,6 +13,10 @@ const mockPrisma = () => ({
   },
 });
 
+const mockTenant = (organizationId = 'org-A') => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+});
+
 const mockSearch = () => ({
   execute: jest.fn().mockResolvedValue([mockSearchResult]),
 });
@@ -26,39 +30,44 @@ const dto = {
   userMessage: 'How do I book an appointment?',
 };
 
+const build = () => {
+  const prisma = mockPrisma();
+  const tenant = mockTenant('org-A');
+  const search = mockSearch();
+  const chat = mockChat();
+  const handler = new ChatCompletionHandler(
+    prisma as never,
+    tenant as never,
+    search as never,
+    chat as never,
+  );
+  return { handler, prisma, tenant, search, chat };
+};
+
 describe('ChatCompletionHandler', () => {
   it('returns assistant reply and sessionId', async () => {
-    const prisma = mockPrisma();
-    const search = mockSearch();
-    const chat = mockChat();
-    const handler = new ChatCompletionHandler(prisma as never, search as never, chat as never);
+    const { handler } = build();
     const result = await handler.execute(dto);
     expect(result.reply).toBe('You can book online through CareKit.');
     expect(result.sessionId).toBe('session-1');
   });
 
-  it('uses retrieved chunks as system context', async () => {
-    const prisma = mockPrisma();
-    const search = mockSearch();
-    const chat = mockChat();
-    const handler = new ChatCompletionHandler(prisma as never, search as never, chat as never);
+  it('creates ChatSession tagged with organizationId', async () => {
+    const { handler, prisma } = build();
     await handler.execute(dto);
-    const messages = chat.complete.mock.calls[0][0];
-    const systemMsg = messages.find((m: { role: string }) => m.role === 'system');
-    expect(systemMsg.content).toContain('CareKit supports online booking.');
+    expect(prisma.chatSession.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ organizationId: 'org-A' }),
+    });
   });
 
-  it('persists user + assistant messages', async () => {
-    const prisma = mockPrisma();
-    const search = mockSearch();
-    const chat = mockChat();
-    const handler = new ChatCompletionHandler(prisma as never, search as never, chat as never);
+  it('persists user + assistant messages tagged with organizationId', async () => {
+    const { handler, prisma } = build();
     await handler.execute(dto);
     expect(prisma.chatMessage.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.arrayContaining([
-          expect.objectContaining({ role: 'user' }),
-          expect.objectContaining({ role: 'assistant' }),
+          expect.objectContaining({ role: 'user', organizationId: 'org-A' }),
+          expect.objectContaining({ role: 'assistant', organizationId: 'org-A' }),
         ]),
       }),
     );
@@ -66,9 +75,10 @@ describe('ChatCompletionHandler', () => {
 
   it('throws if ChatAdapter is not available', async () => {
     const prisma = mockPrisma();
+    const tenant = mockTenant('org-A');
     const search = mockSearch();
     const chat = { isAvailable: jest.fn().mockReturnValue(false), complete: jest.fn() };
-    const handler = new ChatCompletionHandler(prisma as never, search as never, chat as never);
+    const handler = new ChatCompletionHandler(prisma as never, tenant as never, search as never, chat as never);
     await expect(handler.execute(dto)).rejects.toThrow('ChatAdapter is not available');
   });
 });

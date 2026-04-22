@@ -5,6 +5,12 @@ import { CreateContactMessageHandler } from './create-contact-message.handler';
 import { ListContactMessagesHandler } from './list-contact-messages.handler';
 import { UpdateContactMessageStatusHandler } from './update-contact-message-status.handler';
 import { CAPTCHA_VERIFIER, NoopCaptchaVerifier } from './captcha.verifier';
+import { TenantContextService } from '../../../common/tenant';
+
+const tenantProvider = {
+  provide: TenantContextService,
+  useValue: { requireOrganizationIdOrDefault: () => 'org-A' },
+};
 
 describe('ContactMessages handlers', () => {
   let createHandler: CreateContactMessageHandler;
@@ -20,6 +26,7 @@ describe('ContactMessages handlers', () => {
         ListContactMessagesHandler,
         UpdateContactMessageStatusHandler,
         { provide: CAPTCHA_VERIFIER, useClass: NoopCaptchaVerifier },
+        tenantProvider,
         {
           provide: PrismaService,
           useValue: {
@@ -28,6 +35,7 @@ describe('ContactMessages handlers', () => {
               findMany: jest.fn(),
               count: jest.fn(),
               findUnique: jest.fn(),
+              findFirst: jest.fn(),
               update: jest.fn(),
             },
           },
@@ -62,6 +70,7 @@ describe('ContactMessages handlers', () => {
       providers: [
         CreateContactMessageHandler,
         failing,
+        tenantProvider,
         {
           provide: PrismaService,
           useValue: { contactMessage: { create: jest.fn() } },
@@ -82,7 +91,7 @@ describe('ContactMessages handlers', () => {
   });
 
   it('updates status and sets readAt for READ', async () => {
-    prisma.contactMessage.findUnique.mockResolvedValue({ id: 'm1', readAt: null });
+    prisma.contactMessage.findFirst.mockResolvedValue({ id: 'm1', readAt: null });
     prisma.contactMessage.update.mockResolvedValue({ id: 'm1', status: 'READ' });
     await updateHandler.execute({ id: 'm1', status: 'READ' });
     expect(prisma.contactMessage.update).toHaveBeenCalledWith(
@@ -91,7 +100,7 @@ describe('ContactMessages handlers', () => {
   });
 
   it('throws NotFound when id missing', async () => {
-    prisma.contactMessage.findUnique.mockResolvedValue(null);
+    prisma.contactMessage.findFirst.mockResolvedValue(null);
     await expect(
       updateHandler.execute({ id: 'x', status: 'READ' }),
     ).rejects.toThrow(NotFoundException);

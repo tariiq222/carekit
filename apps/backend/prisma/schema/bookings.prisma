@@ -96,16 +96,16 @@ model WaitlistEntry {
   id             String         @id @default(uuid())
   organizationId String // SaaS-02d
   clientId       String
-  employeeId    String
-  serviceId     String
-  branchId      String
-  preferredDate DateTime?
-  status        WaitlistStatus @default(WAITING)
-  promotedAt    DateTime?
-  expiresAt     DateTime?
-  notes         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  employeeId     String
+  serviceId      String
+  branchId       String
+  preferredDate  DateTime?
+  status         WaitlistStatus @default(WAITING)
+  promotedAt     DateTime?
+  expiresAt      DateTime?
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([clientId])
   @@index([employeeId])
@@ -192,11 +192,11 @@ model BookingStatusLog {
   id             String         @id @default(uuid())
   organizationId String // SaaS-02d (denormalized from Booking)
   bookingId      String
-  fromStatus BookingStatus?
-  toStatus   BookingStatus
-  changedBy  String
-  reason     String?
-  createdAt  DateTime       @default(now())
+  fromStatus     BookingStatus?
+  toStatus       BookingStatus
+  changedBy      String
+  reason         String?
+  createdAt      DateTime       @default(now())
 
   @@index([bookingId])
   @@index([createdAt])

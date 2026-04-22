@@ -12,7 +12,7 @@ const mockTemplate = {
 
 const buildPrisma = () => ({
   emailTemplate: {
-    findUnique: jest.fn().mockResolvedValue(mockTemplate),
+    findFirst: jest.fn().mockResolvedValue(mockTemplate),
   },
 });
 
@@ -51,7 +51,7 @@ describe('SendEmailHandler', () => {
 
   it('skips when template not found', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValue(null);
+    prisma.emailTemplate.findFirst.mockResolvedValue(null);
     const smtp = {
       isAvailable: jest.fn().mockReturnValue(true),
       sendMail: jest.fn(),
@@ -68,21 +68,21 @@ describe('SendEmailHandler', () => {
 describe('SendEmailHandler — interpolation', () => {
   it('skips email when SMTP not available', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(false), sendMail: jest.fn() };
-    const prisma = { emailTemplate: { findUnique: jest.fn() } };
+    const prisma = { emailTemplate: { findFirst: jest.fn() } };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'booking-confirmed', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 
   it('skips when template not found', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
-    const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue(null) } };
+    const prisma = { emailTemplate: { findFirst: jest.fn().mockResolvedValue(null) } };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'missing', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 
   it('skips when template is inactive', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
-    const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subjectAr: '' }) } };
+    const prisma = { emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subjectAr: '' }) } };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -91,7 +91,7 @@ describe('SendEmailHandler — interpolation', () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn().mockResolvedValue(undefined) };
     const prisma = {
       emailTemplate: {
-        findUnique: jest.fn().mockResolvedValue({
+        findFirst: jest.fn().mockResolvedValue({
           isActive: true,
           htmlBody: '<p>Hello {{name}}</p>',
           subjectAr: 'مرحبا {{name}}',
@@ -106,7 +106,7 @@ describe('SendEmailHandler — interpolation', () => {
   it('does not throw when smtp.sendMail rejects', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn().mockRejectedValue(new Error('SMTP down')) };
     const prisma = {
-      emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subjectAr: 'subj', subjectEn: '' }) },
+      emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subjectAr: 'subj', subjectEn: '' }) },
     };
     await expect(new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} })).resolves.not.toThrow();
   });

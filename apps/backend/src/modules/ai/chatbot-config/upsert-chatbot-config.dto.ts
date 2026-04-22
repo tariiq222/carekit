@@ -1,33 +1,45 @@
-import { Allow, IsArray, IsDefined, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsObject, IsOptional, IsString, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-class ConfigItemDto {
-  @ApiProperty({ description: 'Configuration key', example: 'greeting_message' })
-  @IsString()
-  @IsNotEmpty()
-  key!: string;
-
-  // Accepts any JSON-serializable value — intentionally permissive
-  @ApiProperty({ description: 'Configuration value (any JSON-serializable type)', example: 'Hello! How can I help you today?' })
-  @IsDefined()
-  @Allow()
-  value!: unknown;
-
-  @ApiProperty({ description: 'Configuration category', example: 'general' })
-  @IsString()
-  @IsNotEmpty()
-  category!: string;
-}
-
+/**
+ * SaaS-02f: restructured from key/value shape to a typed singleton.
+ * `settings` remains as a free-form JSON blob for forward-compat keys.
+ */
 export class UpsertChatbotConfigDto {
-  @ApiProperty({
-    description: 'Array of configuration entries to upsert',
-    type: [ConfigItemDto],
-    example: [{ key: 'greeting_message', value: 'Hello!', category: 'general' }],
+  @ApiPropertyOptional({ description: 'System prompt (Arabic)', example: 'أنت مساعد...' })
+  @IsOptional()
+  @IsString()
+  systemPromptAr?: string;
+
+  @ApiPropertyOptional({ description: 'System prompt (English)', example: 'You are an assistant...' })
+  @IsOptional()
+  @IsString()
+  systemPromptEn?: string;
+
+  @ApiPropertyOptional({ description: 'Greeting shown on chat open (Arabic)', example: 'مرحباً، كيف يمكنني مساعدتك؟' })
+  @IsOptional()
+  @IsString()
+  greetingAr?: string;
+
+  @ApiPropertyOptional({ description: 'Greeting shown on chat open (English)', example: 'Hi! How can I help?' })
+  @IsOptional()
+  @IsString()
+  greetingEn?: string;
+
+  @ApiPropertyOptional({
+    description: 'Auto-escalate to human after N messages. Null disables.',
+    example: 5,
   })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ConfigItemDto)
-  configs!: ConfigItemDto[];
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  escalateToHumanAt?: number;
+
+  @ApiPropertyOptional({
+    description: 'Free-form settings blob for future keyed configuration.',
+    example: { tone: 'friendly' },
+  })
+  @IsOptional()
+  @IsObject()
+  settings?: Record<string, unknown>;
 }

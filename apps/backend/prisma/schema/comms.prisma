@@ -1,5 +1,5 @@
 // Comms BC — notifications, chat, email templates.
-// Phase 9 (p9-t*).
+// Phase 9 (p9-t*). SaaS-02f: organizationId added to all models.
 
 enum NotificationType {
   BOOKING_CONFIRMED
@@ -29,41 +29,46 @@ enum MessageSenderType {
 }
 
 model Notification {
-  id            String           @id @default(uuid())
-  recipientId   String
-  recipientType RecipientType
-  type          NotificationType
-  title         String
-  body          String
-  metadata      Json?
-  isRead        Boolean          @default(false)
-  readAt        DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id             String           @id @default(uuid())
+  organizationId String // SaaS-02f
+  recipientId    String
+  recipientType  RecipientType
+  type           NotificationType
+  title          String
+  body           String
+  metadata       Json?
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@index([recipientId])
   @@index([recipientId, createdAt])
+  @@index([organizationId])
 }
 
 model ChatConversation {
-  id            String             @id @default(uuid())
-  clientId      String
-  employeeId    String?
-  isAiChat      Boolean            @default(false)
-  status        ConversationStatus @default(OPEN)
-  lastMessageAt DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id             String             @id @default(uuid())
+  organizationId String // SaaS-02f
+  clientId       String
+  employeeId     String?
+  isAiChat       Boolean            @default(false)
+  status         ConversationStatus @default(OPEN)
+  lastMessageAt  DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   messages CommsChatMessage[]
 
   @@index([clientId])
   @@index([employeeId])
   @@index([status, lastMessageAt])
+  @@index([organizationId])
 }
 
 model CommsChatMessage {
   id             String            @id @default(uuid())
+  organizationId String // SaaS-02f (denormalized from ChatConversation)
   conversationId String
   conversation   ChatConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderType     MessageSenderType
@@ -73,6 +78,7 @@ model CommsChatMessage {
   createdAt      DateTime          @default(now())
 
   @@index([conversationId, createdAt])
+  @@index([organizationId])
 }
 
 enum ContactMessageStatus {
@@ -83,29 +89,35 @@ enum ContactMessageStatus {
 }
 
 model ContactMessage {
-  id         String               @id @default(uuid())
-  name       String
-  phone      String?
-  email      String?
-  subject    String?
-  body       String
-  status     ContactMessageStatus @default(NEW)
-  createdAt  DateTime             @default(now())
-  readAt     DateTime?
-  archivedAt DateTime?
+  id             String               @id @default(uuid())
+  organizationId String // SaaS-02f
+  name           String
+  phone          String?
+  email          String?
+  subject        String?
+  body           String
+  status         ContactMessageStatus @default(NEW)
+  createdAt      DateTime             @default(now())
+  readAt         DateTime?
+  archivedAt     DateTime?
 
   @@index([status, createdAt])
+  @@index([organizationId])
 }
 
 model EmailTemplate {
-  id        String   @id @default(uuid())
-  slug      String   @unique
-  nameAr    String
-  nameEn    String?
-  subjectAr String
-  subjectEn String?
-  htmlBody  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  organizationId String // SaaS-02f — slug namespace now per-org
+  slug           String
+  nameAr         String
+  nameEn         String?
+  subjectAr      String
+  subjectEn      String?
+  htmlBody       String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
 }

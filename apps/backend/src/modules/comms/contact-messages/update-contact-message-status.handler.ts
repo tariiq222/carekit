@@ -12,7 +12,9 @@ export class UpdateContactMessageStatusHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: UpdateContactMessageStatusCommand) {
-    const existing = await this.prisma.contactMessage.findUnique({ where: { id: cmd.id } });
+    // SaaS-02f: findFirst (not findUnique) so the Proxy auto-scopes by org;
+    // prevents cross-org id probes from returning foreign rows.
+    const existing = await this.prisma.contactMessage.findFirst({ where: { id: cmd.id } });
     if (!existing) throw new NotFoundException('Contact message not found');
 
     const now = new Date();

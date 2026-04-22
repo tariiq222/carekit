@@ -1,61 +1,60 @@
 import { GetChatbotConfigHandler } from './get-chatbot-config.handler';
 import { UpsertChatbotConfigHandler } from './upsert-chatbot-config.handler';
 
-const buildPrisma = () => {
-  const upsert = jest.fn().mockResolvedValue({ id: 'cfg-1' });
-  return {
-    chatbotConfig: {
-      findMany: jest.fn().mockResolvedValue([]),
-      upsert,
-    },
-    $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
-  };
-};
+const buildPrisma = () => ({
+  chatbotConfig: {
+    upsert: jest.fn().mockResolvedValue({ id: 'cfg-1', organizationId: 'org-A' }),
+  },
+});
+
+const buildTenant = (organizationId = 'org-A') => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+});
 
 describe('GetChatbotConfigHandler', () => {
-  it('returns all configs (no category filter)', async () => {
+  it('upserts the singleton row by organizationId (lazy-create on first read)', async () => {
     const prisma = buildPrisma();
-    const handler = new GetChatbotConfigHandler(prisma as never);
-    await handler.execute({});
-    expect(prisma.chatbotConfig.findMany).toHaveBeenCalledWith({
-      where: {},
-      orderBy: { createdAt: 'asc' },
-    });
-  });
-
-  it('returns configs filtered by category', async () => {
-    const prisma = buildPrisma();
-    const handler = new GetChatbotConfigHandler(prisma as never);
-    await handler.execute({ category: 'general' });
-    expect(prisma.chatbotConfig.findMany).toHaveBeenCalledWith({
-      where: { category: 'general' },
-      orderBy: { createdAt: 'asc' },
+    const handler = new GetChatbotConfigHandler(prisma as never, buildTenant('org-A') as never);
+    const res = await handler.execute();
+    expect(res.organizationId).toBe('org-A');
+    expect(prisma.chatbotConfig.upsert).toHaveBeenCalledWith({
+      where: { organizationId: 'org-A' },
+      update: {},
+      create: { organizationId: 'org-A' },
     });
   });
 });
 
 describe('UpsertChatbotConfigHandler', () => {
-  it('upserts multiple config entries using Promise.all', async () => {
+  it('upserts provided fields into the org singleton', async () => {
     const prisma = buildPrisma();
-    const handler = new UpsertChatbotConfigHandler(prisma as never);
-    const configs = [
-      { key: 'greeting', value: 'Hello', category: 'general' },
-      { key: 'language', value: 'ar', category: 'general' },
-    ];
-    const result = await handler.execute({ configs });
-    expect(prisma.chatbotConfig.upsert).toHaveBeenCalledTimes(2);
-    expect(result).toHaveLength(2);
+    const handler = new UpsertChatbotConfigHandler(prisma as never, buildTenant('org-A') as never);
+    await handler.execute({
+      systemPromptAr: 'prompt-ar',
+      greetingEn: 'hi',
+      escalateToHumanAt: 3,
+    });
+    expect(prisma.chatbotConfig.upsert).toHaveBeenCalledWith({
+      where: { organizationId: 'org-A' },
+      create: expect.objectContaining({
+        organizationId: 'org-A',
+        systemPromptAr: 'prompt-ar',
+        greetingEn: 'hi',
+        escalateToHumanAt: 3,
+      }),
+      update: expect.objectContaining({
+        systemPromptAr: 'prompt-ar',
+        greetingEn: 'hi',
+        escalateToHumanAt: 3,
+      }),
+    });
   });
 
-  it('upserts each entry by key', async () => {
+  it('ignores undefined fields (no field-overwrite with null)', async () => {
     const prisma = buildPrisma();
-    const handler = new UpsertChatbotConfigHandler(prisma as never);
-    const configs = [{ key: 'greeting', value: 'Hi', category: 'general' }];
-    await handler.execute({ configs });
-    expect(prisma.chatbotConfig.upsert).toHaveBeenCalledWith({
-      where: { key: 'greeting' },
-      create: { key: 'greeting', value: 'Hi', category: 'general' },
-      update: { value: 'Hi', category: 'general' },
-    });
+    const handler = new UpsertChatbotConfigHandler(prisma as never, buildTenant('org-A') as never);
+    await handler.execute({ greetingAr: 'مرحبا' });
+    const callArg = prisma.chatbotConfig.upsert.mock.calls[0][0];
+    expect(callArg.update).toEqual({ greetingAr: 'مرحبا' });
   });
 });

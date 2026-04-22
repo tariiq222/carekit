@@ -26,6 +26,8 @@ export class SendStaffMessageHandler {
     const [message] = await Promise.all([
       this.prisma.commsChatMessage.create({
         data: {
+          // SaaS-02f: derive organizationId from the conversation anchor.
+          organizationId: conversation.organizationId,
           conversationId: cmd.conversationId,
           senderType: MessageSenderType.EMPLOYEE,
           senderId: cmd.staffId,
