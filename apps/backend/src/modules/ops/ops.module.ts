@@ -15,6 +15,14 @@ import { LogActivityHandler } from './log-activity/log-activity.handler';
 import { ListActivityHandler } from './log-activity/list-activity.handler';
 import { GenerateReportHandler } from './generate-report/generate-report.handler';
 import { HealthCheckHandler } from './health-check/health-check.handler';
+// Billing crons (SaaS-04 Task 9)
+import { MeterUsageCron } from '../platform/billing/meter-usage/meter-usage.cron';
+import { ChargeDueSubscriptionsCron } from '../platform/billing/charge-due-subscriptions/charge-due-subscriptions.cron';
+import { ComputeOverageCron } from '../platform/billing/compute-overage/compute-overage.cron';
+import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period/enforce-grace-period.cron';
+import { UsageAggregatorService } from '../platform/billing/usage-aggregator.service';
+import { SubscriptionStateMachine } from '../platform/billing/subscription-state-machine';
+import { SubscriptionCacheService } from '../platform/billing/subscription-cache.service';
 
 const handlers = [
   LogActivityHandler,
@@ -30,12 +38,23 @@ const cronHandlers = [
   AppointmentRemindersCron,
   GroupSessionAutomationCron,
   RefreshTokenCleanupCron,
+  // Billing crons
+  MeterUsageCron,
+  ChargeDueSubscriptionsCron,
+  ComputeOverageCron,
+  EnforceGracePeriodCron,
+];
+
+const billingServices = [
+  UsageAggregatorService,
+  SubscriptionStateMachine,
+  SubscriptionCacheService,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule],
   controllers: [DashboardOpsController],
-  providers: [...handlers, ...cronHandlers, CronTasksService],
+  providers: [...handlers, ...cronHandlers, ...billingServices, CronTasksService],
   exports: [...handlers],
 })
 export class OpsModule implements OnModuleInit {

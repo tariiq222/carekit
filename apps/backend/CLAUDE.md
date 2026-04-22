@@ -113,7 +113,7 @@ npm run prisma:studio                # GUI
 
 ## Conventions that catch new contributors
 
-- **Multi-tenancy (transitional).** The backend is migrating to multi-tenant SaaS. As of Plan 01, `Organization` + `Membership` exist and the `TenantContextService` carries tenant identity through CLS. The `TENANT_ENFORCEMENT` env flag defaults to `off` — single-tenant behavior is unchanged at runtime. Cluster-by-cluster rollout begins in Plan 02. See [docs/saas-tenancy.md](./docs/saas-tenancy.md) before adding new queries.
+- **Multi-tenancy (default).** The backend runs multi-tenant by default. As of SaaS-02h, `TENANT_ENFORCEMENT=strict` is the platform default — any scoped-model query without CLS tenant context throws `UnauthorizedTenantAccessError`. Every cluster (02a–02g) is scoped; `SCOPED_MODELS` in `prisma.service.ts` lists the 52 tenant-scoped entities. `permissive` and `off` remain only for local dev + migration bootstrap. See `test/e2e/security/` for the contract (direct-id probe, IDOR, FK injection, `$queryRaw` backstop, webhook forgery, strict-mode enforcement).
 - **One handler = one public method (`execute`).** Don't add `executeVariant()`; create a new slice.
 - **Tests colocated as `*.handler.spec.ts`** next to the handler, not in a parallel `test/` tree.
 - **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").

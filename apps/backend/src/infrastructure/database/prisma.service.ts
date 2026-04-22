@@ -77,6 +77,12 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // 02g-sms — per-tenant SMS provider
   'OrganizationSmsConfig',
   'SmsDelivery',
+  // 02g — platform cluster
+  'Membership',
+  // 04 — billing (Plan and SubscriptionInvoice are deliberately PLATFORM-level
+  // and NOT scoped — they describe CareKit's catalog / receivables respectively).
+  'Subscription',
+  'UsageRecord',
 ]);
 
 /**
@@ -109,8 +115,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     super({
       adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
     });
-    const mode = (this.config?.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'off') ??
-      'off') as TenantEnforcementMode;
+    const mode = (this.config?.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict') ??
+      'strict') as TenantEnforcementMode;
 
     // When DI is not available (unit tests using `new PrismaService()`), fall
     // back to the base client unchanged — the extension would have nothing to
@@ -155,7 +161,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleInit(): Promise<void> {
     await this.$connect();
     this.logger.log(
-      `Prisma connected (tenant mode = ${this.config?.get('TENANT_ENFORCEMENT', 'off') ?? 'off'})`,
+      `Prisma connected (tenant mode = ${this.config?.get('TENANT_ENFORCEMENT', 'strict') ?? 'strict'})`,
     );
   }
 

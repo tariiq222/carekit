@@ -228,7 +228,7 @@ Do NOT proceed to Task 2 until owner posts `/approve saas-04` in the PR.
 
 ## Task 2 — Env + config
 
-- [ ] **Step 2.1: Extend env validation**
+- [x] **Step 2.1: Extend env validation**
 
 `apps/backend/src/config/env.validation.ts`:
 
@@ -242,7 +242,7 @@ SAAS_GRACE_PERIOD_DAYS: Joi.number().integer().min(0).max(30).default(2),
 BILLING_CRON_ENABLED: Joi.boolean().default(false),
 ```
 
-- [ ] **Step 2.2: Update `.env.example`**
+- [x] **Step 2.2: Update `.env.example`**
 
 ```
 # Billing (SaaS-04) — PLATFORM Moyasar (NOT tenant Moyasar)
@@ -253,7 +253,7 @@ SAAS_GRACE_PERIOD_DAYS=2
 BILLING_CRON_ENABLED=false
 ```
 
-- [ ] **Step 2.3: Typecheck + commit**
+- [x] **Step 2.3: Typecheck + commit**
 
 ```bash
 cd apps/backend && npm run typecheck
@@ -265,7 +265,7 @@ git commit -m "chore(saas-04): add billing env vars"
 
 ## Task 3 — Subscription state machine (design + tests first)
 
-- [ ] **Step 3.1: Diagram the state machine**
+- [x] **Step 3.1: Diagram the state machine**
 
 States: `TRIALING`, `ACTIVE`, `PAST_DUE`, `SUSPENDED`, `CANCELED`.
 
@@ -312,7 +312,7 @@ Transition table (source of truth):
 | SUSPENDED | `cancel` | CANCELED | — |
 | CANCELED | — | — | terminal |
 
-- [ ] **Step 3.2: TDD — state-machine spec first**
+- [x] **Step 3.2: TDD — state-machine spec first**
 
 `subscription-state-machine.spec.ts`:
 
@@ -352,7 +352,7 @@ describe('SubscriptionStateMachine', () => {
 });
 ```
 
-- [ ] **Step 3.3: Implement**
+- [x] **Step 3.3: Implement**
 
 `subscription-state-machine.ts`:
 
@@ -396,7 +396,7 @@ export class SubscriptionStateMachine {
 
 Run tests — expect pass.
 
-- [ ] **Step 3.4: Commit**
+- [x] **Step 3.4: Commit**
 
 ```bash
 git add apps/backend/src/modules/platform/billing/subscription-state-machine.ts \
@@ -408,7 +408,7 @@ git commit -m "feat(saas-04): subscription state machine + transition table"
 
 ## Task 4 — Schema + migration
 
-- [ ] **Step 4.1: Extend `platform.prisma`**
+- [x] **Step 4.1: Extend `platform.prisma`**
 
 Append to `apps/backend/prisma/schema/platform.prisma`:
 
@@ -564,13 +564,13 @@ model UsageRecord {
 }
 ```
 
-- [ ] **Step 4.2: Validate schema**
+- [x] **Step 4.2: Validate schema**
 
 ```bash
 cd apps/backend && npx prisma format && npx prisma validate
 ```
 
-- [ ] **Step 4.3: Generate migration**
+- [x] **Step 4.3: Generate migration**
 
 ```bash
 cd apps/backend && npx prisma migrate dev --name saas_04_billing_models --create-only
@@ -578,13 +578,13 @@ cd apps/backend && npx prisma migrate dev --name saas_04_billing_models --create
 
 Inspect SQL; if generation fails due to pgvector, write manually using the prior patterns.
 
-- [ ] **Step 4.4: Apply**
+- [x] **Step 4.4: Apply**
 
 ```bash
 cd apps/backend && npx prisma migrate dev
 ```
 
-- [ ] **Step 4.5: Seed plans**
+- [x] **Step 4.5: Seed plans**
 
 Create migration `<ts>_saas_04_seed_plans/migration.sql`:
 
@@ -605,7 +605,7 @@ INSERT INTO "Plan" (id, slug, "nameAr", "nameEn", "priceMonthly", "priceAnnual",
 
 (`-1` = unlimited, handled in guard.)
 
-- [ ] **Step 4.6: Apply and commit**
+- [x] **Step 4.6: Apply and commit**
 
 ```bash
 cd apps/backend && npx prisma migrate deploy
@@ -617,7 +617,7 @@ git commit -m "feat(saas-04): billing models + seed STARTER/PROFESSIONAL/ENTERPR
 
 ## Task 5 — SCOPED_MODELS update
 
-- [ ] **Step 5.1: Add `Subscription`, `UsageRecord`**
+- [x] **Step 5.1: Add `Subscription`, `UsageRecord`**
 
 Edit `apps/backend/src/infrastructure/database/prisma.service.ts`:
 
@@ -628,7 +628,7 @@ Edit `apps/backend/src/infrastructure/database/prisma.service.ts`:
 
 `Plan` and `SubscriptionInvoice` are deliberately **not** added — they are platform-level.
 
-- [ ] **Step 5.2: Typecheck + commit**
+- [x] **Step 5.2: Typecheck + commit**
 
 ```bash
 cd apps/backend && npm run typecheck
@@ -640,14 +640,14 @@ git commit -m "feat(saas-04): scope Subscription + UsageRecord"
 
 ## Task 6 — `SubscriptionCacheService` + `TenantContextService.currentPlanLimits()`
 
-- [ ] **Step 6.1: TDD cache service**
+- [x] **Step 6.1: TDD cache service**
 
 `subscription-cache.service.spec.ts` — write tests for:
 - Cache miss → fetch from DB → cache hit.
 - `invalidate(orgId)` clears entry.
 - TTL enforced (use injected clock).
 
-- [ ] **Step 6.2: Implement**
+- [x] **Step 6.2: Implement**
 
 ```ts
 // subscription-cache.service.ts
@@ -695,11 +695,11 @@ export class SubscriptionCacheService {
 }
 ```
 
-- [ ] **Step 6.3: Extend `TenantContextService`**
+- [x] **Step 6.3: Extend `TenantContextService`**
 
 Add method `async currentPlanLimits(): Promise<CachedPlanLimits | null>` that calls `SubscriptionCacheService.get(this.requireOrganizationIdOrDefault())`.
 
-- [ ] **Step 6.4: Commit**
+- [x] **Step 6.4: Commit**
 
 ```bash
 git add apps/backend/src/modules/platform/billing/subscription-cache.service.ts \

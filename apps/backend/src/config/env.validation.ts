@@ -43,6 +43,10 @@ export const envValidationSchema = Joi.object({
   JWT_ACCESS_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TTL: Joi.string().default('30d'),
 
+  // Client JWT — separate namespace for website clients
+  JWT_CLIENT_ACCESS_SECRET: Joi.string().min(16).required(),
+  JWT_CLIENT_ACCESS_TTL: Joi.string().default('7d'),
+
   // License Server (Platform BC) — optional until Phase 3
   LICENSE_SERVER_URL: Joi.string().uri().allow('').optional(),
   LICENSE_KEY: Joi.string().allow('').optional(),
@@ -72,12 +76,25 @@ export const envValidationSchema = Joi.object({
   MOYASAR_API_KEY: Joi.string().allow('').optional(),
   MOYASAR_WEBHOOK_SECRET: Joi.string().allow('').optional(),
 
-  // Multi-tenancy (SaaS-01) — flag defaults OFF until Plan 02 rollout
-  TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('off'),
+  // Multi-tenancy — default `strict` as of SaaS-02h.
+  //   strict     → platform default. Any scoped query without CLS org throws.
+  //   permissive → falls back to DEFAULT_ORGANIZATION_ID. Dev-only.
+  //   off        → no scoping. Legacy single-tenant mode. Never in multi-tenant prod.
+  TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('strict'),
   DEFAULT_ORGANIZATION_ID: Joi.string().uuid().default('00000000-0000-0000-0000-000000000001'),
 
   // SMS per-tenant (SaaS-02g-sms) — encryption key is REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
   // Webhook base URL is the public origin registered with providers for DLR callbacks.
   SMS_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
   SMS_WEBHOOK_URL_BASE: Joi.string().uri().allow('').optional(),
+
+  // Billing (SaaS-04) — PLATFORM Moyasar (charges clinics for SaaS subscriptions).
+  // Distinct from OrganizationPaymentConfig.moyasar* (tenant Moyasar, Plan 02e).
+  // Optional at boot so dev/test environments without billing can still start;
+  // billing handlers/crons assert presence at use-time.
+  MOYASAR_PLATFORM_SECRET_KEY: Joi.string().min(16).allow('').optional(),
+  MOYASAR_PLATFORM_WEBHOOK_SECRET: Joi.string().min(16).allow('').optional(),
+  SAAS_TRIAL_DAYS: Joi.number().integer().min(0).max(90).default(14),
+  SAAS_GRACE_PERIOD_DAYS: Joi.number().integer().min(0).max(30).default(2),
+  BILLING_CRON_ENABLED: Joi.boolean().default(false),
 }).unknown(true);

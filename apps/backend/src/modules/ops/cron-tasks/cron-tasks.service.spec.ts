@@ -13,21 +13,40 @@ const buildBullMq = () => {
   };
 };
 
+/** Build 10 cron mocks (all crons except BullMqService itself). */
+const buildAllMocks = () => [
+  buildCronMock(), // bookingAutocomplete
+  buildCronMock(), // bookingExpiry
+  buildCronMock(), // bookingNoShow
+  buildCronMock(), // appointmentReminders
+  buildCronMock(), // groupSessionAutomation
+  buildCronMock(), // refreshTokenCleanup
+  buildCronMock(), // meterUsage
+  buildCronMock(), // chargeDueSubscriptions
+  buildCronMock(), // computeOverage (no execute, but still injected)
+  buildCronMock(), // enforceGracePeriod
+] as const;
+
+const JOB_ORDER = [
+  CRON_JOBS.BOOKING_AUTOCOMPLETE,
+  CRON_JOBS.BOOKING_EXPIRY,
+  CRON_JOBS.BOOKING_NOSHOW,
+  CRON_JOBS.APPOINTMENT_REMINDERS,
+  CRON_JOBS.GROUP_SESSION_AUTOMATION,
+  CRON_JOBS.REFRESH_TOKEN_CLEANUP,
+  CRON_JOBS.METER_USAGE,
+  CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS,
+  CRON_JOBS.ENFORCE_GRACE_PERIOD,
+] as const;
+
 describe('CronTasksService', () => {
-  it('schedules all 6 cron jobs on module init', () => {
+  it('schedules all 9 cron jobs on module init', () => {
     const bullMq = buildBullMq();
-    const service = new CronTasksService(
-      bullMq as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-    );
+    const mocks = buildAllMocks();
+    const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never, never, never, never, never]);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(6);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(9);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -35,38 +54,41 @@ describe('CronTasksService', () => {
 
   it('registers a worker on the ops-cron queue', () => {
     const bullMq = buildBullMq();
-    const service = new CronTasksService(
-      bullMq as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-      buildCronMock() as never,
-    );
+    const mocks = buildAllMocks();
+    const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never, never, never, never, never]);
     service.onModuleInit();
     expect(bullMq.createWorker).toHaveBeenCalledWith('ops-cron', expect.any(Function));
   });
 
-  it.each(Object.entries(CRON_JOBS))('worker routes %s job to correct cron handler', async (_, jobName) => {
-    const bullMq = buildBullMq();
-    const mocks = [buildCronMock(), buildCronMock(), buildCronMock(), buildCronMock(), buildCronMock(), buildCronMock()];
-    const jobOrder = [
-      CRON_JOBS.BOOKING_AUTOCOMPLETE,
-      CRON_JOBS.BOOKING_EXPIRY,
-      CRON_JOBS.BOOKING_NOSHOW,
-      CRON_JOBS.APPOINTMENT_REMINDERS,
-      CRON_JOBS.GROUP_SESSION_AUTOMATION,
-      CRON_JOBS.REFRESH_TOKEN_CLEANUP,
-    ];
+  // Worker routing — maps each schedulable job to its handler mock index
+  const ROUTED_JOBS: Array<[string, number]> = [
+    [CRON_JOBS.BOOKING_AUTOCOMPLETE, 0],
+    [CRON_JOBS.BOOKING_EXPIRY, 1],
+    [CRON_JOBS.BOOKING_NOSHOW, 2],
+    [CRON_JOBS.APPOINTMENT_REMINDERS, 3],
+    [CRON_JOBS.GROUP_SESSION_AUTOMATION, 4],
+    [CRON_JOBS.REFRESH_TOKEN_CLEANUP, 5],
+    [CRON_JOBS.METER_USAGE, 6],
+    [CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS, 7],
+    [CRON_JOBS.ENFORCE_GRACE_PERIOD, 9],
+  ];
 
-    const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never]);
+  it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {
+    const bullMq = buildBullMq();
+    const mocks = buildAllMocks();
+    const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never, never, never, never, never]);
     service.onModuleInit();
 
     const processor = bullMq.getProcessor();
     await processor({ name: jobName });
 
-    const idx = jobOrder.indexOf(jobName as typeof CRON_JOBS[keyof typeof CRON_JOBS]);
     expect(mocks[idx].execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes ComputeOverageCron via getComputeOverage()', () => {
+    const bullMq = buildBullMq();
+    const mocks = buildAllMocks();
+    const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never, never, never, never, never]);
+    expect(service.getComputeOverage()).toBe(mocks[8]);
   });
 });
