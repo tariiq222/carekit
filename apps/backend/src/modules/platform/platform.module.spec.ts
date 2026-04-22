@@ -19,6 +19,7 @@ describe('PlatformModule', () => {
               REDIS_HOST: 'localhost',
               REDIS_PORT: 6379,
               REDIS_DB: 0,
+              JWT_ACCESS_SECRET: 'test-secret-for-platform-module-spec',
               // SMTP_HOST intentionally absent — SmtpService logs a warning
               // and stays in the disabled-but-resolvable state.
             }),

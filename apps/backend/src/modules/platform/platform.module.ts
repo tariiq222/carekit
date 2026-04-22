@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DashboardVerticalsController } from '../../api/dashboard/verticals.controller';
 import { AdminOrganizationsController } from '../../api/admin/organizations.controller';
@@ -7,6 +9,7 @@ import { AdminPlansController } from '../../api/admin/plans.controller';
 import { AdminVerticalsController } from '../../api/admin/verticals.controller';
 import { AdminMetricsController } from '../../api/admin/metrics.controller';
 import { AdminAuditLogController } from '../../api/admin/audit-log.controller';
+import { AdminImpersonationController } from '../../api/admin/impersonation.controller';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { AdminHostGuard, SuperAdminGuard } from '../../common/guards';
 import { DatabaseModule } from '../../infrastructure/database';
@@ -38,6 +41,10 @@ import { UpdateVerticalAdminHandler } from './admin/update-vertical/update-verti
 import { DeleteVerticalAdminHandler } from './admin/delete-vertical/delete-vertical-admin.handler';
 import { GetPlatformMetricsHandler } from './admin/get-platform-metrics/get-platform-metrics.handler';
 import { ListAuditLogHandler } from './admin/list-audit-log/list-audit-log.handler';
+import { StartImpersonationHandler } from './admin/start-impersonation/start-impersonation.handler';
+import { EndImpersonationHandler } from './admin/end-impersonation/end-impersonation.handler';
+import { ListImpersonationSessionsHandler } from './admin/list-impersonation-sessions/list-impersonation-sessions.handler';
+import { ExpireImpersonationSessionsCron } from './admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 
 const ADMIN_HANDLERS = [
   ListOrganizationsHandler,
@@ -56,10 +63,25 @@ const ADMIN_HANDLERS = [
   DeleteVerticalAdminHandler,
   GetPlatformMetricsHandler,
   ListAuditLogHandler,
+  StartImpersonationHandler,
+  EndImpersonationHandler,
+  ListImpersonationSessionsHandler,
+  ExpireImpersonationSessionsCron,
 ];
 
 @Module({
-  imports: [DatabaseModule, TenantModule, VerticalsModule],
+  imports: [
+    DatabaseModule,
+    TenantModule,
+    VerticalsModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      }),
+    }),
+  ],
   controllers: [
     DashboardPlatformController,
     DashboardVerticalsController,
@@ -69,6 +91,7 @@ const ADMIN_HANDLERS = [
     AdminVerticalsController,
     AdminMetricsController,
     AdminAuditLogController,
+    AdminImpersonationController,
   ],
   providers: [
     SuperAdminContextInterceptor,
