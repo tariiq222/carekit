@@ -83,4 +83,8 @@ export const enNav: Record<string, string> = {
   "table.pagination.of": "of",
   "table.pagination.previous": "Previous",
   "table.pagination.next": "Next",
+  "tenantSwitcher.selectOrg": "Select organization",
+  "tenantSwitcher.switchOrg": "Switch organization",
+  "tenantSwitcher.switching": "Switching…",
+  "tenantSwitcher.switchFailed": "Failed to switch organization",
 }

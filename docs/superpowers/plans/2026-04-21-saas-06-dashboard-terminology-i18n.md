@@ -1047,4 +1047,68 @@ Edit `docs/superpowers/plans/2026-04-21-saas-transformation-index.md`:
 
 ## Amendments applied during execution
 
-> _Empty until execution. If reality diverges from any step, stop, document here, and await confirmation before continuing._
+### 2026-04-22 — Execution divergence log (session 1)
+
+**Reality check against the plan's assumptions:**
+
+1. **Dashboard does NOT use `next-intl` at runtime.** Although `next-intl@4.8.3`
+   is installed, `apps/dashboard/components/locale-provider.tsx` is the sole
+   i18n runtime: a `LocaleProvider` context with `useLocale()` → flat
+   `t(key: string)` backed by `lib/translations.ts` (which merges
+   `lib/translations/ar.*.ts` / `en.*.ts` into two `Record<string, string>`s).
+   → **Plan steps referencing `useTranslations('<namespace>')`, ICU
+   `.rich` plurals, next-intl `onError` / `getMessageFallback`, and
+   `NextIntlClientProvider` in test wrappers do not apply as written.** We
+   keep the existing custom system and adapt the gate (parity script +
+   snapshot test) to the flat-key model.
+
+2. **`DirectionProvider` is already wired** inside `LocaleProvider` via
+   `@radix-ui/react-direction` (flips `rtl`/`ltr` with locale, syncs
+   `document.documentElement.dir`). Plan Task 3 as a new file is
+   redundant; keep current wiring. (Root `app/layout.tsx` still hardcodes
+   `dir="rtl"` on `<html>` as the SSR default, which is fine — the
+   client `LocaleProvider` overrides at mount.)
+
+3. **`useTerminology` already exists** at
+   `apps/dashboard/hooks/use-terminology.ts` (Plan 03, shipped). Signature
+   differs from plan: it is `useTerminology(verticalSlug: string)` →
+   `{ t(key), isLoading, pack }`, queries
+   `GET /public/verticals/:slug/terminology`. It returns `string | key`
+   (fallback to key), not a typed `TerminologyKey` union. Plan Task 4 as
+   written would create a second, conflicting hook → we keep the shipped
+   one and treat Task 4 as DONE.
+
+4. **`OrgContext` does not exist** in the dashboard — instead, vertical
+   slug would need to come from `AuthProvider` / `BrandingProvider`. Per
+   `hooks/use-terminology.ts` comment: "the current auth session
+   (AuthUser) and OrganizationSettings do not yet carry the vertical slug
+   — this will be populated in Plan 07." → Task 4.3's `OrgContext.Provider`
+   wrapper is not applicable.
+
+5. **i18n audit volume (Task 1).** `grep '[؀-ۿ]'` over `app/` + `components/`
+   returns **434 Arabic literal occurrences across 65 files**. A full
+   refactor of the 8 representative categories under the Plan 06
+   session budget is not realistic in a single agent session, so Task 9
+   (A–H page refactors) is explicitly **deferred to a follow-up plan**
+   (tentative: 06a). Audit outputs written to
+   `apps/dashboard/.i18n-audit/` (git-ignored) for handoff.
+
+6. **Plan 04 dependency.** Tasks 5 (BillingContext / useCurrentPlan),
+   6 (FeatureGate), 8 (Billing UI), and 9G (Billing category i18n) are
+   blocked by Plan 04 endpoints and types, which are NOT yet on `main`.
+   Per the launch instructions, we **stop before those tasks** and do
+   not stub the Plan-04 types (to avoid merge pain).
+
+**Consequently this session delivers only:**
+- Task 1 partial — audit scratch scaffolding + `.gitignore`.
+- Task 2 — EN/AR parity script, `i18n:verify` npm script, 2 AR keys
+  added so parity is 0/0 (green).
+- Task 7A/B — backend `GET /me/memberships` + `POST /auth/switch-org`.
+- Task 7C/D — frontend tenant switcher + hooks.
+- Task 11 — dashboard `CLAUDE.md` addendum documenting the actual
+  (custom-LocaleProvider) system.
+
+**Deferred to follow-up plan(s):** Tasks 3 (redundant), 4 (already shipped),
+5, 6, 8, 9A–9H, 10 (snapshot test), 12 (Chrome DevTools + Kiwi QA),
+13.3 (PR).
+
