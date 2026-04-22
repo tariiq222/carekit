@@ -5,6 +5,7 @@
   "workspaces": [
     "apps/backend",
     "apps/dashboard",
+    "apps/admin",
     "apps/website",
     "packages/shared",
     "packages/api-client",
@@ -13,6 +14,7 @@
   "scripts": {
     "dev:backend": "turbo run dev --filter=backend",
     "dev:dashboard": "turbo run dev --filter=dashboard",
+    "dev:admin": "turbo run dev --filter=admin",
     "dev:website": "turbo run dev --filter=website",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
