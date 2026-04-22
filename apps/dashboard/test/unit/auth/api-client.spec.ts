@@ -44,12 +44,15 @@ describe('API Client (lib/api.ts)', () => {
   }
 
   function makeErrorResponse(status: number, code: string, message: string) {
-    return Promise.resolve({
+    const body = { statusCode: status, error: code, message }
+    const response = {
       ok: false,
       status,
       statusText: message,
-      json: () => Promise.resolve({ statusCode: status, error: code, message }),
-    })
+      json: () => Promise.resolve(body),
+      clone: function() { return response },
+    }
+    return Promise.resolve(response)
   }
 
   // =========================================================================
@@ -164,12 +167,14 @@ describe('API Client (lib/api.ts)', () => {
   it('should throw ApiError with UNKNOWN code when error body is missing', async () => {
     const { api, ApiError } = await import('@/lib/api')
 
-    fetchMock.mockResolvedValueOnce({
+    const response500 = {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
       json: () => Promise.reject(new Error('not json')),
-    })
+      clone: function() { return response500 },
+    }
+    fetchMock.mockResolvedValueOnce(response500)
 
     try {
       await api.get('/clients')
@@ -191,11 +196,13 @@ describe('API Client (lib/api.ts)', () => {
     localStorage.setItem('carekit_refresh_token', 'stored-rt')
 
     // First call returns 401
-    fetchMock.mockResolvedValueOnce({
+    const response401 = {
       ok: false,
       status: 401,
       json: () => Promise.resolve({}),
-    })
+      clone: function() { return response401 },
+    }
+    fetchMock.mockResolvedValueOnce(response401)
     // Refresh token call succeeds (tryRefreshToken uses fetch directly, not api.post)
     fetchMock.mockResolvedValueOnce({
       ok: true,
@@ -217,17 +224,21 @@ describe('API Client (lib/api.ts)', () => {
     localStorage.setItem('carekit_user', JSON.stringify({ id: 'u1' }))
 
     // Original request → 401
-    fetchMock.mockResolvedValueOnce({
+    const response401_1 = {
       ok: false,
       status: 401,
       json: () => Promise.resolve({}),
-    })
+      clone: function() { return response401_1 },
+    }
+    fetchMock.mockResolvedValueOnce(response401_1)
     // Refresh attempt → also 401
-    fetchMock.mockResolvedValueOnce({
+    const response401_2 = {
       ok: false,
       status: 401,
       json: () => Promise.resolve({}),
-    })
+      clone: function() { return response401_2 },
+    }
+    fetchMock.mockResolvedValueOnce(response401_2)
 
     await expect(api.get('/clients')).rejects.toThrow()
     expect(getAccessToken()).toBeNull()
@@ -244,9 +255,21 @@ describe('API Client (lib/api.ts)', () => {
     localStorage.setItem('carekit_refresh_token', 'stored-rt')
 
     // Both requests fail with 401
+    const response401_a = {
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({}),
+      clone: function() { return response401_a },
+    }
+    const response401_b = {
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({}),
+      clone: function() { return response401_b },
+    }
     fetchMock
-      .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) })
-      .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) })
+      .mockResolvedValueOnce(response401_a)
+      .mockResolvedValueOnce(response401_b)
       // Single refresh succeeds (tryRefreshToken uses fetch directly via /api/proxy/auth/refresh)
       .mockResolvedValueOnce({
         ok: true,
