@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-
-const SINGLETON_ID = 'default';
+import { TenantContextService } from '../../../common/tenant';
 
 export interface OnboardZatcaCommand {
   vatRegistrationNumber: string;
@@ -10,16 +9,19 @@ export interface OnboardZatcaCommand {
 
 @Injectable()
 export class OnboardZatcaHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: OnboardZatcaCommand) {
-    const config = await this.prisma.zatcaConfig.findUnique({
-      where: { id: SINGLETON_ID },
-    });
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    // Proxy scopes findFirst to this org automatically via CLS
+    const config = await this.prisma.zatcaConfig.findFirst({ where: {} });
     if (config?.isOnboarded) throw new BadRequestException('ZATCA already onboarded');
 
     return this.prisma.zatcaConfig.upsert({
-      where: { id: SINGLETON_ID },
+      where: { organizationId },
       update: {
         vatRegistrationNumber: cmd.vatRegistrationNumber,
         sellerName: cmd.sellerName,
@@ -27,7 +29,7 @@ export class OnboardZatcaHandler {
         onboardedAt: new Date(),
       },
       create: {
-        id: SINGLETON_ID,
+        organizationId,
         vatRegistrationNumber: cmd.vatRegistrationNumber,
         sellerName: cmd.sellerName,
         isOnboarded: true,

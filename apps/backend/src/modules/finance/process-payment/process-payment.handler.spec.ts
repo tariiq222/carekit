@@ -20,6 +20,10 @@ const mockPayment = {
   processedAt: new Date(),
 };
 
+const buildTenant = () => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue('00000000-0000-0000-0000-000000000001'),
+});
+
 // Build a tx object that execute() will see inside $transaction. The $transaction
 // mock immediately invokes its callback with this tx, simulating a real Prisma
 // interactive transaction against the mock.
@@ -29,7 +33,7 @@ const buildTx = (overrides: Record<string, unknown> = {}) => ({
     update: jest.fn().mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.PAID }),
   },
   payment: {
-    findUnique: jest.fn().mockResolvedValue(mockPayment),
+    findFirst: jest.fn().mockResolvedValue(mockPayment),
     create: jest.fn().mockResolvedValue(mockPayment),
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 230 } }),
   },
@@ -38,10 +42,9 @@ const buildTx = (overrides: Record<string, unknown> = {}) => ({
 
 const buildPrisma = (tx = buildTx()) => ({
   ...tx,
-  // Outside-of-transaction read used to fetch invoice for event publishing.
+  // Outside-of-transaction reads use the Proxy-scoped findFirst.
   invoice: {
     ...tx.invoice,
-    findUnique: jest.fn().mockResolvedValue(mockInvoice),
   },
   $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(tx)),
 });
@@ -53,7 +56,7 @@ describe('ProcessPaymentHandler', () => {
     const tx = buildTx();
     const prisma = buildPrisma(tx);
     const eventBus = buildEventBus();
-    const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
+    const handler = new ProcessPaymentHandler(prisma as never, eventBus as never, buildTenant() as never);
 
     const result = await handler.execute({
       invoiceId: 'inv-1',
@@ -80,14 +83,14 @@ describe('ProcessPaymentHandler', () => {
         update: jest.fn().mockResolvedValue(mockInvoice),
       },
       payment: {
-        findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn().mockResolvedValue(mockPayment),
         aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 100 } }),
       },
     });
     const prisma = buildPrisma(tx);
     const eventBus = buildEventBus();
-    const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
+    const handler = new ProcessPaymentHandler(prisma as never, eventBus as never, buildTenant() as never);
 
     await handler.execute({
       invoiceId: 'inv-1',
@@ -114,13 +117,13 @@ describe('ProcessPaymentHandler', () => {
         update: jest.fn(),
       },
       payment: {
-        findUnique: jest.fn().mockResolvedValue(mockPayment),
+        findFirst: jest.fn().mockResolvedValue(mockPayment),
         create: jest.fn().mockRejectedValue(uniqueError),
         aggregate: jest.fn(),
       },
     });
     const prisma = buildPrisma(tx);
-    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
+    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never, buildTenant() as never);
 
     const result = await handler.execute({
       invoiceId: 'inv-1',
@@ -130,9 +133,9 @@ describe('ProcessPaymentHandler', () => {
     });
 
     expect(tx.payment.create).toHaveBeenCalled();
-    expect(tx.payment.findUnique).toHaveBeenCalledWith({
-      where: { idempotencyKey: 'key-1' },
-    });
+    expect(tx.payment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ idempotencyKey: 'key-1' }) }),
+    );
     expect(tx.invoice.update).not.toHaveBeenCalled();
     expect(result.id).toBe('pay-1');
   });
@@ -143,10 +146,10 @@ describe('ProcessPaymentHandler', () => {
         findFirst: jest.fn().mockResolvedValue(null),
         update: jest.fn(),
       },
-      payment: { findUnique: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
+      payment: { findFirst: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
     });
     const prisma = buildPrisma(tx);
-    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
+    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never, buildTenant() as never);
 
     await expect(
       handler.execute({
@@ -163,10 +166,10 @@ describe('ProcessPaymentHandler', () => {
         findFirst: jest.fn().mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.VOID }),
         update: jest.fn(),
       },
-      payment: { findUnique: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
+      payment: { findFirst: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
     });
     const prisma = buildPrisma(tx);
-    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
+    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never, buildTenant() as never);
 
     await expect(
       handler.execute({

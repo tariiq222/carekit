@@ -1,14 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { ApplyCouponDto } from './apply-coupon.dto';
 
 export type ApplyCouponCommand = ApplyCouponDto;
 
 @Injectable()
 export class ApplyCouponHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: ApplyCouponCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
     const invoice = await this.prisma.invoice.findFirst({
       where: { id: cmd.invoiceId },
     });
@@ -16,7 +22,7 @@ export class ApplyCouponHandler {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
 
-    const coupon = await this.prisma.coupon.findUnique({
+    const coupon = await this.prisma.coupon.findFirst({
       where: { code: cmd.code },
     });
     if (!coupon || !coupon.isActive) throw new NotFoundException(`Coupon ${cmd.code} not found`);
@@ -45,18 +51,23 @@ export class ApplyCouponHandler {
     return this.prisma.$transaction(async (tx) => {
       // Atomic guard: increment usedCount only if still below maxUses.
       // updateMany returns { count: 0 } if the WHERE predicate fails — prevents race condition.
+      // organizationId included in all tx.* calls because tx bypasses the tenant Proxy.
       if (coupon.maxUses !== null) {
         const { count } = await tx.coupon.updateMany({
-          where: { id: coupon.id, usedCount: { lt: coupon.maxUses } },
+          where: { id: coupon.id, organizationId, usedCount: { lt: coupon.maxUses } },
           data: { usedCount: { increment: 1 } },
         });
         if (count === 0) throw new BadRequestException(`Coupon ${cmd.code} has reached its usage limit`);
       } else {
+        // UUID-targeted update: assert row belongs to this org before mutating to prevent
+        // cross-org blind updates (tx bypasses Proxy auto-scoping).
+        const owned = await tx.coupon.findFirst({ where: { id: coupon.id, organizationId } });
+        if (!owned) throw new NotFoundException(`Coupon ${cmd.code} not found`);
         await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
       }
 
       const redemption = await tx.couponRedemption.create({
-        data: { couponId: coupon.id, invoiceId: cmd.invoiceId, clientId: cmd.clientId, discount },
+        data: { organizationId, couponId: coupon.id, invoiceId: cmd.invoiceId, clientId: cmd.clientId, discount },
       });
 
       await tx.invoice.update({

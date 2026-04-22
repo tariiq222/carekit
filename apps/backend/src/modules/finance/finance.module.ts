@@ -4,6 +4,7 @@ import { RefundsController } from '../../api/dashboard/refunds.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { StorageModule } from '../../infrastructure/storage';
+import { TenantModule } from '../../common/tenant';
 import { CreateInvoiceHandler } from './create-invoice/create-invoice.handler';
 import { BookingConfirmedHandler } from './create-invoice/booking-confirmed.handler';
 import { ProcessPaymentHandler } from './process-payment/process-payment.handler';
@@ -65,7 +66,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, StorageModule],
+  imports: [DatabaseModule, MessagingModule, StorageModule, TenantModule],
   controllers: [DashboardFinanceController, RefundsController],
   providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler, MoyasarApiClient],
   exports: [...handlers, MoyasarApiClient],

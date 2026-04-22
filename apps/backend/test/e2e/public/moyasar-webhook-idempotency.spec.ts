@@ -70,6 +70,7 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
 
     const invoice = await testPrisma.invoice.create({
       data: {
+        organizationId: DEFAULT_ORG_ID,
         branchId,
         clientId,
         employeeId,
@@ -85,10 +86,22 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
     });
     invoiceId = invoice.id;
 
+    // Minimal ClsService stub: `run` executes callback; `set`/`get` track local
+    // storage so the handler's SaaS-02e 3-stage flow (system-context bypass
+    // then tenant context) works in the raw e2e harness.
+    const clsStore: Record<string, unknown> = {};
+    const cls = {
+      run: async (fn: () => Promise<unknown>) => fn(),
+      set: (key: string, value: unknown) => {
+        clsStore[key] = value;
+      },
+      get: (key: string) => clsStore[key],
+    };
     handler = new MoyasarWebhookHandler(
       testPrisma as never,
       buildEventBus() as never,
       buildConfig() as never,
+      cls as never,
     );
   });
 

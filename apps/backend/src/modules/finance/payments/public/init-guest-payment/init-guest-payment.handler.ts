@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database';
+import { TenantContextService } from '../../../../../common/tenant/tenant-context.service';
 import { MoyasarApiClient } from '../../../moyasar-api/moyasar-api.client';
 import { InitGuestPaymentDto } from './init-guest-payment.dto';
 
@@ -12,10 +13,12 @@ export interface InitGuestPaymentResult {
 export class InitGuestPaymentHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly moyasar: MoyasarApiClient,
   ) {}
 
   async execute(dto: InitGuestPaymentDto): Promise<InitGuestPaymentResult> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await this.prisma.booking.findFirst({
       where: { id: dto.bookingId },
       select: { id: true, status: true, price: true, currency: true },
@@ -58,6 +61,7 @@ export class InitGuestPaymentHandler {
 
     const payment = await this.prisma.payment.create({
       data: {
+        organizationId,
         invoiceId: invoice.id,
         amount: invoice.total,
         currency: invoice.currency,

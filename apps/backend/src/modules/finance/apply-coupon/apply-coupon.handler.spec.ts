@@ -1,6 +1,10 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApplyCouponHandler } from './apply-coupon.handler';
 
+const buildTenant = () => ({
+  requireOrganizationIdOrDefault: jest.fn().mockReturnValue('00000000-0000-0000-0000-000000000001'),
+});
+
 const mockInvoice = {
   id: 'inv-1', subtotal: 200, discountAmt: 0, vatRate: 0.15, vatAmt: 30, total: 230,
 };
@@ -13,13 +17,13 @@ const mockRedemption = { id: 'red-1', couponId: 'coupon-1', invoiceId: 'inv-1', 
 const buildPrisma = () => {
   const db: {
     invoice: { findFirst: jest.Mock; update: jest.Mock };
-    coupon: { findUnique: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
+    coupon: { findFirst: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
     couponRedemption: { findUnique: jest.Mock; create: jest.Mock };
     $transaction: jest.Mock;
   } = {
     invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },
     coupon: {
-      findUnique: jest.fn().mockResolvedValue(mockCoupon),
+      findFirst: jest.fn().mockResolvedValue(mockCoupon),
       update: jest.fn(),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
@@ -38,7 +42,7 @@ const cmd = { invoiceId: 'inv-1', clientId: 'client-1', code: 'SAVE10' };
 describe('ApplyCouponHandler', () => {
   it('applies percentage coupon and returns redemption', async () => {
     const prisma = buildPrisma();
-    const handler = new ApplyCouponHandler(prisma as never);
+    const handler = new ApplyCouponHandler(prisma as never, buildTenant() as never);
     const result = await handler.execute(cmd);
     expect(prisma.couponRedemption.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ discount: 20 }) }),
@@ -49,31 +53,31 @@ describe('ApplyCouponHandler', () => {
   it('throws NotFoundException when invoice not found', async () => {
     const prisma = buildPrisma();
     prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
-    await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(NotFoundException);
+    await expect(new ApplyCouponHandler(prisma as never, buildTenant() as never).execute(cmd)).rejects.toThrow(NotFoundException);
   });
 
   it('throws NotFoundException when coupon not found', async () => {
     const prisma = buildPrisma();
-    prisma.coupon.findUnique = jest.fn().mockResolvedValue(null);
-    await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(NotFoundException);
+    prisma.coupon.findFirst = jest.fn().mockResolvedValue(null);
+    await expect(new ApplyCouponHandler(prisma as never, buildTenant() as never).execute(cmd)).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when coupon expired', async () => {
     const prisma = buildPrisma();
-    prisma.coupon.findUnique = jest.fn().mockResolvedValue({ ...mockCoupon, expiresAt: new Date('2020-01-01') });
-    await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(BadRequestException);
+    prisma.coupon.findFirst = jest.fn().mockResolvedValue({ ...mockCoupon, expiresAt: new Date('2020-01-01') });
+    await expect(new ApplyCouponHandler(prisma as never, buildTenant() as never).execute(cmd)).rejects.toThrow(BadRequestException);
   });
 
   it('throws BadRequestException when max uses reached', async () => {
     const prisma = buildPrisma();
-    (prisma.coupon as { findUnique: jest.Mock; updateMany: jest.Mock }).findUnique = jest.fn().mockResolvedValue({ ...mockCoupon, maxUses: 10, usedCount: 10 });
+    (prisma.coupon as { findFirst: jest.Mock; updateMany: jest.Mock }).findFirst = jest.fn().mockResolvedValue({ ...mockCoupon, maxUses: 10, usedCount: 10 });
     (prisma.coupon as { updateMany: jest.Mock }).updateMany = jest.fn().mockResolvedValue({ count: 0 });
-    await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(BadRequestException);
+    await expect(new ApplyCouponHandler(prisma as never, buildTenant() as never).execute(cmd)).rejects.toThrow(BadRequestException);
   });
 
   it('throws BadRequestException when coupon already applied', async () => {
     const prisma = buildPrisma();
     prisma.couponRedemption.findUnique = jest.fn().mockResolvedValue(mockRedemption);
-    await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(BadRequestException);
+    await expect(new ApplyCouponHandler(prisma as never, buildTenant() as never).execute(cmd)).rejects.toThrow(BadRequestException);
   });
 });

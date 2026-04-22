@@ -100,7 +100,10 @@ export class CreateBookingHandler {
     let discountedPrice: number | null = null;
 
     if (dto.couponCode) {
-      const coupon = await this.prisma.coupon.findUnique({
+      // SaaS-02e: Coupon.code is now composite-unique per (organizationId, code).
+      // The Proxy auto-scopes organizationId from CLS — this is an authenticated
+      // flow (dashboard/client), so CLS is always set.
+      const coupon = await this.prisma.coupon.findFirst({
         where: { code: dto.couponCode },
       });
       if (!coupon || !coupon.isActive) throw new BadRequestException(`Coupon ${dto.couponCode} not found`);

@@ -47,6 +47,14 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'Booking', 'BookingStatusLog', 'WaitlistEntry',
   'GroupSession', 'GroupEnrollment', 'GroupSessionWaitlist',
   'BookingSettings',
+  // 02e — finance
+  'Invoice',
+  'Payment',
+  'Coupon',
+  'CouponRedemption',
+  'RefundRequest',
+  'ZatcaSubmission',
+  'ZatcaConfig',
 ]);
 
 /**

@@ -14,7 +14,7 @@ const buildDeps = (overrides: Partial<{
 
   const prisma = {
     booking: { findMany: jest.fn().mockResolvedValue(bookings) },
-    invoice: { findUnique: jest.fn().mockResolvedValue(overrides.invoiceExists ? mockInvoice : null) },
+    invoice: { findFirst: jest.fn().mockResolvedValue(overrides.invoiceExists ? mockInvoice : null) },
   };
 
   const createInvoice = {
@@ -53,7 +53,7 @@ describe('GroupSessionReadyHandler', () => {
     createInvoice.execute = jest.fn().mockRejectedValue(new ConflictException('exists'));
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
     await handler.handleMinReached(['bk-1', 'bk-2'], 'key');
-    expect(prisma.invoice.findUnique).toHaveBeenCalledTimes(2);
+    expect(prisma.invoice.findFirst).toHaveBeenCalledTimes(2);
   });
 
   it('emits group_session.payment_links_ready with all invoices', async () => {
