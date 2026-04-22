@@ -264,7 +264,7 @@ enum WebsiteTheme {
 }
 
 model BrandingConfig {
-  id             String  @id @default(uuid()) // SaaS-02c: was @default("default")
+  id             String @id @default(uuid()) // SaaS-02c: was @default("default")
   organizationId String @unique // SaaS-02c: one row per org
 
   organizationNameAr String
