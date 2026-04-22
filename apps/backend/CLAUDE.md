@@ -30,7 +30,7 @@ src/
 | `finance/` | payments, invoices, coupons, ZATCA, moyasar-webhook, refund, bank-transfer |
 | `identity/` | login, logout, refresh-token, current-user, users, roles, CASL |
 | `people/` | clients, employees |
-| `comms/` | email, sms, push, notifications, chat, email-templates |
+| `comms/` | email, sms (per-tenant), push, notifications, chat, email-templates, org-sms-config, sms-dlr |
 | `org-config/` | branches, business-hours, categories, departments |
 | `org-experience/` | branding, intake-forms, ratings, services |
 | `ops/` | generate-report, cron-tasks, health-check, log-activity |
@@ -95,6 +95,14 @@ npm run prisma:migrate               # Apply pending migrations (never `db push`
 npm run seed                         # Seed demo data
 npm run prisma:studio                # GUI
 ```
+
+## Comms cluster — SMS (SaaS-02g-sms)
+
+- **SMS is per-tenant.** Each Organization picks Unifonic or Taqnyat via `/settings/sms` and provides their own credentials. Platform billing does NOT meter SMS — tenants pay their chosen provider directly.
+- Dispatch always goes through `SmsProviderFactory.forCurrentTenant(orgId)` — never construct an adapter manually from a handler.
+- Credentials are AES-256-GCM encrypted with `SMS_PROVIDER_ENCRYPTION_KEY` and `organizationId` as AAD — a DB dump alone cannot decrypt under a different tenant context.
+- DLR webhooks (`POST /api/v1/public/sms/webhooks/:provider/:organizationId`) follow the 02e three-stage flow: system-context config lookup → signature verify → `cls.run` mutation.
+- The `GetOrgSmsConfigHandler` NEVER returns `credentialsCiphertext` or `webhookSecret` — the dashboard form is write-only.
 
 ## AI cluster (`src/modules/ai/`)
 

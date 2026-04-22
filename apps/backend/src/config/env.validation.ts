@@ -75,4 +75,9 @@ export const envValidationSchema = Joi.object({
   // Multi-tenancy (SaaS-01) — flag defaults OFF until Plan 02 rollout
   TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('off'),
   DEFAULT_ORGANIZATION_ID: Joi.string().uuid().default('00000000-0000-0000-0000-000000000001'),
+
+  // SMS per-tenant (SaaS-02g-sms) — encryption key is REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
+  // Webhook base URL is the public origin registered with providers for DLR callbacks.
+  SMS_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
+  SMS_WEBHOOK_URL_BASE: Joi.string().uri().allow('').optional(),
 }).unknown(true);
