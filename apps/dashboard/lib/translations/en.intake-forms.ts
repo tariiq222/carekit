@@ -30,6 +30,8 @@ export const enIntakeForms: Record<string, string> = {
   "intakeForms.field.option": "Option",
   "intakeForms.field.removeOption": "Remove option",
   "intakeForms.field.addOption": "Add Option",
+  "intakeForms.field.labelArPlaceholder": "e.g. ما مستوى ألمك؟",
+  "intakeForms.field.labelEnPlaceholder": "e.g. What is your pain level?",
 
   // — Condition Editor —
   "intakeForms.condition.logic": "Conditional Logic",
@@ -49,6 +51,8 @@ export const enIntakeForms: Record<string, string> = {
   "intakeForms.info.select": "Select...",
   "intakeForms.info.active": "Form is Active",
   "intakeForms.info.activeShort": "Active",
+  "intakeForms.info.nameArPlaceholder": "e.g. استبيان ما قبل الجلسة",
+  "intakeForms.info.nameEnPlaceholder": "e.g. Pre-Session Health Form",
 
   // — Form Page —
   "intakeForms.page.editTitle": "Edit Form",
