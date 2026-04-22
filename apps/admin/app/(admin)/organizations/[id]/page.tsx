@@ -8,6 +8,7 @@ import { Skeleton } from '@carekit/ui/primitives/skeleton';
 import { useGetOrganization } from '@/features/organizations/get-organization/use-get-organization';
 import { SuspendDialog } from '@/features/organizations/suspend-organization/suspend-dialog';
 import { ReinstateDialog } from '@/features/organizations/reinstate-organization/reinstate-dialog';
+import { ImpersonateDialog } from '@/features/impersonation/start-impersonation/impersonate-dialog';
 
 export default function OrganizationDetailPage({
   params,
@@ -51,6 +52,9 @@ export default function OrganizationDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
+          {!suspended ? (
+            <ImpersonateDialog organizationId={id} organizationName={data.nameAr} />
+          ) : null}
           {suspended ? (
             <ReinstateDialog organizationId={id} />
           ) : (
