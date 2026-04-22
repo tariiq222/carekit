@@ -5,6 +5,7 @@ import { PlatformModule } from './platform.module';
 import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { DatabaseModule } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/cache/redis.service';
+import { MailModule } from '../../infrastructure/mail';
 
 describe('PlatformModule', () => {
   it('resolves ListFeatureFlagsHandler', async () => {
@@ -18,11 +19,14 @@ describe('PlatformModule', () => {
               REDIS_HOST: 'localhost',
               REDIS_PORT: 6379,
               REDIS_DB: 0,
+              // SMTP_HOST intentionally absent — SmtpService logs a warning
+              // and stays in the disabled-but-resolvable state.
             }),
           ],
         }),
         ClsModule.forRoot({ global: true, middleware: { mount: false } }),
         DatabaseModule,
+        MailModule,
         PlatformModule,
       ],
     })
