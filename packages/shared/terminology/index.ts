@@ -3,10 +3,10 @@
 // family's JSON; a Vertical may override individual keys via
 // VerticalTerminologyOverride rows in the DB.
 
-import medical from './medical.json';
-import consulting from './consulting.json';
-import salon from './salon.json';
-import fitness from './fitness.json';
+import medical from './medical.json' with { type: 'json' };
+import consulting from './consulting.json' with { type: 'json' };
+import salon from './salon.json' with { type: 'json' };
+import fitness from './fitness.json' with { type: 'json' };
 
 export const TEMPLATE_FAMILIES = ['MEDICAL', 'CONSULTING', 'SALON', 'FITNESS'] as const;
 export type TemplateFamily = (typeof TEMPLATE_FAMILIES)[number];
