@@ -144,10 +144,10 @@ export function ClientFormFields({ form, errors, mode }: ClientFormFieldsProps) 
               <Controller
                 control={control}
                 name="nationality"
-                defaultValue="السعودية"
+                defaultValue={t("clients.form.defaultNationality")}
                 render={({ field }) => (
                   <NationalitySelect
-                    value={field.value ?? (locale === "ar" ? "السعودية" : "Saudi Arabia")}
+                    value={field.value ?? t("clients.form.defaultNationality")}
                     onChange={field.onChange}
                     locale={locale}
                   />

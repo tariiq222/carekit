@@ -87,6 +87,7 @@ export const arClients: Record<string, string> = {
   "clients.form.allergiesPlaceholder": "مثال: البنسلين، الفول السوداني...",
   "clients.form.chronicConditions": "الأمراض المزمنة",
   "clients.form.chronicPlaceholder": "مثال: السكري، ضغط الدم...",
+  "clients.form.defaultNationality": "السعودية",
 
   // ── Account status toggle ──
   "clients.account.status": "حالة الحساب",
