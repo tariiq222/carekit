@@ -28,8 +28,8 @@ Phase 02h     ✅ MERGED     Strict mode + penetration (PR #32) — TENANT_ENFOR
 Phase 03      ✅ MERGED     Verticals System (PR #25) — 11 seeds × 4 families + terminology
 Phase 04      ✅ MERGED     Billing & Subscriptions (PR #30 + PR #38 e2e follow-up) — backend complete
 Phase 05a     ✅ MERGED     packages/ui extraction (PR #20) — 33 shadcn primitives
-Phase 05b     🟢 WRITTEN    Super-admin app (1510 lines) — NOW PRIORITY 1
-Phase 06      🟡 PR OPEN   Dashboard terminology + EN i18n (PR #31 DRAFT ~15%) — NOW PRIORITY 2
+Phase 05b     🟡 PARTIAL    Super-admin BACKEND merged (PR #40) — Tasks 0-7, 9, 13 shipped. Tasks 10-12 (apps/admin Next.js + Docker + Nginx) + Task 14 final pending.
+Phase 06      🟡 PR OPEN   Dashboard terminology + EN i18n (PR #31 DRAFT ~15%) — NOW PRIORITY 1
 Phase 06a     🟢 WRITTEN    Dashboard literal refactor — parallel-safe with 06
 Phase 07      🟢 WRITTEN    Marketing site + signup — DEFERRED TO END (only needed for mass acquisition)
 Phase 08      🔄 RESHAPE   Client-facing website — original booking-heavy plan to be replaced with minimal info-only site (no booking logic). Booking moves to mobile + future marketplace themes
@@ -42,8 +42,8 @@ Phase 10      🟢 WRITTEN    Hardening + launch
 Product direction adjusted. **Booking stays inside the dashboard + mobile app — not a public client website.** The client-facing site becomes purely informational. A multi-template marketplace (clinic picks a website template and a mobile app template) is the long-term productization path.
 
 **Immediate priorities:**
-1. **Plan 05b — Super-admin panel** (the SaaS control plane we own)
-2. **Plan 06 — Dashboard i18n + terminology** (clinic staff daily tool) — PR #31 open, finish it
+1. **Plan 06 — Dashboard i18n + terminology** (clinic staff daily tool) — PR #31 open, finish it
+2. **Plan 05b follow-up — apps/admin frontend** (Next.js on 5104 + Docker + Nginx + final verification) — backend already merged in PR #40
 3. **Mobile app** (apps/mobile wiring to new multi-tenant API) — after dashboard
 4. **Minimal clinic info site** — static landing per tenant, NO booking integration
 
@@ -54,11 +54,11 @@ Product direction adjusted. **Booking stays inside the dashboard + mobile app �
 
 **🎯 Next actions (executor):**
 1. Complete Plan 06 (PR #31) — terminology/t() refactor + EN parity + remaining dashboard surfaces
-2. Start Plan 05b (Super-admin) — pending owner gate on Task 0 (impersonation shadow-JWT)
+2. Ship Plan 05b follow-up — `apps/admin/` Next.js scaffold + 6 list pages + Docker + Nginx + Task 14 verification
 
 **🚧 Active risks:**
 - **06 incomplete** — PR #31 has tenant switcher + parity script only; ~85% of t()/tp() refactor + EN parity remain.
-- **05b** introduces `$allTenants` CLS-gated escape hatch + impersonation shadow-JWT — owner-review gate at Task 0.
+- **05b frontend pending** — backend dormant by default (AdminHostGuard + no seeded super-admin) so no live-traffic risk; follow-up PR needed before the panel is actually usable.
 - **Plan 08 reshape** — needs a new short plan (or amendment) defining "info-only tenant site" before Task 0 of 08 can execute under the revised scope.
 - 09 (Custom domain) requires Nginx→Caddy swap — owner-approval gate before cutover.
 - ~~Prisma 7 extensions / CLS / strict mode~~ — all proven in 02a–02h.
@@ -104,7 +104,7 @@ Status legend: ✅ merged · 🟡 PR open / in-flight · 🟢 plan ready, not st
 | 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) | ✅ DONE (2026-04-22) | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
 | 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) — backend complete incl. 15 e2e tests (Task 14 gap filled in PR #38 after audit) | ✅ DONE (2026-04-22) | [#30](https://github.com/tariiq222/carekit/pull/30) + [#38](https://github.com/tariiq222/carekit/pull/38) | 02e, 02g-sms | 2 weeks |
 | 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) | ✅ DONE (2026-04-22) | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
-| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) ⚠️ owner-review gate Task 0 | 🟢 WRITTEN | — | 04, 05a | 2 weeks |
+| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) — backend Tasks 0-7, 9, 13 shipped; apps/admin frontend + Docker + Nginx + Task 14 deferred | 🟡 BACKEND MERGED | [#40](https://github.com/tariiq222/carekit/pull/40) | 04, 05a | 2 weeks |
 | 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) — tenant switcher done (~15%); full refactor pending | 🟡 PR #31 | [#31](https://github.com/tariiq222/carekit/pull/31) | 03, 04, 05a | 3 weeks |
 | 06a | [Dashboard Literal Refactor](./2026-04-22-saas-06a-dashboard-literal-refactor.md) — parallel-safe with 06 | 🟢 WRITTEN | — | 05a | 1 week |
 | 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) ⚠️ **DEFERRED TO END** — only needed for mass acquisition; manual onboarding until then | 🟢 WRITTEN (deferred) | — | 03, 04, 05a, 02e | 3 weeks |
@@ -179,6 +179,7 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 | 2026-04-22 | 04 — Billing & Subscriptions | [#30](https://github.com/tariiq222/carekit/pull/30) | Plan/Subscription/SubscriptionInvoice/UsageRecord + state machine + PlanLimitsGuard on 5 create-paths + UsageTrackerInterceptor + 4 BullMQ crons + Moyasar subscription webhook (3-stage) + dashboard billing skeleton. |
 | 2026-04-22 | 04 e2e follow-up | [#38](https://github.com/tariiq222/carekit/pull/38) | Closed Task 14 gap (PR #30 shipped without e2e; audit 2026-04-22 caught it). 15 tests across 4 specs: subscription-lifecycle, plan-limits-enforcement, usage-metering, moyasar-subscription-webhook. Admin-merged while GitHub Actions billing locked. |
 | 2026-04-22 | data-integrity hardening | [#34](https://github.com/tariiq222/carekit/pull/34) | CHECK constraints + OTP lockout + PasswordHistory fully scoped (added to SCOPED_MODELS — closed silent-scoping risk flagged by audit) + apply-coupon per-user limit. |
+| 2026-04-22 | 05b — Super-admin BACKEND | [#40](https://github.com/tariiq222/carekit/pull/40) | Schema (User.isSuperAdmin + ImpersonationSession + SuperAdminActionLog) + 4 runtime-enforced invariants (SuperAdminGuard DB re-verify, AdminHostGuard, $allTenants CLS-gated, shadow JWT without isSuperAdmin) + 7 admin controllers (organizations, users, plans, verticals, metrics, audit-log, impersonation) + 12 vertical-slice handlers + BullMQ sweeper cron + JwtGuard scope check + suspended-org Redis-cached rejection + dashboard/mobile force-logout on ORG_SUSPENDED + e2e isolation spec + docs. 1257/1257 unit pass. Tasks 10-12 (apps/admin Next.js + Docker + Nginx) + Task 14 deferred. |
 
 ---
 
