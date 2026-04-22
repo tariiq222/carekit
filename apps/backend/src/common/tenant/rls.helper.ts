@@ -27,7 +27,10 @@ export class RlsHelper {
     if (!orgId) return; // no tenant set — leave GUC empty; Plan 02 policies allow this for system jobs.
     // SET LOCAL applies only to the current transaction. Quote the literal
     // to prevent injection — orgId is trusted (from JWT) but we defend anyway.
+    // Both GUC names are set because 02a policies use `app.current_org_id`
+    // while 02e+ policies use `app.current_organization_id`. Normalized in 02h.
     const safe = orgId.replace(/'/g, "''");
     await tx.$executeRawUnsafe(`SET LOCAL app.current_org_id = '${safe}'`);
+    await tx.$executeRawUnsafe(`SET LOCAL app.current_organization_id = '${safe}'`);
   }
 }

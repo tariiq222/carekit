@@ -72,8 +72,11 @@ export const envValidationSchema = Joi.object({
   MOYASAR_API_KEY: Joi.string().allow('').optional(),
   MOYASAR_WEBHOOK_SECRET: Joi.string().allow('').optional(),
 
-  // Multi-tenancy (SaaS-01) — flag defaults OFF until Plan 02 rollout
-  TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('off'),
+  // Multi-tenancy — default `strict` as of SaaS-02h.
+  //   strict     → platform default. Any scoped query without CLS org throws.
+  //   permissive → falls back to DEFAULT_ORGANIZATION_ID. Dev-only.
+  //   off        → no scoping. Legacy single-tenant mode. Never in multi-tenant prod.
+  TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('strict'),
   DEFAULT_ORGANIZATION_ID: Joi.string().uuid().default('00000000-0000-0000-0000-000000000001'),
 
   // SMS per-tenant (SaaS-02g-sms) — encryption key is REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
