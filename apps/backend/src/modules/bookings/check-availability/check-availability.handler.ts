@@ -85,8 +85,19 @@ export class CheckAvailabilityHandler {
 
     if (!businessHour || !businessHour.isOpen) return [];
     if (holiday) return [];
-    if (exception) return [];
     if (shifts.length === 0) return [];
+
+    // Exception handling: full block unless it's the last day AND endTime is set,
+    // in which case the day is only blocked up to endTime.
+    let exceptionCutoff: Date | null = null;
+    if (exception) {
+      const isLastDay =
+        exception.endDate.getFullYear() === dateOnly.getFullYear() &&
+        exception.endDate.getMonth() === dateOnly.getMonth() &&
+        exception.endDate.getDate() === dateOnly.getDate();
+      if (!isLastDay || !exception.endTime) return [];
+      exceptionCutoff = exception.endTime;
+    }
 
     const branchWindow: [Date, Date] = [
       parseHHmm(businessHour.startTime, dateOnly),
@@ -99,7 +110,15 @@ export class CheckAvailabilityHandler {
         parseHHmm(shift.startTime, dateOnly),
         parseHHmm(shift.endTime, dateOnly),
       ];
-      const intersection = intersectWindows(shiftWindow, branchWindow);
+      let intersection = intersectWindows(shiftWindow, branchWindow);
+      if (intersection && exceptionCutoff) {
+        // Block the day up to exceptionCutoff (exception ends at this time — work resumes after)
+        if (intersection[1] <= exceptionCutoff) {
+          intersection = null;
+        } else if (intersection[0] < exceptionCutoff) {
+          intersection = [exceptionCutoff, intersection[1]];
+        }
+      }
       if (intersection) windows.push(intersection);
     }
 

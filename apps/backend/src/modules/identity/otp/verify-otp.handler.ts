@@ -4,7 +4,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { VerifyOtpDto } from './verify-otp.dto';
 import { OtpSessionService } from './otp-session.service';
 
-const MAX_VERIFY_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MINUTES = 15;
 
 export type VerifyOtpCommand = VerifyOtpDto;
 
@@ -32,13 +32,26 @@ export class VerifyOtpHandler {
       throw new BadRequestException('Invalid or expired OTP code');
     }
 
-    if (otpRecord.attempts >= MAX_VERIFY_ATTEMPTS) {
+    const now = new Date();
+    if (otpRecord.lockedUntil && otpRecord.lockedUntil > now) {
+      throw new BadRequestException('OTP_LOCKED_OUT');
+    }
+
+    if (otpRecord.attempts >= otpRecord.maxAttempts) {
       throw new BadRequestException('Too many failed attempts. Please request a new code.');
     }
 
+    const nextAttempts = otpRecord.attempts + 1;
+    const shouldLock = nextAttempts >= otpRecord.maxAttempts;
+
     await this.prisma.otpCode.update({
       where: { id: otpRecord.id },
-      data: { attempts: { increment: 1 } },
+      data: {
+        attempts: { increment: 1 },
+        ...(shouldLock
+          ? { lockedUntil: new Date(now.getTime() + LOCKOUT_WINDOW_MINUTES * 60 * 1000) }
+          : {}),
+      },
     });
 
     const codeMatch = await bcrypt.compare(dto.code, otpRecord.codeHash);

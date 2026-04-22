@@ -5,6 +5,8 @@ export interface CreateEmployeeExceptionCommand {
   employeeId: string;
   startDate: string;
   endDate: string;
+  endTime?: string;
+  isStartTimeOnly?: boolean;
   reason?: string;
 }
 
@@ -22,12 +24,19 @@ export class CreateEmployeeExceptionHandler {
     const end = new Date(cmd.endDate);
     if (end < start) throw new BadRequestException('endDate must be after startDate');
 
+    const endTime = cmd.endTime ? new Date(cmd.endTime) : null;
+    if (endTime && endTime < start) {
+      throw new BadRequestException('endTime must be at or after startDate');
+    }
+
     return this.prisma.employeeAvailabilityException.create({
       data: {
         employeeId: cmd.employeeId,
         organizationId: employee.organizationId,
         startDate: start,
         endDate: end,
+        endTime,
+        isStartTimeOnly: cmd.isStartTimeOnly ?? false,
         reason: cmd.reason,
       },
     });

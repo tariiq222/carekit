@@ -23,6 +23,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // SaaS-02b — people cluster + ClientRefreshToken.
   'Client',
   'ClientRefreshToken',
+  'PasswordHistory',
   'Employee',
   'EmployeeBranch',
   'EmployeeService',
