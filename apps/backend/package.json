@@ -27,7 +27,7 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
     "openapi:export": "tsx scripts/export-openapi.ts",
-    "openapi:snapshot": "node -e \"process.env.WRITE_OPENAPI_SPEC='1'; require('./dist/main.js')\"",
+    "openapi:snapshot": "WRITE_OPENAPI_SPEC=1 tsx -e \"require('./dist/main.js')\"",
     "openapi:build-and-snapshot": "npm run build && npm run openapi:snapshot",
     "check:openapi-coverage": "tsx scripts/check-openapi-coverage.ts"
   },
