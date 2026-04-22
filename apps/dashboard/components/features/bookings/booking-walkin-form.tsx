@@ -26,6 +26,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { Textarea } from "@carekit/ui"
 
 import { createWalkInClient } from "@/lib/api/clients"
+import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import { BLOOD_TYPES, BLOOD_LABELS } from "@/lib/schemas/client.schema"
 import {
@@ -69,8 +70,7 @@ function FormField({
 
 /* ── Step indicator ── */
 
-function StepIndicator({ step }: { step: 1 | 2 }) {
-  const labels = ["البيانات الشخصية والتواصل", "المعلومات الطبية"]
+function StepIndicator({ step, labels }: { step: 1 | 2; labels: [string, string] }) {
   return (
     <div className="flex items-center gap-3 w-fit">
       {([1, 2] as const).map((s, i) => {

@@ -93,7 +93,7 @@ export function BookingEmployeeSection({
             <SelectContent>
               {employees.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  د. {p.user.firstName} {p.user.lastName}
+                  {t("bookings.info.drPrefix")} {p.user.firstName} {p.user.lastName}
                 </SelectItem>
               ))}
             </SelectContent>
