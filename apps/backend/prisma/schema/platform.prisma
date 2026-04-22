@@ -1,4 +1,5 @@
 // Platform BC — license validation, feature flags, problem reports, integrations.
+// SaaS-02g: ProblemReport, Integration, FeatureFlag scoped (NOT Organization/Membership/Vertical*).
 
 enum ProblemReportStatus {
   OPEN
@@ -14,38 +15,49 @@ enum ProblemReportType {
 }
 
 model ProblemReport {
-  id          String              @id @default(uuid())
-  reporterId  String
-  type        ProblemReportType
-  title       String
-  description String
-  status      ProblemReportStatus @default(OPEN)
-  resolution  String?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id             String              @id @default(uuid())
+  organizationId String // SaaS-02g
+  reporterId     String
+  type           ProblemReportType
+  title          String
+  description    String
+  status         ProblemReportStatus @default(OPEN)
+  resolution     String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
+  @@index([organizationId])
   @@index([status])
 }
 
 model Integration {
-  id        String   @id @default(uuid())
-  provider  String   @unique
-  config    Json
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  organizationId String // SaaS-02g
+  key            String // now composite-unique per (orgId, key)
+  provider       String
+  config         Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
 }
 
 model FeatureFlag {
-  id            String   @id @default(cuid())
-  key           String   @unique
-  enabled       Boolean  @default(true)
-  nameAr        String
-  nameEn        String
-  descriptionAr String?
-  descriptionEn String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  organizationId String // SaaS-02g
+  key            String // now composite-unique per (orgId, key)
+  enabled        Boolean  @default(true)
+  nameAr         String
+  nameEn         String
+  descriptionAr  String?
+  descriptionEn  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
 }
 
 // ─── Organization (SaaS-01) ──────────────────────────────────────────────────

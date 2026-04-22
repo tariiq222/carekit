@@ -1,6 +1,7 @@
 // AI BC — knowledge base, embeddings (pgvector), RAG chat sessions.
 // Uses the `vector` type from pgvector declared in main.prisma.
 // SaaS-02f: ChatSession + ChatMessage scoped; ChatbotConfig converted to org singleton.
+// SaaS-02g: KnowledgeDocument + DocumentChunk scoped.
 
 enum DocumentStatus {
   PENDING
@@ -11,33 +12,37 @@ enum DocumentStatus {
 // ─── Knowledge Base ───────────────────────────────────────────────────────────
 
 model KnowledgeDocument {
-  id         String         @id @default(uuid())
-  title      String
-  sourceType String // "manual" | "url" | "file"
-  sourceRef  String? // URL or MinIO object key
-  status     DocumentStatus @default(PENDING)
-  metadata   Json?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id             String         @id @default(uuid())
+  organizationId String // SaaS-02g
+  title          String
+  sourceType     String // "manual" | "url" | "file"
+  sourceRef      String? // URL or MinIO object key
+  status         DocumentStatus @default(PENDING)
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   chunks DocumentChunk[]
 
+  @@index([organizationId])
   @@index([status])
   @@index([createdAt])
 }
 
 model DocumentChunk {
-  id         String                       @id @default(uuid())
-  documentId String
-  content    String
-  embedding  Unsupported("vector(1536)")?
-  chunkIndex Int
-  tokenCount Int                          @default(0)
-  createdAt  DateTime                     @default(now())
+  id             String                       @id @default(uuid())
+  organizationId String // SaaS-02g (denormalized from KnowledgeDocument)
+  documentId     String
+  content        String
+  embedding      Unsupported("vector(1536)")?
+  chunkIndex     Int
+  tokenCount     Int                          @default(0)
+  createdAt      DateTime                     @default(now())
 
   document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
+  @@index([organizationId])
 }
 
 // ─── Chat Sessions ────────────────────────────────────────────────────────────
