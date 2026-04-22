@@ -25,12 +25,15 @@ function buildController() {
   } as unknown as TokenService;
   const getCurrentUser = fn();
   const changePassword = fn();
+  const listMemberships = fn([]);
+  const switchOrganization = fn(TOKEN_PAIR);
   const config = { get: jest.fn().mockReturnValue('15m'), getOrThrow: jest.fn().mockReturnValue('15m') } as never;
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
-    getCurrentUser as never, changePassword as never, config,
+    getCurrentUser as never, changePassword as never,
+    listMemberships as never, switchOrganization as never, config,
   );
-  return { controller, login, logout, prisma, tokens };
+  return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization };
 }
 
 describe('AuthController', () => {
@@ -145,6 +148,39 @@ describe('AuthController', () => {
 
       await expect(controller.logoutEndpoint({ refreshToken: 'bad' } as never))
         .rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('membershipsEndpoint (SaaS-06)', () => {
+    it('forwards userId to ListMembershipsHandler', async () => {
+      const { controller, listMemberships } = buildController();
+      listMemberships.execute.mockResolvedValue([{ id: 'm1' }]);
+
+      const result = await controller.membershipsEndpoint(USER_ID);
+
+      expect(listMemberships.execute).toHaveBeenCalledWith({ userId: USER_ID });
+      expect(result).toEqual([{ id: 'm1' }]);
+    });
+  });
+
+  describe('switchOrgEndpoint (SaaS-06)', () => {
+    it('returns fresh tokens with expiresIn on success', async () => {
+      const { controller, switchOrganization } = buildController();
+
+      const result = await controller.switchOrgEndpoint(
+        USER_ID,
+        { organizationId: 'org-b' } as never,
+      );
+
+      expect(switchOrganization.execute).toHaveBeenCalledWith({
+        userId: USER_ID,
+        targetOrganizationId: 'org-b',
+      });
+      expect(result).toEqual({
+        accessToken: 'access',
+        refreshToken: 'refresh',
+        expiresIn: 900,
+      });
     });
   });
 });

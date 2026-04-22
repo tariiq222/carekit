@@ -42,6 +42,8 @@ import { ClientLogoutHandler } from './client-auth/client-logout.handler';
 import { GetMeHandler } from './client-auth/get-me.handler';
 import { ResetPasswordHandler } from './client-auth/reset-password/reset-password.handler';
 import { PasswordHistoryService } from './client-auth/shared/password-history.service';
+import { ListMembershipsHandler } from './list-memberships/list-memberships.handler';
+import { SwitchOrganizationHandler } from './switch-organization/switch-organization.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -58,6 +60,8 @@ const handlers = [
   ClientLogoutHandler,
   GetMeHandler,
   ResetPasswordHandler,
+  ListMembershipsHandler,
+  SwitchOrganizationHandler,
 ];
 
 @Module({

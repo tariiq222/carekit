@@ -19,6 +19,9 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
 import { GetCurrentUserQuery } from '../../modules/identity/get-current-user/get-current-user.query';
 import { ChangePasswordHandler } from '../../modules/identity/users/change-password.handler';
+import { ListMembershipsHandler } from '../../modules/identity/list-memberships/list-memberships.handler';
+import { SwitchOrganizationHandler } from '../../modules/identity/switch-organization/switch-organization.handler';
+import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
 import { IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
@@ -43,6 +46,8 @@ export class AuthController {
     private readonly tokens: TokenService,
     private readonly getCurrentUser: GetCurrentUserHandler,
     private readonly changePassword: ChangePasswordHandler,
+    private readonly listMemberships: ListMembershipsHandler,
+    private readonly switchOrganization: SwitchOrganizationHandler,
     private readonly config: ConfigService,
   ) {}
 
@@ -137,6 +142,62 @@ export class AuthController {
   async meEndpoint(@UserId() userId: string) {
     const user = await this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
     return { ...user, permissions: flattenPermissions(user) };
+  }
+
+  @Get('memberships')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List organizations the current user belongs to',
+    description:
+      'SaaS-06 — powers the tenant switcher. Returns one row per ACTIVE ' +
+      'membership for the caller, with the organization summary attached.',
+  })
+  @ApiOkResponse({ description: 'Array of MembershipSummary rows' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
+  async membershipsEndpoint(@UserId() userId: string) {
+    return this.listMemberships.execute({ userId });
+  }
+
+  @Post('switch-org')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Switch active organization context',
+    description:
+      'SaaS-06 — issues a fresh access + refresh token pair scoped to the ' +
+      'target organization. Caller must have an ACTIVE membership in the target.',
+  })
+  @ApiOkResponse({
+    description: 'New access + refresh token pair scoped to the target org',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string' },
+        refreshToken: { type: 'string' },
+        expiresIn: { type: 'number', example: 900 },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
+  @ApiResponse({
+    status: 403,
+    description: 'Caller has no active membership in the target organization',
+    type: ApiErrorDto,
+  })
+  async switchOrgEndpoint(
+    @UserId() userId: string,
+    @Body() body: SwitchOrganizationDto,
+  ) {
+    const tokens = await this.switchOrganization.execute({
+      userId,
+      targetOrganizationId: body.organizationId,
+    });
+    return {
+      ...tokens,
+      expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+    };
   }
 
   @Patch('password/change')
