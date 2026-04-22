@@ -67,6 +67,8 @@ model Organization {
   nameAr          String
   nameEn          String?
   status          OrganizationStatus @default(ACTIVE)
+  verticalId      String?
+  vertical        Vertical?          @relation(fields: [verticalId], references: [id], onDelete: SetNull)
   trialEndsAt     DateTime?
   suspendedAt     DateTime?
   suspendedReason String?
@@ -76,6 +78,7 @@ model Organization {
   memberships Membership[]
 
   @@index([status])
+  @@index([verticalId])
 }
 
 // ─── Membership (SaaS-01) ────────────────────────────────────────────────────
@@ -105,4 +108,84 @@ model Membership {
   @@unique([userId, organizationId])
   @@index([userId])
   @@index([organizationId])
+}
+
+// ─── Vertical (SaaS-03) ──────────────────────────────────────────────────────
+// Platform-level catalog of clinic verticals CareKit supports.
+
+enum TemplateFamily {
+  MEDICAL
+  CONSULTING
+  SALON
+  FITNESS
+}
+
+model Vertical {
+  id             String         @id @default(uuid())
+  slug           String         @unique
+  nameAr         String
+  nameEn         String
+  templateFamily TemplateFamily
+  descriptionAr  String?
+  descriptionEn  String?
+  iconUrl        String?
+  sortOrder      Int            @default(0)
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  seedDepartments       VerticalSeedDepartment[]
+  seedServiceCategories VerticalSeedServiceCategory[]
+  terminologyOverrides  VerticalTerminologyOverride[]
+  organizations         Organization[]
+
+  @@index([templateFamily])
+  @@index([isActive, sortOrder])
+}
+
+model VerticalSeedDepartment {
+  id         String   @id @default(uuid())
+  verticalId String
+  vertical   Vertical @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+  nameAr     String
+  nameEn     String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  seedCategories VerticalSeedServiceCategory[]
+
+  @@unique([verticalId, nameAr])
+  @@index([verticalId])
+}
+
+model VerticalSeedServiceCategory {
+  id           String                  @id @default(uuid())
+  verticalId   String
+  vertical     Vertical                @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+  departmentId String?
+  department   VerticalSeedDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  nameAr       String
+  nameEn       String
+  sortOrder    Int                     @default(0)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  @@unique([verticalId, nameAr])
+  @@index([verticalId])
+  @@index([departmentId])
+}
+
+model VerticalTerminologyOverride {
+  id         String   @id @default(uuid())
+  verticalId String
+  vertical   Vertical @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+  tokenKey   String
+  valueAr    String
+  valueEn    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([verticalId, tokenKey])
+  @@index([verticalId])
 }
