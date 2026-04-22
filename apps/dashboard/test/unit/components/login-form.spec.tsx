@@ -9,9 +9,18 @@ vi.mock("@/components/providers/auth-provider", () => ({
 }))
 
 import { LoginForm } from "@/components/features/login-form"
+import { LocaleProvider } from "@/components/locale-provider"
 
 function getPasswordInput() {
   return document.getElementById("password") as HTMLInputElement
+}
+
+function renderLoginForm() {
+  return render(
+    <LocaleProvider>
+      <LoginForm />
+    </LocaleProvider>
+  )
 }
 
 describe("LoginForm", () => {
@@ -23,19 +32,19 @@ describe("LoginForm", () => {
   })
 
   it("renders email and password fields", () => {
-    render(<LoginForm />)
+    renderLoginForm()
     expect(screen.getByRole("textbox", { name: /البريد الإلكتروني/i })).toBeInTheDocument()
     expect(getPasswordInput()).toBeInTheDocument()
   })
 
   it("renders submit button", () => {
-    render(<LoginForm />)
+    renderLoginForm()
     expect(screen.getByRole("button", { name: /تسجيل الدخول/i })).toBeInTheDocument()
   })
 
   it("calls login with email and password on submit", async () => {
     loginMock.mockResolvedValueOnce(undefined)
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
     await userEvent.type(getPasswordInput(), "password123")
@@ -48,7 +57,7 @@ describe("LoginForm", () => {
 
   it("shows loading state during submit", async () => {
     loginMock.mockReturnValueOnce(new Promise(() => undefined))
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
     await userEvent.type(getPasswordInput(), "password123")
@@ -61,7 +70,7 @@ describe("LoginForm", () => {
 
   it("shows error message on login failure", async () => {
     loginMock.mockRejectedValueOnce(new Error("بيانات غير صحيحة"))
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
     await userEvent.type(getPasswordInput(), "wrong")
@@ -74,7 +83,7 @@ describe("LoginForm", () => {
 
   it("shows generic error for non-Error throws", async () => {
     loginMock.mockRejectedValueOnce("unknown error")
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
     await userEvent.type(getPasswordInput(), "wrong")
@@ -86,7 +95,7 @@ describe("LoginForm", () => {
   })
 
   it("toggles password visibility", async () => {
-    render(<LoginForm />)
+    renderLoginForm()
 
     expect(getPasswordInput()).toHaveAttribute("type", "password")
 
@@ -99,7 +108,7 @@ describe("LoginForm", () => {
 
   it("does not show dev login button in production", () => {
     vi.stubEnv("NODE_ENV", "production")
-    render(<LoginForm />)
+    renderLoginForm()
     expect(screen.queryByText(/Dev Admin Login/i)).toBeNull()
   })
 
@@ -107,7 +116,7 @@ describe("LoginForm", () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("NEXT_PUBLIC_DEV_EMAIL", "dev@test.com")
     vi.stubEnv("NEXT_PUBLIC_DEV_PASSWORD", "devpass")
-    render(<LoginForm />)
+    renderLoginForm()
     expect(screen.getByText(/Dev Admin Login/i)).toBeInTheDocument()
   })
 
@@ -116,7 +125,7 @@ describe("LoginForm", () => {
     vi.stubEnv("NEXT_PUBLIC_DEV_EMAIL", "dev@test.com")
     vi.stubEnv("NEXT_PUBLIC_DEV_PASSWORD", "devpass")
     loginMock.mockResolvedValueOnce(undefined)
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.click(screen.getByText(/Dev Admin Login/i))
 
@@ -127,7 +136,7 @@ describe("LoginForm", () => {
 
   it("clears error on new submit attempt", async () => {
     loginMock.mockRejectedValueOnce(new Error("خطأ"))
-    render(<LoginForm />)
+    renderLoginForm()
 
     await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "a@b.com")
     await userEvent.type(getPasswordInput(), "123")

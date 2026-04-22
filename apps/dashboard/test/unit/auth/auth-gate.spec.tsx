@@ -37,6 +37,19 @@ vi.mock('@hugeicons/core-free-icons', () => ({
 }))
 
 import { AuthGate } from '@/components/providers/auth-gate'
+import { LocaleProvider } from '@/components/locale-provider'
+
+// ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
+
+function renderAuthGate(children: React.ReactNode) {
+  return render(
+    <LocaleProvider>
+      <AuthGate>{children}</AuthGate>
+    </LocaleProvider>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -69,11 +82,7 @@ describe('AuthGate', () => {
   it('should show loading spinner while auth is resolving', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: true, login: vi.fn(), logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div data-testid="protected-content">Protected</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div data-testid="protected-content">Protected</div>)
 
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
     // Loading indicator is present
@@ -87,11 +96,7 @@ describe('AuthGate', () => {
   it('should show login form when user is null and not loading', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: false, login: vi.fn(), logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div data-testid="protected-content">Protected</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div data-testid="protected-content">Protected</div>)
 
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
     expect(screen.getByLabelText(/البريد الإلكتروني/)).toBeInTheDocument()
@@ -105,11 +110,7 @@ describe('AuthGate', () => {
   it('should render children when user is authenticated', () => {
     mockUseAuth.mockReturnValue({ user: mockUser, loading: false, login: vi.fn(), logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div data-testid="protected-content">Dashboard Content</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div data-testid="protected-content">Dashboard Content</div>)
 
     expect(screen.getByTestId('protected-content')).toBeInTheDocument()
     expect(screen.queryByLabelText(/البريد الإلكتروني/)).not.toBeInTheDocument()
@@ -123,11 +124,7 @@ describe('AuthGate', () => {
     const mockLogin = vi.fn().mockResolvedValue(undefined)
     mockUseAuth.mockReturnValue({ user: null, loading: false, login: mockLogin, logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div>Protected</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div>Protected</div>)
 
     await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'admin@carekit-test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'Admin@Pass123')
@@ -142,11 +139,7 @@ describe('AuthGate', () => {
     const mockLogin = vi.fn().mockRejectedValue(new Error('Invalid email or password'))
     mockUseAuth.mockReturnValue({ user: null, loading: false, login: mockLogin, logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div>Protected</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div>Protected</div>)
 
     await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'bad@test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'wrongpass')
@@ -167,9 +160,11 @@ describe('AuthGate', () => {
     mockUseAuth.mockImplementation(() => authState)
 
     const { rerender } = render(
-      <AuthGate>
-        <div data-testid="protected-content">Dashboard</div>
-      </AuthGate>,
+      <LocaleProvider>
+        <AuthGate>
+          <div data-testid="protected-content">Dashboard</div>
+        </AuthGate>
+      </LocaleProvider>
     )
 
     expect(screen.getByTestId('protected-content')).toBeInTheDocument()
@@ -177,9 +172,11 @@ describe('AuthGate', () => {
     // Simulate logout — user becomes null
     authState = { user: null, loading: false, login: vi.fn(), logout: vi.fn() }
     rerender(
-      <AuthGate>
-        <div data-testid="protected-content">Dashboard</div>
-      </AuthGate>,
+      <LocaleProvider>
+        <AuthGate>
+          <div data-testid="protected-content">Dashboard</div>
+        </AuthGate>
+      </LocaleProvider>
     )
 
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
@@ -191,9 +188,11 @@ describe('AuthGate', () => {
     mockUseAuth.mockImplementation(() => authState)
 
     const { rerender } = render(
-      <AuthGate>
-        <div data-testid="secret">Secret Data</div>
-      </AuthGate>,
+      <LocaleProvider>
+        <AuthGate>
+          <div data-testid="secret">Secret Data</div>
+        </AuthGate>
+      </LocaleProvider>
     )
 
     // Confirm content was visible
@@ -202,9 +201,11 @@ describe('AuthGate', () => {
     // Logout
     authState = { user: null, loading: false, login: vi.fn(), logout: vi.fn() }
     rerender(
-      <AuthGate>
-        <div data-testid="secret">Secret Data</div>
-      </AuthGate>,
+      <LocaleProvider>
+        <AuthGate>
+          <div data-testid="secret">Secret Data</div>
+        </AuthGate>
+      </LocaleProvider>
     )
 
     // Content must be gone, login form must be present
@@ -220,11 +221,7 @@ describe('AuthGate', () => {
     )
     mockUseAuth.mockReturnValue({ user: null, loading: false, login: mockLogin, logout: vi.fn() })
 
-    render(
-      <AuthGate>
-        <div>Protected</div>
-      </AuthGate>,
-    )
+    renderAuthGate(<div>Protected</div>)
 
     await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'admin@test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'Pass123!')
