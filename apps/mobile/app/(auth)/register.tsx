@@ -1,45 +1,105 @@
+import { useState, useCallback } from 'react';
 import {
   View,
+  Text,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Alert,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Eye,
-  EyeOff,
-  Mail,
-  User,
-  Phone,
-} from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedInput } from '@/theme/components/ThemedInput';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { useTheme } from '@/theme/useTheme';
-import { useRegisterForm } from '@/hooks/use-register-form';
+import { Glass } from '@/theme';
+import { C, RADII, SHADOW } from '@/theme/glass';
+import { useDir } from '@/hooks/useDir';
+import { useAppDispatch } from '@/hooks/use-redux';
+import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
+import { authService } from '@/services/auth';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const dispatch = useAppDispatch();
+  const dir = useDir();
 
-  const { fields, setters, errors, clearError, loading, handleRegister } =
-    useRegisterForm();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const validate = useCallback((): boolean => {
+    const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
+    if (!lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
+    if (!email || !emailRegex.test(email)) newErrors.email = t('auth.invalidEmail');
+    if (!phone.trim()) newErrors.phone = t('auth.phoneRequired');
+    if (!password) {
+      newErrors.password = t('auth.passwordRequired');
+    } else if (password.length < 8) {
+      newErrors.password = t('auth.passwordMinLength');
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = t('auth.passwordMismatch');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [firstName, lastName, email, phone, password, confirmPassword, t]);
+
+  const handleRegister = useCallback(async () => {
+    if (!validate()) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    setIsLoading(true);
+    dispatch(setLoading(true));
+
+    try {
+      const response = await authService.register({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+      });
+      if (response.success && response.data) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        dispatch(setCredentials(response.data));
+        router.replace('/(client)/(tabs)/home');
+      }
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(t('common.error'), t('auth.registerError'));
+    } finally {
+      setIsLoading(false);
+      dispatch(setLoading(false));
+    }
+  }, [firstName, lastName, email, phone, password, validate, dispatch, router, t]);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[C.bgTop, C.bgUpper, C.bgMid, C.bgLower, C.bgBot]}
+        locations={[0, 0.25, 0.5, 0.72, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -47,7 +107,7 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scroll,
-            { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 20 },
+            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -60,208 +120,190 @@ export default function RegisterScreen() {
             }}
             style={styles.backBtn}
           >
-            <BackIcon
-              size={24}
-              strokeWidth={1.5}
-              color={theme.colors.textPrimary}
-            />
+            <Text style={styles.backIcon}>←</Text>
           </Pressable>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <LinearGradient
-              colors={['#0037B0', '#1D4ED8']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconBadge}
-            >
-              <User size={28} color="#FFF" strokeWidth={1.5} />
-            </LinearGradient>
-
-            <ThemedText variant="displaySm" align="center">
-              {t('auth.createAccountTitle')}
-            </ThemedText>
-            <ThemedText
-              variant="bodySm"
-              align="center"
-              color={theme.colors.textSecondary}
-              style={styles.sub}
-            >
-              {t('auth.createAccountSub')}
-            </ThemedText>
-          </View>
+          {/* Title */}
+          <Text
+            style={[
+              styles.title,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
+          >
+            {t('auth.createAccountTitle')}
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
+          >
+            {t('auth.createAccountSub')}
+          </Text>
 
           {/* Form */}
-          <View style={styles.form}>
-            {/* Name Row */}
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <ThemedInput
-                  label={t('auth.firstName')}
-                  labelAr={t('auth.firstName')}
-                  placeholder={t('auth.firstNamePlaceholder')}
-                  placeholderAr={t('auth.firstNamePlaceholder')}
-                  value={fields.firstName}
-                  onChangeText={(text) => {
-                    setters.setFirstName(text);
-                    clearError('firstName');
-                  }}
-                  error={errors.firstName}
-                  suffixIcon={
-                    <User
-                      size={16}
-                      strokeWidth={1.5}
-                      color={theme.colors.textMuted}
+          <Glass
+            variant="regular"
+            radius={RADII.card}
+            style={[styles.form, SHADOW, { marginTop: 24 }]}
+          >
+            <View style={styles.formInner}>
+              {/* Name Row */}
+              <View style={[styles.row, { flexDirection: dir.row }]}>
+                <View style={styles.half}>
+                  <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                    {t('auth.firstName')}
+                  </Text>
+                  <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                    <TextInput
+                      value={firstName}
+                      onChangeText={(text) => {
+                        setFirstName(text);
+                        if (errors.firstName) setErrors((e) => ({ ...e, firstName: undefined }));
+                      }}
+                      placeholder={t('auth.firstNamePlaceholder')}
+                      placeholderTextColor={C.subtle}
+                      style={[styles.inputText, { textAlign: dir.textAlign }]}
                     />
-                  }
-                />
+                  </Glass>
+                  {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
+                </View>
+
+                <View style={styles.half}>
+                  <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                    {t('auth.lastName')}
+                  </Text>
+                  <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                    <TextInput
+                      value={lastName}
+                      onChangeText={(text) => {
+                        setLastName(text);
+                        if (errors.lastName) setErrors((e) => ({ ...e, lastName: undefined }));
+                      }}
+                      placeholder={t('auth.lastNamePlaceholder')}
+                      placeholderTextColor={C.subtle}
+                      style={[styles.inputText, { textAlign: dir.textAlign }]}
+                    />
+                  </Glass>
+                  {errors.lastName ? <Text style={styles.error}>{errors.lastName}</Text> : null}
+                </View>
               </View>
-              <View style={styles.halfInput}>
-                <ThemedInput
-                  label={t('auth.lastName')}
-                  labelAr={t('auth.lastName')}
-                  placeholder={t('auth.lastNamePlaceholder')}
-                  placeholderAr={t('auth.lastNamePlaceholder')}
-                  value={fields.lastName}
-                  onChangeText={(text) => {
-                    setters.setLastName(text);
-                    clearError('lastName');
+
+              {/* Email */}
+              <View style={styles.field}>
+                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                  {t('auth.email')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
+                    }}
+                    placeholder={t('auth.emailPlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={[styles.inputText, { textAlign: dir.textAlign }]}
+                  />
+                </Glass>
+                {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
+              </View>
+
+              {/* Phone */}
+              <View style={styles.field}>
+                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                  {t('auth.phone')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={phone}
+                    onChangeText={(text) => {
+                      setPhone(text);
+                      if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
+                    }}
+                    placeholder={t('auth.phonePlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    keyboardType="phone-pad"
+                    style={[styles.inputText, { textAlign: dir.textAlign }]}
+                  />
+                </Glass>
+                {errors.phone ? <Text style={styles.error}>{errors.phone}</Text> : null}
+              </View>
+
+              {/* Password */}
+              <View style={styles.field}>
+                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                  {t('auth.password')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+                    }}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    secureTextEntry={!showPassword}
+                    style={[styles.inputText, { textAlign: dir.textAlign }]}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                    <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                  </Pressable>
+                </Glass>
+                {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
+              </View>
+
+              {/* Confirm Password */}
+              <View style={styles.field}>
+                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
+                  {t('auth.confirmPassword')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword) setErrors((e) => ({ ...e, confirmPassword: undefined }));
+                    }}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    secureTextEntry={!showPassword}
+                    style={[styles.inputText, { textAlign: dir.textAlign }]}
+                  />
+                </Glass>
+                {errors.confirmPassword ? <Text style={styles.error}>{errors.confirmPassword}</Text> : null}
+              </View>
+
+              {/* Register Button */}
+              <Glass
+                variant="regular"
+                radius={RADII.image}
+                onPress={handleRegister}
+                interactive
+                style={[styles.btn, { backgroundColor: C.deepTeal, marginTop: 8 }]}
+              >
+                <Text style={styles.btnText}>
+                  {loading ? t('common.loading') : t('auth.register')}
+                </Text>
+              </Glass>
+
+              {/* Login Link */}
+              <View style={[styles.loginRow, { flexDirection: dir.row }]}>
+                <Text style={styles.loginText}>{t('auth.haveAccount')} </Text>
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.back();
                   }}
-                  error={errors.lastName}
-                />
+                >
+                  <Text style={styles.loginLink}>{t('auth.login')}</Text>
+                </Pressable>
               </View>
             </View>
-
-            <ThemedInput
-              label={t('auth.email')}
-              labelAr={t('auth.email')}
-              placeholder={t('auth.emailPlaceholder')}
-              placeholderAr={t('auth.emailPlaceholder')}
-              value={fields.email}
-              onChangeText={(text) => {
-                setters.setEmail(text);
-                clearError('email');
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              error={errors.email}
-              suffixIcon={
-                <Mail
-                  size={18}
-                  strokeWidth={1.5}
-                  color={theme.colors.textMuted}
-                />
-              }
-            />
-
-            <ThemedInput
-              label={t('auth.phone')}
-              labelAr={t('auth.phone')}
-              placeholder={t('auth.phonePlaceholder')}
-              placeholderAr={t('auth.phonePlaceholder')}
-              value={fields.phone}
-              onChangeText={setters.setPhoneNum}
-              keyboardType="phone-pad"
-              suffixIcon={
-                <Phone
-                  size={18}
-                  strokeWidth={1.5}
-                  color={theme.colors.textMuted}
-                />
-              }
-            />
-
-            <ThemedInput
-              label={t('auth.password')}
-              labelAr={t('auth.password')}
-              placeholder={t('auth.passwordPlaceholder')}
-              placeholderAr={t('auth.passwordPlaceholder')}
-              value={fields.password}
-              onChangeText={(text) => {
-                setters.setPassword(text);
-                clearError('password');
-              }}
-              secureTextEntry={!fields.showPassword}
-              error={errors.password}
-              suffixIcon={
-                fields.showPassword ? (
-                  <Eye
-                    size={18}
-                    strokeWidth={1.5}
-                    color={theme.colors.textMuted}
-                  />
-                ) : (
-                  <EyeOff
-                    size={18}
-                    strokeWidth={1.5}
-                    color={theme.colors.textMuted}
-                  />
-                )
-              }
-              onSuffixPress={() => setters.setShowPassword(!fields.showPassword)}
-            />
-
-            <ThemedInput
-              label={t('auth.confirmPassword')}
-              labelAr={t('auth.confirmPassword')}
-              placeholder={t('auth.confirmPasswordPlaceholder')}
-              placeholderAr={t('auth.confirmPasswordPlaceholder')}
-              value={fields.confirmPassword}
-              onChangeText={(text) => {
-                setters.setConfirmPassword(text);
-                clearError('confirmPassword');
-              }}
-              secureTextEntry={!fields.showPassword}
-              error={errors.confirmPassword}
-            />
-
-            {/* Terms */}
-            <ThemedText
-              variant="caption"
-              color={theme.colors.textMuted}
-              align="center"
-              style={styles.terms}
-            >
-              {t('auth.agreeTerms')}{' '}
-              <ThemedText variant="caption" color="#1D4ED8" style={styles.link}>
-                {t('auth.termsOfService')}
-              </ThemedText>{' '}
-              {t('auth.and')}{' '}
-              <ThemedText variant="caption" color="#1D4ED8" style={styles.link}>
-                {t('auth.privacyPolicy')}
-              </ThemedText>
-            </ThemedText>
-
-            {/* Register Button */}
-            <ThemedButton
-              onPress={handleRegister}
-              variant="primary"
-              size="lg"
-              full
-              loading={loading}
-              disabled={loading}
-            >
-              {t('auth.createAccount')}
-            </ThemedButton>
-          </View>
-
-          {/* Login Link */}
-          <View style={styles.bottomRow}>
-            <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-              {t('auth.hasAccount')}{' '}
-            </ThemedText>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.back();
-              }}
-            >
-              <ThemedText variant="bodySm" color="#1D4ED8" style={styles.link}>
-                {t('auth.loginNow')}
-              </ThemedText>
-            </Pressable>
-          </View>
+          </Glass>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -271,34 +313,25 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24 },
-  backBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  header: { alignItems: 'center', marginBottom: 32 },
-  iconBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  sub: { marginTop: 8 },
-  form: { gap: 14 },
-  row: { flexDirection: 'row', gap: 12 },
-  halfInput: { flex: 1 },
-  terms: { marginVertical: 4, lineHeight: 20 },
-  link: { fontWeight: '600' },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-    paddingBottom: 8,
-  },
+  scroll: { paddingHorizontal: 24 },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  backIcon: { fontSize: 24, color: C.deepTeal },
+  title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
+  form: { padding: 24 },
+  formInner: { gap: 16 },
+  row: { gap: 12 },
+  half: { flex: 1, gap: 8 },
+  field: { gap: 8 },
+  label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
+  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
+  eyeBtn: { padding: 4 },
+  eyeIcon: { fontSize: 18 },
+  error: { fontSize: 12, color: '#E74C3C' },
+  btn: { padding: 16, alignItems: 'center' },
+  btnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  loginRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
+  loginText: { fontSize: 14, color: C.subtle },
+  loginLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
 });

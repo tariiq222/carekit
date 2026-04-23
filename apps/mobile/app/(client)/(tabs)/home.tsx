@@ -1,198 +1,191 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { Stethoscope, Bell } from 'lucide-react-native';
+import { View, Text, ScrollView, StyleSheet, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { ThemedCard } from '@/theme/components/ThemedCard';
-import { EmployeeCard } from '@/components/features/EmployeeCard';
-import { StatusPill } from '@/components/ui/StatusPill';
-import { Avatar } from '@/components/ui/Avatar';
-import { useTheme } from '@/theme/useTheme';
-import { useAppSelector } from '@/hooks/use-redux';
-import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner';
-import { employeesService } from '@/services/employees';
-import { bookingsService } from '@/services/bookings';
-import type { Employee, Booking } from '@/types/models';
+import { useDir } from '@/hooks/useDir';
+import { Glass } from '@/theme';
+import { C, RADII, SHADOW, SHADOW_RAISED } from '@/theme/glass';
 
 export default function ClientHomeScreen() {
-  const { t } = useTranslation();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
-  const user = useAppSelector((s) => s.auth.user);
-
-  const [refreshing, setRefreshing] = useState(false);
-  const [featured, setFeatured] = useState<Employee[]>([]);
-  const [upcoming, setUpcoming] = useState<Booking | null>(null);
-
-  const loadData = useCallback(async () => {
-    const [featRes, upRes] = await Promise.allSettled([
-      employeesService.getFeatured(),
-      bookingsService.getUpcoming(),
-    ]);
-    if (featRes.status === 'fulfilled' && featRes.value.data)
-      setFeatured(featRes.value.data as Employee[]);
-    if (upRes.status === 'fulfilled' && upRes.value.data) {
-      const list = upRes.value.data as Booking[];
-      setUpcoming(list[0] ?? null);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  }, [loadData]);
-
-  const greeting = user?.firstName
-    ? `${t('home.greeting')}، ${user.firstName}`
-    : t('home.greeting');
+  const dir = useDir();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[C.bgTop, C.bgUpper, C.bgMid, C.bgLower, C.bgBot]}
+        locations={[0, 0.25, 0.5, 0.72, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: insets.top + 6, paddingBottom: 120 }
+        ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Gradient Header */}
-        <LinearGradient
-          colors={['#0037B0', '#1D4ED8']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
+        {/* Header */}
+        <View style={[styles.header, { paddingHorizontal: 22 }]}>
+          <View style={[styles.headerRow, { flexDirection: dir.row }]}>
+            <View style={{ flex: 1, gap: 8 }}>
+              <Text
+                style={[
+                  styles.greeting,
+                  { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                ]}
+              >
+                مرحباً سارة
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                ]}
+              >
+                كيف يمكننا مساعدتك اليوم؟
+              </Text>
+            </View>
+
+            {/* Avatar + Bell */}
+            <View style={[styles.headerIcons, { flexDirection: dir.row }]}>
+              <Glass variant="clear" radius={RADII.pill} style={styles.iconBubble}>
+                <Text style={styles.avatarText}>س</Text>
+              </Glass>
+              <Glass variant="clear" radius={RADII.pill} style={styles.iconBubble}>
+                <View style={styles.bellIcon} />
+                <View style={styles.notifDot} />
+              </Glass>
+            </View>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <Glass
+          variant="strong"
+          radius={RADII.floating}
+          style={[styles.quickActions, SHADOW_RAISED, { marginHorizontal: 18 }]}
         >
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1, gap: 6 }}>
-              <View style={styles.brandRow}>
-                <Stethoscope size={20} strokeWidth={1.5} color="#FFF" />
-                <ThemedText variant="subheading" color="#FFF">
-                  {t('common.appName')}
-                </ThemedText>
-              </View>
-              <ThemedText variant="heading" color="#FFF">
-                {greeting}
-              </ThemedText>
-            </View>
-            <Pressable
-              onPress={() => router.push('/(client)/(tabs)/notifications')}
-              style={styles.bellBtn}
-            >
-              <Bell size={22} strokeWidth={1.5} color="#FFF" />
-            </Pressable>
+          <View style={[styles.actionsGrid, { flexDirection: dir.row }]}>
+            <ActionCard icon="📅" label="حجز موعد" tint={C.greenTint} />
+            <ActionCard icon="💬" label="تحدث معنا" tint={C.peachTint} />
+            <ActionCard icon="📋" label="سجلاتي" tint={C.tealTint} />
           </View>
-        </LinearGradient>
+        </Glass>
 
-        <View style={styles.body}>
-          {/* Email Verification Banner */}
-          <EmailVerificationBanner />
-
-          {/* Upcoming Appointment */}
-          {upcoming ? (
-            <View style={styles.section}>
-              <ThemedText variant="subheading">{t('home.upcomingAppointment')}</ThemedText>
-              <ThemedCard onPress={() => {}}>
-                <View style={styles.upRow}>
-                  <Avatar
-                    size={44}
-                    name={`${upcoming.employee.user.firstName} ${upcoming.employee.user.lastName}`}
-                    imageUrl={upcoming.employee.user.avatarUrl}
-                  />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <ThemedText variant="subheading" numberOfLines={1}>
-                      {upcoming.employee.user.firstName} {upcoming.employee.user.lastName}
-                    </ThemedText>
-                    <ThemedText variant="caption" color={theme.colors.textSecondary}>
-                      {new Date(upcoming.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
-                        weekday: 'short', month: 'short', day: 'numeric',
-                      })} • {upcoming.startTime}
-                    </ThemedText>
-                  </View>
-                  <StatusPill status={upcoming.status} label={t('appointments.confirmed')} />
-                </View>
-              </ThemedCard>
-            </View>
-          ) : (
-            <ThemedCard style={{ alignItems: 'center', gap: 12, padding: 24 }}>
-              <ThemedText variant="body" color={theme.colors.textSecondary} align="center">
-                {t('home.noUpcoming')}
-              </ThemedText>
-              <ThemedButton onPress={() => {}} variant="primary" size="sm">
-                {t('home.bookNow')}
-              </ThemedButton>
-            </ThemedCard>
-          )}
-
-          {/* Featured Employees */}
-          <View style={styles.section}>
-            <SectionHeader title={t('home.featured')} action={t('common.viewAll')} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-              {featured.map((p) => (
-                <EmployeeCard
-                  key={p.id}
-                  employee={p}
-                  compact
-                  onPress={(id) => router.push(`/(client)/employee/${id}`)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Promo Banner */}
-          <LinearGradient
-            colors={['#0037B0', '#1D4ED8']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.promo}
+        {/* Section: Clinics */}
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
           >
-            <ThemedText variant="subheading" color="#FFF" style={{ flex: 1 }}>
-              {t('home.bookAppointment')}
-            </ThemedText>
-            <ThemedButton onPress={() => {}} variant="secondary" size="sm">
-              {t('home.bookNow')}
-            </ThemedButton>
-          </LinearGradient>
+            العيادات المميزة
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.rail,
+              { flexDirection: dir.rowReverse, paddingHorizontal: 18 }
+            ]}
+          >
+            <ClinicCard name="عيادة النفسية" city="الرياض" />
+            <ClinicCard name="مركز الصحة" city="جدة" />
+          </ScrollView>
         </View>
       </ScrollView>
     </View>
   );
 }
 
-function SectionHeader({ title, action }: { title: string; action: string }) {
+function ActionCard({ icon, label, tint }: { icon: string; label: string; tint: string }) {
+  const dir = useDir();
   return (
-    <View style={styles.sectionHead}>
-      <ThemedText variant="subheading">{title}</ThemedText>
-      <Pressable>
-        <ThemedText variant="bodySm" color="#1D4ED8" style={{ fontWeight: '600' }}>
-          {action}
-        </ThemedText>
-      </Pressable>
-    </View>
+    <Glass variant="regular" radius={RADII.card} style={[styles.actionCard, { backgroundColor: tint }]}>
+      <Text style={styles.actionIcon}>{icon}</Text>
+      <Text
+        style={[
+          styles.actionLabel,
+          { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+        ]}
+      >
+        {label}
+      </Text>
+    </Glass>
+  );
+}
+
+function ClinicCard({ name, city }: { name: string; city: string }) {
+  const dir = useDir();
+  return (
+    <Glass variant="regular" radius={RADII.card} style={[styles.clinicCard, SHADOW]}>
+      <View style={styles.clinicImage}>
+        <LinearGradient
+          colors={[C.softTeal, C.deepTeal]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </View>
+      <View style={styles.clinicBody}>
+        <Text
+          style={[
+            styles.clinicName,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {name}
+        </Text>
+        <Text
+          style={[
+            styles.clinicCity,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {city}
+        </Text>
+      </View>
+    </Glass>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bellBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 20, paddingTop: 20, gap: 24 },
-  section: { gap: 12 },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  upRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  promo: { borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center' },
+  scroll: { paddingBottom: 120 },
+  header: { paddingTop: 6, paddingBottom: 18 },
+  headerRow: { alignItems: 'flex-start', gap: 12 },
+  greeting: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42 },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
+  headerIcons: { gap: 10, alignItems: 'center' },
+  iconBubble: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 18, fontWeight: '700', color: C.deepTeal },
+  bellIcon: { width: 20, height: 20, backgroundColor: C.deepTeal, borderRadius: 4 },
+  notifDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: C.notifDot,
+  },
+  quickActions: { marginTop: 0, padding: 18 },
+  actionsGrid: { gap: 12 },
+  actionCard: { flex: 1, padding: 16, alignItems: 'center', gap: 8, minHeight: 100 },
+  actionIcon: { fontSize: 32 },
+  actionLabel: { fontSize: 12, fontWeight: '700', color: C.deepTeal },
+  section: { marginTop: 24, gap: 12 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: C.deepTeal,
+    paddingHorizontal: 18,
+  },
+  rail: { gap: 14, paddingTop: 20, paddingBottom: 72 },
+  clinicCard: { width: 180, overflow: 'hidden' },
+  clinicImage: { width: 180, height: 120, borderRadius: RADII.image },
+  clinicBody: { padding: 10, gap: 4 },
+  clinicName: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  clinicCity: { fontSize: 12, color: C.subtle },
 });
