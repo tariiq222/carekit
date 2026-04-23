@@ -45,9 +45,11 @@ model Integration {
 
 model FeatureFlag {
   id             String   @id @default(uuid())
-  organizationId String // SaaS-02g
+  organizationId String? // SaaS-02g — nullable for global flags
   key            String // now composite-unique per (orgId, key)
   enabled        Boolean  @default(true)
+  allowedPlans   String[] // plan IDs allowed to use this flag
+  limitKind      String? // e.g. "count", "percentage"
   nameAr         String
   nameEn         String
   descriptionAr  String?
@@ -178,6 +180,37 @@ model Membership {
   @@unique([userId, organizationId])
   @@index([userId])
   @@index([organizationId])
+}
+
+// ─── Invitation (SaaS-06c) ───────────────────────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model Invitation {
+  id              String           @id @default(uuid())
+  organizationId  String
+  email           String
+  role            MembershipRole
+  token           String           @unique
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  invitedByUserId String
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([token])
+  @@index([email, organizationId])
+  @@index([status, expiresAt])
 }
 
 // ─── Vertical (SaaS-03) ──────────────────────────────────────────────────────

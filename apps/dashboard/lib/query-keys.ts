@@ -9,8 +9,7 @@ export const queryKeys = {
   /* ─── Bookings ─── */
   bookings: {
     all: ["bookings"] as const,
-    list: (filters?: object) =>
-      ["bookings", "list", filters] as const,
+    list: (filters?: object) => ["bookings", "list", filters] as const,
     detail: (id: string) => ["bookings", "detail", id] as const,
     stats: () => ["bookings", "stats"] as const,
     statusLog: (id: string) => ["bookings", "status-log", id] as const,
@@ -19,8 +18,7 @@ export const queryKeys = {
   /* ─── Clients ─── */
   clients: {
     all: ["clients"] as const,
-    list: (filters?: object) =>
-      ["clients", "list", filters] as const,
+    list: (filters?: object) => ["clients", "list", filters] as const,
     listStats: () => ["clients", "list-stats"] as const,
     detail: (id: string) => ["clients", "detail", id] as const,
     stats: (id: string) => ["clients", "stats", id] as const,
@@ -30,31 +28,29 @@ export const queryKeys = {
   /* ─── Employees ─── */
   employees: {
     all: ["employees"] as const,
-    list: (filters?: object) =>
-      ["employees", "list", filters] as const,
+    list: (filters?: object) => ["employees", "list", filters] as const,
     detail: (id: string) => ["employees", "detail", id] as const,
-    availability: (id: string) =>
-      ["employees", "availability", id] as const,
+    availability: (id: string) => ["employees", "availability", id] as const,
     slots: (id: string, date: string) =>
       ["employees", "slots", id, date] as const,
-    breaks: (id: string) =>
-      ["employees", "breaks", id] as const,
-    vacations: (id: string) =>
-      ["employees", "vacations", id] as const,
-    services: (id: string) =>
-      ["employees", "services", id] as const,
+    breaks: (id: string) => ["employees", "breaks", id] as const,
+    vacations: (id: string) => ["employees", "vacations", id] as const,
+    services: (id: string) => ["employees", "services", id] as const,
     serviceTypes: (employeeId: string, serviceId: string) =>
-      [...["employees"] as const, employeeId, "service-types", serviceId] as const,
-    ratings: (id: string) =>
-      ["employees", "ratings", id] as const,
+      [
+        ...(["employees"] as const),
+        employeeId,
+        "service-types",
+        serviceId,
+      ] as const,
+    ratings: (id: string) => ["employees", "ratings", id] as const,
     stats: () => ["employees", "stats"] as const,
   },
 
   /* ─── Services ─── */
   services: {
     all: ["services"] as const,
-    list: (filters?: object) =>
-      ["services", "list", filters] as const,
+    list: (filters?: object) => ["services", "list", filters] as const,
     listStats: () => ["services", "list-stats"] as const,
     detail: (id: string) => ["services", "detail", id] as const,
     categories: (filters?: object) =>
@@ -74,8 +70,7 @@ export const queryKeys = {
   /* ─── Payments ─── */
   payments: {
     all: ["payments"] as const,
-    list: (filters?: object) =>
-      ["payments", "list", filters] as const,
+    list: (filters?: object) => ["payments", "list", filters] as const,
     detail: (id: string) => ["payments", "detail", id] as const,
     stats: () => ["payments", "stats"] as const,
     byBooking: (bookingId: string) =>
@@ -85,8 +80,7 @@ export const queryKeys = {
   /* ─── Invoices ─── */
   invoices: {
     all: ["invoices"] as const,
-    list: (filters?: object) =>
-      ["invoices", "list", filters] as const,
+    list: (filters?: object) => ["invoices", "list", filters] as const,
     detail: (id: string) => ["invoices", "detail", id] as const,
     stats: () => ["invoices", "stats"] as const,
     html: (id: string) => ["invoices", "html", id] as const,
@@ -95,8 +89,7 @@ export const queryKeys = {
   /* ─── Users ─── */
   users: {
     all: ["users"] as const,
-    list: (filters?: object) =>
-      ["users", "list", filters] as const,
+    list: (filters?: object) => ["users", "list", filters] as const,
     detail: (id: string) => ["users", "detail", id] as const,
   },
 
@@ -115,17 +108,14 @@ export const queryKeys = {
   /* ─── Notifications ─── */
   notifications: {
     all: ["notifications"] as const,
-    list: (filters?: object) =>
-      ["notifications", "list", filters] as const,
+    list: (filters?: object) => ["notifications", "list", filters] as const,
     unreadCount: () => ["notifications", "unread-count"] as const,
   },
 
   /* ─── Reports ─── */
   reports: {
-    revenue: (filters?: object) =>
-      ["reports", "revenue", filters] as const,
-    bookings: (filters?: object) =>
-      ["reports", "bookings", filters] as const,
+    revenue: (filters?: object) => ["reports", "revenue", filters] as const,
+    bookings: (filters?: object) => ["reports", "bookings", filters] as const,
     employee: (id: string, filters?: object) =>
       ["reports", "employee", id, filters] as const,
   },
@@ -136,8 +126,7 @@ export const queryKeys = {
       all: ["chatbot", "sessions"] as const,
       list: (filters?: object) =>
         ["chatbot", "sessions", "list", filters] as const,
-      detail: (id: string) =>
-        ["chatbot", "sessions", "detail", id] as const,
+      detail: (id: string) => ["chatbot", "sessions", "detail", id] as const,
     },
     knowledgeBase: {
       all: ["chatbot", "knowledge-base"] as const,
@@ -151,12 +140,10 @@ export const queryKeys = {
     },
     config: {
       all: ["chatbot", "config"] as const,
-      list: (category?: string) =>
-        ["chatbot", "config", { category }] as const,
+      list: (category?: string) => ["chatbot", "config", { category }] as const,
     },
     analytics: {
-      all: (filters?: object) =>
-        ["chatbot", "analytics", filters] as const,
+      all: (filters?: object) => ["chatbot", "analytics", filters] as const,
       questions: (limit?: number) =>
         ["chatbot", "analytics", "questions", limit] as const,
     },
@@ -165,6 +152,7 @@ export const queryKeys = {
   /* ─── Organization ─── */
   organization: {
     all: ["organization"] as const,
+    profile: () => ["organization", "profile"] as const,
     hours: () => ["organization-hours"] as const,
     holidays: (year?: number) => ["organization-holidays", year] as const,
   },
@@ -172,26 +160,22 @@ export const queryKeys = {
   /* ─── Coupons ─── */
   coupons: {
     all: ["coupons"] as const,
-    list: (filters?: object) =>
-      ["coupons", "list", filters] as const,
+    list: (filters?: object) => ["coupons", "list", filters] as const,
     detail: (id: string) => ["coupons", "detail", id] as const,
   },
 
   /* ─── Branches ─── */
   branches: {
     all: ["branches"] as const,
-    list: (filters?: object) =>
-      ["branches", "list", filters] as const,
+    list: (filters?: object) => ["branches", "list", filters] as const,
     detail: (id: string) => ["branches", "detail", id] as const,
-    employees: (id: string) =>
-      ["branches", "employees", id] as const,
+    employees: (id: string) => ["branches", "employees", id] as const,
   },
 
   /* ─── Departments ─── */
   departments: {
     all: ["departments"] as const,
-    list: (filters?: object) =>
-      ["departments", "list", filters] as const,
+    list: (filters?: object) => ["departments", "list", filters] as const,
     detail: (id: string) => ["departments", "detail", id] as const,
   },
 
@@ -234,7 +218,8 @@ export const queryKeys = {
     all: ["organization-settings"] as const,
     config: () => ["organization-settings", "config"] as const,
     public: () => ["organization-settings", "public"] as const,
-    bookingFlowOrder: () => ["organization-settings", "booking-flow-order"] as const,
+    bookingFlowOrder: () =>
+      ["organization-settings", "booking-flow-order"] as const,
     payment: () => ["organization-settings", "payment"] as const,
   },
 
@@ -267,12 +252,11 @@ export const queryKeys = {
     list: (prefix?: string) => ["site-settings", "list", prefix ?? ""] as const,
   },
 
-
   /* ─── Billing ─── */
   billing: {
     all: ["billing"] as const,
     subscription: () => ["billing", "subscription"] as const,
     plans: () => ["billing", "plans"] as const,
+    features: () => ["billing", "features"] as const,
   },
-
 } as const

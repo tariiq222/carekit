@@ -15,8 +15,12 @@ import {
   Building06Icon,
   DocumentValidationIcon,
   PaintBrush01Icon,
+  Building01Icon,
+  StarIcon,
+  TaxesIcon,
+  Activity01Icon,
 } from "@hugeicons/core-free-icons"
-import type { FeatureFlagKey } from "@carekit/shared/constants"
+import { FeatureKey } from "@carekit/shared/constants"
 
 export interface NavItem {
   titleKey: string
@@ -24,7 +28,7 @@ export interface NavItem {
   icon: typeof Home01Icon
   badge?: number
   permission?: string // "module:action" — item hidden if user lacks this permission
-  featureFlag?: FeatureFlagKey // hide if feature flag is disabled
+  featureFlag?: FeatureKey // hide if feature flag is disabled for this org's plan
 }
 
 export interface NavGroup {
@@ -43,28 +47,90 @@ export const organizationNav: NavItem[] = [
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.categories", href: "/categories", icon: GridIcon },
   { titleKey: "nav.departments", href: "/departments", icon: Building06Icon },
-  { titleKey: "nav.branches", href: "/branches", icon: Building06Icon, featureFlag: "multi_branch" },
-  { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon, featureFlag: "intake_forms" },
+  {
+    titleKey: "nav.branches",
+    href: "/branches",
+    icon: Building06Icon,
+    featureFlag: FeatureKey.BRANCHES,
+  },
+  {
+    titleKey: "nav.intakeForms",
+    href: "/intake-forms",
+    icon: DocumentValidationIcon,
+    featureFlag: FeatureKey.INTAKE_FORMS,
+  },
+  // Ratings is always visible (spec §6.3 — no plan gating)
+  { titleKey: "nav.ratings", href: "/ratings", icon: StarIcon },
 ]
 
 export const financeNav: NavItem[] = [
   { titleKey: "nav.payments", href: "/payments", icon: MoneyBag02Icon },
   { titleKey: "nav.invoices", href: "/invoices", icon: Invoice02Icon },
-  { titleKey: "nav.coupons", href: "/coupons", icon: Coupon01Icon, featureFlag: "coupons" },
-  { titleKey: "nav.reports", href: "/reports", icon: AnalyticsUpIcon, featureFlag: "reports" },
+  {
+    titleKey: "nav.coupons",
+    href: "/coupons",
+    icon: Coupon01Icon,
+    featureFlag: FeatureKey.COUPONS,
+  },
+  {
+    titleKey: "nav.reports",
+    href: "/reports",
+    icon: AnalyticsUpIcon,
+    featureFlag: FeatureKey.ADVANCED_REPORTS,
+  },
+  {
+    titleKey: "nav.zatca",
+    href: "/zatca",
+    icon: TaxesIcon,
+    featureFlag: FeatureKey.ZATCA,
+  },
 ]
 
 export const toolsNav: NavItem[] = [
-  { titleKey: "nav.chatbot", href: "/chatbot", icon: AiChat02Icon, featureFlag: "chatbot" },
-  { titleKey: "nav.notifications", href: "/notifications", icon: Notification03Icon },
-  { titleKey: "nav.contactMessages", href: "/contact-messages", icon: Notification03Icon },
+  {
+    titleKey: "nav.chatbot",
+    href: "/chatbot",
+    icon: AiChat02Icon,
+    featureFlag: FeatureKey.AI_CHATBOT,
+  },
+  {
+    titleKey: "nav.notifications",
+    href: "/notifications",
+    icon: Notification03Icon,
+  },
+  {
+    titleKey: "nav.contactMessages",
+    href: "/contact-messages",
+    icon: Notification03Icon,
+  },
+  {
+    titleKey: "nav.activityLog",
+    href: "/activity-log",
+    icon: Activity01Icon,
+    featureFlag: FeatureKey.ACTIVITY_LOG,
+  },
 ]
 
 export const adminNav: NavItem[] = [
   { titleKey: "nav.users", href: "/users", icon: ShieldKeyIcon },
-  { titleKey: "nav.branding", href: "/branding", icon: PaintBrush01Icon, permission: "branding:edit" },
+  {
+    titleKey: "nav.branding",
+    href: "/branding",
+    icon: PaintBrush01Icon,
+    permission: "branding:edit",
+  },
   { titleKey: "nav.content", href: "/content", icon: DocumentValidationIcon },
   { titleKey: "nav.settings", href: "/settings", icon: Settings02Icon },
+  {
+    titleKey: "settings.organization.title",
+    href: "/settings/organization",
+    icon: Building01Icon,
+  },
+  {
+    titleKey: "settings.members.title",
+    href: "/settings/members",
+    icon: UserMultiple02Icon,
+  },
 ]
 
 export const navGroups: NavGroup[] = [
