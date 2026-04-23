@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Mental Health Home",
+    "slug": "mental-health-home",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": { "supportsTablet": false },
+    "android": { "adaptiveIcon": { "backgroundColor": "#BFE6E6" } },
+    "web": { "bundler": "metro" },
+    "extra": { "rtl": true }
+  }
+}

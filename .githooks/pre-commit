@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# CareKit pre-commit hook.
+# Runs design-system lint for any changes touching apps/mobile.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR || true)
+
+# Mobile design lint — only when mobile files are staged.
+if echo "$STAGED" | grep -qE '^apps/mobile/.*\.(ts|tsx)$'; then
+  echo "→ design-lint (apps/mobile)…"
+  if ! (cd apps/mobile && node scripts/design-lint.mjs); then
+    echo ""
+    echo "✗ Pre-commit blocked: new design-system violations."
+    echo "  Fix the errors above, or — if intentional — run:"
+    echo "    npm run lint:design --workspace=carekit-mobile -- --update-baseline"
+    exit 1
+  fi
+fi
+
+exit 0

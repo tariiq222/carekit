@@ -1,15 +1,19 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubscriptionInvoiceStatus, SubscriptionStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
   IsEnum,
+  IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 export class ListSubscriptionsQueryDto {
@@ -82,4 +86,49 @@ export class ListSubscriptionInvoicesQueryDto {
   @Type(() => Boolean)
   @IsBoolean()
   includeDrafts?: boolean;
+}
+
+export class WaiveInvoiceDto {
+  @ApiProperty({ minLength: 10, maxLength: 500 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class GrantCreditDto {
+  @ApiProperty()
+  @IsString()
+  organizationId!: string;
+
+  @ApiProperty({ minimum: 1, maximum: 100000 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100000)
+  amount!: number;
+
+  @ApiPropertyOptional({ enum: ['SAR'], default: 'SAR' })
+  @IsOptional()
+  @IsString()
+  @IsIn(['SAR'])
+  currency?: string;
+
+  @ApiProperty({ minLength: 10, maxLength: 500 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ChangePlanForOrgDto {
+  @ApiProperty()
+  @IsString()
+  newPlanId!: string;
+
+  @ApiProperty({ minLength: 10, maxLength: 500 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(500)
+  reason!: string;
 }
