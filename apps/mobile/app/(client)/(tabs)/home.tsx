@@ -1,5 +1,4 @@
 import { View, Text, ScrollView, StyleSheet, ImageBackground } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDir } from '@/hooks/useDir';
 import { Glass } from '@/theme';
@@ -11,10 +10,10 @@ export default function ClientHomeScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[C.bgTop, C.bgUpper, C.bgMid, C.bgLower, C.bgBot]}
-        locations={[0, 0.25, 0.5, 0.72, 1]}
+      <ImageBackground
+        source={require('@/assets/bg.jpg')}
         style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
       />
 
       <ScrollView

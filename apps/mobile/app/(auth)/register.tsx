@@ -9,10 +9,10 @@ import {
   Alert,
   StyleSheet,
   TextInput,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
@@ -94,10 +94,10 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[C.bgTop, C.bgUpper, C.bgMid, C.bgLower, C.bgBot]}
-        locations={[0, 0.25, 0.5, 0.72, 1]}
+      <ImageBackground
+        source={require('@/assets/bg.jpg')}
         style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
       />
 
       <KeyboardAvoidingView
