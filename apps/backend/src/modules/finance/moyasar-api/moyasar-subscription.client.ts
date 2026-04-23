@@ -39,6 +39,37 @@ export class MoyasarSubscriptionClient {
   }
 
   /**
+   * Refund a previously paid Moyasar payment. Amount in halalas (1 SAR = 100).
+   * Idempotency-Key prevents double-refunds on network retry.
+   * Throws on non-2xx — handler must catch and surface to the admin caller.
+   */
+  async refundPayment(params: {
+    paymentId: string;
+    amountHalalas: number;
+    idempotencyKey: string;
+  }): Promise<{ id: string; amount: number; status: string }> {
+    const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
+    const response = await fetch(
+      `https://api.moyasar.com/v1/payments/${params.paymentId}/refund`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+          'Idempotency-Key': params.idempotencyKey,
+        },
+        body: JSON.stringify({ amount: params.amountHalalas }),
+      },
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Moyasar refund failed: ${response.status} ${text}`);
+    }
+    return response.json() as Promise<{ id: string; amount: number; status: string }>;
+  }
+
+  /**
    * Verifies the HMAC-SHA256 signature from Moyasar webhook requests.
    * Matches the approach used by MoyasarWebhookHandler: HMAC-SHA256 over
    * rawBody with the webhook secret, compared using timingSafeEqual.

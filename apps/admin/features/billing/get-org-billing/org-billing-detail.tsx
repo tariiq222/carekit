@@ -21,10 +21,16 @@ import type {
 } from '../types';
 import { ChangePlanDialog } from '../change-plan-for-org/change-plan-dialog';
 import { GrantCreditDialog } from '../grant-credit/grant-credit-dialog';
+import { RefundInvoiceDialog } from '../refund-invoice/refund-invoice-dialog';
 import { WaiveInvoiceDialog } from '../waive-invoice/waive-invoice-dialog';
 import { useGetOrgBilling } from './use-get-org-billing';
 
 const WAIVABLE: SubscriptionInvoiceStatus[] = ['DUE', 'FAILED'];
+
+function isFullyRefunded(inv: SubscriptionInvoiceRow): boolean {
+  if (inv.refundedAmount === null) return false;
+  return Number(inv.refundedAmount) >= Number(inv.amount);
+}
 
 const SUB_TONE: Record<SubscriptionStatus, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
@@ -58,6 +64,7 @@ interface Props {
 export function OrgBillingDetail({ orgId }: Props) {
   const { data, isLoading, error } = useGetOrgBilling(orgId);
   const [waiveTarget, setWaiveTarget] = useState<SubscriptionInvoiceRow | null>(null);
+  const [refundTarget, setRefundTarget] = useState<SubscriptionInvoiceRow | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [grantCreditOpen, setGrantCreditOpen] = useState(false);
 
@@ -194,6 +201,14 @@ export function OrgBillingDetail({ orgId }: Props) {
                           >
                             Waive
                           </Button>
+                        ) : inv.status === 'PAID' && !isFullyRefunded(inv) ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setRefundTarget(inv)}
+                          >
+                            Refund
+                          </Button>
                         ) : null}
                       </TableCell>
                     </TableRow>
@@ -278,6 +293,15 @@ export function OrgBillingDetail({ orgId }: Props) {
           open={Boolean(waiveTarget)}
           onOpenChange={(o) => !o && setWaiveTarget(null)}
           invoice={waiveTarget}
+          orgId={orgId}
+        />
+      ) : null}
+
+      {refundTarget ? (
+        <RefundInvoiceDialog
+          open={Boolean(refundTarget)}
+          onOpenChange={(o) => !o && setRefundTarget(null)}
+          invoice={refundTarget}
           orgId={orgId}
         />
       ) : null}

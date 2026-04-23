@@ -22,11 +22,13 @@ import { GetBillingMetricsHandler } from '../../modules/platform/admin/get-billi
 import { AdminWaiveInvoiceHandler } from '../../modules/platform/admin/admin-waive-invoice/admin-waive-invoice.handler';
 import { AdminGrantCreditHandler } from '../../modules/platform/admin/admin-grant-credit/admin-grant-credit.handler';
 import { AdminChangePlanForOrgHandler } from '../../modules/platform/admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
+import { AdminRefundInvoiceHandler } from '../../modules/platform/admin/admin-refund-invoice/admin-refund-invoice.handler';
 import {
   ChangePlanForOrgDto,
   GrantCreditDto,
   ListSubscriptionInvoicesQueryDto,
   ListSubscriptionsQueryDto,
+  RefundInvoiceDto,
   WaiveInvoiceDto,
 } from './dto/billing.dto';
 
@@ -44,6 +46,7 @@ export class AdminBillingController {
     private readonly waiveInvoice: AdminWaiveInvoiceHandler,
     private readonly grantCredit: AdminGrantCreditHandler,
     private readonly changePlanForOrg: AdminChangePlanForOrgHandler,
+    private readonly refundInvoice: AdminRefundInvoiceHandler,
   ) {}
 
   @Get('subscriptions')
@@ -113,6 +116,26 @@ export class AdminBillingController {
       currency: dto.currency ?? 'SAR',
       reason: dto.reason,
       superAdminUserId: user.id,
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
+  @Post('invoices/:id/refund')
+  @ApiOperation({
+    summary: 'Refund a PAID invoice via Moyasar (full or partial; idempotent; audited)',
+  })
+  refund(
+    @Param('id') id: string,
+    @Body() dto: RefundInvoiceDto,
+    @CurrentUser() user: { id: string },
+    @Req() req: Request,
+  ) {
+    return this.refundInvoice.execute({
+      invoiceId: id,
+      amount: dto.amount,
+      superAdminUserId: user.id,
+      reason: dto.reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',
     });
