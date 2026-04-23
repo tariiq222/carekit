@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@carekit/ui/primitives/badge';
+import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
 import {
   Table,
@@ -15,9 +16,11 @@ import type { VerticalRow } from '../types';
 interface Props {
   items: VerticalRow[] | undefined;
   isLoading: boolean;
+  onEdit: (vertical: VerticalRow) => void;
+  onDelete: (vertical: VerticalRow) => void;
 }
 
-export function VerticalsTable({ items, isLoading }: Props) {
+export function VerticalsTable({ items, isLoading, onEdit, onDelete }: Props) {
   return (
     <Table>
       <TableHeader>
@@ -26,13 +29,14 @@ export function VerticalsTable({ items, isLoading }: Props) {
           <TableHead>Name</TableHead>
           <TableHead>Template family</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {isLoading && !items
           ? Array.from({ length: 4 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <Skeleton className="h-6" />
                 </TableCell>
               </TableRow>
@@ -56,12 +60,27 @@ export function VerticalsTable({ items, isLoading }: Props) {
                     </Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(v)}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => onDelete(v)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-              No verticals defined. Run the verticals seed.
+            <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+              No verticals defined. Create one using the button above.
             </TableCell>
           </TableRow>
         ) : null}

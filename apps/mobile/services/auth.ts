@@ -6,6 +6,7 @@ import {
 } from '@/stores/secure-storage';
 import { store } from '@/stores/store';
 import { logout as logoutAction } from '@/stores/slices/auth-slice';
+import { clearBranding } from '@/stores/slices/branding-slice';
 import type {
   LoginRequest,
   LoginWithOtpRequest,
@@ -74,6 +75,7 @@ export const authService = {
     await deleteSecureItem('accessToken');
     await deleteSecureItem('refreshToken');
     store.dispatch(logoutAction());
+    store.dispatch(clearBranding());
   },
 
   /** GET /auth/me */

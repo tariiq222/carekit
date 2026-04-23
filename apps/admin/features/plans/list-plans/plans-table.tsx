@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@carekit/ui/primitives/badge';
+import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
 import {
   Table,
@@ -15,9 +16,11 @@ import type { PlanRow } from '../types';
 interface Props {
   items: PlanRow[] | undefined;
   isLoading: boolean;
+  onEdit: (plan: PlanRow) => void;
+  onDelete: (plan: PlanRow) => void;
 }
 
-export function PlansTable({ items, isLoading }: Props) {
+export function PlansTable({ items, isLoading, onEdit, onDelete }: Props) {
   return (
     <Table>
       <TableHeader>
@@ -27,13 +30,14 @@ export function PlansTable({ items, isLoading }: Props) {
           <TableHead className="text-right">Monthly</TableHead>
           <TableHead className="text-right">Annual</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {isLoading && !items
           ? Array.from({ length: 3 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <Skeleton className="h-6" />
                 </TableCell>
               </TableRow>
@@ -62,12 +66,27 @@ export function PlansTable({ items, isLoading }: Props) {
                     </Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(plan)}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => onDelete(plan)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-              No plans defined. Create one via the API.
+            <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              No plans defined. Create one using the button above.
             </TableCell>
           </TableRow>
         ) : null}

@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -26,7 +25,7 @@ import { CreatePlanDto, UpdatePlanDto, DeletePlanDto } from './dto/plan.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/plans')
+@Controller('admin/plans')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminPlansController {
@@ -47,12 +46,12 @@ export class AdminPlansController {
   @ApiOperation({ summary: 'Create a plan (audited)' })
   create(
     @Body() dto: CreatePlanDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { id: string },
     @Req() req: Request,
   ) {
     const { reason, ...data } = dto;
     return this.createHandler.execute({
-      superAdminUserId: user.sub,
+      superAdminUserId: user.id,
       reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',
@@ -63,15 +62,15 @@ export class AdminPlansController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a plan (audited)' })
   update(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Body() dto: UpdatePlanDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { id: string },
     @Req() req: Request,
   ) {
     const { reason, ...data } = dto;
     return this.updateHandler.execute({
       planId: id,
-      superAdminUserId: user.sub,
+      superAdminUserId: user.id,
       reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',
@@ -83,14 +82,14 @@ export class AdminPlansController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete a plan (sets isActive=false; audited)' })
   async remove(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Body() dto: DeletePlanDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { id: string },
     @Req() req: Request,
   ): Promise<void> {
     await this.deleteHandler.execute({
       planId: id,
-      superAdminUserId: user.sub,
+      superAdminUserId: user.id,
       reason: dto.reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',

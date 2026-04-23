@@ -2,6 +2,7 @@ import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import { router } from 'expo-router';
 
 import { API_URL } from '@/constants/config';
 import type { ApiResponse } from '@/types/api';
@@ -53,6 +54,7 @@ api.interceptors.response.use(
       await deleteSecureItem('accessToken');
       await deleteSecureItem('refreshToken');
       store.dispatch(logout());
+      router.replace('/(auth)/suspended');
       return Promise.reject(error);
     }
 

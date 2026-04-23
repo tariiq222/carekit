@@ -24,7 +24,7 @@ import { StartImpersonationDto } from './dto/impersonation.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/impersonation')
+@Controller('admin/impersonation')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminImpersonationController {

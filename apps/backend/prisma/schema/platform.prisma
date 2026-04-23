@@ -84,6 +84,11 @@ enum SuperAdminActionType {
   VERTICAL_CREATE
   VERTICAL_UPDATE
   VERTICAL_DELETE
+  BILLING_REFUND
+  BILLING_WAIVE_INVOICE
+  BILLING_GRANT_CREDIT
+  BILLING_CHANGE_PLAN
+  BILLING_FORCE_CHARGE
 }
 
 model Organization {
@@ -378,6 +383,10 @@ model SubscriptionInvoice {
   attemptCount     Int                       @default(0)
   receiptUrl       String?
   pdfUrl           String?
+  // SaaS-05c — admin billing oversight
+  refundedAmount   Decimal?                  @db.Decimal(12, 2)
+  refundedAt       DateTime?
+  voidedReason     String?
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
@@ -385,6 +394,24 @@ model SubscriptionInvoice {
   @@index([organizationId])
   @@index([status])
   @@index([dueDate])
+}
+
+// SaaS-05c — credit granted by super-admin, applied against next invoice.
+// Platform-level (not tenant-scoped) — CareKit's liability to the tenant.
+model BillingCredit {
+  id                String    @id @default(uuid())
+  organizationId    String
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          String    @default("SAR")
+  reason            String    @db.Text
+  grantedByUserId   String
+  grantedAt         DateTime  @default(now())
+  consumedInvoiceId String?
+  consumedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([organizationId, consumedAt])
+  @@index([grantedByUserId])
 }
 
 model UsageRecord {

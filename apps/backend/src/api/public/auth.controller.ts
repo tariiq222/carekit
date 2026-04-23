@@ -71,12 +71,28 @@ export class AuthController {
     const tokens = await this.login.execute({ email: body.email, password: body.password });
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
-      omit: { passwordHash: true },
-      include: { customRole: { include: { permissions: true } } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        gender: true,
+        avatarUrl: true,
+        isActive: true,
+        role: true,
+        customRoleId: true,
+        customRole: { include: { permissions: true } },
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    // Workaround: isSuperAdmin is not being returned by Prisma ORM, so we add it manually
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
     return {
       ...tokens,
-      user: user ? { ...user, permissions: flattenPermissions(user) } : user,
+      user: user ? { ...user, isSuperAdmin, permissions: flattenPermissions(user) } : user,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
   }
