@@ -3,7 +3,7 @@
   "violations": [
     {
       "file": "app/(auth)/login.tsx",
-      "line": 293,
+      "line": 290,
       "rule": "no-hex-color",
       "detail": "#E74C3C",
       "level": "error"
@@ -17,20 +17,6 @@
     },
     {
       "file": "app/(auth)/otp-verify.tsx",
-      "line": 181,
-      "rule": "no-hex-color",
-      "detail": "#0037B0",
-      "level": "error"
-    },
-    {
-      "file": "app/(auth)/otp-verify.tsx",
-      "line": 181,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(auth)/otp-verify.tsx",
       "line": 19,
       "rule": "legacy-themed-import",
       "detail": "Themed*",
@@ -38,80 +24,59 @@
     },
     {
       "file": "app/(auth)/otp-verify.tsx",
-      "line": 211,
+      "line": 200,
+      "rule": "no-hex-color",
+      "detail": "#0037B0",
+      "level": "error"
+    },
+    {
+      "file": "app/(auth)/otp-verify.tsx",
+      "line": 200,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
     },
     {
       "file": "app/(auth)/otp-verify.tsx",
-      "line": 240,
+      "line": 230,
+      "rule": "no-hex-color",
+      "detail": "#1D4ED8",
+      "level": "error"
+    },
+    {
+      "file": "app/(auth)/otp-verify.tsx",
+      "line": 259,
       "rule": "no-hex-color",
       "detail": "#1D4ED866",
       "level": "error"
     },
     {
       "file": "app/(auth)/otp-verify.tsx",
-      "line": 276,
+      "line": 295,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
     },
     {
       "file": "app/(auth)/register.tsx",
-      "line": 331,
+      "line": 345,
       "rule": "no-hex-color",
       "detail": "#E74C3C",
       "level": "error"
     },
     {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 102,
+      "file": "app/(client)/(tabs)/profile.tsx",
+      "line": 50,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#B42318",
       "level": "error"
-    },
-    {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 14,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 15,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 92,
-      "rule": "no-hex-color",
-      "detail": "#001551",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/(tabs)/chat.tsx",
-      "line": 9,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/(tabs)/notifications.tsx",
-      "line": 16,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
     },
     {
       "file": "app/(client)/(tabs)/profile.tsx",
-      "line": 22,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
+      "line": 51,
+      "rule": "no-hex-color",
+      "detail": "#B42318",
+      "level": "error"
     },
     {
       "file": "app/(client)/appointment/[id].tsx",
@@ -591,14 +556,14 @@
     },
     {
       "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 86,
+      "line": 87,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 87,
+      "line": 88,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
@@ -674,41 +639,6 @@
       "level": "warning"
     },
     {
-      "file": "app/(employee)/(tabs)/_layout.tsx",
-      "line": 36,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/_layout.tsx",
-      "line": 37,
-      "rule": "no-hex-color",
-      "detail": "#64748B",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/calendar.tsx",
-      "line": 10,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(employee)/(tabs)/calendar.tsx",
-      "line": 11,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(employee)/(tabs)/calendar.tsx",
-      "line": 9,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
       "file": "app/(employee)/(tabs)/clients.tsx",
       "line": 14,
       "rule": "legacy-themed-import",
@@ -724,93 +654,16 @@
     },
     {
       "file": "app/(employee)/(tabs)/profile.tsx",
-      "line": 102,
+      "line": 47,
       "rule": "no-hex-color",
-      "detail": "#F59E0B",
+      "detail": "#B42318",
       "level": "error"
     },
     {
       "file": "app/(employee)/(tabs)/profile.tsx",
-      "line": 102,
+      "line": 48,
       "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/profile.tsx",
-      "line": 20,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 21,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 22,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 37,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 38,
-      "rule": "no-hex-color",
-      "detail": "#7C3AED",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 39,
-      "rule": "no-hex-color",
-      "detail": "#059669",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 74,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 75,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 76,
-      "rule": "no-hex-color",
-      "detail": "#059669",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 87,
-      "rule": "no-hex-color",
-      "detail": "#0037B0",
-      "level": "error"
-    },
-    {
-      "file": "app/(employee)/(tabs)/today.tsx",
-      "line": 87,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#B42318",
       "level": "error"
     },
     {
@@ -919,20 +772,6 @@
       "level": "warning"
     },
     {
-      "file": "app/index.tsx",
-      "line": 66,
-      "rule": "no-hex-color",
-      "detail": "#F7F9FB",
-      "level": "error"
-    },
-    {
-      "file": "app/index.tsx",
-      "line": 67,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
       "file": "components/chat/chat-quick-actions.tsx",
       "line": 24,
       "rule": "no-literal-row-reverse",
@@ -948,21 +787,21 @@
     },
     {
       "file": "components/features/AppointmentCard.tsx",
-      "line": 19,
+      "line": 21,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
     },
     {
       "file": "components/features/AppointmentCard.tsx",
-      "line": 20,
+      "line": 22,
       "rule": "no-hex-color",
       "detail": "#7C3AED",
       "level": "error"
     },
     {
       "file": "components/features/AppointmentCard.tsx",
-      "line": 21,
+      "line": 23,
       "rule": "no-hex-color",
       "detail": "#059669",
       "level": "error"
@@ -976,7 +815,7 @@
     },
     {
       "file": "components/features/AppointmentCard.tsx",
-      "line": 85,
+      "line": 82,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
@@ -1039,7 +878,7 @@
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 109,
+      "line": 105,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
@@ -1053,21 +892,21 @@
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 61,
+      "line": 60,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 61,
+      "line": 60,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 64,
+      "line": 63,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
@@ -1081,14 +920,14 @@
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 97,
+      "line": 93,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "components/features/PractitionerCard.tsx",
-      "line": 97,
+      "line": 93,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
@@ -1178,6 +1017,13 @@
       "level": "warning"
     },
     {
+      "file": "components/GlassTabBar.tsx",
+      "line": 45,
+      "rule": "no-literal-row-reverse",
+      "detail": "row-reverse",
+      "level": "error"
+    },
+    {
       "file": "components/ui/Avatar.tsx",
       "line": 15,
       "rule": "no-hex-color",
@@ -1193,21 +1039,21 @@
     },
     {
       "file": "components/ui/EmailVerificationBanner.tsx",
-      "line": 39,
+      "line": 44,
       "rule": "no-hex-color",
       "detail": "#F59E0B14",
       "level": "error"
     },
     {
       "file": "components/ui/EmailVerificationBanner.tsx",
-      "line": 40,
+      "line": 45,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "components/ui/EmailVerificationBanner.tsx",
-      "line": 46,
+      "line": 51,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"

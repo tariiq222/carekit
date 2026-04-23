@@ -25,7 +25,7 @@ import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { setBranding } from '@/stores/slices/branding-slice';
 import { authService } from '@/services/auth';
 import { brandingService } from '@/services/branding';
-import { getPrimaryRole } from '@/types/auth';
+import { getMobileRole, type AuthUser } from '@/types/auth';
 import { getFontName } from '@/theme/fonts';
 
 export default function LoginScreen() {
@@ -62,9 +62,8 @@ export default function LoginScreen() {
   }, [email, password, t]);
 
   const navigateByRole = useCallback(
-    (user: { roles: Array<{ slug: string }> }) => {
-      const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
-      if (role === 'employee') {
+    (user: AuthUser) => {
+      if (getMobileRole(user) === 'employee') {
         router.replace('/(employee)/(tabs)/today');
       } else {
         router.replace('/(client)/(tabs)/home');
@@ -83,17 +82,15 @@ export default function LoginScreen() {
     dispatch(setLoading(true));
 
     try {
-      const response = await authService.login({ email, password });
-      if (response.success && response.data) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        brandingService.getBranding().then((branding) => {
-          if (branding) {
-            dispatch(setBranding(branding));
-          }
-        });
-        navigateByRole(response.data.user);
-      }
+      const result = await authService.login({ email, password });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      dispatch(setCredentials(result));
+      brandingService.getBranding().then((branding) => {
+        if (branding) {
+          dispatch(setBranding(branding));
+        }
+      });
+      navigateByRole(result.user);
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('common.error'), t('auth.loginError'));
@@ -281,16 +278,16 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 24 },
   logoContainer: { alignItems: 'center', marginBottom: 24 },
   logo: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
+  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, width: '100%' },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, width: '100%' },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, color: C.deepTeal },
+  label: { fontSize: 14, color: C.deepTeal, width: '100%' },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
   inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
   eyeBtn: { padding: 4 },
-  error: { fontSize: 12, color: '#E74C3C' },
+  error: { fontSize: 12, color: '#E74C3C', width: '100%' },
   btn: { padding: 16, alignItems: 'center', marginTop: 8 },
   btnText: { fontSize: 16, color: '#FFF' },
   registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },

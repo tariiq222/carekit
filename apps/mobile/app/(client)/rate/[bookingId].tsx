@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { useTheme } from '@/theme/useTheme';
+import { getFontName } from '@/theme/fonts';
 import api from '@/services/api';
 
 export default function RatingScreen() {
@@ -22,7 +23,7 @@ export default function RatingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme, isRTL, language } = useTheme();
 
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
@@ -48,7 +49,7 @@ export default function RatingScreen() {
     }
   }, [stars, comment, bookingId, router, t]);
 
-  const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
+  const fontFamily = getFontName(language, '400');
 
   return (
     <View
@@ -94,10 +95,11 @@ export default function RatingScreen() {
         <TextInput
           value={comment}
           onChangeText={setComment}
-          placeholder={isRTL ? 'أضف تعليقاً (اختياري)...' : 'Add a comment (optional)...'}
+          placeholder={t('appointments.commentPlaceholder')}
           placeholderTextColor={theme.colors.textMuted}
           multiline
           textAlign={isRTL ? 'right' : 'left'}
+          writingDirection={isRTL ? 'rtl' : 'ltr'}
           style={[
             styles.commentInput,
             {

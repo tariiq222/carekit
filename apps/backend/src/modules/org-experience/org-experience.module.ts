@@ -30,6 +30,8 @@ import { GetOrgSettingsHandler } from './org-settings/get-org-settings.handler';
 import { UpsertOrgSettingsHandler } from './org-settings/upsert-org-settings.handler';
 import { GetBookingSettingsHandler } from '../bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../bookings/upsert-booking-settings/upsert-booking-settings.handler';
+import { GetOrgProfileHandler } from './get-org-profile/get-org-profile.handler';
+import { UpdateOrgProfileHandler } from './update-org-profile/update-org-profile.handler';
 
 const serviceHandlers = [
   CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, GetServiceHandler, ArchiveServiceHandler,
@@ -48,6 +50,7 @@ const serviceHandlers = [
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
     GetBookingSettingsHandler, UpsertBookingSettingsHandler,
+    GetOrgProfileHandler, UpdateOrgProfileHandler,
   ],
   exports: [
     ...serviceHandlers,
@@ -56,6 +59,7 @@ const serviceHandlers = [
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
     GetBookingSettingsHandler, UpsertBookingSettingsHandler,
+    GetOrgProfileHandler, UpdateOrgProfileHandler,
   ],
 })
 export class OrgExperienceModule {}

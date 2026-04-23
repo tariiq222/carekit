@@ -15,16 +15,25 @@ function buildController() {
   const deleteRole = fn();
   const assignPermissions = fn();
   const listPermissions = fn([]);
+  const listMembers = fn({ items: [], meta: {} });
+  const inviteMember = fn({ invitationId: 'inv-1' });
+  const updateMemberRole = fn();
+  const deactivateMember = fn();
+  const listInvitations = fn({ items: [], meta: {} });
+  const revokeInvitation = fn();
   const controller = new DashboardIdentityController(
     listUsers as never, createUser as never, updateUser as never, deactivateUser as never,
     deleteUser as never, assignRole as never, removeRole as never,
     listRoles as never, createRole as never, deleteRole as never, assignPermissions as never,
-    listPermissions as never,
+    listPermissions as never, listMembers as never, inviteMember as never,
+    updateMemberRole as never, deactivateMember as never, listInvitations as never,
+    revokeInvitation as never,
   );
   return {
     controller, listUsers, createUser, updateUser, deactivateUser,
     deleteUser, assignRole, removeRole,
     listRoles, createRole, deleteRole, assignPermissions, listPermissions,
+    listMembers, inviteMember, updateMemberRole, deactivateMember, listInvitations, revokeInvitation,
   };
 }
 

@@ -21,10 +21,17 @@ import { CreateRoleHandler } from '../../modules/identity/roles/create-role.hand
 import { DeleteRoleHandler } from '../../modules/identity/roles/delete-role.handler';
 import { AssignPermissionsHandler } from '../../modules/identity/roles/assign-permissions.handler';
 import { ListPermissionsHandler } from '../../modules/identity/roles/list-permissions.handler';
+import { ListMembersHandler } from '../../modules/identity/list-members/list-members.handler';
+import { InviteMemberHandler } from '../../modules/identity/invite-member/invite-member.handler';
+import { UpdateMemberRoleHandler } from '../../modules/identity/update-member-role/update-member-role.handler';
+import { DeactivateMemberHandler } from '../../modules/identity/deactivate-member/deactivate-member.handler';
+import { ListInvitationsHandler } from '../../modules/identity/list-invitations/list-invitations.handler';
+import { RevokeInvitationHandler } from '../../modules/identity/revoke-invitation/revoke-invitation.handler';
 import { CreateUserDto } from '../../modules/identity/users/create-user.dto';
 import { CreateRoleDto } from '../../modules/identity/roles/create-role.dto';
 import { AssignPermissionsDto } from '../../modules/identity/roles/assign-permissions.dto';
-import { IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min, IsEmail, IsEnum } from 'class-validator';
+import { MembershipRole } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -58,6 +65,24 @@ class AssignRoleDto {
   @IsUUID() customRoleId!: string;
 }
 
+class InviteMemberDto {
+  @ApiProperty({ description: 'Email address to invite', example: 'newuser@example.com' })
+  @IsEmail() email!: string;
+
+  @ApiProperty({ description: 'Role to assign', enum: MembershipRole })
+  @IsEnum(MembershipRole) role!: MembershipRole;
+}
+
+class UpdateMemberRoleDto {
+  @ApiProperty({ description: 'New role to assign', enum: MembershipRole })
+  @IsEnum(MembershipRole) role!: MembershipRole;
+}
+
+class RevokeInvitationDto {
+  @ApiProperty({ description: 'Invitation ID to revoke', example: '00000000-0000-0000-0000-000000000000' })
+  @IsUUID() invitationId!: string;
+}
+
 @ApiTags('Dashboard / Identity')
 @ApiBearerAuth()
 @ApiStandardResponses()
@@ -77,6 +102,12 @@ export class DashboardIdentityController {
     private readonly deleteRoleHandler: DeleteRoleHandler,
     private readonly assignPermissionsHandler: AssignPermissionsHandler,
     private readonly listPermissionsHandler: ListPermissionsHandler,
+    private readonly listMembersHandler: ListMembersHandler,
+    private readonly inviteMemberHandler: InviteMemberHandler,
+    private readonly updateMemberRoleHandler: UpdateMemberRoleHandler,
+    private readonly deactivateMemberHandler: DeactivateMemberHandler,
+    private readonly listInvitationsHandler: ListInvitationsHandler,
+    private readonly revokeInvitationHandler: RevokeInvitationHandler,
   ) {}
 
   // ── Users ────────────────────────────────────────────────────────────────
@@ -217,5 +248,64 @@ export class DashboardIdentityController {
   @ApiResponse({ status: 404, description: 'Role not found', type: ApiErrorDto })
   async deleteRoleEndpoint(@Param('id', ParseUUIDPipe) customRoleId: string) {
     await this.deleteRoleHandler.execute({ customRoleId });
+  }
+
+  // ── Members ───────────────────────────────────────────────────────────────
+
+  @Get('members')
+  @ApiOperation({ summary: 'List organization members' })
+  @ApiOkResponse({ description: 'Paginated list of members' })
+  async listMembers(@Query() query: ListUsersQueryDto) {
+    return this.listMembersHandler.execute({
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+      isActive: query.isActive,
+    });
+  }
+
+  @Post('members/invite')
+  @ApiOperation({ summary: 'Invite a member by email' })
+  @ApiCreatedResponse({ description: 'Invitation sent' })
+  async inviteMemberEndpoint(@Body() body: InviteMemberDto) {
+    return this.inviteMemberHandler.execute({ email: body.email, role: body.role });
+  }
+
+  @Patch('members/:id/role')
+  @ApiOperation({ summary: 'Update member role' })
+  @ApiParam({ name: 'id', description: 'Membership UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Role updated' })
+  async updateMemberRoleEndpoint(
+    @Param('id', ParseUUIDPipe) membershipId: string,
+    @Body() body: UpdateMemberRoleDto,
+  ) {
+    return this.updateMemberRoleHandler.execute({ membershipId, role: body.role });
+  }
+
+  @Patch('members/:id/deactivate')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Deactivate a member' })
+  @ApiParam({ name: 'id', description: 'Membership UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Member deactivated' })
+  async deactivateMemberEndpoint(@Param('id', ParseUUIDPipe) membershipId: string) {
+    await this.deactivateMemberHandler.execute({ membershipId });
+  }
+
+  @Get('members/invitations')
+  @ApiOperation({ summary: 'List pending invitations' })
+  @ApiOkResponse({ description: 'Paginated list of invitations' })
+  async listInvitations(@Query() query: ListUsersQueryDto) {
+    return this.listInvitationsHandler.execute({
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+    });
+  }
+
+  @Delete('members/invitations/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Revoke an invitation' })
+  @ApiParam({ name: 'id', description: 'Invitation UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Invitation revoked' })
+  async revokeInvitationEndpoint(@Param('id', ParseUUIDPipe) invitationId: string) {
+    await this.revokeInvitationHandler.execute({ invitationId });
   }
 }

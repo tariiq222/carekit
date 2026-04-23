@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../useTheme';
+import { getFontName } from '../fonts';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -37,10 +38,7 @@ export function ThemedButton({
 }: ThemedButtonProps) {
   const { theme, language } = useTheme();
 
-  const fontFamily =
-    language === 'ar'
-      ? theme.typography.fontFamily.arabic
-      : theme.typography.fontFamily.english;
+  const fontFamily = getFontName(language, '600');
 
   const paddingY: Record<ButtonSize, number> = {
     sm: 8,
@@ -97,7 +95,6 @@ export function ThemedButton({
         style={{
           color: textColor[variant],
           fontSize: fontSize[size],
-          fontWeight: '600',
           fontFamily,
         }}
       >

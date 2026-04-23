@@ -1,355 +1,331 @@
-# SaaS-05c — Admin Billing Oversight
-
-> **Path:** DEEP · **Worktree:** required (port band 5110/5120/5130) · **Owner-only:** YES (Abdullah review mandatory) · **Risk:** high (touches money — manual refund/waive/credit)
-
-## 1. Goal
-
-Add a **super-admin oversight layer** on top of the Plan 04 billing domain. CareKit staff get cross-tenant visibility (subscriptions, invoices, MRR/churn) and money-affecting controls (refund, waive, grant credit, force plan change) — every action audited via `SuperAdminActionLog`.
-
-**Plan 04 is intentionally unchanged.** Domain logic (state machine, webhooks, cron, tenant endpoints) stays. This plan adds:
-
-- ~9 admin-facing handlers in `modules/platform/admin/`
-- 1 controller in `api/admin/billing.controller.ts`
-- 4 admin pages + ~8 vertical-slice features in `apps/admin/`
-- 1 small Prisma migration (enum extensions + 2 audit/credit fields)
-
-## 2. Non-goals
-
-- No refactor of tenant-facing billing endpoints (`api/dashboard/billing.controller.ts`)
-- No new Moyasar webhook routes — refund triggers an outbound Moyasar API call, then the existing webhook reconciles
-- No multi-currency (SAR only, same as Plan 04)
-- No revenue recognition / accounting export — that is a future Plan 05d if requested
-- No AR (admin panel is English-only per `apps/admin/CLAUDE.md`)
-
-## 3. Architecture
-
-### 3.1 Audience separation (preserve existing rule)
-
-```
-api/dashboard/billing.controller.ts  ← Tenant: "my subscription"      (UNTOUCHED)
-api/admin/billing.controller.ts      ← Super-admin: "all subscriptions"  (NEW)
-api/public/billing-webhook.controller.ts ← Moyasar callback           (UNTOUCHED)
-```
-
-Cross-tenant queries on `Subscription` / `SubscriptionInvoice` / `UsageRecord` are safe **only** behind `SuperAdminContextInterceptor` (unlocks `$allTenants`). All admin handlers must be invoked through it.
-
-### 3.2 New handlers (all under `modules/platform/admin/`)
-
-| Handler | Purpose | Audited |
-|---|---|---|
-| `list-subscriptions` | Cross-tenant list with filters (status, plan, past_due) + pagination | No (read) |
-| `get-org-billing` | One org: subscription + last 12 invoices + current-period usage | No (read) |
-| `list-subscription-invoices` | Cross-tenant invoice list (filters: status, date range, org) + pagination | No (read) |
-| `get-billing-metrics` | MRR, ARR, active count, trialing count, past_due count, churn 30d | No (read) |
-| `admin-refund-invoice` | Calls Moyasar refund API, writes `SubscriptionInvoice.refundedAmount`, status → `VOID` if full | **Yes** |
-| `admin-waive-invoice` | Sets status → `VOID` without Moyasar call (e.g. waived as goodwill) | **Yes** |
-| `admin-grant-credit` | Inserts `BillingCredit` row that next invoice auto-applies | **Yes** |
-| `admin-change-plan-for-org` | Forces `Subscription.planId` change immediately (no proration v1) | **Yes** |
-| `admin-force-charge-subscription` | Manually re-attempts charge for `PAST_DUE` sub via existing `record-subscription-payment*` path | **Yes** |
-
-Each handler matches the established pattern (see `modules/platform/admin/suspend-organization/suspend-organization.handler.ts`):
-
-```ts
-type Cmd = {
-  superAdminUserId: string;
-  reason: string;        // min 10 chars (validated in DTO)
-  ipAddress: string;
-  userAgent: string;
-  // …handler-specific fields
-};
-```
-
-The handler runs the mutation + writes the `SuperAdminActionLog` row inside one Prisma `$transaction` so audit can never silently miss.
-
-### 3.3 New controller — `api/admin/billing.controller.ts`
-
-```ts
-@ApiTags('admin')
-@ApiBearerAuth()
-@Controller('admin/billing')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
-@UseInterceptors(SuperAdminContextInterceptor)
-export class AdminBillingController {
-  // GET   /admin/billing/subscriptions             → list-subscriptions
-  // GET   /admin/billing/subscriptions/:orgId      → get-org-billing
-  // GET   /admin/billing/invoices                  → list-subscription-invoices
-  // GET   /admin/billing/metrics                   → get-billing-metrics
-  // POST  /admin/billing/invoices/:id/refund       → admin-refund-invoice
-  // POST  /admin/billing/invoices/:id/waive        → admin-waive-invoice
-  // POST  /admin/billing/credits                   → admin-grant-credit
-  // PATCH /admin/billing/subscriptions/:orgId/plan → admin-change-plan-for-org
-  // POST  /admin/billing/subscriptions/:orgId/charge → admin-force-charge-subscription
-}
-```
-
-Same guard stack as the other 7 admin controllers — see `verticals.controller.ts` for the canonical example. **Use `@CurrentUser() user: { id: string }`** (not `sub`) and **omit `ParseUUIDPipe`** from `@Param('id')` — keep consistent with the bug-fix commit `bfa697fb` we just landed.
-
-### 3.4 Frontend — `apps/admin/app/(admin)/billing/`
-
-Per `apps/admin/CLAUDE.md` Hard Rule #1, every action is its own slice under `features/billing/<action>/`.
-
-**Pages (≤ 80 lines each, page anatomy law applies):**
-
-```
-app/(admin)/billing/
-├── page.tsx                          → /billing  (subscriptions list)
-├── invoices/page.tsx                 → /billing/invoices  (invoices list)
-├── metrics/page.tsx                  → /billing/metrics  (MRR/churn cards + groupBy)
-└── [orgId]/page.tsx                  → /billing/<orgId>  (org billing detail)
-```
-
-**Vertical slices:**
-
-```
-features/billing/
-├── types.ts
-├── list-subscriptions/
-│   ├── list-subscriptions.api.ts
-│   ├── use-list-subscriptions.ts
-│   └── subscriptions-table.tsx + subscriptions-filter-bar.tsx
-├── list-subscription-invoices/
-│   ├── list-subscription-invoices.api.ts
-│   ├── use-list-subscription-invoices.ts
-│   └── invoices-table.tsx + invoices-filter-bar.tsx
-├── get-billing-metrics/
-│   ├── get-billing-metrics.api.ts
-│   ├── use-get-billing-metrics.ts
-│   └── billing-metrics-grid.tsx
-├── get-org-billing/
-│   ├── get-org-billing.api.ts
-│   ├── use-get-org-billing.ts
-│   └── org-billing-detail.tsx
-├── refund-invoice/
-│   ├── refund-invoice.api.ts
-│   ├── use-refund-invoice.ts
-│   └── refund-invoice-dialog.tsx
-├── waive-invoice/
-│   ├── waive-invoice.api.ts
-│   ├── use-waive-invoice.ts
-│   └── waive-invoice-dialog.tsx
-├── grant-credit/
-│   ├── grant-credit.api.ts
-│   ├── use-grant-credit.ts
-│   └── grant-credit-dialog.tsx
-├── change-plan-for-org/
-│   ├── change-plan-for-org.api.ts
-│   ├── use-change-plan-for-org.ts
-│   └── change-plan-dialog.tsx
-└── force-charge-subscription/
-    ├── force-charge-subscription.api.ts
-    ├── use-force-charge-subscription.ts
-    └── force-charge-dialog.tsx
-```
-
-**Sidebar update:** add `{ href: '/billing', label: 'Billing' }` after `Plans` in `apps/admin/shell/sidebar.tsx`.
-
-### 3.5 Page anatomy compliance
-
-`/billing` (subscriptions list) and `/billing/invoices` follow the dashboard list-page law verbatim:
-
-- Breadcrumbs (Admin > Billing)
-- PageHeader: Title + description | [Export outline] [no primary add — read-only list]
-- StatsGrid: 4 cards (Active subs · Trialing · Past due · Canceled 30d)
-- FilterBar (search by org name/slug · status ▼ · plan ▼ · Reset)
-- DataTable (no Card wrapper)
-- Pagination (when totalPages > 1)
-- Dialogs (refund · waive · change plan · force charge) at bottom
-
-`/billing/metrics` does NOT follow list-page law — it's a metrics dashboard (cards + grouped bar charts). Use existing `metrics-grid.tsx` as a starting point.
-
-`/billing/[orgId]` is a detail page — use the same skeleton as `/organizations/[id]`: header card, then tabbed sections (Subscription · Invoices · Usage · Credits).
-
-## 4. Schema changes (additive — no edits to existing migrations)
-
-**File:** `apps/backend/prisma/schema/platform.prisma`
-
-```prisma
-enum SuperAdminActionType {
-  // …existing 11 values
-  BILLING_REFUND          // NEW
-  BILLING_WAIVE_INVOICE   // NEW
-  BILLING_GRANT_CREDIT    // NEW
-  BILLING_CHANGE_PLAN     // NEW
-  BILLING_FORCE_CHARGE    // NEW
-}
-
-model SubscriptionInvoice {
-  // …existing fields…
-  refundedAmount Decimal?  @db.Decimal(12, 2)  // NEW — null = no refund; equals amount = full refund
-  refundedAt     DateTime?                      // NEW
-  voidedReason   String?                        // NEW — set when waived (status=VOID)
-}
-
-model BillingCredit {                           // NEW MODEL — platform table, not tenant-scoped
-  id                String    @id @default(uuid())
-  organizationId    String    // denormalized; this is CareKit's liability to the tenant
-  amount            Decimal   @db.Decimal(12, 2)  // positive credit, deducted from next invoice
-  currency          String    @default("SAR")
-  reason            String    @db.Text
-  grantedByUserId   String    // super-admin who granted
-  grantedAt         DateTime  @default(now())
-  consumedInvoiceId String?   // set when invoice consumes it
-  consumedAt        DateTime?
-  createdAt         DateTime  @default(now())
-
-  @@index([organizationId, consumedAt])
-  @@index([grantedByUserId])
-}
-```
-
-**Migration:** `apps/backend/prisma/migrations/<ts>_saas_05c_admin_billing/migration.sql` — pure additive (CREATE TYPE values, ALTER TABLE ADD COLUMN, CREATE TABLE). No data backfill needed.
-
-**Tenant scoping:** `BillingCredit` is **NOT** added to `SCOPED_MODELS` (platform-level, like `Subscription` / `SubscriptionInvoice`). Cross-tenant queries are intended.
-
-**Rollback note (`apps/backend/prisma/NOTES.md`):**
-```
-05c — admin billing oversight
-  Tables added: BillingCredit
-  Columns added: SubscriptionInvoice.refundedAmount, refundedAt, voidedReason
-  Enum values added: SuperAdminActionType.BILLING_REFUND, BILLING_WAIVE_INVOICE,
-                     BILLING_GRANT_CREDIT, BILLING_CHANGE_PLAN, BILLING_FORCE_CHARGE
-  Rollback: DROP TABLE BillingCredit;
-           ALTER TABLE SubscriptionInvoice DROP COLUMN refundedAmount, refundedAt, voidedReason;
-           Postgres enums cannot drop values — leave enum extensions in place.
-```
-
-## 5. Reuse + dependencies
-
-**Reused (no edits):**
-
-- `SuperAdminContextInterceptor` (unlocks `$allTenants`)
-- `SuperAdminGuard` + `AdminHostGuard` + `JwtGuard`
-- `SubscriptionStateMachine` (refund must NOT change status; waive sets `VOID` directly)
-- Moyasar HTTP client from `modules/finance/moyasar/` — extend with `refundPayment(paymentId, amount?)` if not present
-- `SuperAdminActionLog` write helper (currently inlined in each handler — keep that pattern)
-- `metrics-grid.tsx` from `features/platform-metrics` — copy as base for billing-metrics-grid
-
-**Touched (small extensions):**
-
-- `apps/admin/shell/sidebar.tsx` — add Billing entry
-- `apps/backend/src/modules/platform/billing/billing.module.ts` — export `SubscriptionStateMachine` so admin handlers can call it
-- `apps/backend/src/api/admin/admin.module.ts` (or equivalent) — register `AdminBillingController`
-
-**External:**
-
-- Moyasar refund API: `POST https://api.moyasar.com/v1/payments/{id}/refund` with platform secret key. Idempotent on `payment_id`.
-
-## 6. Security invariants (Abdullah review must verify)
-
-1. **Every admin handler writes `SuperAdminActionLog` in the same `$transaction` as the mutation** — never as a fire-and-forget afterwards.
-2. **Refund amount is server-validated** against `SubscriptionInvoice.amount - (refundedAmount ?? 0)` — never trust the request body for max.
-3. **Waive cannot resurrect a paid invoice** — guard on current status (only `DUE`, `FAILED` allowed → `VOID`; not `PAID`).
-4. **Grant credit minimum amount = 1 SAR, maximum = 100,000 SAR** — sanity bound to catch typos.
-5. **Force charge respects retry/grace logic** — calls existing `charge-due-subscriptions` path with `forceOrgId`, never bypasses state machine.
-6. **Change plan is immediate, no proration** — clearly labeled in the dialog confirmation; reason mandatory; if downgrade and quota exceeded, dialog warns but does not block (super-admin override).
-7. **Moyasar refund failures are surfaced** — no silent swallow. Handler returns structured error and the dialog shows it.
-
-## 7. Path / worktree / commands
-
-- **Path:** DEEP — owner-only + money-affecting + > 30 files.
-- **Worktree:** required.
-  ```bash
-  git worktree add ../carekit-saas-05c -b feat/saas-05c-admin-billing main
-  cd ../carekit-saas-05c
-  npm install
-  ```
-- **Ports:** backend 5110, dashboard 5120, admin 5130 (per `WORKTREES.md`). Update local env files only — no commits to env mappings.
-- **Migration:**
-  ```bash
-  cd apps/backend && npm run prisma:migrate -- --name saas_05c_admin_billing
-  npx prisma generate
-  ```
-- **Build/test loop:**
-  ```bash
-  npm run lint
-  npm run typecheck --workspace=backend
-  npm run typecheck --workspace=admin
-  npm run build --workspace=backend
-  npm run build --workspace=admin
-  npm run test --workspace=backend
-  npm run test:e2e --workspace=backend
-  ```
-- **Kiwi sync:**
-  ```bash
-  npm run test:kiwi:all
-  npm run kiwi:sync-manual data/kiwi/billing-2026-04-23.json
-  ```
-
-## 8. i18n keys
-
-**None** — the admin panel is English-only LTR per `apps/admin/CLAUDE.md`. All strings inline.
-
-For tenant-facing surfaces (none in this plan), the rule from memory applies: future "Vertical" exposure → `"القطاع"`; this plan does not introduce any tenant strings.
-
-## 9. Page Anatomy law applicability
-
-| Page | Applies? |
-|---|---|
-| `/billing` | ✅ Full law (list page) |
-| `/billing/invoices` | ✅ Full law (list page) |
-| `/billing/metrics` | ❌ Not a list page — metrics dashboard pattern |
-| `/billing/[orgId]` | ❌ Detail page — follows `/organizations/[id]` shape |
-
-## 10. Semantic tokens
-
-All status badges use existing tokens — no hex, no `text-gray-*`:
-
-- `ACTIVE`, `PAID` → `bg-success/10 text-success border-success/30`
-- `TRIALING` → `bg-info/10 text-info border-info/30`
-- `PAST_DUE`, `FAILED` → `bg-warning/10 text-warning border-warning/30`
-- `SUSPENDED`, `CANCELED`, `VOID` → `bg-destructive/10 text-destructive border-destructive/30`
-- `DRAFT`, `DUE` → `bg-muted text-muted-foreground`
-
-## 11. File budget check
-
-All new files target ≤ 200 lines. The largest expected:
-
-- `subscriptions-table.tsx` (~180 lines — many columns)
-- `org-billing-detail.tsx` (~250 lines — split if > 280 into `org-billing-tabs.tsx`)
-- `admin-refund-invoice.handler.ts` (~120 lines)
-- `billing.controller.ts` (~150 lines)
-
-Hard cap 350. Split immediately if any file approaches 320.
-
-## 12. Step-by-step execution order
-
-When the implementer (Cursor / Copilot / external AI) picks this up:
-
-1. **Schema first** — write Prisma diff + migration; `prisma migrate dev`; `prisma generate`. Confirm `npm run typecheck` clean.
-2. **Audit + read handlers** (no money) in this order, with specs each:
-   `list-subscriptions` → `list-subscription-invoices` → `get-billing-metrics` → `get-org-billing`.
-3. **Mutating handlers**, easy → hard:
-   `admin-grant-credit` → `admin-waive-invoice` → `admin-change-plan-for-org` → `admin-force-charge-subscription` → `admin-refund-invoice`.
-4. **Controller** — `api/admin/billing.controller.ts`, register in admin module.
-5. **E2E suite** — write all 9 specs (see TEST_CASES.md), run `npm run test:e2e`.
-6. **Frontend slices** in slice-per-PR style if possible:
-   list-subscriptions + types → list-subscription-invoices → get-billing-metrics → get-org-billing → mutating dialogs (one per slice).
-7. **Sidebar entry** + 4 pages.
-8. **Manual QA** via Chrome DevTools MCP at `:5130`.
-9. **Kiwi sync** — both automated and manual.
-10. **OpenAPI snapshot:** `npm run openapi:build-and-snapshot` and commit.
-
-## 13. Risks & rollback
-
-| Risk | Mitigation |
-|---|---|
-| Moyasar refund partial-failure (charged but Moyasar timeout) | Idempotency key on refund call; reconcile job re-checks `payment_id` status nightly |
-| Super-admin grants huge credit by typo | 100k SAR upper bound + reason ≥ 10 chars + audit + dialog confirms amount in words |
-| Cross-tenant query leaks via missing interceptor | E2E `admin-billing-isolation.e2e-spec.ts` asserts 403 without `SuperAdminGuard` |
-| New columns nullable but not backfilled | Code defaults `refundedAmount ?? 0` everywhere; no NOT NULL constraint |
-| Waiving an in-flight Moyasar charge race | State machine forbids `VOID` from `PAID`; admin must refund first |
-
-**Rollback:** the worktree branch can be deleted; the migration is forward-only but additive (safe to leave columns + table empty if reverting).
-
-## 14. Out of scope (filed for future plans)
-
-- **05d** — revenue recognition + accounting CSV export
-- **05e** — proration on plan change
-- **05f** — bulk credits ("grant 100 SAR to all Salon vertical orgs")
-- **05g** — refund partial-line-item granularity
-- **05h** — admin self-serve coupon issuance for SaaS subs
+# IMPLEMENTATION PLAN — SaaS-06b/c/d: P0 Tenant Settings
+
+**Date:** 2026-04-23  
+**Scope:** Three P0 features — Organization Profile, Members Management, Payment Methods  
+**Path:** STANDARD (no worktree required)  
+**PRs:** 3 sequential PRs — each mergeable independently  
+**Owner-only gate:** PR3 only (payments module — Abdullah review mandatory)
 
 ---
 
-**Estimated scope:** ~30–35 new files, ~3,500 LOC, 9 backend handlers + 9 E2E specs + 4 admin pages + 9 vertical slices.
-**Confidence:** medium-high — the patterns (audit, slice, page anatomy, super-admin guard) are well-established. The novel piece is the Moyasar refund call.
+## Context
+
+The dashboard has no page for a clinic to edit its own identity, manage its staff members, or manage its saved payment card. All three are blocking for any clinic that has just subscribed.
+
+**What already exists (do NOT rebuild):**
+- `POST /dashboard/organization/branding/logo` → logo upload (MinIO), works
+- `BrandingConfig` singleton with `logoUrl`, `organizationNameAr/En`, `productTagline`
+- `Organization` model with `nameAr`, `nameEn`, `slug` in `platform.prisma`
+- `Membership` model with `userId`, `organizationId`, `role`, `isActive` in `platform.prisma`
+- `Subscription.moyasarCardTokenRef` (String?) already in `platform.prisma`
+- `MoyasarApiClient` in `src/modules/finance/moyasar-api/moyasar-api.client.ts`
+- User management handlers in `src/modules/identity/users/`
+- File upload: `POST /dashboard/media/upload` (multipart, 25 MB max, MinIO-backed)
+
+---
+
+## PR1 — SaaS-06b: Organization Profile Page
+
+**Branch:** `feat/saas-06b-org-profile`  
+**Touches:** org-experience cluster (backend) + settings/organization (dashboard)  
+**Prisma migration:** NO — all fields exist  
+**Owner-only:** NO
+
+### What it does
+New page `/settings/organization` — clinic owner edits:
+- Organization name (AR + EN)
+- Slug (uniqueness check; caution note re Plan 09 subdomain lock)
+- Tagline / description (`BrandingConfig.productTagline`)
+- Logo (delegates to existing `POST /dashboard/organization/branding/logo`)
+
+### Backend — 2 new slices in `org-experience/` cluster
+
+**Slice A: `get-org-profile`**  
+File: `src/modules/org-experience/get-org-profile/get-org-profile.handler.ts`  
+Reads `Organization` (nameAr, nameEn, slug) + `BrandingConfig` (productTagline, logoUrl).  
+Returns merged `OrgProfileDto { nameAr, nameEn, slug, tagline, logoUrl }`.  
+Unit test: `get-org-profile.handler.spec.ts`
+
+**Slice B: `update-org-profile`**  
+File: `src/modules/org-experience/update-org-profile/update-org-profile.handler.ts`  
+Validates slug uniqueness (exclude self). Updates `Organization` + syncs `BrandingConfig.organizationNameAr/En` + stores `productTagline` in one `$transaction`.  
+Slug conflict → `ConflictException('SLUG_TAKEN')`.  
+Input DTO: `nameAr?`, `nameEn?`, `slug?` (lowercase alphanum-hyphen, max 40), `tagline?` (max 300).  
+Unit test: `update-org-profile.handler.spec.ts`
+
+**Controller wiring** — extend `src/api/dashboard/organization-settings.controller.ts`:
+```
+GET   /dashboard/organization/profile  → GetOrgProfileHandler
+PATCH /dashboard/organization/profile  → UpdateOrgProfileHandler (OWNER | ADMIN, CASL)
+```
+
+### Dashboard — 4 new files
+
+1. `apps/dashboard/lib/api/organization-profile.ts` (≤80 lines) — `fetchOrgProfile()`, `updateOrgProfile()`
+2. `apps/dashboard/hooks/use-organization-profile.ts` (≤80 lines) — query (staleTime 10 min) + mutation
+3. `apps/dashboard/components/features/settings/organization-profile-form.tsx` (≤300 lines)  
+   RHF + Zod. Logo section → file input → `POST /dashboard/media/upload` → logo endpoint.  
+   Slug: debounced (500 ms) uniqueness feedback. Caution banner on slug change.
+4. `apps/dashboard/app/(dashboard)/settings/organization/page.tsx` (≤60 lines)  
+   Breadcrumb → PageHeader → `<OrganizationProfileForm />`
+
+**Sidebar:** add to Admin group in `sidebar-config.ts`:  
+`{ label: "settings.organization.title", href: "/settings/organization", icon: Building07Icon }`
+
+### i18n keys (AR + EN — run `npm run i18n:verify`)
+
+| Key | AR | EN |
+|-----|----|----|
+| `settings.organization.title` | ملف العيادة | Organization Profile |
+| `settings.organization.description` | اسم العيادة والمعرّف والشعار | Clinic name, slug, and logo |
+| `settings.organization.nameAr` | الاسم بالعربي | Name (Arabic) |
+| `settings.organization.nameEn` | الاسم بالإنجليزي | Name (English) |
+| `settings.organization.slug` | المعرّف | Slug |
+| `settings.organization.slugHint` | أحرف صغيرة وأرقام وشرطة فقط | Lowercase, numbers, hyphens only |
+| `settings.organization.slugTaken` | هذا المعرّف مستخدم | This slug is already taken |
+| `settings.organization.slugCaution` | تغيير المعرّف قد يؤثر على النطاق الفرعي لاحقاً | Changing the slug may affect subdomain routing later |
+| `settings.organization.tagline` | الوصف | Description / Tagline |
+| `settings.organization.logo` | الشعار | Logo |
+| `settings.organization.logoUpload` | رفع شعار جديد | Upload New Logo |
+| `settings.organization.saved` | تم حفظ الملف | Profile saved |
+
+---
+
+## PR2 — SaaS-06c: Members Management Page
+
+**Branch:** `feat/saas-06c-members`  
+**Touches:** identity cluster (backend) + settings/members (dashboard) + platform.prisma migration  
+**Prisma migration:** YES — `Invitation` model in `platform.prisma`  
+**Owner-only:** NO (CASL: OWNER | ADMIN for invite/remove)
+
+### ADR — Invitation Model
+File: `docs/decisions/2026-04-23-invitation-model.md`  
+**Decision:** `Invitation` table in `platform.prisma` (co-located with `Membership`).  
+**Reason:** State machine (PENDING → ACCEPTED | REVOKED | EXPIRED) requires persistence. Not tenant-scoped via CLS (same as `Membership`). Queried by token (public) or orgId (dashboard).  
+**Rollback:** Drop `Invitation` table — no FK to existing tables.
+
+### Prisma migration
+Name: `20260423_saas_06c_invitation`  
+Append to `platform.prisma` (after Membership block):
+
+```prisma
+enum InvitationStatus { PENDING ACCEPTED REVOKED EXPIRED }
+
+model Invitation {
+  id              String           @id @default(uuid())
+  organizationId  String
+  email           String
+  role            MembershipRole
+  token           String           @unique   // signed JWT, 72h TTL
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  invitedByUserId String
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([token])
+  @@index([email, organizationId])
+  @@index([status, expiresAt])
+}
+```
+
+### Backend — 6 new slices in `identity/` cluster
+
+| Slice | Endpoint | Notes |
+|-------|----------|-------|
+| `list-members` | `GET /dashboard/organization/members` | Joins User (name, email, avatarUrl). Filters: role, isActive |
+| `update-member-role` | `PATCH /dashboard/organization/members/:id/role` | Cannot change sole OWNER |
+| `deactivate-member` | `PATCH /dashboard/organization/members/:id/deactivate` | Cannot deactivate self or sole OWNER |
+| `invite-member` | `POST /dashboard/organization/members/invite` | Body: `{email, role}`. Creates Invitation + sends email |
+| `list-invitations` | `GET /dashboard/organization/members/invitations` | Returns PENDING + EXPIRED for current org |
+| `revoke-invitation` | `DELETE /dashboard/organization/members/invitations/:id` | Sets REVOKED |
+
+**invite-member flow:**
+1. Existing Membership for (email, orgId) → `ConflictException('ALREADY_MEMBER')`
+2. Revoke any PENDING invitation for same email+org
+3. Create `Invitation` (token = JWT signed with `INVITE_SECRET`, 72h)
+4. Send email via `MailService`: link `{DASHBOARD_URL}/accept-invitation?token=...`
+
+**Public accept endpoint** — extend `src/api/public/auth.controller.ts`:  
+`POST /api/v1/public/auth/accept-invitation` — body: `{ token, password? }`  
+Flow: verify JWT → load Invitation (PENDING, not expired) → find or create User → create Membership → set ACCEPTED → return `{ accessToken, refreshToken }` (auto-login).
+
+**Controller wiring** — extend `src/api/dashboard/identity.controller.ts`.  
+All endpoints: CASL `manage:Membership` (OWNER | ADMIN).
+
+### Dashboard — 6 new files
+
+1. `apps/dashboard/lib/api/members.ts` (≤150 lines)
+2. `apps/dashboard/hooks/use-members.ts` (≤100 lines) — query + staleTime 30s
+3. `apps/dashboard/hooks/use-member-mutations.ts` (≤120 lines) — invite, deactivate, role change, revoke
+4. `apps/dashboard/components/features/settings/members-table.tsx` (≤300 lines)  
+   Columns: Avatar+Name | Email | Role badge | Status | Joined | Actions
+5. `apps/dashboard/components/features/settings/invite-member-dialog.tsx` (≤200 lines)  
+   Email + role selector → pending invitations list below
+6. `apps/dashboard/app/(dashboard)/settings/members/page.tsx` (≤80 lines)  
+   Page Anatomy: PageHeader (+ Invite button) | StatsGrid (4 cards) | FilterBar | DataTable | Dialogs
+
+**Sidebar:** add to Admin group: `{ href: "/settings/members", icon: UserGroup02Icon }`
+
+### i18n keys
+
+| Key | AR | EN |
+|-----|----|----|
+| `members.title` | أعضاء الفريق | Team Members |
+| `members.invite` | دعوة عضو | Invite Member |
+| `members.invite.sent` | تم إرسال الدعوة | Invitation sent |
+| `members.invite.alreadyMember` | هذا المستخدم عضو بالفعل | Already a member |
+| `members.role.OWNER` | مالك | Owner |
+| `members.role.ADMIN` | مدير | Admin |
+| `members.role.RECEPTIONIST` | موظف استقبال | Receptionist |
+| `members.role.ACCOUNTANT` | محاسب | Accountant |
+| `members.role.EMPLOYEE` | موظف | Employee |
+| `members.deactivate.confirm` | هل تريد تعطيل هذا العضو؟ | Deactivate this member? |
+| `members.invitations.pending` | دعوات معلّقة | Pending Invitations |
+| `members.invitations.revoke` | إلغاء الدعوة | Revoke |
+| `members.invitations.expired` | منتهية | Expired |
+| `members.stats.total` | إجمالي الأعضاء | Total Members |
+| `members.stats.active` | نشط | Active |
+| `members.stats.pending` | دعوات معلّقة | Pending Invites |
+| `members.stats.owners` | ملاك | Owners |
+
+### Tenant isolation test
+File: `apps/backend/test/tenant-isolation/members.e2e-spec.ts`  
+Verify: Org A cannot list/invite/deactivate members of Org B. Cross-org FK injection on membershipId → 404.
+
+---
+
+## PR3 — SaaS-06d: Payment Methods
+
+**Branch:** `feat/saas-06d-payment-methods`  
+**Touches:** finance cluster (backend) + billing settings (dashboard) + platform.prisma migration  
+**Prisma migration:** YES — 4 nullable columns on `Subscription`  
+**Owner-only:** YES — **Abdullah review mandatory**
+
+### ADR — Card Metadata on Subscription
+File: `docs/decisions/2026-04-23-saved-card-on-subscription.md`  
+**Decision:** 4 nullable columns on `Subscription` (last4, brand, expiryMonth, expiryYear). No separate model.  
+**Reason:** One sub per org (`@unique(organizationId)`). Multi-card not in scope for Phase 1.  
+**Future:** Extract to `SavedPaymentMethod` model if multi-card needed.  
+**Rollback:** Drop 4 nullable columns — safe, no data loss.
+
+### Prisma migration
+Name: `20260423_saas_06d_subscription_card_meta`  
+Add to `Subscription` in `platform.prisma`:
+```prisma
+  cardLast4        String?
+  cardBrand        String?  // "VISA" | "MADA" | "MASTERCARD"
+  cardExpiryMonth  Int?
+  cardExpiryYear   Int?
+```
+
+### Backend — 3 new slices in `finance/` cluster
+
+**Slice 1: `save-payment-method`**  
+`POST /dashboard/billing/payment-methods` — body: `{ moyasarToken: string }`  
+Flow:
+1. Load Subscription for current org
+2. If `moyasarCustomerRef` null → `MoyasarApiClient.createCustomer()` → store ref
+3. `MoyasarApiClient.saveCard(customerRef, moyasarToken)` → `{ id, last_four, brand, expiry_month, expiry_year }`
+4. Update Subscription (cardTokenRef + 4 meta fields)
+
+Moyasar `invalid_card` → `UnprocessableEntityException('INVALID_CARD')`.
+
+**Slice 2: `get-payment-method`**  
+`GET /dashboard/billing/payment-methods`  
+Returns `{ hasCard, last4, brand, expiryMonth, expiryYear }` — never exposes raw token.
+
+**Slice 3: `remove-payment-method`**  
+`DELETE /dashboard/billing/payment-methods`  
+Guard: if renewal within 7 days and status ACTIVE → `ConflictException('CARD_NEEDED_FOR_RENEWAL')`.  
+Flow: call `MoyasarApiClient.deleteCard()` (best-effort) → null out all 5 card fields on Subscription.
+
+**MoyasarApiClient** — extend `moyasar-api.client.ts`:  
+Add `createCustomer()`, `saveCard()`, `deleteCard()` methods.  
+Use `moyasar` skill for API reference.
+
+**Controller wiring** — extend `src/api/dashboard/billing.controller.ts`:
+```
+GET    /dashboard/billing/payment-methods  → GetPaymentMethodHandler
+POST   /dashboard/billing/payment-methods  → SavePaymentMethodHandler   (OWNER only)
+DELETE /dashboard/billing/payment-methods  → RemovePaymentMethodHandler (OWNER only)
+```
+
+### Dashboard — 3 new files + 1 modified
+
+1. `apps/dashboard/lib/api/payment-methods.ts` (≤80 lines)
+2. `apps/dashboard/hooks/use-payment-method.ts` (≤100 lines) — query + save + remove mutations
+3. `apps/dashboard/components/features/settings/payment-method-card.tsx` (≤250 lines)  
+   States: no-card | has-card (chip: brand icon + ●●●● last4 + MM/YY + Change/Remove) | adding (Moyasar.js iframe)  
+   Use `moyasar` skill for iframe embed details.
+4. `apps/dashboard/app/(dashboard)/settings/billing/page.tsx` — insert `<PaymentMethodCard />` between CurrentPlanCard and UsageBars
+
+### i18n keys
+
+| Key | AR | EN |
+|-----|----|----|
+| `billing.paymentMethod.title` | طريقة الدفع | Payment Method |
+| `billing.paymentMethod.noCard` | لا توجد بطاقة محفوظة | No saved card |
+| `billing.paymentMethod.add` | إضافة بطاقة | Add Card |
+| `billing.paymentMethod.change` | تغيير البطاقة | Change Card |
+| `billing.paymentMethod.remove` | حذف البطاقة | Remove Card |
+| `billing.paymentMethod.remove.confirm` | هل تريد حذف البطاقة؟ | Remove this card? |
+| `billing.paymentMethod.cardNeededForRenewal` | لا يمكن الحذف قبل التجديد القادم | Cannot remove before upcoming renewal |
+| `billing.paymentMethod.invalidCard` | بيانات البطاقة غير صحيحة | Invalid card details |
+| `billing.paymentMethod.saved` | تم حفظ البطاقة | Card saved |
+| `billing.paymentMethod.removed` | تم حذف البطاقة | Card removed |
+
+---
+
+## Execution Order
+
+```
+PR1 (SaaS-06b) ──┐
+                  ├── can be worked in parallel, merge PR1 first
+PR2 (SaaS-06c) ──┘
+PR3 (SaaS-06d) — after PR1+PR2 merged (touches billing page modified by PR1 indirectly)
+```
+
+---
+
+## File Budget per PR
+
+| PR | New Backend Files | New Dashboard Files | Migration |
+|----|------------------|---------------------|-----------|
+| PR1 | 5 (2 handlers + 2 specs + controller ext.) | 4 | ❌ |
+| PR2 | 14 (6 handlers + 6 specs + 1 isolation test + controller ext.) | 6 | ✅ platform.prisma |
+| PR3 | 8 (3 handlers + 3 specs + client ext. + controller ext.) | 3 + 1 modified | ✅ platform.prisma |
+
+All files ≤350 lines. Each PR: 2 commits (backend + dashboard).
+
+---
+
+## Pre-PR Checklist (every PR)
+
+```
+□ npm run typecheck          → 0 errors
+□ npm run lint               → 0 new errors
+□ cd apps/backend && npm run test  → all pass
+□ npm run i18n:verify        → AR/EN parity
+□ npm run prisma:migrate     → applies cleanly (PR2, PR3)
+□ No file > 350 lines
+□ No hex colors, no text-gray-*
+□ RTL logical spacing (ps-/pe-/ms-/me-)
+□ Icons from @hugeicons only
+□ staleTime set on every new query
+□ Tenant isolation test added (PR2 only)
+□ Manual QA via Chrome DevTools MCP before merge
+□ Abdullah review on PR3 (owner-only: payments)
+□ openapi:build-and-snapshot after each backend PR
+```
+
+## Kiwi TestPlans
+
+| PR | Kiwi Plan |
+|----|-----------|
+| PR1 | `CareKit / Organization / Manual QA` |
+| PR2 | `CareKit / Members / Manual QA` |
+| PR3 | `CareKit / Billing / Manual QA` |

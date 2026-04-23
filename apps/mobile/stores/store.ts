@@ -19,6 +19,10 @@ const authPersistConfig = {
   key: 'auth',
   storage: secureStorage,
   whitelist: ['token', 'refreshToken', 'user'],
+  // Bumped when AuthUser shape changed (added `kind`). Old blobs lack `kind`
+  // and would otherwise leak into the new code path — redux-persist drops
+  // state with an older version than the current one.
+  version: 2,
 };
 
 const rootReducer = combineReducers({

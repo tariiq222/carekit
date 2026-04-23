@@ -33,7 +33,8 @@
       "expo-router",
       "expo-secure-store",
       "expo-notifications",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-web-browser"
     ]
   }
 }

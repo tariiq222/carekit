@@ -1,0 +1,18 @@
+export const FeatureKey = {
+  RECURRING_BOOKINGS: "recurring_bookings",
+  WAITLIST: "waitlist",
+  GROUP_SESSIONS: "group_sessions",
+  AI_CHATBOT: "ai_chatbot",
+  EMAIL_TEMPLATES: "email_templates",
+  COUPONS: "coupons",
+  ADVANCED_REPORTS: "advanced_reports",
+  INTAKE_FORMS: "intake_forms",
+  ZATCA: "zatca",
+  CUSTOM_ROLES: "custom_roles",
+  ACTIVITY_LOG: "activity_log",
+  BRANCHES: "branches",
+  EMPLOYEES: "employees",
+  SERVICES: "services",
+  MONTHLY_BOOKINGS: "monthly_bookings",
+  STORAGE: "storage",
+} as const;

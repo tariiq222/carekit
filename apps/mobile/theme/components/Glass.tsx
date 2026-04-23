@@ -9,8 +9,26 @@ import {
   GestureResponderEvent,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  GlassView,
+  isLiquidGlassAvailable,
+} from "expo-glass-effect";
 import { useReducedTransparency, useIncreasedContrast } from "../../hooks/useA11y";
 import { GLASS_CFG } from "../glass";
+
+// Cache at module load — availability cannot change during a session.
+const HAS_LIQUID_GLASS = isLiquidGlassAvailable();
+
+// Map our DS variants → native liquid-glass styles.
+// Native only exposes "clear" / "regular" / "none"; "strong" intentionally
+// collapses to "regular" because the native effect already reads heavier
+// than our BlurView fallback at the same nominal intensity.
+const NATIVE_STYLE: Record<"regular" | "strong" | "clear", "regular" | "clear"> = {
+  clear: "clear",
+  regular: "regular",
+  strong: "regular",
+};
 
 type Variant = "regular" | "strong" | "clear";
 
@@ -69,14 +87,20 @@ export const Glass = ({
   const pressed = pressedOverride ?? pressedInternal;
 
   const flat = StyleSheet.flatten(style) ?? {};
+  // Forward layout-affecting props to the content view so children
+  // (e.g. row inputs with icons) receive the correct flexDirection/gap.
   const contentCenter = {
     ...(flat.alignItems != null ? { alignItems: flat.alignItems } : {}),
     ...(flat.justifyContent != null ? { justifyContent: flat.justifyContent } : {}),
+    ...(flat.flexDirection != null ? { flexDirection: flat.flexDirection } : {}),
+    ...(flat.gap != null ? { gap: flat.gap } : {}),
+    ...(flat.rowGap != null ? { rowGap: flat.rowGap } : {}),
+    ...(flat.columnGap != null ? { columnGap: flat.columnGap } : {}),
   };
 
   const pressTransform: ViewStyle | undefined =
     (interactive || onPress) && pressed
-      ? { transform: [{ scale: 0.96 }] }
+      ? { transform: [{ scale: 0.97 }] }
       : undefined;
 
   const wrapperTransition: any =
@@ -88,39 +112,27 @@ export const Glass = ({
         }
       : null;
 
+  // Progressive enhancement: iOS 26+ renders a native UIVisualEffectView.
+  // Reduce-transparency a11y forces the CSS fallback (flat surface) instead.
+  const useLiquidGlass = HAS_LIQUID_GLASS && !reduceTransparency;
+
   const body = (
     <>
-      {Platform.OS === "web" ? null : (
-        <>
-          <BlurView
-            intensity={cfg.nativeBlur}
-            tint="light"
-            style={[
-              StyleSheet.absoluteFillObject,
-              { backgroundColor: `rgba(255,255,255,${cfg.mainTintAlpha + 0.15})` },
-            ]}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              {
-                borderRadius: radius,
-                borderWidth: 1,
-                borderColor: `rgba(255,255,255,${cfg.borderAlpha + 0.15})`,
-              },
-            ]}
-          />
-          {tint ? (
-            <View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFillObject, { backgroundColor: tint }]}
-            />
-          ) : null}
-        </>
+      {useLiquidGlass ? (
+        <GlassView
+          glassEffectStyle={NATIVE_STYLE[variant]}
+          tintColor={tint}
+          isInteractive={!!(interactive || onPress)}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { borderRadius: radius },
+          ]}
+        />
+      ) : Platform.OS === "web" ? null : (
+        <AppleGlassLayers cfg={cfg} radius={radius} tint={tint} pressed={pressed} />
       )}
 
-      {Platform.OS === "web" ? <WebLayers cfg={cfg} radius={radius} tint={tint} pressed={pressed} /> : null}
+      {Platform.OS === "web" && !useLiquidGlass ? <WebLayers cfg={cfg} radius={radius} tint={tint} pressed={pressed} /> : null}
 
       <View style={[
         { flex: 1, position: "relative", zIndex: 1 },
@@ -154,6 +166,107 @@ export const Glass = ({
 
   return <View style={wrapperStyle}>{body}</View>;
 };
+
+function AppleGlassLayers({
+  cfg,
+  radius,
+  tint,
+  pressed,
+}: {
+  cfg: Cfg;
+  radius: number;
+  tint?: string;
+  pressed: boolean;
+}) {
+  // Specular alpha: derived from border alpha — light reflected off glass surface
+  const specularAlpha = cfg.borderAlpha * 0.65;
+  const topEdgeAlpha = Math.min(0.92, cfg.borderAlpha * 1.75);
+
+  return (
+    <>
+      {/* 1 — backdrop blur + base white tint */}
+      <BlurView
+        intensity={cfg.nativeBlur}
+        tint="light"
+        style={[
+          StyleSheet.absoluteFillObject,
+          { backgroundColor: `rgba(255,255,255,${cfg.mainTintAlpha + 0.12})` },
+        ]}
+      />
+
+      {/* 2 — specular gradient: simulates light hitting glass from above */}
+      <LinearGradient
+        colors={[`rgba(255,255,255,${specularAlpha})`, "rgba(255,255,255,0)"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFillObject, { bottom: "55%" }]}
+      />
+
+      {/* 3 — top-edge highlight line (brightest glass edge) */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 1,
+          backgroundColor: `rgba(255,255,255,${topEdgeAlpha})`,
+          borderTopLeftRadius: radius,
+          borderTopRightRadius: radius,
+        }}
+      />
+
+      {/* 4 — outer glass border (sides + bottom) */}
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            borderRadius: radius,
+            borderWidth: 1,
+            borderColor: `rgba(255,255,255,${cfg.borderAlpha + 0.08})`,
+          },
+        ]}
+      />
+
+      {/* 5 — bottom depth edge: grounds the surface in 3D space */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 1,
+          backgroundColor: "rgba(21,79,87,0.07)",
+          borderBottomLeftRadius: radius,
+          borderBottomRightRadius: radius,
+        }}
+      />
+
+      {/* 6 — press flash */}
+      {pressed ? (
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: "rgba(255,255,255,0.18)", borderRadius: radius },
+          ]}
+        />
+      ) : null}
+
+      {/* 7 — optional tint overlay */}
+      {tint ? (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: tint }]}
+        />
+      ) : null}
+    </>
+  );
+}
 
 function WebLayers({
   cfg,

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Platform } from "react-native";
+import { Platform, I18nManager } from "react-native";
 
 export type Locale = "ar" | "en";
 
@@ -28,15 +28,17 @@ export type DirState = {
 const build = (locale: Locale): DirState => {
   const isRTL = locale === "ar";
   const onWeb = Platform.OS === "web";
+  // When I18nManager.isRTL is true, React Native auto-mirrors flexDirection:"row".
+  // Asking for "row-reverse" in that mode would double-flip back to LTR.
+  const nativeAutoMirror = !onWeb && I18nManager.isRTL;
+  const wantRTLRow = isRTL && !nativeAutoMirror;
   return {
     locale,
     isRTL,
-    // Web: rely on CSS `direction` on <html> — `flex-start` already maps to
-    // the logical start. Native: no CSS direction, so explicit flip required.
-    row: onWeb ? "row" : isRTL ? "row-reverse" : "row",
-    rowReverse: onWeb ? "row-reverse" : isRTL ? "row" : "row-reverse",
-    alignStart: onWeb ? "flex-start" : isRTL ? "flex-end" : "flex-start",
-    alignEnd: onWeb ? "flex-end" : isRTL ? "flex-start" : "flex-end",
+    row: onWeb ? "row" : wantRTLRow ? "row-reverse" : "row",
+    rowReverse: onWeb ? "row-reverse" : wantRTLRow ? "row" : "row-reverse",
+    alignStart: onWeb ? "flex-start" : wantRTLRow ? "flex-end" : "flex-start",
+    alignEnd: onWeb ? "flex-end" : wantRTLRow ? "flex-start" : "flex-end",
     textAlign: isRTL ? "right" : "left",
     writingDirection: isRTL ? "rtl" : "ltr",
     iconScaleX: isRTL ? -1 : 1,

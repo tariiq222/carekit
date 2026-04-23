@@ -43,6 +43,9 @@ import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/
 import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
 import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
+import { GetOrgProfileHandler } from '../../modules/org-experience/get-org-profile/get-org-profile.handler';
+import { UpdateOrgProfileHandler } from '../../modules/org-experience/update-org-profile/update-org-profile.handler';
+import { UpdateOrgProfileDto } from '../../modules/org-experience/update-org-profile/update-org-profile.dto';
 
 @ApiTags('Dashboard / Org Experience')
 @ApiBearerAuth()
@@ -72,6 +75,8 @@ export class DashboardOrganizationSettingsController {
     private readonly setServiceBookingConfigs: SetServiceBookingConfigsHandler,
     private readonly getServiceBookingConfigs: GetServiceBookingConfigsHandler,
     private readonly listServiceEmployees: ListServiceEmployeesHandler,
+    private readonly getOrgProfile: GetOrgProfileHandler,
+    private readonly updateOrgProfile: UpdateOrgProfileHandler,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -266,5 +271,21 @@ export class DashboardOrganizationSettingsController {
   @ApiOkResponse({ description: 'Booking settings updated' })
   upsertBookingSettingsEndpoint(@Body() body: Record<string, unknown>) {
     return this.upsertBookingSettings.execute({ branchId: null, ...body });
+  }
+
+  // ── Organization Profile ─────────────────────────────────────────────────
+
+  @Get('profile')
+  @ApiOperation({ summary: 'Get organization profile' })
+  @ApiOkResponse({ description: 'Current organization profile' })
+  getOrgProfileEndpoint() {
+    return this.getOrgProfile.execute();
+  }
+
+  @Patch('profile')
+  @ApiOperation({ summary: 'Update organization profile' })
+  @ApiOkResponse({ description: 'Organization profile updated' })
+  updateOrgProfileEndpoint(@Body() body: UpdateOrgProfileDto) {
+    return this.updateOrgProfile.execute(body);
   }
 }

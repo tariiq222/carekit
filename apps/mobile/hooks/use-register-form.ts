@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 
 import { useAppDispatch } from '@/hooks/use-redux';
-import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
+import { setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
 
 export interface RegisterFormErrors {
@@ -71,18 +71,25 @@ export function useRegisterForm() {
     dispatch(setLoading(true));
 
     try {
-      const response = await authService.register({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email,
-        password,
-        phone: phone || undefined,
+      // Phase 1 of client registration: request an OTP to the user's email.
+      // The OTP screen completes registration via authService.register once verified.
+      await authService.sendOtp({
+        channel: 'EMAIL',
+        identifier: email.trim(),
+        purpose: 'CLIENT_LOGIN',
       });
-      if (response.success && response.data) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        router.replace('/(client)/(tabs)/home');
-      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+      router.push({
+        pathname: '/(auth)/otp-verify',
+        params: {
+          email: email.trim(),
+          mode: 'register',
+          name,
+          password,
+          phone: phone || '',
+        },
+      });
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('common.error'), t('auth.registerError'));

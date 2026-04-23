@@ -7,11 +7,13 @@ CareKit uses **Maestro v10** — a tiered multi-agent system with a Planner-Veri
 ### 1. One-shot slash commands (most common)
 
 ```
-/plan [task]        Planning phase only — hand output to external AI
-/execute [task]     Full cycle inside Claude Code (plan + write + verify)
+/plan [task]        Planning phase only — writes IMPLEMENTATION_PLAN.md for external AI (Cursor/Copilot)
+/execute [task]     Full cycle inside Claude Code (plan + delegate to agents + verify)
 /verify [branch]    Verify code written by external AI
 /maestro [task]     Interactive — asks you to pick PLAN/EXECUTE/VERIFY
 ```
+
+**Key difference:** `/plan` stops after planning (user implements elsewhere). `/execute` continues with agent team to write code.
 
 ### 2. Persistent output style (mode-like)
 
@@ -32,12 +34,14 @@ If you're not using Maestro globally but want it for one task:
 ## Quick Decision: Which Command?
 
 ```
-Just want a plan to give to Cursor/Copilot?     → /plan
-Want Claude Code to do everything?              → /execute
-External AI finished, want audit?               → /verify
-Not sure, let Claude Code ask?                  → /maestro
-Want Maestro active for whole session?          → /output-style maestro
+Want a plan to hand to Cursor/Copilot?           → /plan (stops after planning)
+Want Claude Code agents to implement?            → /execute (plan + agents + verify)
+External AI finished, want audit?                → /verify
+Not sure, let Claude Code ask?                   → /maestro (interactive)
+Want Maestro active for whole session?           → /output-style maestro
 ```
+
+**Key:** `/plan` is for **planning only** — Fahad writes IMPLEMENTATION_PLAN.md and stops. `/execute` continues with the agent team to write code.
 
 ## Mandatory Reading Order (for Claude)
 

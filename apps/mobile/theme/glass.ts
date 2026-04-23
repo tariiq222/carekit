@@ -135,7 +135,7 @@ type Cfg = {
 };
 
 export const GLASS_CFG: Record<Variant, Cfg> = {
-  clear:   { mainBlur: 30, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.32, nativeBlur: 45 },
-  regular: { mainBlur: 50, mainTintAlpha: 0.06, baseTintAlpha: 0.20, bloomAlpha: 0.32, borderAlpha: 0.40, nativeBlur: 75 },
-  strong:  { mainBlur: 65, mainTintAlpha: 0.09, baseTintAlpha: 0.28, bloomAlpha: 0.42, borderAlpha: 0.50, nativeBlur: 95 },
+  clear:   { mainBlur: 30, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.36, nativeBlur: 58 },
+  regular: { mainBlur: 50, mainTintAlpha: 0.06, baseTintAlpha: 0.20, bloomAlpha: 0.32, borderAlpha: 0.45, nativeBlur: 82 },
+  strong:  { mainBlur: 65, mainTintAlpha: 0.09, baseTintAlpha: 0.28, bloomAlpha: 0.42, borderAlpha: 0.55, nativeBlur: 95 },
 };

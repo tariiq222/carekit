@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -8,6 +8,8 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { Glass } from '@/theme/components/Glass';
+import { RADII, SHADOW } from '@/theme/glass';
 import type { Employee } from '@/types/models';
 
 interface EmployeeCardProps {
@@ -31,15 +33,12 @@ export function EmployeeCard({
 
   if (compact) {
     return (
-      <Pressable
+      <Glass
+        variant="regular"
+        radius={RADII.card}
+        interactive
         onPress={() => onPress(employee.id)}
-        style={({ pressed }) => [
-          styles.compactCard,
-          {
-            backgroundColor: theme.colors.white,
-            transform: [{ scale: pressed ? 0.97 : 1 }],
-          },
-        ]}
+        style={[styles.compactCard, SHADOW]}
       >
         <View style={styles.compactHeader}>
           <Avatar
@@ -65,20 +64,17 @@ export function EmployeeCard({
             {t('home.from')} {employee.clinicPrice} {t('home.sar')}
           </ThemedText>
         </View>
-      </Pressable>
+      </Glass>
     );
   }
 
   return (
-    <Pressable
+    <Glass
+      variant="regular"
+      radius={RADII.card}
+      interactive
       onPress={() => onPress(employee.id)}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.colors.white,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
-      ]}
+      style={[styles.card, SHADOW]}
     >
       <View style={styles.row}>
         <Avatar
@@ -129,13 +125,13 @@ export function EmployeeCard({
           {t('home.bookAppointment')}
         </ThemedButton>
       )}
-    </Pressable>
+    </Glass>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 12, padding: 16, gap: 12 },
-  compactCard: { borderRadius: 12, padding: 12, minWidth: 155, gap: 10 },
+  card: { padding: 16, gap: 12 },
+  compactCard: { padding: 12, minWidth: 155, gap: 10 },
   row: { flexDirection: 'row', gap: 14 },
   info: { flex: 1, gap: 2 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

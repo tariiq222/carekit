@@ -13,6 +13,7 @@
     "packages/ui"
   ],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "dev:backend": "turbo run dev --filter=backend",
     "dev:dashboard": "turbo run dev --filter=dashboard",
     "dev:admin": "turbo run dev --filter=admin",
@@ -34,10 +35,8 @@
     "turbo": "^2"
   },
   "overrides": {
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@types/react": "18.3.28",
-    "@types/react-dom": "18.3.7"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.1.1",

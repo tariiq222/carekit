@@ -10,7 +10,7 @@ import {
   LayoutAnimation,
   UIManager,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Bell, Search, X, Leaf } from 'lucide-react-native';
 import { C, RADII } from "@/theme/glass";
 import { Glass } from "@/theme";
 import { useDir } from "@/hooks/useDir";
@@ -90,7 +90,7 @@ export const Header = ({
           >
             <Pressable onPress={onNotificationPress}>
               <Glass variant="regular" radius={22} interactive style={s.iconBtn}>
-                <Ionicons name="notifications-outline" size={20} color={C.deepTeal} />
+                <Bell size={20} color={C.deepTeal} strokeWidth={1.75} />
                 {hasUnreadNotifications && <View style={s.bellDot} />}
               </Glass>
             </Pressable>
@@ -123,7 +123,7 @@ export const Header = ({
                 ]}
               >
                 <View style={s.iconAnchor}>
-                  <Ionicons name="search" size={20} color={C.deepTeal} />
+                  <Search size={20} color={C.deepTeal} strokeWidth={1.75} />
                 </View>
 
                 <TextInput
@@ -135,7 +135,9 @@ export const Header = ({
                   editable={open}
                   style={[
                     s.input,
-                    open ? { flex: 1, opacity: 1 } : { flex: 0, width: 0, minWidth: 0, opacity: 0 },
+                    open
+                      ? { flex: 1, opacity: 1 }
+                      : { flex: 0, width: 0, minWidth: 0, opacity: 0, paddingHorizontal: 0 },
                     {
                       textAlign: dir.textAlign,
                       writingDirection: dir.writingDirection,
@@ -168,7 +170,7 @@ export const Header = ({
                   ]}
                   pointerEvents={open ? "auto" : "none"}
                 >
-                  <Ionicons name="close" size={16} color={C.deepTeal} />
+                  <X size={16} color={C.deepTeal} strokeWidth={2} />
                 </Pressable>
               </View>
             </Glass>
@@ -179,7 +181,7 @@ export const Header = ({
 
       <View style={[s.greetingBlock, { alignItems: dir.alignStart }]}>
         <View style={[s.greetingRow, { flexDirection: dir.row }]}>
-          <Ionicons name="leaf" size={22} color={C.deepTeal} />
+          <Leaf size={22} color={C.deepTeal} strokeWidth={1.75} />
           <Text
             style={[
               s.greeting,

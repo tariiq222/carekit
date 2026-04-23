@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
-import { getPrimaryRole } from '@/types/auth';
+import { getMobileRole } from '@/types/auth';
+import { SplashWelcome } from '@/components/SplashWelcome';
+import { C } from '@/theme/glass';
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -15,45 +17,39 @@ export default function IndexScreen() {
 
   useEffect(() => {
     async function hydrate() {
-      // If Redux already has tokens, skip hydration
       if (token && user) {
         setHydrating(false);
         return;
       }
 
-      // Try to restore from SecureStore
       const stored = await authService.getStoredTokens();
-      if (stored.accessToken) {
+      if (stored.accessToken && stored.kind) {
         try {
-          const profileRes = await authService.getProfile();
-          if (profileRes.success && profileRes.data) {
+          const user = await authService.hydrate();
+          if (user) {
             dispatch(
               setCredentials({
                 accessToken: stored.accessToken,
                 refreshToken: stored.refreshToken ?? '',
-                user: profileRes.data,
+                user,
               }),
             );
           }
         } catch {
-          // Token expired or invalid — go to login
+          // Token expired or invalid — fall through to splash
         }
       }
       setHydrating(false);
     }
 
     hydrate();
-  }, []);
+  }, [dispatch, token, user]);
 
   useEffect(() => {
     if (hydrating) return;
+    if (!token || !user) return;
 
-    if (!token || !user) {
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    const role = getPrimaryRole(user);
+    const role = getMobileRole(user);
     if (role === 'employee') {
       router.replace('/(employee)/(tabs)/today');
     } else {
@@ -61,12 +57,20 @@ export default function IndexScreen() {
     }
   }, [hydrating, token, user, router]);
 
+  const handleContinue = useCallback(() => {
+    router.replace('/(auth)/login');
+  }, [router]);
+
   if (hydrating) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F9FB' }}>
-        <ActivityIndicator size="large" color="#1D4ED8" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bgBot }}>
+        <ActivityIndicator size="large" color={C.deepTeal} />
       </View>
     );
+  }
+
+  if (!token || !user) {
+    return <SplashWelcome onContinue={handleContinue} />;
   }
 
   return null;

@@ -21,7 +21,7 @@ import { useTheme } from '@/theme/useTheme';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
-import { getPrimaryRole } from '@/types/auth';
+import { getMobileRole } from '@/types/auth';
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
@@ -29,7 +29,13 @@ const RESEND_COOLDOWN = 60;
 export default function OtpVerifyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email, mode, name, password } = useLocalSearchParams<{
+    email: string;
+    mode?: 'login' | 'register';
+    name?: string;
+    password?: string;
+  }>();
+  const isRegister = mode === 'register';
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { theme, isRTL } = useTheme();
@@ -59,7 +65,11 @@ export default function OtpVerifyScreen() {
   const sendOtp = useCallback(async () => {
     if (!email) return;
     try {
-      await authService.sendOtp({ email });
+      await authService.sendOtp({
+        channel: 'EMAIL',
+        identifier: email,
+        purpose: 'CLIENT_LOGIN',
+      });
       setOtpSent(true);
       setCountdown(RESEND_COOLDOWN);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -119,21 +129,30 @@ export default function OtpVerifyScreen() {
     dispatch(setLoading(true));
 
     try {
-      const response = await authService.verifyOtp({
-        email: email ?? '',
+      const { sessionToken } = await authService.verifyOtp({
+        channel: 'EMAIL',
+        identifier: email ?? '',
         code,
+        purpose: 'CLIENT_LOGIN',
       });
-      if (response.success && response.data) {
+
+      if (isRegister) {
+        if (!password) throw new Error('Missing pending password for register flow');
+        const result = await authService.register({
+          name: name ?? '',
+          password,
+          otpSessionToken: sessionToken,
+        });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        // OTP verification also auto-verifies email on backend
-        const role = getPrimaryRole(response.data.user);
-        if (role === 'employee') {
-          router.replace('/(employee)/(tabs)/today');
-        } else {
-          router.replace('/(client)/(tabs)/home');
-        }
+        dispatch(setCredentials(result));
+        const role = getMobileRole(result.user);
+        router.replace(role === 'employee' ? '/(employee)/(tabs)/today' : '/(client)/(tabs)/home');
+        return;
       }
+
+      // Login-via-OTP escape hatch is not yet implemented on the public-auth
+      // controller — surface a clear error until then.
+      Alert.alert(t('common.error'), t('auth.otpError'));
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('common.error'), t('auth.otpError'));
@@ -143,7 +162,7 @@ export default function OtpVerifyScreen() {
       setIsLoading(false);
       dispatch(setLoading(false));
     }
-  }, [otp, email, dispatch, router, t]);
+  }, [otp, email, isRegister, name, password, dispatch, router, t]);
 
   const isComplete = otp.every((d) => d !== '');
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;

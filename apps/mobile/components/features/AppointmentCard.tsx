@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Building2, Video } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,8 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { Glass } from '@/theme/components/Glass';
+import { RADII, SHADOW } from '@/theme/glass';
 import type { Booking, BookingType } from '@/types/models';
 
 const TYPE_ICON = {
@@ -49,20 +51,15 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
   });
 
   return (
-    <Pressable
+    <Glass
+      variant="regular"
+      radius={RADII.card}
+      interactive
       onPress={() => onPress(booking.id)}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.colors.white,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
-      ]}
+      style={[styles.card, SHADOW]}
     >
       <View style={styles.row}>
-        <View
-          style={[styles.iconCircle, { backgroundColor: `${color}14` }]}
-        >
+        <View style={[styles.iconCircle, { backgroundColor: `${color}18` }]}>
           <Icon size={18} strokeWidth={1.5} color={color} />
         </View>
         <View style={styles.info}>
@@ -78,7 +75,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
           label={statusLabels[booking.status] ?? booking.status}
         />
       </View>
-      <View style={[styles.footer, { borderTopColor: theme.colors.surfaceLow }]}>
+      <View style={styles.footer}>
         <ThemedText variant="caption" color={theme.colors.textSecondary}>
           {formattedDate} • {booking.startTime}
         </ThemedText>
@@ -86,13 +83,12 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
           {booking.totalAmount} {t('home.sar')}
         </ThemedText>
       </View>
-    </Pressable>
+    </Glass>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
     padding: 16,
     gap: 12,
   },
@@ -109,6 +105,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.35)',
     paddingTop: 10,
   },
 });

@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { AuthState, User } from '@/types/auth';
+import type { AuthState, AuthUser } from '@/types/auth';
 
 const initialState: AuthState = {
   token: null,
@@ -19,7 +19,7 @@ const authSlice = createSlice({
       action: PayloadAction<{
         accessToken: string;
         refreshToken: string;
-        user: User;
+        user: AuthUser;
       }>,
     ) {
       state.token = action.payload.accessToken;
@@ -30,7 +30,7 @@ const authSlice = createSlice({
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
     },
-    setUser(state, action: PayloadAction<User>) {
+    setUser(state, action: PayloadAction<AuthUser>) {
       state.user = action.payload;
     },
     setLoading(state, action: PayloadAction<boolean>) {

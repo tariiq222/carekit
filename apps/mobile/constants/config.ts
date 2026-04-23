@@ -1,5 +1,5 @@
 export const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1';
 
 export const APP_NAME = 'CareKit';
 export const APP_SCHEME = 'carekit';

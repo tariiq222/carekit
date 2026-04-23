@@ -1,147 +1,153 @@
-# TEST CASES — SaaS-05c Admin Billing Oversight
+# TEST CASES — SaaS-06b/c/d: P0 Tenant Settings
 
-**Kiwi TCMS Product:** CareKit (id=1)
-**Version:** main
-**Build:** `saas-05c-billing-2026-04-23`
-
----
-
-## Plan: `CareKit / Billing / Unit`
-
-Colocated `*.handler.spec.ts` next to each handler under `apps/backend/src/modules/platform/admin/`.
-
-### list-subscriptions.handler.spec.ts
-- ✓ returns paginated list across multiple orgs when `$allTenants` is set (CLS bypass)
-- ✓ filters by `status=PAST_DUE`
-- ✓ filters by `planId`
-- ✓ orders by `currentPeriodEnd` desc
-- ✓ throws `UnauthorizedTenantAccessError` if invoked without `SuperAdminContextInterceptor` (defense in depth)
-
-### get-org-billing.handler.spec.ts
-- ✓ returns subscription + last 12 invoices + current-period usage rows for given orgId
-- ✓ returns `null` subscription if org has none (org may be pre-billing)
-- ✓ throws `OrganizationNotFoundError` if orgId unknown
-
-### list-subscription-invoices.handler.spec.ts
-- ✓ paginates across orgs
-- ✓ filters by `status`, `dateRange`, `organizationId`
-- ✓ excludes `DRAFT` by default; includeDrafts=true returns them
-
-### get-billing-metrics.handler.spec.ts
-- ✓ MRR = Σ(Plan.priceMonthly for ACTIVE + TRIALING subs)
-- ✓ ARR = MRR × 12
-- ✓ counts active / trialing / past_due / suspended / canceled correctly
-- ✓ churn 30d = canceled in last 30d / active 30d ago
-
-### admin-grant-credit.handler.spec.ts
-- ✓ writes BillingCredit + SuperAdminActionLog inside one $transaction
-- ✓ DTO rejects amount < 1 SAR
-- ✓ DTO rejects amount > 100,000 SAR
-- ✓ DTO rejects reason < 10 chars
-- ✓ stores `grantedByUserId` from Cmd.superAdminUserId
-- ✓ throws `OrganizationNotFoundError` if orgId unknown
-
-### admin-waive-invoice.handler.spec.ts
-- ✓ DUE → VOID, voidedReason set, audit row written
-- ✓ FAILED → VOID
-- ✓ PAID → throws `InvoiceCannotBeWaivedError` (must refund instead)
-- ✓ already VOID → throws (no-op forbidden to keep audit clean)
-- ✓ DRAFT → throws
-
-### admin-change-plan-for-org.handler.spec.ts
-- ✓ Subscription.planId updated, audit written
-- ✓ targeting an inactive Plan throws
-- ✓ same plan throws (no-op)
-- ✓ no proration applied (currentPeriodEnd untouched)
-
-### admin-force-charge-subscription.handler.spec.ts
-- ✓ ACTIVE sub throws (only PAST_DUE / TRIALING with overdue invoice eligible)
-- ✓ PAST_DUE sub triggers existing charge handler with forceOrgId
-- ✓ audit row references the resulting payment attempt
-- ✓ Moyasar success → state machine moves PAST_DUE → ACTIVE (covered by integration test downstream)
-
-### admin-refund-invoice.handler.spec.ts
-- ✓ full refund: refundedAmount = amount, status → VOID, audit written
-- ✓ partial refund: refundedAmount = partial, status stays PAID, audit written
-- ✓ refund > remaining throws `RefundExceedsAmountError`
-- ✓ refunding unpaid invoice throws
-- ✓ Moyasar 4xx surfaces as structured error, no DB mutation
-- ✓ Moyasar timeout → idempotency key allows safe retry
-- ✓ second refund with same idempotency key returns prior result
+**Kiwi Product:** CareKit (id=1)  
+**Version:** main  
+**Date:** 2026-04-23
 
 ---
 
-## Plan: `CareKit / Billing / E2E`
+## PR1 — SaaS-06b: Organization Profile (Kiwi: `CareKit / Organization / Manual QA`)
 
-Under `apps/backend/test/e2e/admin/billing/`. Use `superAdminAgent` from existing helpers.
+### Unit Tests (colocated with handlers)
 
-### admin-billing-isolation.e2e-spec.ts (security gate)
-- ✓ all 9 routes return 403 without JWT
-- ✓ all 9 routes return 403 with non-super-admin JWT (CASL covered by SuperAdminGuard)
-- ✓ all 9 routes return 403 with impersonation JWT (scope=impersonation)
-- ✓ AdminHostGuard rejects requests from non-admin host
+| File | Cases |
+|------|-------|
+| `get-org-profile.handler.spec.ts` | Returns merged profile from Organization + BrandingConfig; handles missing BrandingConfig (upsert fallback) |
+| `update-org-profile.handler.spec.ts` | Updates name + slug + tagline atomically; slug conflict throws SLUG_TAKEN; syncs BrandingConfig.organizationNameAr/En |
 
-### list-subscriptions.e2e-spec.ts
-- ✓ returns subs from ≥ 2 seeded orgs
-- ✓ filter by status narrows results
-- ✓ pagination links correct
+### Manual QA Gate (Chrome DevTools MCP)
 
-### list-invoices.e2e-spec.ts
-- ✓ cross-tenant invoice list works
-- ✓ date range filter excludes out-of-range rows
-
-### get-org-billing.e2e-spec.ts
-- ✓ super-admin can read another org's full billing context
-- ✓ tenant JWT cannot reach this route (covered in isolation spec)
-
-### get-billing-metrics.e2e-spec.ts
-- ✓ MRR matches sum of seeded ACTIVE plan prices
-- ✓ counts match seeded fixtures
-
-### refund-invoice.e2e-spec.ts
-- ✓ Moyasar refund mock 200 → invoice updated, audit row visible at /admin/audit-log
-- ✓ Moyasar refund mock 4xx → 502 returned, no DB mutation
-- ✓ second call with same body is idempotent (no double-refund)
-
-### waive-invoice.e2e-spec.ts
-- ✓ DUE → VOID with reason ≥ 10 chars
-- ✓ PAID → 400 with explicit error message
-
-### grant-credit.e2e-spec.ts
-- ✓ credit row created
-- ✓ next-invoice cron applies it (chained or stubbed)
-- ✓ grants over 100k → 400
-
-### change-plan-for-org.e2e-spec.ts
-- ✓ plan changed, audit visible
-- ✓ inactive plan target → 400
-
-### force-charge-subscription.e2e-spec.ts
-- ✓ PAST_DUE org charges via existing handler path
-- ✓ ACTIVE org → 400
+| # | Summary | Steps | Expected |
+|---|---------|-------|----------|
+| OP-01 | Page loads with current org data | Navigate to /settings/organization | Shows nameAr, slug, tagline, logo |
+| OP-02 | Edit org name (AR + EN) | Change nameAr → Save | Toast "تم حفظ الملف"; values persist on reload |
+| OP-03 | Edit tagline | Type description → Save | Saved; visible on reload |
+| OP-04 | Change slug to available value | Type new slug → Save | Success; slug updated |
+| OP-05 | Change slug to taken value | Type existing org slug → Save | Inline error "هذا المعرّف مستخدم" |
+| OA-06 | Slug caution banner | Type new value in slug field | Yellow caution banner appears |
+| OP-07 | Logo upload | Click upload → select PNG → Save | Logo updates in header/page |
+| OP-08 | Invalid logo (PDF) | Upload PDF as logo | Error toast; logo unchanged |
+| OP-09 | RTL layout | View in Arabic locale | All fields right-aligned; labels correct |
+| OP-10 | EN locale | View in English locale | All labels in English; LTR fields |
 
 ---
 
-## Plan: `CareKit / Billing / Manual QA`
+## PR2 — SaaS-06c: Members Management (Kiwi: `CareKit / Members / Manual QA`)
 
-QA agent walks through Chrome DevTools MCP at `http://localhost:5130` (worktree admin port) signed in as super-admin.
+### Unit Tests
 
-| # | Step | Expected |
-|---|---|---|
-| 1 | Click sidebar "Billing" | `/billing` loads, StatsGrid shows 4 cards, Subscriptions table shows ≥ 2 orgs |
-| 2 | Filter status = PAST_DUE | Table narrows to past-due subs only |
-| 3 | Click an org row | `/billing/<orgId>` loads with 4 tabs (Subscription · Invoices · Usage · Credits) |
-| 4 | On Invoices tab, click Refund on a PAID invoice | Dialog opens; submit disabled when reason < 10 chars |
-| 5 | Submit refund with reason "Customer requested cancellation" | Row updates: status VOID, refundedAmount = amount; toast success |
-| 6 | Click Waive on a DUE invoice | Dialog opens; submit with reason → row VOID, voidedReason set |
-| 7 | Click "Grant credit" → 50 SAR + reason | Credits tab shows new row |
-| 8 | Click "Change plan" → BASIC → PRO + reason | Subscription tab shows new plan; warning shown about no-proration |
-| 9 | Force-charge a PAST_DUE sub | Backend job triggers; status flips to ACTIVE after webhook reconcile (visible on refresh) |
-| 10 | Visit `/billing/metrics` | MRR card matches seeded value; group-by-plan bar chart renders |
-| 11 | Visit `/audit-log` | Filter actionType `BILLING_*` → all 5 actions from steps 5-9 visible with reasons |
-| 12 | Open dev console | No 401/403/500 errors during the entire walk-through |
+| File | Cases |
+|------|-------|
+| `list-members.handler.spec.ts` | Returns members with joined User data; filters by role; filters by isActive |
+| `invite-member.handler.spec.ts` | Creates Invitation + sends email; rejects duplicate (ALREADY_MEMBER); revokes prior pending invite for same email |
+| `update-member-role.handler.spec.ts` | Updates role; rejects change on sole OWNER |
+| `deactivate-member.handler.spec.ts` | Sets isActive=false; rejects deactivate self; rejects deactivate sole OWNER |
+| `list-invitations.handler.spec.ts` | Returns PENDING + EXPIRED; marks expired correctly |
+| `revoke-invitation.handler.spec.ts` | Sets REVOKED; rejects if already ACCEPTED |
 
-**Deliverables after QA:**
-- Report at `docs/superpowers/qa/billing-admin-2026-04-23.md` with screenshots per step
-- Plan JSON at `data/kiwi/billing-2026-04-23.json` synced via `npm run kiwi:sync-manual data/kiwi/billing-2026-04-23.json`
-- Kiwi run URL pasted into the report
+### Tenant Isolation Tests (e2e)
+
+| File | Cases |
+|------|-------|
+| `members.e2e-spec.ts` | Org A user cannot list Org B members (403/empty); Org A user cannot deactivate Org B membership via direct ID (404); Cross-org FK injection on membershipId rejected |
+
+### Manual QA Gate (Chrome DevTools MCP)
+
+| # | Summary | Steps | Expected |
+|---|---------|-------|----------|
+| MB-01 | Page loads with member list | Navigate to /settings/members | Members table with current users |
+| MB-02 | Stats grid shows correct counts | View page | Total / Active / Pending / Owners correct |
+| MB-03 | Search by name | Type partial name in search | Table filters live |
+| MB-04 | Filter by role | Select RECEPTIONIST | Only receptionists shown |
+| MB-05 | Invite new user | Click "دعوة عضو" → enter email + role → Submit | Toast "تم إرسال الدعوة"; invitation appears in pending list |
+| MB-06 | Invite existing member | Enter email of current member | Error "هذا المستخدم عضو بالفعل" |
+| MB-07 | Revoke invitation | Click revoke on pending invite | Invitation removed from list |
+| MB-08 | Change member role | Change RECEPTIONIST → ADMIN | Role badge updates; no page reload |
+| MB-09 | Deactivate member | Click deactivate → confirm | Member status → inactive; row grayed |
+| MB-10 | Cannot deactivate self | Logged-in user tries to deactivate own account | Action disabled / error toast |
+| MB-11 | Cannot change sole OWNER | Try to change only OWNER's role | Error toast |
+| MB-12 | Accept invitation (happy path) | Open invite link in email → register/login | Auto-joined org; dashboard access granted |
+| MB-13 | Accept expired invitation | Open link after 72h | Error page "الدعوة منتهية الصلاحية" |
+| MB-14 | RTL layout | View in Arabic | Table RTL; badges correct |
+
+---
+
+## PR3 — SaaS-06d: Payment Methods (Kiwi: `CareKit / Billing / Manual QA`)
+
+### Unit Tests
+
+| File | Cases |
+|------|-------|
+| `save-payment-method.handler.spec.ts` | Creates Moyasar customer if missing; saves card token + meta; maps INVALID_CARD error |
+| `get-payment-method.handler.spec.ts` | Returns hasCard=false when no token; returns display data when card exists; never returns raw token |
+| `remove-payment-method.handler.spec.ts` | Nulls out token + meta; calls MoyasarApiClient.deleteCard; rejects removal within 7-day renewal window |
+
+### Manual QA Gate (Chrome DevTools MCP)
+
+| # | Summary | Steps | Expected |
+|---|---------|-------|----------|
+| PM-01 | No card state | Navigate to /settings/billing (no card) | Section shows "لا توجد بطاقة محفوظة" + "إضافة بطاقة" |
+| PM-02 | Add card (valid Moyasar test card) | Click "إضافة بطاقة" → enter test card details → Submit | Card chip shows brand + ●●●● last4 + MM/YY |
+| PM-03 | Add invalid card | Enter invalid card number | Error "بيانات البطاقة غير صحيحة" |
+| PM-04 | Card display after save | Reload /settings/billing | Card chip still visible; data persists |
+| PM-05 | Remove card | Click "حذف البطاقة" → confirm | Back to no-card state |
+| PM-06 | Remove blocked near renewal | Subscription renews in 3 days → try remove | Error "لا يمكن الحذف قبل التجديد القادم" |
+| PM-07 | Change card | Click "تغيير البطاقة" → enter new card | Old card replaced; new last4 shown |
+| PM-08 | Only OWNER can manage card | Login as ADMIN → /settings/billing | No add/remove card buttons visible |
+| PM-09 | Raw token never exposed | Check network responses | No card token in any API response body |
+| PM-10 | RTL layout | View in Arabic | Section RTL; brand icon + last4 correct |
+
+---
+
+## Regression Tests (all PRs)
+
+| # | Summary | Check |
+|---|---------|-------|
+| REG-01 | Existing branding tab unaffected | /settings → Branding tab still works |
+| REG-02 | Tenant switcher unaffected | Multi-org user can still switch orgs |
+| REG-03 | Billing page layout unaffected (PR3) | CurrentPlanCard + UsageBars still visible |
+| REG-04 | Users page unaffected | /users still lists staff correctly |
+| REG-05 | Auth flow unaffected | Login / logout / token refresh still work |
+
+---
+
+## Kiwi JSON Templates
+
+### PR1
+```json
+{
+  "domain": "Organization",
+  "version": "main",
+  "build": "saas-06b-org-profile",
+  "planName": "CareKit / Organization / Manual QA",
+  "planSummary": "Manual QA for Organization Profile settings page (SaaS-06b)",
+  "runSummary": "10 test cases — name/slug/logo editing",
+  "cases": []
+}
+```
+
+### PR2
+```json
+{
+  "domain": "Members",
+  "version": "main",
+  "build": "saas-06c-members",
+  "planName": "CareKit / Members / Manual QA",
+  "planSummary": "Manual QA for Members Management settings page (SaaS-06c)",
+  "runSummary": "14 test cases — invite/deactivate/role management",
+  "cases": []
+}
+```
+
+### PR3
+```json
+{
+  "domain": "Billing",
+  "version": "main",
+  "build": "saas-06d-payment-methods",
+  "planName": "CareKit / Billing / Manual QA",
+  "planSummary": "Manual QA for Payment Methods in billing settings (SaaS-06d)",
+  "runSummary": "10 test cases — add/change/remove saved card",
+  "cases": []
+}
+```

@@ -14,6 +14,7 @@ export const FEATURE_FLAG_KEYS = [
   "waitlist",
   "zoom",
   "zatca",
+  "activity_log",
   "departments",
   "groups",
 ] as const;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, TextStyle } from 'react-native';
 import { useTheme } from '../useTheme';
+import { getFontName } from '../fonts';
 
 type TextVariant =
   | 'display'
@@ -44,33 +45,19 @@ export function ThemedText({
 }: ThemedTextProps) {
   const { theme, isRTL, language } = useTheme();
 
-  const fontFamily =
-    language === 'ar'
-      ? theme.typography.fontFamily.arabic
-      : theme.typography.fontFamily.english;
-
-  const variantStyles: Record<TextVariant, TextStyle> = {
-    display: { fontSize: 36, fontWeight: '700', lineHeight: 45 },
-    displaySm: { fontSize: 28, fontWeight: '700', lineHeight: 35 },
-    heading: { fontSize: 20, fontWeight: '600', lineHeight: 26 },
-    subheading: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
-    body: { fontSize: 14, fontWeight: '400', lineHeight: 21 },
-    bodySm: {
-      fontSize: 13,
-      fontWeight: '400',
-      lineHeight: 20,
-      color: theme.colors.textSecondary,
-    },
-    caption: { fontSize: 12, fontWeight: '400', lineHeight: 18 },
-    label: {
-      fontSize: 11,
-      fontWeight: '600',
-      lineHeight: 16,
-      textTransform: 'uppercase',
-      letterSpacing: 0.6,
-      color: theme.colors.textSecondary,
-    },
+  const variantStyles: Record<TextVariant, TextStyle & { _weight: string }> = {
+    display:    { fontSize: 36, lineHeight: 45, _weight: '700' },
+    displaySm:  { fontSize: 28, lineHeight: 35, _weight: '700' },
+    heading:    { fontSize: 20, lineHeight: 26, _weight: '600' },
+    subheading: { fontSize: 16, lineHeight: 22, _weight: '600' },
+    body:       { fontSize: 14, lineHeight: 21, _weight: '400' },
+    bodySm:     { fontSize: 13, lineHeight: 20, _weight: '400', color: theme.colors.textSecondary },
+    caption:    { fontSize: 12, lineHeight: 18, _weight: '400' },
+    label:      { fontSize: 11, lineHeight: 16, _weight: '600', textTransform: 'uppercase', letterSpacing: 0.6, color: theme.colors.textSecondary },
   };
+
+  const { _weight, ...variantStyle } = variantStyles[variant];
+  const fontFamily = getFontName(language, _weight);
 
   return (
     <Text
@@ -81,7 +68,7 @@ export function ThemedText({
           textAlign: align ?? (isRTL ? 'right' : 'left'),
           color: color ?? theme.colors.textPrimary,
         },
-        variantStyles[variant],
+        variantStyle,
         style,
       ]}
     >

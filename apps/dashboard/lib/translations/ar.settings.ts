@@ -286,4 +286,21 @@ export const arSettings: Record<string, string> = {
   "settings.emailTemplates.previewLabel": "معاينة الرسالة",
   "settings.emailTemplates.saved": "تم حفظ القالب بنجاح",
   "settings.emailTemplates.backToList": "العودة للقائمة",
+  // Organization Profile
+  "settings.organization.title": "ملف العيادة",
+  "settings.organization.description": "اسم العيادة والمعرّف والشعار",
+  "settings.organization.nameAr": "الاسم بالعربي",
+  "settings.organization.nameEn": "الاسم بالإنجليزي",
+  "settings.organization.slug": "المعرّف",
+  "settings.organization.slugHint": "أحرف صغيرة وأرقام وشرطة فقط",
+  "settings.organization.slugTaken": "هذا المعرّف مستخدم",
+  "settings.organization.slugCaution": "تغيير المعرّف قد يؤثر على النطاق الفرعي لاحقاً",
+  "settings.organization.tagline": "الوصف",
+  "settings.organization.taglinePlaceholder": "شعار عيادتك أو وصفها...",
+  "settings.organization.logo": "الشعار",
+  "settings.organization.logoUpload": "رفع شعار جديد",
+  "settings.organization.saved": "تم حفظ الملف",
+  // Members
+  "settings.members.title": "أعضاء الفريق",
+  "settings.members.description": "إدارة أعضاء فريق العيادة والدعوات",
 }

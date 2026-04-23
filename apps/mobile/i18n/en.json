@@ -1,4 +1,10 @@
 {
+  "splash": {
+    "title": "CareKit for your clinic",
+    "tagline": "With you, toward smarter care",
+    "cta": "Begin your journey",
+    "privacy": "Complete privacy, professional care"
+  },
   "auth": {
     "login": "Login",
     "register": "Create Account",
@@ -104,6 +110,7 @@
     "joinZoom": "Join Meeting",
     "requestCancel": "Request Cancellation",
     "rate": "Rate Visit",
+    "commentPlaceholder": "Add a comment (optional)...",
     "pending": "Pending Confirmation",
     "confirmed": "Confirmed",
     "completed": "Completed",

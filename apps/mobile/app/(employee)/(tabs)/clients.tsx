@@ -15,6 +15,8 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { getFontName } from '@/theme/fonts';
+import { SectionHeader } from '@/components/SectionHeader';
 import { clientsService } from '@/services/clients';
 
 interface ClientItem {
@@ -28,14 +30,14 @@ interface ClientItem {
 export default function ClientsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme, isRTL, language } = useTheme();
 
   const [search, setSearch] = useState('');
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [loading, setLoading] = useState(true);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
+  const fontFamily = getFontName(language, '400');
 
   const fetchClients = useCallback(async (searchTerm: string) => {
     setLoading(true);
@@ -74,9 +76,7 @@ export default function ClientsScreen() {
         { backgroundColor: theme.colors.surface, paddingTop: insets.top + 16 },
       ]}
     >
-      <ThemedText variant="displaySm" style={styles.title}>
-        {t('employee.clients')}
-      </ThemedText>
+      <SectionHeader title={t('employee.clients')} size="screen" style={styles.title} />
 
       {/* Search */}
       <View style={[styles.searchBar, theme.shadows.md, { backgroundColor: theme.colors.white }]}>

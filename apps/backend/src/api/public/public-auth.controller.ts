@@ -14,6 +14,8 @@ import { ClientLogoutHandler } from '../../modules/identity/client-auth/client-l
 import { RefreshTokenDto, LogoutDto } from '../../modules/identity/client-auth/client-tokens.dto';
 import { ResetPasswordHandler } from '../../modules/identity/client-auth/reset-password/reset-password.handler';
 import { ResetPasswordDto } from '../../modules/identity/client-auth/reset-password/reset-password.dto';
+import { AcceptInvitationHandler } from '../../modules/identity/accept-invitation/accept-invitation.handler';
+import { AcceptInvitationDto } from '../../modules/identity/accept-invitation/accept-invitation.dto';
 import { Request } from 'express';
 
 @ApiTags('Public / Auth')
@@ -26,6 +28,7 @@ export class PublicAuthController {
     private readonly refresh: ClientRefreshHandler,
     private readonly logout: ClientLogoutHandler,
     private readonly resetPassword: ResetPasswordHandler,
+    private readonly acceptInvitation: AcceptInvitationHandler,
   ) {}
 
   @Public()
@@ -75,5 +78,14 @@ export class PublicAuthController {
   @ApiOperation({ summary: 'Reset client password using a verified OTP session token' })
   async resetPasswordEndpoint(@Body() dto: ResetPasswordDto): Promise<void> {
     await this.resetPassword.execute(dto);
+  }
+
+  @Public()
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  @Post('accept-invitation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept an organization invitation and create account' })
+  async acceptInvitationEndpoint(@Body() dto: AcceptInvitationDto) {
+    return this.acceptInvitation.execute(dto);
   }
 }

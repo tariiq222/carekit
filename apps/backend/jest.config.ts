@@ -1,22 +1,22 @@
-import type { Config } from 'jest';
+import type { Config } from "jest";
 
 const config: Config = {
-  moduleFileExtensions: ['js', 'json', 'ts'],
-  rootDir: '.',
-  testRegex: '.*\\.spec\\.ts$',
+  moduleFileExtensions: ["js", "json", "ts"],
+  rootDir: ".",
+  testRegex: ".*\\.spec\\.ts$",
   transform: {
-    '^.+\\.(t|j)s$': ['ts-jest', { diagnostics: false }],
+    "^.+\\.(t|j)s$": ["ts-jest", { diagnostics: false }],
   },
   collectCoverageFrom: [
-    'src/**/*.(t|j)s',
-    '!src/modules/**/index.ts',
-    '!src/api/**/index.ts',
-    '!src/infrastructure/**/index.ts',
-    '!src/modules/*/**', // exclude module-level folder aggregates
-    '!src/api/mobile/**',
-    '!src/api/public/**',
+    "src/**/*.(t|j)s",
+    "!src/modules/**/index.ts",
+    "!src/api/**/index.ts",
+    "!src/infrastructure/**/index.ts",
+    "!src/modules/*/**", // exclude module-level folder aggregates
+    "!src/api/mobile/**",
+    "!src/api/public/**",
   ],
-  coverageDirectory: './coverage',
+  coverageDirectory: "./coverage",
   coverageThreshold: {
     global: {
       branches: 90,
@@ -25,10 +25,12 @@ const config: Config = {
       statements: 90,
     },
   },
-  setupFiles: ['<rootDir>/test/jest.setup.ts'],
-  testEnvironment: 'node',
+  setupFiles: ["<rootDir>/test/jest.setup.ts"],
+  testEnvironment: "node",
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@carekit/shared/constants/feature-keys$":
+      "<rootDir>/src/__mocks__/@carekit/shared/constants/feature-keys.ts",
   },
 };
 

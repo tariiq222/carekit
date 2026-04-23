@@ -286,4 +286,21 @@ export const enSettings: Record<string, string> = {
   "settings.emailTemplates.previewLabel": "Email Preview",
   "settings.emailTemplates.saved": "Template saved successfully",
   "settings.emailTemplates.backToList": "Back to list",
+  // Organization Profile
+  "settings.organization.title": "Organization Profile",
+  "settings.organization.description": "Clinic name, slug, and logo",
+  "settings.organization.nameAr": "Name (Arabic)",
+  "settings.organization.nameEn": "Name (English)",
+  "settings.organization.slug": "Slug",
+  "settings.organization.slugHint": "Lowercase, numbers, hyphens only",
+  "settings.organization.slugTaken": "This slug is already taken",
+  "settings.organization.slugCaution": "Changing the slug may affect subdomain routing later",
+  "settings.organization.tagline": "Description / Tagline",
+  "settings.organization.taglinePlaceholder": "Your clinic tagline or description...",
+  "settings.organization.logo": "Logo",
+  "settings.organization.logoUpload": "Upload New Logo",
+  "settings.organization.saved": "Profile saved",
+  // Members
+  "settings.members.title": "Team Members",
+  "settings.members.description": "Manage clinic team members and invitations",
 }

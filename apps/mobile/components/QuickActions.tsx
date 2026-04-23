@@ -1,13 +1,13 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { LucideIcon } from 'lucide-react-native';
 import { C, RADII, SHADOW_RAISED } from "@/theme/glass";
 import { Glass } from "@/theme";
 import { useDir } from "@/hooks/useDir";
 
 type QuickAction = {
   id: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: LucideIcon;
   label: { ar: string; en: string };
   onPress: () => void;
 };
@@ -26,7 +26,7 @@ export const QuickActions = ({ actions }: QuickActionsProps) => {
             <React.Fragment key={a.id}>
               <Pressable style={s.tile} onPress={a.onPress}>
                 <View style={s.iconBubble}>
-                  <Ionicons name={a.icon} size={22} color={C.deepTeal} />
+                  <a.icon size={22} color={C.deepTeal} strokeWidth={1.75} />
                 </View>
                 <Text style={s.label}>{a.label[dir.locale]}</Text>
               </Pressable>

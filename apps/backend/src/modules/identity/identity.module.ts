@@ -44,6 +44,13 @@ import { ResetPasswordHandler } from './client-auth/reset-password/reset-passwor
 import { PasswordHistoryService } from './client-auth/shared/password-history.service';
 import { ListMembershipsHandler } from './list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from './switch-organization/switch-organization.handler';
+import { ListMembersHandler } from './list-members/list-members.handler';
+import { InviteMemberHandler } from './invite-member/invite-member.handler';
+import { UpdateMemberRoleHandler } from './update-member-role/update-member-role.handler';
+import { DeactivateMemberHandler } from './deactivate-member/deactivate-member.handler';
+import { ListInvitationsHandler } from './list-invitations/list-invitations.handler';
+import { RevokeInvitationHandler } from './revoke-invitation/revoke-invitation.handler';
+import { AcceptInvitationHandler } from './accept-invitation/accept-invitation.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -62,6 +69,13 @@ const handlers = [
   ResetPasswordHandler,
   ListMembershipsHandler,
   SwitchOrganizationHandler,
+  ListMembersHandler,
+  InviteMemberHandler,
+  UpdateMemberRoleHandler,
+  DeactivateMemberHandler,
+  ListInvitationsHandler,
+  RevokeInvitationHandler,
+  AcceptInvitationHandler,
 ];
 
 @Module({

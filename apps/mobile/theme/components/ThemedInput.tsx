@@ -8,6 +8,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { useTheme } from '../useTheme';
+import { getFontName } from '../fonts';
 
 interface ThemedInputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -39,10 +40,8 @@ export function ThemedInput({
   const { theme, isRTL, language } = useTheme();
   const [focused, setFocused] = useState(false);
 
-  const fontFamily =
-    language === 'ar'
-      ? theme.typography.fontFamily.arabic
-      : theme.typography.fontFamily.english;
+  const fontFamily = getFontName(language, '400');
+  const fontFamilyMedium = getFontName(language, '500');
   const displayLabel = isRTL ? (labelAr ?? label) : label;
   const displayPlaceholder = isRTL
     ? (placeholderAr ?? placeholder)
@@ -54,9 +53,8 @@ export function ThemedInput({
         <Text
           style={{
             fontSize: 12,
-            fontWeight: '500',
             color: theme.colors.textSecondary,
-            fontFamily,
+            fontFamily: fontFamilyMedium,
             textAlign: isRTL ? 'right' : 'left',
           }}
         >

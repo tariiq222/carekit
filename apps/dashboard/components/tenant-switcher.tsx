@@ -3,11 +3,12 @@
 /**
  * TenantSwitcher — SaaS-06
  *
- * App-shell dropdown that lets a user with multiple active memberships
- * switch their organization context. Hides itself when the caller has
- * ≤ 1 membership (the overwhelmingly common case today).
+ * Shows the active organization name in the app-shell header.
+ * - Single org: renders a static badge (read-only).
+ * - Multi-org: renders a dropdown to switch between organizations.
+ * Hides when unauthenticated or while loading.
  *
- * On click → mutation → fresh JWT → full TanStack Query cache flush +
+ * On switch → mutation → fresh JWT → full TanStack Query cache flush +
  * router refresh. The currently-active org is marked disabled.
  */
 
@@ -46,17 +47,22 @@ export function TenantSwitcher() {
   const { data: memberships, isLoading } = useMemberships()
   const switchOrg = useSwitchOrganization()
 
-  // Hide entirely when unauthenticated, loading, or user has ≤1 org.
-  if (!isAuthenticated) return null
-  if (isLoading) return null
-  if (!memberships || memberships.length <= 1) return null
+  if (!isAuthenticated || isLoading || !memberships?.length) return null
 
   // The first membership matches the org the current JWT targets,
   // because the backend orders by role/createdAt (same ordering as login).
-  // We don't have the current org on the AuthUser yet (Plan 07), so we
-  // treat the first entry as the active one for now.
   const active = memberships[0]
 
+  // Single-org: show org name as a static read-only badge.
+  if (memberships.length === 1) {
+    return (
+      <span className="hidden sm:inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium bg-primary/8 text-primary max-w-[12rem] truncate">
+        {displayName(active, locale)}
+      </span>
+    )
+  }
+
+  // Multi-org: full dropdown switcher.
   const handleSelect = (target: Membership) => {
     if (target.organizationId === active?.organizationId) return
     switchOrg.mutate(target.organizationId, {

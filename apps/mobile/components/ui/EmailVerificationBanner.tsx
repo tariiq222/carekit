@@ -28,8 +28,13 @@ export function EmailVerificationBanner({ onDismiss }: EmailVerificationBannerPr
 
   const handleResend = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!user.email) return;
     try {
-      await authService.sendVerificationEmail();
+      await authService.sendOtp({
+        channel: 'EMAIL',
+        identifier: user.email,
+        purpose: 'CLIENT_LOGIN',
+      });
     } catch {
       // Silent — don't block UX
     }

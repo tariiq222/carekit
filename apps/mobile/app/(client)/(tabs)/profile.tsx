@@ -1,5 +1,13 @@
 import { useCallback } from 'react';
-import { View, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  ScrollView,
+  Pressable,
+  Alert,
+  StyleSheet,
+  ImageBackground,
+  Text,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,9 +27,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
-import { ThemedText } from '@/theme/components/ThemedText';
+import { Glass } from '@/theme';
+import { C, RADII, SHADOW, SHADOW_SOFT } from '@/theme/glass';
+import { useDir } from '@/hooks/useDir';
+import { SectionHeader } from '@/components/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
-import { useTheme } from '@/theme/useTheme';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
@@ -35,40 +45,36 @@ interface MenuItemProps {
 }
 
 function MenuItem({ icon: Icon, label, value, danger, onPress }: MenuItemProps) {
-  const { theme, isRTL } = useTheme();
-  const Chevron = isRTL ? ChevronLeft : ChevronRight;
+  const dir = useDir();
+  const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
+  const fg = danger ? '#B42318' : C.deepTeal;
+  const subtle = danger ? '#B42318' : C.subtle;
   return (
-    <Pressable
+    <Glass
+      variant="regular"
+      radius={RADII.card}
+      interactive
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.menuItem,
-        { backgroundColor: theme.colors.card, opacity: pressed ? 0.7 : 1 },
-      ]}
+      style={[styles.menuItem, { flexDirection: dir.row }, SHADOW_SOFT]}
     >
-      <View style={styles.menuLeft}>
-        <Icon
-          size={20}
-          strokeWidth={1.5}
-          color={danger ? theme.colors.error : theme.colors.textSecondary}
-        />
-        <ThemedText
-          variant="body"
-          color={danger ? theme.colors.error : theme.colors.textPrimary}
+      <View style={[styles.menuLeft, { flexDirection: dir.row }]}>
+        <View style={[styles.menuIcon, { backgroundColor: danger ? 'rgba(180,35,24,0.12)' : C.tealTint }]}>
+          <Icon size={18} strokeWidth={1.6} color={fg} />
+        </View>
+        <Text
+          style={[
+            styles.menuLabel,
+            { color: fg, textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+          ]}
         >
           {label}
-        </ThemedText>
+        </Text>
       </View>
-      <View style={styles.menuRight}>
-        {value && (
-          <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-            {value}
-          </ThemedText>
-        )}
-        {!danger && (
-          <Chevron size={16} strokeWidth={1.5} color={theme.colors.textMuted} />
-        )}
+      <View style={[styles.menuRight, { flexDirection: dir.row }]}>
+        {!!value && <Text style={[styles.menuValue, { color: subtle }]}>{value}</Text>}
+        {!danger && <Chevron size={16} strokeWidth={1.8} color={C.subtle} />}
       </View>
-    </Pressable>
+    </Glass>
   );
 }
 
@@ -77,7 +83,7 @@ export default function ClientProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const { theme } = useTheme();
+  const dir = useDir();
   const user = useAppSelector((s) => s.auth.user);
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : '';
@@ -99,29 +105,49 @@ export default function ClientProfileScreen() {
   }, [dispatch, router, t]);
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.colors.surface, paddingTop: insets.top + 16 },
-      ]}
-    >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        <ThemedText variant="displaySm" style={styles.title}>
-          {t('profile.title')}
-        </ThemedText>
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/bg.jpg')}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+      />
 
-        {/* Profile Header */}
-        <View style={[styles.profileCard, { backgroundColor: theme.colors.card }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: insets.top + 18, paddingBottom: 120, paddingHorizontal: 18 }}
+      >
+        <SectionHeader title={t('profile.title')} size="screen" style={styles.title} />
+
+        <Glass
+          variant="strong"
+          radius={RADII.card}
+          style={[
+            styles.profileCard,
+            { flexDirection: dir.row },
+            SHADOW,
+          ]}
+        >
           <Avatar size={64} name={fullName} imageUrl={user?.avatarUrl} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <ThemedText variant="heading">{fullName}</ThemedText>
-            <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
+          <View style={{ flex: 1, gap: 4, alignItems: dir.alignStart }}>
+            <Text
+              style={[
+                styles.profileName,
+                { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+              ]}
+            >
+              {fullName}
+            </Text>
+            <Text
+              style={[
+                styles.profileEmail,
+                { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+              ]}
+            >
               {user?.email}
-            </ThemedText>
+            </Text>
           </View>
-        </View>
+        </Glass>
 
-        {/* Menu Groups */}
         <View style={styles.menuGroup}>
           <MenuItem
             icon={User}
@@ -175,12 +201,7 @@ export default function ClientProfileScreen() {
         </View>
 
         <View style={styles.menuGroup}>
-          <MenuItem
-            icon={LogOut}
-            label={t('auth.logout')}
-            danger
-            onPress={handleLogout}
-          />
+          <MenuItem icon={LogOut} label={t('auth.logout')} danger onPress={handleLogout} />
         </View>
       </ScrollView>
     </View>
@@ -188,25 +209,32 @@ export default function ClientProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20 },
-  title: { marginBottom: 20 },
+  container: { flex: 1 },
+  title: { marginBottom: 18 },
   profileCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    borderRadius: 12,
+    gap: 14,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 22,
   },
-  menuGroup: { gap: 8, marginBottom: 20 },
+  profileName: { fontSize: 18, fontWeight: '800', color: C.deepTeal },
+  profileEmail: { fontSize: 13, color: C.subtle },
+  menuGroup: { gap: 10, marginBottom: 20 },
   menuItem: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 12,
-    padding: 14,
-    paddingHorizontal: 16,
+    padding: 12,
+    paddingHorizontal: 14,
   },
-  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  menuLeft: { alignItems: 'center', gap: 12, flex: 1 },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: { fontSize: 14, fontWeight: '600' },
+  menuRight: { alignItems: 'center', gap: 6 },
+  menuValue: { fontSize: 13 },
 });
