@@ -10,6 +10,7 @@ const ITEMS: Array<{ href: string; label: string }> = [
   { href: '/users', label: 'Users' },
   { href: '/plans', label: 'Plans' },
   { href: '/verticals', label: 'Verticals' },
+  { href: '/billing', label: 'Billing' },
   { href: '/metrics', label: 'Metrics' },
   { href: '/audit-log', label: 'Audit log' },
   { href: '/impersonation-sessions', label: 'Impersonation sessions' },
