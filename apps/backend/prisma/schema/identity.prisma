@@ -75,7 +75,7 @@ model RefreshToken {
   id             String    @id @default(uuid())
   userId         String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId String
+  organizationId String?
   tokenHash      String    @unique
   // First 8 chars of the raw UUID used as a fast lookup key.
   // Lets us do an indexed DB lookup to a single row before the bcrypt compare,
