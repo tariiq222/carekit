@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Badge } from '@carekit/ui/primitives/badge';
+import { Button } from '@carekit/ui/primitives/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
 import {
@@ -12,8 +14,17 @@ import {
   TableRow,
 } from '@carekit/ui/primitives/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@carekit/ui/primitives/tabs';
-import type { SubscriptionInvoiceStatus, SubscriptionStatus } from '../types';
+import type {
+  SubscriptionInvoiceRow,
+  SubscriptionInvoiceStatus,
+  SubscriptionStatus,
+} from '../types';
+import { ChangePlanDialog } from '../change-plan-for-org/change-plan-dialog';
+import { GrantCreditDialog } from '../grant-credit/grant-credit-dialog';
+import { WaiveInvoiceDialog } from '../waive-invoice/waive-invoice-dialog';
 import { useGetOrgBilling } from './use-get-org-billing';
+
+const WAIVABLE: SubscriptionInvoiceStatus[] = ['DUE', 'FAILED'];
 
 const SUB_TONE: Record<SubscriptionStatus, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
@@ -46,6 +57,9 @@ interface Props {
 
 export function OrgBillingDetail({ orgId }: Props) {
   const { data, isLoading, error } = useGetOrgBilling(orgId);
+  const [waiveTarget, setWaiveTarget] = useState<SubscriptionInvoiceRow | null>(null);
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [grantCreditOpen, setGrantCreditOpen] = useState(false);
 
   if (error) {
     return (
@@ -114,6 +128,11 @@ export function OrgBillingDetail({ orgId }: Props) {
                   <Field label="Last failure">{data.subscription.lastFailureReason}</Field>
                 ) : null}
               </CardContent>
+              <CardContent className="border-t border-border pt-4">
+                <Button variant="outline" size="sm" onClick={() => setChangePlanOpen(true)}>
+                  Change plan…
+                </Button>
+              </CardContent>
             </Card>
           ) : (
             <Card>
@@ -135,12 +154,13 @@ export function OrgBillingDetail({ orgId }: Props) {
                   <TableHead>Status</TableHead>
                   <TableHead>Period</TableHead>
                   <TableHead>Due</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.invoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                       No invoices.
                     </TableCell>
                   </TableRow>
@@ -164,6 +184,17 @@ export function OrgBillingDetail({ orgId }: Props) {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {fmt(inv.dueDate)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {WAIVABLE.includes(inv.status) ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setWaiveTarget(inv)}
+                          >
+                            Waive
+                          </Button>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))
@@ -199,6 +230,11 @@ export function OrgBillingDetail({ orgId }: Props) {
 
         <TabsContent value="credits" className="mt-4">
           <Card>
+            <CardContent className="flex justify-end border-b border-border py-3">
+              <Button variant="outline" size="sm" onClick={() => setGrantCreditOpen(true)}>
+                Grant credit…
+              </Button>
+            </CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -236,6 +272,31 @@ export function OrgBillingDetail({ orgId }: Props) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {waiveTarget ? (
+        <WaiveInvoiceDialog
+          open={Boolean(waiveTarget)}
+          onOpenChange={(o) => !o && setWaiveTarget(null)}
+          invoice={waiveTarget}
+          orgId={orgId}
+        />
+      ) : null}
+
+      <GrantCreditDialog
+        open={grantCreditOpen}
+        onOpenChange={setGrantCreditOpen}
+        organizationId={orgId}
+      />
+
+      {data.subscription ? (
+        <ChangePlanDialog
+          open={changePlanOpen}
+          onOpenChange={setChangePlanOpen}
+          organizationId={orgId}
+          currentPlanId={data.subscription.planId}
+          currentPlanLabel={`${data.subscription.plan.nameEn} (${data.subscription.plan.slug}) · ${Number(data.subscription.plan.priceMonthly).toFixed(2)} SAR/mo`}
+        />
+      ) : null}
     </div>
   );
 }

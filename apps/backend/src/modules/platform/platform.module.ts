@@ -49,6 +49,9 @@ import { ListSubscriptionsHandler } from './admin/list-subscriptions/list-subscr
 import { GetOrgBillingHandler } from './admin/get-org-billing/get-org-billing.handler';
 import { ListSubscriptionInvoicesHandler } from './admin/list-subscription-invoices/list-subscription-invoices.handler';
 import { GetBillingMetricsHandler } from './admin/get-billing-metrics/get-billing-metrics.handler';
+import { AdminWaiveInvoiceHandler } from './admin/admin-waive-invoice/admin-waive-invoice.handler';
+import { AdminGrantCreditHandler } from './admin/admin-grant-credit/admin-grant-credit.handler';
+import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 
 const ADMIN_HANDLERS = [
@@ -76,6 +79,9 @@ const ADMIN_HANDLERS = [
   GetOrgBillingHandler,
   ListSubscriptionInvoicesHandler,
   GetBillingMetricsHandler,
+  AdminWaiveInvoiceHandler,
+  AdminGrantCreditHandler,
+  AdminChangePlanForOrgHandler,
 ];
 
 @Module({
