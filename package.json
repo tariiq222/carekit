@@ -7,6 +7,7 @@
     "apps/dashboard",
     "apps/admin",
     "apps/website",
+    "apps/mobile",
     "packages/shared",
     "packages/api-client",
     "packages/ui"
@@ -16,6 +17,7 @@
     "dev:dashboard": "turbo run dev --filter=dashboard",
     "dev:admin": "turbo run dev --filter=admin",
     "dev:website": "turbo run dev --filter=website",
+    "dev:mobile": "npm run dev --workspace=carekit-mobile",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
