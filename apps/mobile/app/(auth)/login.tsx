@@ -1,58 +1,41 @@
 import { useState, useCallback } from 'react';
 import {
   View,
+  Text,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   Alert,
   StyleSheet,
+  TextInput,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Stethoscope, Eye, EyeOff, Mail } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedInput } from '@/theme/components/ThemedInput';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { useTheme } from '@/theme/useTheme';
+import { Glass } from '@/theme';
+import { C, RADII, SHADOW } from '@/theme/glass';
+import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
 import { getPrimaryRole } from '@/types/auth';
 
-/**
- * Login Screen — unified for clients + employees.
- * No role selection — backend detects role automatically.
- * Two options: password login OR OTP login.
- * Register link = clients only (employees added from dashboard).
- */
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const { theme, isRTL } = useTheme();
+  const dir = useDir();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {},
-  );
-
-  const validateEmail = useCallback((): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-      setErrors({ email: t('auth.invalidEmail') });
-      return false;
-    }
-    return true;
-  }, [email, t]);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = useCallback((): boolean => {
     const newErrors: typeof errors = {};
@@ -71,7 +54,6 @@ export default function LoginScreen() {
     return Object.keys(newErrors).length === 0;
   }, [email, password, t]);
 
-  /** Navigate to correct interface based on role from backend */
   const navigateByRole = useCallback(
     (user: { roles: Array<{ slug: string }> }) => {
       const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
@@ -84,8 +66,7 @@ export default function LoginScreen() {
     [router],
   );
 
-  /** Login with email + password */
-  const handlePasswordLogin = useCallback(async () => {
+  const handleLogin = useCallback(async () => {
     if (!validate()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
@@ -110,18 +91,14 @@ export default function LoginScreen() {
     }
   }, [email, password, validate, dispatch, navigateByRole, t]);
 
-  /** Login with OTP — also auto-verifies email */
-  const handleOtpLogin = useCallback(() => {
-    if (!validateEmail()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({ pathname: '/(auth)/otp-verify', params: { email } });
-  }, [email, validateEmail, router]);
-
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/bg.jpg')}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -129,150 +106,154 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scroll,
-            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 },
+            { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 40 }
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo + Header */}
-          <View style={styles.header}>
-            <LinearGradient
-              colors={['#0037B0', '#1D4ED8']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoContainer}
-            >
-              <Stethoscope size={32} color="#FFF" strokeWidth={1.5} />
-            </LinearGradient>
-
-            <ThemedText variant="displaySm" align="center" style={styles.title}>
-              {t('auth.welcomeBack')}
-            </ThemedText>
-            <ThemedText
-              variant="bodySm"
-              align="center"
-              color={theme.colors.textSecondary}
-            >
-              {t('auth.welcomeBackSub')}
-            </ThemedText>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Glass variant="strong" radius={RADII.floating} style={[styles.logo, SHADOW]}>
+              <Text style={styles.logoText}>🏥</Text>
+            </Glass>
           </View>
+
+          {/* Title */}
+          <Text
+            style={[
+              styles.title,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
+          >
+            {t('auth.welcomeBack')}
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
+          >
+            {t('auth.welcomeBackSub')}
+          </Text>
 
           {/* Form */}
-          <View style={styles.form}>
-            <ThemedInput
-              label={t('auth.email')}
-              labelAr={t('auth.email')}
-              placeholder={t('auth.emailPlaceholder')}
-              placeholderAr={t('auth.emailPlaceholder')}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              error={errors.email}
-              suffixIcon={
-                <Mail size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
-              }
-            />
-
-            <ThemedInput
-              label={t('auth.password')}
-              labelAr={t('auth.password')}
-              placeholder={t('auth.passwordPlaceholder')}
-              placeholderAr={t('auth.passwordPlaceholder')}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password)
-                  setErrors((e) => ({ ...e, password: undefined }));
-              }}
-              secureTextEntry={!showPassword}
-              error={errors.password}
-              suffixIcon={
-                showPassword ? (
-                  <Eye size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
-                ) : (
-                  <EyeOff size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
-                )
-              }
-              onSuffixPress={() => setShowPassword(!showPassword)}
-            />
-
-            {/* Forgot Password */}
-            <Pressable
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-              style={[
-                styles.forgotRow,
-                { alignSelf: isRTL ? 'flex-start' : 'flex-end' },
-              ]}
-            >
-              <ThemedText variant="bodySm" color="#1D4ED8" style={styles.link}>
-                {t('auth.forgotPassword')}
-              </ThemedText>
-            </Pressable>
-
-            {/* Password Login */}
-            <ThemedButton
-              onPress={handlePasswordLogin}
-              variant="primary"
-              size="lg"
-              full
-              loading={loading}
-              disabled={loading}
-            >
-              {t('auth.login')}
-            </ThemedButton>
-
-            {/* Divider */}
-            <View style={styles.dividerRow}>
-              <View style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]} />
-              <ThemedText variant="caption" color={theme.colors.textMuted} style={styles.dividerText}>
-                {t('auth.orContinueWith')}
-              </ThemedText>
-              <View style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]} />
-            </View>
-
-            {/* OTP Login */}
-            <ThemedButton
-              onPress={handleOtpLogin}
-              variant="outline"
-              size="lg"
-              full
-              icon={<Mail size={16} strokeWidth={1.5} color="#1D4ED8" />}
-            >
-              {t('auth.loginWithOtp')}
-            </ThemedButton>
-          </View>
-
-          {/* Register — clients only */}
-          <View style={styles.bottomRow}>
-            <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-              {t('auth.noAccount')}{' '}
-            </ThemedText>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/(auth)/register');
-              }}
-            >
-              <ThemedText variant="bodySm" color="#1D4ED8" style={styles.link}>
-                {t('auth.createAccount')}
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          {/* Note: employees are added from dashboard */}
-          <ThemedText
-            variant="caption"
-            color={theme.colors.textMuted}
-            align="center"
-            style={styles.note}
+          <Glass
+            variant="regular"
+            radius={RADII.card}
+            style={[styles.form, SHADOW, { marginTop: 32 }]}
           >
-            {t('auth.employeeNote')}
-          </ThemedText>
+            <View style={styles.formInner}>
+              {/* Email */}
+              <View style={styles.field}>
+                <Text
+                  style={[
+                    styles.label,
+                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                  ]}
+                >
+                  {t('auth.email')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
+                    }}
+                    placeholder={t('auth.emailPlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    style={[
+                      styles.inputText,
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    ]}
+                  />
+                </Glass>
+                {errors.email ? (
+                  <Text
+                    style={[
+                      styles.error,
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    ]}
+                  >
+                    {errors.email}
+                  </Text>
+                ) : null}
+              </View>
+
+              {/* Password */}
+              <View style={styles.field}>
+                <Text
+                  style={[
+                    styles.label,
+                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                  ]}
+                >
+                  {t('auth.password')}
+                </Text>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <TextInput
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+                    }}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    placeholderTextColor={C.subtle}
+                    secureTextEntry={!showPassword}
+                    style={[
+                      styles.inputText,
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    ]}
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeBtn}
+                  >
+                    <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                  </Pressable>
+                </Glass>
+                {errors.password ? (
+                  <Text
+                    style={[
+                      styles.error,
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    ]}
+                  >
+                    {errors.password}
+                  </Text>
+                ) : null}
+              </View>
+
+              {/* Login Button */}
+              <Glass
+                variant="regular"
+                radius={RADII.image}
+                onPress={handleLogin}
+                interactive
+                style={[styles.btn, { backgroundColor: C.deepTeal }]}
+              >
+                <Text style={styles.btnText}>
+                  {loading ? t('common.loading') : t('auth.login')}
+                </Text>
+              </Glass>
+
+              {/* Register Link */}
+              <View style={[styles.registerRow, { flexDirection: dir.row }]}>
+                <Text style={styles.registerText}>{t('auth.noAccount')} </Text>
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/(auth)/register');
+                  }}
+                >
+                  <Text style={styles.registerLink}>{t('auth.createAccount')}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Glass>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -282,33 +263,24 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24 },
-  header: { alignItems: 'center', marginBottom: 40, marginTop: 32 },
-  logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  title: { marginBottom: 8 },
-  form: { gap: 16 },
-  forgotRow: { paddingVertical: 4 },
-  link: { fontWeight: '600' },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginVertical: 4,
-  },
-  divider: { flex: 1, height: 1 },
-  dividerText: { paddingHorizontal: 4 },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  note: { marginTop: 12 },
+  scroll: { paddingHorizontal: 24 },
+  logoContainer: { alignItems: 'center', marginBottom: 24 },
+  logo: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
+  logoText: { fontSize: 40 },
+  title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32 },
+  form: { padding: 24 },
+  formInner: { gap: 20 },
+  field: { gap: 8 },
+  label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
+  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
+  eyeBtn: { padding: 4 },
+  eyeIcon: { fontSize: 18 },
+  error: { fontSize: 12, color: '#E74C3C' },
+  btn: { padding: 16, alignItems: 'center', marginTop: 8 },
+  btnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
+  registerText: { fontSize: 14, color: C.subtle },
+  registerLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
 });

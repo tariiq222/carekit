@@ -1,198 +1,253 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { Stethoscope, Bell } from 'lucide-react-native';
+import { View, ScrollView, StyleSheet, ImageBackground, Pressable, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { ThemedCard } from '@/theme/components/ThemedCard';
-import { EmployeeCard } from '@/components/features/EmployeeCard';
-import { StatusPill } from '@/components/ui/StatusPill';
-import { Avatar } from '@/components/ui/Avatar';
-import { useTheme } from '@/theme/useTheme';
-import { useAppSelector } from '@/hooks/use-redux';
-import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner';
-import { employeesService } from '@/services/employees';
-import { bookingsService } from '@/services/bookings';
-import type { Employee, Booking } from '@/types/models';
+import { Header } from '@/components/Header';
+import { QuickActions } from '@/components/QuickActions';
+import { Glass } from '@/theme';
+import { C, RADII, SHADOW } from '@/theme/glass';
+import { useDir } from '@/hooks/useDir';
 
 export default function ClientHomeScreen() {
-  const { t } = useTranslation();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
-  const user = useAppSelector((s) => s.auth.user);
+  const dir = useDir();
+  const router = useRouter();
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [featured, setFeatured] = useState<Employee[]>([]);
-  const [upcoming, setUpcoming] = useState<Booking | null>(null);
-
-  const loadData = useCallback(async () => {
-    const [featRes, upRes] = await Promise.allSettled([
-      employeesService.getFeatured(),
-      bookingsService.getUpcoming(),
-    ]);
-    if (featRes.status === 'fulfilled' && featRes.value.data)
-      setFeatured(featRes.value.data as Employee[]);
-    if (upRes.status === 'fulfilled' && upRes.value.data) {
-      const list = upRes.value.data as Booking[];
-      setUpcoming(list[0] ?? null);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  }, [loadData]);
-
-  const greeting = user?.firstName
-    ? `${t('home.greeting')}، ${user.firstName}`
-    : t('home.greeting');
+  const quickActions = [
+    {
+      id: 'book',
+      icon: 'calendar-outline' as const,
+      label: { ar: 'حجز موعد', en: 'Book Appointment' },
+      onPress: () => router.push('/(client)/booking/create'),
+    },
+    {
+      id: 'chat',
+      icon: 'chatbubbles-outline' as const,
+      label: { ar: 'تحدث معنا', en: 'Chat with us' },
+      onPress: () => router.push('/(client)/(tabs)/chat'),
+    },
+    {
+      id: 'records',
+      icon: 'document-text-outline' as const,
+      label: { ar: 'سجلاتي', en: 'My Records' },
+      onPress: () => router.push('/(client)/records'),
+    },
+  ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/bg.jpg')}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+      />
+
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: insets.top + 6, paddingBottom: 120 }
+        ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Gradient Header */}
-        <LinearGradient
-          colors={['#0037B0', '#1D4ED8']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
-        >
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1, gap: 6 }}>
-              <View style={styles.brandRow}>
-                <Stethoscope size={20} strokeWidth={1.5} color="#FFF" />
-                <ThemedText variant="subheading" color="#FFF">
-                  {t('common.appName')}
-                </ThemedText>
-              </View>
-              <ThemedText variant="heading" color="#FFF">
-                {greeting}
-              </ThemedText>
-            </View>
-            <Pressable
-              onPress={() => router.push('/(client)/(tabs)/notifications')}
-              style={styles.bellBtn}
-            >
-              <Bell size={22} strokeWidth={1.5} color="#FFF" />
-            </Pressable>
-          </View>
-        </LinearGradient>
+        <Header
+          greeting={dir.isRTL ? 'مرحباً سارة' : 'Welcome back, Sara'}
+          subtitle={dir.isRTL ? 'كيف يمكننا مساعدتك اليوم؟' : 'How can we help you today?'}
+          onNotificationPress={() => router.push('/(client)/(tabs)/notifications')}
+          hasUnreadNotifications={false}
+        />
 
-        <View style={styles.body}>
-          {/* Email Verification Banner */}
-          <EmailVerificationBanner />
+        <QuickActions actions={quickActions} />
 
-          {/* Upcoming Appointment */}
-          {upcoming ? (
-            <View style={styles.section}>
-              <ThemedText variant="subheading">{t('home.upcomingAppointment')}</ThemedText>
-              <ThemedCard onPress={() => {}}>
-                <View style={styles.upRow}>
-                  <Avatar
-                    size={44}
-                    name={`${upcoming.employee.user.firstName} ${upcoming.employee.user.lastName}`}
-                    imageUrl={upcoming.employee.user.avatarUrl}
-                  />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <ThemedText variant="subheading" numberOfLines={1}>
-                      {upcoming.employee.user.firstName} {upcoming.employee.user.lastName}
-                    </ThemedText>
-                    <ThemedText variant="caption" color={theme.colors.textSecondary}>
-                      {new Date(upcoming.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
-                        weekday: 'short', month: 'short', day: 'numeric',
-                      })} • {upcoming.startTime}
-                    </ThemedText>
-                  </View>
-                  <StatusPill status={upcoming.status} label={t('appointments.confirmed')} />
-                </View>
-              </ThemedCard>
-            </View>
-          ) : (
-            <ThemedCard style={{ alignItems: 'center', gap: 12, padding: 24 }}>
-              <ThemedText variant="body" color={theme.colors.textSecondary} align="center">
-                {t('home.noUpcoming')}
-              </ThemedText>
-              <ThemedButton onPress={() => {}} variant="primary" size="sm">
-                {t('home.bookNow')}
-              </ThemedButton>
-            </ThemedCard>
-          )}
-
-          {/* Featured Employees */}
-          <View style={styles.section}>
-            <SectionHeader title={t('home.featured')} action={t('common.viewAll')} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-              {featured.map((p) => (
-                <EmployeeCard
-                  key={p.id}
-                  employee={p}
-                  compact
-                  onPress={(id) => router.push(`/(client)/employee/${id}`)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Promo Banner */}
-          <LinearGradient
-            colors={['#0037B0', '#1D4ED8']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.promo}
+        {/* Clinics Section */}
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
           >
-            <ThemedText variant="subheading" color="#FFF" style={{ flex: 1 }}>
-              {t('home.bookAppointment')}
-            </ThemedText>
-            <ThemedButton onPress={() => {}} variant="secondary" size="sm">
-              {t('home.bookNow')}
-            </ThemedButton>
-          </LinearGradient>
+            {dir.isRTL ? 'العيادات المميزة' : 'Featured Clinics'}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.rail,
+              { flexDirection: dir.rowReverse, paddingHorizontal: 18 }
+            ]}
+          >
+            <ClinicCard
+              name={dir.isRTL ? 'عيادة النفسية' : 'Mental Health Clinic'}
+              city={dir.isRTL ? 'الرياض' : 'Riyadh'}
+              rating={4.7}
+            />
+            <ClinicCard
+              name={dir.isRTL ? 'مركز الصحة' : 'Health Center'}
+              city={dir.isRTL ? 'جدة' : 'Jeddah'}
+              rating={4.8}
+            />
+          </ScrollView>
+        </View>
+
+        {/* Therapists Section */}
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+            ]}
+          >
+            {dir.isRTL ? 'المعالجون المميزون' : 'Featured Therapists'}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.rail,
+              { flexDirection: dir.rowReverse, paddingHorizontal: 18 }
+            ]}
+          >
+            <TherapistCard
+              name={dir.isRTL ? 'د. فيصل أحمد' : 'Dr. Faisal Ahmed'}
+              specialty={dir.isRTL ? 'طب نفسي' : 'Psychiatry'}
+              rating={4.9}
+            />
+            <TherapistCard
+              name={dir.isRTL ? 'د. سارة محمد' : 'Dr. Sara Mohammed'}
+              specialty={dir.isRTL ? 'علاج نفسي' : 'Psychotherapy'}
+              rating={4.8}
+            />
+          </ScrollView>
         </View>
       </ScrollView>
     </View>
   );
 }
 
-function SectionHeader({ title, action }: { title: string; action: string }) {
+function ClinicCard({ name, city, rating }: { name: string; city: string; rating: number }) {
+  const dir = useDir();
   return (
-    <View style={styles.sectionHead}>
-      <ThemedText variant="subheading">{title}</ThemedText>
-      <Pressable>
-        <ThemedText variant="bodySm" color="#1D4ED8" style={{ fontWeight: '600' }}>
-          {action}
-        </ThemedText>
-      </Pressable>
-    </View>
+    <Glass variant="regular" radius={RADII.card} style={[styles.clinicCard, SHADOW]}>
+      <View style={styles.clinicImage}>
+        <LinearGradient
+          colors={[C.softTeal, C.deepTeal]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <Ionicons name="business-outline" size={32} color="#FFF" />
+      </View>
+      <View style={styles.clinicBody}>
+        <Text
+          style={[
+            styles.clinicName,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {name}
+        </Text>
+        <Text
+          style={[
+            styles.clinicCity,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {city}
+        </Text>
+        <View style={[styles.ratingPill, { alignSelf: dir.alignStart }]}>
+          <Ionicons name="star" size={12} color={C.goldText} />
+          <Text style={styles.ratingText}>{rating}</Text>
+        </View>
+      </View>
+    </Glass>
+  );
+}
+
+function TherapistCard({ name, specialty, rating }: { name: string; specialty: string; rating: number }) {
+  const dir = useDir();
+  return (
+    <Glass variant="regular" radius={RADII.card} style={[styles.therapistCard, SHADOW]}>
+      <View style={styles.therapistAvatar}>
+        <LinearGradient
+          colors={[C.softTeal, C.deepTeal]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <Text style={styles.therapistInitial}>{name.charAt(0)}</Text>
+      </View>
+      <View style={[styles.therapistBody, { alignItems: dir.alignStart }]}>
+        <Text
+          style={[
+            styles.therapistName,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {name}
+        </Text>
+        <Text
+          style={[
+            styles.therapistSpecialty,
+            { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+          ]}
+        >
+          {specialty}
+        </Text>
+        <View style={[styles.ratingPill, { alignSelf: dir.alignStart }]}>
+          <Ionicons name="star" size={12} color={C.goldText} />
+          <Text style={styles.ratingText}>{rating}</Text>
+        </View>
+      </View>
+    </Glass>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bellBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 20, paddingTop: 20, gap: 24 },
-  section: { gap: 12 },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  upRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  promo: { borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center' },
+  scroll: { paddingBottom: 120 },
+  section: { marginTop: 24, gap: 12 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: C.deepTeal,
+    paddingHorizontal: 18,
+  },
+  rail: { gap: 14, paddingTop: 20, paddingBottom: 72 },
+  clinicCard: { width: 180, overflow: 'hidden' },
+  clinicImage: {
+    width: 180,
+    height: 120,
+    borderRadius: RADII.image,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clinicBody: { padding: 10, gap: 4 },
+  clinicName: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  clinicCity: { fontSize: 12, color: C.subtle },
+  therapistCard: { width: 150, padding: 12, gap: 10 },
+  therapistAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  therapistInitial: { fontSize: 24, fontWeight: '800', color: '#FFF' },
+  therapistBody: { gap: 4 },
+  therapistName: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  therapistSpecialty: { fontSize: 12, color: C.subtle },
+  ratingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: C.ratingGlass,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADII.pill,
+    marginTop: 4,
+  },
+  ratingText: { fontSize: 11, fontWeight: '700', color: C.deepTeal },
 });
