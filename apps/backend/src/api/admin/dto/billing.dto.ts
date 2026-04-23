@@ -121,6 +121,24 @@ export class GrantCreditDto {
   reason!: string;
 }
 
+export class RefundInvoiceDto {
+  @ApiPropertyOptional({
+    description: 'Amount in SAR. Omit for full refund of remaining balance.',
+    minimum: 0.01,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.01)
+  amount?: number;
+
+  @ApiProperty({ minLength: 10, maxLength: 500 })
+  @IsString()
+  @MinLength(10)
+  @MaxLength(500)
+  reason!: string;
+}
+
 export class ChangePlanForOrgDto {
   @ApiProperty()
   @IsString()

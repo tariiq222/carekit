@@ -52,7 +52,9 @@ import { GetBillingMetricsHandler } from './admin/get-billing-metrics/get-billin
 import { AdminWaiveInvoiceHandler } from './admin/admin-waive-invoice/admin-waive-invoice.handler';
 import { AdminGrantCreditHandler } from './admin/admin-grant-credit/admin-grant-credit.handler';
 import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
+import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
+import { FinanceModule } from '../finance/finance.module';
 
 const ADMIN_HANDLERS = [
   ListOrganizationsHandler,
@@ -82,6 +84,7 @@ const ADMIN_HANDLERS = [
   AdminWaiveInvoiceHandler,
   AdminGrantCreditHandler,
   AdminChangePlanForOrgHandler,
+  AdminRefundInvoiceHandler,
 ];
 
 @Module({
@@ -89,6 +92,7 @@ const ADMIN_HANDLERS = [
     DatabaseModule,
     TenantModule,
     VerticalsModule,
+    FinanceModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

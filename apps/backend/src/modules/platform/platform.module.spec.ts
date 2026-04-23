@@ -20,6 +20,16 @@ describe('PlatformModule', () => {
               REDIS_PORT: 6379,
               REDIS_DB: 0,
               JWT_ACCESS_SECRET: 'test-secret-for-platform-module-spec',
+              // FinanceModule (imported by PlatformModule for refund flow)
+              // pulls in MinioService → require MinIO env keys.
+              MINIO_ENDPOINT: 'localhost',
+              MINIO_PORT: 9000,
+              MINIO_USE_SSL: 'false',
+              MINIO_ACCESS_KEY: 'test',
+              MINIO_SECRET_KEY: 'test',
+              MINIO_BUCKET: 'carekit-test',
+              MOYASAR_PLATFORM_SECRET_KEY: 'sk_test_placeholder',
+              MOYASAR_PLATFORM_WEBHOOK_SECRET: 'whsec_test_placeholder',
               // SMTP_HOST intentionally absent — SmtpService logs a warning
               // and stays in the disabled-but-resolvable state.
             }),
