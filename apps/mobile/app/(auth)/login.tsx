@@ -15,14 +15,18 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { Eye, EyeOff, Hospital } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
 import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
+import { setBranding } from '@/stores/slices/branding-slice';
 import { authService } from '@/services/auth';
+import { brandingService } from '@/services/branding';
 import { getPrimaryRole } from '@/types/auth';
+import { getFontName } from '@/theme/fonts';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -30,6 +34,9 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const dir = useDir();
+  const f400 = getFontName(dir.locale, '400');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,6 +87,11 @@ export default function LoginScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
+        brandingService.getBranding().then((branding) => {
+          if (branding) {
+            dispatch(setBranding(branding));
+          }
+        });
         navigateByRole(response.data.user);
       }
     } catch {
@@ -114,7 +126,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Glass variant="strong" radius={RADII.floating} style={[styles.logo, SHADOW]}>
-              <Text style={styles.logoText}>🏥</Text>
+              <Hospital size={40} color={C.deepTeal} strokeWidth={1.5} />
             </Glass>
           </View>
 
@@ -122,7 +134,7 @@ export default function LoginScreen() {
           <Text
             style={[
               styles.title,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f700 }
             ]}
           >
             {t('auth.welcomeBack')}
@@ -130,7 +142,7 @@ export default function LoginScreen() {
           <Text
             style={[
               styles.subtitle,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
             ]}
           >
             {t('auth.welcomeBackSub')}
@@ -148,12 +160,12 @@ export default function LoginScreen() {
                 <Text
                   style={[
                     styles.label,
-                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f600 }
                   ]}
                 >
                   {t('auth.email')}
                 </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                <Glass variant="clear" radius={RADII.image} style={[styles.input, { flexDirection: dir.row }]}>
                   <TextInput
                     value={email}
                     onChangeText={(text) => {
@@ -167,7 +179,7 @@ export default function LoginScreen() {
                     autoComplete="email"
                     style={[
                       styles.inputText,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
                     ]}
                   />
                 </Glass>
@@ -175,7 +187,7 @@ export default function LoginScreen() {
                   <Text
                     style={[
                       styles.error,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
                     ]}
                   >
                     {errors.email}
@@ -188,12 +200,12 @@ export default function LoginScreen() {
                 <Text
                   style={[
                     styles.label,
-                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f600 }
                   ]}
                 >
                   {t('auth.password')}
                 </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                <Glass variant="clear" radius={RADII.image} style={[styles.input, { flexDirection: dir.row }]}>
                   <TextInput
                     value={password}
                     onChangeText={(text) => {
@@ -205,21 +217,24 @@ export default function LoginScreen() {
                     secureTextEntry={!showPassword}
                     style={[
                       styles.inputText,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
                     ]}
                   />
                   <Pressable
                     onPress={() => setShowPassword(!showPassword)}
                     style={styles.eyeBtn}
                   >
-                    <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                    {showPassword
+                      ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
+                      : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
+                    }
                   </Pressable>
                 </Glass>
                 {errors.password ? (
                   <Text
                     style={[
                       styles.error,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
                     ]}
                   >
                     {errors.password}
@@ -235,21 +250,21 @@ export default function LoginScreen() {
                 interactive
                 style={[styles.btn, { backgroundColor: C.deepTeal }]}
               >
-                <Text style={styles.btnText}>
+                <Text style={[styles.btnText, { fontFamily: f700 }]}>
                   {loading ? t('common.loading') : t('auth.login')}
                 </Text>
               </Glass>
 
               {/* Register Link */}
               <View style={[styles.registerRow, { flexDirection: dir.row }]}>
-                <Text style={styles.registerText}>{t('auth.noAccount')} </Text>
+                <Text style={[styles.registerText, { fontFamily: f400 }]}>{t('auth.noAccount')} </Text>
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     router.push('/(auth)/register');
                   }}
                 >
-                  <Text style={styles.registerLink}>{t('auth.createAccount')}</Text>
+                  <Text style={[styles.registerLink, { fontFamily: f700 }]}>{t('auth.createAccount')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -266,21 +281,19 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 24 },
   logoContainer: { alignItems: 'center', marginBottom: 24 },
   logo: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontSize: 40 },
-  title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32 },
+  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  label: { fontSize: 14, color: C.deepTeal },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
   inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
   eyeBtn: { padding: 4 },
-  eyeIcon: { fontSize: 18 },
   error: { fontSize: 12, color: '#E74C3C' },
   btn: { padding: 16, alignItems: 'center', marginTop: 8 },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  btnText: { fontSize: 16, color: '#FFF' },
   registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
   registerText: { fontSize: 14, color: C.subtle },
-  registerLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  registerLink: { fontSize: 14, color: C.deepTeal },
 });

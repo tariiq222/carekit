@@ -7,6 +7,7 @@ const initialState: AuthState = {
   refreshToken: null,
   user: null,
   isLoading: false,
+  organizationId: null,
 };
 
 const authSlice = createSlice({
@@ -24,6 +25,7 @@ const authSlice = createSlice({
       state.token = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
+      state.organizationId = action.payload.user.organizationId ?? null;
     },
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
@@ -38,10 +40,14 @@ const authSlice = createSlice({
       state.token = null;
       state.refreshToken = null;
       state.user = null;
+      state.organizationId = null;
+    },
+    setOrganizationId(state, action: PayloadAction<string | null>) {
+      state.organizationId = action.payload;
     },
   },
 });
 
-export const { setCredentials, setToken, setUser, setLoading, logout } =
+export const { setCredentials, setToken, setUser, setLoading, logout, setOrganizationId } =
   authSlice.actions;
 export default authSlice.reducer;

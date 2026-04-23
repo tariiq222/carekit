@@ -23,6 +23,7 @@ export interface User {
   roles: UserRoleItem[];
   permissions: string[];
   avatarUrl?: string | null;
+  organizationId: string | null;
 }
 
 /** Derived primary role from roles[] array */
@@ -37,6 +38,7 @@ export interface AuthState {
   refreshToken: string | null;
   user: User | null;
   isLoading: boolean;
+  organizationId: string | null;
 }
 
 export interface LoginRequest {
