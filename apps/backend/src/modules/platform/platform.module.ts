@@ -45,6 +45,11 @@ import { StartImpersonationHandler } from './admin/start-impersonation/start-imp
 import { EndImpersonationHandler } from './admin/end-impersonation/end-impersonation.handler';
 import { ListImpersonationSessionsHandler } from './admin/list-impersonation-sessions/list-impersonation-sessions.handler';
 import { ExpireImpersonationSessionsCron } from './admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+import { ListSubscriptionsHandler } from './admin/list-subscriptions/list-subscriptions.handler';
+import { GetOrgBillingHandler } from './admin/get-org-billing/get-org-billing.handler';
+import { ListSubscriptionInvoicesHandler } from './admin/list-subscription-invoices/list-subscription-invoices.handler';
+import { GetBillingMetricsHandler } from './admin/get-billing-metrics/get-billing-metrics.handler';
+import { AdminBillingController } from '../../api/admin/billing.controller';
 
 const ADMIN_HANDLERS = [
   ListOrganizationsHandler,
@@ -67,6 +72,10 @@ const ADMIN_HANDLERS = [
   EndImpersonationHandler,
   ListImpersonationSessionsHandler,
   ExpireImpersonationSessionsCron,
+  ListSubscriptionsHandler,
+  GetOrgBillingHandler,
+  ListSubscriptionInvoicesHandler,
+  GetBillingMetricsHandler,
 ];
 
 @Module({
@@ -92,6 +101,7 @@ const ADMIN_HANDLERS = [
     AdminMetricsController,
     AdminAuditLogController,
     AdminImpersonationController,
+    AdminBillingController,
   ],
   providers: [
     SuperAdminContextInterceptor,
