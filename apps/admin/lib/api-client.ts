@@ -12,8 +12,8 @@ export class ApiError extends Error {
   }
 }
 
-const ADMIN_BASE = '/api/proxy/api/v1/admin';
-const PUBLIC_BASE = '/api/proxy/api/v1';
+const ADMIN_BASE = '/api/proxy/admin';
+const PUBLIC_BASE = '/api/proxy';
 
 function tokenFromStorage(): string | null {
   if (typeof window === 'undefined') return null;

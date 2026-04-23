@@ -1,0 +1,21 @@
+import { adminRequest } from '@/lib/api-client';
+import type { PlanRow } from '../types';
+
+export interface UpdatePlanCommand {
+  planId: string;
+  nameAr?: string;
+  nameEn?: string;
+  priceMonthly?: number;
+  priceAnnual?: number;
+  currency?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+  reason: string;
+}
+
+export function updatePlan({ planId, ...body }: UpdatePlanCommand): Promise<PlanRow> {
+  return adminRequest<PlanRow>(`/plans/${planId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
