@@ -6,7 +6,7 @@ import { GetPlatformMetricsHandler } from '../../modules/platform/admin/get-plat
 
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/metrics')
+@Controller('admin/metrics')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminMetricsController {

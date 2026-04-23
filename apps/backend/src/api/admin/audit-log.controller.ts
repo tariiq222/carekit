@@ -15,7 +15,7 @@ const VALID_ACTION_TYPES = new Set<string>(Object.values(SuperAdminActionType));
 
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/audit-log')
+@Controller('admin/audit-log')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminAuditLogController {

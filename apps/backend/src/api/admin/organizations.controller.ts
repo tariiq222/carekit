@@ -39,7 +39,7 @@ import {
 // token carries scope='impersonation'.
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/organizations')
+@Controller('admin/organizations')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminOrganizationsController {

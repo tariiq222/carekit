@@ -23,7 +23,7 @@ import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
-@Controller('api/v1/admin/users')
+@Controller('admin/users')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminUsersController {
