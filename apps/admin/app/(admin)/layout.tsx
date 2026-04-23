@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { Sidebar } from '@/shell/sidebar';
 import { LogoutButton } from '@/shell/logout-button';
+import { useTranslations } from 'next-intl';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const t = useTranslations('nav');
   return (
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r border-border bg-card px-4 py-6">
         <div className="mb-6 px-2">
-          <h1 className="text-lg font-semibold">CareKit Admin</h1>
+          <h1 className="text-lg font-semibold">{t('title')}</h1>
           <p className="text-xs text-muted-foreground">Platform control plane</p>
         </div>
         <Sidebar />

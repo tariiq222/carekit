@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "title": "CareKit Super-admin",
+    "overview": "Overview",
+    "organizations": "Organizations",
+    "users": "Users",
+    "plans": "Plans",
+    "verticals": "Verticals",
+    "billing": "Billing",
+    "metrics": "Metrics",
+    "auditLog": "Audit log",
+    "impersonation": "Impersonation sessions"
+  },
+  "login": {
+    "title": "CareKit Super-admin",
+    "description": "Platform staff only. Sign in with your CareKit account.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "error": {
+      "notAuthorized": "This account is not authorized for the super-admin panel.",
+      "noToken": "Login succeeded but no access token was returned.",
+      "failed": "Sign-in failed"
+    }
+  }
+}

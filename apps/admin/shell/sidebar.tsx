@@ -2,22 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { cn } from '@carekit/ui/lib/cn';
 
-const ITEMS: Array<{ href: string; label: string }> = [
-  { href: '/', label: 'Overview' },
-  { href: '/organizations', label: 'Organizations' },
-  { href: '/users', label: 'Users' },
-  { href: '/plans', label: 'Plans' },
-  { href: '/verticals', label: 'Verticals' },
-  { href: '/billing', label: 'Billing' },
-  { href: '/metrics', label: 'Metrics' },
-  { href: '/audit-log', label: 'Audit log' },
-  { href: '/impersonation-sessions', label: 'Impersonation sessions' },
+const ITEMS: Array<{ href: string; labelKey: string }> = [
+  { href: '/', labelKey: 'nav.overview' },
+  { href: '/organizations', labelKey: 'nav.organizations' },
+  { href: '/users', labelKey: 'nav.users' },
+  { href: '/plans', labelKey: 'nav.plans' },
+  { href: '/verticals', labelKey: 'nav.verticals' },
+  { href: '/billing', labelKey: 'nav.billing' },
+  { href: '/metrics', labelKey: 'nav.metrics' },
+  { href: '/audit-log', labelKey: 'nav.auditLog' },
+  { href: '/impersonation-sessions', labelKey: 'nav.impersonation' },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations();
   return (
     <nav className="flex flex-col gap-1">
       {ITEMS.map((item) => {
@@ -36,7 +38,7 @@ export function Sidebar() {
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

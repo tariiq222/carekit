@@ -4,7 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { AppModule } from './app.module';
-import { LoggingInterceptor } from './common/interceptors';
+import { LoggingInterceptor, AuditInterceptor } from './common/interceptors';
 import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap(): Promise<void> {
@@ -35,6 +35,7 @@ async function bootstrap(): Promise<void> {
   );
 
   app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(new AuditInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────
