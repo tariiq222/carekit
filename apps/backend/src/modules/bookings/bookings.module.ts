@@ -13,6 +13,7 @@ import { ListWaitlistHandler } from './list-waitlist/list-waitlist.handler';
 import { RemoveWaitlistEntryHandler } from './remove-waitlist-entry/remove-waitlist-entry.handler';
 import { GetBookingHandler } from './get-booking/get-booking.handler';
 import { ListBookingsHandler } from './list-bookings/list-bookings.handler';
+import { BookingsStatsHandler } from './bookings-stats/bookings-stats.handler';
 import { CheckAvailabilityHandler } from './check-availability/check-availability.handler';
 import { CheckInBookingHandler } from './check-in-booking/check-in-booking.handler';
 import { CompleteBookingHandler } from './complete-booking/complete-booking.handler';
@@ -48,6 +49,7 @@ const handlers = [
   RemoveWaitlistEntryHandler,
   GetBookingHandler,
   ListBookingsHandler,
+  BookingsStatsHandler,
   CheckAvailabilityHandler,
   CheckInBookingHandler,
   CompleteBookingHandler,

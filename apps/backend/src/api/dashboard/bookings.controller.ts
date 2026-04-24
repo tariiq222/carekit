@@ -17,6 +17,7 @@ import { CreateRecurringBookingHandler } from '../../modules/bookings/create-rec
 import { CreateRecurringBookingDto } from '../../modules/bookings/create-recurring-booking/create-recurring-booking.dto';
 import { ListBookingsHandler } from '../../modules/bookings/list-bookings/list-bookings.handler';
 import { ListBookingsDto } from '../../modules/bookings/list-bookings/list-bookings.dto';
+import { BookingsStatsHandler } from '../../modules/bookings/bookings-stats/bookings-stats.handler';
 import { GetBookingHandler } from '../../modules/bookings/get-booking/get-booking.handler';
 import { CancelBookingHandler } from '../../modules/bookings/cancel-booking/cancel-booking.handler';
 import { CancelBookingDto } from '../../modules/bookings/cancel-booking/cancel-booking.dto';
@@ -47,6 +48,7 @@ export class DashboardBookingsController {
     private readonly createHandler: CreateBookingHandler,
     private readonly createRecurringHandler: CreateRecurringBookingHandler,
     private readonly listHandler: ListBookingsHandler,
+    private readonly statsHandler: BookingsStatsHandler,
     private readonly getHandler: GetBookingHandler,
     private readonly cancelHandler: CancelBookingHandler,
     private readonly rescheduleHandler: RescheduleBookingHandler,
@@ -103,6 +105,13 @@ export class DashboardBookingsController {
       fromDate: fromDate ? new Date(fromDate) : undefined,
       toDate: toDate ? new Date(toDate) : undefined,
     });
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Today\'s booking counters + revenue for the dashboard StatsGrid' })
+  @ApiOkResponse({ description: 'Today/pending counts and today revenue', schema: { type: 'object' } })
+  getStats() {
+    return this.statsHandler.execute();
   }
 
   @Get('availability')
