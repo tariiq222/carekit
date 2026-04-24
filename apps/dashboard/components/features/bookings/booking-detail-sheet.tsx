@@ -95,6 +95,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
                   specialty={specialty}
                   appointmentDate={appointmentDate}
                   t={t}
+                  locale={locale}
                 />
                 <div className="flex flex-col gap-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -120,6 +121,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
                 specialty={specialty}
                 appointmentDate={appointmentDate}
                 t={t}
+                locale={locale}
               />
               <div className="flex flex-col gap-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

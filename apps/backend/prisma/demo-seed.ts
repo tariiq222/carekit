@@ -42,18 +42,22 @@ async function main() {
     experience: number | null; isActive: boolean;
     extraBranchId?: string;
   }> = [
+    // NOTE: do NOT include "د. " / "Dr. " prefixes in name fields — the UI's
+    // booking practitioner column auto-prepends `t("bookings.info.drPrefix")`,
+    // so a stored "د. خالد" renders as "د. د. خالد". Keep the honorific in
+    // `title` only.
     // Original 3 (kept stable for existing bookings/ratings references).
-    { id: '00000000-0000-4000-8000-000000000001', name: 'د. أحمد الغامدي',   nameEn: 'Dr. Ahmed Alghamdi',   nameAr: 'د. أحمد الغامدي',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'ahmed@carekit-test.com',   phone: '+966500000001', experience: 12, isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000002', name: 'د. فاطمة القحطاني', nameEn: 'Dr. Fatima Alqahtani', nameAr: 'د. فاطمة القحطاني', title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'fatima@carekit-test.com',  phone: '+966500000002', experience: 8,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000003', name: 'د. خالد السبيعي',   nameEn: 'Dr. Khalid Alsubaie',  nameAr: 'د. خالد السبيعي',   title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'khalid@carekit-test.com',  phone: '+966500000003', experience: null, isActive: true },
+    { id: '00000000-0000-4000-8000-000000000001', name: 'أحمد الغامدي',   nameEn: 'Ahmed Alghamdi',   nameAr: 'أحمد الغامدي',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'ahmed@carekit-test.com',   phone: '+966500000001', experience: 12, isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000002', name: 'فاطمة القحطاني', nameEn: 'Fatima Alqahtani', nameAr: 'فاطمة القحطاني', title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'fatima@carekit-test.com',  phone: '+966500000002', experience: 8,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000003', name: 'خالد السبيعي',   nameEn: 'Khalid Alsubaie',  nameAr: 'خالد السبيعي',   title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'khalid@carekit-test.com',  phone: '+966500000003', experience: null, isActive: true },
     // 7 more to cover plan §1.2 (10+, mixed active/inactive, experience coverage, branch 2).
-    { id: '00000000-0000-4000-8000-000000000004', name: 'د. سارة الحربي',    nameEn: 'Dr. Sarah Alharbi',    nameAr: 'د. سارة الحربي',    title: 'أخصائية باطنة', specialty: 'Internal Med', specialtyAr: 'باطنة',   gender: 'FEMALE', email: 'sarah@carekit-test.com',   phone: '+966500000004', experience: 5,  isActive: true,  extraBranchId: BRANCH_ID_2 },
-    { id: '00000000-0000-4000-8000-000000000005', name: 'د. عمر العتيبي',    nameEn: 'Dr. Omar Alotaibi',    nameAr: 'د. عمر العتيبي',    title: 'أخصائي جلدية',   specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'MALE',   email: 'omar@carekit-test.com',    phone: '+966500000005', experience: 3,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000006', name: 'د. هند الدوسري',    nameEn: 'Dr. Hind Aldosari',    nameAr: 'د. هند الدوسري',    title: 'أخصائية أسنان', specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'FEMALE', email: 'hind@carekit-test.com',    phone: '+966500000006', experience: 15, isActive: true,  extraBranchId: BRANCH_ID_2 },
-    { id: '00000000-0000-4000-8000-000000000007', name: 'د. يوسف المطيري',   nameEn: 'Dr. Yousef Almutairi', nameAr: 'د. يوسف المطيري',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'yousef@carekit-test.com',  phone: '+966500000007', experience: 2,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000008', name: 'د. ريم الشهري',     nameEn: 'Dr. Reem Alshehri',    nameAr: 'د. ريم الشهري',     title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'reem.dr@carekit-test.com', phone: '+966500000008', experience: 7,  isActive: false },
-    { id: '00000000-0000-4000-8000-000000000009', name: 'د. طلال الزهراني',  nameEn: 'Dr. Talal Alzahrani',  nameAr: 'د. طلال الزهراني',  title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'talal@carekit-test.com',   phone: '+966500000009', experience: 20, isActive: false },
-    { id: '00000000-0000-4000-8000-00000000000a', name: 'د. ليان القحطاني',  nameEn: 'Dr. Layan Alqahtani',  nameAr: 'د. ليان القحطاني',  title: 'طبيبة عامة',    specialty: 'General',      specialtyAr: 'طب عام',  gender: 'FEMALE', email: 'layan@carekit-test.com',   phone: '+966500000010', experience: 1,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000004', name: 'سارة الحربي',    nameEn: 'Sarah Alharbi',    nameAr: 'سارة الحربي',    title: 'أخصائية باطنة', specialty: 'Internal Med', specialtyAr: 'باطنة',   gender: 'FEMALE', email: 'sarah@carekit-test.com',   phone: '+966500000004', experience: 5,  isActive: true,  extraBranchId: BRANCH_ID_2 },
+    { id: '00000000-0000-4000-8000-000000000005', name: 'عمر العتيبي',    nameEn: 'Omar Alotaibi',    nameAr: 'عمر العتيبي',    title: 'أخصائي جلدية',   specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'MALE',   email: 'omar@carekit-test.com',    phone: '+966500000005', experience: 3,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000006', name: 'هند الدوسري',    nameEn: 'Hind Aldosari',    nameAr: 'هند الدوسري',    title: 'أخصائية أسنان', specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'FEMALE', email: 'hind@carekit-test.com',    phone: '+966500000006', experience: 15, isActive: true,  extraBranchId: BRANCH_ID_2 },
+    { id: '00000000-0000-4000-8000-000000000007', name: 'يوسف المطيري',   nameEn: 'Yousef Almutairi', nameAr: 'يوسف المطيري',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'yousef@carekit-test.com',  phone: '+966500000007', experience: 2,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000008', name: 'ريم الشهري',     nameEn: 'Reem Alshehri',    nameAr: 'ريم الشهري',     title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'reem.dr@carekit-test.com', phone: '+966500000008', experience: 7,  isActive: false },
+    { id: '00000000-0000-4000-8000-000000000009', name: 'طلال الزهراني',  nameEn: 'Talal Alzahrani',  nameAr: 'طلال الزهراني',  title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'talal@carekit-test.com',   phone: '+966500000009', experience: 20, isActive: false },
+    { id: '00000000-0000-4000-8000-00000000000a', name: 'ليان القحطاني',  nameEn: 'Layan Alqahtani',  nameAr: 'ليان القحطاني',  title: 'طبيبة عامة',    specialty: 'General',      specialtyAr: 'طب عام',  gender: 'FEMALE', email: 'layan@carekit-test.com',   phone: '+966500000010', experience: 1,  isActive: true  },
   ];
 
   for (const e of employees) {
@@ -77,7 +81,7 @@ async function main() {
         isActive: e.isActive,
         updatedAt: new Date(),
       },
-      update: { experience: e.experience, isActive: e.isActive },
+      update: { name: e.name, nameEn: e.nameEn, nameAr: e.nameAr, title: e.title, experience: e.experience, isActive: e.isActive },
     });
     await prisma.employeeBranch.upsert({
       where: { employeeId_branchId: { employeeId: e.id, branchId: BRANCH_ID } },
