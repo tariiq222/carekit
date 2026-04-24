@@ -466,7 +466,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
 - **الجهد:** M (يوم كامل)
 - **الخطر:** منخفض
 - **الوصف:**
-  - مجلد `performance/k6/` موجود بالفعل مع scenarios
+  - مجلد `scripts/performance/k6/` موجود بالفعل مع scenarios
   - **المطلوب:**
     1. تحديث الـ k6 scenarios الموجودة
     2. إضافة scenarios جديدة:
@@ -480,9 +480,9 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
        - 0 errors under 100 concurrent users
     4. إضافة k6 run إلى CI (on-demand)
 - **الملفات المتأثرة:**
-  - `performance/k6/scenarios/` — تحديث وإضافة
-  - `performance/k6/config.js`
-  - `performance/k6/run-all.sh`
+  - `scripts/performance/k6/scenarios/` — تحديث وإضافة
+  - `scripts/performance/k6/config.js`
+  - `scripts/performance/k6/run-all.sh`
 - **معيار الإتمام:** k6 scenarios تعمل، baselines محددة، تقرير أداء أولي
 
 ---
