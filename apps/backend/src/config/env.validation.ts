@@ -20,6 +20,19 @@ export const envValidationSchema = Joi.object({
     .default('development'),
   PORT: Joi.number().port().default(5100),
 
+  // CORS — comma-separated list of allowed origins.
+  // In production MUST be set to the dashboard + mobile origins (no localhost).
+  CORS_ORIGINS: Joi.string().allow('').optional(),
+
+  // Sentry — optional. When unset, error reporting is silently disabled.
+  // Set to the project DSN from https://sentry.io/settings/<org>/projects/<project>/keys/
+  SENTRY_DSN: Joi.string().uri().allow('').optional(),
+
+  // ZATCA e-invoicing — set to 'true' ONLY when UBL 2.1 XML builder is complete
+  // and compliance-reviewed. Any other value leaves the submit endpoint
+  // returning 503 so a half-built XML is never posted to ZATCA in production.
+  ZATCA_ENABLED: Joi.string().valid('true', 'false').default('false'),
+
   // Database (Prisma)
   DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
 
@@ -97,4 +110,9 @@ export const envValidationSchema = Joi.object({
   SAAS_TRIAL_DAYS: Joi.number().integer().min(0).max(90).default(14),
   SAAS_GRACE_PERIOD_DAYS: Joi.number().integer().min(0).max(30).default(2),
   BILLING_CRON_ENABLED: Joi.boolean().default(false),
+  // Slug of the plan assigned to organizations without an active subscription
+  // (trial/entry tier). Must match an existing Plan.slug after seed.
+  PLATFORM_DEFAULT_PLAN_SLUG: Joi.string()
+    .pattern(/^[A-Z][A-Z0-9_]{1,31}$/)
+    .default('BASIC'),
 }).unknown(true);

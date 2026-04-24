@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 
 const BRANCH_ID = 'main-branch';
 const BRANCH_ID_2 = '00000000-0000-4000-8000-0000000b0002';
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 async function main() {
   const prisma = new PrismaClient({
@@ -23,6 +24,7 @@ async function main() {
     where: { id: BRANCH_ID_2 },
     create: {
       id: BRANCH_ID_2,
+      organizationId: DEFAULT_ORG_ID,
       nameAr: 'فرع الروضة',
       nameEn: 'Al Rawdah Branch',
       city: 'Riyadh',
@@ -59,6 +61,7 @@ async function main() {
       where: { id: e.id },
       create: {
         id: e.id,
+        organizationId: DEFAULT_ORG_ID,
         name: e.name,
         nameEn: e.nameEn,
         nameAr: e.nameAr,
@@ -78,13 +81,13 @@ async function main() {
     });
     await prisma.employeeBranch.upsert({
       where: { employeeId_branchId: { employeeId: e.id, branchId: BRANCH_ID } },
-      create: { employeeId: e.id, branchId: BRANCH_ID },
+      create: { employeeId: e.id, branchId: BRANCH_ID, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
     if (e.extraBranchId) {
       await prisma.employeeBranch.upsert({
         where: { employeeId_branchId: { employeeId: e.id, branchId: e.extraBranchId } },
-        create: { employeeId: e.id, branchId: e.extraBranchId },
+        create: { employeeId: e.id, branchId: e.extraBranchId, organizationId: DEFAULT_ORG_ID },
         update: {},
       });
     }
@@ -99,7 +102,7 @@ async function main() {
   for (const s of services) {
     await prisma.service.upsert({
       where: { id: s.id },
-      create: { ...s, price: s.price as any, currency: 'SAR', isActive: true, updatedAt: new Date() },
+      create: { ...s, organizationId: DEFAULT_ORG_ID, price: s.price as any, currency: 'SAR', isActive: true, updatedAt: new Date() },
       update: {},
     });
 
@@ -109,6 +112,7 @@ async function main() {
       where: { serviceId_bookingType: { serviceId: s.id, bookingType: 'in_person' } },
       create: {
         id: `${s.id}-in-person`,
+        organizationId: DEFAULT_ORG_ID,
         serviceId: s.id,
         bookingType: 'in_person',
         price: s.price as any,
@@ -130,7 +134,7 @@ async function main() {
   for (const es of empService) {
     await prisma.employeeService.upsert({
       where: { employeeId_serviceId: es },
-      create: es,
+      create: { ...es, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
   }
@@ -175,6 +179,7 @@ async function main() {
       where: { id: c.id },
       create: {
         id: c.id,
+        organizationId: DEFAULT_ORG_ID,
         name: c.name,
         firstName: c.firstName,
         lastName: c.lastName,
@@ -231,6 +236,7 @@ async function main() {
       where: { id: b.id },
       create: {
         id: b.id,
+        organizationId: DEFAULT_ORG_ID,
         branchId: BRANCH_ID,
         clientId: b.clientId,
         employeeId: b.employeeId,
@@ -264,7 +270,7 @@ async function main() {
   for (const r of ratings) {
     await prisma.rating.upsert({
       where: { id: r.id },
-      create: r,
+      create: { ...r, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
   }

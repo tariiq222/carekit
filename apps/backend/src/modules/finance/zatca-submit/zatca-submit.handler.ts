@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { ZatcaSubmissionStatus } from '@prisma/client';
@@ -31,6 +31,12 @@ export class ZatcaSubmitHandler {
   ) {}
 
   async execute(cmd: ZatcaSubmitCommand) {
+    // ZATCA Phase-2 UBL 2.1 XML builder is a stub — disabled until post-launch.
+    // Flip ZATCA_ENABLED=true only once buildInvoiceXml is completed and
+    // reviewed by compliance. Tracked in issues/ZATCA-XML.
+    if (this.config.get<string>('ZATCA_ENABLED') !== 'true') {
+      throw new ServiceUnavailableException('ZATCA e-invoicing is not yet enabled on this deployment');
+    }
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
     // Proxy auto-scopes findFirst by organizationId via CLS
     const invoice = await this.prisma.invoice.findFirst({

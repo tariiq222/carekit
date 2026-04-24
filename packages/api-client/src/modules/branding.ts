@@ -1,4 +1,4 @@
-import { apiRequest } from '../client.js'
+import { apiRequest } from '../client'
 import type { BrandingConfig, PublicBranding } from '@carekit/shared/types'
 
 /**

@@ -1,6 +1,6 @@
 import { MobileClientNotificationsController } from './notifications.controller';
 
-const USER = { sub: 'client-1', roles: ['CLIENT'], permissions: [] };
+const USER = { id: 'client-1', email: null, phone: null };
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function build() {
@@ -15,7 +15,7 @@ describe('MobileClientNotificationsController', () => {
     const { controller, listNotifications } = build();
     await controller.listNotificationsEndpoint(USER, {} as never);
     expect(listNotifications.execute).toHaveBeenCalledWith(expect.objectContaining({
-      recipientId: USER.sub, page: 1, limit: 20,
+      recipientId: USER.id, page: 1, limit: 20,
     }));
   });
 
@@ -28,6 +28,6 @@ describe('MobileClientNotificationsController', () => {
   it('markReadEndpoint — passes recipientId from JWT', async () => {
     const { controller, markRead } = build();
     await controller.markReadEndpoint(USER);
-    expect(markRead.execute).toHaveBeenCalledWith({ recipientId: USER.sub });
+    expect(markRead.execute).toHaveBeenCalledWith({ recipientId: USER.id });
   });
 });

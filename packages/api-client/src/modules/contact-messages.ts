@@ -1,10 +1,10 @@
-import { apiRequest } from '../client.js'
-import type { PaginatedResponse } from '../types/api.js'
+import { apiRequest } from '../client'
+import type { PaginatedResponse } from '../types/api'
 import type {
   ContactMessage,
   ContactMessageStatus,
   CreateContactMessagePayload,
-} from '../types/public-directory.js'
+} from '../types/public-directory'
 
 export async function submit(
   payload: CreateContactMessagePayload,

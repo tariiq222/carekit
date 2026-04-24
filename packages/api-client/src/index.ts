@@ -1,34 +1,34 @@
-export { initClient, apiRequest, ApiError } from './client.js'
-export type { ClientConfig } from './client.js'
-export * from './types/index.js'
-export * as authApi from './modules/auth.js'
-export * as featureFlagsApi from './modules/feature-flags.js'
-export * as brandingApi from './modules/branding.js'
-export * as bookingsApi from './modules/bookings.js'
-export * as clientsApi from './modules/clients.js'
-export * as employeesApi from './modules/employees.js'
-export * as servicesApi from './modules/services.js'
-export * as branchesApi from './modules/branches.js'
-export * as departmentsApi from './modules/departments.js'
-export * as availabilityApi from './modules/availability.js'
-export * as ratingsApi from './modules/ratings.js'
-export * as paymentsApi from './modules/payments.js'
-export * as invoicesApi from './modules/invoices.js'
-export * as couponsApi from './modules/coupons.js'
-export * as intakeFormsApi from './modules/intake-forms.js'
-export * as notificationsApi from './modules/notifications.js'
-export * as reportsApi from './modules/reports.js'
-export * as chatbotAdminApi from './modules/chatbot-admin.js'
-export * as groupsApi from './modules/groups.js'
-export * as usersApi from './modules/users.js'
-export * as organizationSettingsApi from "./modules/organization-settings.js"
-export type { OrganizationSettings, UpdateOrganizationSettingsPayload } from "./modules/organization-settings.js"
-export * as publicEmployeesApi from './modules/public-employees.js'
-export * as publicBranchesApi from './modules/public-branches.js'
-export * as contactMessagesApi from './modules/contact-messages.js'
-export * as otpApi from './modules/otp.js'
-export * as publicAvailabilityApi from './modules/public-availability.js'
-export { setOtpSessionToken, getOtpSessionToken, setGuestBaseUrl } from './modules/guest-client.js'
+export { initClient, apiRequest, ApiError } from './client'
+export type { ClientConfig } from './client'
+export * from './types/index'
+export * as authApi from './modules/auth'
+export * as featureFlagsApi from './modules/feature-flags'
+export * as brandingApi from './modules/branding'
+export * as bookingsApi from './modules/bookings'
+export * as clientsApi from './modules/clients'
+export * as employeesApi from './modules/employees'
+export * as servicesApi from './modules/services'
+export * as branchesApi from './modules/branches'
+export * as departmentsApi from './modules/departments'
+export * as availabilityApi from './modules/availability'
+export * as ratingsApi from './modules/ratings'
+export * as paymentsApi from './modules/payments'
+export * as invoicesApi from './modules/invoices'
+export * as couponsApi from './modules/coupons'
+export * as intakeFormsApi from './modules/intake-forms'
+export * as notificationsApi from './modules/notifications'
+export * as reportsApi from './modules/reports'
+export * as chatbotAdminApi from './modules/chatbot-admin'
+export * as groupsApi from './modules/groups'
+export * as usersApi from './modules/users'
+export * as organizationSettingsApi from "./modules/organization-settings"
+export type { OrganizationSettings, UpdateOrganizationSettingsPayload } from "./modules/organization-settings"
+export * as publicEmployeesApi from './modules/public-employees'
+export * as publicBranchesApi from './modules/public-branches'
+export * as contactMessagesApi from './modules/contact-messages'
+export * as otpApi from './modules/otp'
+export * as publicAvailabilityApi from './modules/public-availability'
+export { setOtpSessionToken, getOtpSessionToken, setGuestBaseUrl } from './modules/guest-client'
 export {
   setClientBaseUrl,
   initClientAuth,
@@ -36,11 +36,11 @@ export {
   clientRegister,
   clientRefresh,
   clientLogout,
-} from './modules/client-auth.js'
+} from './modules/client-auth'
 export {
   setMeBaseUrl,
   getMe,
   getMyBookings,
   cancelMyBooking,
   rescheduleMyBooking,
-} from './modules/me.js'
+} from './modules/me'

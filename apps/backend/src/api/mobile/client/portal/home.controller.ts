@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
-import { JwtGuard } from '../../../../common/guards/jwt.guard';
-import { CurrentUser, JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ClientSessionGuard } from '../../../../common/guards/client-session.guard';
+import { ClientSession } from '../../../../common/auth/client-session.decorator';
 import { ApiStandardResponses } from '../../../../common/swagger';
 import { ListBookingsHandler } from '../../../../modules/bookings/list-bookings/list-bookings.handler';
 import { ListNotificationsHandler } from '../../../../modules/comms/notifications/list-notifications.handler';
@@ -11,7 +11,7 @@ import { GetClientHandler } from '../../../../modules/people/clients/get-client.
 @ApiTags('Mobile Client / Portal')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(ClientSessionGuard)
 @Controller('mobile/client/portal')
 export class MobileClientHomeController {
   constructor(
@@ -27,13 +27,13 @@ export class MobileClientHomeController {
     description: 'Client profile, upcoming bookings, unread notifications, and recent payments.',
     schema: { type: 'object' },
   })
-  async home(@CurrentUser() user: JwtUser) {
+  async home(@ClientSession() user: ClientSession) {
     const now = new Date();
     const [upcomingResult, notificationsResult, paymentsResult, profile] = await Promise.all([
-      this.listBookings.execute({ clientId: user.sub, fromDate: now, page: 1, limit: 5 }),
-      this.listNotifications.execute({ recipientId: user.sub, unreadOnly: true, page: 1, limit: 5 }),
-      this.listPayments.execute({ clientId: user.sub, page: 1, limit: 3 }),
-      this.getClient.execute({ clientId: user.sub }),
+      this.listBookings.execute({ clientId: user.id, fromDate: now, page: 1, limit: 5 }),
+      this.listNotifications.execute({ recipientId: user.id, unreadOnly: true, page: 1, limit: 5 }),
+      this.listPayments.execute({ clientId: user.id, page: 1, limit: 3 }),
+      this.getClient.execute({ clientId: user.id }),
     ]);
 
     return {

@@ -1,7 +1,7 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
-import type { PaginatedResponse } from '../types/api.js'
-import type { GroupListItem, GroupListQuery } from '../types/group.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
+import type { PaginatedResponse } from '../types/api'
+import type { GroupListItem, GroupListQuery } from '../types/group'
 
 export async function list(query: GroupListQuery = {}): Promise<PaginatedResponse<GroupListItem>> {
   return apiRequest<PaginatedResponse<GroupListItem>>(

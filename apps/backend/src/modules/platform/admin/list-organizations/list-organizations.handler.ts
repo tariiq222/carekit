@@ -42,6 +42,12 @@ export class ListOrganizationsHandler {
           suspendedAt: true,
           suspendedReason: true,
           createdAt: true,
+          subscription: {
+            select: {
+              status: true,
+              plan: { select: { slug: true, nameEn: true } },
+            },
+          },
         },
       }),
       this.prisma.$allTenants.organization.count({ where }),

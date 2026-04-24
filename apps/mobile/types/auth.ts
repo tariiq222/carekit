@@ -24,6 +24,7 @@ export interface User {
   permissions: string[];
   avatarUrl?: string | null;
   organizationId: string | null;
+  employeeId?: string | null;
 }
 
 /** Derived primary role from roles[] array */
@@ -64,5 +65,48 @@ export interface AuthResponse {
     refreshToken: string;
     expiresIn: number;
     user: User;
+  };
+}
+
+/** Which mobile app flow the user belongs to */
+export type MobileRole = 'client' | 'employee';
+
+/** Backend staff role enum (mirrors Prisma UserRole) */
+export type StaffRole =
+  | 'SUPER_ADMIN'
+  | 'CLINIC_OWNER'
+  | 'RECEPTIONIST'
+  | 'ACCOUNTANT'
+  | 'EMPLOYEE';
+
+/** Flat "subject:action" string produced by backend flattenPermissions() */
+export type CaslPermission = string;
+
+/** Unified user shape used by the mobile auth flow (client + staff). */
+export interface AuthUser {
+  kind: 'client' | 'staff';
+  id: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  emailVerified: boolean;
+  staffRole: StaffRole | null;
+  isSuperAdmin: boolean;
+  permissions: CaslPermission[];
+  organizationId: string | null;
+}
+
+/** Split a full name into first/last on the first whitespace. */
+export function splitName(name: string): { firstName: string; lastName: string } {
+  const trimmed = name.trim();
+  if (!trimmed) return { firstName: '', lastName: '' };
+  const idx = trimmed.search(/\s+/);
+  if (idx === -1) return { firstName: trimmed, lastName: '' };
+  return {
+    firstName: trimmed.slice(0, idx),
+    lastName: trimmed.slice(idx).trim(),
   };
 }

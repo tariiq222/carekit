@@ -1,9 +1,9 @@
 import { MobileClientUpcomingController, UpcomingQuery } from './upcoming.controller';
-import { JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ClientSession } from '../../../../common/auth/client-session.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 import { BookingStatus } from '@prisma/client';
 
-const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
+const USER: ClientSession = { id: 'client-1', email: null, phone: null };
 
 function buildController(prisma: Partial<PrismaService>) {
   const controller = new MobileClientUpcomingController(prisma as PrismaService);
@@ -78,7 +78,7 @@ describe('MobileClientUpcomingController', () => {
       expect(prisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            clientId: USER.sub,
+            clientId: USER.id,
             status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
           }),
         }),

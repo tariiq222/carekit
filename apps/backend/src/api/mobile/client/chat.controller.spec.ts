@@ -1,6 +1,6 @@
 import { MobileClientChatController } from './chat.controller';
 
-const USER = { sub: 'client-1', roles: ['CLIENT'], permissions: [] };
+const USER = { id: 'client-1', email: null, phone: null };
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function build() {
@@ -18,7 +18,7 @@ describe('MobileClientChatController', () => {
     const { controller, chatCompletion } = build();
     await controller.chat(USER, { userMessage: 'مرحبا', sessionId: 'sess-1' } as never);
     expect(chatCompletion.execute).toHaveBeenCalledWith(expect.objectContaining({
-      clientId: USER.sub, userMessage: 'مرحبا', sessionId: 'sess-1',
+      clientId: USER.id, userMessage: 'مرحبا', sessionId: 'sess-1',
     }));
   });
 
@@ -26,7 +26,7 @@ describe('MobileClientChatController', () => {
     const { controller, listConversations } = build();
     await controller.listConversationsEndpoint(USER, {} as never);
     expect(listConversations.execute).toHaveBeenCalledWith(expect.objectContaining({
-      clientId: USER.sub, page: 1, limit: 20,
+      clientId: USER.id, page: 1, limit: 20,
     }));
   });
 

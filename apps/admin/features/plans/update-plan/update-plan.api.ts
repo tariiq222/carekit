@@ -8,6 +8,7 @@ export interface UpdatePlanCommand {
   priceMonthly?: number;
   priceAnnual?: number;
   currency?: string;
+  limits?: Record<string, unknown>;
   isActive?: boolean;
   sortOrder?: number;
   reason: string;

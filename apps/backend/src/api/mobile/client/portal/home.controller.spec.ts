@@ -1,7 +1,7 @@
 import { MobileClientHomeController } from './home.controller';
-import { JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ClientSession } from '../../../../common/auth/client-session.decorator';
 
-const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
+const USER: ClientSession = { id: 'client-1', email: null, phone: null };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -29,15 +29,15 @@ describe('MobileClientHomeController', () => {
     await controller.home(USER);
 
     expect(listBookings.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ clientId: USER.sub, fromDate: now, page: 1, limit: 5 }),
+      expect.objectContaining({ clientId: USER.id, fromDate: now, page: 1, limit: 5 }),
     );
     expect(listNotifications.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ recipientId: USER.sub, unreadOnly: true, page: 1, limit: 5 }),
+      expect.objectContaining({ recipientId: USER.id, unreadOnly: true, page: 1, limit: 5 }),
     );
     expect(listPayments.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ clientId: USER.sub, page: 1, limit: 3 }),
+      expect.objectContaining({ clientId: USER.id, page: 1, limit: 3 }),
     );
-    expect(getClient.execute).toHaveBeenCalledWith({ clientId: USER.sub });
+    expect(getClient.execute).toHaveBeenCalledWith({ clientId: USER.id });
   });
 
   it('home — returns formatted response', async () => {

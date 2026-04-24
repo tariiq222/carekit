@@ -1,4 +1,4 @@
-import { guestApiRequest } from './guest-client.js';
+import { guestApiRequest } from './guest-client';
 import type { OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse } from '@carekit/shared';
 
 export async function requestOtp(payload: OtpRequestPayload): Promise<void> {

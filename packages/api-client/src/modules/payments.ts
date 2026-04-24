@@ -1,12 +1,12 @@
-import { apiRequest } from '../client.js'
-import { guestApiRequest } from './guest-client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { guestApiRequest } from './guest-client'
+import { buildQueryString } from '../types/api'
 import type {
   PaymentListItem,
   PaymentListQuery,
   PaymentListResponse,
   PaymentStats,
-} from '../types/payment.js'
+} from '../types/payment'
 import type { InitPaymentResponse } from '@carekit/shared'
 
 export async function list(

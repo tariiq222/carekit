@@ -26,6 +26,7 @@ export function OrganizationsTable({ items, isLoading }: Props) {
         <TableRow>
           <TableHead>Slug</TableHead>
           <TableHead>Name</TableHead>
+          <TableHead>Plan</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Created</TableHead>
           <TableHead className="text-right">Actions</TableHead>
@@ -35,7 +36,7 @@ export function OrganizationsTable({ items, isLoading }: Props) {
         {isLoading && !items
           ? Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <Skeleton className="h-6" />
                 </TableCell>
               </TableRow>
@@ -48,6 +49,13 @@ export function OrganizationsTable({ items, isLoading }: Props) {
                   {org.nameEn ? (
                     <div className="text-xs text-muted-foreground">{org.nameEn}</div>
                   ) : null}
+                </TableCell>
+                <TableCell>
+                  {org.subscription ? (
+                    <span className="font-mono text-xs">{org.subscription.plan.slug}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {org.suspendedAt ? (
@@ -76,7 +84,7 @@ export function OrganizationsTable({ items, isLoading }: Props) {
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
               No organizations match the current filters.
             </TableCell>
           </TableRow>

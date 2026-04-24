@@ -1,6 +1,7 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -52,6 +53,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiOkResponse({
@@ -98,6 +100,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate a refresh token and issue new token pair' })
   @ApiOkResponse({
@@ -139,6 +142,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke a refresh token (log out)' })
   @ApiOkResponse({ description: 'Token revoked; no body returned' })
@@ -218,6 +222,7 @@ export class AuthController {
 
   @Patch('password/change')
   @UseGuards(JwtGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change the current user\'s password' })

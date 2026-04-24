@@ -1,4 +1,4 @@
-import { PlanSlug, SubscriptionStatus } from "@prisma/client";
+import { SubscriptionStatus } from "@prisma/client";
 
 /**
  * A single feature entry in the billing features response.
@@ -30,7 +30,7 @@ export class FeatureEntry {
  * }
  */
 export class BillingFeaturesResponse {
-  planSlug!: PlanSlug;
+  planSlug!: string;
   status!: SubscriptionStatus;
   features!: Record<string, FeatureEntry>;
 }

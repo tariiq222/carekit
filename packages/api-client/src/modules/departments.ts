@@ -1,12 +1,12 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
 import type {
   DepartmentListItem,
   DepartmentListQuery,
   DepartmentListResponse,
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
-} from '../types/department.js'
+} from '../types/department'
 
 export async function list(
   query: DepartmentListQuery = {},

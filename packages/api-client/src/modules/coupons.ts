@@ -1,12 +1,12 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
 import type {
   CouponListItem,
   CouponListQuery,
   CouponListResponse,
   CreateCouponPayload,
   UpdateCouponPayload,
-} from '../types/coupon.js'
+} from '../types/coupon'
 
 export async function list(
   query: CouponListQuery = {},

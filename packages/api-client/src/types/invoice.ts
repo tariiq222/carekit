@@ -1,4 +1,4 @@
-import type { PaginatedResponse, PaginationParams } from './api.js'
+import type { PaginatedResponse, PaginationParams } from './api'
 
 export type ZatcaStatus = 'not_applicable' | 'pending' | 'reported' | 'failed'
 

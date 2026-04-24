@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { Prisma, PlanSlug, SuperAdminActionType } from '@prisma/client';
+import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 
 export interface CreatePlanCommand {
@@ -8,7 +8,7 @@ export interface CreatePlanCommand {
   ipAddress: string;
   userAgent: string;
   data: {
-    slug: PlanSlug;
+    slug: string;
     nameAr: string;
     nameEn: string;
     priceMonthly: number;

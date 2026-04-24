@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
@@ -16,11 +17,10 @@ import type { PlanRow } from '../types';
 interface Props {
   items: PlanRow[] | undefined;
   isLoading: boolean;
-  onEdit: (plan: PlanRow) => void;
   onDelete: (plan: PlanRow) => void;
 }
 
-export function PlansTable({ items, isLoading, onEdit, onDelete }: Props) {
+export function PlansTable({ items, isLoading, onDelete }: Props) {
   return (
     <Table>
       <TableHeader>
@@ -68,8 +68,8 @@ export function PlansTable({ items, isLoading, onEdit, onDelete }: Props) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(plan)}>
-                      Edit
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/plans/${plan.id}/edit`}>Edit</Link>
                     </Button>
                     <Button
                       variant="ghost"

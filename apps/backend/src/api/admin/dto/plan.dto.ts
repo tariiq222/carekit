@@ -1,22 +1,29 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PlanSlug } from '@prisma/client';
 import {
   IsBoolean,
-  IsEnum,
   IsInt,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
 
+export const PLAN_SLUG_REGEX = /^[A-Z][A-Z0-9_]{1,31}$/;
+
 export class CreatePlanDto {
-  @ApiProperty({ enum: PlanSlug })
-  @IsEnum(PlanSlug)
-  slug!: PlanSlug;
+  @ApiProperty({
+    description: 'Uppercase letters, digits, underscores. 2–32 chars. Example: STARTER, TEAM_ANNUAL.',
+    example: 'STARTER',
+  })
+  @IsString()
+  @Matches(PLAN_SLUG_REGEX, {
+    message: 'slug must be 2-32 uppercase letters/digits/underscores, starting with a letter',
+  })
+  slug!: string;
 
   @ApiProperty()
   @IsString()

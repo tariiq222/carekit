@@ -70,11 +70,11 @@ export default function ChatScreen() {
     <Bubble
       {...props}
       wrapperStyle={{
-        left: { backgroundColor: theme.colors.surfaceSecondary, borderRadius: 16 },
+        left: { backgroundColor: theme.colors.surfaceHigh, borderRadius: 16 },
         right: { backgroundColor: theme.colors.primary, borderRadius: 16 },
       }}
       textStyle={{
-        left: { color: theme.colors.text },
+        left: { color: theme.colors.textPrimary },
         right: { color: '#FFFFFF' },
       }}
     />
@@ -132,15 +132,11 @@ export default function ChatScreen() {
         renderInputToolbar={renderInputToolbar}
         renderSend={renderSend}
         renderFooter={renderFooter}
-        placeholder={t('chatbot.placeholder', 'Type your message...')}
         isTyping={isTyping}
-        showUserAvatar={false}
-        alwaysShowSend
-        scrollToBottom
-        inverted
-        bottomOffset={insets.bottom}
+        isSendButtonAlwaysVisible
         textInputProps={{
-          style: [styles.textInput, { color: theme.colors.text }],
+          placeholder: t('chatbot.placeholder', 'Type your message...'),
+          style: [styles.textInput, { color: theme.colors.textPrimary }],
           placeholderTextColor: theme.colors.textMuted,
         }}
       />

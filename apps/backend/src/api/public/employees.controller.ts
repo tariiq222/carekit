@@ -26,11 +26,11 @@ export class PublicEmployeesController {
 
   @Public()
   @Throttle({ default: { ttl: 60_000, limit: 30 } })
-  @Get(':slug')
-  @ApiOperation({ summary: 'Get single public employee by slug' })
-  @ApiParam({ name: 'slug', description: 'Public slug', example: 'dr-ahmed' })
+  @Get(':key')
+  @ApiOperation({ summary: 'Get single public employee by slug or id' })
+  @ApiParam({ name: 'key', description: 'Public slug or employee UUID', example: 'dr-ahmed' })
   @ApiOkResponse({ description: 'Single public employee' })
-  getOne(@Param('slug') slug: string) {
-    return this.getHandler.execute(slug);
+  getOne(@Param('key') key: string) {
+    return this.getHandler.execute(key);
   }
 }

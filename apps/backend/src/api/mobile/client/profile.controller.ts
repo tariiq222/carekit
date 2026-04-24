@@ -6,8 +6,8 @@ import {
 } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../../common/swagger';
-import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
+import { ClientSessionGuard } from '../../../common/guards/client-session.guard';
+import { ClientSession } from '../../../common/auth/client-session.decorator';
 import { GetClientHandler } from '../../../modules/people/clients/get-client.handler';
 import { UpdateClientHandler } from '../../../modules/people/clients/update-client.handler';
 
@@ -43,7 +43,7 @@ export class MobileUpdateProfileBody {
 @ApiTags('Mobile Client / Profile')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(ClientSessionGuard)
 @Controller('mobile/client/profile')
 export class MobileClientProfileController {
   constructor(
@@ -54,17 +54,17 @@ export class MobileClientProfileController {
   @Get()
   @ApiOperation({ summary: "Get the authenticated client's profile" })
   @ApiOkResponse({ description: 'Client profile record' })
-  getProfile(@CurrentUser() user: JwtUser) {
-    return this.getClient.execute({ clientId: user.sub });
+  getProfile(@ClientSession() user: ClientSession) {
+    return this.getClient.execute({ clientId: user.id });
   }
 
   @Patch()
   @ApiOperation({ summary: "Update the authenticated client's profile" })
   @ApiOkResponse({ description: 'Updated client profile' })
   updateProfile(
-    @CurrentUser() user: JwtUser,
+    @ClientSession() user: ClientSession,
     @Body() body: MobileUpdateProfileBody,
   ) {
-    return this.updateClient.execute({ clientId: user.sub, ...body });
+    return this.updateClient.execute({ clientId: user.id, ...body });
   }
 }

@@ -31,6 +31,9 @@ export interface Employee {
   qualifications?: string[];
   rating: number;
   reviewCount: number;
+  averageRating?: number;
+  totalRatings?: number;
+  clinicPrice?: number;
   isAvailableToday?: boolean;
   nextAvailableDate?: string;
 }

@@ -1,15 +1,18 @@
 import { MobileClientPaymentsController, MobileListPaymentsQuery } from './payments.controller';
-import type { JwtUser } from '../../../common/auth/current-user.decorator';
+import type { ClientSession } from '../../../common/auth/client-session.decorator';
 
-const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
+const USER: ClientSession = { id: 'client-1', email: null, phone: null };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
   const listPayments = fn({ data: [], meta: {} });
   const getInvoice = fn({ id: 'inv-1', total: 100 });
-  const controller = new MobileClientPaymentsController(listPayments as never, getInvoice as never);
-  return { controller, listPayments, getInvoice };
+  const bankTransferUpload = fn({ id: 'pay-1' });
+  const controller = new MobileClientPaymentsController(
+    listPayments as never, getInvoice as never, bankTransferUpload as never,
+  );
+  return { controller, listPayments, getInvoice, bankTransferUpload };
 }
 
 describe('MobileClientPaymentsController', () => {
@@ -18,7 +21,7 @@ describe('MobileClientPaymentsController', () => {
       const { controller, listPayments } = buildController();
       await controller.listMyPayments(USER, {});
       expect(listPayments.execute).toHaveBeenCalledWith({
-        clientId: USER.sub, page: 1, limit: 20,
+        clientId: USER.id, page: 1, limit: 20,
       });
     });
 
@@ -27,7 +30,7 @@ describe('MobileClientPaymentsController', () => {
       const q: MobileListPaymentsQuery = { page: 3, limit: 50 };
       await controller.listMyPayments(USER, q);
       expect(listPayments.execute).toHaveBeenCalledWith({
-        clientId: USER.sub, page: 3, limit: 50,
+        clientId: USER.id, page: 3, limit: 50,
       });
     });
 

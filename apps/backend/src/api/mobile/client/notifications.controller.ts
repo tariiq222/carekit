@@ -6,8 +6,8 @@ import {
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
+import { ClientSessionGuard } from '../../../common/guards/client-session.guard';
+import { ClientSession } from '../../../common/auth/client-session.decorator';
 import { ApiStandardResponses } from '../../../common/swagger';
 import { ListNotificationsHandler } from '../../../modules/comms/notifications/list-notifications.handler';
 import { MarkReadHandler } from '../../../modules/comms/notifications/mark-read.handler';
@@ -26,7 +26,7 @@ export class MobileListNotificationsQuery {
 @ApiTags('Mobile Client / Notifications')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(ClientSessionGuard)
 @Controller('mobile/client/notifications')
 export class MobileClientNotificationsController {
   constructor(
@@ -38,11 +38,11 @@ export class MobileClientNotificationsController {
   @ApiOkResponse({ description: 'Paginated notification list' })
   @Get()
   listNotificationsEndpoint(
-    @CurrentUser() user: JwtUser,
+    @ClientSession() user: ClientSession,
     @Query() q: MobileListNotificationsQuery,
   ) {
     return this.listNotifications.execute({
-      recipientId: user.sub,
+      recipientId: user.id,
       unreadOnly: q.unreadOnly,
       page: q.page ?? 1,
       limit: q.limit ?? 20,
@@ -52,7 +52,7 @@ export class MobileClientNotificationsController {
   @ApiOperation({ summary: 'Mark all notifications as read for the current client' })
   @ApiNoContentResponse({ description: 'All notifications marked as read' })
   @Patch('mark-read')
-  markReadEndpoint(@CurrentUser() user: JwtUser) {
-    return this.markRead.execute({ recipientId: user.sub });
+  markReadEndpoint(@ClientSession() user: ClientSession) {
+    return this.markRead.execute({ recipientId: user.id });
   }
 }

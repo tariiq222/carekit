@@ -1,8 +1,8 @@
 import { MobileClientSummaryController } from './summary.controller';
-import { JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ClientSession } from '../../../../common/auth/client-session.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 
-const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
+const USER: ClientSession = { id: 'client-1', email: null, phone: null };
 
 function buildController(prisma: Partial<PrismaService>) {
   const controller = new MobileClientSummaryController(prisma as PrismaService);
@@ -47,7 +47,7 @@ describe('MobileClientSummaryController', () => {
       await controller.summary(USER);
 
       expect(prisma.booking.count).toHaveBeenCalledWith({
-        where: { clientId: USER.sub },
+        where: { clientId: USER.id },
       });
     });
 
@@ -66,7 +66,7 @@ describe('MobileClientSummaryController', () => {
       await controller.summary(USER);
 
       expect(prisma.booking.findFirst).toHaveBeenCalledWith({
-        where: { clientId: USER.sub, status: 'COMPLETED' },
+        where: { clientId: USER.id, status: 'COMPLETED' },
         orderBy: { scheduledAt: 'desc' },
         select: { scheduledAt: true },
       });
@@ -105,7 +105,7 @@ describe('MobileClientSummaryController', () => {
 
       expect(prisma.invoice.aggregate).toHaveBeenCalledWith({
         where: {
-          clientId: USER.sub,
+          clientId: USER.id,
           status: { in: ['ISSUED', 'PARTIALLY_PAID'] },
         },
         _sum: { total: true },

@@ -1,181 +1,136 @@
-import { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Building2,
-  Video,
-  Check,
-} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Building2, ChevronLeft, ChevronRight, Video } from 'lucide-react-native';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { ThemedCard } from '@/theme/components/ThemedCard';
-import { useTheme } from '@/theme/useTheme';
-import { useAppSelector } from '@/hooks/use-redux';
-import { requireEmailVerification } from '@/components/ui/EmailVerificationBanner';
-import type { BookingType } from '@/types/models';
+import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
+import { Glass } from '@/theme/components/Glass';
+import { useDir } from '@/hooks/useDir';
+import { getFontName } from '@/theme/fonts';
 
-/**
- * Booking Flow — Step 1: Select Visit Type
- * Route: /(client)/booking/[serviceId]
- *
- * 2 booking types: in_person, online
- * Each shown as a selectable card with icon, name, and description.
- */
-
-interface TypeOption {
-  type: BookingType;
-  icon: React.ElementType;
-  color: string;
-  labelKey: string;
-  descKey: string;
-}
+type BookingType = 'in_person' | 'online';
 
 export default function BookingTypeScreen() {
   const { serviceId, employeeId } = useLocalSearchParams<{ serviceId: string; employeeId?: string }>();
-  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const dir = useDir();
+  const f400 = getFontName(dir.locale, '400');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
+  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
 
-  const [selected, setSelected] = useState<BookingType | null>(null);
-  const user = useAppSelector((s) => s.auth.user);
-
-  const types: TypeOption[] = [
+  const types = [
     {
-      type: 'in_person',
+      type: 'in_person' as BookingType,
       icon: Building2,
-      color: theme.colors.primary[500],
-      labelKey: 'booking.inPerson',
-      descKey: 'booking.inPersonDesc',
+      color: sawaaColors.teal[600],
+      labelAr: 'موعد عيادة',
+      labelEn: 'In-clinic visit',
+      descAr: 'زيارة شخصية في العيادة',
+      descEn: 'In-person at the clinic',
     },
     {
-      type: 'online',
+      type: 'online' as BookingType,
       icon: Video,
-      color: theme.colors.purple,
-      labelKey: 'booking.online',
-      descKey: 'booking.onlineDesc',
+      color: sawaaColors.accent.violet,
+      labelAr: 'استشارة عن بُعد',
+      labelEn: 'Remote consultation',
+      descAr: 'مرئي أو هاتفي — سيؤكد المعالج الطريقة',
+      descEn: 'Video or phone — confirmed by therapist',
     },
   ];
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
-
-  const handleNext = () => {
-    if (!selected) return;
-    if (!requireEmailVerification(user, t)) return;
+  const handleSelect = (type: BookingType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: '/(client)/booking/schedule',
-      params: {
-        serviceId,
-        employeeId: employeeId ?? '',
-        type: selected,
-      },
+      params: { serviceId, employeeId: employeeId ?? '', type },
     });
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <AquaBackground>
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 20 },
-        ]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 28 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back */}
-        <Pressable
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
-          style={styles.backBtn}
-        >
-          <BackIcon size={24} strokeWidth={1.5} color={theme.colors.textPrimary} />
-        </Pressable>
-
-        {/* Progress */}
-        <View style={styles.progressRow}>
-          <ThemedText variant="caption" color={theme.colors.textSecondary}>
-            {t('booking.step')} 1 {t('booking.of')} 3
-          </ThemedText>
-          <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceHigh }]}>
-            <LinearGradient
-              colors={[theme.colors.primary[700], theme.colors.primary[500]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressFill, { width: '33%' }]}
-            />
+        {/* Back + progress */}
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <View style={[styles.topRow, { flexDirection: dir.row }]}>
+            <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
+              <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
+            </Glass>
+            <Text style={[styles.step, { fontFamily: f600 }]}>
+              {dir.isRTL ? 'خطوة ١ من ٣' : 'Step 1 of 3'}
+            </Text>
           </View>
-        </View>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: '33%' }]} />
+          </View>
+        </Animated.View>
 
         {/* Title */}
-        <ThemedText variant="heading" style={styles.title}>
-          {t('booking.selectType')}
-        </ThemedText>
+        <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
+          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? 'اختر نوع الزيارة' : 'Select visit type'}
+          </Text>
+        </Animated.View>
 
-        {/* Type Cards */}
-        <View style={styles.typeList}>
-          {types.map((item) => {
-            const isSelected = selected === item.type;
-            return (
-              <ThemedCard
-                key={item.type}
-                selected={isSelected}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelected(item.type);
-                }}
-                padding={18}
-              >
-                <View style={styles.typeRow}>
-                  <View style={[styles.typeIcon, { backgroundColor: `${item.color}14` }]}>
-                    <item.icon size={20} strokeWidth={1.5} color={item.color} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText variant="subheading">{t(item.labelKey)}</ThemedText>
-                    <ThemedText variant="caption" color={theme.colors.textSecondary}>
-                      {t(item.descKey)}
-                    </ThemedText>
-                  </View>
+        {/* Type cards — tap to select + advance */}
+        {types.map((item, i) => (
+          <Animated.View
+            key={item.type}
+            entering={FadeInDown.delay(160 + i * 80).duration(700).easing(Easing.out(Easing.cubic))}
+          >
+            <Glass
+              variant="strong"
+              radius={sawaaRadius.xl}
+              onPress={() => handleSelect(item.type)}
+              interactive
+              style={styles.typeCard}
+            >
+              <View style={[styles.typeRow, { flexDirection: dir.row }]}>
+                <View style={[styles.typeIcon, { backgroundColor: `${item.color}1e` }]}>
+                  <item.icon size={22} strokeWidth={1.75} color={item.color} />
                 </View>
-              </ThemedCard>
-            );
-          })}
-        </View>
-
-        {/* Next Button */}
-        <ThemedButton
-          onPress={handleNext}
-          variant="primary"
-          size="lg"
-          full
-          disabled={!selected}
-        >
-          {t('common.next')}
-        </ThemedButton>
+                <View style={styles.typeMid}>
+                  <Text style={[styles.typeLabel, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                    {dir.isRTL ? item.labelAr : item.labelEn}
+                  </Text>
+                  <Text style={[styles.typeDesc, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                    {dir.isRTL ? item.descAr : item.descEn}
+                  </Text>
+                </View>
+                <BackIcon size={16} color={sawaaColors.ink[400]} strokeWidth={2} style={{ transform: [{ scaleX: -1 }] }} />
+              </View>
+            </Glass>
+          </Animated.View>
+        ))}
       </ScrollView>
-    </View>
+    </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24 },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  progressRow: { gap: 8, marginBottom: 24 },
-  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 2 },
-  title: { marginBottom: 20 },
-  typeList: { gap: 12, marginBottom: 32 },
-  typeRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  scroll: { paddingHorizontal: 16, gap: 14 },
+  topRow: { alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  step: { fontSize: 12, color: sawaaColors.ink[500] },
+  progressTrack: {
+    height: 4, borderRadius: 2, overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginBottom: 8,
+  },
+  progressFill: { height: '100%', borderRadius: 2, backgroundColor: sawaaColors.teal[600] },
+  title: { fontSize: 22, color: sawaaColors.ink[900], marginVertical: 8, paddingHorizontal: 4 },
+  typeCard: { padding: 16 },
+  typeRow: { alignItems: 'center', gap: 14 },
   typeIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  typeMid: { flex: 1 },
+  typeLabel: { fontSize: 15, color: sawaaColors.ink[900] },
+  typeDesc: { fontSize: 12, color: sawaaColors.ink[500], marginTop: 2 },
 });

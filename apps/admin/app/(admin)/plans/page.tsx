@@ -1,18 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@carekit/ui/primitives/button';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { PlansTable } from '@/features/plans/list-plans/plans-table';
-import { CreatePlanDialog } from '@/features/plans/create-plan/create-plan-dialog';
-import { UpdatePlanDialog } from '@/features/plans/update-plan/update-plan-dialog';
 import { DeletePlanDialog } from '@/features/plans/delete-plan/delete-plan-dialog';
 import type { PlanRow } from '@/features/plans/types';
 
 export default function PlansPage() {
   const { data, isLoading, error } = useListPlans();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editPlan, setEditPlan] = useState<PlanRow | null>(null);
   const [deletePlan, setDeletePlan] = useState<PlanRow | null>(null);
 
   return (
@@ -24,7 +21,9 @@ export default function PlansPage() {
             Subscription plans available to tenants.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>+ Create Plan</Button>
+        <Button asChild>
+          <Link href="/plans/new">+ Create Plan</Link>
+        </Button>
       </div>
 
       {error ? (
@@ -36,19 +35,8 @@ export default function PlansPage() {
       <PlansTable
         items={data}
         isLoading={isLoading}
-        onEdit={(plan) => setEditPlan(plan)}
         onDelete={(plan) => setDeletePlan(plan)}
       />
-
-      <CreatePlanDialog open={createOpen} onOpenChange={setCreateOpen} />
-
-      {editPlan ? (
-        <UpdatePlanDialog
-          open={editPlan !== null}
-          onOpenChange={(open) => { if (!open) setEditPlan(null); }}
-          plan={editPlan}
-        />
-      ) : null}
 
       {deletePlan ? (
         <DeletePlanDialog

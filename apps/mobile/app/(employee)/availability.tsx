@@ -42,10 +42,11 @@ export default function AvailabilityScreen() {
       return;
     }
     employeesService.getAvailabilitySchedule(pid).then((res) => {
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+      const data = res.data;
+      if (res.success && Array.isArray(data) && data.length > 0) {
         setSchedule(
           DEFAULT_SCHEDULE.map((def) => {
-            const found = res.data.find((d) => d.dayOfWeek === def.dayOfWeek);
+            const found = data.find((d) => d.dayOfWeek === def.dayOfWeek);
             return found ?? def;
           }),
         );

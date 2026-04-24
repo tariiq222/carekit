@@ -18,7 +18,7 @@ const BILLING_KEYS = {
 export function useCurrentSubscription() {
   return useQuery({
     queryKey: BILLING_KEYS.subscription(),
-    queryFn: () => billingApi.currentSubscription(),
+    queryFn: () => billingApi.currentSubscription().then((s) => s ?? null),
     staleTime: 60 * 1000,
   })
 }

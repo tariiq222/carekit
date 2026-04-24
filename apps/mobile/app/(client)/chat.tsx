@@ -1,218 +1,184 @@
-import { useCallback, useEffect } from 'react';
-import { View, StyleSheet, Pressable, ImageBackground, Text } from 'react-native';
-import { GiftedChat, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
-import type { IMessage, BubbleProps, InputToolbarProps, SendProps } from 'react-native-gifted-chat';
+import React, { useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
-import { SendHorizonal, RotateCcw } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { ChevronLeft, ChevronRight, Send, Sparkles } from 'lucide-react-native';
 
-import { Glass } from '@/theme';
-import { C, RADII, SHADOW, SHADOW_RAISED } from '@/theme/glass';
+import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
+import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
-import { useAppDispatch, useAppSelector } from '@/hooks/use-redux';
-import { startSession, sendMessage, addUserMessage, clearChat } from '@/stores/slices/chat-slice';
-import { ChatQuickActions } from '@/components/chat/chat-quick-actions';
-import { ChatTypingIndicator } from '@/components/chat/chat-typing-indicator';
+import { getFontName } from '@/theme/fonts';
+
+type Msg = { id: string; me: boolean; text: { ar: string; en: string } };
+const INITIAL_MSGS: Msg[] = [
+  { id: '1', me: false, text: { ar: 'مرحباً سارة ✨ كيف يمكنني مساعدتكِ اليوم؟', en: 'Hi Sara ✨ How can I help you today?' } },
+  { id: '2', me: true, text: { ar: 'أشعر بقلق قبل النوم، هل هناك تمرين يساعدني؟', en: "I feel anxious before sleep — any exercise that helps?" } },
+  { id: '3', me: false, text: { ar: 'بالتأكيد. جرّبي تمرين التنفّس ٤-٧-٨: شهيق ٤ ثوانٍ، حبس ٧، زفير ٨. كرّري ٤ مرات.', en: 'Try 4-7-8 breathing: inhale 4s, hold 7s, exhale 8s. Repeat 4x.' } },
+];
 
 export default function ChatScreen() {
-  const { t } = useTranslation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
-  const dispatch = useAppDispatch();
+  const f400 = getFontName(dir.locale, '400');
+  const f500 = getFontName(dir.locale, '500');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
+  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const [msgs, setMsgs] = useState<Msg[]>(INITIAL_MSGS);
+  const [text, setText] = useState('');
+  const scrollRef = useRef<ScrollView>(null);
 
-  const {
-    currentSessionId,
-    messages,
-    isTyping,
-    quickReplies,
-    botConfig,
-    error,
-  } = useAppSelector((state) => state.chat);
-
-  useEffect(() => {
-    if (!currentSessionId) {
-      dispatch(startSession(dir.isRTL ? 'ar' : 'en'));
-    }
-  }, [currentSessionId, dispatch, dir.isRTL]);
-
-  const handleSend = useCallback(
-    (newMessages: IMessage[] = []) => {
-      if (!currentSessionId || newMessages.length === 0) return;
-      const msg = newMessages[0];
-      dispatch(addUserMessage(msg));
-      dispatch(sendMessage({ sessionId: currentSessionId, content: msg.text }));
-    },
-    [currentSessionId, dispatch],
-  );
-
-  const handleQuickAction = useCallback(
-    (_action: string, label: string) => {
-      const msg: IMessage = {
-        _id: `user-${Date.now()}`,
-        text: label,
-        createdAt: new Date(),
-        user: { _id: 'user' },
-      };
-      handleSend([msg]);
-    },
-    [handleSend],
-  );
-
-  const handleNewChat = useCallback(() => {
-    dispatch(clearChat());
-    dispatch(startSession(dir.isRTL ? 'ar' : 'en'));
-  }, [dispatch, dir.isRTL]);
-
-  const renderBubble = (props: BubbleProps<IMessage>) => (
-    <Bubble
-      {...props}
-      wrapperStyle={{
-        left: { backgroundColor: C.ratingGlass, borderRadius: 20, padding: 2 },
-        right: { backgroundColor: C.deepTeal, borderRadius: 20, padding: 2 },
-      }}
-      textStyle={{
-        left: { color: C.deepTeal, writingDirection: dir.writingDirection },
-        right: { color: '#FFFFFF', writingDirection: dir.writingDirection },
-      }}
-    />
-  );
-
-  const renderInputToolbar = (props: InputToolbarProps<IMessage>) => (
-    <InputToolbar
-      {...props}
-      containerStyle={styles.inputToolbar}
-      primaryStyle={{ alignItems: 'center' }}
-    />
-  );
-
-  const renderSend = (props: SendProps<IMessage>) => (
-    <Send {...props} containerStyle={styles.sendContainer}>
-      <View style={[styles.sendButton, SHADOW]}>
-        <SendHorizonal size={18} color="#FFFFFF" />
-      </View>
-    </Send>
-  );
-
-  const renderFooter = () => {
-    if (isTyping) return <ChatTypingIndicator />;
-    if (quickReplies.length > 0) {
-      return <ChatQuickActions quickReplies={quickReplies} onPress={handleQuickAction} />;
-    }
-    return null;
+  const send = () => {
+    if (!text.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const next: Msg = { id: String(Date.now()), me: true, text: { ar: text, en: text } };
+    setMsgs((m) => [...m, next]);
+    setText('');
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  const botName = botConfig?.bot_name ?? t('tabs.assistant');
-
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('@/assets/bg.jpg')}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode="cover"
-      />
-
-      <View style={{ flex: 1, paddingTop: insets.top }}>
-        {/* Glass header */}
-        <Glass
-          variant="strong"
-          radius={RADII.floating}
-          style={[
-            styles.header,
-            { flexDirection: dir.row },
-            SHADOW_RAISED,
-          ]}
-        >
-          <Text
-            style={[
-              styles.headerTitle,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
-            ]}
-          >
-            {botName}
-          </Text>
-          <Pressable onPress={handleNewChat} hitSlop={12} style={styles.resetBtn}>
-            <RotateCcw size={18} color={C.deepTeal} />
-          </Pressable>
-        </Glass>
-
-        {error && (
-          <Glass variant="regular" radius={RADII.card} style={styles.errorBanner}>
-            <Text style={[styles.errorText, { textAlign: dir.textAlign }]}>{error}</Text>
+    <AquaBackground>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+        keyboardVerticalOffset={0}
+      >
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
+          <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
+            <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
           </Glass>
-        )}
+          <View style={styles.headerMid}>
+            <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
+              <Sparkles size={14} color={sawaaColors.teal[600]} strokeWidth={2} />
+              <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
+                {dir.isRTL ? 'المساعد' : 'Assistant'}
+              </Text>
+            </View>
+            <Text style={[styles.headerSub, { fontFamily: f400 }]}>
+              {dir.isRTL ? 'يعتمد على الذكاء الاصطناعي' : 'AI-powered'}
+            </Text>
+          </View>
+          <View style={styles.headerPlaceholder} />
+        </View>
 
-        <GiftedChat
-          messages={messages}
-          onSend={handleSend}
-          user={{ _id: 'user' }}
-          renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar}
-          renderSend={renderSend}
-          renderFooter={renderFooter}
-          isTyping={isTyping}
-          showUserAvatar={false}
-          alwaysShowSend
-          scrollToBottom
-          inverted
-          bottomOffset={insets.bottom + 80}
-          textInputProps={{
-            style: [styles.textInput, { textAlign: dir.textAlign }],
-            placeholder: t('chatbot.placeholder', 'Type your message...'),
-            placeholderTextColor: C.subtle,
-          }}
-        />
-      </View>
-    </View>
+        {/* Messages */}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={[styles.messages, { paddingBottom: 20 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {msgs.map((m, i) => (
+            <Animated.View
+              key={m.id}
+              entering={FadeInDown.delay(i < INITIAL_MSGS.length ? i * 80 : 0).duration(400).easing(Easing.out(Easing.cubic))}
+              style={[styles.bubbleRow, m.me ? styles.rowMe : styles.rowThem]}
+            >
+              {m.me ? (
+                <LinearGradient
+                  colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.bubble, styles.bubbleMe]}
+                >
+                  <Text style={[styles.bubbleMeText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
+                    {dir.isRTL ? m.text.ar : m.text.en}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <Glass variant="strong" radius={sawaaRadius.xl} style={[styles.bubble, styles.bubbleThem]}>
+                  <Text style={[styles.bubbleThemText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
+                    {dir.isRTL ? m.text.ar : m.text.en}
+                  </Text>
+                </Glass>
+              )}
+            </Animated.View>
+          ))}
+        </ScrollView>
+
+        {/* Input bar */}
+        <View style={[styles.inputWrap, { paddingBottom: insets.bottom + 12 }]}>
+          <Glass variant="strong" radius={sawaaRadius.pill} style={styles.inputPill}>
+            <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                placeholder={dir.isRTL ? 'اكتبي رسالتكِ…' : 'Type a message…'}
+                placeholderTextColor={sawaaColors.ink[400]}
+                style={[
+                  styles.input,
+                  { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
+                ]}
+                onSubmitEditing={send}
+                returnKeyType="send"
+              />
+              <Pressable onPress={send} disabled={!text.trim()} style={styles.sendBtnPress}>
+                <LinearGradient
+                  colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.sendBtn, !text.trim() && { opacity: 0.55 }]}
+                >
+                  <Send size={16} color="#fff" strokeWidth={2} style={{ transform: [{ scaleX: dir.isRTL ? -1 : 1 }] }} />
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </Glass>
+        </View>
+      </KeyboardAvoidingView>
+    </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  flex: { flex: 1 },
   header: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    marginHorizontal: 14,
-    marginTop: 6,
-    marginBottom: 8,
+    paddingHorizontal: 16, paddingBottom: 12,
+    alignItems: 'center', gap: 10,
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: C.deepTeal, flex: 1 },
-  resetBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: C.ratingGlass,
-    alignItems: 'center',
-    justifyContent: 'center',
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  headerMid: { flex: 1, alignItems: 'center' },
+  headerTitleRow: { alignItems: 'center', gap: 6 },
+  headerTitle: { fontSize: 15, color: sawaaColors.ink[900] },
+  headerSub: { fontSize: 11, color: sawaaColors.ink[500], marginTop: 2 },
+  headerPlaceholder: { width: 40 },
+  messages: { paddingHorizontal: 16, gap: 8 },
+  bubbleRow: { maxWidth: '85%' },
+  rowMe: { alignSelf: 'flex-end' },
+  rowThem: { alignSelf: 'flex-start' },
+  bubble: { paddingHorizontal: 14, paddingVertical: 10 },
+  bubbleMe: {
+    borderBottomRightRadius: 6,
+    borderTopLeftRadius: sawaaRadius.xl,
+    borderTopRightRadius: sawaaRadius.xl,
+    borderBottomLeftRadius: sawaaRadius.xl,
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
   },
-  errorBanner: {
-    marginHorizontal: 14,
-    padding: 12,
-    marginBottom: 8,
-  },
-  errorText: { fontSize: 12, color: '#B42318' },
-  inputToolbar: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderTopColor: C.glassBorder,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  sendContainer: { justifyContent: 'center', marginRight: 4, marginLeft: 4 },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: C.deepTeal,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    paddingHorizontal: 12,
-    color: C.deepTeal,
+  bubbleThem: { },
+  bubbleMeText: { color: '#fff', fontSize: 13.5, lineHeight: 22 },
+  bubbleThemText: { color: sawaaColors.ink[900], fontSize: 13.5, lineHeight: 22 },
+  inputWrap: { paddingHorizontal: 16, paddingTop: 8 },
+  inputPill: { padding: 6 },
+  inputRow: { alignItems: 'center', gap: 6 },
+  input: { flex: 1, height: 40, paddingHorizontal: 16, fontSize: 13.5 },
+  sendBtnPress: { height: 40 },
+  sendBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
   },
 });
