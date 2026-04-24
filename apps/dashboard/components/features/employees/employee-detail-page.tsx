@@ -145,7 +145,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
                 </span>
               </div>
               <span className="text-sm tabular-nums text-muted-foreground">
-                {p._count?.ratings ?? 0} {t("employees.detail.reviews")}
+                {p.ratingCount ?? 0} {t("employees.detail.reviews")}
               </span>
             </div>
             <div className="flex flex-col gap-1">
@@ -162,7 +162,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
         <StatCard
           title={t("employees.detail.stats.avgRating")}
           value={p.averageRating != null ? p.averageRating.toFixed(1) : "—"}
-          description={`${p._count?.ratings ?? 0} ${t("employees.detail.reviews")}`}
+          description={`${p.ratingCount ?? 0} ${t("employees.detail.reviews")}`}
           icon={StarIcon}
           iconColor="warning"
         />
@@ -233,7 +233,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
           <EmployeeRatingsSection
             employeeId={employeeId}
             averageRating={p.averageRating}
-            totalRatings={p._count?.ratings ?? 0}
+            totalRatings={p.ratingCount ?? 0}
           />
         </TabsContent>
 
