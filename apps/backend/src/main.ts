@@ -5,6 +5,8 @@ import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { AppModule } from './app.module';
 import { LoggingInterceptor, AuditInterceptor } from './common/interceptors';
+import { PrismaService } from './infrastructure/database';
+import { TenantContextService } from './common/tenant/tenant-context.service';
 import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap(): Promise<void> {
@@ -35,7 +37,7 @@ async function bootstrap(): Promise<void> {
   );
 
   app.useGlobalInterceptors(new LoggingInterceptor());
-  app.useGlobalInterceptors(new AuditInterceptor());
+  app.useGlobalInterceptors(new AuditInterceptor(app.get(PrismaService), app.get(TenantContextService)));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────

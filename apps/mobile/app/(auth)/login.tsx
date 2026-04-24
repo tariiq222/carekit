@@ -9,16 +9,18 @@ import {
   Alert,
   StyleSheet,
   TextInput,
-  ImageBackground,
 } from 'react-native';
+import Animated, { Easing, FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { Eye, EyeOff, Hospital } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
+import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
@@ -104,13 +106,7 @@ export default function LoginScreen() {
   }, [email, password, validate, dispatch, navigateByRole, t]);
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('@/assets/bg.jpg')}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode="cover"
-      />
-
+    <AquaBackground>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -124,31 +120,50 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Logo */}
-          <View style={styles.logoContainer}>
+          <Animated.View
+            entering={FadeIn.duration(700).easing(Easing.out(Easing.cubic))}
+            style={styles.logoContainer}
+          >
             <Glass variant="strong" radius={RADII.floating} style={[styles.logo, SHADOW]}>
-              <Hospital size={40} color={C.deepTeal} strokeWidth={1.5} />
+              <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 2C7 6 4 10 4 14a8 8 0 0 0 16 0c0-4-3-8-8-12Z"
+                  stroke={sawaaColors.teal[700]}
+                  strokeWidth={1.7}
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M12 22V10"
+                  stroke={sawaaColors.teal[700]}
+                  strokeWidth={1.7}
+                  strokeLinecap="round"
+                />
+              </Svg>
             </Glass>
-          </View>
+          </Animated.View>
 
           {/* Title */}
-          <Text
+          <Animated.Text
+            entering={FadeInDown.delay(150).duration(700).easing(Easing.out(Easing.cubic))}
             style={[
               styles.title,
               { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f700 }
             ]}
           >
             {t('auth.welcomeBack')}
-          </Text>
-          <Text
+          </Animated.Text>
+          <Animated.Text
+            entering={FadeInDown.delay(250).duration(700).easing(Easing.out(Easing.cubic))}
             style={[
               styles.subtitle,
               { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
             ]}
           >
             {t('auth.welcomeBackSub')}
-          </Text>
+          </Animated.Text>
 
           {/* Form */}
+          <Animated.View entering={FadeInUp.delay(400).duration(800).easing(Easing.out(Easing.cubic))}>
           <Glass
             variant="regular"
             radius={RADII.card}
@@ -269,9 +284,10 @@ export default function LoginScreen() {
               </View>
             </View>
           </Glass>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </AquaBackground>
   );
 }
 
