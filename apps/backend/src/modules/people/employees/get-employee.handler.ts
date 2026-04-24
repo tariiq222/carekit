@@ -11,7 +11,7 @@ export class GetEmployeeHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetEmployeeQuery) {
-    const [employee, ratingAgg] = await Promise.all([
+    const [employee, ratingAgg, bookingCount] = await Promise.all([
       this.prisma.employee.findFirst({
         where: { id: query.employeeId },
         include: {
@@ -26,6 +26,7 @@ export class GetEmployeeHandler {
         _avg: { score: true },
         _count: { _all: true },
       }),
+      this.prisma.booking.count({ where: { employeeId: query.employeeId } }),
     ]);
 
     if (!employee) {
@@ -33,7 +34,11 @@ export class GetEmployeeHandler {
     }
 
     return {
-      ...mapEmployeeRow(employee, { avg: ratingAgg._avg.score, count: ratingAgg._count._all }),
+      ...mapEmployeeRow(
+        employee,
+        { avg: ratingAgg._avg.score, count: ratingAgg._count._all },
+        bookingCount,
+      ),
       exceptions: employee.exceptions,
     };
   }

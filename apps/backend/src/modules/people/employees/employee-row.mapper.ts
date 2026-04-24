@@ -34,6 +34,7 @@ export interface EmployeeListItem {
   availability: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>;
   averageRating: number | null;
   ratingCount: number;
+  bookingCount: number;
 }
 
 export interface EmployeeRatingAggregate {
@@ -44,6 +45,7 @@ export interface EmployeeRatingAggregate {
 export function mapEmployeeRow(
   e: EmployeeWithRelations,
   ratings: EmployeeRatingAggregate = { avg: null, count: 0 },
+  bookingCount = 0,
 ): EmployeeListItem {
   return {
     id: e.id,
@@ -78,5 +80,6 @@ export function mapEmployeeRow(
     })),
     averageRating: ratings.avg,
     ratingCount: ratings.count,
+    bookingCount,
   };
 }

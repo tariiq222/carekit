@@ -150,7 +150,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-2xl font-bold tabular-nums text-foreground">
-                {p._count?.bookings ?? 0}
+                {p.bookingCount ?? 0}
               </span>
               <span className="text-sm text-muted-foreground">{t("employees.detail.bookings")}</span>
             </div>
@@ -168,7 +168,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
         />
         <StatCard
           title={t("employees.detail.stats.totalBookings")}
-          value={p._count?.bookings ?? 0}
+          value={p.bookingCount ?? 0}
           icon={Calendar03Icon}
           iconColor="primary"
         />

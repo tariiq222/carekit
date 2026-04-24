@@ -37,12 +37,13 @@ export async function fetchEmployees(
 }
 
 /** Backend returns specialty as plain text fields + rating/reviewCount */
-type RawEmployee = Omit<Employee, "averageRating" | "ratingCount" | "_count" | "user"> & {
+type RawEmployee = Omit<Employee, "averageRating" | "ratingCount" | "bookingCount" | "_count" | "user"> & {
   rating?: number
   reviewCount?: number
   _count?: Employee["_count"]
   averageRating?: number
   ratingCount?: number
+  bookingCount?: number
   name?: string | null
   nameEn?: string | null
   email?: string | null
@@ -77,8 +78,9 @@ function mapEmployee(raw: RawEmployee): Employee {
     avatarUrl: raw.user?.avatarUrl ?? raw.avatarUrl ?? null,
     averageRating: raw.averageRating ?? raw.rating ?? undefined,
     ratingCount: raw.ratingCount ?? raw.reviewCount ?? raw._count?.ratings ?? 0,
+    bookingCount: raw.bookingCount ?? raw._count?.bookings ?? 0,
     _count: raw._count ?? {
-      bookings: 0,
+      bookings: raw.bookingCount ?? 0,
       ratings: raw.ratingCount ?? raw.reviewCount ?? 0,
     },
   }

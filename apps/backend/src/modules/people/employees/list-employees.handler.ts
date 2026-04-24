@@ -61,20 +61,29 @@ export class ListEmployeesHandler {
       this.prisma.employee.count({ where }),
     ]);
 
-    const ratings = items.length
-      ? await this.prisma.rating.groupBy({
-          by: ['employeeId'],
-          where: { employeeId: { in: items.map((e) => e.id) } },
-          _avg: { score: true },
-          _count: { _all: true },
-        })
-      : [];
+    const ids = items.map((e) => e.id);
+    const [ratings, bookings] = items.length
+      ? await Promise.all([
+          this.prisma.rating.groupBy({
+            by: ['employeeId'],
+            where: { employeeId: { in: ids } },
+            _avg: { score: true },
+            _count: { _all: true },
+          }),
+          this.prisma.booking.groupBy({
+            by: ['employeeId'],
+            where: { employeeId: { in: ids } },
+            _count: { _all: true },
+          }),
+        ])
+      : [[], []];
     const ratingsByEmployee = new Map(
       ratings.map((r) => [r.employeeId, { avg: r._avg.score, count: r._count._all }]),
     );
+    const bookingsByEmployee = new Map(bookings.map((b) => [b.employeeId, b._count._all]));
 
     return toListResponse(
-      items.map((e) => mapEmployeeRow(e, ratingsByEmployee.get(e.id))),
+      items.map((e) => mapEmployeeRow(e, ratingsByEmployee.get(e.id), bookingsByEmployee.get(e.id))),
       total,
       query.page,
       query.limit,
