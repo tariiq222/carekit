@@ -91,6 +91,25 @@ async function main() {
         update: {},
       });
     }
+
+    // Default availability: Sun..Thu 09:00–17:00.
+    // Dashboard's create form uses the same defaults; seeded employees without
+    // these rows are invisible to the booking slots endpoint → create-booking
+    // flow dead-ends on the date picker. EmployeeAvailability has no compound
+    // unique on (employeeId, dayOfWeek), so gate on count to stay idempotent.
+    const availabilityCount = await prisma.employeeAvailability.count({ where: { employeeId: e.id } });
+    if (availabilityCount === 0) {
+      await prisma.employeeAvailability.createMany({
+        data: [0, 1, 2, 3, 4].map((dayOfWeek) => ({
+          employeeId: e.id,
+          organizationId: DEFAULT_ORG_ID,
+          dayOfWeek,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+        })),
+      });
+    }
   }
 
   // Categories first — the dashboard's create-service form enforces category
