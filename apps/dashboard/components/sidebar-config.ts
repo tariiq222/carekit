@@ -15,7 +15,6 @@ import {
   Building06Icon,
   DocumentValidationIcon,
   PaintBrush01Icon,
-  Building01Icon,
   StarIcon,
   TaxesIcon,
   Activity01Icon,
@@ -121,16 +120,6 @@ export const adminNav: NavItem[] = [
   },
   { titleKey: "nav.content", href: "/content", icon: DocumentValidationIcon },
   { titleKey: "nav.settings", href: "/settings", icon: Settings02Icon },
-  {
-    titleKey: "settings.organization.title",
-    href: "/settings/organization",
-    icon: Building01Icon,
-  },
-  {
-    titleKey: "settings.members.title",
-    href: "/settings/members",
-    icon: UserMultiple02Icon,
-  },
 ]
 
 export const navGroups: NavGroup[] = [

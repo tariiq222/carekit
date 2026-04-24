@@ -59,4 +59,5 @@ export const enBranding: Record<string, string> = {
   "branding.preview.accentOnBg": "Accent on background",
   "branding.preview.primaryText": "Primary text — نص أساسي",
   "branding.preview.textOnBg": "Text on background",
+  "branding.preview.badge": "Badge",
 }

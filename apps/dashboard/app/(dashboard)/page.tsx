@@ -17,6 +17,7 @@ import { Skeleton } from "@carekit/ui"
 import { FlashIcon, Analytics01Icon } from "@hugeicons/core-free-icons"
 import { useTodayBookings } from "@/hooks/use-bookings"
 import { useDashboardNotifications } from "@/hooks/use-notifications"
+import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useLocale } from "@/components/locale-provider"
 
@@ -28,7 +29,7 @@ export default function DashboardPage() {
   const dateLabel = format(
     new Date(),
     locale === "ar" ? "EEEE، d MMMM yyyy" : "EEEE, MMMM d, yyyy",
-    locale === "ar" ? { locale: ar } : undefined,
+    locale === "ar" ? { locale: ar } : undefined
   )
 
   const {
@@ -45,6 +46,12 @@ export default function DashboardPage() {
     refetch: refetchNotifs,
   } = useDashboardNotifications()
 
+  const {
+    data: dashboardStats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useDashboardStats()
+
   const userName = user?.name || user?.email || "—"
 
   return (
@@ -57,15 +64,16 @@ export default function DashboardPage() {
           bookingsCount={0}
         />
 
-        <AttentionAlerts pendingPayments={0} cancelRequests={0} />
+        <DashboardStats stats={dashboardStats} />
+        <AttentionAlerts
+          pendingPayments={dashboardStats?.pendingPayments ?? 0}
+          cancelRequests={dashboardStats?.cancelRequests ?? 0}
+        />
       </section>
 
       {/* Group 2: Quick Actions */}
       <section className="flex flex-col gap-4">
-        <SectionHeader
-          icon={FlashIcon}
-          title={t("dashboard.quickActions")}
-        />
+        <SectionHeader icon={FlashIcon} title={t("dashboard.quickActions")} />
         <QuickActions />
       </section>
 
@@ -81,7 +89,10 @@ export default function DashboardPage() {
           {bookingsLoading ? (
             <Skeleton className="h-[400px] rounded-xl" />
           ) : bookingsError ? (
-            <ErrorBanner message={t("dashboard.error.schedule")} onRetry={() => refetchBookings()} />
+            <ErrorBanner
+              message={t("dashboard.error.schedule")}
+              onRetry={() => refetchBookings()}
+            />
           ) : (
             <TodayTimeline bookings={todayBookings?.items ?? []} />
           )}
@@ -89,7 +100,10 @@ export default function DashboardPage() {
           {notifLoading ? (
             <Skeleton className="h-[400px] rounded-xl" />
           ) : notifError ? (
-            <ErrorBanner message={t("dashboard.error.activity")} onRetry={() => refetchNotifs()} />
+            <ErrorBanner
+              message={t("dashboard.error.activity")}
+              onRetry={() => refetchNotifs()}
+            />
           ) : (
             <ActivityFeed notifications={notifData?.items ?? []} />
           )}

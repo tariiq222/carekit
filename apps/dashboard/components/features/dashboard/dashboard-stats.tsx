@@ -11,25 +11,26 @@ import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
 import { useLocale } from "@/components/locale-provider"
 
-interface BookingStats {
-  total?: number
-  pending?: number
-  confirmed?: number
-  completed?: number
-  cancelled?: number
-  pendingCancellation?: number
+interface DashboardStatsApi {
+  todayBookings: number
+  confirmedToday: number
+  pendingToday: number
+  pendingPayments: number
+  cancelRequests: number
+  todayRevenue: number
 }
 
 interface DashboardStatsProps {
-  stats: BookingStats | undefined
+  stats: DashboardStatsApi | undefined
 }
 
 export function DashboardStats({ stats }: DashboardStatsProps) {
   const { t } = useLocale()
 
-  const todayBookings = stats?.total ?? 0
-  const newClients = stats?.confirmed ?? 0
-  const pendingCount = stats?.pending ?? 0
+  const todayBookings = stats?.todayBookings ?? 0
+  const confirmedToday = stats?.confirmedToday ?? 0
+  const pendingToday = stats?.pendingToday ?? 0
+  const todayRevenue = stats?.todayRevenue ?? 0
 
   return (
     <StatsGrid>
@@ -41,19 +42,19 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       />
       <StatCard
         title={t("dashboard.newClients")}
-        value={newClients}
+        value={confirmedToday}
         icon={UserMultiple02Icon}
         iconColor="success"
       />
       <StatCard
         title={t("dashboard.awaitingApproval")}
-        value={pendingCount}
+        value={pendingToday}
         icon={Clock01Icon}
         iconColor="warning"
       />
       <StatCard
         title={t("dashboard.todayRevenue")}
-        value="—"
+        value={todayRevenue}
         icon={MoneyReceiveSquareIcon}
         iconColor="accent"
         description={t("dashboard.currency")}

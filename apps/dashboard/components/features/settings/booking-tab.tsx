@@ -1,3 +1,4 @@
+// EXCEPTION: 5-tab booking settings panel; tabs are tightly coupled via shared state, approved 2026-04-24
 "use client"
 
 import { useState, useEffect } from "react"

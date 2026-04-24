@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/features/page-header"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
 import { Button } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
+import { FeatureGate } from "@/components/feature-gate"
+import { FeatureKey } from "@carekit/shared/constants"
 import { FilterBar } from "@/components/features/filter-bar"
 import { EmployeeCombobox } from "@/components/features/reports/employee-combobox"
 
@@ -35,6 +37,7 @@ export default function ReportsPage() {
   const showExport = false
 
   return (
+    <FeatureGate feature={FeatureKey.ADVANCED_REPORTS}>
     <ListPageShell>
       <Breadcrumbs />
 
@@ -100,5 +103,6 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
     </ListPageShell>
+    </FeatureGate>
   )
 }

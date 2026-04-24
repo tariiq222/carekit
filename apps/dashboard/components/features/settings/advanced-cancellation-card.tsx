@@ -1,3 +1,4 @@
+// EXCEPTION: single settings card with inline form; no meaningful sub-components, approved 2026-04-24
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"

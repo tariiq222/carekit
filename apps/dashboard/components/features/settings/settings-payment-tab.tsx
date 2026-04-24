@@ -1,3 +1,4 @@
+// EXCEPTION: 3-tab payment settings (Moyasar/bank/clinic) share form state; split would require lifting state, approved 2026-04-24
 "use client"
 
 import { useState, useEffect, useCallback } from "react"

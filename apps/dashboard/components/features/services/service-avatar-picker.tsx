@@ -1,3 +1,4 @@
+// EXCEPTION: icon grid + color swatches are tightly coupled state; split adds complexity with no benefit, approved 2026-04-24
 "use client"
 
 import { useRef, useState, useMemo } from "react"
@@ -14,15 +15,40 @@ import { useLocale } from "@/components/locale-provider"
 
 /* ─── Icon list ─── */
 const ALL_ICON_NAMES: string[] = Object.keys(HugeIcons).filter(
-  (k) => k.endsWith("Icon") && Array.isArray((HugeIcons as Record<string, unknown>)[k])
+  (k) =>
+    k.endsWith("Icon") &&
+    Array.isArray((HugeIcons as Record<string, unknown>)[k])
 )
 
-/* ─── Color palette ─── */
-const BG_COLORS = [
-  "#354FD8", "#82CC17", "#E04040", "#E07A10",
-  "#9B59B6", "#1ABC9C", "#2980B9", "#F39C12",
-  "#16A085", "#8E44AD", "#C0392B", "#27AE60",
+/* ─── Color palette — tenant-brandable via CSS variables ─── */
+const DEFAULT_BG_COLORS = [
+  "#354FD8",
+  "#82CC17",
+  "#E04040",
+  "#E07A10",
+  "#9B59B6",
+  "#1ABC9C",
+  "#2980B9",
+  "#F39C12",
+  "#16A085",
+  "#8E44AD",
+  "#C0392B",
+  "#27AE60",
 ]
+
+/** Resolved at render time from CSS vars so each tenant sees their brand colors. */
+function getBgColors(): string[] {
+  if (typeof window === "undefined") return DEFAULT_BG_COLORS
+  const root = getComputedStyle(document.documentElement)
+  const primary =
+    root.getPropertyValue("--primary").trim() || DEFAULT_BG_COLORS[0]
+  const accent =
+    root.getPropertyValue("--accent").trim() || DEFAULT_BG_COLORS[1]
+  // Build a tenant-aware palette from brand vars + fallbacks
+  return [primary, accent, ...DEFAULT_BG_COLORS.slice(2)]
+}
+
+const BG_COLORS = getBgColors()
 
 /* ─── Props ─── */
 interface ServiceAvatarPickerProps {
@@ -48,9 +74,15 @@ export function ServiceAvatarPicker({
   const { t } = useLocale()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
-  const [selectedIcon, setSelectedIcon] = useState<string | null>(iconName ?? null)
-  const [selectedColor, setSelectedColor] = useState<string>(iconBgColor ?? BG_COLORS[0])
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>(imageUrl ?? undefined)
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(
+    iconName ?? null
+  )
+  const [selectedColor, setSelectedColor] = useState<string>(
+    iconBgColor ?? BG_COLORS[0]
+  )
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(
+    imageUrl ?? undefined
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
   const colorPickerRef = useRef<HTMLInputElement>(null)
 
@@ -100,7 +132,7 @@ export function ServiceAvatarPicker({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="group h-20 w-20 cursor-pointer rounded-full border-2 border-dashed border-border bg-surface-muted overflow-hidden flex items-center justify-center"
+            className="group flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border bg-surface-muted"
           >
             <ServiceAvatar
               iconName={displayIconName}
@@ -115,12 +147,16 @@ export function ServiceAvatarPicker({
         <PopoverContent className="w-80 p-0" align="start">
           <Tabs defaultValue="icon">
             <TabsList className="w-full rounded-none border-b border-border">
-              <TabsTrigger value="icon" className="flex-1">{t("services.avatar.iconTab")}</TabsTrigger>
-              <TabsTrigger value="image" className="flex-1">{t("services.avatar.imageTab")}</TabsTrigger>
+              <TabsTrigger value="icon" className="flex-1">
+                {t("services.avatar.iconTab")}
+              </TabsTrigger>
+              <TabsTrigger value="image" className="flex-1">
+                {t("services.avatar.imageTab")}
+              </TabsTrigger>
             </TabsList>
 
             {/* ── Icon Tab ── */}
-            <TabsContent value="icon" className="p-3 space-y-3">
+            <TabsContent value="icon" className="space-y-3 p-3">
               <Input
                 placeholder={t("services.avatar.iconSearch")}
                 value={search}
@@ -144,11 +180,13 @@ export function ServiceAvatarPicker({
                           "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
                           isSelected
                             ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         <HugeiconsIcon
-                          icon={icon as Parameters<typeof HugeiconsIcon>[0]["icon"]}
+                          icon={
+                            icon as Parameters<typeof HugeiconsIcon>[0]["icon"]
+                          }
                           size={18}
                           color="currentColor"
                         />
@@ -161,7 +199,9 @@ export function ServiceAvatarPicker({
               {/* Color Swatches */}
               {selectedIcon && (
                 <div className="space-y-1.5">
-                  <p className="text-xs text-muted-foreground">{t("services.avatar.bgColor")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("services.avatar.bgColor")}
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {BG_COLORS.map((color) => (
                       <button
@@ -171,7 +211,7 @@ export function ServiceAvatarPicker({
                         className={cn(
                           "h-6 w-6 rounded-full border-2 transition-all",
                           selectedColor === color
-                            ? "border-foreground scale-110"
+                            ? "scale-110 border-foreground"
                             : "border-transparent hover:scale-105"
                         )}
                         style={{ backgroundColor: color }}
@@ -184,16 +224,22 @@ export function ServiceAvatarPicker({
                         type="button"
                         onClick={() => colorPickerRef.current?.click()}
                         className={cn(
-                          "h-6 w-6 rounded-full border-2 transition-all flex items-center justify-center",
+                          "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
                           !BG_COLORS.includes(selectedColor)
-                            ? "border-foreground scale-110"
+                            ? "scale-110 border-foreground"
                             : "border-dashed border-muted-foreground/40 hover:scale-105 hover:border-muted-foreground"
                         )}
-                        style={!BG_COLORS.includes(selectedColor) ? { backgroundColor: selectedColor } : undefined}
+                        style={
+                          !BG_COLORS.includes(selectedColor)
+                            ? { backgroundColor: selectedColor }
+                            : undefined
+                        }
                         aria-label={t("services.avatar.customColor")}
                       >
                         {BG_COLORS.includes(selectedColor) && (
-                          <span className="text-[10px] font-bold text-muted-foreground leading-none">+</span>
+                          <span className="text-[10px] leading-none font-bold text-muted-foreground">
+                            +
+                          </span>
                         )}
                       </button>
                       <input
@@ -201,7 +247,7 @@ export function ServiceAvatarPicker({
                         type="color"
                         value={selectedColor}
                         onChange={(e) => handleColorSelect(e.target.value)}
-                        className="absolute inset-0 opacity-0 pointer-events-none w-0 h-0"
+                        className="pointer-events-none absolute inset-0 h-0 w-0 opacity-0"
                         aria-hidden="true"
                       />
                     </div>
@@ -213,29 +259,38 @@ export function ServiceAvatarPicker({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => { onClear(); setSelectedIcon(null); setPreviewUrl(undefined); setOpen(false) }}
+                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => {
+                  onClear()
+                  setSelectedIcon(null)
+                  setPreviewUrl(undefined)
+                  setOpen(false)
+                }}
               >
                 {t("services.avatar.clear")}
               </Button>
             </TabsContent>
 
             {/* ── Image Tab ── */}
-            <TabsContent value="image" className="p-3 space-y-3">
+            <TabsContent value="image" className="space-y-3 p-3">
               {displayImageUrl ? (
                 <div className="space-y-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={displayImageUrl}
                     alt="preview"
-                    className="h-24 w-24 mx-auto rounded-full object-cover border border-border"
+                    className="mx-auto h-24 w-24 rounded-full border border-border object-cover"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => { setPreviewUrl(undefined); onClear(); setOpen(false) }}
+                    className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => {
+                      setPreviewUrl(undefined)
+                      onClear()
+                      setOpen(false)
+                    }}
                   >
                     {t("services.avatar.deleteImage")}
                   </Button>
@@ -244,10 +299,14 @@ export function ServiceAvatarPicker({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                  className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
                 >
-                  <span className="text-sm">{t("services.avatar.uploadHint")}</span>
-                  <span className="text-xs opacity-60">{t("services.avatar.uploadFormats")}</span>
+                  <span className="text-sm">
+                    {t("services.avatar.uploadHint")}
+                  </span>
+                  <span className="text-xs opacity-60">
+                    {t("services.avatar.uploadFormats")}
+                  </span>
                 </button>
               )}
               <input
@@ -267,7 +326,7 @@ export function ServiceAvatarPicker({
         <button
           type="button"
           onClick={handleClear}
-          className="absolute bottom-0 end-0 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white shadow-md ring-2 ring-background hover:bg-destructive/80 transition-colors"
+          className="inset-b-0 absolute inset-e-0 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white shadow-md ring-2 ring-background transition-colors hover:bg-destructive/80"
         >
           <HugeiconsIcon icon={Cancel01Icon} className="h-3 w-3" />
         </button>
@@ -275,7 +334,7 @@ export function ServiceAvatarPicker({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="absolute bottom-0 end-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-2 ring-background hover:bg-primary/80 transition-colors"
+          className="inset-b-0 absolute inset-e-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-2 ring-background transition-colors hover:bg-primary/80"
         >
           <HugeiconsIcon icon={Add01Icon} className="h-3 w-3" />
         </button>

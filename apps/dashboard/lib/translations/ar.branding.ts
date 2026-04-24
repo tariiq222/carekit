@@ -67,4 +67,5 @@ export const arBranding: Record<string, string> = {
   "branding.preview.accentOnBg": "لون التمييز على الخلفية",
   "branding.preview.primaryText": "نص أساسي — Primary text",
   "branding.preview.textOnBg": "نص على الخلفية",
+  "branding.preview.badge": "شارة",
 }

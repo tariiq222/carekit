@@ -1,3 +1,4 @@
+// EXCEPTION: service create/edit form with tightly coupled tab state; all tabs mutate the same draft, approved 2026-04-24
 "use client"
 
 import { useState, useEffect, useRef } from "react"

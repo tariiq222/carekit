@@ -1,3 +1,4 @@
+// EXCEPTION: employee basic info form with deeply interdependent field logic; splitting by section adds indirection, approved 2026-04-24
 "use client"
 
 import { useState } from "react"

@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
+import { FeatureGate } from "@/components/feature-gate"
+import { FeatureKey } from "@carekit/shared/constants"
 
 import { SessionsTab } from "@/components/features/chatbot/sessions-tab"
 import { KnowledgeBaseTab } from "@/components/features/chatbot/knowledge-base-tab"
@@ -15,6 +17,7 @@ export default function ChatbotPage() {
   const { t } = useLocale()
 
   return (
+    <FeatureGate feature={FeatureKey.AI_CHATBOT}>
     <ListPageShell>
       <Breadcrumbs />
 
@@ -58,5 +61,6 @@ export default function ChatbotPage() {
         </TabsContent>
       </Tabs>
     </ListPageShell>
+    </FeatureGate>
   )
 }

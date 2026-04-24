@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { Separator } from "@carekit/ui"
 import {
   Select,
@@ -15,25 +14,14 @@ import {
   SelectValue,
 } from "@carekit/ui"
 import { useBranding } from "@/components/providers/branding-provider"
-import { isValidHex, hexToRgb, contrastRatio, pickForeground } from "@/lib/color-utils"
+import { isValidHex } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"
-import type { BrandingConfig, UpdateBrandingPayload, WebsiteTheme } from "@/lib/types/branding"
-
-function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
-  const pass = ratio >= 4.5
-  const large = ratio >= 3
-  const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA Large" : "Fail"
-  const color = pass ? "var(--success)" : large ? "var(--warning)" : "var(--error)"
-  return (
-    <span
-      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-mono tabular-nums"
-      style={{ borderColor: color, color }}
-      title={label}
-    >
-      {ratio.toFixed(1)}:1 · {grade}
-    </span>
-  )
-}
+import { BrandingColorsSection } from "./branding-colors-section"
+import type {
+  BrandingConfig,
+  UpdateBrandingPayload,
+  WebsiteTheme,
+} from "@/lib/types/branding"
 
 interface Props {
   branding: BrandingConfig | null
@@ -63,7 +51,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
 
   useEffect(() => {
     if (!branding) return
-    // Seed editable form fields from async-loaded server data; users edit these freely afterwards.
+    // Seed form from async-loaded server data; users edit these freely afterwards.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrganizationNameEn(branding.organizationNameEn ?? "")
     setOrganizationNameAr(branding.organizationNameAr ?? "")
@@ -85,13 +73,10 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
   const updatePreview = useCallback(
     (primary: string, accent: string) => {
       if (isValidHex(primary)) {
-        preview({
-          primary,
-          accent: isValidHex(accent) ? accent : primary,
-        })
+        preview({ primary, accent: isValidHex(accent) ? accent : primary })
       }
     },
-    [preview],
+    [preview]
   )
 
   const handlePrimaryChange = (value: string) => {
@@ -152,180 +137,22 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
 
         <Separator />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("settings.primaryColor")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorPrimary) ? colorPrimary : null}
-                onChange={handlePrimaryChange}
-                defaultColor="#354FD8"
-              />
-              <Input
-                value={colorPrimary}
-                onChange={(e) => handlePrimaryChange(e.target.value)}
-                placeholder="#354FD8"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("branding.colorPrimaryLight")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorPrimaryLight) ? colorPrimaryLight : null}
-                onChange={setColorPrimaryLight}
-                defaultColor="#6B7FE3"
-              />
-              <Input
-                value={colorPrimaryLight}
-                onChange={(e) => setColorPrimaryLight(e.target.value)}
-                placeholder="#6B7FE3"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("branding.colorPrimaryDark")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorPrimaryDark) ? colorPrimaryDark : null}
-                onChange={setColorPrimaryDark}
-                defaultColor="#1E3AB8"
-              />
-              <Input
-                value={colorPrimaryDark}
-                onChange={(e) => setColorPrimaryDark(e.target.value)}
-                placeholder="#1E3AB8"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("settings.secondaryColor")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorAccent) ? colorAccent : null}
-                onChange={handleAccentChange}
-                defaultColor="#82CC17"
-              />
-              <Input
-                value={colorAccent}
-                onChange={(e) => handleAccentChange(e.target.value)}
-                placeholder="#82CC17"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("branding.colorAccentDark")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorAccentDark) ? colorAccentDark : null}
-                onChange={setColorAccentDark}
-                defaultColor="#5A8F0F"
-              />
-              <Input
-                value={colorAccentDark}
-                onChange={(e) => setColorAccentDark(e.target.value)}
-                placeholder="#5A8F0F"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("branding.colorBackground")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(colorBackground) ? colorBackground : null}
-                onChange={setColorBackground}
-                defaultColor="#F8F9FF"
-              />
-              <Input
-                value={colorBackground}
-                onChange={(e) => setColorBackground(e.target.value)}
-                placeholder="#F8F9FF"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-        </div>
-
-        {isValidHex(colorPrimary) && (
-          <>
-            <Separator />
-            <div className="space-y-3">
-              <Label className="text-xs text-muted-foreground">
-                {t("settings.preview")}
-              </Label>
-
-              {/* Color swatches row */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimary }} title={colorPrimary} />
-                {isValidHex(colorPrimaryLight) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimaryLight }} title={colorPrimaryLight} />}
-                {isValidHex(colorPrimaryDark) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimaryDark }} title={colorPrimaryDark} />}
-                {isValidHex(colorAccent) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorAccent }} title={colorAccent} />}
-                {isValidHex(colorAccentDark) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorAccentDark }} title={colorAccentDark} />}
-                {isValidHex(colorBackground) && <div className="size-8 rounded-md border shadow-sm ring-1 ring-border" style={{ background: colorBackground }} title={colorBackground} />}
-              </div>
-
-              {/* Live UI preview with contrast indicators */}
-              <div
-                className="rounded-lg border p-4 space-y-3"
-                style={{ background: isValidHex(colorBackground) ? colorBackground : "var(--background)" }}
-              >
-                {/* Primary button preview */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium shadow-sm"
-                    style={{
-                      background: colorPrimary,
-                      color: pickForeground(colorPrimary),
-                    }}
-                  >
-                    {organizationNameEn || organizationNameAr || "CareKit"}
-                  </div>
-                  <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} />
-                </div>
-
-                {/* Accent badge preview */}
-                {isValidHex(colorAccent) && (
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
-                      style={{
-                        background: colorAccent,
-                        color: pickForeground(colorAccent),
-                      }}
-                    >
-                      Badge
-                    </div>
-                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.accentOnBg")} />
-                  </div>
-                )}
-
-                {/* Foreground text preview */}
-                <div className="flex items-center gap-3">
-                  <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-                    {t("branding.preview.primaryText")}
-                  </p>
-                  <ContrastBadge ratio={contrastRatio("#1a1a1a", isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.textOnBg")} />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <BrandingColorsSection
+          colorPrimary={colorPrimary}
+          colorPrimaryLight={colorPrimaryLight}
+          colorPrimaryDark={colorPrimaryDark}
+          colorAccent={colorAccent}
+          colorAccentDark={colorAccentDark}
+          colorBackground={colorBackground}
+          organizationNameEn={organizationNameEn}
+          organizationNameAr={organizationNameAr}
+          onPrimaryChange={handlePrimaryChange}
+          onAccentChange={handleAccentChange}
+          onPrimaryLightChange={setColorPrimaryLight}
+          onPrimaryDarkChange={setColorPrimaryDark}
+          onAccentDarkChange={setColorAccentDark}
+          onBackgroundChange={setColorBackground}
+        />
 
         <Separator />
 
@@ -358,23 +185,12 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="website-domain">{t("branding.website.domain")}</Label>
-              <Input
-                id="website-domain"
-                value={websiteDomain}
-                onChange={(e) => setWebsiteDomain(e.target.value)}
-                placeholder="clinic.example.com"
-                dir="ltr"
-              />
+              <Input id="website-domain" value={websiteDomain} onChange={(e) => setWebsiteDomain(e.target.value)} placeholder="clinic.example.com" dir="ltr" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="website-theme">{t("branding.website.theme")}</Label>
-              <Select
-                value={activeWebsiteTheme}
-                onValueChange={(v) => setActiveWebsiteTheme(v as WebsiteTheme)}
-              >
-                <SelectTrigger id="website-theme">
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={activeWebsiteTheme} onValueChange={(v) => setActiveWebsiteTheme(v as WebsiteTheme)}>
+                <SelectTrigger id="website-theme"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SAWAA">{t("branding.website.themes.sawaa")}</SelectItem>
                   <SelectItem value="PREMIUM">{t("branding.website.themes.premium")}</SelectItem>

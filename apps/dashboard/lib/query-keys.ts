@@ -259,4 +259,10 @@ export const queryKeys = {
     plans: () => ["billing", "plans"] as const,
     features: () => ["billing", "features"] as const,
   },
+
+  /* ─── Dashboard ─── */
+  dashboard: {
+    all: ["dashboard"] as const,
+    stats: () => ["dashboard", "stats"] as const,
+  },
 } as const
