@@ -17,7 +17,6 @@ export function useActivityLogs() {
   const query: ActivityLogQuery = {
     page,
     perPage: 20,
-    sortOrder: "desc",
     module,
     action,
     dateFrom: dateFrom || undefined,
@@ -39,11 +38,18 @@ export function useActivityLogs() {
     setPage(1)
   }, [])
 
+  // Handle NestJS validation errors (array of messages) gracefully
+  const errorMessage = error
+    ? Array.isArray((error as any)?.message)
+      ? (error as any).message[0]
+      : error.message
+    : null
+
   return {
     logs: data?.items ?? [],
     meta: data?.meta ?? null,
     isLoading,
-    error: error?.message ?? null,
+    error: errorMessage,
     page,
     setPage,
     module,

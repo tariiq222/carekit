@@ -21,6 +21,16 @@ async function main() {
   });
   await prisma.$connect();
 
+  // 0. Cleanup isolation test artifacts (Bug #24)
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { email: { contains: '@t.test' } },
+        { email: { startsWith: 'iso-' } },
+      ],
+    },
+  });
+
   // 1. Admin user (email is globally @unique now)
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
   const adminUser = await prisma.user.upsert({
