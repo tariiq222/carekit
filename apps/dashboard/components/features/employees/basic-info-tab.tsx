@@ -28,11 +28,13 @@ interface BasicInfoTabProps {
   form: UseFormReturn<CreateEmployeeFormData>
   showEmail?: boolean
   employeeName?: string
+  /** Existing email shown read-only on edit mode. */
+  readOnlyEmail?: string | null
 }
 
 /* ─── Component ─── */
 
-export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInfoTabProps) {
+export function BasicInfoTab({ form, showEmail = false, employeeName, readOnlyEmail }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const isAr = locale === "ar"
   const [pendingValue, setPendingValue] = useState<boolean | null>(null)
@@ -102,8 +104,8 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
               />
             </div>
 
-            {/* Email (create only) */}
-            {showEmail && (
+            {/* Email — editable on create, read-only on edit */}
+            {showEmail ? (
               <div className="flex flex-col gap-1.5">
                 <Label>
                   <span className="flex items-center gap-1.5">
@@ -123,7 +125,17 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
                   </p>
                 )}
               </div>
-            )}
+            ) : readOnlyEmail ? (
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  <span className="flex items-center gap-1.5">
+                    <HugeiconsIcon icon={Mail01Icon} className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("employees.create.emailLabel")}
+                  </span>
+                </Label>
+                <Input value={readOnlyEmail} readOnly dir="ltr" className="bg-muted/40 text-muted-foreground" />
+              </div>
+            ) : null}
 
             {/* Phone */}
             <div className="flex flex-col gap-1.5">
@@ -259,6 +271,7 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
                 <Input
                   type="number"
                   min={0}
+                  max={70}
                   {...form.register("experience")}
                   placeholder="e.g. 5"
                 />

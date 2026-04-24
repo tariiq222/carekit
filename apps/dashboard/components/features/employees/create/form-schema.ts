@@ -18,8 +18,10 @@ export function createEmployeeSchema(t?: (key: string) => string) {
     nameAr: z.string().min(1, msg("employees.form.validation.nameArRequired", "Full name in Arabic is required")).max(255),
     email: z.string().email(msg("employees.form.validation.emailInvalid", "Invalid email address")),
     phone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, msg("employees.form.validation.phoneInvalid", "Invalid phone number")).optional().or(z.literal("")),
-    gender: z.enum(EMPLOYEE_GENDERS).optional(),
-    employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
+    // Selects default to `<option value="">—</option>`, which submits `""`.
+    // z.enum rejects "" — preprocess it to `undefined` so .optional() kicks in.
+    gender: z.preprocess((v) => (v === "" ? undefined : v), z.enum(EMPLOYEE_GENDERS).optional()),
+    employmentType: z.preprocess((v) => (v === "" ? undefined : v), z.enum(EMPLOYMENT_TYPES).optional()),
     specialty: z.string().min(1, msg("employees.form.validation.specialtyRequired", "Specialty is required")),
     specialtyAr: z.string().optional(),
     bio: z.string().optional(),

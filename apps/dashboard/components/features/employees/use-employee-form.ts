@@ -277,13 +277,23 @@ export function useEmployeeForm({
     router.push("/employees")
   }
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    if (isEdit) {
-      await submitEdit(data as EditEmployeeFormData)
-    } else {
-      await submitCreate(data as CreateEmployeeFormData)
-    }
-  })
+  const onSubmit = form.handleSubmit(
+    async (data) => {
+      if (isEdit) {
+        await submitEdit(data as EditEmployeeFormData)
+      } else {
+        await submitCreate(data as CreateEmployeeFormData)
+      }
+    },
+    (errors) => {
+      // Without this, zod validation failures on fields that lack a visible
+      // FormMessage (e.g. a select with no error node) would leave the user
+      // with a non-responsive submit button and no feedback at all.
+      const firstKey = Object.keys(errors)[0]
+      const firstMessage = firstKey ? String((errors[firstKey as keyof typeof errors] as { message?: unknown } | undefined)?.message ?? "") : ""
+      toast.error(firstMessage || t("employees.form.validationFailed"))
+    },
+  )
 
   return { onSubmit }
 }

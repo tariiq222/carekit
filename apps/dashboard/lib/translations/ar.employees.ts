@@ -308,6 +308,7 @@ export const arEmployees: Record<string, string> = {
   "employees.form.validation.specialtyRequired": "التخصص مطلوب",
 
   // — Form Step Errors —
+  "employees.form.validationFailed": "تحقق من الحقول المطلوبة ثم أعد المحاولة.",
   "employees.form.stepErrorSchedule": "جدول المواعيد",
   "employees.form.stepErrorBreaks": "فترات الاستراحة",
   "employees.form.stepErrorVacation": "الإجازة",

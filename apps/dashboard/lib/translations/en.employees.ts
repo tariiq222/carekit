@@ -308,6 +308,7 @@ export const enEmployees: Record<string, string> = {
   "employees.form.validation.specialtyRequired": "Specialty is required",
 
   // — Form Step Errors —
+  "employees.form.validationFailed": "Please review the required fields and try again.",
   "employees.form.stepErrorSchedule": "schedule",
   "employees.form.stepErrorBreaks": "breaks",
   "employees.form.stepErrorVacation": "vacation",
