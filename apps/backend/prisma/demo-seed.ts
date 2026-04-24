@@ -93,17 +93,39 @@ async function main() {
     }
   }
 
+  // Categories first — the dashboard's create-service form enforces category
+  // as required, so seeded services without one create a UI/contract mismatch.
+  const categories = [
+    { id: '00000000-0000-4000-8000-00000000c001', nameAr: 'باطنة', nameEn: 'General Medicine', sortOrder: 1 },
+    { id: '00000000-0000-4000-8000-00000000c002', nameAr: 'أسنان',  nameEn: 'Dentistry',        sortOrder: 2 },
+    { id: '00000000-0000-4000-8000-00000000c003', nameAr: 'جلدية',  nameEn: 'Dermatology',      sortOrder: 3 },
+  ];
+  for (const c of categories) {
+    await prisma.serviceCategory.upsert({
+      where: { id: c.id },
+      create: { ...c, organizationId: DEFAULT_ORG_ID, isActive: true, updatedAt: new Date() },
+      update: {},
+    });
+  }
+
+  // NOTE ON PRICE UNITS:
+  //   Schema is `price Decimal @db.Decimal(12, 2)` with `currency: SAR`, but
+  //   the dashboard consistently multiplies by 100 on save and divides by 100
+  //   on display (service-form-page, service-columns, duration-options-editor).
+  //   i.e. the runtime convention is "halalas stored as Decimal". This seed
+  //   matches that convention so demo prices render as 120/250/200 SAR, not
+  //   1.20/2.50/2.00. Unifying on SAR is tracked as tech-debt separately.
   const services = [
-    { id: '00000000-0000-4000-8000-000000000011', nameAr: 'كشف عام', nameEn: 'General consultation', durationMins: 30, price: '120.00' },
-    { id: '00000000-0000-4000-8000-000000000012', nameAr: 'تنظيف أسنان', nameEn: 'Dental cleaning', durationMins: 45, price: '250.00' },
-    { id: '00000000-0000-4000-8000-000000000013', nameAr: 'استشارة جلدية', nameEn: 'Dermatology consult', durationMins: 30, price: '200.00' },
+    { id: '00000000-0000-4000-8000-000000000011', nameAr: 'كشف عام', nameEn: 'General consultation', durationMins: 30, price: '12000.00', categoryId: '00000000-0000-4000-8000-00000000c001' },
+    { id: '00000000-0000-4000-8000-000000000012', nameAr: 'تنظيف أسنان', nameEn: 'Dental cleaning', durationMins: 45, price: '25000.00', categoryId: '00000000-0000-4000-8000-00000000c002' },
+    { id: '00000000-0000-4000-8000-000000000013', nameAr: 'استشارة جلدية', nameEn: 'Dermatology consult', durationMins: 30, price: '20000.00', categoryId: '00000000-0000-4000-8000-00000000c003' },
   ];
 
   for (const s of services) {
     await prisma.service.upsert({
       where: { id: s.id },
       create: { ...s, organizationId: DEFAULT_ORG_ID, price: s.price as any, currency: 'SAR', isActive: true, updatedAt: new Date() },
-      update: {},
+      update: { categoryId: s.categoryId, price: s.price as any },
     });
 
     // Every service is bookable IN_PERSON by default — the wizard's step-4
@@ -120,7 +142,7 @@ async function main() {
         isActive: true,
         updatedAt: new Date(),
       },
-      update: {},
+      update: { price: s.price as any },
     });
   }
 

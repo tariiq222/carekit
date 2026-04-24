@@ -48,6 +48,7 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
   const [selectedDeptId, setSelectedDeptId] = useState<string>("")
 
   const hasDepts = departments.length > 0
+  const hasAnyCategories = (categories ?? []).length > 0
   const visibleCategories = selectedDeptId
     ? (categories ?? []).filter((c) => c.departmentId === selectedDeptId)
     : (categories ?? [])
@@ -117,6 +118,21 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
       </CardHeader>
 
       <CardContent className="space-y-6">
+
+        {/* First-run guidance: category is required but none exist yet */}
+        {!loadingCategories && !hasAnyCategories && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <p className="text-sm text-warning-foreground">
+              {t("services.create.noCategoriesBanner")}
+            </p>
+            <a
+              href="/categories"
+              className="shrink-0 rounded-md border border-warning/40 bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-warning/20"
+            >
+              {t("services.create.noCategoriesCta")}
+            </a>
+          </div>
+        )}
 
         {/* ── Row 1: Names ── */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
