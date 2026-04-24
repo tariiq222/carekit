@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { toast } from "sonner"
 
 import { Button } from "@carekit/ui"
@@ -17,6 +18,7 @@ import {
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Textarea } from "@carekit/ui"
+import { useLocale } from "@/components/locale-provider"
 import { useChatbotMutations } from "@/hooks/use-chatbot"
 import {
   createKbEntrySchema,
@@ -36,6 +38,7 @@ export function CreateKbEntryDialog({
   open,
   onOpenChange,
 }: CreateKbEntryDialogProps) {
+  const { t } = useLocale()
   const { createKbEntryMut } = useChatbotMutations()
 
   const form = useForm<CreateKbEntryFormData>({
@@ -58,9 +61,7 @@ export function CreateKbEntryDialog({
       form.reset()
       onOpenChange(false)
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create entry",
-      )
+      toast.error(err instanceof Error ? err.message : "Failed to create entry")
     }
   })
 
@@ -68,17 +69,22 @@ export function CreateKbEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Knowledge Base Entry</DialogTitle>
-          <DialogDescription>
-            Create a new entry for the AI assistant knowledge base.
-          </DialogDescription>
+          <DialogTitle>{t("chatbot.kb.addTitle")}</DialogTitle>
+          <DialogDescription>{t("chatbot.kb.addDesc")}</DialogDescription>
         </DialogHeader>
 
         <DialogBody>
-          <form id="create-kb-entry-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form
+            id="create-kb-entry-form"
+            onSubmit={onSubmit}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-2">
-              <Label>Title *</Label>
-              <Input {...form.register("title")} placeholder="Entry title" />
+              <Label>{t("chatbot.kb.field.title")}</Label>
+              <Input
+                {...form.register("title")}
+                placeholder={t("chatbot.kb.field.titlePlaceholder")}
+              />
               {form.formState.errors.title && (
                 <p className="text-xs text-destructive">
                   {form.formState.errors.title.message}
@@ -87,10 +93,10 @@ export function CreateKbEntryDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Content *</Label>
+              <Label>{t("chatbot.kb.field.content")}</Label>
               <Textarea
                 {...form.register("content")}
-                placeholder="Knowledge base content..."
+                placeholder={t("chatbot.kb.field.contentPlaceholder")}
                 rows={5}
               />
               {form.formState.errors.content && (
@@ -101,10 +107,10 @@ export function CreateKbEntryDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Category</Label>
+              <Label>{t("chatbot.kb.field.category")}</Label>
               <Input
                 {...form.register("category")}
-                placeholder="e.g. FAQ, Services, Policies"
+                placeholder={t("chatbot.kb.field.categoryPlaceholder")}
               />
             </div>
           </form>
@@ -116,10 +122,16 @@ export function CreateKbEntryDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
-          <Button type="submit" form="create-kb-entry-form" disabled={createKbEntryMut.isPending}>
-            {createKbEntryMut.isPending ? "Creating..." : "Create Entry"}
+          <Button
+            type="submit"
+            form="create-kb-entry-form"
+            disabled={createKbEntryMut.isPending}
+          >
+            {createKbEntryMut.isPending
+              ? t("chatbot.kb.creating")
+              : t("chatbot.kb.createEntry")}
           </Button>
         </DialogFooter>
       </DialogContent>

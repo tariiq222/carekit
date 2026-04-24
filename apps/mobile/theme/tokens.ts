@@ -1,13 +1,12 @@
 import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
-import type { BrandingConfig } from '@carekit/shared/types';
 
-export function buildTheme(overrides?: Partial<BrandingConfig>) {
+export function buildTheme() {
   return {
     colors: {
       ...colors,
-      primary: overrides?.colorPrimary ?? colors.primary[600],
-      accent: overrides?.colorAccent ?? colors.secondary[500],
-      background: overrides?.colorBackground ?? colors.gray[50],
+      primary: colors.primary[600],
+      accent: colors.secondary[500],
+      background: colors.gray[50],
     },
     typography,
     spacing,

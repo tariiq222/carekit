@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
-import { useLocale } from "@/components/locale-provider";
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Delete02Icon } from "@hugeicons/core-free-icons"
+import { useLocale } from "@/components/locale-provider"
 
 interface ColorSwatchInputProps {
-  id?: string;
-  value: string | null | undefined;
-  onChange: (value: string) => void;
-  onClear?: () => void;
-  showHex?: boolean;
-  defaultColor?: string;
+  id?: string
+  value: string | null | undefined
+  onChange: (value: string) => void
+  onClear?: () => void
+  showHex?: boolean
+  defaultColor?: string
 }
 
 export function ColorSwatchInput({
@@ -19,9 +19,21 @@ export function ColorSwatchInput({
   onChange,
   onClear,
   showHex = false,
-  defaultColor = "#354FD8",
+  defaultColor,
 }: ColorSwatchInputProps) {
   const { t } = useLocale()
+  // Read CSS variable at render time so tenant-brand overrides take effect as default.
+  // Falls back to "#354FD8" only if no --primary variable is defined.
+  const resolvedDefault = (() => {
+    if (defaultColor) return defaultColor
+    if (typeof window !== "undefined") {
+      const v = getComputedStyle(document.documentElement)
+        .getPropertyValue("--primary")
+        .trim()
+      return v || "#354FD8"
+    }
+    return "#354FD8"
+  })()
   return (
     <div className="flex items-center gap-3">
       <div className="relative h-9 w-9 shrink-0">
@@ -30,9 +42,9 @@ export function ColorSwatchInput({
           <input
             id={id}
             type="color"
-            value={value ?? defaultColor}
+            value={value ?? resolvedDefault}
             onChange={(e) => onChange(e.target.value)}
-            className="absolute inset-[-4px] h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer border-none bg-transparent"
+            className="absolute -inset-1 h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer border-none bg-transparent"
           />
         </div>
         {/* Trash icon badge on the edge */}
@@ -40,7 +52,7 @@ export function ColorSwatchInput({
           <button
             type="button"
             onClick={onClear}
-            className="absolute -end-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-error text-white shadow-sm hover:bg-error/80 transition-colors"
+            className="absolute -inset-e-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-error text-white shadow-sm transition-colors hover:bg-error/80"
             aria-label={t("common.removeColor")}
           >
             <HugeiconsIcon icon={Delete02Icon} size={10} color="currentColor" />
@@ -48,10 +60,10 @@ export function ColorSwatchInput({
         )}
       </div>
       {showHex && (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {value ?? "—"}
         </span>
       )}
     </div>
-  );
+  )
 }

@@ -1,50 +1,23 @@
-import {
-  IBMPlexSansArabic_300Light,
-  IBMPlexSansArabic_400Regular,
-  IBMPlexSansArabic_500Medium,
-  IBMPlexSansArabic_600SemiBold,
-  IBMPlexSansArabic_700Bold,
-} from '@expo-google-fonts/ibm-plex-sans-arabic';
-import {
-  IBMPlexSans_300Light,
-  IBMPlexSans_400Regular,
-  IBMPlexSans_500Medium,
-  IBMPlexSans_600SemiBold,
-  IBMPlexSans_700Bold,
-} from '@expo-google-fonts/ibm-plex-sans';
-
 export const fontAssets = {
-  IBMPlexSansArabic_300Light,
-  IBMPlexSansArabic_400Regular,
-  IBMPlexSansArabic_500Medium,
-  IBMPlexSansArabic_600SemiBold,
-  IBMPlexSansArabic_700Bold,
-  IBMPlexSans_300Light,
-  IBMPlexSans_400Regular,
-  IBMPlexSans_500Medium,
-  IBMPlexSans_600SemiBold,
-  IBMPlexSans_700Bold,
+  Handicrafts_400Regular: require('../assets/fonts/TheYearofHandicraftsTTF-Reg.ttf'),
+  Handicrafts_500Medium: require('../assets/fonts/TheYearofHandicraftsTTF-Med.ttf'),
+  Handicrafts_600SemiBold: require('../assets/fonts/TheYearofHandicraftsTTF-SemBd.ttf'),
+  Handicrafts_700Bold: require('../assets/fonts/TheYearofHandicraftsTTF-Bold.ttf'),
+  Handicrafts_900Black: require('../assets/fonts/TheYearofHandicraftsTTF-Black.ttf'),
 };
 
-type Weight = '300' | '400' | '500' | '600' | '700';
+type Weight = '300' | '400' | '500' | '600' | '700' | '900';
 
-const arabicMap: Record<Weight, string> = {
-  '300': 'IBMPlexSansArabic_300Light',
-  '400': 'IBMPlexSansArabic_400Regular',
-  '500': 'IBMPlexSansArabic_500Medium',
-  '600': 'IBMPlexSansArabic_600SemiBold',
-  '700': 'IBMPlexSansArabic_700Bold',
+const weightMap: Record<Weight, string> = {
+  '300': 'Handicrafts_400Regular',
+  '400': 'Handicrafts_400Regular',
+  '500': 'Handicrafts_500Medium',
+  '600': 'Handicrafts_600SemiBold',
+  '700': 'Handicrafts_700Bold',
+  '900': 'Handicrafts_900Black',
 };
 
-const latinMap: Record<Weight, string> = {
-  '300': 'IBMPlexSans_300Light',
-  '400': 'IBMPlexSans_400Regular',
-  '500': 'IBMPlexSans_500Medium',
-  '600': 'IBMPlexSans_600SemiBold',
-  '700': 'IBMPlexSans_700Bold',
-};
-
-export function getFontName(language: string, weight: string = '400'): string {
-  const w = (weight in arabicMap ? weight : '400') as Weight;
-  return language === 'ar' ? arabicMap[w] : latinMap[w];
+export function getFontName(_language: string, weight: string = '400'): string {
+  const w = (weight in weightMap ? weight : '400') as Weight;
+  return weightMap[w];
 }

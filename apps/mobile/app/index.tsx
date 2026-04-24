@@ -49,7 +49,10 @@ export default function IndexScreen() {
     if (hydrating) return;
 
     if (!token || !user) {
-      router.replace('/(auth)/login');
+      // DEV preview: skip auth and land on client tabs so UI work can be reviewed
+      // without a working backend login. Swap back to '/(auth)/login' when auth
+      // flow is re-enabled.
+      router.replace('/(client)/(tabs)/home');
       return;
     }
 

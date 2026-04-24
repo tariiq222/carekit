@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm } from "react-hook-form"
+import { useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
@@ -17,32 +18,37 @@ import {
   SheetTitle,
 } from "@carekit/ui"
 import { Input } from "@carekit/ui"
+
 import { Label } from "@carekit/ui"
 import { Switch } from "@carekit/ui"
+import { useLocale } from "@/components/locale-provider"
+
+import type { AvailabilitySlot } from "@/lib/types/employee"
 import {
   useEmployeeAvailability,
   useSetAvailability,
 } from "@/hooks/use-employees"
-import type { AvailabilitySlot } from "@/lib/types/employee"
 
 /* ─── Constants ─── */
 
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
+const DAY_NAMES_KEYS = [
+  "availability.day.sunday",
+  "availability.day.monday",
+  "availability.day.tuesday",
+  "availability.day.wednesday",
+  "availability.day.thursday",
+  "availability.day.friday",
+  "availability.day.saturday",
 ] as const
 
-const DEFAULT_SCHEDULE: AvailabilitySlot[] = DAY_NAMES.map((_, i) => ({
-  dayOfWeek: i,
-  startTime: "09:00",
-  endTime: "17:00",
-  isActive: i >= 0 && i <= 4, // Mon-Fri active by default
-}))
+const DEFAULT_SCHEDULE: AvailabilitySlot[] = DAY_NAMES_KEYS.map(
+  (_, i: number) => ({
+    dayOfWeek: i,
+    startTime: "09:00",
+    endTime: "17:00",
+    isActive: i >= 0 && i <= 4, // Mon-Fri active by default
+  })
+)
 
 /* ─── Schema ─── */
 
@@ -74,6 +80,7 @@ export function AvailabilityEditor({
   open,
   onOpenChange,
 }: AvailabilityEditorProps) {
+  const { t } = useLocale()
   const { data: slots } = useEmployeeAvailability(employeeId)
   const setAvailability = useSetAvailability()
 
@@ -104,11 +111,11 @@ export function AvailabilityEditor({
         id: employeeId,
         schedule: activeSlots,
       })
-      toast.success("Schedule updated successfully")
+      toast.success(t("availability.saveSuccess"))
       onOpenChange(false)
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update schedule",
+        err instanceof Error ? err.message : t("availability.saveError")
       )
     }
   })
@@ -117,14 +124,16 @@ export function AvailabilityEditor({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left">
         <SheetHeader>
-          <SheetTitle>Edit Weekly Schedule</SheetTitle>
-          <SheetDescription>
-            Set working hours for each day of the week.
-          </SheetDescription>
+          <SheetTitle>{t("availability.editTitle")}</SheetTitle>
+          <SheetDescription>{t("availability.editDesc")}</SheetDescription>
         </SheetHeader>
 
         <SheetBody>
-          <form id="availability-editor-form" onSubmit={onSubmit} className="flex flex-col gap-5">
+          <form
+            id="availability-editor-form"
+            onSubmit={onSubmit}
+            className="flex flex-col gap-5"
+          >
             {fields.map((field, index) => {
               const isActive = form.watch(`schedule.${index}.isActive`)
               return (
@@ -140,7 +149,7 @@ export function AvailabilityEditor({
                       }
                     />
                     <Label className="text-xs font-medium">
-                      {DAY_NAMES[index]}
+                      {t(DAY_NAMES_KEYS[index])}
                     </Label>
                   </div>
 
@@ -150,7 +159,9 @@ export function AvailabilityEditor({
                     className="h-8 text-xs tabular-nums"
                     {...form.register(`schedule.${index}.startTime`)}
                   />
-                  <span className="text-xs text-muted-foreground">to</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("common.to")}
+                  </span>
                   <Input
                     type="time"
                     disabled={!isActive}
@@ -163,7 +174,7 @@ export function AvailabilityEditor({
 
             {form.formState.errors.schedule && (
               <p className="text-xs text-destructive">
-                Please fix schedule errors.
+                {t("availability.scheduleError")}
               </p>
             )}
           </form>
@@ -175,10 +186,16 @@ export function AvailabilityEditor({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
-          <Button type="submit" form="availability-editor-form" disabled={setAvailability.isPending}>
-            {setAvailability.isPending ? "Saving..." : "Save Schedule"}
+          <Button
+            type="submit"
+            form="availability-editor-form"
+            disabled={setAvailability.isPending}
+          >
+            {setAvailability.isPending
+              ? t("common.saving")
+              : t("availability.saveSchedule")}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -14,15 +14,14 @@ import { cn } from "@/lib/utils"
 
 /* ─── Meta text builder ─── */
 
-function buildMeta(
-  service: Service,
-  t: (key: string) => string,
-): string {
+function buildMeta(service: Service, t: (key: string) => string): string {
   const parts: string[] = []
 
   // Duration
   if (!service.hideDurationOnBooking) {
-    parts.push(`${service.durationMins} ${t("bookings.wizard.step.typeDuration.minutes")}`)
+    parts.push(
+      `${service.durationMins} ${t("bookings.wizard.step.typeDuration.minutes")}`
+    )
   }
 
   // Price — backend stores as Decimal(12,2); JSON gives us a string or number, already in major units (SAR).
@@ -56,6 +55,7 @@ interface StepServiceProps {
 
 export function StepService({ onSelect }: StepServiceProps) {
   const { t, locale } = useLocale()
+  const isRtl = locale === "ar"
   const [search, setSearch] = useState("")
 
   const { data, isLoading } = useQuery({
@@ -71,7 +71,7 @@ export function StepService({ onSelect }: StepServiceProps) {
     return all.filter(
       (s) =>
         s.nameAr.toLowerCase().includes(q) ||
-        (s.nameEn ?? "").toLowerCase().includes(q),
+        (s.nameEn ?? "").toLowerCase().includes(q)
     )
   }, [data, search])
 
@@ -86,7 +86,7 @@ export function StepService({ onSelect }: StepServiceProps) {
           size={16}
           className={cn(
             "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground",
-            locale === "ar" ? "right-4" : "left-4",
+            isRtl ? "inset-e-4" : "inset-s-4"
           )}
         />
         <input
@@ -96,9 +96,9 @@ export function StepService({ onSelect }: StepServiceProps) {
           placeholder={t("bookings.wizard.step.service.search")}
           className={cn(
             "h-12 w-full rounded-2xl border border-border bg-surface text-sm text-foreground",
-            "placeholder:text-muted-foreground outline-none",
-            "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all",
-            locale === "ar" ? "pr-12 pl-4" : "pl-12 pr-4",
+            "outline-none placeholder:text-muted-foreground",
+            "transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
+            isRtl ? "ps-4 pe-12" : "ps-12 pe-4"
           )}
         />
       </div>
@@ -106,11 +106,17 @@ export function StepService({ onSelect }: StepServiceProps) {
       {/* Service list */}
       <div className="flex flex-col gap-3">
         {services.map((service) => {
-          const name = locale === "ar" ? service.nameAr : (service.nameEn ?? service.nameAr)
+          const name =
+            locale === "ar"
+              ? service.nameAr
+              : (service.nameEn ?? service.nameAr)
           const meta = buildMeta(service, t)
 
           return (
-            <WizardCard key={service.id} onClick={() => onSelect(service.id, name)}>
+            <WizardCard
+              key={service.id}
+              onClick={() => onSelect(service.id, name)}
+            >
               <div className="flex items-center gap-4">
                 {/* Icon — RTL: shown on the right */}
                 <div
@@ -131,12 +137,12 @@ export function StepService({ onSelect }: StepServiceProps) {
                 </div>
 
                 {/* Name + meta */}
-                <div className="flex flex-col gap-1 min-w-0 flex-1 text-end">
-                  <span className="text-base font-bold text-foreground leading-snug">
+                <div className="flex min-w-0 flex-1 flex-col gap-1 text-end">
+                  <span className="text-base leading-snug font-bold text-foreground">
                     {name}
                   </span>
                   {meta && (
-                    <span className="text-sm text-muted-foreground font-normal">
+                    <span className="text-sm font-normal text-muted-foreground">
                       {meta}
                     </span>
                   )}

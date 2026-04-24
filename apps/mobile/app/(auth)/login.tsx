@@ -20,13 +20,11 @@ import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
-import { AquaBackground, sawaaColors } from '@/theme/sawaa';
+import { AquaBackground, PrimaryButton, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
-import { setBranding } from '@/stores/slices/branding-slice';
 import { authService } from '@/services/auth';
-import { brandingService } from '@/services/branding';
 import { getPrimaryRole } from '@/types/auth';
 import { getFontName } from '@/theme/fonts';
 
@@ -89,11 +87,6 @@ export default function LoginScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
-        brandingService.getBranding().then((branding) => {
-          if (branding) {
-            dispatch(setBranding(branding));
-          }
-        });
         navigateByRole(response.data.user);
       }
     } catch {
@@ -180,11 +173,11 @@ export default function LoginScreen() {
                 >
                   {t('auth.email')}
                 </Text>
-                <Glass variant="clear" radius={RADII.image} style={[styles.input, { flexDirection: dir.row }]}>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
                   <TextInput
                     value={email}
                     onChangeText={(text) => {
-                      setEmail(text);
+                      setEmail(text.trim());
                       if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
                     }}
                     placeholder={t('auth.emailPlaceholder')}
@@ -192,9 +185,10 @@ export default function LoginScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
+                    textContentType="emailAddress"
                     style={[
                       styles.inputText,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
+                      { textAlign: 'left', writingDirection: 'ltr', fontFamily: f400 }
                     ]}
                   />
                 </Glass>
@@ -220,30 +214,33 @@ export default function LoginScreen() {
                 >
                   {t('auth.password')}
                 </Text>
-                <Glass variant="clear" radius={RADII.image} style={[styles.input, { flexDirection: dir.row }]}>
-                  <TextInput
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
-                    }}
-                    placeholder={t('auth.passwordPlaceholder')}
-                    placeholderTextColor={C.subtle}
-                    secureTextEntry={!showPassword}
-                    style={[
-                      styles.inputText,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
-                    ]}
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeBtn}
-                  >
-                    {showPassword
-                      ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
-                      : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
-                    }
-                  </Pressable>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+                    <TextInput
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+                      }}
+                      placeholder={t('auth.passwordPlaceholder')}
+                      placeholderTextColor={C.subtle}
+                      secureTextEntry={!showPassword}
+                      style={[
+                        styles.inputText,
+                        { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
+                      ]}
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeBtn}
+                      hitSlop={8}
+                    >
+                      {showPassword
+                        ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
+                        : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
+                      }
+                    </Pressable>
+                  </View>
                 </Glass>
                 {errors.password ? (
                   <Text
@@ -258,17 +255,13 @@ export default function LoginScreen() {
               </View>
 
               {/* Login Button */}
-              <Glass
-                variant="regular"
-                radius={RADII.image}
+              <PrimaryButton
+                label={loading ? t('common.loading') : t('auth.login')}
                 onPress={handleLogin}
-                interactive
-                style={[styles.btn, { backgroundColor: C.deepTeal }]}
-              >
-                <Text style={[styles.btnText, { fontFamily: f700 }]}>
-                  {loading ? t('common.loading') : t('auth.login')}
-                </Text>
-              </Glass>
+                fontFamily={f700}
+                disabled={loading}
+                style={{ marginTop: 8 }}
+              />
 
               {/* Register Link */}
               <View style={[styles.registerRow, { flexDirection: dir.row }]}>
@@ -304,6 +297,7 @@ const styles = StyleSheet.create({
   field: { gap: 8 },
   label: { fontSize: 14, color: C.deepTeal },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', width: '100%' },
   inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
   eyeBtn: { padding: 4 },
   error: { fontSize: 12, color: '#E74C3C' },

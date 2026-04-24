@@ -23,10 +23,7 @@ import {
   useTestSms,
   useUpsertSmsConfig,
 } from "@/hooks/use-sms-config"
-import type {
-  SmsProvider,
-  UpsertSmsConfigInput,
-} from "@/lib/types/sms"
+import type { SmsProvider, UpsertSmsConfigInput } from "@/lib/types/sms"
 
 export function SmsSettingsForm() {
   const { locale, t } = useLocale()
@@ -66,13 +63,11 @@ export function SmsSettingsForm() {
     const result = await test.mutateAsync(testPhone.trim())
     if (result.ok) {
       setTestMessage(
-        t("sms.form.testSent").replace("{id}", result.providerMessageId ?? ""),
+        t("sms.form.testSent").replace("{id}", result.providerMessageId ?? "")
       )
     } else {
       const err = result.error
-      setTestMessage(
-        err ? (isAr ? err.ar : err.en) : t("sms.form.testFailed"),
-      )
+      setTestMessage(err ? (isAr ? err.ar : err.en) : t("sms.form.testFailed"))
     }
   }
 
@@ -99,8 +94,12 @@ export function SmsSettingsForm() {
                   <SelectItem value="NONE">
                     {t("sms.form.providerNone")}
                   </SelectItem>
-                  <SelectItem value="UNIFONIC">Unifonic</SelectItem>
-                  <SelectItem value="TAQNYAT">Taqnyat</SelectItem>
+                  <SelectItem value="UNIFONIC">
+                    {t("sms.provider.unifonic")}
+                  </SelectItem>
+                  <SelectItem value="TAQNYAT">
+                    {t("sms.provider.taqnyat")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -123,7 +122,7 @@ export function SmsSettingsForm() {
                   {t("sms.form.credsHint")}
                 </p>
                 <div className="space-y-2">
-                  <Label htmlFor="u-appsid">App SID</Label>
+                  <Label htmlFor="u-appsid">{t("sms.form.appSid")}</Label>
                   <Input
                     id="u-appsid"
                     value={appSid}
@@ -131,7 +130,7 @@ export function SmsSettingsForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="u-apikey">API Key</Label>
+                  <Label htmlFor="u-apikey">{t("sms.form.apiKey")}</Label>
                   <Input
                     id="u-apikey"
                     type="password"
@@ -148,7 +147,7 @@ export function SmsSettingsForm() {
                   {t("sms.form.credsHint")}
                 </p>
                 <div className="space-y-2">
-                  <Label htmlFor="t-apitoken">API Token</Label>
+                  <Label htmlFor="t-apitoken">{t("sms.form.apiToken")}</Label>
                   <Input
                     id="t-apitoken"
                     type="password"
@@ -171,7 +170,7 @@ export function SmsSettingsForm() {
             </div>
 
             {config?.credentialsConfigured && provider !== "NONE" && (
-              <div className="rounded-md border p-4 space-y-3">
+              <div className="space-y-3 rounded-md border p-4">
                 <Label htmlFor="test-phone">{t("sms.form.testPhone")}</Label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -188,9 +187,7 @@ export function SmsSettingsForm() {
                     {t("sms.form.sendTest")}
                   </Button>
                 </div>
-                {testMessage && (
-                  <p className="text-sm">{testMessage}</p>
-                )}
+                {testMessage && <p className="text-sm">{testMessage}</p>}
               </div>
             )}
           </>

@@ -34,27 +34,34 @@ function DeleteEntryCell({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:border-destructive/20 hover:text-destructive"
+            className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setOpen(true)}
             aria-label={t("chatbot.kb.deleteEntry")}
           >
             <HugeiconsIcon icon={Delete02Icon} size={16} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top">{t("chatbot.kb.deleteEntry")}</TooltipContent>
+        <TooltipContent side="top">
+          {t("chatbot.kb.deleteEntry")}
+        </TooltipContent>
       </Tooltip>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("chatbot.kb.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("chatbot.kb.deleteConfirm")}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {t("chatbot.kb.deleteConfirm")}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { setOpen(false); onDelete(id) }}
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+              onClick={() => {
+                setOpen(false)
+                onDelete(id)
+              }}
             >
               {t("chatbot.kb.deleteEntry")}
             </AlertDialogAction>
@@ -67,12 +74,12 @@ function DeleteEntryCell({
 
 export function getEntryColumns(
   onDelete: (id: string) => void,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): ColumnDef<KnowledgeBaseEntry, unknown>[] {
   return [
     {
       accessorKey: "title",
-      header: "Title",
+      header: t("chatbot.kb.col.title"),
       cell: ({ row }) => (
         <span className="text-sm font-medium text-foreground">
           {row.original.title}
@@ -81,7 +88,7 @@ export function getEntryColumns(
     },
     {
       accessorKey: "category",
-      header: "Category",
+      header: t("chatbot.kb.col.category"),
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {row.original.category ?? "—"}
@@ -90,7 +97,7 @@ export function getEntryColumns(
     },
     {
       accessorKey: "source",
-      header: "Source",
+      header: t("chatbot.kb.col.source"),
       cell: ({ row }) => (
         <Badge variant="outline" className="text-xs">
           {row.original.source ?? "manual"}
@@ -99,12 +106,12 @@ export function getEntryColumns(
     },
     {
       accessorKey: "isActive",
-      header: "Status",
+      header: t("chatbot.kb.col.status"),
       cell: ({ row }) =>
         row.original.isActive ? (
-          <Badge variant="default">Active</Badge>
+          <Badge variant="default">{t("chatbot.kb.status.active")}</Badge>
         ) : (
-          <Badge variant="secondary">Inactive</Badge>
+          <Badge variant="secondary">{t("chatbot.kb.status.inactive")}</Badge>
         ),
     },
     {

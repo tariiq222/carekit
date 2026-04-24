@@ -15,9 +15,11 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
+import { PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
@@ -113,15 +115,21 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Back Button */}
-          <Pressable
+          <Glass
+            variant="strong"
+            radius={22}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               router.back();
             }}
+            interactive
             style={styles.backBtn}
           >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+            {dir.isRTL
+              ? <ChevronRight size={22} color={C.deepTeal} strokeWidth={1.75} />
+              : <ChevronLeft size={22} color={C.deepTeal} strokeWidth={1.75} />
+            }
+          </Glass>
 
           {/* Title */}
           <Text
@@ -238,20 +246,25 @@ export default function RegisterScreen() {
                   {t('auth.password')}
                 </Text>
                 <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                  <TextInput
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
-                    }}
-                    placeholder={t('auth.passwordPlaceholder')}
-                    placeholderTextColor={C.subtle}
-                    secureTextEntry={!showPassword}
-                    style={[styles.inputText, { textAlign: dir.textAlign }]}
-                  />
-                  <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                    <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-                  </Pressable>
+                  <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+                    <TextInput
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+                      }}
+                      placeholder={t('auth.passwordPlaceholder')}
+                      placeholderTextColor={C.subtle}
+                      secureTextEntry={!showPassword}
+                      style={[styles.inputText, { textAlign: dir.textAlign }]}
+                    />
+                    <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn} hitSlop={8}>
+                      {showPassword
+                        ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
+                        : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
+                      }
+                    </Pressable>
+                  </View>
                 </Glass>
                 {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
               </View>
@@ -278,17 +291,12 @@ export default function RegisterScreen() {
               </View>
 
               {/* Register Button */}
-              <Glass
-                variant="regular"
-                radius={RADII.image}
+              <PrimaryButton
+                label={loading ? t('common.loading') : t('auth.register')}
                 onPress={handleRegister}
-                interactive
-                style={[styles.btn, { backgroundColor: C.deepTeal, marginTop: 8 }]}
-              >
-                <Text style={styles.btnText}>
-                  {loading ? t('common.loading') : t('auth.register')}
-                </Text>
-              </Glass>
+                disabled={loading}
+                style={{ marginTop: 8 }}
+              />
 
               {/* Login Link */}
               <View style={[styles.loginRow, { flexDirection: dir.row }]}>
@@ -314,7 +322,14 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
   scroll: { paddingHorizontal: 24 },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  backBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
   backIcon: { fontSize: 24, color: C.deepTeal },
   title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
   subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
@@ -325,6 +340,7 @@ const styles = StyleSheet.create({
   field: { gap: 8 },
   label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', width: '100%' },
   inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
   eyeBtn: { padding: 4 },
   eyeIcon: { fontSize: 18 },

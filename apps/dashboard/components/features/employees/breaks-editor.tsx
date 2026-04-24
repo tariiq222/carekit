@@ -15,10 +15,8 @@ import {
 } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
-import {
-  useEmployeeBreaks,
-  useSetBreaks,
-} from "@/hooks/use-employees"
+import { useLocale } from "@/components/locale-provider"
+import { useEmployeeBreaks, useSetBreaks } from "@/hooks/use-employees"
 
 /* ─── Constants ─── */
 
@@ -60,6 +58,7 @@ export function BreaksEditor({
   open,
   onOpenChange,
 }: BreaksEditorProps) {
+  const { t } = useLocale()
   const { data: serverBreaks } = useEmployeeBreaks(employeeId)
   const setBreaks = useSetBreaks()
   const [breaks, setLocalBreaks] = useState<LocalBreak[]>([])
@@ -74,7 +73,7 @@ export function BreaksEditor({
         dayOfWeek: b.dayOfWeek,
         startTime: b.startTime,
         endTime: b.endTime,
-      })),
+      }))
     )
   }, [serverBreaks])
 
@@ -89,9 +88,13 @@ export function BreaksEditor({
     setLocalBreaks((prev) => prev.filter((b) => b.key !== key))
   }
 
-  const updateBreak = (key: string, field: "startTime" | "endTime", value: string) => {
+  const updateBreak = (
+    key: string,
+    field: "startTime" | "endTime",
+    value: string
+  ) => {
     setLocalBreaks((prev) =>
-      prev.map((b) => (b.key === key ? { ...b, [field]: value } : b)),
+      prev.map((b) => (b.key === key ? { ...b, [field]: value } : b))
     )
   }
 
@@ -99,7 +102,9 @@ export function BreaksEditor({
     // Validate all breaks
     for (const b of breaks) {
       if (b.startTime >= b.endTime) {
-        toast.error(`Invalid break on ${DAY_NAMES[b.dayOfWeek]}: start must be before end`)
+        toast.error(
+          `Invalid break on ${DAY_NAMES[b.dayOfWeek]}: start must be before end`
+        )
         return
       }
     }
@@ -117,24 +122,22 @@ export function BreaksEditor({
       onOpenChange(false)
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update breaks",
+        err instanceof Error ? err.message : "Failed to update breaks"
       )
     }
   }
 
   /* Group breaks by day */
   const breaksByDay = DAY_NAMES.map((_, dayIndex) =>
-    breaks.filter((b) => b.dayOfWeek === dayIndex),
+    breaks.filter((b) => b.dayOfWeek === dayIndex)
   )
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left">
         <SheetHeader>
-          <SheetTitle>Edit Breaks</SheetTitle>
-          <SheetDescription>
-            Set break periods (e.g. lunch) for each day of the week.
-          </SheetDescription>
+          <SheetTitle>{t("breaks.editTitle")}</SheetTitle>
+          <SheetDescription>{t("breaks.editDesc")}</SheetDescription>
         </SheetHeader>
 
         <SheetBody>
@@ -158,7 +161,9 @@ export function BreaksEditor({
                 </div>
 
                 {breaksByDay[dayIndex].length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No breaks</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("breaks.noBreaks")}
+                  </p>
                 ) : (
                   breaksByDay[dayIndex].map((b) => (
                     <div key={b.key} className="flex items-center gap-2">

@@ -6,7 +6,6 @@ import {
 } from '@/stores/secure-storage';
 import { store } from '@/stores/store';
 import { logout as logoutAction } from '@/stores/slices/auth-slice';
-import { clearBranding } from '@/stores/slices/branding-slice';
 import type {
   LoginRequest,
   LoginWithOtpRequest,
@@ -24,21 +23,52 @@ interface RegisterRequest {
   phone?: string;
 }
 
+/**
+ * Accept either the legacy `{ success, data }` envelope or the current
+ * bare `{ accessToken, refreshToken, user, expiresIn? }` backend shape.
+ * Callers can continue to read `response.success` / `response.data` uniformly.
+ */
+function normalizeAuthResponse(raw: unknown): AuthResponse {
+  const r = raw as Partial<AuthResponse> & {
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    user?: User;
+  };
+  if (r && typeof r === 'object' && 'success' in r && 'data' in r && r.data) {
+    return r as AuthResponse;
+  }
+  if (r && r.accessToken && r.refreshToken && r.user) {
+    return {
+      success: true,
+      data: {
+        accessToken: r.accessToken,
+        refreshToken: r.refreshToken,
+        expiresIn: r.expiresIn ?? 900,
+        user: r.user,
+      },
+    };
+  }
+  return { success: false, data: undefined as never };
+}
+
 export const authService = {
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', data);
-    if (response.data.success && response.data.data) {
-      await persistTokens(response.data.data);
+    const response = await api.post<unknown>('/auth/login', data);
+    const normalized = normalizeAuthResponse(response.data);
+    if (normalized.success && normalized.data) {
+      await persistTokens(normalized.data);
     }
-    return response.data;
+    return normalized;
   },
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    if (response.data.success && response.data.data) {
-      await persistTokens(response.data.data);
+    const response = await api.post<unknown>('/auth/register', data);
+    const normalized = normalizeAuthResponse(response.data);
+    if (normalized.success && normalized.data) {
+      await persistTokens(normalized.data);
     }
-    return response.data;
+    return normalized;
   },
 
   /** POST /auth/login/otp/send */
@@ -52,14 +82,15 @@ export const authService = {
 
   /** POST /auth/login/otp/verify — field is "code" not "otp" */
   async verifyOtp(data: VerifyOtpRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>(
+    const response = await api.post<unknown>(
       '/auth/login/otp/verify',
       data,
     );
-    if (response.data.success && response.data.data) {
-      await persistTokens(response.data.data);
+    const normalized = normalizeAuthResponse(response.data);
+    if (normalized.success && normalized.data) {
+      await persistTokens(normalized.data);
     }
-    return response.data;
+    return normalized;
   },
 
   /** Logout: call backend + clear storage + clear Redux */
@@ -75,7 +106,6 @@ export const authService = {
     await deleteSecureItem('accessToken');
     await deleteSecureItem('refreshToken');
     store.dispatch(logoutAction());
-    store.dispatch(clearBranding());
   },
 
   /** GET /auth/me */

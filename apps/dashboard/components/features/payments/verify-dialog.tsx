@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@carekit/ui"
 
+import { useLocale } from "@/components/locale-provider"
 import { usePaymentMutations } from "@/hooks/use-payments"
 import {
   verifyTransferSchema,
@@ -47,6 +48,7 @@ export function VerifyDialog({
   onOpenChange,
   onSuccess,
 }: VerifyDialogProps) {
+  const { t } = useLocale()
   const { verifyMut } = usePaymentMutations()
 
   const form = useForm<VerifyTransferFormData>({
@@ -62,7 +64,7 @@ export function VerifyDialog({
         transferRef: data.transferRef || undefined,
       })
       toast.success(
-        data.action === "approve" ? "Transfer approved" : "Transfer rejected",
+        data.action === "approve" ? "Transfer approved" : "Transfer rejected"
       )
       form.reset()
       onOpenChange(false)
@@ -76,16 +78,20 @@ export function VerifyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Verify Bank Transfer</DialogTitle>
+          <DialogTitle>{t("payments.verify.title")}</DialogTitle>
           <DialogDescription>
-            Approve or reject this bank transfer payment.
+            {t("payments.verify.description")}
           </DialogDescription>
         </DialogHeader>
 
         <DialogBody>
-          <form id="verify-transfer-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form
+            id="verify-transfer-form"
+            onSubmit={onSubmit}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-2">
-              <Label>Action</Label>
+              <Label>{t("payments.verify.actionLabel")}</Label>
               <Select
                 value={form.watch("action") ?? ""}
                 onValueChange={(v) =>
@@ -98,8 +104,12 @@ export function VerifyDialog({
                   <SelectValue placeholder="Select action" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="approve">Approve</SelectItem>
-                  <SelectItem value="reject">Reject</SelectItem>
+                  <SelectItem value="approve">
+                    {t("payments.verify.approve")}
+                  </SelectItem>
+                  <SelectItem value="reject">
+                    {t("payments.verify.reject")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {form.formState.errors.action && (
@@ -110,7 +120,9 @@ export function VerifyDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="verify-notes">Transfer Reference (optional)</Label>
+              <Label htmlFor="verify-notes">
+                Transfer Reference (optional)
+              </Label>
               <Textarea
                 id="verify-notes"
                 placeholder="Bank transfer reference number..."
@@ -129,7 +141,11 @@ export function VerifyDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" form="verify-transfer-form" disabled={verifyMut.isPending}>
+          <Button
+            type="submit"
+            form="verify-transfer-form"
+            disabled={verifyMut.isPending}
+          >
             {verifyMut.isPending ? "Processing..." : "Confirm"}
           </Button>
         </DialogFooter>

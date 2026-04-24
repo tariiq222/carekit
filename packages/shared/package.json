@@ -9,6 +9,7 @@
     "./types": "./types/index.ts",
     "./enums": "./enums/index.ts",
     "./constants": "./constants/index.ts",
+    "./constants/feature-keys": "./constants/feature-keys.ts",
     "./theme": "./theme/index.ts",
     "./types/theme": "./types/theme.ts",
     "./types/theme.js": "./types/theme.ts",

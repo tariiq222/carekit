@@ -4,11 +4,14 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { Bell, Calendar, Home, MessageCircle, User } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW_RAISED } from '@/theme/glass';
+import { sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { notificationsService } from '@/services/notifications';
+import { getFontName } from '@/theme/fonts';
 
 export default function ClientTabsLayout() {
   const { t } = useTranslation();
@@ -81,7 +84,7 @@ function GlassTabBar({ state, descriptors, navigation, unreadCount }: any) {
             <TabItem
               key={route.key}
               label={label}
-              icon={getIcon(route.name)}
+              routeName={route.name}
               focused={isFocused}
               onPress={onPress}
               badge={route.name === 'notifications' ? unreadCount : undefined}
@@ -95,18 +98,22 @@ function GlassTabBar({ state, descriptors, navigation, unreadCount }: any) {
 
 function TabItem({
   label,
-  icon,
+  routeName,
   focused,
   onPress,
   badge,
 }: {
   label: string;
-  icon: string;
+  routeName: string;
   focused: boolean;
   onPress: () => void;
   badge?: number;
 }) {
   const dir = useDir();
+  const f500 = getFontName(dir.locale, '500');
+  const f700 = getFontName(dir.locale, '700');
+  const color = focused ? sawaaColors.teal[700] : sawaaColors.ink[500];
+  const Icon = getIcon(routeName);
 
   return (
     <Pressable onPress={onPress} style={styles.tabItem}>
@@ -117,11 +124,11 @@ function TabItem({
             radius={20}
             style={[styles.activeCapsule, { backgroundColor: C.activeTab }]}
           >
-            <Text style={styles.icon}>{icon}</Text>
+            <Icon size={20} color={color} strokeWidth={1.9} />
           </Glass>
         ) : (
           <View style={styles.iconContainer}>
-            <Text style={[styles.icon, { opacity: 0.6 }]}>{icon}</Text>
+            <Icon size={20} color={color} strokeWidth={1.75} />
             {badge && badge > 0 ? (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
@@ -132,34 +139,35 @@ function TabItem({
         <Text
           style={[
             styles.label,
+            { fontFamily: focused ? f700 : f500, color },
             focused && styles.labelActive,
             { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
           ]}
         >
           {label}
         </Text>
-        {focused ? <View style={styles.pip} /> : null}
       </View>
     </Pressable>
   );
 }
 
-function getIcon(routeName: string): string {
-  const icons: Record<string, string> = {
-    home: '🏠',
-    appointments: '📅',
-    chat: '💬',
-    notifications: '🔔',
-    profile: '👤',
-  };
-  return icons[routeName] || '•';
+const ICONS: Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  home: Home,
+  appointments: Calendar,
+  chat: MessageCircle,
+  notifications: Bell,
+  profile: User,
+};
+
+function getIcon(routeName: string) {
+  return ICONS[routeName] ?? Home;
 }
 
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   tabBarInner: {
     gap: 8,
@@ -172,39 +180,25 @@ const styles = StyleSheet.create({
   },
   tabItemInner: {
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   activeCapsule: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
-    fontSize: 20,
-  },
   label: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: C.subtle,
+    fontSize: 10.5,
   },
   labelActive: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: C.deepTeal,
-  },
-  pip: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: C.deepTeal,
-    marginTop: 2,
+    fontSize: 11,
   },
   badge: {
     position: 'absolute',
