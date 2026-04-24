@@ -208,6 +208,7 @@ export const arMisc: Record<string, string> = {
   "login.hidePassword": "إخفاء كلمة المرور",
   "login.signingIn": "جارٍ تسجيل الدخول...",
   "login.signIn": "تسجيل الدخول",
+  "login.orgSuspended": "تم تعليق حساب المنظمة. تواصل مع الإدارة لإعادة التفعيل.",
 
   // — Error banner —
   "common.retry": "إعادة المحاولة",

@@ -159,7 +159,7 @@ export function ClientDetailPage({ clientId }: Props) {
             <Card>
               <CardContent className="pt-6">
                 <DetailSection title={t("clients.detail.contactInfo")}>
-                  <DetailRow label={t("clients.detail.email")} value={<span dir="ltr">{client.email}</span>} />
+                  <DetailRow label={t("clients.detail.email")} value={client.email ? <span dir="ltr">{client.email}</span> : "—"} />
                   <DetailRow label={t("clients.detail.phone")} value={<span dir="ltr">{client.phone ?? "—"}</span>} />
                 </DetailSection>
                 <Separator className="my-4" />

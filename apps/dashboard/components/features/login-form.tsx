@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
@@ -16,7 +16,16 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const reason = sessionStorage.getItem("carekit_auth_reason")
+    if (reason === "ORG_SUSPENDED") {
+      setNotice(t("login.orgSuspended"))
+      sessionStorage.removeItem("carekit_auth_reason")
+    }
+  }, [t])
 
   const isDev = process.env.NODE_ENV === "development"
   const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL
@@ -83,6 +92,13 @@ export function LoginForm() {
             </p>
           </div>
         </div>
+
+        {/* Notice (e.g. suspended organization) */}
+        {notice && !error && (
+          <div className="mb-4 rounded-lg bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+            {notice}
+          </div>
+        )}
 
         {/* Error */}
         {error && (

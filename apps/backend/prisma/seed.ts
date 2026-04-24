@@ -58,6 +58,13 @@ async function main() {
     },
   });
 
+  // 1.5 Default org — clear any leftover suspension state from SaaS-05b tests.
+  //     `updateMany` is a no-op if the row is missing, safe for fresh DBs.
+  await prisma.organization.updateMany({
+    where: { id: DEFAULT_ORG_ID, suspendedAt: { not: null } },
+    data: { suspendedAt: null, suspendedReason: null, status: 'ACTIVE' },
+  });
+
   // 2. Branding singleton (org-unique per SaaS-02c)
   await prisma.brandingConfig.upsert({
     where: { organizationId: DEFAULT_ORG_ID },

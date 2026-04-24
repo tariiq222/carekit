@@ -208,6 +208,7 @@ export const enMisc: Record<string, string> = {
   "login.hidePassword": "Hide password",
   "login.signingIn": "Signing in...",
   "login.signIn": "Sign in",
+  "login.orgSuspended": "This organization has been suspended. Contact the platform admin to restore access.",
 
   // — Error banner —
   "common.retry": "Retry",
