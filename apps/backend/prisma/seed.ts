@@ -23,7 +23,7 @@ async function main() {
 
   // 1. Admin user (email is globally @unique now)
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { email: ADMIN_EMAIL },
     create: {
       email: ADMIN_EMAIL,
@@ -33,6 +33,23 @@ async function main() {
       isActive: true,
     },
     update: {},
+  });
+
+  // 1.1 Admin membership to the default org — login requires an active
+  //     Membership since SaaS-05b. @@unique([userId]) lets us upsert on userId.
+  await prisma.membership.upsert({
+    where: { userId_organizationId: { userId: adminUser.id, organizationId: DEFAULT_ORG_ID } },
+    create: {
+      userId: adminUser.id,
+      organizationId: DEFAULT_ORG_ID,
+      role: 'OWNER',
+      isActive: true,
+      acceptedAt: new Date(),
+    },
+    update: {
+      role: 'OWNER',
+      isActive: true,
+    },
   });
 
   if (!SUPER_ADMIN_EMAIL || !SUPER_ADMIN_PASSWORD) {
