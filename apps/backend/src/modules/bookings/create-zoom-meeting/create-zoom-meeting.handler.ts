@@ -2,28 +2,26 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { ZoomApiClient } from '../../../infrastructure/zoom/zoom-api.client';
+import { ZoomCredentialsService } from '../../../infrastructure/zoom/zoom-credentials.service';
+import { ZoomMeetingStatus } from '@prisma/client';
 
 export interface CreateZoomMeetingCommand {
   bookingId: string;
 }
 
-interface ZoomTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-interface ZoomMeetingResponse {
-  id: number;
-  join_url: string;
-  start_url: string;
-}
-
 @Injectable()
 export class CreateZoomMeetingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(CreateZoomMeetingHandler.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly zoomApi: ZoomApiClient,
+    private readonly zoomCredentials: ZoomCredentialsService,
+  ) {}
 
   async execute(cmd: CreateZoomMeetingCommand) {
     const booking = await this.prisma.booking.findFirst({
@@ -32,6 +30,15 @@ export class CreateZoomMeetingHandler {
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
     }
+
+    // Idempotency: skip if already CREATED
+    if (
+      booking.zoomMeetingId &&
+      booking.zoomMeetingStatus === ZoomMeetingStatus.CREATED
+    ) {
+      return booking;
+    }
+
     if (booking.bookingType !== 'ONLINE') {
       throw new BadRequestException(
         'Zoom meetings can only be created for ONLINE bookings',
@@ -43,87 +50,84 @@ export class CreateZoomMeetingHandler {
       where: { provider: 'zoom' },
     });
     if (!integration || !integration.isActive) {
-      throw new BadRequestException(
-        'Zoom integration is not configured for this clinic',
-      );
-    }
-
-    const config = integration.config as Record<string, string>;
-    const { zoomClientId, zoomClientSecret, zoomAccountId } = config;
-
-    const token = await this.getAccessToken(
-      zoomClientId,
-      zoomClientSecret,
-      zoomAccountId,
-    );
-
-    const meeting = await this.createMeeting(token, {
-      topic: `Booking ${booking.id}`,
-      startTime: booking.scheduledAt.toISOString(),
-      durationMins: booking.durationMins,
-    });
-
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        zoomMeetingId: String(meeting.id),
-        zoomJoinUrl: meeting.join_url,
-        zoomHostUrl: meeting.start_url,
-      },
-    });
-  }
-
-  private async getAccessToken(
-    clientId: string,
-    clientSecret: string,
-    accountId: string,
-  ): Promise<string> {
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
-      'base64',
-    );
-    const res = await fetch(
-      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
+      this.logger.warn(`Zoom integration not configured for booking ${booking.id}`);
+      return this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: 'Zoom integration is not configured for this clinic',
         },
-      },
-    );
-    if (!res.ok) {
-      throw new BadRequestException(
-        `Zoom authentication failed: ${res.statusText}`,
-      );
+      });
     }
-    const data: ZoomTokenResponse = await res.json();
-    return data.access_token;
-  }
 
-  private async createMeeting(
-    accessToken: string,
-    opts: { topic: string; startTime: string; durationMins: number },
-  ): Promise<ZoomMeetingResponse> {
-    const res = await fetch('https://api.zoom.us/v2/users/me/meetings', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        topic: opts.topic,
-        type: 2,
-        start_time: opts.startTime,
-        duration: opts.durationMins,
-        timezone: 'Asia/Riyadh',
-        settings: { join_before_host: true, waiting_room: false },
-      }),
-    });
-    if (!res.ok) {
-      throw new BadRequestException(
-        `Failed to create Zoom meeting: ${res.statusText}`,
-      );
+    const config = integration.config as { ciphertext?: string } | null;
+    const ciphertext = config?.ciphertext;
+
+    if (!ciphertext) {
+      this.logger.error(`Zoom config missing ciphertext for org ${booking.organizationId}`);
+      return this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: 'Zoom integration configuration is invalid',
+        },
+      });
     }
-    return res.json();
+
+    try {
+      const { zoomClientId, zoomClientSecret, zoomAccountId } =
+        this.zoomCredentials.decrypt<{
+          zoomClientId: string;
+          zoomClientSecret: string;
+          zoomAccountId: string;
+        }>(ciphertext, booking.organizationId);
+
+      const settings = await this.prisma.organizationSettings.findFirst({
+        where: { organizationId: booking.organizationId },
+      });
+      const timezone = settings?.timezone || 'Asia/Riyadh';
+
+      const token = await this.zoomApi.getAccessToken(
+        booking.organizationId,
+        zoomClientId,
+        zoomClientSecret,
+        zoomAccountId,
+      );
+
+      const meeting = await this.zoomApi.createMeeting(
+        token,
+        {
+          topic: `Booking ${booking.id}`,
+          startTime: booking.scheduledAt.toISOString(),
+          durationMins: booking.durationMins,
+        },
+        timezone,
+      );
+
+      return await this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          zoomMeetingId: String(meeting.id),
+          zoomJoinUrl: meeting.join_url,
+          zoomHostUrl: meeting.start_url,
+          zoomStartUrl: meeting.start_url,
+          zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+          zoomMeetingCreatedAt: new Date(),
+          zoomMeetingError: null,
+        },
+      });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      this.logger.error(
+        `Failed to create Zoom meeting for booking ${booking.id}: ${message}`,
+      );
+      return await this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: message,
+        },
+      });
+    }
   }
 }

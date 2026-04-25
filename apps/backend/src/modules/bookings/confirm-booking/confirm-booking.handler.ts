@@ -59,9 +59,14 @@ export class ConfirmBookingHandler {
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 
     if ((booking.bookingType as string) === 'ONLINE') {
-      await this.createZoomMeeting.execute({
-        bookingId: cmd.bookingId,
-      });
+      try {
+        await this.createZoomMeeting.execute({
+          bookingId: cmd.bookingId,
+        });
+      } catch {
+        // Never throw from here; the handler already persists FAILED status internally for Zoom API errors.
+        // This catch handles unexpected non-Zoom exceptions (e.g. DB down during update).
+      }
     }
 
     return updated;

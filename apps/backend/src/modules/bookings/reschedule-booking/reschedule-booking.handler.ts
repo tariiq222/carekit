@@ -5,6 +5,7 @@ import { TenantContextService } from '../../../common/tenant';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { RescheduleBookingDto } from './reschedule-booking.dto';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
+import { ZoomMeetingService } from '../zoom-meeting.service';
 
 export type RescheduleBookingCommand = Omit<RescheduleBookingDto, 'newScheduledAt'> & {
   bookingId: string;
@@ -18,6 +19,7 @@ export class RescheduleBookingHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly zoomMeetingService: ZoomMeetingService,
   ) {}
 
   async execute(cmd: RescheduleBookingCommand) {
@@ -82,6 +84,17 @@ export class RescheduleBookingHandler {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    if (booking.zoomMeetingId) {
+      // Best effort update
+      this.zoomMeetingService
+        .updateMeeting(organizationId, booking.zoomMeetingId, {
+          topic: `Booking ${booking.id}`,
+          startTime: newScheduledAt.toISOString(),
+          durationMins,
+        })
+        .catch(() => {});
+    }
 
     return updated;
   }

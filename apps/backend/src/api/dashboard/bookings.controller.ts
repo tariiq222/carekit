@@ -24,6 +24,7 @@ import { CancelBookingDto } from '../../modules/bookings/cancel-booking/cancel-b
 import { RescheduleBookingHandler } from '../../modules/bookings/reschedule-booking/reschedule-booking.handler';
 import { RescheduleBookingDto } from '../../modules/bookings/reschedule-booking/reschedule-booking.dto';
 import { ConfirmBookingHandler } from '../../modules/bookings/confirm-booking/confirm-booking.handler';
+import { RetryZoomMeetingHandler } from '../../modules/bookings/retry-zoom-meeting/retry-zoom-meeting.handler';
 import { CheckInBookingHandler } from '../../modules/bookings/check-in-booking/check-in-booking.handler';
 import { CompleteBookingHandler } from '../../modules/bookings/complete-booking/complete-booking.handler';
 import { CompleteBookingDto } from '../../modules/bookings/complete-booking/complete-booking.dto';
@@ -53,6 +54,7 @@ export class DashboardBookingsController {
     private readonly cancelHandler: CancelBookingHandler,
     private readonly rescheduleHandler: RescheduleBookingHandler,
     private readonly confirmHandler: ConfirmBookingHandler,
+    private readonly retryZoomHandler: RetryZoomMeetingHandler,
     private readonly checkInHandler: CheckInBookingHandler,
     private readonly completeHandler: CompleteBookingHandler,
     private readonly noShowHandler: NoShowBookingHandler,
@@ -188,6 +190,18 @@ export class DashboardBookingsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.confirmHandler.execute({ bookingId: id, changedBy: userId });
+  }
+
+  @Post(':id/zoom/retry')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Retry creating Zoom meeting for a booking' })
+  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Zoom meeting retry attempted', schema: { type: 'object' } })
+  @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
+  retryZoomMeeting(
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.retryZoomHandler.execute({ bookingId: id });
   }
 
   @Patch(':id/check-in')

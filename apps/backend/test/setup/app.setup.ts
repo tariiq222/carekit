@@ -49,6 +49,9 @@ export async function createTestApp(): Promise<{
   process.env.SMS_PROVIDER_ENCRYPTION_KEY =
     process.env.SMS_PROVIDER_ENCRYPTION_KEY ??
     Buffer.alloc(32, 1).toString('base64');
+  process.env.ZOOM_PROVIDER_ENCRYPTION_KEY =
+    process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ??
+    Buffer.alloc(32, 2).toString('base64');
 
   await ensureTestUsers();
 
@@ -86,11 +89,16 @@ export async function createTestApp(): Promise<{
           MINIO_ACCESS_KEY: 'minioadmin',
           MINIO_SECRET_KEY: 'minioadmin123',
           MINIO_BUCKET: 'carekit',
+          SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
+          ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
+          ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
+          TENANT_ENFORCEMENT: 'permissive',
+          DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
         };
         return map[key];
       },
       getOrThrow: (key: string) => {
-        const map: Record<string, string> = {
+        const map: Record<string, string | undefined> = {
           DATABASE_URL: TEST_DATABASE_URL,
           JWT_ACCESS_SECRET: TEST_JWT_ACCESS_SECRET,
           JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
@@ -114,6 +122,11 @@ export async function createTestApp(): Promise<{
           MINIO_ACCESS_KEY: 'minioadmin',
           MINIO_SECRET_KEY: 'minioadmin123',
           MINIO_BUCKET: 'carekit',
+          SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
+          ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
+          ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
+          TENANT_ENFORCEMENT: 'permissive',
+          DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
         };
         const val = map[key];
         if (!val) throw new Error(`Config key ${key} not found`);

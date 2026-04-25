@@ -32,7 +32,11 @@ export class TenantResolverMiddleware implements NestMiddleware {
   private isPublicRoute(path: string): boolean {
     // Accept both prefixed (`/api/v1/public/...` in production) and bare
     // (`/public/...` in tests, where setGlobalPrefix is not applied).
-    if (!path.startsWith('/api/v1/public/') && !path.startsWith('/public/')) {
+    if (
+      !path.startsWith('/api/v1/public/') &&
+      !path.startsWith('/public/') &&
+      !path.endsWith('/auth/login')
+    ) {
       return false;
     }
     if (path.includes('/webhooks/')) return false;
