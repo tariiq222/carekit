@@ -73,7 +73,7 @@ describe('authApi.login', () => {
 
     expect(result).toEqual(fakeAuth)
 
-    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    const [url, init] = vi.mocked(fetch).mock.calls[0]!
     expect(url).toBe('http://api.test/auth/login')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(init?.body as string)).toEqual({
@@ -118,7 +118,7 @@ describe('authApi.refreshToken', () => {
     const result = await authApi.refreshToken('old.refresh')
 
     expect(result).toEqual(fakeTokenPair)
-    const [, init] = vi.mocked(fetch).mock.calls[0]
+    const [, init] = vi.mocked(fetch).mock.calls[0]!
     expect(JSON.parse(init?.body as string)).toEqual({
       refreshToken: 'old.refresh',
     })
@@ -135,7 +135,7 @@ describe('authApi.getMe', () => {
     const me = await authApi.getMe()
 
     expect(me).toEqual(fakeUser)
-    const [, init] = vi.mocked(fetch).mock.calls[0]
+    const [, init] = vi.mocked(fetch).mock.calls[0]!
     const headers = init?.headers as Record<string, string>
     expect(headers.Authorization).toBe(`Bearer ${fakeAccess}`)
   })
@@ -147,7 +147,7 @@ describe('authApi.logout', () => {
 
     await authApi.logout()
 
-    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    const [url, init] = vi.mocked(fetch).mock.calls[0]!
     expect(url).toBe('http://api.test/auth/logout')
     expect(init?.method).toBe('POST')
   })
@@ -163,7 +163,7 @@ describe('authApi.changePassword', () => {
       newPassword: 'new',
     })
 
-    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    const [url, init] = vi.mocked(fetch).mock.calls[0]!
     expect(url).toBe('http://api.test/auth/password/change')
     expect(init?.method).toBe('PATCH')
     expect(JSON.parse(init?.body as string)).toEqual({

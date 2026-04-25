@@ -1,5 +1,10 @@
 import { apiRequest } from '../client'
-import type { AuthResponse, TokenPair } from '../types/index'
+import type {
+  AuthResponse,
+  ChangePasswordPayload,
+  TokenPair,
+  UserPayload,
+} from '../types/auth'
 
 export interface LoginPayload {
   email: string
@@ -24,6 +29,17 @@ export async function logout(): Promise<void> {
   return apiRequest<void>('/auth/logout', { method: 'POST' })
 }
 
-export async function getMe(): Promise<AuthResponse['user']> {
-  return apiRequest('/auth/me')
+export async function getMe(): Promise<UserPayload> {
+  return apiRequest<UserPayload>('/auth/me')
 }
+
+export async function changePassword(
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  return apiRequest<void>('/auth/password/change', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export type { AuthResponse, ChangePasswordPayload, TokenPair, UserPayload }
