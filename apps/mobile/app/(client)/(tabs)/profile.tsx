@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -23,7 +23,7 @@ import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout } from '@/stores/slices/auth-slice';
 import { unregisterPushAsync } from '@/services/push';
 import { getFontName } from '@/theme/fonts';
-import { clientPortalService, type PortalSummary } from '@/services/client/portal';
+import { useSummary } from '@/hooks/queries';
 
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -46,7 +46,8 @@ export default function ProfileScreen() {
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [darkMode, setDarkMode] = useState(false);
-  const [summary, setSummary] = useState<PortalSummary | null>(null);
+  const summaryQuery = useSummary();
+  const summary = summaryQuery.data ?? null;
   const [refreshing, setRefreshing] = useState(false);
   const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
 
@@ -56,21 +57,13 @@ export default function ProfileScreen() {
   const email = user?.email ?? '';
   const initial = (user?.firstName ?? '·').charAt(0);
 
-  const loadSummary = React.useCallback(async () => {
-    try {
-      const data = await clientPortalService.getSummary();
-      setSummary(data);
-    } catch {
-      // leave previous summary in place; the screen renders dashes if null
-    }
-  }, []);
-
-  useEffect(() => { void loadSummary(); }, [loadSummary]);
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadSummary();
-    setRefreshing(false);
+    try {
+      await summaryQuery.refetch();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const stats: Array<{ value: string; ar: string; en: string }> = [

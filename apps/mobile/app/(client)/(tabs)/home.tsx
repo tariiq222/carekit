@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -8,8 +8,7 @@ import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useAppSelector } from '@/hooks/use-redux';
 import { getFontName } from '@/theme/fonts';
-import { clientPortalService, type PortalBookingRow } from '@/services/client/portal';
-import { publicEmployeesService, type PublicEmployeeItem } from '@/services/client/employees';
+import { useHome, useTherapists } from '@/hooks/queries';
 import { HomeTopBar } from '@/components/features/home/HomeTopBar';
 import { UpNextCard } from '@/components/features/home/UpNextCard';
 import { FeaturedClinics } from '@/components/features/home/FeaturedClinics';
@@ -31,42 +30,22 @@ export default function HomeScreen() {
     month: 'long',
   });
 
-  const [nextBooking, setNextBooking] = useState<PortalBookingRow | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [therapists, setTherapists] = useState<PublicEmployeeItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const homeQuery = useHome();
+  const therapistsQuery = useTherapists();
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadHome = React.useCallback(async () => {
-    try {
-      const [home, therapistList] = await Promise.all([
-        clientPortalService.getHome(),
-        publicEmployeesService.list().catch(() => [] as PublicEmployeeItem[]),
-      ]);
-      setNextBooking(home.upcomingBookings?.[0] ?? null);
-      setUnreadCount(home.unreadNotifications?.length ?? 0);
-      setTherapists(therapistList.slice(0, 6));
-    } catch {
-      // Network/auth errors leave the screen in its empty state — better
-      // than masking with stale mock data.
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      await loadHome();
-      if (!cancelled) setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [loadHome]);
+  const nextBooking = homeQuery.data?.upcomingBookings?.[0] ?? null;
+  const unreadCount = homeQuery.data?.unreadNotifications?.length ?? 0;
+  const therapists = (therapistsQuery.data ?? []).slice(0, 6);
+  const loading = homeQuery.isLoading;
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadHome();
-    setRefreshing(false);
+    try {
+      await Promise.all([homeQuery.refetch(), therapistsQuery.refetch()]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (
