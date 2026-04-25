@@ -131,6 +131,97 @@ describe('TenantResolverMiddleware', () => {
     });
   });
 
+  describe('public-route X-Org-Id resolution', () => {
+    const VALID = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('strict mode: accepts X-Org-Id on unauthenticated public route', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              path: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(VALID);
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('strict mode: ignores X-Org-Id on authenticated public route (JWT wins)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'CLIENT' },
+              path: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe('org-jwt');
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('strict mode: ignores X-Org-Id on private route when unauthenticated (throws)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              path: '/api/v1/dashboard/bookings',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: ignores invalid UUID, throws (no fallback)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              path: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': 'not-a-uuid' },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: ignores X-Org-Id on /webhooks/ public route', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              path: '/api/v1/public/sms/webhooks/unifonic/org-1',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+  });
+
   describe('isPublicRoute()', () => {
     let mw: TenantResolverMiddleware;
     beforeEach(async () => {
