@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -10,10 +10,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
-import {
-  publicEmployeesService,
-  type PublicEmployeeItem,
-} from '@/services/client';
+import { useTherapist } from '@/hooks/queries';
 
 const SPECIALTIES = [
   { ar: 'القلق العام', en: 'General Anxiety', color: sawaaColors.teal[600] },
@@ -42,21 +39,7 @@ export default function EmployeeProfileScreen() {
   const f700 = getFontName(dir.locale, '700');
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
   const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
-  const [employee, setEmployee] = useState<PublicEmployeeItem | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    publicEmployeesService.getByKey(id).then(
-      (res) => {
-        if (!cancelled) setEmployee(res);
-      },
-      () => {},
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const { data: employee } = useTherapist(id);
 
   const employeeName = employee
     ? (dir.isRTL ? employee.nameAr : employee.nameEn) ?? employee.nameEn ?? employee.nameAr ?? '—'

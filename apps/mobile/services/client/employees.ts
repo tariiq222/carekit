@@ -26,14 +26,17 @@ export const publicEmployeesService = {
 
   async getSlots(params: {
     employeeId: string;
+    branchId: string;
     date: string;
-    duration?: number;
+    durationMins?: number;
     serviceId?: string;
+    durationOptionId?: string;
     bookingType?: string;
   }) {
-    const response = await api.get<{
-      slots: Array<{ startTime: string; endTime: string; available: boolean }>;
-    }>('/public/slots', { params });
+    const response = await api.get<Array<{ startTime: string; endTime: string }>>(
+      '/public/availability',
+      { params },
+    );
     return response.data;
   },
 };

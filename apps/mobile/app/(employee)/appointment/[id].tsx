@@ -28,7 +28,7 @@ import { ThemedCard } from '@/theme/components/ThemedCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
-import { bookingsService } from '@/services/bookings';
+import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
 import type { Booking } from '@/types/models';
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {

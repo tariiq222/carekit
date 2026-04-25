@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,11 +11,21 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
+import { clientBookingsService } from '@/services/client/bookings';
 
 type Method = 'card' | 'apple_pay' | 'bank_transfer';
 
 export default function BookingPaymentScreen() {
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{
+    serviceId?: string;
+    employeeId?: string;
+    branchId?: string;
+    type?: string;
+    scheduledAt?: string;
+    durationOptionId?: string;
+    amount?: string;
+    currency?: string;
+  }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
@@ -23,10 +33,14 @@ export default function BookingPaymentScreen() {
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [method, setMethod] = useState<Method>('card');
+  const [submitting, setSubmitting] = useState(false);
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
   const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
 
-  const TOTAL = 287;
+  const total = params.amount ? Number(params.amount) : 0;
+  const currency = params.currency ?? 'SAR';
+  const formatMoney = (n: number) =>
+    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
 
   const methods: Array<{ key: Method; icon: React.ReactNode; labelAr: string; labelEn: string; subAr: string; subEn: string; color: string }> = [
     { key: 'card', icon: <CreditCard size={20} color={sawaaColors.teal[600]} strokeWidth={1.75} />, labelAr: 'بطاقة ائتمانية', labelEn: 'Credit card', subAr: 'Visa · Mada · Mastercard', subEn: 'Visa · Mada · Mastercard', color: sawaaColors.teal[600] },
@@ -34,12 +48,40 @@ export default function BookingPaymentScreen() {
     { key: 'bank_transfer', icon: <Banknote size={20} color={sawaaColors.accent.amber} strokeWidth={1.75} />, labelAr: 'تحويل بنكي', labelEn: 'Bank transfer', subAr: 'حوّل يدوياً وارفع الإيصال', subEn: 'Transfer and upload receipt', color: sawaaColors.accent.amber },
   ];
 
-  const handlePay = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    if (method === 'bank_transfer') {
-      router.push({ pathname: '/(client)/booking/bank-transfer', params });
-    } else {
-      router.push({ pathname: '/(client)/booking/success', params });
+  const canPay =
+    !!params.serviceId &&
+    !!params.employeeId &&
+    !!params.branchId &&
+    !!params.scheduledAt &&
+    !submitting;
+
+  const handlePay = async () => {
+    if (!canPay) return;
+    setSubmitting(true);
+    try {
+      const booking = await clientBookingsService.create({
+        branchId: params.branchId!,
+        employeeId: params.employeeId!,
+        serviceId: params.serviceId!,
+        scheduledAt: params.scheduledAt!,
+        durationOptionId: params.durationOptionId,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Note: backend create-booking does not yet return an invoice id, so
+      // online card / Apple Pay / bank-transfer upload screens cannot be
+      // wired today. We confirm the booking and surface payment instructions
+      // on the success screen until the finance side is ready.
+      router.replace({
+        pathname: '/(client)/booking/success',
+        params: { bookingId: booking.id, paymentMethod: method },
+      });
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (dir.isRTL ? 'تعذّر إنشاء الحجز. حاولي مرة أخرى.' : 'Could not create booking. Try again.');
+      Alert.alert(dir.isRTL ? 'خطأ' : 'Error', message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -60,7 +102,7 @@ export default function BookingPaymentScreen() {
             {dir.isRTL ? 'اختر طريقة الدفع' : 'Choose payment'}
           </Text>
           <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? `المبلغ الإجمالي ${TOTAL.toLocaleString('ar-SA')} ر.س` : `Total SAR ${TOTAL}`}
+            {dir.isRTL ? `المبلغ الإجمالي ${formatMoney(total)}` : `Total ${formatMoney(total)}`}
           </Text>
         </Animated.View>
 
@@ -110,17 +152,23 @@ export default function BookingPaymentScreen() {
         entering={FadeInDown.delay(360).duration(800).easing(Easing.out(Easing.cubic))}
         style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
       >
-        <Pressable onPress={handlePay}>
+        <Pressable onPress={handlePay} disabled={!canPay}>
           <LinearGradient
             colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.ctaBtn}
+            style={[styles.ctaBtn, !canPay && { opacity: 0.6 }]}
           >
-            <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
-              {dir.isRTL ? `ادفع ${TOTAL.toLocaleString('ar-SA')} ر.س` : `Pay SAR ${TOTAL}`}
-            </Text>
-            <GoIcon size={16} color="#fff" strokeWidth={2} />
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
+                  {dir.isRTL ? `ادفع ${formatMoney(total)}` : `Pay ${formatMoney(total)}`}
+                </Text>
+                <GoIcon size={16} color="#fff" strokeWidth={2} />
+              </>
+            )}
           </LinearGradient>
         </Pressable>
       </Animated.View>

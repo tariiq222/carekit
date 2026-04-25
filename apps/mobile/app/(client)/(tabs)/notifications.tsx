@@ -1,83 +1,75 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, Calendar, Check, FileText, Leaf, MessageCircle, Video } from 'lucide-react-native';
+import { useFocusEffect } from 'expo-router';
+import { Bell, Calendar, Check, CheckCheck, FileText, MessageCircle, Star, Video } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
+import { useNotifications } from '@/hooks/use-notifications';
+import type { Notification } from '@/types/models';
 
-type NotifItem = {
-  id: string;
-  when: { ar: string; en: string };
-  title: { ar: string; en: string };
-  body: { ar: string; en: string };
-  icon: React.ReactNode;
+interface IconConfig {
+  Icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
   color: string;
-  unread?: boolean;
-};
+}
 
-const ITEMS: NotifItem[] = [
-  {
-    id: '1',
-    when: { ar: 'الآن', en: 'Now' },
-    title: { ar: 'جلستك تبدأ خلال ١٥ دقيقة', en: 'Session starts in 15 min' },
-    body: { ar: 'د. فاطمة العمران · جلسة فيديو', en: 'Dr. Fatima · Video' },
-    icon: <Video size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />,
-    color: sawaaColors.teal[600],
-    unread: true,
-  },
-  {
-    id: '2',
-    when: { ar: 'منذ ساعة', en: '1h ago' },
-    title: { ar: 'تذكير تأمل الظهيرة', en: 'Midday meditation' },
-    body: { ar: 'خذي نفساً عميقاً — ٥ دقائق فقط', en: 'Breathe — just 5 min' },
-    icon: <Leaf size={18} color={sawaaColors.accent.violet} strokeWidth={1.75} />,
-    color: sawaaColors.accent.violet,
-    unread: true,
-  },
-  {
-    id: '3',
-    when: { ar: 'اليوم · ١٠:١٢', en: 'Today · 10:12' },
-    title: { ar: 'تم تأكيد حجزك', en: 'Booking confirmed' },
-    body: { ar: 'الخميس ١٦ نوفمبر · ٦:٣٠ م', en: 'Thu Nov 16 · 6:30 PM' },
-    icon: <Check size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />,
-    color: sawaaColors.teal[600],
-  },
-  {
-    id: '4',
-    when: { ar: 'أمس', en: 'Yesterday' },
-    title: { ar: 'رسالة من د. منى السالم', en: 'Message from Dr. Mona' },
-    body: { ar: '"رائع يا سارة، واصلي التمارين..."', en: '"Great, keep going..."' },
-    icon: <MessageCircle size={18} color={sawaaColors.accent.rose} strokeWidth={1.75} />,
-    color: sawaaColors.accent.rose,
-  },
-  {
-    id: '5',
-    when: { ar: 'أمس', en: 'Yesterday' },
-    title: { ar: 'تقرير أسبوعك متاح', en: 'Weekly report ready' },
-    body: { ar: 'تحسّن ملحوظ بنسبة ١٨٪ في المزاج', en: '18% mood improvement' },
-    icon: <FileText size={18} color={sawaaColors.accent.amber} strokeWidth={1.75} />,
-    color: sawaaColors.accent.amber,
-  },
-  {
-    id: '6',
-    when: { ar: 'الأحد', en: 'Sunday' },
-    title: { ar: 'جلسة جماعية: القلق الاجتماعي', en: 'Group: Social anxiety' },
-    body: { ar: 'دعوة للانضمام · مساء الاثنين', en: 'Monday evening' },
-    icon: <Calendar size={18} color={sawaaColors.accent.violet} strokeWidth={1.75} />,
-    color: sawaaColors.accent.violet,
-  },
-];
+function iconForType(type: Notification['type']): IconConfig {
+  switch (type) {
+    case 'booking_confirmed':
+    case 'booking_completed':
+      return { Icon: Check, color: sawaaColors.teal[600] };
+    case 'booking_reminder':
+    case 'booking_reminder_urgent':
+    case 'reminder':
+      return { Icon: Video, color: sawaaColors.teal[600] };
+    case 'booking_rescheduled':
+    case 'waitlist_slot_available':
+      return { Icon: Calendar, color: sawaaColors.accent.violet };
+    case 'new_rating':
+      return { Icon: Star, color: sawaaColors.accent.amber };
+    case 'payment_received':
+      return { Icon: FileText, color: sawaaColors.accent.amber };
+    case 'cancellation_requested':
+    case 'cancellation_rejected':
+    case 'booking_cancellation_rejected':
+    case 'booking_cancelled':
+    case 'booking_expired':
+    case 'booking_no_show':
+    case 'no_show_review':
+    case 'client_arrived':
+    case 'receipt_rejected':
+      return { Icon: MessageCircle, color: sawaaColors.accent.rose };
+    default:
+      return { Icon: Bell, color: sawaaColors.teal[600] };
+  }
+}
+
+function relativeWhen(iso: string, isRTL: boolean): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+  const diffMs = Date.now() - then;
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1) return isRTL ? 'الآن' : 'Now';
+  if (mins < 60) return isRTL ? `قبل ${mins}د` : `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return isRTL ? `قبل ${hours}س` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return isRTL ? `قبل ${days}ي` : `${days}d ago`;
+  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+    day: 'numeric', month: 'short',
+  });
+}
 
 const FILTERS = [
-  { key: 'all', ar: 'الكل', en: 'All', count: 12 },
-  { key: 'sessions', ar: 'الجلسات', en: 'Sessions', count: 4 },
-  { key: 'messages', ar: 'الرسائل', en: 'Messages', count: 2 },
-  { key: 'reminders', ar: 'التذكيرات', en: 'Reminders', count: 6 },
-];
+  { key: 'all', ar: 'الكل', en: 'All' },
+  { key: 'unread', ar: 'غير المقروءة', en: 'Unread' },
+] as const;
+
+type FilterKey = typeof FILTERS[number]['key'];
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
@@ -85,25 +77,62 @@ export default function NotificationsScreen() {
   const f400 = getFontName(dir.locale, '400');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
-  const [active, setActive] = useState('all');
-  const unreadCount = ITEMS.filter((i) => i.unread).length;
+  const [active, setActive] = useState<FilterKey>('all');
+
+  const {
+    notifications,
+    unreadCount,
+    refreshing,
+    refresh,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
+  // Refetch list each time the screen gains focus.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  const visible = useMemo(() => {
+    if (active === 'unread') return notifications.filter((n) => !n.isRead);
+    return notifications;
+  }, [active, notifications]);
 
   return (
     <AquaBackground>
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={sawaaColors.teal[600]} />}
       >
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'الإشعارات' : 'Notifications'}
-          </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL
-              ? `لديكِ ${unreadCount === 1 ? 'إشعار جديد' : `${unreadCount} إشعارات جديدة`}`
-              : `${unreadCount} new ${unreadCount === 1 ? 'notification' : 'notifications'}`}
-          </Text>
+          <View style={[styles.headerRow, { flexDirection: dir.row }]}>
+            <View style={styles.headerText}>
+              <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                {dir.isRTL ? 'الإشعارات' : 'Notifications'}
+              </Text>
+              <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                {dir.isRTL
+                  ? unreadCount === 0
+                    ? 'لا إشعارات جديدة'
+                    : `لديكِ ${unreadCount === 1 ? 'إشعار جديد' : `${unreadCount} إشعارات جديدة`}`
+                  : `${unreadCount} new ${unreadCount === 1 ? 'notification' : 'notifications'}`}
+              </Text>
+            </View>
+            {unreadCount > 0 ? (
+              <Glass variant="regular" radius={20} onPress={markAllAsRead} interactive style={styles.markAllBtn}>
+                <View style={[styles.markAllInner, { flexDirection: dir.row }]}>
+                  <CheckCheck size={14} color={sawaaColors.teal[700]} strokeWidth={2} />
+                  <Text style={[styles.markAllText, { fontFamily: f600 }]}>
+                    {dir.isRTL ? 'تعليم الكل' : 'Mark all'}
+                  </Text>
+                </View>
+              </Glass>
+            ) : null}
+          </View>
         </Animated.View>
 
         {/* Filter chips */}
@@ -115,6 +144,7 @@ export default function NotificationsScreen() {
           >
             {FILTERS.map((f) => {
               const isActive = f.key === active;
+              const count = f.key === 'unread' ? unreadCount : notifications.length;
               return (
                 <Glass
                   key={f.key}
@@ -127,19 +157,19 @@ export default function NotificationsScreen() {
                   <View style={[styles.chipInner, { flexDirection: dir.row }]}>
                     <Text style={[
                       styles.chipLabel,
-                      { fontFamily: f600, color: isActive ? sawaaColors.teal[700] : sawaaColors.ink[700] }
+                      { fontFamily: f600, color: isActive ? sawaaColors.teal[700] : sawaaColors.ink[700] },
                     ]}>
                       {dir.isRTL ? f.ar : f.en}
                     </Text>
                     <View style={[
                       styles.chipBadge,
-                      { backgroundColor: isActive ? sawaaColors.teal[600] : 'rgba(10,40,40,0.1)' }
+                      { backgroundColor: isActive ? sawaaColors.teal[600] : 'rgba(10,40,40,0.1)' },
                     ]}>
                       <Text style={[
                         styles.chipBadgeText,
-                        { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[500] }
+                        { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[500] },
                       ]}>
-                        {f.count}
+                        {count}
                       </Text>
                     </View>
                   </View>
@@ -149,38 +179,56 @@ export default function NotificationsScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Notifications list */}
-        {ITEMS.map((n, i) => (
-          <Animated.View
-            key={n.id}
-            entering={FadeInDown.delay(150 + i * 60).duration(600).easing(Easing.out(Easing.cubic))}
-          >
-            <Glass variant={n.unread ? 'strong' : 'regular'} radius={sawaaRadius.xl} style={styles.card}>
-              <View style={[styles.row, { flexDirection: dir.row }]}>
-                <View style={[
-                  styles.iconBox,
-                  { backgroundColor: `${n.color}22`, borderColor: `${n.color}33` }
-                ]}>
-                  {n.icon}
-                </View>
-                <View style={styles.body}>
-                  <View style={[styles.bodyHead, { flexDirection: dir.row }]}>
-                    <Text style={[styles.itemTitle, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
-                      {dir.isRTL ? n.title.ar : n.title.en}
-                    </Text>
-                    <Text style={[styles.when, { fontFamily: f400 }]}>
-                      {dir.isRTL ? n.when.ar : n.when.en}
-                    </Text>
-                  </View>
-                  <Text style={[styles.itemBody, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                    {dir.isRTL ? n.body.ar : n.body.en}
-                  </Text>
-                </View>
-                {n.unread && <View style={styles.unreadDot} />}
-              </View>
+        {/* List */}
+        {visible.length === 0 ? (
+          <Animated.View entering={FadeInDown.delay(150).duration(600).easing(Easing.out(Easing.cubic))}>
+            <Glass variant="regular" radius={sawaaRadius.xl} style={styles.empty}>
+              <Bell size={20} color={sawaaColors.ink[400]} strokeWidth={1.75} />
+              <Text style={[styles.emptyText, { fontFamily: f400 }]}>
+                {dir.isRTL ? 'لا توجد إشعارات لعرضها' : 'No notifications yet'}
+              </Text>
             </Glass>
           </Animated.View>
-        ))}
+        ) : (
+          visible.map((n, i) => {
+            const { Icon, color } = iconForType(n.type);
+            const title = dir.isRTL ? n.titleAr : n.titleEn;
+            const body = dir.isRTL ? n.bodyAr : n.bodyEn;
+            const when = relativeWhen(n.createdAt, dir.isRTL);
+            const unread = !n.isRead;
+            return (
+              <Animated.View
+                key={n.id}
+                entering={FadeInDown.delay(150 + i * 50).duration(600).easing(Easing.out(Easing.cubic))}
+              >
+                <Pressable onPress={() => unread && markAsRead(n.id)}>
+                  <Glass variant={unread ? 'strong' : 'regular'} radius={sawaaRadius.xl} style={styles.card}>
+                    <View style={[styles.row, { flexDirection: dir.row }]}>
+                      <View style={[
+                        styles.iconBox,
+                        { backgroundColor: `${color}22`, borderColor: `${color}33` },
+                      ]}>
+                        <Icon size={18} color={color} strokeWidth={1.75} />
+                      </View>
+                      <View style={styles.body}>
+                        <View style={[styles.bodyHead, { flexDirection: dir.row }]}>
+                          <Text style={[styles.itemTitle, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
+                            {title}
+                          </Text>
+                          <Text style={[styles.when, { fontFamily: f400 }]}>{when}</Text>
+                        </View>
+                        <Text style={[styles.itemBody, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                          {body}
+                        </Text>
+                      </View>
+                      {unread ? <View style={styles.unreadDot} /> : null}
+                    </View>
+                  </Glass>
+                </Pressable>
+              </Animated.View>
+            );
+          })
+        )}
       </ScrollView>
     </AquaBackground>
   );
@@ -188,8 +236,13 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, gap: 12 },
-  title: { fontSize: 28, color: sawaaColors.ink[900], paddingHorizontal: 4 },
-  subtitle: { fontSize: 12.5, color: sawaaColors.ink[500], marginTop: 2, paddingHorizontal: 4 },
+  headerRow: { justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, paddingHorizontal: 4 },
+  headerText: { flex: 1 },
+  title: { fontSize: 28, color: sawaaColors.ink[900] },
+  subtitle: { fontSize: 12.5, color: sawaaColors.ink[500], marginTop: 2 },
+  markAllBtn: { marginTop: 6 },
+  markAllInner: { alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
+  markAllText: { fontSize: 12, color: sawaaColors.teal[700] },
   filterRow: { gap: 8, paddingHorizontal: 4, paddingVertical: 4 },
   chip: { minWidth: 70 },
   chipInner: { alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
@@ -208,4 +261,6 @@ const styles = StyleSheet.create({
   when: { fontSize: 10.5, color: sawaaColors.ink[400] },
   itemBody: { fontSize: 12, color: sawaaColors.ink[500], marginTop: 3, lineHeight: 18 },
   unreadDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: sawaaColors.teal[500], marginTop: 6 },
+  empty: { padding: 28, alignItems: 'center', gap: 10 },
+  emptyText: { fontSize: 12.5, color: sawaaColors.ink[500] },
 });

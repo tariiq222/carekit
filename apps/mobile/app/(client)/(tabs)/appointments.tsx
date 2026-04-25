@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Calendar,
   CheckCircle2,
@@ -19,11 +20,8 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
-import {
-  clientBookingsService,
-  type ClientBookingRow,
-  type ClientBookingStatus,
-} from '@/services/client';
+import { useClientBookings, clientBookingsKeys } from '@/hooks/queries';
+import { type ClientBookingStatus } from '@/services/client';
 
 type TabKey = 'upcoming' | 'past' | 'cancelled';
 
@@ -73,35 +71,24 @@ export default function AppointmentsScreen() {
   const dir = useDir();
   const router = useRouter();
   const f400 = getFontName(dir.locale, '400');
+  const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [tab, setTab] = useState<TabKey>('upcoming');
-  const [bookings, setBookings] = useState<ClientBookingRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data, isLoading, isRefetching, refetch } = useClientBookings({ limit: 50 });
+  const bookings = data?.items ?? [];
   const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
-
-  useEffect(() => {
-    let cancelled = false;
-    clientBookingsService
-      .list({ limit: 50 })
-      .then((res) => {
-        if (!cancelled) setBookings(res.items);
-      })
-      .catch(() => {
-        if (!cancelled) setBookings([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const items = useMemo(
     () => bookings.filter((b) => tabOf(b.status) === tab),
     [bookings, tab],
   );
+
+  const onRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: clientBookingsKeys.all });
+    refetch();
+  };
 
   const statusConfig: Record<TabKey, { icon: React.ReactNode; color: string }> = {
     upcoming: { icon: <Clock size={12} color={sawaaColors.teal[700]} strokeWidth={2} />, color: sawaaColors.teal[700] },
@@ -114,12 +101,19 @@ export default function AppointmentsScreen() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 20, paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={sawaaColors.teal[600]}
+          />
+        }
       >
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
           <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'مواعيدي' : 'Appointments'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+          <Text style={[styles.subtitle, { fontFamily: f500, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'جلساتك الحالية والسابقة' : 'Your upcoming and past sessions'}
           </Text>
         </Animated.View>
@@ -156,7 +150,7 @@ export default function AppointmentsScreen() {
           </Glass>
         </Animated.View>
 
-        {loading ? (
+        {isLoading ? (
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.empty}>
             <Text style={[styles.emptyText, { fontFamily: f400 }]}>
               {dir.isRTL ? 'جاري التحميل…' : 'Loading…'}
@@ -210,7 +204,7 @@ export default function AppointmentsScreen() {
                           ) : (
                             <MapPin size={12} color={sawaaColors.accent.violet} strokeWidth={2} />
                           )}
-                          <Text style={[styles.metaText, { fontFamily: f400 }]}>{location}</Text>
+                          <Text style={[styles.metaText, { fontFamily: f500 }]}>{location}</Text>
                         </View>
                       </View>
                       <Chevron size={16} color={sawaaColors.ink[400]} strokeWidth={2} />

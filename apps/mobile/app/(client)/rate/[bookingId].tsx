@@ -11,7 +11,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
-import { clientBookingsService } from '@/services/client';
+import { useRateBooking } from '@/hooks/queries';
 
 const QUICK_TAGS = [
   { ar: 'مهنية', en: 'Professional' },
@@ -33,7 +33,8 @@ export default function RateScreen() {
   const [rating, setRating] = useState(0);
   const [tags, setTags] = useState<Set<number>>(new Set());
   const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const rateMutation = useRateBooking();
+  const submitting = rateMutation.isPending;
 
   const toggleTag = (i: number) => {
     Haptics.selectionAsync();
@@ -43,30 +44,33 @@ export default function RateScreen() {
     setTags(next);
   };
 
-  const submit = async () => {
+  const submit = () => {
     if (rating === 0 || !bookingId || submitting) return;
-    setSubmitting(true);
-    try {
-      const tagLabels = [...tags]
-        .map((i) => (dir.isRTL ? QUICK_TAGS[i].ar : QUICK_TAGS[i].en))
-        .join(', ');
-      const comment = [tagLabels, note.trim()].filter(Boolean).join(' — ');
-      await clientBookingsService.rate(bookingId, {
+    const tagLabels = [...tags]
+      .map((i) => (dir.isRTL ? QUICK_TAGS[i].ar : QUICK_TAGS[i].en))
+      .join(', ');
+    const comment = [tagLabels, note.trim()].filter(Boolean).join(' — ');
+    rateMutation.mutate(
+      {
+        id: bookingId,
         score: rating,
         comment: comment || undefined,
         isPublic: true,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
-    } catch (error) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(
-        dir.isRTL ? 'تعذّر إرسال التقييم' : 'Could not submit rating',
-        error instanceof Error ? error.message : String(error),
-      );
-    } finally {
-      setSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.back();
+        },
+        onError: (error) => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          Alert.alert(
+            dir.isRTL ? 'تعذّر إرسال التقييم' : 'Could not submit rating',
+            error instanceof Error ? error.message : String(error),
+          );
+        },
+      },
+    );
   };
 
   return (

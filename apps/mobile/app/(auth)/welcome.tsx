@@ -146,7 +146,7 @@ export default function WelcomeScreen() {
   const { t } = useTranslation();
   const f700 = getFontName('ar', '700');
   const f600 = getFontName('ar', '600');
-  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
 
   return (
     <AquaBackground>
@@ -162,7 +162,7 @@ export default function WelcomeScreen() {
           <Text style={[styles.headline, { fontFamily: f700 }]}>
             {t('welcome.headline', 'رحلتك للسواء تبدأ هنا')}
           </Text>
-          <Text style={[styles.sub, { fontFamily: f400 }]}>
+          <Text style={[styles.sub, { fontFamily: f500 }]}>
             {t('welcome.sub', 'جلسات سرّية مع أفضل المعالجين النفسيين،\nخلال لحظات — أينما كنتِ.')}
           </Text>
           <View style={styles.dots}>

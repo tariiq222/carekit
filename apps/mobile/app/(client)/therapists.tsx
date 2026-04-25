@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -10,10 +10,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
-import {
-  publicEmployeesService,
-  type PublicEmployeeItem,
-} from '@/services/client';
+import { useTherapists } from '@/hooks/queries';
 
 const GRADIENTS: Array<readonly [string, string]> = [
   ['#f7cbb7', '#e88f6c'],
@@ -47,26 +44,9 @@ export default function TherapistsListScreen() {
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
   const [activeChip, setActiveChip] = useState('available');
   const [query, setQuery] = useState('');
-  const [list, setList] = useState<PublicEmployeeItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    publicEmployeesService
-      .list()
-      .then((res) => {
-        if (!cancelled) setList(res);
-      })
-      .catch(() => {
-        if (!cancelled) setList([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, isLoading } = useTherapists();
+  const list = useMemo(() => data ?? [], [data]);
+  const loading = isLoading;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return list;

@@ -26,9 +26,11 @@ import Constants from 'expo-constants';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
+import { SettingsProfileSection } from './settings-profile-section';
 
 const LANGUAGE_KEY = '@carekit/language';
 const PUSH_KEY = '@carekit/push-enabled';
+const DARK_KEY = '@carekit/dark-mode';
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
@@ -37,6 +39,7 @@ export default function SettingsScreen() {
   const { theme, isRTL, language } = useTheme();
 
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [darkEnabled, setDarkEnabled] = useState(false);
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
@@ -48,6 +51,9 @@ export default function SettingsScreen() {
   useEffect(() => {
     AsyncStorage.getItem(PUSH_KEY).then((val) => {
       if (val !== null) setPushEnabled(val === 'true');
+    });
+    AsyncStorage.getItem(DARK_KEY).then((val) => {
+      if (val !== null) setDarkEnabled(val === 'true');
     });
   }, []);
 
@@ -79,6 +85,15 @@ export default function SettingsScreen() {
     [],
   );
 
+  const handleToggleDark = useCallback(
+    async (val: boolean) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setDarkEnabled(val);
+      await AsyncStorage.setItem(DARK_KEY, String(val));
+    },
+    [],
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
       <ScrollView
@@ -103,7 +118,10 @@ export default function SettingsScreen() {
           <View style={styles.backBtn} />
         </View>
 
-        {/* Language Section */}
+        {/* Profile Section (server-backed) */}
+        <SettingsProfileSection />
+
+        {/* Language Section (local-only) */}
         <ThemedCard padding={20} style={{ marginBottom: 16 }}>
           <SectionHeader icon={Globe} label={t('settings.language')} />
 
@@ -119,7 +137,7 @@ export default function SettingsScreen() {
           />
         </ThemedCard>
 
-        {/* Notifications Section */}
+        {/* Notifications + Appearance (local-only) */}
         <ThemedCard padding={20} style={{ marginBottom: 16 }}>
           <SectionHeader icon={Bell} label={t('settings.pushNotifications')} />
           <ThemedText
@@ -136,6 +154,15 @@ export default function SettingsScreen() {
               onValueChange={handleTogglePush}
               trackColor={{ false: '#E2E8F0', true: '#1D4ED880' }}
               thumbColor={pushEnabled ? '#1D4ED8' : '#CBD5E1'}
+            />
+          </View>
+          <View style={[styles.switchRow, { marginTop: 12 }]}>
+            <ThemedText variant="body">{t('settings.darkMode')}</ThemedText>
+            <Switch
+              value={darkEnabled}
+              onValueChange={handleToggleDark}
+              trackColor={{ false: '#E2E8F0', true: '#1D4ED880' }}
+              thumbColor={darkEnabled ? '#1D4ED8' : '#CBD5E1'}
             />
           </View>
         </ThemedCard>
@@ -157,7 +184,6 @@ export default function SettingsScreen() {
 }
 
 function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
-  const { theme } = useTheme();
   return (
     <View style={styles.sectionHeader}>
       <View style={[styles.sectionIcon, { backgroundColor: '#1D4ED814' }]}>
@@ -177,7 +203,6 @@ function LanguageOption({
   selected: boolean;
   onPress: () => void;
 }) {
-  const { theme } = useTheme();
   return (
     <Pressable
       onPress={onPress}

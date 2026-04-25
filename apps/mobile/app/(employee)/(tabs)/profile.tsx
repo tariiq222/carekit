@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { View, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   User,
@@ -21,7 +22,7 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
-import { logout } from '@/stores/slices/auth-slice';
+import { logout, setUser } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
 
 interface MenuItemProps {
@@ -66,6 +67,26 @@ export default function EmployeeProfileScreen() {
   const user = useAppSelector((s) => s.auth.user);
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : '';
+
+  // Refresh /auth/me when the screen gains focus, mirroring the
+  // client profile behaviour from Phase 3.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      authService
+        .getProfile()
+        .then((res) => {
+          if (cancelled || !res?.success || !res.data) return;
+          dispatch(setUser(res.data));
+        })
+        .catch(() => {
+          // Silent — Redux cache remains authoritative on failure.
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [dispatch]),
+  );
 
   const handleLogout = useCallback(() => {
     Alert.alert(t('auth.logout'), t('profile.logoutConfirm'), [

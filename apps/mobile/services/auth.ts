@@ -1,5 +1,9 @@
 import api from './api';
 import {
+  clearCurrentOrgId,
+  setCurrentOrgId,
+} from './tenant';
+import {
   getSecureItem,
   setSecureItem,
   deleteSecureItem,
@@ -105,6 +109,7 @@ export const authService = {
     }
     await deleteSecureItem('accessToken');
     await deleteSecureItem('refreshToken');
+    await clearCurrentOrgId();
     store.dispatch(logoutAction());
   },
 
@@ -131,4 +136,7 @@ export const authService = {
 async function persistTokens(data: NonNullable<AuthResponse['data']>) {
   await setSecureItem('accessToken', data.accessToken);
   await setSecureItem('refreshToken', data.refreshToken);
+  if (data.user?.organizationId) {
+    await setCurrentOrgId(data.user.organizationId);
+  }
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,10 +11,39 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
+import {
+  publicCatalogService,
+  type PublicService,
+} from '@/services/client/catalog';
+
+const VAT_RATE = 0.15;
+
+const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatTime(d: Date, isRTL: boolean): string {
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const suffix = h < 12 ? (isRTL ? 'ص' : 'AM') : (isRTL ? 'م' : 'PM');
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+}
+
+function formatDate(d: Date, isRTL: boolean): string {
+  const month = isRTL ? MONTHS_AR[d.getMonth()] : MONTHS_EN[d.getMonth()];
+  const day = isRTL ? d.getDate().toLocaleString('ar-SA') : d.getDate();
+  const year = isRTL ? d.getFullYear().toLocaleString('ar-SA') : d.getFullYear();
+  return isRTL ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
+}
 
 export default function BookingConfirmScreen() {
-  const { serviceId, employeeId, type, day, time } = useLocalSearchParams<{
-    serviceId?: string; employeeId?: string; type?: string; day?: string; time?: string;
+  const { serviceId, employeeId, branchId, type, scheduledAt, durationOptionId } = useLocalSearchParams<{
+    serviceId?: string;
+    employeeId?: string;
+    branchId?: string;
+    type?: string;
+    scheduledAt?: string;
+    durationOptionId?: string;
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -26,31 +55,97 @@ export default function BookingConfirmScreen() {
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
   const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
 
+  const [service, setService] = useState<PublicService | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!serviceId) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const departments = await publicCatalogService.listDepartments();
+        if (cancelled) return;
+        const found = departments
+          .flatMap((d) => d.services)
+          .find((s) => s.id === serviceId);
+        setService(found ?? null);
+        if (!found) setError(dir.isRTL ? 'الخدمة غير متوفرة' : 'Service unavailable');
+      } catch {
+        if (!cancelled) setError(dir.isRTL ? 'تعذّر تحميل الخدمة' : 'Failed to load service');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [serviceId, dir.isRTL]);
+
+  const scheduledDate = useMemo(
+    () => (scheduledAt ? new Date(scheduledAt) : null),
+    [scheduledAt],
+  );
+
   const isOnline = type === 'online';
   const kindAr = isOnline ? 'استشارة عن بُعد' : 'موعد عيادة';
   const kindEn = isOnline ? 'Remote consultation' : 'In-clinic visit';
-  const dayAr = day ? `${day} نوفمبر ٢٠٢٥` : 'الخميس ١٦ نوفمبر ٢٠٢٥';
-  const dayEn = day ? `Nov ${day}, 2025` : 'Thu Nov 16, 2025';
-  const timeAr = time ? `${time} م` : '٦:٣٠ م';
-  const timeEn = time ? `${time} PM` : '6:30 PM';
 
-  const PRICE = 250;
-  const VAT = Math.round(PRICE * 0.15);
-  const TOTAL = PRICE + VAT;
+  const subtotal = service ? Number(service.price) : 0;
+  const vat = Math.round(subtotal * VAT_RATE * 100) / 100;
+  const total = subtotal + vat;
+  const currency = service?.currency ?? 'SAR';
+
+  const formatMoney = (n: number) =>
+    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
 
   const rows = [
-    { icon: <Video size={18} color={sawaaColors.accent.violet} strokeWidth={1.75} />, labelAr: 'نوع الزيارة', labelEn: 'Visit type', valueAr: kindAr, valueEn: kindEn, color: sawaaColors.accent.violet },
-    { icon: <Calendar size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />, labelAr: 'التاريخ', labelEn: 'Date', valueAr: dayAr, valueEn: dayEn, color: sawaaColors.teal[600] },
-    { icon: <Clock size={18} color={sawaaColors.accent.amber} strokeWidth={1.75} />, labelAr: 'الوقت', labelEn: 'Time', valueAr: timeAr, valueEn: timeEn, color: sawaaColors.accent.amber },
+    {
+      icon: <Video size={18} color={sawaaColors.accent.violet} strokeWidth={1.75} />,
+      labelAr: 'نوع الزيارة',
+      labelEn: 'Visit type',
+      valueAr: kindAr,
+      valueEn: kindEn,
+      color: sawaaColors.accent.violet,
+    },
+    {
+      icon: <Calendar size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />,
+      labelAr: 'التاريخ',
+      labelEn: 'Date',
+      valueAr: scheduledDate ? formatDate(scheduledDate, true) : '—',
+      valueEn: scheduledDate ? formatDate(scheduledDate, false) : '—',
+      color: sawaaColors.teal[600],
+    },
+    {
+      icon: <Clock size={18} color={sawaaColors.accent.amber} strokeWidth={1.75} />,
+      labelAr: 'الوقت',
+      labelEn: 'Time',
+      valueAr: scheduledDate ? formatTime(scheduledDate, true) : '—',
+      valueEn: scheduledDate ? formatTime(scheduledDate, false) : '—',
+      color: sawaaColors.accent.amber,
+    },
   ];
 
   const handleConfirm = () => {
+    if (!service || !scheduledAt || !branchId || !employeeId || !serviceId) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.push({
       pathname: '/(client)/booking/payment',
-      params: { serviceId, employeeId, type, day, time },
+      params: {
+        serviceId,
+        employeeId,
+        branchId,
+        type,
+        scheduledAt,
+        durationOptionId,
+        amount: String(total),
+        currency,
+      },
     });
   };
+
+  const canContinue = service != null && scheduledDate != null && !!branchId;
 
   return (
     <AquaBackground>
@@ -81,7 +176,6 @@ export default function BookingConfirmScreen() {
           </Text>
         </Animated.View>
 
-        {/* Summary card */}
         <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.card}>
             {rows.map((r, i) => (
@@ -107,34 +201,39 @@ export default function BookingConfirmScreen() {
           </Glass>
         </Animated.View>
 
-        {/* Price breakdown */}
         <Animated.View entering={FadeInDown.delay(240).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.card}>
-            <View style={[styles.priceRow, { flexDirection: dir.row }]}>
-              <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
-                {dir.isRTL ? 'المبلغ' : 'Subtotal'}
-              </Text>
-              <Text style={[styles.priceValue, { fontFamily: f600 }]}>
-                {dir.isRTL ? `${PRICE.toLocaleString('ar-SA')} ر.س` : `SAR ${PRICE}`}
-              </Text>
-            </View>
-            <View style={[styles.priceRow, { flexDirection: dir.row }]}>
-              <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
-                {dir.isRTL ? 'ضريبة القيمة المضافة' : 'VAT (15%)'}
-              </Text>
-              <Text style={[styles.priceValue, { fontFamily: f600 }]}>
-                {dir.isRTL ? `${VAT.toLocaleString('ar-SA')} ر.س` : `SAR ${VAT}`}
-              </Text>
-            </View>
-            <View style={styles.priceDivider} />
-            <View style={[styles.priceRow, { flexDirection: dir.row }]}>
-              <Text style={[styles.priceLabelBold, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'الإجمالي' : 'Total'}
-              </Text>
-              <Text style={[styles.priceTotal, { fontFamily: f700 }]}>
-                {dir.isRTL ? `${TOTAL.toLocaleString('ar-SA')} ر.س` : `SAR ${TOTAL}`}
-              </Text>
-            </View>
+            {loading ? (
+              <View style={styles.statusBlock}>
+                <ActivityIndicator color={sawaaColors.teal[600]} />
+              </View>
+            ) : error ? (
+              <View style={styles.statusBlock}>
+                <Text style={[styles.statusText, { fontFamily: f500 }]}>{error}</Text>
+              </View>
+            ) : service ? (
+              <>
+                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                  <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
+                    {dir.isRTL ? service.nameAr : (service.nameEn ?? service.nameAr)}
+                  </Text>
+                  <Text style={[styles.priceValue, { fontFamily: f600 }]}>{formatMoney(subtotal)}</Text>
+                </View>
+                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                  <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
+                    {dir.isRTL ? 'ضريبة القيمة المضافة (١٥٪)' : 'VAT (15%)'}
+                  </Text>
+                  <Text style={[styles.priceValue, { fontFamily: f600 }]}>{formatMoney(vat)}</Text>
+                </View>
+                <View style={styles.priceDivider} />
+                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                  <Text style={[styles.priceLabelBold, { fontFamily: f700 }]}>
+                    {dir.isRTL ? 'الإجمالي' : 'Total'}
+                  </Text>
+                  <Text style={[styles.priceTotal, { fontFamily: f700 }]}>{formatMoney(total)}</Text>
+                </View>
+              </>
+            ) : null}
           </Glass>
         </Animated.View>
       </ScrollView>
@@ -143,12 +242,12 @@ export default function BookingConfirmScreen() {
         entering={FadeInDown.delay(360).duration(800).easing(Easing.out(Easing.cubic))}
         style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
       >
-        <Pressable onPress={handleConfirm} style={styles.ctaBtnPress}>
+        <Pressable onPress={handleConfirm} disabled={!canContinue} style={styles.ctaBtnPress}>
           <LinearGradient
             colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.ctaBtn}
+            style={[styles.ctaBtn, !canContinue && { opacity: 0.5 }]}
           >
             <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
               {dir.isRTL ? 'متابعة الدفع' : 'Continue to payment'}
@@ -183,6 +282,8 @@ const styles = StyleSheet.create({
   priceValue: { fontSize: 13, color: sawaaColors.ink[900] },
   priceTotal: { fontSize: 16, color: sawaaColors.teal[700] },
   priceDivider: { height: 0.5, backgroundColor: 'rgba(255,255,255,0.5)', marginHorizontal: 16 },
+  statusBlock: { paddingVertical: 32, alignItems: 'center', justifyContent: 'center' },
+  statusText: { fontSize: 13, color: sawaaColors.ink[500] },
   ctaWrap: { position: 'absolute', left: 16, right: 16 },
   ctaBtnPress: {},
   ctaBtn: {

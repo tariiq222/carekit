@@ -61,7 +61,8 @@
     "calendar": "Calendar",
     "clients": "Clients",
     "assistant": "Assistant",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "records": "Records"
   },
   "home": {
     "greeting": "Hello",
@@ -241,7 +242,21 @@
     "buildNumber": "Build",
     "languageChangeRestart": "Language change requires app restart to fully apply",
     "restartNow": "Restart Now",
-    "restartLater": "Later"
+    "restartLater": "Later",
+    "darkMode": "Dark Mode",
+    "profile": "Profile",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "phone": "Phone",
+    "email": "Email",
+    "saveProfile": "Save Changes",
+    "profileSaved": "Profile updated",
+    "profileSaveError": "Failed to update profile",
+    "errors": {
+      "required": "Required",
+      "invalidPhone": "Phone must be in +9665XXXXXXXX format",
+      "invalidEmail": "Invalid email"
+    }
   },
   "notifications": {
     "title": "Notifications",

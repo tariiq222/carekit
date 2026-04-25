@@ -8,14 +8,13 @@ import {
   Pressable,
   Alert,
   StyleSheet,
-  TextInput,
   ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
@@ -24,6 +23,7 @@ import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { LabeledInput } from '@/components/ui/LabeledInput';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
@@ -42,6 +42,10 @@ export default function RegisterScreen() {
   const [loading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
+  const clearError = (field: string) => {
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
+  };
+
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,14 +54,9 @@ export default function RegisterScreen() {
     if (!lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
     if (!email || !emailRegex.test(email)) newErrors.email = t('auth.invalidEmail');
     if (!phone.trim()) newErrors.phone = t('auth.phoneRequired');
-    if (!password) {
-      newErrors.password = t('auth.passwordRequired');
-    } else if (password.length < 8) {
-      newErrors.password = t('auth.passwordMinLength');
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = t('auth.passwordMismatch');
-    }
+    if (!password) newErrors.password = t('auth.passwordRequired');
+    else if (password.length < 8) newErrors.password = t('auth.passwordMinLength');
+    if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordMismatch');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -68,18 +67,10 @@ export default function RegisterScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-
     setIsLoading(true);
     dispatch(setLoading(true));
-
     try {
-      const response = await authService.register({
-        firstName,
-        lastName,
-        email,
-        phone,
-        password,
-      });
+      const response = await authService.register({ firstName, lastName, email, phone, password });
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
@@ -109,12 +100,11 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scroll,
-            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }
+            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Back Button */}
           <Glass
             variant="strong"
             radius={22}
@@ -125,17 +115,17 @@ export default function RegisterScreen() {
             interactive
             style={styles.backBtn}
           >
-            {dir.isRTL
-              ? <ChevronRight size={22} color={C.deepTeal} strokeWidth={1.75} />
-              : <ChevronLeft size={22} color={C.deepTeal} strokeWidth={1.75} />
-            }
+            {dir.isRTL ? (
+              <ChevronRight size={22} color={C.deepTeal} strokeWidth={1.75} />
+            ) : (
+              <ChevronLeft size={22} color={C.deepTeal} strokeWidth={1.75} />
+            )}
           </Glass>
 
-          {/* Title */}
           <Text
             style={[
               styles.title,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
             ]}
           >
             {t('auth.createAccountTitle')}
@@ -143,154 +133,100 @@ export default function RegisterScreen() {
           <Text
             style={[
               styles.subtitle,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection }
+              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
             ]}
           >
             {t('auth.createAccountSub')}
           </Text>
 
-          {/* Form */}
-          <Glass
-            variant="regular"
-            radius={RADII.card}
-            style={[styles.form, SHADOW, { marginTop: 24 }]}
-          >
+          <Glass variant="regular" radius={RADII.card} style={[styles.form, SHADOW, { marginTop: 24 }]}>
             <View style={styles.formInner}>
-              {/* Name Row */}
               <View style={[styles.row, { flexDirection: dir.row }]}>
                 <View style={styles.half}>
-                  <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                    {t('auth.firstName')}
-                  </Text>
-                  <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                    <TextInput
-                      value={firstName}
-                      onChangeText={(text) => {
-                        setFirstName(text);
-                        if (errors.firstName) setErrors((e) => ({ ...e, firstName: undefined }));
-                      }}
-                      placeholder={t('auth.firstNamePlaceholder')}
-                      placeholderTextColor={C.subtle}
-                      style={[styles.inputText, { textAlign: dir.textAlign }]}
-                    />
-                  </Glass>
-                  {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
+                  <LabeledInput
+                    label={t('auth.firstName')}
+                    value={firstName}
+                    onChangeText={(v) => {
+                      setFirstName(v);
+                      clearError('firstName');
+                    }}
+                    placeholder={t('auth.firstNamePlaceholder')}
+                    error={errors.firstName}
+                    dir={dir}
+                  />
                 </View>
-
                 <View style={styles.half}>
-                  <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                    {t('auth.lastName')}
-                  </Text>
-                  <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                    <TextInput
-                      value={lastName}
-                      onChangeText={(text) => {
-                        setLastName(text);
-                        if (errors.lastName) setErrors((e) => ({ ...e, lastName: undefined }));
-                      }}
-                      placeholder={t('auth.lastNamePlaceholder')}
-                      placeholderTextColor={C.subtle}
-                      style={[styles.inputText, { textAlign: dir.textAlign }]}
-                    />
-                  </Glass>
-                  {errors.lastName ? <Text style={styles.error}>{errors.lastName}</Text> : null}
+                  <LabeledInput
+                    label={t('auth.lastName')}
+                    value={lastName}
+                    onChangeText={(v) => {
+                      setLastName(v);
+                      clearError('lastName');
+                    }}
+                    placeholder={t('auth.lastNamePlaceholder')}
+                    error={errors.lastName}
+                    dir={dir}
+                  />
                 </View>
               </View>
 
-              {/* Email */}
-              <View style={styles.field}>
-                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                  {t('auth.email')}
-                </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                  <TextInput
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
-                    }}
-                    placeholder={t('auth.emailPlaceholder')}
-                    placeholderTextColor={C.subtle}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    style={[styles.inputText, { textAlign: dir.textAlign }]}
-                  />
-                </Glass>
-                {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
-              </View>
+              <LabeledInput
+                label={t('auth.email')}
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  clearError('email');
+                }}
+                placeholder={t('auth.emailPlaceholder')}
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                dir={dir}
+              />
 
-              {/* Phone */}
-              <View style={styles.field}>
-                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                  {t('auth.phone')}
-                </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                  <TextInput
-                    value={phone}
-                    onChangeText={(text) => {
-                      setPhone(text);
-                      if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
-                    }}
-                    placeholder={t('auth.phonePlaceholder')}
-                    placeholderTextColor={C.subtle}
-                    keyboardType="phone-pad"
-                    style={[styles.inputText, { textAlign: dir.textAlign }]}
-                  />
-                </Glass>
-                {errors.phone ? <Text style={styles.error}>{errors.phone}</Text> : null}
-              </View>
+              <LabeledInput
+                label={t('auth.phone')}
+                value={phone}
+                onChangeText={(v) => {
+                  setPhone(v);
+                  clearError('phone');
+                }}
+                placeholder={t('auth.phonePlaceholder')}
+                error={errors.phone}
+                keyboardType="phone-pad"
+                dir={dir}
+              />
 
-              {/* Password */}
-              <View style={styles.field}>
-                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                  {t('auth.password')}
-                </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                  <View style={[styles.inputRow, { flexDirection: dir.row }]}>
-                    <TextInput
-                      value={password}
-                      onChangeText={(text) => {
-                        setPassword(text);
-                        if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
-                      }}
-                      placeholder={t('auth.passwordPlaceholder')}
-                      placeholderTextColor={C.subtle}
-                      secureTextEntry={!showPassword}
-                      style={[styles.inputText, { textAlign: dir.textAlign }]}
-                    />
-                    <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn} hitSlop={8}>
-                      {showPassword
-                        ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
-                        : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
-                      }
-                    </Pressable>
-                  </View>
-                </Glass>
-                {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
-              </View>
+              <LabeledInput
+                label={t('auth.password')}
+                value={password}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  clearError('password');
+                }}
+                placeholder={t('auth.passwordPlaceholder')}
+                error={errors.password}
+                secureTextEntry
+                showVisibilityToggle
+                isVisible={showPassword}
+                onToggleVisibility={() => setShowPassword((s) => !s)}
+                dir={dir}
+              />
 
-              {/* Confirm Password */}
-              <View style={styles.field}>
-                <Text style={[styles.label, { textAlign: dir.textAlign }]}>
-                  {t('auth.confirmPassword')}
-                </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
-                  <TextInput
-                    value={confirmPassword}
-                    onChangeText={(text) => {
-                      setConfirmPassword(text);
-                      if (errors.confirmPassword) setErrors((e) => ({ ...e, confirmPassword: undefined }));
-                    }}
-                    placeholder={t('auth.confirmPasswordPlaceholder')}
-                    placeholderTextColor={C.subtle}
-                    secureTextEntry={!showPassword}
-                    style={[styles.inputText, { textAlign: dir.textAlign }]}
-                  />
-                </Glass>
-                {errors.confirmPassword ? <Text style={styles.error}>{errors.confirmPassword}</Text> : null}
-              </View>
+              <LabeledInput
+                label={t('auth.confirmPassword')}
+                value={confirmPassword}
+                onChangeText={(v) => {
+                  setConfirmPassword(v);
+                  clearError('confirmPassword');
+                }}
+                placeholder={t('auth.confirmPasswordPlaceholder')}
+                error={errors.confirmPassword}
+                secureTextEntry
+                isVisible={showPassword}
+                dir={dir}
+              />
 
-              {/* Register Button */}
               <PrimaryButton
                 label={loading ? t('common.loading') : t('auth.register')}
                 onPress={handleRegister}
@@ -298,7 +234,6 @@ export default function RegisterScreen() {
                 style={{ marginTop: 8 }}
               />
 
-              {/* Login Link */}
               <View style={[styles.loginRow, { flexDirection: dir.row }]}>
                 <Text style={styles.loginText}>{t('auth.haveAccount')} </Text>
                 <Pressable
@@ -330,23 +265,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignSelf: 'flex-start',
   },
-  backIcon: { fontSize: 24, color: C.deepTeal },
   title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
   subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
   form: { padding: 24 },
   formInner: { gap: 16 },
   row: { gap: 12 },
-  half: { flex: 1, gap: 8 },
-  field: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
-  input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
-  inputRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', width: '100%' },
-  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
-  eyeBtn: { padding: 4 },
-  eyeIcon: { fontSize: 18 },
-  error: { fontSize: 12, color: '#E74C3C' },
-  btn: { padding: 16, alignItems: 'center' },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  half: { flex: 1 },
   loginRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
   loginText: { fontSize: 14, color: C.subtle },
   loginLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },

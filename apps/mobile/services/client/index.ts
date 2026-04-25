@@ -1,5 +1,7 @@
 export { clientBookingsService } from './bookings';
 export { clientPaymentsService } from './payments';
+export { clientProfileService } from './profile';
+export type { ClientProfile, ClientProfileUpdate } from './profile';
 export { publicBranchesService } from './branches';
 export { publicEmployeesService } from './employees';
 export type { PublicEmployeeItem } from './employees';
