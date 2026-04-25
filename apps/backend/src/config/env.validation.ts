@@ -99,6 +99,7 @@ export const envValidationSchema = Joi.object({
   // SMS per-tenant (SaaS-02g-sms) — encryption key is REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
   // Webhook base URL is the public origin registered with providers for DLR callbacks.
   SMS_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
+  ZOOM_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
   SMS_WEBHOOK_URL_BASE: Joi.string().uri().allow('').optional(),
 
   // Billing (SaaS-04) — PLATFORM Moyasar (charges clinics for SaaS subscriptions).

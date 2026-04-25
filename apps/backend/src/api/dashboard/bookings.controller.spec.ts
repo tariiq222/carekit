@@ -13,6 +13,7 @@ function buildController() {
   const cancel = fn({ id: 'book-1' });
   const reschedule = fn({ id: 'book-1' });
   const confirm = fn({ id: 'book-1' });
+  const retryZoom = fn({ id: 'book-1' });
   const checkIn = fn({ id: 'book-1' });
   const complete = fn({ id: 'book-1' });
   const noShow = fn({ id: 'book-1' });
@@ -24,6 +25,7 @@ function buildController() {
   const controller = new DashboardBookingsController(
     create as never, createRecurring as never, list as never, stats as never,
     get as never, cancel as never, reschedule as never, confirm as never,
+    retryZoom as never,
     checkIn as never, complete as never, noShow as never, waitlist as never,
     listWaitlist as never, removeWaitlist as never, availability as never,
     statusLog as never,

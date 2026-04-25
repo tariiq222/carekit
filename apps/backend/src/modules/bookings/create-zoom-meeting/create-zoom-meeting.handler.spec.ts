@@ -1,87 +1,142 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateZoomMeetingHandler } from './create-zoom-meeting.handler';
 import { buildPrisma, mockBooking } from '../testing/booking-test-helpers';
+import { ZoomMeetingStatus } from '@prisma/client';
 
-const onlineBooking = { ...mockBooking, bookingType: 'ONLINE' as const };
+const onlineBooking = {
+  ...mockBooking,
+  bookingType: 'ONLINE' as const,
+  organizationId: 'org-1',
+};
 const zoomIntegration = {
   isActive: true,
-  config: { zoomClientId: 'cid', zoomClientSecret: 'csec', zoomAccountId: 'acct' },
+  config: { ciphertext: 'cipher' },
 };
 
-function buildPrismaWithZoom(bookingOverride = onlineBooking, integrationOverride = zoomIntegration) {
+function buildMocks() {
   const prisma = buildPrisma();
-  prisma.booking.findFirst = jest.fn().mockResolvedValue(bookingOverride);
-  (prisma as unknown as Record<string, unknown>).integration = {
-    findFirst: jest.fn().mockResolvedValue(integrationOverride),
+  prisma.booking.findFirst = jest.fn().mockResolvedValue(onlineBooking);
+  (prisma as unknown as { integration: { findFirst: jest.Mock } }).integration = {
+    findFirst: jest.fn().mockResolvedValue(zoomIntegration),
   };
-  prisma.booking.update = jest.fn().mockResolvedValue({ ...bookingOverride, zoomMeetingId: '12345' });
-  return prisma;
+  (prisma as unknown as { organizationSettings: { findFirst: jest.Mock } }).organizationSettings = {
+    findFirst: jest.fn().mockResolvedValue({ timezone: 'Asia/Riyadh' }),
+  };
+  prisma.booking.update = jest
+    .fn()
+    .mockImplementation(({ data }) => Promise.resolve({ ...onlineBooking, ...data }));
+
+  const zoomApi = {
+    getAccessToken: jest.fn().mockResolvedValue('token'),
+    createMeeting: jest
+      .fn()
+      .mockResolvedValue({ id: 99, join_url: 'join', start_url: 'start' }),
+  };
+
+  const zoomCredentials = {
+    decrypt: jest.fn().mockReturnValue({
+      zoomClientId: 'cid',
+      zoomClientSecret: 'csec',
+      zoomAccountId: 'acct',
+    }),
+  };
+
+  return { prisma, zoomApi, zoomCredentials };
 }
 
 describe('CreateZoomMeetingHandler', () => {
   it('throws NotFoundException when booking not found', async () => {
-    const prisma = buildPrismaWithZoom();
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
-    const handler = new CreateZoomMeetingHandler(prisma as never);
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+    );
 
-    await expect(handler.execute({ bookingId: 'bad' })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ bookingId: 'bad' })).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
-  it('throws BadRequestException for non-ONLINE booking', async () => {
-    const prisma = buildPrismaWithZoom({ ...mockBooking, bookingType: 'INDIVIDUAL' } as never);
-    const handler = new CreateZoomMeetingHandler(prisma as never);
+  it('skips if already CREATED (idempotency)', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({
+      ...onlineBooking,
+      zoomMeetingId: '99',
+      zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+    });
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+    );
 
-    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);
+    await handler.execute({ bookingId: 'book-1' });
+
+    expect(zoomApi.createMeeting).not.toHaveBeenCalled();
   });
 
-  it('throws BadRequestException when Zoom integration not configured', async () => {
-    const prisma = buildPrismaWithZoom(onlineBooking, null as never);
-    const handler = new CreateZoomMeetingHandler(prisma as never);
-
-    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);
-  });
-
-  it('throws BadRequestException when Zoom integration is inactive', async () => {
-    const prisma = buildPrismaWithZoom(onlineBooking, { ...zoomIntegration, isActive: false });
-    const handler = new CreateZoomMeetingHandler(prisma as never);
-
-    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);
-  });
-
-  it('calls Zoom API and updates booking with meeting details', async () => {
-    const prisma = buildPrismaWithZoom();
-    const handler = new CreateZoomMeetingHandler(prisma as never);
-
-    global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ access_token: 'tok', token_type: 'Bearer', expires_in: 3600 }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 99, join_url: 'https://zoom.us/j/99', start_url: 'https://zoom.us/s/99' }) });
+  it('sets FAILED status when Zoom integration not configured', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    (prisma as unknown as { integration: { findFirst: jest.Mock } }).integration.findFirst = jest.fn().mockResolvedValue(null);
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+    );
 
     await handler.execute({ bookingId: 'book-1' });
 
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ zoomMeetingId: '99', zoomJoinUrl: 'https://zoom.us/j/99' }),
+        data: expect.objectContaining({
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+        }),
       }),
     );
   });
 
-  it('throws BadRequestException when Zoom token request fails', async () => {
-    const prisma = buildPrismaWithZoom();
-    const handler = new CreateZoomMeetingHandler(prisma as never);
+  it('calls Zoom API and updates booking with meeting details on success', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+    );
 
-    global.fetch = jest.fn().mockResolvedValueOnce({ ok: false, statusText: 'Unauthorized' });
+    await handler.execute({ bookingId: 'book-1' });
 
-    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);
+    expect(zoomApi.createMeeting).toHaveBeenCalled();
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          zoomMeetingId: '99',
+          zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+          zoomStartUrl: 'start',
+        }),
+      }),
+    );
   });
 
-  it('throws BadRequestException when Zoom meeting creation fails', async () => {
-    const prisma = buildPrismaWithZoom();
-    const handler = new CreateZoomMeetingHandler(prisma as never);
+  it('sets FAILED status when Zoom API fails', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    zoomApi.createMeeting.mockRejectedValue(new Error('Zoom Outage'));
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+    );
 
-    global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ access_token: 'tok', token_type: 'Bearer', expires_in: 3600 }) })
-      .mockResolvedValueOnce({ ok: false, statusText: 'Bad Request' });
+    await handler.execute({ bookingId: 'book-1' });
 
-    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: 'Zoom Outage',
+        }),
+      }),
+    );
   });
 });

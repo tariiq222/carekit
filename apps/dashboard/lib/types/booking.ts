@@ -88,6 +88,8 @@ export interface Booking {
   notes: string | null
   zoomJoinUrl: string | null
   zoomHostUrl: string | null
+  zoomMeetingStatus: "PENDING" | "CREATED" | "FAILED" | "CANCELLED" | null
+  zoomMeetingError: string | null
   cancellationReason: string | null
   cancelledBy: CancelledBy | null
   suggestedRefundType: RefundType | null

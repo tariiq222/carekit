@@ -42,6 +42,13 @@ enum RecurringFrequency {
   CUSTOM
 }
 
+enum ZoomMeetingStatus {
+  PENDING
+  CREATED
+  FAILED
+  CANCELLED
+}
+
 // ─── Booking ─────────────────────────────────────────────────────────────────
 
 model Booking {
@@ -77,6 +84,10 @@ model Booking {
   zoomMeetingId    String?
   zoomJoinUrl      String?
   zoomHostUrl      String?
+  zoomStartUrl     String?
+  zoomMeetingStatus ZoomMeetingStatus?
+  zoomMeetingError String?
+  zoomMeetingCreatedAt DateTime?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 

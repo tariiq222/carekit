@@ -23,6 +23,8 @@ const sampleRow: ClientBookingRow = {
   branchId: 'br1',
   serviceId: 's1',
   zoomJoinUrl: null,
+  zoomStartUrl: null,
+  zoomMeetingStatus: null,
 };
 
 beforeEach(() => {

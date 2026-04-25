@@ -6,6 +6,7 @@ import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { CancelBookingDto } from './cancel-booking.dto';
+import { ZoomMeetingService } from '../zoom-meeting.service';
 
 export type CancelBookingCommand = CancelBookingDto & {
   bookingId: string;
@@ -25,6 +26,7 @@ export class CancelBookingHandler {
     private readonly tenant: TenantContextService,
     private readonly eventBus: EventBusService,
     private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly zoomMeetingService: ZoomMeetingService,
   ) {}
 
   async execute(cmd: CancelBookingCommand) {
@@ -67,6 +69,7 @@ export class CancelBookingHandler {
           cancelReason: cmd.reason,
           cancelNotes: cmd.cancelNotes,
           cancelledAt: new Date(),
+          zoomMeetingStatus: booking.zoomMeetingId ? 'CANCELLED' : undefined,
         },
       }),
       this.prisma.bookingStatusLog.create({
@@ -90,6 +93,11 @@ export class CancelBookingHandler {
       zoomMeetingId: (booking as Record<string, unknown>).zoomMeetingId as string | null ?? null,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
+
+    if (booking.zoomMeetingId) {
+      // Best effort deletion
+      this.zoomMeetingService.deleteMeeting(organizationId, booking.zoomMeetingId).catch(() => {});
+    }
 
     return { ...updated, refundType };
   }

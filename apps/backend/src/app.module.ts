@@ -21,6 +21,7 @@ import { OrgConfigModule } from "./modules/org-config/org-config.module";
 import { OrgExperienceModule } from "./modules/org-experience/org-experience.module";
 import { FinanceModule } from "./modules/finance/finance.module";
 import { BookingsModule } from "./modules/bookings/bookings.module";
+import { ZoomModule } from "./modules/integrations/zoom/zoom.module";
 import { OpsModule } from "./modules/ops/ops.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { AiModule } from "./modules/ai/ai.module";
@@ -62,6 +63,7 @@ import { PublicModule } from "./api/public/public.module";
     OrgExperienceModule,
     FinanceModule,
     BookingsModule,
+    ZoomModule,
     OpsModule,
     DashboardModule,
     AiModule,
