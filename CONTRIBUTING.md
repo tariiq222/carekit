@@ -1,6 +1,6 @@
 # Contributing to CareKit
 
-Welcome to CareKit — a white-label smart clinic management platform. This guide gets you productive in under 30 minutes.
+Welcome to CareKit — a multi-tenant SaaS clinic platform. This guide gets you productive in under 30 minutes.
 
 ## Quick Setup
 
@@ -11,172 +11,196 @@ npm install
 
 # 2. Environment
 cp .env.example .env
-# Fill in: DATABASE_URL, REDIS_URL, OPENROUTER_API_KEY, MOYASAR_API_KEY, ZOOM_*, FCM_*
+# Fill in: DATABASE_URL, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET,
+# MOYASAR_PLATFORM_*, MOYASAR_TENANT_DEFAULT_*, ZOOM_ENCRYPTION_KEY,
+# SMS_ENCRYPTION_KEY, AUTHENTICA_API_KEY, MINIO_*, ADMIN_HOSTS,
+# TENANT_ENFORCEMENT=strict
 
 # 3. Database
-cd backend
-npx prisma migrate dev
-npx prisma db seed
+cd apps/backend
+npx prisma migrate deploy
+npm run seed
 
 # 4. Start everything
-cd .. && npm run dev
-# backend → http://localhost:3000
-# dashboard → http://localhost:3001
-# Swagger → http://localhost:3000/api/docs
+cd ../.. && npm run dev:all
+# backend   → http://localhost:5100
+# dashboard → http://localhost:5103   (per-tenant)
+# admin     → http://localhost:5104   (super-admin)
+# website   → http://localhost:5105   (public)
+# Expo      → http://localhost:5102
 ```
 
 ## Before You Write Any Code
 
-Read these files in order — skip none:
+Read these in order — skip none:
 
 | # | File | What it covers |
 |---|------|----------------|
-| 1 | `CLAUDE.md` | Architecture decisions, coding standards, key rules |
-| 2 | `ARCHITECTURE.md` | Module boundaries, feature list, decision log |
-| 3 | `dashboard/DESIGN-SYSTEM.md` | Visual rules — frosted glass, tokens, RTL |
-| 4 | `dashboard/components-policy.md` | Which components exist, when to create new ones |
-| 5 | `docs/core/api-spec.md` | API contracts before touching backend |
+| 1 | `CLAUDE.md` | Project rules, multi-tenancy, golden rules, design context |
+| 2 | `ARCHITECTURE.md` | Topology, request pipeline, cluster tree, vertical slices |
+| 3 | `apps/backend/CLAUDE.md` | Backend module conventions per cluster |
+| 4 | `apps/dashboard/CLAUDE.md` | Dashboard layer rules + Page Anatomy Law |
+| 5 | `apps/mobile/CLAUDE.md` (if mobile) or `apps/admin/CLAUDE.md` (if super-admin) | App-specific conventions |
+| 6 | `docs/architecture/module-ownership.md` | Live owned-models map |
 
 ## Layer Rules
 
-### Backend (NestJS)
+### Backend (NestJS) — Vertical Slices, NOT Controller→Service→Repository
 
 ```
-Controller  →  Service  →  Repository/Prisma
-     ↓
-   DTOs (input validation via class-validator)
-   Guards (CASL permissions)
-   Interceptors (logging, response transform)
+apps/backend/src/modules/<cluster>/<action>/
+├── <action>.controller.ts    (or registered in src/api/<surface>/)
+├── <action>.handler.ts       business logic — one slice, one intent
+├── <action>.dto.ts           Zod schema + types
+├── <action>.spec.ts          unit tests
+└── <action>.e2e.spec.ts      integration (incl. tenant isolation)
 ```
 
-- One module per domain feature (no god modules)
-- Services contain all business logic — controllers are thin
-- DTOs validate every incoming request
-- Every endpoint has a `@ApiOperation` Swagger decorator
-- Every service method has at least one unit test
+- One folder per intent (`create-booking`, `cancel-booking`, …) — not one service per feature
+- Handlers are thin and direct; reach into Prisma when needed
+- DTOs use Zod (`ZodValidationPipe`)
+- Every endpoint goes through `TenantResolverMiddleware` + `JwtAuthGuard`
+- Plan-tier-restricted endpoints add `@UseGuards(FeatureGuard)`
+- Owner-only clusters (payments, ZATCA, identity, tenant infra, `platform/admin|billing|verticals`): require `@tariq` review
 
-### Dashboard (Next.js)
+### Frontend (Next.js — dashboard / admin / website)
 
 ```
-app/(dashboard)/[feature]/page.tsx   ← route entry point (thin)
-  └── components/features/[feature]/ ← all UI components
-        └── hooks/use-[feature].ts   ← data fetching & mutations
-              └── lib/api/[feature].ts ← raw fetch calls
-                    └── lib/types/[feature].ts ← TypeScript types
+app/<route-group>/[feature]/page.tsx          ← thin route entry
+  └── components/features/[feature]/          ← UI composition
+        └── hooks/queries/[feature]/          ← TanStack Query
+              └── lib/api/[feature].ts        ← typed fetch
 ```
 
-**Import direction is one-way downward — never import upward or sideways across features.**
+- UI primitives come from `@carekit/ui` — **do not modify them in place**
+- Compose primitives in `components/features/`
+- Imports are one-way downward; never sideways across features
+- All user-facing strings: AR + EN entries (i18n parity)
+- Per-tenant dashboard uses semantic tokens only — `BrandingConfig` overrides at runtime
+- Dashboard list pages MUST follow the Page Anatomy Law in root `CLAUDE.md`
+
+### Mobile (Expo)
+
+- Redux Toolkit only for `auth` slice; everything else uses TanStack Query (`hooks/queries/`)
+- Theme reads `PublicBranding` from backend; never hardcode colors
+- Terminology mirrors dashboard via `useTerminology()`
 
 ## New Feature Checklist
 
-Use this when adding any new feature end-to-end:
+### Backend slice
+- [ ] Folder at `apps/backend/src/modules/<cluster>/<action>/`
+- [ ] `<action>.handler.ts` with the business logic
+- [ ] `<action>.dto.ts` with Zod schema
+- [ ] Controller registered in `src/api/<surface>/` or `<action>.controller.ts`
+- [ ] Prisma schema updated (correct cluster file in `prisma/schema/`)
+- [ ] Migration: `npx prisma migrate dev --name <descriptive>`
+- [ ] If new model is tenant-scoped: `organizationId` column + RLS policy in the migration
+- [ ] Unit tests in `<action>.spec.ts`
+- [ ] Tenant-isolation e2e in `<action>.e2e.spec.ts`
+- [ ] If plan-tier-restricted: `FeatureGuard` applied + plan entry in seed
 
-### Backend
-- [ ] New module folder in `backend/src/modules/[feature]/`
-- [ ] `[feature].module.ts` — module definition with imports
-- [ ] `[feature].controller.ts` — routes with `@ApiOperation` decorators
-- [ ] `[feature].service.ts` — business logic
-- [ ] `dto/create-[feature].dto.ts` — input validation
-- [ ] `dto/update-[feature].dto.ts` — update validation
-- [ ] Prisma schema updated in `prisma/schema/`
-- [ ] Migration created: `npx prisma migrate dev --name add_[feature]`
-- [ ] Migration recorded in `docs/operations/migration-log.md`
-- [ ] Unit tests in `[feature]/tests/[feature].service.spec.ts`
-- [ ] Module registered in `app.module.ts`
+### Dashboard / Admin
+- [ ] Page: `app/<route-group>/<feature>/page.tsx`
+- [ ] Components: `components/features/<feature>/`
+- [ ] Types: from `@carekit/api-client` (don't redefine)
+- [ ] Query/mutation hooks: `hooks/queries/<feature>/`
+- [ ] Query keys added to `lib/query-keys.ts`
+- [ ] Translations: `messages/ar.json` + `messages/en.json` (parity)
+- [ ] Page Anatomy Law respected (list pages)
+- [ ] Sidebar link added (if user-visible)
 
-### Dashboard
-- [ ] Page: `dashboard/src/app/(dashboard)/[feature]/page.tsx`
-- [ ] Components: `dashboard/src/components/features/[feature]/`
-- [ ] Types: `dashboard/src/lib/types/[feature].ts`
-- [ ] API client: `dashboard/src/lib/api/[feature].ts`
-- [ ] Zod schema: `dashboard/src/lib/schemas/[feature].schema.ts`
-- [ ] Query hook: `dashboard/src/hooks/use-[feature].ts`
-- [ ] Mutation hook: `dashboard/src/hooks/use-[feature]-mutations.ts`
-- [ ] Query keys: added to `dashboard/src/lib/query-keys.ts`
-- [ ] Arabic translations: `dashboard/src/lib/translations/ar.[feature].ts`
-- [ ] English translations: `dashboard/src/lib/translations/en.[feature].ts`
-- [ ] Sidebar link added (if user-visible page)
+### Mobile
+- [ ] Screen under correct route group (`(client)`, `(employee)`, or `(auth)`)
+- [ ] Service in `services/` (or `services/{client,employee}/`)
+- [ ] TanStack Query hook in `hooks/queries/`
+- [ ] Translations in `i18n/locales/`
+- [ ] Theme tokens, no raw colors
 
 ## Pre-PR Checklist
 
-Do not open a PR until every item is checked:
-
-- [ ] No file exceeds **350 lines** (hard limit, no exceptions)
-- [ ] No `any` TypeScript type (use `unknown` + type guard if needed)
-- [ ] No hardcoded hex colors (use semantic tokens from `globals.css`)
-- [ ] No `text-gray-*` classes (use `text-foreground` / `text-muted-foreground`)
-- [ ] No raw `<input>`, `<select>`, `<textarea>` (use shadcn equivalents)
-- [ ] No Lucide icons (use `@hugeicons/react` only)
-- [ ] No cross-feature imports in dashboard
-- [ ] No `prisma db push` (use `prisma migrate dev` only)
-- [ ] RTL tested: layout works in Arabic (`dir="rtl"`)
-- [ ] Loading state implemented (skeleton or spinner)
-- [ ] Error state implemented (ErrorBanner or toast)
-- [ ] Empty state implemented (EmptyState component)
-- [ ] Unit tests pass: `npm run test` in backend
-- [ ] TypeScript compiles: `npm run build` in affected workspace
+- [ ] No file exceeds **350 lines**
+- [ ] No `any` (use `unknown` + type guard if needed)
+- [ ] No hardcoded hex colors / no `text-gray-*` (semantic tokens only)
+- [ ] No raw `<input>`/`<select>`/`<textarea>` — use `@carekit/ui` primitives
+- [ ] No cross-feature imports
+- [ ] No `prisma db push` — `prisma migrate dev` only
+- [ ] Migrations are additive (never edit/squash existing ones)
+- [ ] RTL tested for any new dashboard/mobile screen
+- [ ] Loading + error + empty states implemented
+- [ ] **Tenant-isolation e2e** for any new tenant-scoped feature
+- [ ] **i18n parity (AR/EN)** for any user-facing string
+- [ ] **FeatureGuard** applied if plan-tier-restricted
+- [ ] Unit + e2e tests pass
+- [ ] Typecheck clean (`npm run typecheck` in affected workspace)
 
 ## Commit Convention
 
 Format: `type(scope): short description`
 
-| Type | When to use |
-|------|-------------|
+| Type | When |
+|------|------|
 | `feat` | New feature or capability |
 | `fix` | Bug fix |
-| `refactor` | Code change that neither adds feature nor fixes bug |
-| `test` | Adding or updating tests |
+| `refactor` | Code change, no behavior change |
+| `test` | Adding/updating tests |
 | `docs` | Documentation only |
-| `chore` | Tooling, deps, config — no production code |
+| `chore` | Tooling, deps, config |
 | `perf` | Performance improvement |
 
 **Examples:**
 ```
 feat(bookings): add cancellation timeout task
 fix(payments): handle Moyasar webhook retry correctly
-refactor(auth): split OTP logic into dedicated service
-test(bookings): add unit tests for cancellation flow
-docs(api): update booking endpoints in api-spec.md
-chore(deps): upgrade NestJS to 11.1
+refactor(saas-06a): bookings — t() literals
+test(backend): cover client payment-init e2e + unit
+docs(claude): rewrite root CLAUDE.md for multi-tenant SaaS
 ```
+
+Commit size limit: **≤10 files OR ≤500 lines** per commit. One system per commit.
 
 **Branch naming:**
 ```
-feature/booking-cancellation-flow
-fix/otp-email-not-sending
-hotfix/moyasar-webhook-signature
-release/v1.2.0
+feat/<saas-phase-or-feature>
+fix/<short-issue>
+refactor/<scope>
+hotfix/<short-issue>
 ```
 
-## Architecture Decision Records (ADRs)
+## Owner-Only Areas (require @tariq review)
 
-When making a significant technical decision, document it in `docs/refactor-roadmap.md` under the ADR section. Include:
-- **Context:** Why was a decision needed?
-- **Decision:** What was chosen?
-- **Consequences:** What trade-offs does this create?
+- `apps/backend/src/modules/finance/` (payments, Moyasar, ZATCA, refunds)
+- `apps/backend/src/modules/identity/` (auth, OTP, JWT, memberships, switch-org)
+- `apps/backend/src/common/tenant/` (resolver, RLS, scoping extension)
+- `apps/backend/src/modules/platform/{admin,billing,verticals}/`
+- `apps/admin/` (super-admin app)
+- `apps/backend/prisma/schema/` and any migrations
+- `CODEOWNERS`
 
 ## FAQ
 
-**Q: Can I modify shadcn/ui components in `components/ui/`?**
-A: No. These are primitives — wrap them in `components/features/` instead.
+**Q: Can I modify primitives in `@carekit/ui`?**
+A: Wrap them in `components/features/`. Modify `@carekit/ui` only if you're intentionally extending the design system.
 
-**Q: Can I add a new color or create a custom CSS class?**
-A: No. Use existing tokens from `globals.css`. If a token is missing, add it there following the naming convention.
+**Q: Can I add a new color or hex value?**
+A: No. Add a semantic token. Per-tenant `BrandingConfig` depends on it.
 
-**Q: My file is getting close to 350 lines. What do I do?**
-A: Split immediately by responsibility. A service with 300 lines likely has 2–3 concerns — extract each into its own service file.
+**Q: My file is approaching 350 lines. What do I do?**
+A: Split by responsibility now. Don't wait to cross the line.
 
 **Q: Do I need a migration for every schema change?**
-A: Yes — always `prisma migrate dev --name <descriptive_name>`. Never `prisma db push`.
+A: Yes — `prisma migrate dev --name <descriptive>`. Never `prisma db push`.
 
 **Q: Can I import a component from another feature folder?**
-A: No. If two features need the same component, extract it to `components/ui/` (if generic) or `components/features/shared/` (if domain-specific).
+A: No. Promote to `@carekit/ui` (if generic) or `components/features/shared/` (if domain-shared).
 
-**Q: Where do I put shared business logic used by multiple backend modules?**
-A: In `backend/src/common/` — utilities, guards, interceptors, decorators, or a dedicated shared module.
+**Q: Where does shared backend logic go?**
+A: `apps/backend/src/common/` (guards, interceptors, decorators) or as a `shared/` slice inside the cluster.
 
 **Q: How do I add a new permission/role?**
-A: Define the permission string in `backend/src/common/constants/permissions.ts`, add a Prisma seed entry, and update the CASL factory.
+A: CASL ability in `apps/backend/src/modules/identity/casl/`, plus a permission string and a Prisma seed entry.
 
-**Q: The AI chatbot is returning wrong answers. Where do I look?**
-A: Check `backend/src/modules/chatbot/` — specifically `chatbot-file.service.ts` (knowledge base) and `chatbot.helpers.ts` (prompt building).
+**Q: How do I gate a feature by plan tier?**
+A: Define the feature flag in `platform/feature-flags/`, attach `@UseGuards(FeatureGuard)` on the controller, and link to the relevant `Plan` row.
+
+**Q: Where do I file QA findings?**
+A: `docs/superpowers/qa/<feature>-report-<date>.md` + a `data/kiwi/<domain>-<date>.json` plan synced via `npm run kiwi:sync-manual`.
