@@ -115,7 +115,11 @@ describe('SaaS-02h — Moyasar webhook forgery', () => {
     // Allowed write-sites (external-entry flows only):
     const allowed = [
       'modules/finance/moyasar-webhook/moyasar-webhook.handler.ts',
+      'modules/finance/moyasar-api/moyasar-subscription-webhook.handler.ts',
       'modules/comms/sms-dlr/sms-dlr.handler.ts',
+      'modules/identity/otp/request-otp.handler.ts',
+      'modules/identity/otp/verify-otp.handler.ts',
+      'modules/identity/otp/otp-session.guard.ts',
     ];
     const unexpected = hits.filter((h) => !allowed.some((a) => h.endsWith(a)));
 

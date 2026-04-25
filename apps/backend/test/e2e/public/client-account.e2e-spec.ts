@@ -12,6 +12,7 @@ import SuperTest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
+import { DEFAULT_ORGANIZATION_ID } from '../../../src/common/tenant/tenant.constants';
 import * as bcrypt from 'bcryptjs';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import {
@@ -796,7 +797,12 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
 
       // Burn the jti manually to simulate replay
       await testPrisma.usedOtpSession.create({
-        data: { jti, consumedAt: new Date(), expiresAt: new Date(Date.now() + 30 * 60 * 1000) },
+        data: {
+          jti,
+          organizationId: DEFAULT_ORGANIZATION_ID,
+          consumedAt: new Date(),
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        },
       });
 
       const res = await req

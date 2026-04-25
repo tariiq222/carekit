@@ -12,28 +12,32 @@ enum OtpPurpose {
 }
 
 model OtpCode {
-  id          String     @id @default(uuid())
-  channel     OtpChannel
-  identifier  String
-  codeHash    String
-  purpose     OtpPurpose
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  attempts    Int        @default(0)
-  maxAttempts Int        @default(5)
-  lockedUntil DateTime?
-  createdAt   DateTime   @default(now())
+  id             String     @id @default(uuid())
+  organizationId String?
+  channel        OtpChannel
+  identifier     String
+  codeHash       String
+  purpose        OtpPurpose
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  attempts       Int        @default(0)
+  maxAttempts    Int        @default(5)
+  lockedUntil    DateTime?
+  createdAt      DateTime   @default(now())
 
   @@index([identifier, purpose])
+  @@index([organizationId, identifier, channel, purpose])
   @@index([expiresAt])
   @@index([lockedUntil])
 }
 
 model UsedOtpSession {
-  jti        String   @id
-  consumedAt DateTime @default(now())
-  expiresAt  DateTime
+  jti            String   @id
+  organizationId String?
+  consumedAt     DateTime @default(now())
+  expiresAt      DateTime
 
+  @@index([organizationId])
   @@index([expiresAt])
 }
 

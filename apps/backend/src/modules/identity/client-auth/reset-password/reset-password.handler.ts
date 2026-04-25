@@ -35,7 +35,7 @@ export class ResetPasswordHandler {
       ? new Date(session.exp * 1000)
       : new Date(now.getTime() + 30 * 60 * 1000);
 
-    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const organizationId = session.organizationId ?? this.tenant.requireOrganizationIdOrDefault();
 
     const identifier = session.identifier;
     const isEmail = session.channel === OtpChannel.EMAIL;
@@ -60,7 +60,12 @@ export class ResetPasswordHandler {
       // Burn OTP session — unique constraint on jti prevents replay
       try {
         await tx.usedOtpSession.create({
-          data: { jti: session.jti, consumedAt: now, expiresAt },
+          data: {
+            jti: session.jti,
+            organizationId,
+            consumedAt: now,
+            expiresAt,
+          },
         });
       } catch {
         throw new UnauthorizedException('Session already used');

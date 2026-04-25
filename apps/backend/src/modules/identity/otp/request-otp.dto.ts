@@ -20,4 +20,9 @@ export class RequestOtpDto {
   @IsString()
   @IsNotEmpty()
   hCaptchaToken!: string;
+
+  @ApiPropertyOptional({ description: 'Target organization ID' })
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
 }
