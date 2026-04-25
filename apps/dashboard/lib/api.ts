@@ -8,6 +8,7 @@
  * Only the short-lived accessToken is kept in memory.
  */
 
+import { initClient } from "@carekit/api-client"
 import type { ApiResponse, PaginatedResponse } from "@/lib/types/common"
 
 export type { ApiResponse, PaginatedResponse }
@@ -208,6 +209,27 @@ export const api = {
       ...(options?.data !== undefined ? { body: JSON.stringify(options.data) } : {}),
     })
   },
+}
+
+/* ─── Shared @carekit/api-client wiring ─── */
+//
+// authApi (login / refreshToken / getMe / logout / changePassword) uses the
+// shared apiRequest. We initialise it once with this module's in-memory
+// access token and the same /api/proxy prefix so login flows hit the same
+// backend rewrite as the bespoke `request` above.
+if (typeof window !== "undefined") {
+  initClient({
+    baseUrl: PROXY_BASE_URL,
+    getAccessToken: () => accessToken,
+    getRefreshToken: () => localStorage.getItem("carekit_refresh_token"),
+    onTokenRefreshed: (a, r) => {
+      setAccessToken(a)
+      if (r) localStorage.setItem("carekit_refresh_token", r)
+    },
+    onAuthFailure: () => {
+      clearAuthState()
+    },
+  })
 }
 
 /* ─── Helpers ─── */
