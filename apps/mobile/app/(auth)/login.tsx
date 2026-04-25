@@ -27,6 +27,7 @@ import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
 import { getPrimaryRole } from '@/types/auth';
 import { getFontName } from '@/theme/fonts';
+import { hasSeenOnboarding } from '@/lib/onboarding';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -62,12 +63,17 @@ export default function LoginScreen() {
   }, [email, password, t]);
 
   const navigateByRole = useCallback(
-    (user: { roles: Array<{ slug: string }> }) => {
+    async (user: { roles: Array<{ slug: string }> }) => {
       const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
       if (role === 'employee') {
         router.replace('/(employee)/(tabs)/today');
-      } else {
+        return;
+      }
+      const seen = await hasSeenOnboarding();
+      if (seen) {
         router.replace('/(client)/(tabs)/home');
+      } else {
+        router.replace('/(auth)/onboarding');
       }
     },
     [router],
@@ -87,7 +93,7 @@ export default function LoginScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
-        navigateByRole(response.data.user);
+        await navigateByRole(response.data.user);
       }
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

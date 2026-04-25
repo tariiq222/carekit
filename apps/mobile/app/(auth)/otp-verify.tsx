@@ -22,6 +22,7 @@ import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
 import { getPrimaryRole } from '@/types/auth';
+import { hasSeenOnboarding } from '@/lib/onboarding';
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
@@ -131,7 +132,8 @@ export default function OtpVerifyScreen() {
         if (role === 'employee') {
           router.replace('/(employee)/(tabs)/today');
         } else {
-          router.replace('/(client)/(tabs)/home');
+          const seen = await hasSeenOnboarding();
+          router.replace(seen ? '/(client)/(tabs)/home' : '/(auth)/onboarding');
         }
       }
     } catch {
