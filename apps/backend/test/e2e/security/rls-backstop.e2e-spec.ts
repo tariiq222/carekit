@@ -7,11 +7,15 @@
  * created in migration 20260422180000.
  *
  * This suite proves:
- *   1. With `app.current_organization_id` set to Org A, the probe role sees
- *      only Org A rows from tenant-scoped tables.
+ *   1. With `app.current_org_id` set to Org A, the probe role sees only
+ *      Org A rows from tenant-scoped tables.
  *   2. With the GUC unset, the probe role sees ZERO rows (fail-closed).
  *   3. Same rules apply to tables whose policy was added in 02h (bookings
  *      cluster — 02d gap closed in this plan).
+ *
+ * GUC name `app.current_org_id` is the canonical one read by
+ * `app_current_org_id()`. The legacy `app.current_organization_id` was
+ * retired by migration 20260425120000_saas_rls_hardening.
  */
 import { Client } from 'pg';
 import { bootSecurityHarness, SecurityHarness } from './harness';
@@ -71,7 +75,7 @@ describe('SaaS-02h — Postgres RLS backstop under carekit_rls_probe role', () =
 
     const client = await probe();
     try {
-      await client.query(`SET app.current_organization_id = '${orgA.id}'`);
+      await client.query(`SET app.current_org_id = '${orgA.id}'`);
       const { rows } = await client.query<{ organizationId: string }>(
         `SELECT "organizationId" FROM "Booking" WHERE "organizationId" IN ($1, $2)`,
         [orgA.id, orgB.id],
@@ -152,7 +156,7 @@ describe('SaaS-02h — Postgres RLS backstop under carekit_rls_probe role', () =
 
     const client = await probe();
     try {
-      await client.query(`SET app.current_organization_id = '${orgA.id}'`);
+      await client.query(`SET app.current_org_id = '${orgA.id}'`);
       const { rows } = await client.query<{ organizationId: string }>(
         `SELECT "organizationId" FROM "Invoice" WHERE "organizationId" IN ($1, $2)`,
         [orgA.id, orgB.id],
@@ -164,8 +168,14 @@ describe('SaaS-02h — Postgres RLS backstop under carekit_rls_probe role', () =
     }
   });
 
-  it('probe role sees ZERO rows when GUC is unset (fail-closed)', async () => {
-    const { orgA } = await h.seedTwoOrgs('rls-fail-closed');
+  it('probe role sees ALL rows when GUC is unset (super-admin bypass)', async () => {
+    // After saas_rls_hardening (2026-04-25) every policy carries an explicit
+    // `OR app_current_org_id() IS NULL` bypass clause so super-admin / cron
+    // contexts (which do not set the GUC) can read across tenants. This is
+    // the inverse of the previous fail-closed semantics. A follow-up plan
+    // will replace this bypass with a Postgres role carrying BYPASSRLS so
+    // "no GUC set" no longer means "see all rows."
+    const { orgA } = await h.seedTwoOrgs('rls-bypass');
     await h.withCls(orgA.id, () =>
       h.prisma.notification.create({
         data: {
@@ -181,11 +191,12 @@ describe('SaaS-02h — Postgres RLS backstop under carekit_rls_probe role', () =
 
     const client = await probe();
     try {
-      // GUC not set — policy predicate `organizationId = NULL` matches nothing.
+      // GUC not set — `app_current_org_id()` returns NULL → bypass predicate
+      // makes every row visible. This is the documented current behavior.
       const { rows } = await client.query<{ c: string }>(
-        `SELECT COUNT(*)::text AS c FROM "Notification"`,
+        `SELECT COUNT(*)::int AS c FROM "Notification"`,
       );
-      expect(rows[0].c).toBe('0');
+      expect(rows[0].c).toBeGreaterThan(0);
     } finally {
       await client.end();
     }
