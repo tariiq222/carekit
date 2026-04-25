@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Apple, Banknote, Check, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react-native';
@@ -11,7 +12,9 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
+import { APP_SCHEME } from '@/constants/config';
 import { clientBookingsService } from '@/services/client/bookings';
+import { clientPaymentsService } from '@/services/client/payments';
 
 type Method = 'card' | 'apple_pay' | 'bank_transfer';
 
@@ -67,18 +70,56 @@ export default function BookingPaymentScreen() {
         durationOptionId: params.durationOptionId,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Note: backend create-booking does not yet return an invoice id, so
-      // online card / Apple Pay / bank-transfer upload screens cannot be
-      // wired today. We confirm the booking and surface payment instructions
-      // on the success screen until the finance side is ready.
+
+      if (method === 'bank_transfer') {
+        if (!booking.invoiceId) {
+          router.replace({
+            pathname: '/(client)/booking/success',
+            params: { bookingId: booking.id },
+          });
+          return;
+        }
+        router.replace({
+          pathname: '/(client)/booking/bank-transfer',
+          params: {
+            invoiceId: booking.invoiceId,
+            amount: String(total),
+            bookingId: booking.id,
+          },
+        });
+        return;
+      }
+
+      if (!booking.invoiceId) {
+        router.replace({
+          pathname: '/(client)/booking/success',
+          params: { bookingId: booking.id },
+        });
+        return;
+      }
+
+      const payment = await clientPaymentsService.initPayment(
+        booking.invoiceId,
+        method === 'apple_pay' ? 'APPLE_PAY' : 'ONLINE_CARD',
+      );
+      if (payment.redirectUrl) {
+        await WebBrowser.openAuthSessionAsync(
+          payment.redirectUrl,
+          `${APP_SCHEME}://booking/payment-callback`,
+        );
+      }
       router.replace({
         pathname: '/(client)/booking/success',
-        params: { bookingId: booking.id, paymentMethod: method },
+        params: {
+          bookingId: booking.id,
+          invoiceId: booking.invoiceId,
+          paymentId: payment.paymentId,
+        },
       });
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        (dir.isRTL ? 'تعذّر إنشاء الحجز. حاولي مرة أخرى.' : 'Could not create booking. Try again.');
+        (dir.isRTL ? 'تعذّر إكمال الدفع. حاولي مرة أخرى.' : 'Could not continue payment. Try again.');
       Alert.alert(dir.isRTL ? 'خطأ' : 'Error', message);
     } finally {
       setSubmitting(false);

@@ -18,7 +18,11 @@ export default function BankTransferScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
-  const { invoiceId, amount } = useLocalSearchParams<{ invoiceId?: string; amount?: string }>();
+  const { invoiceId, amount, bookingId } = useLocalSearchParams<{
+    invoiceId?: string;
+    amount?: string;
+    bookingId?: string;
+  }>();
   const f400 = getFontName(dir.locale, '400');
   const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
@@ -28,6 +32,9 @@ export default function BankTransferScreen() {
   const [submitting, setSubmitting] = useState(false);
   const uploaded = !!receiptUri;
   const numericAmount = amount ? Number(amount) : 0;
+  const amountLabel = dir.isRTL
+    ? `${numericAmount.toLocaleString('ar-SA')} ر.س`
+    : `SAR ${numericAmount.toLocaleString('en-US')}`;
 
   const pickReceipt = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -53,9 +60,15 @@ export default function BankTransferScreen() {
     }
     setSubmitting(true);
     try {
-      await clientPaymentsService.uploadBankTransfer(invoiceId, numericAmount, receiptUri);
+      const payment = await clientPaymentsService.uploadBankTransfer(invoiceId, numericAmount, receiptUri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.push('/(client)/booking/success');
+      const successParams = bookingId
+        ? { bookingId, invoiceId, paymentId: payment.id }
+        : { invoiceId, paymentId: payment.id };
+      router.replace({
+        pathname: '/(client)/booking/success',
+        params: successParams,
+      });
     } catch (error) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
@@ -71,7 +84,7 @@ export default function BankTransferScreen() {
     { labelAr: 'البنك', labelEn: 'Bank', value: dir.isRTL ? 'البنك الأهلي السعودي' : 'Al-Ahli Bank' },
     { labelAr: 'اسم المستفيد', labelEn: 'Beneficiary', value: dir.isRTL ? 'سَواء للرعاية النفسية' : 'Sawaa Mental Care' },
     { labelAr: 'IBAN', labelEn: 'IBAN', value: 'SA03 8000 0000 6080 1016 7519' },
-    { labelAr: 'المبلغ', labelEn: 'Amount', value: dir.isRTL ? '٢٨٧ ر.س' : 'SAR 287' },
+    { labelAr: 'المبلغ', labelEn: 'Amount', value: amountLabel },
   ];
 
   return (

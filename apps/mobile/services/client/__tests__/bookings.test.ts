@@ -14,6 +14,7 @@ const mockedApi = api as unknown as { get: jest.Mock; post: jest.Mock; patch: je
 
 const sampleRow: ClientBookingRow = {
   id: 'b1',
+  invoiceId: 'inv-1',
   scheduledAt: '2026-05-01T10:00:00Z',
   durationMins: 30,
   status: 'CONFIRMED',

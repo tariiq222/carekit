@@ -14,6 +14,7 @@ export type BookingTypeEnum = 'ONLINE' | 'INDIVIDUAL' | 'GROUP' | 'WALK_IN';
 
 export interface ClientBookingRow {
   id: string;
+  invoiceId: string | null;
   scheduledAt: string;
   durationMins: number;
   status: BookingStatus;

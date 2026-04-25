@@ -1,6 +1,22 @@
 import api from '../api';
 import type { Payment } from '@/types/models';
 
+export type ClientPaymentInitMethod = 'ONLINE_CARD' | 'APPLE_PAY';
+
+export interface ClientPaymentInitResponse {
+  paymentId: string;
+  redirectUrl: string;
+}
+
+export interface ClientInvoice {
+  id: string;
+  status: string;
+}
+
+export interface ClientBankTransferUploadResponse {
+  id: string;
+}
+
 export interface PaymentsListResponse {
   items: Payment[];
   meta: {
@@ -23,11 +39,28 @@ export const clientPaymentsService = {
   },
 
   async getInvoice(id: string) {
-    const response = await api.get(`/mobile/client/payments/${id}`);
+    const response = await api.get<ClientInvoice>(
+      `/mobile/client/payments/invoices/${id}`,
+    );
     return response.data;
   },
 
-  async uploadBankTransfer(invoiceId: string, amount: number, imageUri: string) {
+  async initPayment(
+    invoiceId: string,
+    method: ClientPaymentInitMethod,
+  ): Promise<ClientPaymentInitResponse> {
+    const response = await api.post<ClientPaymentInitResponse>(
+      '/mobile/client/payments/init',
+      { invoiceId, method },
+    );
+    return response.data;
+  },
+
+  async uploadBankTransfer(
+    invoiceId: string,
+    amount: number,
+    imageUri: string,
+  ): Promise<ClientBankTransferUploadResponse> {
     const formData = new FormData();
     formData.append('invoiceId', invoiceId);
     formData.append('amount', String(amount));
@@ -37,7 +70,7 @@ export const clientPaymentsService = {
       name: 'receipt.jpg',
     } as unknown as Blob);
 
-    const response = await api.post(
+    const response = await api.post<ClientBankTransferUploadResponse>(
       '/mobile/client/payments/bank-transfer',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
