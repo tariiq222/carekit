@@ -61,7 +61,8 @@
     "calendar": "Calendar",
     "clients": "Clients",
     "assistant": "Assistant",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "records": "Records"
   },
   "home": {
     "greeting": "Hello",

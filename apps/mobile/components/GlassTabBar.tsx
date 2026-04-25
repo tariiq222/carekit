@@ -6,8 +6,10 @@ import * as Haptics from 'expo-haptics';
 import type { LucideIcon } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW_SOFT } from '@/theme/glass';
+import { C, RADII, SHADOW_RAISED } from '@/theme/glass';
+import { sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
+import { getFontName } from '@/theme/fonts';
 
 type IconMap = Record<string, LucideIcon>;
 
@@ -22,11 +24,11 @@ export function GlassTabBar({ state, descriptors, navigation, icons, badges }: G
 
   return (
     <Glass
-      variant="clear"
+      variant="strong"
       radius={RADII.pill}
       style={[
         styles.tabBar,
-        SHADOW_SOFT,
+        SHADOW_RAISED,
         { bottom: insets.bottom + 14, left: 14, right: 14 },
       ]}
     >
@@ -82,28 +84,29 @@ function TabItem({
   badge?: number;
 }) {
   const dir = useDir();
-  const iconColor = focused ? C.deepTeal : C.subtle;
-  const iconFill = focused ? C.deepTeal : 'transparent';
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
+  const color = focused ? sawaaColors.teal[700] : sawaaColors.ink[700];
   const hasBadge = !!badge && badge > 0;
 
   return (
-    <Pressable onPress={onPress} style={styles.tabItem}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={label}
+      style={styles.tabItem}
+    >
       <View style={styles.tabItemInner}>
-        <View style={styles.iconContainer}>
-          {Icon ? (
-            <Icon
-              size={24}
-              color={iconColor}
-              fill={iconFill}
-              strokeWidth={focused ? 2 : 1.6}
-            />
-          ) : null}
+        {focused ? <View style={styles.activePill} pointerEvents="none" /> : null}
+        <View style={styles.iconRow}>
+          {Icon ? <Icon size={22} color={color} strokeWidth={1.7} /> : null}
           {hasBadge ? <View style={styles.badgeDot} /> : null}
         </View>
         <Text
           style={[
             styles.label,
-            focused && styles.labelActive,
+            { fontFamily: focused ? f700 : f600, color },
             { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
           ]}
           numberOfLines={1}
@@ -125,20 +128,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
   },
-  tabItem: { flex: 1, alignItems: 'center' },
-  tabItemInner: { alignItems: 'center', gap: 4, paddingVertical: 4 },
-  iconContainer: {
-    width: 40,
-    height: 32,
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  tabItemInner: {
+    alignItems: 'center',
+    gap: 3,
+    position: 'relative',
+  },
+  activePill: {
+    position: 'absolute',
+    top: -4,
+    bottom: -4,
+    left: -10,
+    right: -10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.6)',
+  },
+  iconRow: {
+    width: 32,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { fontSize: 11, fontWeight: '500', color: C.subtle },
-  labelActive: { fontSize: 12, fontWeight: '800', color: C.deepTeal },
+  label: { fontSize: 10.5 },
   badgeDot: {
     position: 'absolute',
-    top: 2,
-    right: 6,
+    top: 0,
+    right: 4,
     width: 8,
     height: 8,
     borderRadius: 4,
