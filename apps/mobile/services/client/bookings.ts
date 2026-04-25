@@ -39,6 +39,8 @@ export interface ClientBookingRow {
     nameEn: string | null;
   } | null;
   zoomJoinUrl: string | null;
+  zoomStartUrl: string | null;
+  zoomMeetingStatus: 'PENDING' | 'CREATED' | 'FAILED' | 'CANCELLED' | null;
 }
 
 export interface BookingsListResponse {

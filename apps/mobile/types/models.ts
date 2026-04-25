@@ -74,6 +74,11 @@ export interface Booking {
   totalAmount: number;
   notes?: string;
   zoomLink?: string;
+  zoomJoinUrl?: string | null;
+  zoomStartUrl?: string | null;
+  zoomMeetingStatus?: 'PENDING' | 'CREATED' | 'FAILED' | 'CANCELLED' | null;
+  scheduledAt?: string;
+  durationMins?: number;
   createdAt: string;
 }
 

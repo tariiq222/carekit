@@ -20,6 +20,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useBooking, useCancelBooking } from '@/hooks/queries';
+import { JoinVideoCallButton } from '@/components/features/JoinVideoCallButton';
 
 export default function AppointmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -190,24 +191,35 @@ export default function AppointmentDetailScreen() {
             </Text>
           </Glass>
         </Pressable>
-        <Pressable
-          onPress={() =>
-            router.push({ pathname: '/(client)/video-call', params: id ? { bookingId: id } : {} })
-          }
-          style={styles.primaryBtn}
-        >
-          <LinearGradient
-            colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.primaryGradient}
+        {isOnline && booking ? (
+          <JoinVideoCallButton
+            url={booking.zoomJoinUrl}
+            scheduledAt={booking.scheduledAt}
+            durationMins={booking.durationMins}
+            status={booking.zoomMeetingStatus}
+            isRTL={dir.isRTL}
+            variant="join"
+          />
+        ) : (
+          <Pressable
+            onPress={() =>
+              router.push({ pathname: '/(client)/video-call', params: id ? { bookingId: id } : {} })
+            }
+            style={styles.primaryBtn}
           >
-            <Video size={18} color="#fff" strokeWidth={1.75} />
-            <Text style={[styles.primaryText, { fontFamily: f700 }]}>
-              {dir.isRTL ? 'ابدأ الجلسة' : 'Start session'}
-            </Text>
-          </LinearGradient>
-        </Pressable>
+            <LinearGradient
+              colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.primaryGradient}
+            >
+              <Video size={18} color="#fff" strokeWidth={1.75} />
+              <Text style={[styles.primaryText, { fontFamily: f700 }]}>
+                {dir.isRTL ? 'ابدأ الجلسة' : 'Start session'}
+              </Text>
+            </LinearGradient>
+          </Pressable>
+        )}
       </Animated.View>
 
       {/* Cancel link */}

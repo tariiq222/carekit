@@ -30,6 +30,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
 import type { Booking } from '@/types/models';
+import { JoinVideoCallButton } from '@/components/features/JoinVideoCallButton';
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
   in_person: { icon: Building2, color: '#1D4ED8' },
@@ -219,7 +220,16 @@ export default function DoctorAppointmentDetailScreen() {
               {t('doctor.cancelBooking')}
             </ThemedButton>
           )}
-          {booking.type === 'online' && booking.zoomLink && (
+          {booking.type === 'online' && booking.zoomMeetingStatus && booking.scheduledAt && booking.durationMins ? (
+            <JoinVideoCallButton
+              url={booking.zoomStartUrl ?? booking.zoomJoinUrl ?? null}
+              scheduledAt={booking.scheduledAt}
+              durationMins={booking.durationMins}
+              status={booking.zoomMeetingStatus}
+              isRTL={isRTL}
+              variant="start"
+            />
+          ) : booking.type === 'online' && booking.zoomLink ? (
             <ThemedButton
               onPress={() => Linking.openURL(booking.zoomLink!)}
               variant="primary"
@@ -228,7 +238,7 @@ export default function DoctorAppointmentDetailScreen() {
             >
               {t('doctor.startMeeting')}
             </ThemedButton>
-          )}
+          ) : null}
         </View>
       </ScrollView>
     </View>
