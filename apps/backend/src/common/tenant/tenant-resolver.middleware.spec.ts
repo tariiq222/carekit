@@ -41,7 +41,7 @@ describe('TenantResolverMiddleware', () => {
       user: undefined,
       headers: {},
       hostname: 'localhost',
-      originalUrl: '/api/v1/dashboard/bookings',
+      path: '/api/v1/dashboard/bookings',
       url: '/api/v1/dashboard/bookings',
       originalUrl: '/api/v1/dashboard/bookings',
       ...overrides,
