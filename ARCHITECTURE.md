@@ -179,7 +179,7 @@ JWT access + refresh (separate `RefreshToken` and `ClientRefreshToken` per ident
 ### `apps/dashboard` — per-tenant clinic admin
 
 - Next.js 15 App Router, React 19, Tailwind 4, next-intl (AR/EN)
-- 22 features under `app/(dashboard)/`: bookings, clients, employees, services, branches, categories, departments, intake-forms, branding, content, contact-messages, coupons, invoices, payments, ratings, notifications, reports, activity-log, users, zatca, settings
+- 22 features under `app/(dashboard)/`: bookings, clients, employees, services, branches, categories, departments, intake-forms, branding, chatbot, content, contact-messages, coupons, invoices, payments, ratings, notifications, reports, activity-log, users, zatca, settings
 - TanStack Query hooks in `hooks/queries/<feature>/`
 - UI: `@carekit/ui` primitives (do not modify in place); compose them in `components/features/`
 - Terminology: `useTerminology()` reads vertical-driven labels (Plan 03)

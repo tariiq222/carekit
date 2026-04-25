@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 5104",
+    "dev": "next dev --turbopack --port 5105",
     "build": "next build",
-    "start": "next start --port 5104",
+    "start": "next start --port 5105",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

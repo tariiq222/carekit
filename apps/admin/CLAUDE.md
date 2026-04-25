@@ -135,4 +135,4 @@ Mirrors the backend-only rollout:
   `scope='impersonation'` — they cannot be replayed against admin
   endpoints.
 
-Full reference: `docs/saas-05b-super-admin.md`.
+Full reference: `docs/superpowers/plans/2026-04-21-saas-05b-super-admin-app.md`.
