@@ -49,6 +49,8 @@ export function mapBookingRow(b: Booking, relations: BookingRelations) {
     notes: b.notes ?? null,
     zoomJoinUrl: b.zoomJoinUrl ?? null,
     zoomHostUrl: b.zoomHostUrl ?? null,
+    zoomMeetingStatus: b.zoomMeetingStatus ?? null,
+    zoomMeetingError: b.zoomMeetingError ?? null,
     cancellationReason: b.cancelReason ?? null,
     cancelledBy: null,
     suggestedRefundType: null,

@@ -6,10 +6,11 @@ import { Card, CardContent } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Button } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useOrganizationIntegrations, useUpdateOrganizationIntegrations } from "@/hooks/use-organization-integrations"
+import { ZoomSettingsForm } from "@/components/features/zoom/zoom-settings-form"
+import { useZoomConfig } from "@/hooks/use-zoom-config"
 import { useLocale } from "@/components/locale-provider"
 
 type TabId = "zoom" | "email"
@@ -18,13 +19,9 @@ export function SettingsIntegrationsTab() {
   const { t } = useLocale()
   const { data: integrations, isLoading } = useOrganizationIntegrations()
   const updateIntegrations = useUpdateOrganizationIntegrations()
+  const { config: zoomConfig } = useZoomConfig()
 
   const [activeTab, setActiveTab] = useState<TabId>("zoom")
-
-  const [zoomEnabled, setZoomEnabled] = useState(false)
-  const [zoomClientId, setZoomClientId] = useState("")
-  const [zoomClientSecret, setZoomClientSecret] = useState("")
-  const [zoomAccountId, setZoomAccountId] = useState("")
 
   const [emailProvider, setEmailProvider] = useState("")
   const [emailApiKey, setEmailApiKey] = useState("")
@@ -34,28 +31,10 @@ export function SettingsIntegrationsTab() {
     if (!integrations) return
     // Seed editable form fields from async-loaded integrations; user edits locally and saves explicitly.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setZoomEnabled(!!integrations.zoomClientId)
-    setZoomClientId(integrations.zoomClientId ?? "")
-    setZoomClientSecret(integrations.zoomClientSecret ?? "")
-    setZoomAccountId(integrations.zoomAccountId ?? "")
     setEmailProvider(integrations.emailProvider ?? "")
     setEmailApiKey(integrations.emailApiKey ?? "")
     setEmailFrom(integrations.emailFrom ?? "")
   }, [integrations])
-
-  const handleSaveZoom = () => {
-    const payload: Record<string, string | null> = {
-      zoomClientId,
-      zoomAccountId,
-    }
-    if (zoomClientSecret && zoomClientSecret !== "***") {
-      payload.zoomClientSecret = zoomClientSecret
-    }
-    updateIntegrations.mutate(payload, {
-      onSuccess: () => toast.success(t("settings.saved")),
-      onError: () => toast.error(t("settings.error")),
-    })
-  }
 
   const handleSaveEmail = () => {
     const payload: Record<string, string | null> = {
@@ -69,19 +48,6 @@ export function SettingsIntegrationsTab() {
       onSuccess: () => toast.success(t("settings.saved")),
       onError: () => toast.error(t("settings.error")),
     })
-  }
-
-  const handleToggleZoom = (v: boolean) => {
-    setZoomEnabled(v)
-    if (!v) {
-      updateIntegrations.mutate(
-        { zoomClientId: null, zoomClientSecret: null, zoomAccountId: null },
-        {
-          onSuccess: () => toast.success(t("settings.saved")),
-          onError: () => toast.error(t("settings.error")),
-        },
-      )
-    }
   }
 
   if (isLoading) {
@@ -146,18 +112,10 @@ export function SettingsIntegrationsTab() {
                   )}
                 </div>
 
-                {tab.id === "zoom" && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="shrink-0"
-                  >
-                    <Switch
-                      checked={zoomEnabled}
-                      onCheckedChange={handleToggleZoom}
-                      disabled={updateIntegrations.isPending}
-                    />
-                  </div>
+                {tab.id === "zoom" && zoomConfig?.configured && (
+                  <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-success/10 text-success border border-success/30 text-[10px] px-2 py-0.5">
+                    {t("zoom.form.configured")}
+                  </span>
                 )}
               </div>
             ))}
@@ -165,58 +123,7 @@ export function SettingsIntegrationsTab() {
         </div>
 
         <div className="flex-1 p-6">
-          {activeTab === "zoom" && (
-            !zoomEnabled ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-surface-muted flex items-center justify-center border border-border">
-                  <Switch checked={false} disabled className="scale-75 pointer-events-none" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{t("settings.zoom")}</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    {t("settings.zoomDesc")}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setZoomEnabled(true)}
-                  disabled={updateIntegrations.isPending}
-                >
-                  {t("settings.payment.enable")}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 h-full">
-                <div className="grid grid-cols-2 gap-3">
-                  <Card className="shadow-sm bg-surface">
-                    <CardContent className="space-y-2 pt-3 pb-3">
-                      <Label>{t("settings.zoomClientId")}</Label>
-                      <Input value={zoomClientId} onChange={(e) => setZoomClientId(e.target.value)} dir="ltr" />
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-sm bg-surface">
-                    <CardContent className="space-y-2 pt-3 pb-3">
-                      <Label>{t("settings.zoomClientSecret")}</Label>
-                      <Input value={zoomClientSecret} onChange={(e) => setZoomClientSecret(e.target.value)} type="password"
-                        placeholder={zoomClientSecret === "***" ? "............" : undefined} dir="ltr" />
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-sm bg-surface">
-                    <CardContent className="space-y-2 pt-3 pb-3">
-                      <Label>{t("settings.zoomAccountId")}</Label>
-                      <Input value={zoomAccountId} onChange={(e) => setZoomAccountId(e.target.value)} dir="ltr" />
-                    </CardContent>
-                  </Card>
-                </div>
-                <div className="flex justify-end mt-auto pt-2">
-                  <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveZoom}>
-                    {t("settings.save")}
-                  </Button>
-                </div>
-              </div>
-            )
-          )}
+          {activeTab === "zoom" && <ZoomSettingsForm />}
 
           {activeTab === "email" && (
             <div className="flex flex-col gap-3 h-full">

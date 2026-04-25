@@ -14,10 +14,11 @@ import {
   CreditCardIcon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@carekit/ui"
+import { Badge, Button } from "@carekit/ui"
 import { DetailRow } from "@/components/features/detail-sheet-parts"
 import { cn } from "@/lib/utils"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
+import { useRetryBookingZoom } from "@/hooks/use-zoom-config"
 import type { Booking, CancelledBy } from "@/lib/types/booking"
 
 /* ── CancelledByBadge ── */
@@ -64,6 +65,56 @@ function PaymentMethodBadge({ method, t }: { method: string; t: (key: string) =>
     <Badge variant="outline" className="text-xs border-border bg-muted text-foreground">
       {label}
     </Badge>
+  )
+}
+
+/* ── Zoom meeting panel ── */
+
+interface ZoomMeetingPanelProps {
+  booking: Booking
+  t: (key: string) => string
+  card: string
+  cardHeader: string
+  cardTitle: string
+  cardBody: string
+}
+
+function ZoomMeetingPanel({ booking, t, card, cardHeader, cardTitle, cardBody }: ZoomMeetingPanelProps) {
+  const retry = useRetryBookingZoom()
+  const isFailed = booking.zoomMeetingStatus === "FAILED"
+
+  return (
+    <div className={card}>
+      <div className={cardHeader}><p className={cardTitle}>{t("detail.videoCall")}</p></div>
+      <div className={cardBody}>
+        {booking.zoomJoinUrl && (
+          <a
+            href={booking.zoomJoinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+          >
+            {t("detail.joinZoom")}
+          </a>
+        )}
+        {isFailed && (
+          <div className="space-y-2 mt-2">
+            <p className="text-sm text-destructive">
+              {t("detail.zoomFailed")}
+              {booking.zoomMeetingError ? `: ${booking.zoomMeetingError}` : ""}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => retry.mutate(booking.id)}
+              disabled={retry.isPending}
+            >
+              {retry.isPending ? t("detail.zoomRetrying") : t("detail.zoomRetry")}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -186,20 +237,8 @@ export function DetailsBody({ booking, clientName, employeeName, specialty, appo
         </div>
       )}
 
-      {booking.zoomJoinUrl && (
-        <div className={card}>
-          <div className={cardHeader}><p className={cardTitle}>{t("detail.videoCall")}</p></div>
-          <div className={cardBody}>
-            <a
-              href={booking.zoomJoinUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
-            >
-              {t("detail.joinZoom")}
-            </a>
-          </div>
-        </div>
+      {(booking.zoomJoinUrl || booking.zoomMeetingStatus === "FAILED") && (
+        <ZoomMeetingPanel booking={booking} t={t} card={card} cardHeader={cardHeader} cardTitle={cardTitle} cardBody={cardBody} />
       )}
 
       {booking.rescheduledFrom && (
