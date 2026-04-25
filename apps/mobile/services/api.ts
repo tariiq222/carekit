@@ -4,7 +4,7 @@ import axios, {
 } from 'axios';
 import { router } from 'expo-router';
 
-import { API_URL } from '@/constants/config';
+import { API_URL, TENANT_ID } from '@/constants/config';
 import type { ApiResponse } from '@/types/api';
 import { store } from '@/stores/store';
 import { logout } from '@/stores/slices/auth-slice';
@@ -22,6 +22,18 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Tenant header: every request — public and authenticated. On authenticated
+// routes the backend's TenantResolverMiddleware ignores this header (JWT
+// claim wins); on public routes it locks the binary to a single tenant.
+api.interceptors.request.use((config) => {
+  if (config.headers && typeof (config.headers as { set?: unknown }).set === 'function') {
+    (config.headers as { set: (k: string, v: string) => void }).set('X-Org-Id', TENANT_ID);
+  } else if (config.headers) {
+    (config.headers as Record<string, string>)['X-Org-Id'] = TENANT_ID;
+  }
+  return config;
 });
 
 // Request interceptor: inject JWT token
