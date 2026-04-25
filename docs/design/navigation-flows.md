@@ -6,12 +6,16 @@
 
 ### 1.1 Auth Flow (Shared)
 
+OTPs are issued through **Authentica** (`api.authentica.sa`) — SMS or WhatsApp delivery, verified server-side via `/api/v2/send-otp` + `/api/v2/verify-otp`. See the `authentica-sa` skill for the wire contract.
+
 ```
 App Launch
   │
   ├─→ [Splash Screen] → check token
   │     │
   │     ├─→ Token valid → check role → route to correct tab navigator
+  │     │     ├─ client → (client) route group
+  │     │     └─ employee → (employee) route group
   │     │
   │     └─→ No token → [Onboarding] (first launch only)
   │           │
@@ -20,16 +24,16 @@ App Launch
   │                 ├─→ [Login — Email + Password]
   │                 │     │
   │                 │     ├─→ Success → check role → route
-  │                 │     └─→ Forgot password → [Reset Password via OTP]
+  │                 │     └─→ Forgot password → [Reset via Authentica OTP]
   │                 │
-  │                 ├─→ [Login — Email + OTP]
+  │                 ├─→ [Login — Phone + OTP via Authentica]
   │                 │     │
-  │                 │     ├─→ Enter email → [OTP Verification Screen]
-  │                 │     └─→ OTP verified → check role → route
+  │                 │     ├─→ Enter phone → backend → Authentica send-otp → [OTP Verification Screen]
+  │                 │     └─→ OTP verified (Authentica verify-otp) → check role → route
   │                 │
   │                 └─→ [Register] (clients only)
   │                       │
-  │                       └─→ Fill form → verify email OTP → logged in
+  │                       └─→ Fill form → verify phone OTP via Authentica → logged in
 ```
 
 ### 1.2 Client Tab Navigator
@@ -68,7 +72,7 @@ Tab 1: Home
 Tab 2: Bookings (المواعيد)
   ├─→ [Appointments List] (tabs: upcoming / past / cancelled)
   │     └─→ [Appointment Detail]
-  │           ├─→ View Zoom link (video) → opens Zoom
+  │           ├─→ Join video call (video) → opens `/(client)/video-call` (Zoom SDK / deep-link fallback)
   │           ├─→ View employee phone (phone consultation)
   │           ├─→ Request cancellation → [Cancellation Request Form]
   │           ├─→ Modify appointment → [Modify Booking Flow]
@@ -101,47 +105,49 @@ Tab 4: Profile (الملف الشخصي)
   │     └─→ Logout → confirm → [Auth Screen]
 ```
 
-### 1.3 Employee (Doctor) Tab Navigator
+### 1.3 Employee Tab Navigator
+
+Route group: `apps/mobile/app/(employee)/`. Tab labels surface via the active vertical's terminology pack ("Doctor", "Therapist", "Trainer", …) but the route group and code live under `(employee)`.
 
 ```
-Doctor Tabs (Bottom Navigation — 4 tabs):
+Employee Tabs (Bottom Navigation — 4 tabs):
 ┌──────────┬──────────┬──────────┬──────────┐
 │  Today   │ Calendar │ Clients │ Profile  │
 │  اليوم   │ التقويم  │ المرضى   │ الملف    │
 └──────────┴──────────┴──────────┴──────────┘
 
 Tab 1: Today (اليوم)
-  └─→ [Today's Schedule]
+  └─→ [Today's Schedule]  /(employee)/(tabs)/index
         ├─→ List of today's appointments (chronological)
-        │     └─→ [Appointment Detail — Doctor View]
+        │     └─→ [Appointment Detail — Employee View]  /(employee)/appointment/[id]
         │           ├─→ View client info
         │           ├─→ View client phone (phone consultation)
-        │           ├─→ Start Zoom call (video) → opens Zoom
+        │           ├─→ Start video call (video) → opens /(employee)/video-call (Zoom SDK / deep-link fallback)
         │           ├─→ Mark as completed
         │           └─→ View client history
         └─→ Stats: total today, completed, remaining
 
 Tab 2: Calendar (التقويم)
-  └─→ [Calendar View]
+  └─→ [Calendar View]  /(employee)/(tabs)/calendar
         ├─→ Month view → tap date → day view
         ├─→ Day view: time slots with appointments
-        ├─→ Tap appointment → [Appointment Detail — Doctor View]
-        └─→ Manage availability → [Availability Editor]
+        ├─→ Tap appointment → [Appointment Detail — Employee View]
+        └─→ Manage availability → [Availability Editor]  /(employee)/availability
               ├─→ Set weekly schedule (day + start/end time)
               └─→ Set vacation dates
 
 Tab 3: Clients (المرضى)
-  └─→ [Client List]
+  └─→ [Client List]  /(employee)/(tabs)/clients
         ├─→ Search by name
-        └─→ [Client Record]
+        └─→ [Client Record]  /(employee)/client/[id]
               ├─→ Client info (name, phone, email)
               ├─→ Visit history (all appointments with this client)
               └─→ Tap visit → [Appointment Detail]
 
 Tab 4: Profile (الملف الشخصي)
-  └─→ [Doctor Profile Screen]
+  └─→ [Employee Profile Screen]  /(employee)/(tabs)/profile
         ├─→ View/edit bio
-        ├─→ View ratings & reviews
+        ├─→ View ratings & reviews → /(employee)/(tabs)/ratings
         ├─→ Language → toggle Arabic/English
         ├─→ Notification settings
         ├─→ About clinic → [About Screen]
@@ -380,17 +386,17 @@ Notifications
     OR Admin rejects → client notified to re-upload or contact support
 ```
 
-### 3.4 Doctor's Daily Workflow
+### 3.4 Employee's Daily Workflow
 
 ```
-1. Doctor opens app → Today tab
+1. Employee opens app → Today tab  /(employee)/(tabs)/index
 2. Sees today's schedule: 8 appointments
 3. First appointment: clinic visit at 9:00 AM
 4. Taps appointment → sees client info
-5. Client arrives → doctor conducts visit
-6. Doctor marks appointment as "completed"
+5. Client arrives → employee conducts visit
+6. Employee marks appointment as "completed"
 7. Next: video consultation at 10:00 AM
-8. Taps appointment → taps "Start Zoom" → opens Zoom app
+8. Taps appointment → taps "Start video call" → opens /(employee)/video-call (Zoom SDK; falls back to deep link)
 9. Conducts video call
 10. Returns to app → marks as completed
 11. At end of day: checks tomorrow's schedule in Calendar tab

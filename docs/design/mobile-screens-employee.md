@@ -1,25 +1,28 @@
-# CareKit Mobile — Doctor (Employee) Screens Specification
+# CareKit Mobile — Employee Screens Specification
 
-8 screens for the employee experience. All screens support RTL-first (Arabic primary) and LTR (English).
+Employee-app screens (Expo Router `apps/mobile/app/(employee)/` route group). All screens support RTL-first (Arabic primary) and LTR (English). Domain language is "employee" everywhere — `(employee)` is the canonical route group; the user-facing label ("Doctor", "Therapist", etc.) comes from the active vertical's terminology pack via `useTerminology`.
 
 ---
 
 ## Screen Index
 
+Routes below match the live folder structure under `apps/mobile/app/(employee)/`.
+
 | # | Screen | Route | Tab |
 |---|--------|-------|-----|
-| D01 | Today's Schedule | `/(doctor)/today` | Today |
-| D02 | Appointment Detail (Doctor) | `/(doctor)/appointments/[id]` | Today |
-| D03 | Calendar View | `/(doctor)/calendar` | Calendar |
-| D04 | Availability Editor | `/(doctor)/availability` | Calendar |
-| D05 | Client List | `/(doctor)/clients` | Clients |
-| D06 | Client Record | `/(doctor)/clients/[id]` | Clients |
-| D07 | Doctor Profile | `/(doctor)/profile` | Profile |
-| D08 | Ratings & Reviews | `/(doctor)/ratings` | Profile |
+| E01 | Today's Schedule | `/(employee)/(tabs)/index` | Today |
+| E02 | Appointment Detail | `/(employee)/appointment/[id]` | Today |
+| E03 | Calendar View | `/(employee)/(tabs)/calendar` | Calendar |
+| E04 | Availability Editor | `/(employee)/availability` | Calendar |
+| E05 | Client List | `/(employee)/(tabs)/clients` | Clients |
+| E06 | Client Record | `/(employee)/client/[id]` | Clients |
+| E07 | Employee Profile | `/(employee)/(tabs)/profile` | Profile |
+| E08 | Ratings & Reviews | `/(employee)/(tabs)/ratings` | Profile |
+| E09 | Video Call (Zoom) | `/(employee)/video-call` | — (modal) |
 
 ---
 
-## D01 — Today's Schedule
+## E01 — Today's Schedule
 
 **Purpose:** Overview of today's appointments and quick stats
 
@@ -80,7 +83,7 @@
 ```
 
 **Sections:**
-1. **Header:** Greeting with doctor name, notification bell, clinic logo
+1. **Header:** Greeting with employee name, notification bell, clinic logo
 2. **Stats cards:** Total, remaining, completed, cancelled (today)
 3. **Timeline list:** Chronological appointments with time markers
 
@@ -92,7 +95,7 @@
 - **Cancelled:** Strikethrough styling, grey text
 
 **Behavior:**
-- Tap appointment → D02
+- Tap appointment → E02
 - Pull-to-refresh
 - Auto-refresh every 5 minutes
 - "Start Meeting" button visible 15 minutes before video appointment
@@ -101,9 +104,9 @@
 
 ---
 
-## D02 — Appointment Detail (Doctor View)
+## E02 — Appointment Detail (Employee View)
 
-**Purpose:** Full appointment details with doctor-specific actions
+**Purpose:** Full appointment details with employee-specific actions
 
 **Layout:**
 ```
@@ -149,9 +152,9 @@
 └──────────────────────────────┘
 ```
 
-**Doctor-specific features:**
+**Employee-specific features:**
 - Client contact info visible (phone, email)
-- Client visit history with this doctor
+- Client visit history with this employee
 - "Mark as Completed" button (only for confirmed appointments)
 - "Start Zoom" for video appointments (deep link)
 - "Call Client" for phone appointments (opens dialer)
@@ -160,11 +163,11 @@
 - Mark completed → confirmation dialog → status updates → triggers rating prompt for client
 - Phone number tappable → opens dialer
 - Email tappable → opens mail app
-- Client history shows previous appointments with this doctor only
+- Client history shows previous appointments with this employee only
 
 ---
 
-## D03 — Calendar View
+## E03 — Calendar View
 
 **Purpose:** Monthly/weekly calendar with appointments
 
@@ -207,16 +210,16 @@
 **Behavior:**
 - Monthly calendar with dots under dates that have appointments
 - Tap date → shows day's appointments below calendar
-- Tap appointment → D02
+- Tap appointment → E02
 - Vacation dates highlighted (different color)
-- "Manage Availability" → D04
+- "Manage Availability" → E04
 - Swipe month navigation
 
 **RTL:** Calendar day headers Arabic. Navigation arrows swap.
 
 ---
 
-## D04 — Availability Editor
+## E04 — Availability Editor
 
 **Purpose:** Set weekly schedule and vacation dates
 
@@ -321,9 +324,9 @@
 
 ---
 
-## D05 — Client List
+## E05 — Client List
 
-**Purpose:** Browse clients who have visited this doctor
+**Purpose:** Browse clients who have seen this employee
 
 **Layout:**
 ```
@@ -357,18 +360,18 @@
 ```
 
 **Behavior:**
-- Shows only clients who have had appointments with this doctor
+- Shows only clients who have had appointments with this employee
 - Search by name
 - Sorted by last visit date (most recent first)
 - Shows visit count and last visit date
 - Avatar: first letter of name with colored background
-- Tap → D06 (Client Record)
+- Tap → E06 (Client Record)
 
 ---
 
-## D06 — Client Record
+## E06 — Client Record
 
-**Purpose:** Client details and visit history with this doctor
+**Purpose:** Client details and visit history with this employee
 
 **Layout:**
 ```
@@ -410,15 +413,15 @@
 
 **Behavior:**
 - Client contact info (phone tappable, email tappable)
-- Visit history: all appointments with this doctor, chronological (newest first)
+- Visit history: all appointments with this employee, chronological (newest first)
 - Completed visits show rating if given
-- Tap visit → D02 (Appointment Detail)
+- Tap visit → E02 (Appointment Detail)
 
 ---
 
-## D07 — Doctor Profile
+## E07 — Employee Profile
 
-**Purpose:** Doctor's own profile and settings
+**Purpose:** Employee's own profile and settings
 
 **Layout:**
 ```
@@ -450,19 +453,19 @@
 
 **Behavior:**
 - View profile info (bio, qualifications — read-only in app, edited by admin)
-- Ratings & Reviews → D08
+- Ratings & Reviews → E08
 - Language toggle
 - Notification settings
 - About clinic (same as client)
 - Logout
 
-**Note:** Doctor cannot edit their own pricing, schedule display name, or specialty from the app — those are managed by admin via dashboard.
+**Note:** Employee cannot edit their own pricing, schedule display name, or specialty from the app — those are managed by admin via dashboard.
 
 ---
 
-## D08 — Ratings & Reviews
+## E08 — Ratings & Reviews
 
-**Purpose:** View all ratings received by this doctor
+**Purpose:** View all ratings received by this employee
 
 **Layout:**
 ```
@@ -506,6 +509,21 @@
 - Reviews list (newest first)
 - Client name shown as first name + initial (privacy)
 - Pagination / infinite scroll
-- No reply feature for doctor (out of scope for v1)
+- No reply feature for employees (out of scope for v1)
 
 **RTL:** Rating bars fill from right. Star breakdown labels on right.
+
+---
+
+## E09 — Video Call (Zoom)
+
+**Purpose:** In-app Zoom surface for the employee side of a video consultation.
+
+**Route:** `/(employee)/video-call` (modal, opened from E01/E02 with the booking id as a param).
+
+**Behavior:**
+- Joins the Zoom meeting bound to the booking via the `JoinVideoCallButton` flow (see backend `zoom/` module).
+- Pre-call checks: camera + microphone permission, network status.
+- Falls back to launching the native Zoom app via deep link if the embedded SDK is unavailable.
+- "Start Meeting" button on E01 cards becomes active 15 minutes before the scheduled start.
+- On call end, returns to E02 where the employee can "Mark Completed".

@@ -1,6 +1,6 @@
-# CareKit Accessibility Guidelines (WCAG AA)
+# CareKit Accessibility Guidelines (WCAG AAA)
 
-All CareKit interfaces must meet WCAG 2.1 Level AA compliance minimum.
+All CareKit interfaces target WCAG 2.1 Level AAA. AA is the floor; AAA is the goal we design and review against (per root `CLAUDE.md` § "Design Principles").
 
 ---
 
@@ -10,10 +10,10 @@ All CareKit interfaces must meet WCAG 2.1 Level AA compliance minimum.
 
 | Element | Ratio | Standard |
 |---------|-------|----------|
-| Normal text (< 18px) | 4.5:1 | WCAG AA |
-| Large text (>= 18px bold or >= 24px) | 3:1 | WCAG AA |
-| UI components (borders, icons) | 3:1 | WCAG AA |
-| Focus indicators | 3:1 | WCAG AA |
+| Normal text (< 18px) | 7:1 | WCAG AAA |
+| Large text (>= 18px bold or >= 24px) | 4.5:1 | WCAG AAA |
+| UI components (borders, icons) | 3:1 | WCAG AA (AAA has no stricter rule) |
+| Focus indicators | 3:1 | WCAG AA (AAA has no stricter rule) |
 
 ### 1.2 Color Independence
 
@@ -278,7 +278,7 @@ GOOD: "View appointment details" / "عرض تفاصيل الموعد"
 - [ ] Keyboard navigable (Tab, Enter, Space, Escape, Arrow keys)
 - [ ] Focus indicator visible
 - [ ] Screen reader announces correctly (role, name, state)
-- [ ] Color contrast meets 4.5:1 (text) and 3:1 (UI)
+- [ ] Color contrast meets 7:1 (normal text), 4.5:1 (large text), 3:1 (UI) — AAA target
 - [ ] Works in both light and dark mode
 - [ ] Works in both RTL and LTR
 - [ ] Touch target >= 44x44px (mobile)

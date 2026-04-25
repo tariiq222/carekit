@@ -1,37 +1,41 @@
 # CareKit Mobile — Client Screens Specification
 
-24 screens for the client experience. All screens support RTL-first (Arabic primary) and LTR (English).
+Client-app screens (Expo Router `apps/mobile/app/(client)/` route group). All screens support RTL-first (Arabic primary) and LTR (English). The `(client)` group is gated by `_layout.tsx` and contains `(tabs)/` for the bottom-tab surfaces plus modal/stack routes for chat, therapists, video calls, booking, and appointment detail.
 
 ---
 
 ## Screen Index
 
+Routes below match the live folder structure under `apps/mobile/app/(client)/`. Auth screens live outside the group under `apps/mobile/app/auth/` (and `(auth)` for OTP). OTPs are issued via Authentica (SMS/WhatsApp).
+
 | # | Screen | Route | Tab |
 |---|--------|-------|-----|
-| P01 | Splash | `/` | - |
-| P02 | Onboarding | `/onboarding` | - |
-| P03 | Login (Password) | `/auth/login` | - |
-| P04 | Login (OTP - Email) | `/auth/login-otp` | - |
-| P05 | OTP Verification | `/auth/verify-otp` | - |
-| P06 | Register | `/auth/register` | - |
-| P07 | Forgot Password | `/auth/forgot-password` | - |
-| P08 | Home | `/(client)/home` | Home |
-| P09 | Notifications | `/(client)/notifications` | - |
-| P10 | Specialty List | `/(client)/specialties` | Home |
-| P11 | Employee List | `/(client)/employees` | Home |
-| P12 | Employee Profile | `/(client)/employees/[id]` | Home |
-| P13 | Service List | `/(client)/services` | Home |
-| P14 | Booking - Type | `/(client)/booking/type` | Home |
-| P15 | Booking - Date & Time | `/(client)/booking/schedule` | Home |
-| P16 | Booking - Confirm | `/(client)/booking/confirm` | Home |
+| P01 | Splash | `/` | — |
+| P02 | Onboarding | `/onboarding` | — |
+| P03 | Login (Password) | `/auth/login` | — |
+| P04 | Login (OTP — phone via Authentica) | `/auth/login-otp` | — |
+| P05 | OTP Verification | `/auth/verify-otp` | — |
+| P06 | Register | `/auth/register` | — |
+| P07 | Forgot Password | `/auth/forgot-password` | — |
+| P08 | Home | `/(client)/(tabs)/index` | Home |
+| P09 | Notifications | `/(client)/(tabs)/notifications` | Notifications |
+| P10 | Specialty List | `/(client)/(tabs)/specialties` | Home |
+| P11 | Employee List (Therapists) | `/(client)/therapists` | Home |
+| P12 | Employee Profile | `/(client)/employee/[id]` | Home |
+| P13 | Service List | `/(client)/(tabs)/services` | Home |
+| P14 | Booking — Type | `/(client)/booking/type` | Home |
+| P15 | Booking — Date & Time | `/(client)/booking/schedule` | Home |
+| P16 | Booking — Confirm | `/(client)/booking/confirm` | Home |
 | P17 | Payment | `/(client)/booking/payment` | Home |
 | P18 | Bank Transfer Upload | `/(client)/booking/bank-transfer` | Home |
 | P19 | Booking Confirmation | `/(client)/booking/success` | Home |
-| P20 | My Appointments | `/(client)/appointments` | Bookings |
-| P21 | Appointment Detail | `/(client)/appointments/[id]` | Bookings |
-| P22 | Chat (AI) | `/(client)/chat` | Chat |
-| P23 | Profile | `/(client)/profile` | Profile |
-| P24 | About & FAQ | `/(client)/about` | Profile |
+| P20 | My Appointments | `/(client)/(tabs)/appointments` | Bookings |
+| P21 | Appointment Detail | `/(client)/appointment/[id]` | Bookings |
+| P22 | Video Call (Zoom join) | `/(client)/video-call` | — (modal) |
+| P23 | Chat (AI) | `/(client)/chat` | Chat |
+| P24 | Profile / Settings | `/(client)/settings` | Profile |
+| P25 | Rate Appointment | `/(client)/rate/[id]` | — (modal) |
+| P26 | Clinic / About & FAQ | `/(client)/clinic` | Profile |
 
 ---
 
@@ -152,9 +156,9 @@
 
 ---
 
-## P04 — Login (OTP via Email)
+## P04 — Login (OTP via Authentica)
 
-**Purpose:** Passwordless login with email OTP
+**Purpose:** Passwordless login with phone OTP delivered through Authentica (SMS/WhatsApp). See the `authentica-sa` skill for endpoint contract.
 
 **Layout:**
 ```
@@ -182,9 +186,9 @@
 ```
 
 **Behavior:**
-- On submit: API sends OTP to email → navigate to P05
+- On submit: backend calls Authentica `/api/v2/send-otp` (channel: SMS or WhatsApp) → navigate to P05
 - Loading state on button
-- Rate limiting: disable resend for 60 seconds
+- Rate limiting: disable resend for 60 seconds (also enforced server-side via Authentica)
 
 **RTL:** Back arrow → ChevronRight in RTL.
 
@@ -221,7 +225,7 @@
 - 6 individual digit inputs, auto-focus next on input
 - Auto-submit when all 6 digits entered
 - Countdown timer for resend (60 seconds)
-- On success: store tokens → check role → route
+- On verify: backend calls Authentica `/api/v2/verify-otp`; on success store tokens → check role → route
 - OTP digits always LTR regardless of language
 
 **RTL:** OTP boxes remain LTR. Labels right-aligned.
@@ -984,8 +988,8 @@ Then after OTP verification, show new password form:
 │  │ حالة الدفع: مدفوع ✅   │    │
 │  └──────────────────────┘    │
 │                              │
-│  (for video: Zoom link button)│
-│  [انضم للاجتماع / Join Zoom] │
+│  (for video: opens P22 video-call screen)│
+│  [انضم للاجتماع / Join Video Call] │
 │                              │
 │  (for completed appointments) │
 │  [تقييم الموعد / Rate]       │
@@ -1000,11 +1004,25 @@ Then after OTP verification, show new password form:
 ```
 
 **Conditional elements:**
-- **Video booking:** Show "Join Zoom" button (opens Zoom via deep link)
+- **Video booking:** Show "Join Video Call" button — opens P22 (`/(client)/video-call`) which embeds the Zoom SDK / falls back to Zoom deep link
 - **Phone booking:** Show employee phone number
-- **Completed:** Show "Rate" button (if not yet rated)
+- **Completed:** Show "Rate" button (if not yet rated) → navigates to `/(client)/rate/[id]`
 - **Pending cancellation:** Show "Cancellation under review" message
 - **Cancelled:** Show cancellation reason + refund status
+
+---
+
+## P22 — Video Call (Zoom)
+
+**Purpose:** In-app Zoom video consultation surface for video-type bookings.
+
+**Route:** `/(client)/video-call` (modal, opened from P21 with the booking id as a param).
+
+**Behavior:**
+- Joins the Zoom meeting bound to the booking via the `JoinVideoCallButton` flow (see backend `zoom/` module).
+- Pre-call checks: camera + microphone permission, network status.
+- Falls back to launching the native Zoom app via deep link if the embedded SDK is unavailable.
+- Available 15 minutes before scheduled start; closes the screen on call end and returns to P21.
 
 ---
 
