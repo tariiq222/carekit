@@ -13,7 +13,21 @@ export class GetCurrentUserHandler {
       omit: { passwordHash: true },
     });
     if (!user) throw new NotFoundException('User not found');
+
+    // Resolve active membership so /auth/me carries organizationId without
+    // forcing the caller to decode the JWT. Same ordering as LoginHandler.
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: user.id, isActive: true },
+      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+      select: { organizationId: true },
+    });
+
     const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
-    return { ...user, firstName, lastName: rest.join(' ') };
+    return {
+      ...user,
+      firstName,
+      lastName: rest.join(' '),
+      organizationId: membership?.organizationId ?? null,
+    };
   }
 }
