@@ -85,9 +85,12 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
+        // Backend exposes POST /auth/refresh — older mobile versions hit
+        // /auth/refresh-token by mistake, so refreshes silently failed and
+        // users got logged out at every 15-minute access-token expiry.
         const { data } = await axios.post<
           ApiResponse<{ accessToken: string; refreshToken: string }>
-        >(`${API_URL}/auth/refresh-token`, { refreshToken });
+        >(`${API_URL}/auth/refresh`, { refreshToken });
 
         if (data.success && data.data) {
           await setSecureItem('accessToken', data.data.accessToken);
