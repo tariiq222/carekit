@@ -42,7 +42,7 @@ export function ChatTypingIndicator() {
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surfaceSecondary }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.surfaceHigh }]}>
       {[dot1, dot2, dot3].map((dot, i) => (
         <Animated.View
           key={i}

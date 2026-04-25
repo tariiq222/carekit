@@ -1,8 +1,12 @@
+// instrument.ts must be the first import — Sentry wraps OpenTelemetry before
+// NestJS/Express load so all spans are captured from the start.
+import './instrument';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { LoggingInterceptor, AuditInterceptor } from './common/interceptors';
 import { PrismaService } from './infrastructure/database';
@@ -15,6 +19,8 @@ async function bootstrap(): Promise<void> {
   // Without this the body is JSON-parsed before the handler sees it and the
   // signature computed over the raw bytes would never match.
   const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  app.use(helmet());
 
   app.setGlobalPrefix('api/v1');
 
@@ -52,9 +58,14 @@ async function bootstrap(): Promise<void> {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { persistAuthorization: true },
-  });
+
+  // Expose the interactive UI only outside production — the OpenAPI JSON
+  // snapshot (WRITE_OPENAPI_SPEC=1) is still generated in CI regardless.
+  if (process.env.NODE_ENV !== 'production') {
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: { persistAuthorization: true },
+    });
+  }
 
   if (process.env.WRITE_OPENAPI_SPEC === '1') {
     const outPath = resolve(__dirname, '../openapi.json');

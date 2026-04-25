@@ -1,7 +1,7 @@
 import { CancellationReason } from '@prisma/client';
 import { MobileClientBookingsController, MobileCreateBookingDto, MobileCancelBookingDto, MobileListBookingsDto } from './bookings.controller';
 
-const USER = { sub: 'client-1', email: 'client@test.com', role: 'client' as const };
+const USER = { id: 'client-1', email: 'client@test.com', phone: null };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -11,10 +11,14 @@ function buildController() {
   const create = fn({ id: 'booking-1' });
   const cancel = fn({ id: 'booking-1', status: 'cancelled' });
   const reschedule = fn({ id: 'booking-1', scheduledAt: new Date() });
+  const rate = fn({ id: 'rating-1' });
+  const prisma = { booking: { findFirst: jest.fn() } };
+  const zoom = fn({ zoomJoinUrl: 'https://zoom.us/j/123', scheduledAt: new Date() });
   const controller = new MobileClientBookingsController(
     list as never, get as never, create as never, cancel as never, reschedule as never,
+    rate as never, prisma as never, zoom as never,
   );
-  return { controller, list, get, create, cancel, reschedule };
+  return { controller, list, get, create, cancel, reschedule, rate, prisma, zoom };
 }
 
 describe('MobileClientBookingsController', () => {
@@ -30,7 +34,7 @@ describe('MobileClientBookingsController', () => {
       await controller.createBooking(USER as never, body);
       expect(create.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          clientId: USER.sub,
+          clientId: USER.id,
           branchId: body.branchId,
           employeeId: body.employeeId,
           serviceId: body.serviceId,
@@ -66,7 +70,7 @@ describe('MobileClientBookingsController', () => {
       const { controller, list } = buildController();
       await controller.listMyBookings(USER as never, {});
       expect(list.execute).toHaveBeenCalledWith({
-        clientId: USER.sub, page: 1, limit: 20, status: undefined,
+        clientId: USER.id, page: 1, limit: 20, status: undefined,
       });
     });
 
@@ -75,7 +79,7 @@ describe('MobileClientBookingsController', () => {
       const q: MobileListBookingsDto = { page: 3, limit: 50, status: 'CONFIRMED' };
       await controller.listMyBookings(USER as never, q);
       expect(list.execute).toHaveBeenCalledWith({
-        clientId: USER.sub, page: 3, limit: 50, status: 'CONFIRMED',
+        clientId: USER.id, page: 3, limit: 50, status: 'CONFIRMED',
       });
     });
   });
@@ -97,7 +101,7 @@ describe('MobileClientBookingsController', () => {
         bookingId: 'booking-1',
         reason: CancellationReason.CLIENT_REQUESTED,
         cancelNotes: 'changed mind',
-        changedBy: USER.sub,
+        changedBy: USER.id,
         source: 'client',
       });
     });
@@ -120,7 +124,7 @@ describe('MobileClientBookingsController', () => {
         bookingId: 'booking-1',
         newScheduledAt: expect.any(Date),
         newDurationMins: 60,
-        changedBy: USER.sub,
+        changedBy: USER.id,
       });
     });
 

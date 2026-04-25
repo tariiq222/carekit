@@ -1,13 +1,13 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
-import type { PaginatedResponse } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
+import type { PaginatedResponse } from '../types/api'
 import type {
   IntakeFormListItem,
   IntakeFormDetail,
   IntakeFormListQuery,
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
-} from '../types/intake-form.js'
+} from '../types/intake-form'
 
 export async function list(query: IntakeFormListQuery = {}): Promise<PaginatedResponse<IntakeFormListItem>> {
   return apiRequest<PaginatedResponse<IntakeFormListItem>>(

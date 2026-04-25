@@ -341,6 +341,8 @@ export const enServices: Record<string, string> = {
   "services.create.department": "Department",
   "services.create.allDepartments": "All departments",
   "services.create.noCategories": "No categories found",
+  "services.create.noCategoriesCta": "Create a category first",
+  "services.create.noCategoriesBanner": "No categories exist yet. Every service must belong to a category.",
   "services.create.calendarColor": "Calendar Color",
 
   /* ── Intake footnote (create mode) ── */

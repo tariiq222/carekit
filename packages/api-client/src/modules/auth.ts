@@ -1,5 +1,5 @@
-import { apiRequest } from '../client.js'
-import type { AuthResponse, TokenPair } from '../types/index.js'
+import { apiRequest } from '../client'
+import type { AuthResponse, TokenPair } from '../types/index'
 
 export interface LoginPayload {
   email: string

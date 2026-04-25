@@ -12,6 +12,7 @@ import { Button } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { FeatureGate } from "@/components/feature-gate"
 import { FeatureKey } from "@carekit/shared/constants"
+import { FeatureDisabledState } from "@/components/features/feature-disabled-state"
 import { FilterBar } from "@/components/features/filter-bar"
 import { EmployeeCombobox } from "@/components/features/reports/employee-combobox"
 
@@ -37,7 +38,15 @@ export default function ReportsPage() {
   const showExport = false
 
   return (
-    <FeatureGate feature={FeatureKey.ADVANCED_REPORTS}>
+    <FeatureGate
+      feature={FeatureKey.ADVANCED_REPORTS}
+      fallback={
+        <FeatureDisabledState
+          title={t("reports.title")}
+          description={t("reports.description")}
+        />
+      }
+    >
     <ListPageShell>
       <Breadcrumbs />
 

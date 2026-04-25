@@ -1,5 +1,5 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
 import type {
   ServiceCategory,
   ServiceListItem,
@@ -8,7 +8,7 @@ import type {
   ServiceStats,
   CreateServicePayload,
   UpdateServicePayload,
-} from '../types/service.js'
+} from '../types/service'
 
 export async function listCategories(): Promise<ServiceCategory[]> {
   return apiRequest<ServiceCategory[]>('/services/categories')

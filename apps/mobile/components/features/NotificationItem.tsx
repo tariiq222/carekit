@@ -12,6 +12,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
 
+import { colors as sharedColors } from '@carekit/shared/tokens';
+
 import { ThemedText } from '@/theme/components/ThemedText';
 import { useTheme } from '@/theme/useTheme';
 import type { Notification } from '@/types/models';
@@ -27,7 +29,7 @@ interface TypeConfig {
   color: string;
 }
 
-const TYPE_MAP: Record<Notification['type'], TypeConfig> = {
+const TYPE_MAP: Partial<Record<Notification['type'], TypeConfig>> = {
   booking_confirmed: { icon: Calendar, color: '#059669' },
   booking_cancelled: { icon: CalendarX, color: '#DC2626' },
   reminder: { icon: Bell, color: '#F59E0B' },
@@ -35,6 +37,8 @@ const TYPE_MAP: Record<Notification['type'], TypeConfig> = {
   new_rating: { icon: Star, color: '#7C3AED' },
   problem_report: { icon: AlertTriangle, color: '#DC2626' },
 };
+
+const DEFAULT_TYPE_CONFIG: TypeConfig = { icon: Bell, color: sharedColors.textSecondary };
 
 function getRelativeTime(
   dateStr: string,
@@ -57,7 +61,7 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const config = TYPE_MAP[notification.type];
+  const config = TYPE_MAP[notification.type] ?? DEFAULT_TYPE_CONFIG;
   const Icon = config.icon;
 
   const title =

@@ -27,11 +27,23 @@ describe('TenantResolverMiddleware', () => {
     return mod.get(TenantResolverMiddleware);
   };
 
-  const req = (overrides: Partial<{ user: unknown; headers: Record<string, unknown>; hostname: string }> = {}) =>
+  const req = (
+    overrides: Partial<{
+      user: unknown;
+      headers: Record<string, unknown>;
+      hostname: string;
+      path: string;
+      url: string;
+      originalUrl: string;
+    }> = {},
+  ) =>
     ({
       user: undefined,
       headers: {},
       hostname: 'localhost',
+      path: '/api/v1/dashboard/bookings',
+      url: '/api/v1/dashboard/bookings',
+      originalUrl: '/api/v1/dashboard/bookings',
       ...overrides,
     }) as never;
 
@@ -84,16 +96,17 @@ describe('TenantResolverMiddleware', () => {
 
   it('strict mode: accepts explicit header when super-admin', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+    const headerOrg = '550e8400-e29b-41d4-a716-446655440000';
     await new Promise<void>((done) => {
       cls.run(() =>
         mw.use(
           req({
             user: { id: 'u1', role: 'SUPER_ADMIN', isSuperAdmin: true },
-            headers: { 'x-org-id': 'org-header' },
+            headers: { 'x-org-id': headerOrg },
           }),
           {} as never,
           () => {
-            expect(ctx.getOrganizationId()).toBe('org-header');
+            expect(ctx.getOrganizationId()).toBe(headerOrg);
             done();
           },
         ),
@@ -117,6 +130,150 @@ describe('TenantResolverMiddleware', () => {
           },
         ),
       );
+    });
+  });
+
+  describe('public-route X-Org-Id resolution', () => {
+    const VALID = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('strict mode: accepts X-Org-Id on unauthenticated public route', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(VALID);
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('strict mode: ignores X-Org-Id on authenticated public route (JWT wins)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'CLIENT' },
+              originalUrl: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe('org-jwt');
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('strict mode: ignores X-Org-Id on private route when unauthenticated (throws)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/dashboard/bookings',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: ignores invalid UUID, throws (no fallback)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              headers: { 'x-org-id': 'not-a-uuid' },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: ignores X-Org-Id on /webhooks/ public route', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/sms/webhooks/unifonic/org-1',
+              headers: { 'x-org-id': VALID },
+            }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+  });
+
+  describe('isPublicRoute()', () => {
+    let mw: TenantResolverMiddleware;
+    beforeEach(async () => {
+      mw = await build({ TENANT_ENFORCEMENT: 'permissive' });
+    });
+
+    it('accepts /api/v1/public/* paths', () => {
+      expect((mw as unknown as { isPublicRoute(p: string): boolean }).isPublicRoute('/api/v1/public/services/departments')).toBe(true);
+    });
+
+    it('rejects authenticated paths', () => {
+      expect((mw as unknown as { isPublicRoute(p: string): boolean }).isPublicRoute('/api/v1/dashboard/bookings')).toBe(false);
+    });
+
+    it('rejects /api/v1/public/sms/webhooks/* (webhooks self-resolve)', () => {
+      expect((mw as unknown as { isPublicRoute(p: string): boolean }).isPublicRoute('/api/v1/public/sms/webhooks/unifonic/org-1')).toBe(false);
+    });
+  });
+
+  describe('parseUuidHeader()', () => {
+    let mw: TenantResolverMiddleware;
+    beforeEach(async () => {
+      mw = await build({ TENANT_ENFORCEMENT: 'permissive' });
+    });
+
+    const parse = (v: unknown) =>
+      (mw as unknown as { parseUuidHeader(v: unknown): string | undefined }).parseUuidHeader(v);
+
+    it('accepts well-formed UUID', () => {
+      expect(parse('550e8400-e29b-41d4-a716-446655440000')).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('accepts the all-zero DEFAULT_ORGANIZATION_ID', () => {
+      expect(parse('00000000-0000-0000-0000-000000000001')).toBe('00000000-0000-0000-0000-000000000001');
+    });
+
+    it('rejects non-string values', () => {
+      expect(parse(undefined)).toBeUndefined();
+      expect(parse(123)).toBeUndefined();
+      expect(parse(null)).toBeUndefined();
+    });
+
+    it('rejects malformed UUIDs', () => {
+      expect(parse('not-a-uuid')).toBeUndefined();
+      expect(parse('550e8400-e29b-41d4-a716')).toBeUndefined();
+      expect(parse('550e8400e29b41d4a716446655440000')).toBeUndefined();
+    });
+
+    it('trims whitespace', () => {
+      expect(parse('  550e8400-e29b-41d4-a716-446655440000  ')).toBe('550e8400-e29b-41d4-a716-446655440000');
     });
   });
 });

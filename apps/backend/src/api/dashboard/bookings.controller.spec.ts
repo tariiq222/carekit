@@ -8,6 +8,7 @@ function buildController() {
   const create = fn({ id: 'book-1' });
   const createRecurring = fn({ ids: ['book-1'] });
   const list = fn({ data: [], meta: {} });
+  const stats = fn({ todayCount: 0, pendingCount: 0, completedToday: 0, revenueToday: 0 });
   const get = fn({ id: 'book-1' });
   const cancel = fn({ id: 'book-1' });
   const reschedule = fn({ id: 'book-1' });
@@ -21,13 +22,13 @@ function buildController() {
   const availability = fn({ available: true });
   const statusLog = fn([]);
   const controller = new DashboardBookingsController(
-    create as never, createRecurring as never, list as never, get as never,
-    cancel as never, reschedule as never, confirm as never, checkIn as never,
-    complete as never, noShow as never, waitlist as never,
+    create as never, createRecurring as never, list as never, stats as never,
+    get as never, cancel as never, reschedule as never, confirm as never,
+    checkIn as never, complete as never, noShow as never, waitlist as never,
     listWaitlist as never, removeWaitlist as never, availability as never,
     statusLog as never,
   );
-  return { controller, create, createRecurring, list, get, cancel, reschedule, confirm, checkIn, complete, noShow, waitlist, listWaitlist, removeWaitlist, availability, statusLog };
+  return { controller, create, createRecurring, list, stats, get, cancel, reschedule, confirm, checkIn, complete, noShow, waitlist, listWaitlist, removeWaitlist, availability, statusLog };
 }
 
 describe('DashboardBookingsController', () => {

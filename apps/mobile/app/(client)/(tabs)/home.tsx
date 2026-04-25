@@ -175,13 +175,13 @@ export default function HomeScreen() {
             contentContainerStyle={[styles.hScrollContent, { flexDirection: dir.row }]}
           >
             {[
-              { ar: 'عيادة النفسية', en: 'Wellness Clinic', city: dir.isRTL ? 'الرياض' : 'Riyadh', rating: 4.7 },
-              { ar: 'مركز الصحة', en: 'Health Center', city: dir.isRTL ? 'جدة' : 'Jeddah', rating: 4.8 },
-              { ar: 'عيادة النور', en: 'Noor Clinic', city: dir.isRTL ? 'الدمام' : 'Dammam', rating: 4.6 },
-              { ar: 'مركز السكينة', en: 'Serenity Center', city: dir.isRTL ? 'مكة' : 'Makkah', rating: 4.9 },
-            ].map((c, i) => (
-              <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.clinicCard}>
-                <Pressable onPress={() => {}} style={styles.clinicInner}>
+              { id: '1', ar: 'عيادة النفسية', en: 'Wellness Clinic', city: dir.isRTL ? 'الرياض' : 'Riyadh', rating: 4.7 },
+              { id: '2', ar: 'مركز الصحة', en: 'Health Center', city: dir.isRTL ? 'جدة' : 'Jeddah', rating: 4.8 },
+              { id: '3', ar: 'عيادة النور', en: 'Noor Clinic', city: dir.isRTL ? 'الدمام' : 'Dammam', rating: 4.6 },
+              { id: '4', ar: 'مركز السكينة', en: 'Serenity Center', city: dir.isRTL ? 'مكة' : 'Makkah', rating: 4.9 },
+            ].map((c) => (
+              <Glass key={c.id} variant="strong" radius={sawaaRadius.xl} style={styles.clinicCard}>
+                <Pressable onPress={() => router.push(`/(client)/clinic/${c.id}`)} style={styles.clinicInner}>
                   <View style={styles.clinicFavWrap}>
                     <Heart size={14} color={sawaaColors.ink[500]} strokeWidth={1.75} />
                   </View>
@@ -259,9 +259,11 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
             {dir.isRTL ? 'المعالجون' : 'Therapists'}
           </Text>
-          <Text style={[styles.sectionMeta, { fontFamily: f600, color: sawaaColors.teal[700] }]}>
-            {dir.isRTL ? 'عرض الكل' : 'See all'}
-          </Text>
+          <Pressable onPress={() => router.push('/(client)/therapists')} hitSlop={8}>
+            <Text style={[styles.sectionMeta, { fontFamily: f600, color: sawaaColors.teal[700] }]}>
+              {dir.isRTL ? 'عرض الكل' : 'See all'}
+            </Text>
+          </Pressable>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>

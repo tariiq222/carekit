@@ -12,6 +12,7 @@ export interface IsolationHarness {
   ctx: TenantContextService;
   createOrg: (slug: string, nameAr: string) => Promise<{ id: string }>;
   runAs: <T>(context: Partial<TenantContext>, fn: () => Promise<T>) => Promise<T>;
+  cleanupOrg: (orgId: string) => Promise<void>;
   close: () => Promise<void>;
 }
 
@@ -53,6 +54,16 @@ export async function bootHarness(): Promise<IsolationHarness> {
       return fn();
     });
 
+  const cleanupOrg = async (orgId: string) => {
+    await runAs({ organizationId: orgId }, async () => {
+      await prisma.membership.deleteMany({ where: { organizationId: orgId } });
+      await prisma.refreshToken.deleteMany({ where: { organizationId: orgId } });
+      await prisma.customRole.deleteMany({ where: { organizationId: orgId } });
+      await prisma.permission.deleteMany({ where: { organizationId: orgId } });
+    });
+    await prisma.organization.delete({ where: { id: orgId } });
+  };
+
   return {
     app,
     prisma,
@@ -60,6 +71,7 @@ export async function bootHarness(): Promise<IsolationHarness> {
     ctx,
     createOrg,
     runAs,
+    cleanupOrg,
     close: async () => {
       await app.close();
     },

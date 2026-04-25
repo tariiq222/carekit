@@ -24,6 +24,36 @@ export class TenantResolverMiddleware implements NestMiddleware {
     private readonly config: ConfigService,
   ) {}
 
+  /**
+   * Public mobile routes that may resolve their tenant from the X-Org-Id
+   * header. Webhook routes are excluded — they have their own system-context
+   * resolution flow (see SaaS-02e moyasar-webhook).
+   */
+  private isPublicRoute(path: string): boolean {
+    // Accept both prefixed (`/api/v1/public/...` in production) and bare
+    // (`/public/...` in tests, where setGlobalPrefix is not applied).
+    if (!path.startsWith('/api/v1/public/') && !path.startsWith('/public/')) {
+      return false;
+    }
+    if (path.includes('/webhooks/')) return false;
+    return true;
+  }
+
+  /**
+   * Validates a header value as a well-formed UUID (RFC 4122, any version
+   * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
+   * Returns the trimmed value when valid, undefined otherwise.
+   */
+  private parseUuidHeader(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      trimmed,
+    )
+      ? trimmed
+      : undefined;
+  }
+
   use(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
     const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
@@ -34,19 +64,28 @@ export class TenantResolverMiddleware implements NestMiddleware {
     // Priority:
     //   1. JWT claim (authenticated users)
     //   2. X-Org-Id header (super-admins only — never trusted from regular users)
-    //   3. Subdomain resolver (added in Plan 09)
-    //   4. DEFAULT_ORGANIZATION_ID (permissive mode only)
+    //   3. X-Org-Id header on UNAUTHENTICATED public routes (mobile tenant-lock)
+    //   4. Subdomain resolver (added in Plan 09)
+    //   5. DEFAULT_ORGANIZATION_ID (permissive mode only)
     const fromJwt = req.user?.organizationId;
-    const fromHeader =
+    const fromSuperAdminHeader =
       req.user?.isSuperAdmin === true
-        ? (req.headers['x-org-id'] as string | undefined)
+        ? this.parseUuidHeader(req.headers['x-org-id'])
+        : undefined;
+    // Note: req.originalUrl (not req.path) is used because NestJS middleware
+    // mounted via forRoutes('*') runs after Express path-stripping — req.path
+    // is '/' and the full path lives on req.originalUrl.
+    const fromPublicHeader =
+      !req.user && this.isPublicRoute(req.originalUrl ?? '')
+        ? this.parseUuidHeader(req.headers['x-org-id'])
         : undefined;
     const fromDefault =
       mode === 'permissive'
         ? this.config.get<string>('DEFAULT_ORGANIZATION_ID', DEFAULT_ORGANIZATION_ID)
         : undefined;
 
-    const organizationId = fromJwt ?? fromHeader ?? fromDefault;
+    const organizationId =
+      fromJwt ?? fromSuperAdminHeader ?? fromPublicHeader ?? fromDefault;
 
     if (!organizationId) {
       throw new TenantResolutionError(

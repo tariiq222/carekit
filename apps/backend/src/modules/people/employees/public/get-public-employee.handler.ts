@@ -6,9 +6,14 @@ import type { PublicEmployeeItem } from './list-public-employees.handler';
 export class GetPublicEmployeeHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(slug: string): Promise<PublicEmployeeItem> {
+  async execute(key: string): Promise<PublicEmployeeItem> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
     const row = await this.prisma.employee.findFirst({
-      where: { slug, isPublic: true, isActive: true },
+      where: {
+        ...(isUuid ? { id: key } : { slug: key }),
+        isPublic: true,
+        isActive: true,
+      },
       select: {
         id: true,
         slug: true,
@@ -23,6 +28,17 @@ export class GetPublicEmployeeHandler {
       },
     });
     if (!row) throw new NotFoundException('Employee not found');
-    return row;
+
+    const ratings = await this.prisma.rating.aggregate({
+      where: { employeeId: row.id, isPublic: true },
+      _avg: { score: true },
+      _count: { _all: true },
+    });
+
+    return {
+      ...row,
+      ratingAverage: ratings._avg.score ?? null,
+      ratingCount: ratings._count._all,
+    };
   }
 }

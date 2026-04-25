@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { PlanSlug, SubscriptionStatus } from "@prisma/client";
+import type { SubscriptionStatus } from "@prisma/client";
 import { BookingStatus } from "@prisma/client";
 import { FeatureKey } from "@carekit/shared/constants/feature-keys";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
@@ -26,8 +26,12 @@ export class GetMyFeaturesHandler {
     // 1. Load subscription from cache
     const cached = await this.cache.get(organizationId);
     if (!cached) {
+      // Orgs without an active subscription default to the platform-configured
+      // free/entry tier — the slug is now arbitrary (configurable) so we no
+      // longer hardcode "BASIC". If the configured plan is missing, callers
+      // still get a valid shape; a later request after seeding recovers.
       return {
-        planSlug: "BASIC" as PlanSlug,
+        planSlug: process.env.PLATFORM_DEFAULT_PLAN_SLUG ?? "BASIC",
         status: "TRIALING" as SubscriptionStatus,
         features: {},
       };
@@ -48,7 +52,6 @@ export class GetMyFeaturesHandler {
         organizationId: true,
         key: true,
         enabled: true,
-        // @ts-expect-error -- allowedPlans exists in schema but Prisma client is pending `prisma generate` after schema fix (Invitation relation)
         allowedPlans: true,
         limitKind: true,
       },
@@ -119,7 +122,7 @@ export class GetMyFeaturesHandler {
     }
 
     return {
-      planSlug: planSlug as PlanSlug,
+      planSlug,
       status,
       features,
     };

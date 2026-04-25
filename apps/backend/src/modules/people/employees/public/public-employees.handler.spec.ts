@@ -17,7 +17,13 @@ describe('Public employees handlers', () => {
         GetPublicEmployeeHandler,
         {
           provide: PrismaService,
-          useValue: { employee: { findMany: jest.fn(), findFirst: jest.fn() } },
+          useValue: {
+            employee: { findMany: jest.fn(), findFirst: jest.fn() },
+            rating: {
+              groupBy: jest.fn().mockResolvedValue([]),
+              aggregate: jest.fn().mockResolvedValue({ _avg: { score: null }, _count: { _all: 0 } }),
+            },
+          },
         },
       ],
     }).compile();

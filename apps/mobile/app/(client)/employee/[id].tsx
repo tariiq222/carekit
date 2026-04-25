@@ -1,218 +1,290 @@
-import { useState, useEffect } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Star,
-  Building2,
-  Phone,
-  Video,
-  Clock,
-} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react-native';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { ThemedCard } from '@/theme/components/ThemedCard';
-import { Avatar } from '@/components/ui/Avatar';
-import { StatusPill } from '@/components/ui/StatusPill';
-import { useTheme } from '@/theme/useTheme';
-import { employeesService } from '@/services/employees';
-import type { Employee, Rating } from '@/types/models';
+import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
+import { Glass } from '@/theme/components/Glass';
+import { useDir } from '@/hooks/useDir';
+import { getFontName } from '@/theme/fonts';
+import {
+  publicEmployeesService,
+  type PublicEmployeeItem,
+} from '@/services/client';
 
-export default function EmployeeDetailScreen() {
+const SPECIALTIES = [
+  { ar: 'القلق العام', en: 'General Anxiety', color: sawaaColors.teal[600] },
+  { ar: 'نوبات الهلع', en: 'Panic', color: sawaaColors.accent.violet },
+  { ar: 'الاكتئاب', en: 'Depression', color: sawaaColors.accent.rose },
+  { ar: 'الوسواس', en: 'OCD', color: sawaaColors.accent.amber },
+  { ar: 'الرهاب الاجتماعي', en: 'Social phobia', color: sawaaColors.accent.sky },
+];
+
+const REVIEWS = [
+  {
+    byAr: 'نورة', byEn: 'Noura',
+    whenAr: 'قبل أسبوع', whenEn: '1 week ago',
+    textAr: '"جلسات عميقة ومهنية، شعرت بفرق حقيقي بعد ٤ جلسات فقط."',
+    textEn: '"Deep, professional sessions. Felt a real difference after only 4 sessions."',
+  },
+];
+
+export default function EmployeeProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
-
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [ratings, setRatings] = useState<Rating[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dir = useDir();
+  const f400 = getFontName(dir.locale, '400');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
+  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const [employee, setEmployee] = useState<PublicEmployeeItem | null>(null);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [pRes, rRes] = await Promise.allSettled([
-          employeesService.getById(id ?? ''),
-          employeesService.getRatings(id ?? '', 1, 3),
-        ]);
-        if (pRes.status === 'fulfilled' && pRes.value.data)
-          setEmployee(pRes.value.data);
-        if (rRes.status === 'fulfilled' && rRes.value.data)
-          setRatings(rRes.value.data.items);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (id) load();
+    if (!id) return;
+    let cancelled = false;
+    publicEmployeesService.getByKey(id).then(
+      (res) => {
+        if (!cancelled) setEmployee(res);
+      },
+      () => {},
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const employeeName = employee
+    ? (dir.isRTL ? employee.nameAr : employee.nameEn) ?? employee.nameEn ?? employee.nameAr ?? '—'
+    : '—';
+  const employeeSpec = employee
+    ? [
+        (dir.isRTL ? employee.specialtyAr : employee.specialty) ?? employee.specialty ?? employee.specialtyAr ?? '',
+        employee.title ?? '',
+      ].filter(Boolean).join(' · ')
+    : '';
+  const employeeBio = employee
+    ? (dir.isRTL ? employee.publicBioAr : employee.publicBioEn) ?? employee.publicBioEn ?? employee.publicBioAr ?? ''
+    : '';
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { backgroundColor: theme.colors.surface }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-      </View>
-    );
-  }
-
-  if (!employee) return null;
-
-  const name = `${employee.user.firstName} ${employee.user.lastName}`;
-  const specialtyName = isRTL ? employee.specialtyAr : employee.specialty;
-
-  const prices = [
-    { icon: Building2, label: t('home.clinicVisit'), price: employee.clinicPrice, color: theme.colors.primary[500] },
-    { icon: Phone, label: t('home.phoneConsult'), price: employee.phonePrice, color: theme.colors.success },
-    { icon: Video, label: t('home.videoConsult'), price: employee.videoPrice, color: theme.colors.purple },
+  const stats = [
+    { nAr: '١٢', nEn: '12', ar: 'سنة خبرة', en: 'yrs exp' },
+    { nAr: '٩٨٠', nEn: '980', ar: 'جلسة', en: 'Sessions' },
+    { nAr: '٩٨٪', nEn: '98%', ar: 'رضا', en: 'Satisfaction' },
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <AquaBackground>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: 120 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back */}
-        <Pressable
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
-          style={styles.backBtn}
-        >
-          <BackIcon size={24} strokeWidth={1.5} color={theme.colors.textPrimary} />
-        </Pressable>
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <Glass
+            variant="strong"
+            radius={22}
+            onPress={() => router.back()}
+            interactive
+            style={styles.backBtn}
+          >
+            <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
+          </Glass>
+        </Animated.View>
 
-        {/* Header */}
-        <View style={styles.profileHeader}>
-          <Avatar size={80} name={name} imageUrl={employee.user.avatarUrl} />
-          <ThemedText variant="heading" align="center">{name}</ThemedText>
-          <ThemedText variant="bodySm" color={theme.colors.textSecondary} align="center">
-            {specialtyName}
-          </ThemedText>
-          <View style={styles.ratingRow}>
-            <Star size={16} fill="#F59E0B" color="#F59E0B" />
-            <ThemedText variant="body" style={{ fontWeight: '600' }}>
-              {employee.averageRating}
-            </ThemedText>
-            <ThemedText variant="bodySm" color={theme.colors.textMuted}>
-              ({employee.totalRatings} {t('home.rating')})
-            </ThemedText>
-          </View>
-          <StatusPill
-            status={employee.isAvailableToday ? 'available' : 'pending'}
-            label={employee.isAvailableToday ? t('home.availableToday') : t('home.nextAvailable')}
-          />
-        </View>
-
-        {/* About */}
-        {employee.bio && (
-          <View style={styles.section}>
-            <ThemedText variant="subheading">{t('employee.about')}</ThemedText>
-            <ThemedText variant="body" color={theme.colors.textSecondary}>
-              {isRTL ? (employee.bioAr ?? employee.bio) : employee.bio}
-            </ThemedText>
-          </View>
-        )}
-
-        {/* Prices */}
-        <View style={styles.section}>
-          <ThemedText variant="subheading">{t('employee.prices')}</ThemedText>
-          <View style={styles.pricesGrid}>
-            {prices.map((p) => (
-              <ThemedCard key={p.label} style={styles.priceCard}>
-                <View style={[styles.priceIcon, { backgroundColor: `${p.color}14` }]}>
-                  <p.icon size={18} strokeWidth={1.5} color={p.color} />
+        <Animated.View entering={FadeInDown.delay(80).duration(700).easing(Easing.out(Easing.cubic))}>
+          <Glass variant="strong" radius={sawaaRadius.xl} style={styles.heroCard}>
+            <View style={[styles.heroRow, { flexDirection: dir.row }]}>
+              <LinearGradient
+                colors={['#f7cbb7', '#e88f6c']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatar}
+              >
+                <Text style={[styles.avatarText, { fontFamily: f700 }]}>{employeeName.charAt(0)}</Text>
+                <View style={styles.onlineDot} />
+              </LinearGradient>
+              <View style={styles.heroMid}>
+                <Text style={[styles.heroName, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                  {employeeName}
+                </Text>
+                <Text style={[styles.heroSpec, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                  {employeeSpec}
+                </Text>
+                <View style={[styles.rating, { flexDirection: dir.row }]}>
+                  <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
+                  <Text style={[styles.ratingVal, { fontFamily: f700 }]}>4.9</Text>
+                  <Text style={[styles.ratingCount, { fontFamily: f400 }]}>
+                    {dir.isRTL ? '(٤١٢ تقييم)' : '(412 reviews)'}
+                  </Text>
                 </View>
-                <ThemedText variant="caption" color={theme.colors.textSecondary}>
-                  {p.label}
-                </ThemedText>
-                <ThemedText variant="subheading" color={theme.colors.primary[500]}>
-                  {p.price} {t('home.sar')}
-                </ThemedText>
-              </ThemedCard>
-            ))}
-          </View>
-        </View>
-
-        {/* Reviews */}
-        {ratings.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <ThemedText variant="subheading">{t('employee.reviews')}</ThemedText>
-              <Pressable>
-                <ThemedText variant="bodySm" color={theme.colors.primary[500]} style={{ fontWeight: '600' }}>
-                  {t('employee.allReviews')}
-                </ThemedText>
-              </Pressable>
+              </View>
             </View>
-            {ratings.map((r) => (
-              <ThemedCard key={r.id} style={{ gap: 8 }}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.stars}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={14} fill={s <= r.stars ? '#F59E0B' : 'none'} color={s <= r.stars ? '#F59E0B' : '#E6E8EA'} />
-                    ))}
-                  </View>
-                  <ThemedText variant="caption" color={theme.colors.textMuted}>
-                    {new Date(r.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
-                  </ThemedText>
+
+            <View style={[styles.statsRow, { flexDirection: dir.row }]}>
+              {stats.map((s, i) => (
+                <View key={i} style={styles.statBox}>
+                  <Text style={[styles.statN, { fontFamily: f700 }]}>
+                    {dir.isRTL ? s.nAr : s.nEn}
+                  </Text>
+                  <Text style={[styles.statL, { fontFamily: f400 }]}>
+                    {dir.isRTL ? s.ar : s.en}
+                  </Text>
                 </View>
-                {r.comment && (
-                  <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-                    {r.comment}
-                  </ThemedText>
-                )}
-              </ThemedCard>
+              ))}
+            </View>
+          </Glass>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(180).duration(700).easing(Easing.out(Easing.cubic))}>
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? 'نبذة' : 'About'}
+          </Text>
+          <Text style={[styles.aboutText, { fontFamily: f400, textAlign: dir.textAlign }]}>
+            {employeeBio || (dir.isRTL ? '—' : '—')}
+          </Text>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(260).duration(700).easing(Easing.out(Easing.cubic))}>
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? 'التخصصات' : 'Expertise'}
+          </Text>
+          <View style={[styles.tagRow, { flexDirection: dir.row }]}>
+            {SPECIALTIES.map((s, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.tag,
+                  { backgroundColor: `${s.color}1e`, borderColor: `${s.color}33` },
+                ]}
+              >
+                <Text style={[styles.tagText, { fontFamily: f600, color: s.color }]}>
+                  {dir.isRTL ? s.ar : s.en}
+                </Text>
+              </View>
             ))}
           </View>
-        )}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(340).duration(700).easing(Easing.out(Easing.cubic))}>
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? 'آراء العملاء' : 'Reviews'}
+          </Text>
+          {REVIEWS.map((r, i) => (
+            <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.reviewCard}>
+              <View style={[styles.reviewHead, { flexDirection: dir.row }]}>
+                <View style={[styles.stars, { flexDirection: dir.row }]}>
+                  {[0, 1, 2, 3, 4].map((k) => (
+                    <Star key={k} size={12} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
+                  ))}
+                </View>
+                <Text style={[styles.reviewBy, { fontFamily: f700 }]}>
+                  {dir.isRTL ? `${r.byAr} · ${r.whenAr}` : `${r.byEn} · ${r.whenEn}`}
+                </Text>
+              </View>
+              <Text style={[styles.reviewText, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                {dir.isRTL ? r.textAr : r.textEn}
+              </Text>
+            </Glass>
+          ))}
+        </Animated.View>
       </ScrollView>
 
-      {/* Fixed CTA */}
-      <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 12, backgroundColor: theme.colors.surface }]}>
-        <ThemedButton
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push({
-              pathname: '/(client)/booking/[serviceId]',
-              params: { serviceId: 'select', employeeId: employee.id },
-            });
-          }}
-          variant="primary"
-          size="lg"
-          full
-        >
-          {t('employee.bookWith')} {employee.user.firstName}
-        </ThemedButton>
-      </View>
-    </View>
+      <Animated.View
+        entering={FadeInDown.delay(420).duration(800).easing(Easing.out(Easing.cubic))}
+        style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
+      >
+        <Glass variant="strong" radius={sawaaRadius.pill} style={styles.ctaPill}>
+          <View style={[styles.ctaRow, { flexDirection: dir.row }]}>
+            <View style={styles.ctaPrice}>
+              <Text style={[styles.ctaPriceLabel, { fontFamily: f400 }]}>
+                {dir.isRTL ? 'السعر لكل جلسة' : 'Per session'}
+              </Text>
+              <Text style={[styles.ctaPriceVal, { fontFamily: f700 }]}>
+                {dir.isRTL ? '٢٥٠ ر.س' : 'SAR 250'}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => router.push(`/(client)/booking/${id ?? '1'}`)}
+              style={styles.ctaBtnPress}
+            >
+              <LinearGradient
+                colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.ctaBtn}
+              >
+                <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
+                  {dir.isRTL ? 'احجز جلسة' : 'Book now'}
+                </Text>
+                <GoIcon size={14} color="#fff" strokeWidth={2} />
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </Glass>
+      </Animated.View>
+    </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingHorizontal: 20 },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  profileHeader: { alignItems: 'center', gap: 8, marginBottom: 28 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  section: { gap: 12, marginBottom: 24 },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pricesGrid: { flexDirection: 'row', gap: 10 },
-  priceCard: { flex: 1, alignItems: 'center', gap: 6, padding: 14 },
-  priceIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  stars: { flexDirection: 'row', gap: 2 },
-  ctaBar: { paddingHorizontal: 20, paddingTop: 12, borderTopWidth: 0 },
+  scroll: { paddingHorizontal: 16, gap: 18 },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
+  heroCard: { padding: 18 },
+  heroRow: { alignItems: 'center', gap: 14 },
+  avatar: {
+    width: 80, height: 80, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center', position: 'relative',
+    shadowColor: '#e88f6c', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 8 },
+  },
+  avatarText: { fontSize: 32, color: '#fff' },
+  onlineDot: {
+    position: 'absolute', bottom: 4, right: 4,
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: '#4bd67a', borderWidth: 2, borderColor: '#fff',
+  },
+  heroMid: { flex: 1 },
+  heroName: { fontSize: 17, color: sawaaColors.ink[900] },
+  heroSpec: { fontSize: 12, color: sawaaColors.ink[500], marginTop: 2 },
+  rating: { alignItems: 'center', gap: 4, marginTop: 6 },
+  ratingVal: { fontSize: 11, color: sawaaColors.ink[900] },
+  ratingCount: { fontSize: 11, color: sawaaColors.ink[500] },
+  statsRow: { marginTop: 14, gap: 8 },
+  statBox: {
+    flex: 1, paddingVertical: 10, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.55)',
+    alignItems: 'center',
+  },
+  statN: { fontSize: 15, color: sawaaColors.teal[700] },
+  statL: { fontSize: 10, color: sawaaColors.ink[500], marginTop: 2 },
+  sectionTitle: { fontSize: 14, color: sawaaColors.ink[900], marginBottom: 8 },
+  aboutText: { fontSize: 12.5, color: sawaaColors.ink[700], lineHeight: 22 },
+  tagRow: { flexWrap: 'wrap', gap: 6 },
+  tag: {
+    paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12,
+    borderWidth: 0.5,
+  },
+  tagText: { fontSize: 11 },
+  reviewCard: { padding: 14 },
+  reviewHead: { justifyContent: 'space-between', alignItems: 'center' },
+  stars: { gap: 2 },
+  reviewBy: { fontSize: 12.5, color: sawaaColors.ink[900] },
+  reviewText: { fontSize: 12, color: sawaaColors.ink[700], marginTop: 6, lineHeight: 20 },
+  ctaWrap: { position: 'absolute', left: 16, right: 16 },
+  ctaPill: { padding: 6 },
+  ctaRow: { alignItems: 'center', gap: 8, height: 46 },
+  ctaPrice: { flex: 1, paddingHorizontal: 12 },
+  ctaPriceLabel: { fontSize: 10, color: sawaaColors.ink[500] },
+  ctaPriceVal: { fontSize: 13, color: sawaaColors.teal[700], marginTop: 2 },
+  ctaBtnPress: { height: 46 },
+  ctaBtn: {
+    paddingHorizontal: 20, borderRadius: 999, height: 46,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 },
+  },
+  ctaBtnText: { color: '#fff', fontSize: 13 },
 });

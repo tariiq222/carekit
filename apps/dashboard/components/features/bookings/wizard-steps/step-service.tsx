@@ -24,11 +24,15 @@ function buildMeta(service: Service, t: (key: string) => string): string {
     )
   }
 
-  // Price — backend stores as Decimal(12,2); JSON gives us a string or number, already in major units (SAR).
+  // Price — runtime convention is halalas-as-Decimal (see docs/superpowers/
+  // tech-debt/price-units-*). The /services list + service-columns divide by
+  // 100 for display; this dialog must match or the operator sees 100× the real
+  // price. TODO(price-units): remove /100 once the halalas↔SAR unification
+  // migration lands (owner-only — touches payments/ZATCA).
   if (!service.hidePriceOnBooking) {
     const currency = t("bookings.wizard.step.service.currency")
-    const price = Number(service.price)
-    parts.push(`${price.toFixed(0)} ${currency}`)
+    const price = Number(service.price) / 100
+    parts.push(`${price.toFixed(2)} ${currency}`)
   }
 
   return parts.join(" · ")

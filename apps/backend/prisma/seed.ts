@@ -21,9 +21,19 @@ async function main() {
   });
   await prisma.$connect();
 
+  // 0. Cleanup isolation test artifacts (Bug #24)
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { email: { contains: '@t.test' } },
+        { email: { startsWith: 'iso-' } },
+      ],
+    },
+  });
+
   // 1. Admin user (email is globally @unique now)
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { email: ADMIN_EMAIL },
     create: {
       email: ADMIN_EMAIL,
@@ -33,6 +43,23 @@ async function main() {
       isActive: true,
     },
     update: {},
+  });
+
+  // 1.1 Admin membership to the default org — login requires an active
+  //     Membership since SaaS-05b. @@unique([userId]) lets us upsert on userId.
+  await prisma.membership.upsert({
+    where: { userId_organizationId: { userId: adminUser.id, organizationId: DEFAULT_ORG_ID } },
+    create: {
+      userId: adminUser.id,
+      organizationId: DEFAULT_ORG_ID,
+      role: 'OWNER',
+      isActive: true,
+      acceptedAt: new Date(),
+    },
+    update: {
+      role: 'OWNER',
+      isActive: true,
+    },
   });
 
   if (!SUPER_ADMIN_EMAIL || !SUPER_ADMIN_PASSWORD) {
@@ -56,6 +83,13 @@ async function main() {
       isSuperAdmin: true,
       isActive: true,
     },
+  });
+
+  // 1.5 Default org — clear any leftover suspension state from SaaS-05b tests.
+  //     `updateMany` is a no-op if the row is missing, safe for fresh DBs.
+  await prisma.organization.updateMany({
+    where: { id: DEFAULT_ORG_ID, suspendedAt: { not: null } },
+    data: { suspendedAt: null, suspendedReason: null, status: 'ACTIVE' },
   });
 
   // 2. Branding singleton (org-unique per SaaS-02c)

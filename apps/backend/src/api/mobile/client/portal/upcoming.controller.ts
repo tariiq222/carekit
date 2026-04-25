@@ -3,8 +3,8 @@ import { BookingStatus } from '@prisma/client';
 import { IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtGuard } from '../../../../common/guards/jwt.guard';
-import { CurrentUser, JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ClientSessionGuard } from '../../../../common/guards/client-session.guard';
+import { ClientSession } from '../../../../common/auth/client-session.decorator';
 import { ApiStandardResponses } from '../../../../common/swagger';
 import { PrismaService } from '../../../../infrastructure/database';
 
@@ -18,7 +18,7 @@ const UPCOMING_STATUSES: BookingStatus[] = [BookingStatus.PENDING, BookingStatus
 @ApiTags('Mobile Client / Portal')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(ClientSessionGuard)
 @Controller('mobile/client/portal/upcoming')
 export class MobileClientUpcomingController {
   constructor(private readonly prisma: PrismaService) {}
@@ -32,7 +32,7 @@ export class MobileClientUpcomingController {
     schema: { type: 'object' },
   })
   async upcoming(
-    @CurrentUser() user: JwtUser,
+    @ClientSession() user: ClientSession,
     @Query() q: UpcomingQuery,
   ) {
     const page = q.page ?? 1;
@@ -40,7 +40,7 @@ export class MobileClientUpcomingController {
     const now = new Date();
 
     const where = {
-      clientId: user.sub,
+      clientId: user.id,
       scheduledAt: { gte: now },
       status: { in: UPCOMING_STATUSES },
     };

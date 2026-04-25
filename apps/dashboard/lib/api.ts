@@ -131,6 +131,11 @@ async function request<T>(
     const { code, message } = await parseErrorBody()
     if (code === ORG_SUSPENDED_CODE) {
       clearAuthState()
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("carekit_auth_reason", ORG_SUSPENDED_CODE)
+        // Full reload → AuthGate re-evaluates → LoginForm shows the reason banner.
+        window.location.href = "/"
+      }
       throw new ApiError(401, ORG_SUSPENDED_CODE, message)
     }
 

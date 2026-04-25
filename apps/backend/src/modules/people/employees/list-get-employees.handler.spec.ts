@@ -42,6 +42,11 @@ describe('List/Get Employees handlers', () => {
           provide: PrismaService,
           useValue: {
             employee: { findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
+            rating: {
+              aggregate: jest.fn().mockResolvedValue({ _avg: { score: null }, _count: { _all: 0 } }),
+              groupBy: jest.fn().mockResolvedValue([]),
+            },
+            booking: { groupBy: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
           },
         },
       ],

@@ -2,7 +2,7 @@ import { adminRequest } from '@/lib/api-client';
 import type { PlanRow } from '../types';
 
 export interface CreatePlanCommand {
-  slug: 'BASIC' | 'PRO' | 'ENTERPRISE';
+  slug: string;
   nameAr: string;
   nameEn: string;
   priceMonthly: number;

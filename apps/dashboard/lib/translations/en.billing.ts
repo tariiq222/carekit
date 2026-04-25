@@ -66,4 +66,7 @@ export const enBilling: Record<string, string> = {
   "billing.invoices.status.failed": "Failed",
   "billing.invoices.status.draft": "Draft",
   "billing.invoices.status.void": "Void",
+  "featureGate.locked.title": "This feature is not available on your current plan",
+  "featureGate.locked.description": "Upgrade your subscription to unlock this feature and use it across the dashboard.",
+  "featureGate.locked.upgrade": "Upgrade plan",
 }

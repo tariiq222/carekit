@@ -145,12 +145,12 @@ export function EmployeeDetailPage({ employeeId }: Props) {
                 </span>
               </div>
               <span className="text-sm tabular-nums text-muted-foreground">
-                {p._count?.ratings ?? 0} {t("employees.detail.reviews")}
+                {p.ratingCount ?? 0} {t("employees.detail.reviews")}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-2xl font-bold tabular-nums text-foreground">
-                {p._count?.bookings ?? 0}
+                {p.bookingCount ?? 0}
               </span>
               <span className="text-sm text-muted-foreground">{t("employees.detail.bookings")}</span>
             </div>
@@ -162,13 +162,13 @@ export function EmployeeDetailPage({ employeeId }: Props) {
         <StatCard
           title={t("employees.detail.stats.avgRating")}
           value={p.averageRating != null ? p.averageRating.toFixed(1) : "—"}
-          description={`${p._count?.ratings ?? 0} ${t("employees.detail.reviews")}`}
+          description={`${p.ratingCount ?? 0} ${t("employees.detail.reviews")}`}
           icon={StarIcon}
           iconColor="warning"
         />
         <StatCard
           title={t("employees.detail.stats.totalBookings")}
-          value={p._count?.bookings ?? 0}
+          value={p.bookingCount ?? 0}
           icon={Calendar03Icon}
           iconColor="primary"
         />
@@ -233,7 +233,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
           <EmployeeRatingsSection
             employeeId={employeeId}
             averageRating={p.averageRating}
-            totalRatings={p._count?.ratings ?? 0}
+            totalRatings={p.ratingCount ?? 0}
           />
         </TabsContent>
 

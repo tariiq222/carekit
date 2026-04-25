@@ -19,8 +19,7 @@ const REFRESH_KEY = 'admin.refreshToken';
 // Initialise the shared client once
 // ---------------------------------------------------------------------------
 initClient({
-  baseUrl:
-    (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1') + '/admin',
+  baseUrl: '',
 
   getAccessToken: () =>
     typeof window !== 'undefined' ? window.localStorage.getItem(ACCESS_KEY) : null,

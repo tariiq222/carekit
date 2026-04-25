@@ -1,5 +1,5 @@
-import { apiRequest } from '../client.js';
-import { buildQueryString } from '../types/api.js';
+import { apiRequest } from '../client';
+import { buildQueryString } from '../types/api';
 import type { AvailableSlot } from '@carekit/shared';
 
 export async function getPublicAvailability(

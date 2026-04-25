@@ -1,10 +1,10 @@
-import { apiRequest } from '../client.js'
+import { apiRequest } from '../client'
 import type {
   ChatbotConfig,
   ChatbotAnalytics,
   ChatbotTopQuestion,
   UpdateChatbotConfigPayload,
-} from '../types/chatbot-admin.js'
+} from '../types/chatbot-admin'
 
 export async function getConfig(): Promise<ChatbotConfig[]> {
   return apiRequest<ChatbotConfig[]>('/chatbot/admin/config')

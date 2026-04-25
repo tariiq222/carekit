@@ -1,4 +1,4 @@
-export type { UserPayload, TokenPair, AuthResponse } from './auth.js'
+export type { UserPayload, TokenPair, AuthResponse } from './auth'
 export type {
   UserGender,
   UserRole,
@@ -7,12 +7,12 @@ export type {
   UserListResponse,
   CreateUserPayload,
   UpdateUserPayload,
-} from './user.js'
-export type { BrandingConfig, UpdateBrandingPayload } from './branding.js'
-export type { FeatureFlags } from './feature-flags.js'
-export { DEFAULT_FEATURE_FLAGS } from './feature-flags.js'
-export type { PaginationMeta, PaginatedResponse, PaginationParams } from './api.js'
-export { buildQueryString } from './api.js'
+} from './user'
+export type { BrandingConfig, UpdateBrandingPayload } from './branding'
+export type { FeatureFlags } from './feature-flags'
+export { DEFAULT_FEATURE_FLAGS } from './feature-flags'
+export type { PaginationMeta, PaginatedResponse, PaginationParams } from './api'
+export { buildQueryString } from './api'
 export type {
   BookingStatus,
   BookingType,
@@ -22,7 +22,7 @@ export type {
   BookingListResponse,
   CreateBookingPayload,
   UpdateBookingPayload,
-} from './booking.js'
+} from './booking'
 export type {
   ClientListItem,
   ClientStats,
@@ -30,7 +30,7 @@ export type {
   ClientListResponse,
   CreateWalkInPayload,
   UpdateClientPayload,
-} from './client.js'
+} from './client'
 export type {
   EmployeeListItem,
   EmployeeStats,
@@ -49,7 +49,7 @@ export type {
   AssignEmployeeServicePayload,
   UpdateEmployeeServicePayload,
   EmployeeTypeConfigInput,
-} from './employee.js'
+} from './employee'
 export type {
   ServiceCategory,
   ServiceListItem,
@@ -58,35 +58,35 @@ export type {
   ServiceListResponse,
   CreateServicePayload,
   UpdateServicePayload,
-} from './service.js'
+} from './service'
 export type {
   BranchListItem,
   BranchListQuery,
   BranchListResponse,
   CreateBranchPayload,
   UpdateBranchPayload,
-} from './branch.js'
+} from './branch'
 export type {
   DepartmentListItem,
   DepartmentListQuery,
   DepartmentListResponse,
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
-} from './department.js'
+} from './department'
 export type {
   EmployeeAvailability,
   AvailabilitySlotInput,
   SetAvailabilityPayload,
   GetAvailabilityResponse,
   SetAvailabilityResponse,
-} from './availability.js'
+} from './availability'
 export type {
   EmployeeRating,
   RatingDistribution,
   RatingStats,
   RatingListQuery,
   RatingListResponse,
-} from './rating.js'
+} from './rating'
 export type {
   PaymentMethod,
   PaymentStatus,
@@ -97,7 +97,7 @@ export type {
   PaymentStats,
   PaymentListQuery,
   PaymentListResponse,
-} from './payment.js'
+} from './payment'
 export type {
   ZatcaStatus,
   InvoicePaymentInfo,
@@ -105,7 +105,7 @@ export type {
   InvoiceStats,
   InvoiceListQuery,
   InvoiceListResponse,
-} from './invoice.js'
+} from './invoice'
 export type {
   CouponDiscountType,
   CouponStatusFilter,
@@ -115,7 +115,7 @@ export type {
   UpdateCouponPayload,
   CouponListResponse,
   CouponStats,
-} from './coupon.js'
+} from './coupon'
 export type {
   FormType,
   FormScope,
@@ -125,12 +125,12 @@ export type {
   IntakeFormListQuery,
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
-} from './intake-form.js'
+} from './intake-form'
 export type {
   NotificationListItem,
   NotificationListQuery,
   UnreadCountResponse,
-} from './notification.js'
+} from './notification'
 export type {
   RevenueByMonth,
   RevenueByEmployee,
@@ -139,22 +139,22 @@ export type {
   BookingReport,
   DashboardStats,
   ReportDateParams,
-} from './report.js'
+} from './report'
 export type {
   ChatbotConfig,
   ChatbotAnalytics,
   ChatbotTopQuestion,
   UpdateChatbotConfigPayload,
-} from './chatbot-admin.js'
+} from './chatbot-admin'
 export type {
   GroupStatus,
   GroupListItem,
   GroupListQuery,
-} from './group.js'
+} from './group'
 export type {
   PublicBranch,
   PublicEmployee,
   ContactMessage,
   ContactMessageStatus,
   CreateContactMessagePayload,
-} from './public-directory.js'
+} from './public-directory'

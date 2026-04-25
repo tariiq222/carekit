@@ -87,30 +87,72 @@
     },
     {
       "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 102,
+      "line": 37,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#e88f6c",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 14,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 15,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/(tabs)/appointments.tsx",
-      "line": 92,
+      "line": 37,
       "rule": "no-hex-color",
-      "detail": "#001551",
+      "detail": "#f7cbb7",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 38,
+      "rule": "no-hex-color",
+      "detail": "#7aa8e0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 38,
+      "rule": "no-hex-color",
+      "detail": "#c9e4ff",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 39,
+      "rule": "no-hex-color",
+      "detail": "#8c78d0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 39,
+      "rule": "no-hex-color",
+      "detail": "#d4c8f0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 40,
+      "rule": "no-hex-color",
+      "detail": "#e09b5a",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 40,
+      "rule": "no-hex-color",
+      "detail": "#ffd5a8",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 41,
+      "rule": "no-hex-color",
+      "detail": "#5aa893",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/(tabs)/appointments.tsx",
+      "line": 41,
+      "rule": "no-hex-color",
+      "detail": "#b8e4d6",
       "level": "error"
     },
     {
@@ -157,562 +199,156 @@
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 274,
+      "line": 276,
       "rule": "no-hex-color",
       "detail": "#e88f6c",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 274,
+      "line": 276,
       "rule": "no-hex-color",
       "detail": "#f7cbb7",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 275,
+      "line": 277,
       "rule": "no-hex-color",
       "detail": "#7aa8e0",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 275,
+      "line": 277,
       "rule": "no-hex-color",
       "detail": "#c9e4ff",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 276,
+      "line": 278,
       "rule": "no-hex-color",
       "detail": "#8c78d0",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 276,
+      "line": 278,
       "rule": "no-hex-color",
       "detail": "#d4c8f0",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 277,
+      "line": 279,
       "rule": "no-hex-color",
       "detail": "#e09b5a",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 277,
+      "line": 279,
       "rule": "no-hex-color",
       "detail": "#ffd5a8",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 386,
+      "line": 388,
       "rule": "no-hex-color",
       "detail": "#4bd67a",
       "level": "error"
     },
     {
       "file": "app/(client)/(tabs)/home.tsx",
-      "line": 396,
+      "line": 398,
       "rule": "no-hex-color",
       "detail": "#4bd67a",
       "level": "error"
     },
     {
       "file": "app/(client)/appointment/[id].tsx",
-      "line": 139,
+      "line": 129,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#e88f6c",
       "level": "error"
     },
     {
       "file": "app/(client)/appointment/[id].tsx",
-      "line": 141,
+      "line": 129,
       "rule": "no-hex-color",
-      "detail": "#F59E0B",
+      "detail": "#f7cbb7",
       "level": "error"
     },
     {
       "file": "app/(client)/appointment/[id].tsx",
-      "line": 143,
+      "line": 260,
       "rule": "no-hex-color",
-      "detail": "#059669",
+      "detail": "#4bd67a",
       "level": "error"
     },
     {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 165,
+      "file": "app/(client)/clinic/[id].tsx",
+      "line": 43,
       "rule": "no-hex-color",
-      "detail": "#DC2626",
+      "detail": "#2b8f82",
       "level": "error"
     },
     {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 27,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 28,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 29,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 37,
+      "file": "app/(client)/clinic/[id].tsx",
+      "line": 43,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#5fbcae",
       "level": "error"
     },
     {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 38,
+      "file": "app/(client)/clinic/[id].tsx",
+      "line": 43,
       "rule": "no-hex-color",
-      "detail": "#7C3AED",
+      "detail": "#9ad6cd",
       "level": "error"
     },
     {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 39,
+      "file": "app/(client)/employee/[id].tsx",
+      "line": 102,
       "rule": "no-hex-color",
-      "detail": "#059669",
+      "detail": "#e88f6c",
       "level": "error"
     },
     {
-      "file": "app/(client)/appointment/[id].tsx",
-      "line": 65,
+      "file": "app/(client)/employee/[id].tsx",
+      "line": 102,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
+      "detail": "#f7cbb7",
       "level": "error"
     },
     {
-      "file": "app/(client)/booking/[serviceId].tsx",
-      "line": 21,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/[serviceId].tsx",
-      "line": 22,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/[serviceId].tsx",
-      "line": 23,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
-      "line": 203,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
-      "line": 23,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
-      "line": 231,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
-      "line": 24,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
+      "file": "app/(client)/employee/[id].tsx",
       "line": 241,
       "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/bank-transfer.tsx",
-      "line": 25,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 122,
-      "rule": "no-hex-color",
-      "detail": "#0037B0",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 122,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 155,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED814",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 156,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 172,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B14",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 173,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 203,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 23,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 24,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 25,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 31,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 32,
-      "rule": "no-hex-color",
-      "detail": "#7C3AED",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/confirm.tsx",
-      "line": 33,
-      "rule": "no-hex-color",
-      "detail": "#059669",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 132,
-      "rule": "no-hex-color",
-      "detail": "#0037B0",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 132,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 175,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 194,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED814",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 196,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 212,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 22,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 23,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 232,
-      "rule": "no-hex-color",
-      "detail": "#05966914",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 234,
-      "rule": "no-hex-color",
-      "detail": "#059669",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 24,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 250,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/payment.tsx",
-      "line": 324,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/schedule.tsx",
-      "line": 16,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/schedule.tsx",
-      "line": 17,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/schedule.tsx",
-      "line": 18,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/schedule.tsx",
-      "line": 40,
-      "rule": "no-hex-color",
-      "detail": "#0037B0",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/schedule.tsx",
-      "line": 40,
-      "rule": "no-hex-color",
-      "detail": "#1D4ED8",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 25,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 25,
-      "rule": "no-hex-color",
-      "detail": "#F97316",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 26,
-      "rule": "no-hex-color",
-      "detail": "#047857",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 26,
-      "rule": "no-hex-color",
-      "detail": "#059669",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 8,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/booking/success.tsx",
-      "line": 9,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/chat.tsx",
-      "line": 194,
-      "rule": "no-hex-color",
-      "detail": "#B42318",
+      "detail": "#e88f6c",
       "level": "error"
     },
     {
       "file": "app/(client)/employee/[id].tsx",
-      "line": 104,
+      "line": 247,
       "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 104,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 164,
-      "rule": "no-hex-color",
-      "detail": "#E6E8EA",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 164,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 164,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
-      "level": "error"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 23,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 24,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/employee/[id].tsx",
-      "line": 25,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 15,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 16,
-      "rule": "legacy-themed-import",
-      "detail": "Themed*",
-      "level": "warning"
-    },
-    {
-      "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 86,
-      "rule": "no-hex-color",
-      "detail": "#F59E0B",
+      "detail": "#4bd67a",
       "level": "error"
     },
     {
       "file": "app/(client)/rate/[bookingId].tsx",
-      "line": 87,
+      "line": 98,
       "rule": "no-hex-color",
-      "detail": "#F59E0B",
+      "detail": "#e88f6c",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/rate/[bookingId].tsx",
+      "line": 98,
+      "rule": "no-hex-color",
+      "detail": "#f7cbb7",
       "level": "error"
     },
     {
@@ -784,6 +420,146 @@
       "rule": "legacy-themed-import",
       "detail": "Themed*",
       "level": "warning"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 19,
+      "rule": "no-hex-color",
+      "detail": "#e88f6c",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 19,
+      "rule": "no-hex-color",
+      "detail": "#f7cbb7",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 20,
+      "rule": "no-hex-color",
+      "detail": "#7fa8d9",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 20,
+      "rule": "no-hex-color",
+      "detail": "#bed7f0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 21,
+      "rule": "no-hex-color",
+      "detail": "#c47db0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 21,
+      "rule": "no-hex-color",
+      "detail": "#e8c4dd",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 22,
+      "rule": "no-hex-color",
+      "detail": "#7ac4a0",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 22,
+      "rule": "no-hex-color",
+      "detail": "#c4e8d7",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 23,
+      "rule": "no-hex-color",
+      "detail": "#e09b5a",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 23,
+      "rule": "no-hex-color",
+      "detail": "#ffd5a8",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 240,
+      "rule": "no-hex-color",
+      "detail": "#4bd67a",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/therapists.tsx",
+      "line": 260,
+      "rule": "no-hex-color",
+      "detail": "#1f8f3e",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 213,
+      "rule": "no-hex-color",
+      "detail": "#e88f6c",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 221,
+      "rule": "no-hex-color",
+      "detail": "#ff5b5b",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 222,
+      "rule": "no-hex-color",
+      "detail": "#ff5b5b",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 232,
+      "rule": "no-hex-color",
+      "detail": "#4bd67a",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 264,
+      "rule": "no-hex-color",
+      "detail": "#ff3b30",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 265,
+      "rule": "no-hex-color",
+      "detail": "#ff3b30",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 83,
+      "rule": "no-hex-color",
+      "detail": "#e88f6c",
+      "level": "error"
+    },
+    {
+      "file": "app/(client)/video-call.tsx",
+      "line": 83,
+      "rule": "no-hex-color",
+      "detail": "#f7cbb7",
+      "level": "error"
     },
     {
       "file": "app/(employee)/(tabs)/_layout.tsx",
@@ -1095,56 +871,56 @@
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 142,
+      "line": 146,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 15,
+      "line": 17,
       "rule": "legacy-themed-import",
       "detail": "Themed*",
       "level": "warning"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 31,
+      "line": 33,
       "rule": "no-hex-color",
       "detail": "#059669",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 32,
+      "line": 34,
       "rule": "no-hex-color",
       "detail": "#DC2626",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 33,
+      "line": 35,
       "rule": "no-hex-color",
       "detail": "#F59E0B",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 34,
+      "line": 36,
       "rule": "no-hex-color",
       "detail": "#1D4ED8",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 35,
+      "line": 37,
       "rule": "no-hex-color",
       "detail": "#7C3AED",
       "level": "error"
     },
     {
       "file": "components/features/NotificationItem.tsx",
-      "line": 36,
+      "line": 38,
       "rule": "no-hex-color",
       "detail": "#DC2626",
       "level": "error"

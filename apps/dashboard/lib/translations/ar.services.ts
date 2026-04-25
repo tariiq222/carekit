@@ -341,6 +341,8 @@ export const arServices: Record<string, string> = {
   "services.create.department": "القسم",
   "services.create.allDepartments": "جميع الأقسام",
   "services.create.noCategories": "لا يوجد فئات",
+  "services.create.noCategoriesCta": "أنشئ فئة أولاً",
+  "services.create.noCategoriesBanner": "لا توجد أي فئات بعد. الفئة مطلوبة لكل خدمة.",
   "services.create.calendarColor": "لون التقويم",
 
   /* ── Intake footnote (create mode) ── */

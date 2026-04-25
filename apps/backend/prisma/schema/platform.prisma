@@ -107,7 +107,9 @@ model Organization {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  memberships Membership[]
+  memberships  Membership[]
+  invitations  Invitation[]
+  subscription Subscription?
 
   @@index([status])
   @@index([verticalId])
@@ -297,12 +299,6 @@ model VerticalTerminologyOverride {
 // Plan, SubscriptionInvoice = platform-level (CareKit's catalog / receivables).
 // Subscription, UsageRecord   = tenant-scoped (belong to an org).
 
-enum PlanSlug {
-  BASIC
-  PRO
-  ENTERPRISE
-}
-
 enum BillingCycle {
   MONTHLY
   ANNUAL
@@ -336,7 +332,8 @@ enum UsageMetric {
 
 model Plan {
   id               String   @id @default(uuid())
-  slug             PlanSlug @unique
+  /// Format enforced by DB CHECK "Plan_slug_format_chk": ^[A-Z][A-Z0-9_]{1,31}$
+  slug             String   @unique
   nameAr           String
   nameEn           String
   priceMonthly     Decimal  @db.Decimal(12, 2)
@@ -362,6 +359,7 @@ model Plan {
 model Subscription {
   id                     String             @id @default(uuid())
   organizationId         String             @unique // one active sub per org (SaaS-04 scoped)
+  organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   planId                 String
   plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
   status                 SubscriptionStatus @default(TRIALING)

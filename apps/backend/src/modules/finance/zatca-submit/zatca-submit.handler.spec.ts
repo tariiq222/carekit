@@ -1,4 +1,4 @@
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ZatcaSubmissionStatus } from '@prisma/client';
 import { ZatcaSubmitHandler } from './zatca-submit.handler';
 
@@ -23,7 +23,12 @@ const buildPrisma = () => ({
 });
 
 const buildConfig = (overrides: Record<string, string | undefined> = {}) => ({
-  get: jest.fn((key: string) => ({ ZATCA_API_URL: undefined, ZATCA_API_KEY: undefined, ...overrides }[key])),
+  get: jest.fn((key: string) => ({
+    ZATCA_API_URL: undefined,
+    ZATCA_API_KEY: undefined,
+    ZATCA_ENABLED: 'true',
+    ...overrides,
+  }[key])),
 });
 
 const buildTenant = (organizationId = DEFAULT_ORG) =>
@@ -35,6 +40,17 @@ const buildTenant = (organizationId = DEFAULT_ORG) =>
 const cmd = { invoiceId: 'inv-1' };
 
 describe('ZatcaSubmitHandler', () => {
+  it('throws ServiceUnavailableException when ZATCA_ENABLED is not "true"', async () => {
+    const prisma = buildPrisma();
+    const handler = new ZatcaSubmitHandler(
+      prisma as never,
+      buildConfig({ ZATCA_ENABLED: 'false' }) as never,
+      buildTenant(),
+    );
+    await expect(handler.execute(cmd)).rejects.toThrow(ServiceUnavailableException);
+    expect(prisma.invoice.findFirst).not.toHaveBeenCalled();
+  });
+
   it('creates submission and returns updated record', async () => {
     const prisma = buildPrisma();
     const handler = new ZatcaSubmitHandler(prisma as never, buildConfig() as never, buildTenant());

@@ -111,7 +111,7 @@ export function EmployeesListContent({
             iconColor="success"
           />
           <StatCard
-            title={t("employees.card.inactive")}
+            title={t("employees.status.suspended")}
             value={inactiveCount}
             icon={UserBlock01Icon}
             iconColor="warning"
@@ -136,7 +136,7 @@ export function EmployeesListContent({
             options: [
               { value: "all", label: t("employees.filters.allStatuses") },
               { value: "active", label: t("employees.card.active") },
-              { value: "inactive", label: t("employees.card.inactive") },
+              { value: "inactive", label: t("employees.status.suspended") },
             ],
             onValueChange: handleStatusChange,
           },

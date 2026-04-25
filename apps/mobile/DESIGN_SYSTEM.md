@@ -313,7 +313,7 @@ export const DURATION = { short: 220, medium: 360 } as const;
 
 // Shadow tiers — tinted with deepTeal, never pure black.
 // For full web 4-layer stacks + native elevation values, see
-// design-prototype/mental-health-home/src/theme.ts (SHADOW, SHADOW_SOFT, SHADOW_RAISED).
+// docs/design-prototypes/mental-health-home/src/theme.ts (SHADOW, SHADOW_SOFT, SHADOW_RAISED).
 
 export const GLASS_CFG = {
   clear:   { mainBlur: 30, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.32, nativeBlur: 45 },

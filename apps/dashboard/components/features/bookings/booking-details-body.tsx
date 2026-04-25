@@ -76,9 +76,13 @@ interface DetailsBodyProps {
   specialty: string
   appointmentDate: string
   t: (key: string) => string
+  locale?: "en" | "ar"
 }
 
-export function DetailsBody({ booking, clientName, employeeName, specialty, appointmentDate, t }: DetailsBodyProps) {
+export function DetailsBody({ booking, clientName, employeeName, specialty, appointmentDate, t, locale = "ar" }: DetailsBodyProps) {
+  const serviceName = locale === "ar"
+    ? (booking.service?.nameAr ?? booking.service?.nameEn ?? "—")
+    : (booking.service?.nameEn ?? booking.service?.nameAr ?? "—")
   const card = "bg-surface rounded-xl border border-border shadow-sm overflow-hidden"
   const cardHeader = "px-4 py-2.5 bg-muted/50 border-b border-border"
   const cardTitle = "text-xs font-semibold text-muted-foreground uppercase tracking-wider"
@@ -109,10 +113,15 @@ export function DetailsBody({ booking, clientName, employeeName, specialty, appo
         <div className={card}>
           <div className={cardHeader}><p className={cardTitle}>{t("detail.appointment")}</p></div>
           <div className={cardBody}>
-            <DetailRow label={t("detail.service")} value={booking.service?.nameEn ?? "—"} icon={MedicineBottle01Icon} />
+            <DetailRow label={t("detail.service")} value={serviceName} icon={MedicineBottle01Icon} />
             <DetailRow label={t("detail.date")} value={appointmentDate} numeric icon={Calendar03Icon} />
             <DetailRow label={t("detail.time")} value={`${booking.startTime} — ${booking.endTime}`} numeric icon={Clock01Icon} />
-            <DetailRow label={t("detail.duration")} value={`${booking.service?.duration ?? 0} min`} numeric icon={Timer02Icon} />
+            <DetailRow
+              label={t("detail.duration")}
+              value={`${booking.service?.duration ?? 0} ${t("bookings.wizard.step.typeDuration.minutes")}`}
+              numeric
+              icon={Timer02Icon}
+            />
           </div>
         </div>
 

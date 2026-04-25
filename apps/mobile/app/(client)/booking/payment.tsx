@@ -1,326 +1,150 @@
-import { useState, useCallback } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  Alert,
-  StyleSheet,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import {
-  ChevronRight,
-  ChevronLeft,
-  CreditCard,
-  Building2,
-} from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Apple, Banknote, Check, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react-native';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { ThemedCard } from '@/theme/components/ThemedCard';
-import { useTheme } from '@/theme/useTheme';
-import { paymentsService } from '@/services/payments';
+import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
+import { Glass } from '@/theme/components/Glass';
+import { useDir } from '@/hooks/useDir';
+import { getFontName } from '@/theme/fonts';
 
-type PaymentMethod = 'moyasar' | 'bank_transfer';
+type Method = 'card' | 'apple_pay' | 'bank_transfer';
 
-export default function PaymentScreen() {
-  const params = useLocalSearchParams<{
-    bookingId: string;
-    total: string;
-    type: string;
-  }>();
-  const { t } = useTranslation();
+export default function BookingPaymentScreen() {
+  const params = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const dir = useDir();
+  const f400 = getFontName(dir.locale, '400');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
+  const [method, setMethod] = useState<Method>('card');
+  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(false);
+  const TOTAL = 287;
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const methods: Array<{ key: Method; icon: React.ReactNode; labelAr: string; labelEn: string; subAr: string; subEn: string; color: string }> = [
+    { key: 'card', icon: <CreditCard size={20} color={sawaaColors.teal[600]} strokeWidth={1.75} />, labelAr: 'بطاقة ائتمانية', labelEn: 'Credit card', subAr: 'Visa · Mada · Mastercard', subEn: 'Visa · Mada · Mastercard', color: sawaaColors.teal[600] },
+    { key: 'apple_pay', icon: <Apple size={20} color={sawaaColors.ink[900]} strokeWidth={1.75} />, labelAr: 'Apple Pay', labelEn: 'Apple Pay', subAr: 'ادفع بلمسة واحدة', subEn: 'Pay with one touch', color: sawaaColors.ink[900] },
+    { key: 'bank_transfer', icon: <Banknote size={20} color={sawaaColors.accent.amber} strokeWidth={1.75} />, labelAr: 'تحويل بنكي', labelEn: 'Bank transfer', subAr: 'حوّل يدوياً وارفع الإيصال', subEn: 'Transfer and upload receipt', color: sawaaColors.accent.amber },
+  ];
 
-  const totalAmount = Number(params.total) || 0;
-  const vatRate = 0.15;
-  const baseAmount = Math.round(totalAmount / (1 + vatRate));
-  const vatAmount = totalAmount - baseAmount;
-
-  const handleSelectMethod = useCallback((method: PaymentMethod) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedMethod(method);
-  }, []);
-
-  const handlePay = useCallback(async () => {
-    if (!selectedMethod || !params.bookingId) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    if (selectedMethod === 'bank_transfer') {
-      router.push({
-        pathname: '/(client)/booking/bank-transfer',
-        params: { bookingId: params.bookingId, total: params.total },
-      });
-      return;
+  const handlePay = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (method === 'bank_transfer') {
+      router.push({ pathname: '/(client)/booking/bank-transfer', params });
+    } else {
+      router.push({ pathname: '/(client)/booking/success', params });
     }
-
-    setLoading(true);
-    try {
-      const res = await paymentsService.createMoyasarPayment({
-        bookingId: params.bookingId,
-        source: { type: 'creditcard' },
-      });
-
-      if (res.success && res.data?.redirectUrl) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          res.data.redirectUrl,
-          'carekit://payment-callback',
-        );
-
-        if (result.type === 'success') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace({
-            pathname: '/(client)/booking/success',
-            params: { bookingId: params.bookingId },
-          });
-        }
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Alert.alert(t('common.error'), t('payment.paymentError'));
-      }
-    } catch {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(t('common.error'), t('payment.paymentError'));
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedMethod, params.bookingId, params.total, router, t]);
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+    <AquaBackground>
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 20 },
-        ]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 120 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <BackIcon
-            size={24}
-            strokeWidth={1.5}
-            color={theme.colors.textPrimary}
-          />
-        </Pressable>
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
+            <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
+          </Glass>
+        </Animated.View>
 
-        {/* Progress */}
-        <View style={styles.progressRow}>
-          <ThemedText variant="caption" color={theme.colors.textSecondary}>
-            {t('booking.step')} 4 {t('booking.of')} 4
-          </ThemedText>
-          <View
-            style={[
-              styles.progressTrack,
-              { backgroundColor: theme.colors.surfaceHigh },
-            ]}
-          >
-            <LinearGradient
-              colors={['#0037B0', '#1D4ED8']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressFill, { width: '100%' }]}
-            />
-          </View>
-        </View>
+        <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
+          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? 'اختر طريقة الدفع' : 'Choose payment'}
+          </Text>
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+            {dir.isRTL ? `المبلغ الإجمالي ${TOTAL.toLocaleString('ar-SA')} ر.س` : `Total SAR ${TOTAL}`}
+          </Text>
+        </Animated.View>
 
-        <ThemedText variant="heading" style={styles.title}>
-          {t('payment.title')}
-        </ThemedText>
-
-        {/* Price Summary */}
-        <ThemedCard style={styles.summaryCard}>
-          <ThemedText variant="label" style={styles.summaryTitle}>
-            {t('payment.summary')}
-          </ThemedText>
-          <View style={styles.priceRow}>
-            <ThemedText variant="body" color={theme.colors.textSecondary}>
-              {t('payment.amount')}
-            </ThemedText>
-            <ThemedText variant="body">
-              {baseAmount} {t('home.sar')}
-            </ThemedText>
-          </View>
-          <View style={styles.priceRow}>
-            <ThemedText variant="body" color={theme.colors.textSecondary}>
-              {t('payment.vat')}
-            </ThemedText>
-            <ThemedText variant="body">
-              {vatAmount} {t('home.sar')}
-            </ThemedText>
-          </View>
-          <View
-            style={[
-              styles.divider,
-              { backgroundColor: theme.colors.surfaceLow },
-            ]}
-          />
-          <View style={styles.priceRow}>
-            <ThemedText variant="subheading">
-              {t('payment.total')}
-            </ThemedText>
-            <ThemedText variant="subheading" color="#1D4ED8">
-              {totalAmount} {t('home.sar')}
-            </ThemedText>
-          </View>
-        </ThemedCard>
-
-        {/* Select Payment Method */}
-        <ThemedText variant="subheading" style={styles.sectionTitle}>
-          {t('payment.selectMethod')}
-        </ThemedText>
-
-        {/* Card Payment Option */}
-        <ThemedCard
-          style={styles.methodCard}
-          selected={selectedMethod === 'moyasar'}
-          onPress={() => handleSelectMethod('moyasar')}
-        >
-          <View style={styles.methodRow}>
-            <View
-              style={[styles.iconCircle, { backgroundColor: '#1D4ED814' }]}
+        {methods.map((m, i) => {
+          const isSelected = method === m.key;
+          return (
+            <Animated.View
+              key={m.key}
+              entering={FadeInDown.delay(160 + i * 80).duration(700).easing(Easing.out(Easing.cubic))}
             >
-              <CreditCard size={20} strokeWidth={1.5} color="#1D4ED8" />
-            </View>
-            <View style={styles.methodContent}>
-              <ThemedText variant="body" style={{ fontWeight: '600' }}>
-                {t('payment.cardPayment')}
-              </ThemedText>
-              <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-                {t('payment.cardPaymentDesc')}
-              </ThemedText>
-            </View>
-            <View
-              style={[
-                styles.radio,
-                {
-                  borderColor:
-                    selectedMethod === 'moyasar'
-                      ? '#1D4ED8'
-                      : theme.colors.textSecondary,
-                },
-              ]}
-            >
-              {selectedMethod === 'moyasar' && (
-                <View style={styles.radioInner} />
-              )}
-            </View>
-          </View>
-        </ThemedCard>
-
-        {/* Bank Transfer Option */}
-        <ThemedCard
-          style={styles.methodCard}
-          selected={selectedMethod === 'bank_transfer'}
-          onPress={() => handleSelectMethod('bank_transfer')}
-        >
-          <View style={styles.methodRow}>
-            <View
-              style={[styles.iconCircle, { backgroundColor: '#05966914' }]}
-            >
-              <Building2 size={20} strokeWidth={1.5} color="#059669" />
-            </View>
-            <View style={styles.methodContent}>
-              <ThemedText variant="body" style={{ fontWeight: '600' }}>
-                {t('payment.bankTransfer')}
-              </ThemedText>
-              <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-                {t('payment.bankTransferDesc')}
-              </ThemedText>
-            </View>
-            <View
-              style={[
-                styles.radio,
-                {
-                  borderColor:
-                    selectedMethod === 'bank_transfer'
-                      ? '#1D4ED8'
-                      : theme.colors.textSecondary,
-                },
-              ]}
-            >
-              {selectedMethod === 'bank_transfer' && (
-                <View style={styles.radioInner} />
-              )}
-            </View>
-          </View>
-        </ThemedCard>
-
-        {/* Pay Now Button */}
-        <ThemedButton
-          onPress={handlePay}
-          variant="primary"
-          size="lg"
-          full
-          loading={loading}
-          disabled={!selectedMethod || loading}
-          style={{ marginTop: 24 }}
-        >
-          {t('payment.payNow')}
-        </ThemedButton>
+              <Glass
+                variant="strong"
+                radius={sawaaRadius.xl}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setMethod(m.key);
+                }}
+                interactive
+                style={[
+                  styles.methodCard,
+                  isSelected && { borderWidth: 2, borderColor: m.color },
+                ]}
+              >
+                <View style={[styles.methodRow, { flexDirection: dir.row }]}>
+                  <View style={[styles.methodIcon, { backgroundColor: `${m.color}1e` }]}>{m.icon}</View>
+                  <View style={styles.methodMid}>
+                    <Text style={[styles.methodLabel, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                      {dir.isRTL ? m.labelAr : m.labelEn}
+                    </Text>
+                    <Text style={[styles.methodSub, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                      {dir.isRTL ? m.subAr : m.subEn}
+                    </Text>
+                  </View>
+                  {isSelected && (
+                    <View style={[styles.checkCircle, { backgroundColor: m.color }]}>
+                      <Check size={14} color="#fff" strokeWidth={3} />
+                    </View>
+                  )}
+                </View>
+              </Glass>
+            </Animated.View>
+          );
+        })}
       </ScrollView>
-    </View>
+
+      <Animated.View
+        entering={FadeInDown.delay(360).duration(800).easing(Easing.out(Easing.cubic))}
+        style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
+      >
+        <Pressable onPress={handlePay}>
+          <LinearGradient
+            colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.ctaBtn}
+          >
+            <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
+              {dir.isRTL ? `ادفع ${TOTAL.toLocaleString('ar-SA')} ر.س` : `Pay SAR ${TOTAL}`}
+            </Text>
+            <GoIcon size={16} color="#fff" strokeWidth={2} />
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
+    </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24 },
-  backBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+  scroll: { paddingHorizontal: 16, gap: 14 },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
+  title: { fontSize: 24, color: sawaaColors.ink[900], marginTop: 8, paddingHorizontal: 4 },
+  subtitle: { fontSize: 12.5, color: sawaaColors.ink[500], marginTop: 4, paddingHorizontal: 4 },
+  methodCard: { padding: 16 },
+  methodRow: { alignItems: 'center', gap: 14 },
+  methodIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  methodMid: { flex: 1 },
+  methodLabel: { fontSize: 14.5, color: sawaaColors.ink[900] },
+  methodSub: { fontSize: 11.5, color: sawaaColors.ink[500], marginTop: 2 },
+  checkCircle: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  ctaWrap: { position: 'absolute', left: 16, right: 16 },
+  ctaBtn: {
+    borderRadius: 999, height: 52,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.35, shadowRadius: 16, shadowOffset: { width: 0, height: 6 },
   },
-  progressRow: { gap: 8, marginBottom: 24 },
-  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 2 },
-  title: { marginBottom: 20 },
-  summaryCard: { gap: 10, padding: 16, marginBottom: 20 },
-  summaryTitle: { marginBottom: 4 },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  divider: { height: 1, marginVertical: 4 },
-  sectionTitle: { marginBottom: 14 },
-  methodCard: { padding: 16, marginBottom: 12 },
-  methodRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  methodContent: { flex: 1, gap: 2 },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#1D4ED8',
-  },
+  ctaBtnText: { color: '#fff', fontSize: 14 },
 });

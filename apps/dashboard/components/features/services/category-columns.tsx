@@ -3,21 +3,17 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  MoreHorizontalIcon,
   PencilEdit01Icon,
   Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@carekit/ui"
-import { Button } from "@carekit/ui"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@carekit/ui"
+import { cn } from "@/lib/utils"
 import type { ServiceCategory } from "@/lib/types/service"
+
+const iconBtnBase =
+  "flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-muted hover:border-border hover:text-foreground"
 
 type TFn = (key: string) => string
 
@@ -84,36 +80,37 @@ export function getCategoryColumns(
     },
     {
       id: "actions",
-      header: "",
+      header: label("common.actions", "Actions"),
+      enableSorting: false,
       cell: ({ row }) => {
         const c = row.original
         return (
-          <DropdownMenu>
+          <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm">
-                    <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
-                    <span className="sr-only">{label("common.actions", "Actions")}</span>
-                  </Button>
-                </DropdownMenuTrigger>
+                <button
+                  className={iconBtnBase}
+                  aria-label={label("services.categories.action.edit", "Edit")}
+                  onClick={() => onEdit?.(c)}
+                >
+                  <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+                </button>
               </TooltipTrigger>
-              <TooltipContent side="top">{label("common.actions", "Actions")}</TooltipContent>
+              <TooltipContent side="top">{label("services.categories.action.edit", "Edit")}</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="glass-solid">
-              <DropdownMenuItem onClick={() => onEdit?.(c)}>
-                <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
-                {label("services.categories.action.edit", "Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete?.(c)}
-                className="text-destructive focus:text-destructive"
-              >
-                <HugeiconsIcon icon={Delete02Icon} size={14} />
-                {label("services.categories.action.delete", "Delete")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(iconBtnBase, "hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20")}
+                  aria-label={label("services.categories.action.delete", "Delete")}
+                  onClick={() => onDelete?.(c)}
+                >
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{label("services.categories.action.delete", "Delete")}</TooltipContent>
+            </Tooltip>
+          </div>
         )
       },
     },

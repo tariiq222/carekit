@@ -155,6 +155,7 @@ export function EmployeeFormPage(props: Props) {
               form={form}
               showEmail={!isEdit}
               employeeName={isEdit ? employeeDisplayName : undefined}
+              readOnlyEmail={isEdit ? employee?.user.email ?? null : null}
             />
           </TabsContent>
 

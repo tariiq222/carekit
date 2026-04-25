@@ -1,4 +1,4 @@
-import type { PaginatedResponse, PaginationParams } from './api.js'
+import type { PaginatedResponse, PaginationParams } from './api'
 
 export type PaymentMethod = 'moyasar' | 'bank_transfer' | 'cash'
 

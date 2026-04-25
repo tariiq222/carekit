@@ -12,6 +12,10 @@ export interface OrganizationRow {
   suspendedAt: string | null;
   suspendedReason: string | null;
   createdAt: string;
+  subscription: {
+    status: string;
+    plan: { slug: string; nameEn: string };
+  } | null;
 }
 
 export interface OrganizationDetail extends OrganizationRow {

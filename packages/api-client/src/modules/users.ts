@@ -1,12 +1,12 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
 import type {
   UserListItem,
   UserListQuery,
   UserListResponse,
   CreateUserPayload,
   UpdateUserPayload,
-} from '../types/user.js'
+} from '../types/user'
 
 export async function list(query: UserListQuery = {}): Promise<UserListResponse> {
   return apiRequest<UserListResponse>(

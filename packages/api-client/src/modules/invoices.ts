@@ -1,11 +1,11 @@
-import { apiRequest } from '../client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { buildQueryString } from '../types/api'
 import type {
   InvoiceListItem,
   InvoiceListQuery,
   InvoiceListResponse,
   InvoiceStats,
-} from '../types/invoice.js'
+} from '../types/invoice'
 
 export async function list(
   query: InvoiceListQuery = {},

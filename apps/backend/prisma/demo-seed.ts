@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 
 const BRANCH_ID = 'main-branch';
 const BRANCH_ID_2 = '00000000-0000-4000-8000-0000000b0002';
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 async function main() {
   const prisma = new PrismaClient({
@@ -23,6 +24,7 @@ async function main() {
     where: { id: BRANCH_ID_2 },
     create: {
       id: BRANCH_ID_2,
+      organizationId: DEFAULT_ORG_ID,
       nameAr: 'فرع الروضة',
       nameEn: 'Al Rawdah Branch',
       city: 'Riyadh',
@@ -40,18 +42,22 @@ async function main() {
     experience: number | null; isActive: boolean;
     extraBranchId?: string;
   }> = [
+    // NOTE: do NOT include "د. " / "Dr. " prefixes in name fields — the UI's
+    // booking practitioner column auto-prepends `t("bookings.info.drPrefix")`,
+    // so a stored "د. خالد" renders as "د. د. خالد". Keep the honorific in
+    // `title` only.
     // Original 3 (kept stable for existing bookings/ratings references).
-    { id: '00000000-0000-4000-8000-000000000001', name: 'د. أحمد الغامدي',   nameEn: 'Dr. Ahmed Alghamdi',   nameAr: 'د. أحمد الغامدي',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'ahmed@carekit-test.com',   phone: '+966500000001', experience: 12, isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000002', name: 'د. فاطمة القحطاني', nameEn: 'Dr. Fatima Alqahtani', nameAr: 'د. فاطمة القحطاني', title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'fatima@carekit-test.com',  phone: '+966500000002', experience: 8,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000003', name: 'د. خالد السبيعي',   nameEn: 'Dr. Khalid Alsubaie',  nameAr: 'د. خالد السبيعي',   title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'khalid@carekit-test.com',  phone: '+966500000003', experience: null, isActive: true },
+    { id: '00000000-0000-4000-8000-000000000001', name: 'أحمد الغامدي',   nameEn: 'Ahmed Alghamdi',   nameAr: 'أحمد الغامدي',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'ahmed@carekit-test.com',   phone: '+966500000001', experience: 12, isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000002', name: 'فاطمة القحطاني', nameEn: 'Fatima Alqahtani', nameAr: 'فاطمة القحطاني', title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'fatima@carekit-test.com',  phone: '+966500000002', experience: 8,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000003', name: 'خالد السبيعي',   nameEn: 'Khalid Alsubaie',  nameAr: 'خالد السبيعي',   title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'khalid@carekit-test.com',  phone: '+966500000003', experience: null, isActive: true },
     // 7 more to cover plan §1.2 (10+, mixed active/inactive, experience coverage, branch 2).
-    { id: '00000000-0000-4000-8000-000000000004', name: 'د. سارة الحربي',    nameEn: 'Dr. Sarah Alharbi',    nameAr: 'د. سارة الحربي',    title: 'أخصائية باطنة', specialty: 'Internal Med', specialtyAr: 'باطنة',   gender: 'FEMALE', email: 'sarah@carekit-test.com',   phone: '+966500000004', experience: 5,  isActive: true,  extraBranchId: BRANCH_ID_2 },
-    { id: '00000000-0000-4000-8000-000000000005', name: 'د. عمر العتيبي',    nameEn: 'Dr. Omar Alotaibi',    nameAr: 'د. عمر العتيبي',    title: 'أخصائي جلدية',   specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'MALE',   email: 'omar@carekit-test.com',    phone: '+966500000005', experience: 3,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000006', name: 'د. هند الدوسري',    nameEn: 'Dr. Hind Aldosari',    nameAr: 'د. هند الدوسري',    title: 'أخصائية أسنان', specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'FEMALE', email: 'hind@carekit-test.com',    phone: '+966500000006', experience: 15, isActive: true,  extraBranchId: BRANCH_ID_2 },
-    { id: '00000000-0000-4000-8000-000000000007', name: 'د. يوسف المطيري',   nameEn: 'Dr. Yousef Almutairi', nameAr: 'د. يوسف المطيري',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'yousef@carekit-test.com',  phone: '+966500000007', experience: 2,  isActive: true  },
-    { id: '00000000-0000-4000-8000-000000000008', name: 'د. ريم الشهري',     nameEn: 'Dr. Reem Alshehri',    nameAr: 'د. ريم الشهري',     title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'reem.dr@carekit-test.com', phone: '+966500000008', experience: 7,  isActive: false },
-    { id: '00000000-0000-4000-8000-000000000009', name: 'د. طلال الزهراني',  nameEn: 'Dr. Talal Alzahrani',  nameAr: 'د. طلال الزهراني',  title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'talal@carekit-test.com',   phone: '+966500000009', experience: 20, isActive: false },
-    { id: '00000000-0000-4000-8000-00000000000a', name: 'د. ليان القحطاني',  nameEn: 'Dr. Layan Alqahtani',  nameAr: 'د. ليان القحطاني',  title: 'طبيبة عامة',    specialty: 'General',      specialtyAr: 'طب عام',  gender: 'FEMALE', email: 'layan@carekit-test.com',   phone: '+966500000010', experience: 1,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000004', name: 'سارة الحربي',    nameEn: 'Sarah Alharbi',    nameAr: 'سارة الحربي',    title: 'أخصائية باطنة', specialty: 'Internal Med', specialtyAr: 'باطنة',   gender: 'FEMALE', email: 'sarah@carekit-test.com',   phone: '+966500000004', experience: 5,  isActive: true,  extraBranchId: BRANCH_ID_2 },
+    { id: '00000000-0000-4000-8000-000000000005', name: 'عمر العتيبي',    nameEn: 'Omar Alotaibi',    nameAr: 'عمر العتيبي',    title: 'أخصائي جلدية',   specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'MALE',   email: 'omar@carekit-test.com',    phone: '+966500000005', experience: 3,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000006', name: 'هند الدوسري',    nameEn: 'Hind Aldosari',    nameAr: 'هند الدوسري',    title: 'أخصائية أسنان', specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'FEMALE', email: 'hind@carekit-test.com',    phone: '+966500000006', experience: 15, isActive: true,  extraBranchId: BRANCH_ID_2 },
+    { id: '00000000-0000-4000-8000-000000000007', name: 'يوسف المطيري',   nameEn: 'Yousef Almutairi', nameAr: 'يوسف المطيري',   title: 'طبيب عام',       specialty: 'General',      specialtyAr: 'طب عام',  gender: 'MALE',   email: 'yousef@carekit-test.com',  phone: '+966500000007', experience: 2,  isActive: true  },
+    { id: '00000000-0000-4000-8000-000000000008', name: 'ريم الشهري',     nameEn: 'Reem Alshehri',    nameAr: 'ريم الشهري',     title: 'أخصائية جلدية', specialty: 'Dermatology',  specialtyAr: 'جلدية',   gender: 'FEMALE', email: 'reem.dr@carekit-test.com', phone: '+966500000008', experience: 7,  isActive: false },
+    { id: '00000000-0000-4000-8000-000000000009', name: 'طلال الزهراني',  nameEn: 'Talal Alzahrani',  nameAr: 'طلال الزهراني',  title: 'أخصائي أسنان',   specialty: 'Dentistry',    specialtyAr: 'أسنان',   gender: 'MALE',   email: 'talal@carekit-test.com',   phone: '+966500000009', experience: 20, isActive: false },
+    { id: '00000000-0000-4000-8000-00000000000a', name: 'ليان القحطاني',  nameEn: 'Layan Alqahtani',  nameAr: 'ليان القحطاني',  title: 'طبيبة عامة',    specialty: 'General',      specialtyAr: 'طب عام',  gender: 'FEMALE', email: 'layan@carekit-test.com',   phone: '+966500000010', experience: 1,  isActive: true  },
   ];
 
   for (const e of employees) {
@@ -59,6 +65,7 @@ async function main() {
       where: { id: e.id },
       create: {
         id: e.id,
+        organizationId: DEFAULT_ORG_ID,
         name: e.name,
         nameEn: e.nameEn,
         nameAr: e.nameAr,
@@ -74,33 +81,74 @@ async function main() {
         isActive: e.isActive,
         updatedAt: new Date(),
       },
-      update: { experience: e.experience, isActive: e.isActive },
+      update: { name: e.name, nameEn: e.nameEn, nameAr: e.nameAr, title: e.title, experience: e.experience, isActive: e.isActive },
     });
     await prisma.employeeBranch.upsert({
       where: { employeeId_branchId: { employeeId: e.id, branchId: BRANCH_ID } },
-      create: { employeeId: e.id, branchId: BRANCH_ID },
+      create: { employeeId: e.id, branchId: BRANCH_ID, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
     if (e.extraBranchId) {
       await prisma.employeeBranch.upsert({
         where: { employeeId_branchId: { employeeId: e.id, branchId: e.extraBranchId } },
-        create: { employeeId: e.id, branchId: e.extraBranchId },
+        create: { employeeId: e.id, branchId: e.extraBranchId, organizationId: DEFAULT_ORG_ID },
         update: {},
+      });
+    }
+
+    // Default availability: Sun..Thu 09:00–17:00.
+    // Dashboard's create form uses the same defaults; seeded employees without
+    // these rows are invisible to the booking slots endpoint → create-booking
+    // flow dead-ends on the date picker. EmployeeAvailability has no compound
+    // unique on (employeeId, dayOfWeek), so gate on count to stay idempotent.
+    const availabilityCount = await prisma.employeeAvailability.count({ where: { employeeId: e.id } });
+    if (availabilityCount === 0) {
+      await prisma.employeeAvailability.createMany({
+        data: [0, 1, 2, 3, 4].map((dayOfWeek) => ({
+          employeeId: e.id,
+          organizationId: DEFAULT_ORG_ID,
+          dayOfWeek,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+        })),
       });
     }
   }
 
+  // Categories first — the dashboard's create-service form enforces category
+  // as required, so seeded services without one create a UI/contract mismatch.
+  const categories = [
+    { id: '00000000-0000-4000-8000-00000000c001', nameAr: 'باطنة', nameEn: 'General Medicine', sortOrder: 1 },
+    { id: '00000000-0000-4000-8000-00000000c002', nameAr: 'أسنان',  nameEn: 'Dentistry',        sortOrder: 2 },
+    { id: '00000000-0000-4000-8000-00000000c003', nameAr: 'جلدية',  nameEn: 'Dermatology',      sortOrder: 3 },
+  ];
+  for (const c of categories) {
+    await prisma.serviceCategory.upsert({
+      where: { id: c.id },
+      create: { ...c, organizationId: DEFAULT_ORG_ID, isActive: true, updatedAt: new Date() },
+      update: {},
+    });
+  }
+
+  // NOTE ON PRICE UNITS:
+  //   Schema is `price Decimal @db.Decimal(12, 2)` with `currency: SAR`, but
+  //   the dashboard consistently multiplies by 100 on save and divides by 100
+  //   on display (service-form-page, service-columns, duration-options-editor).
+  //   i.e. the runtime convention is "halalas stored as Decimal". This seed
+  //   matches that convention so demo prices render as 120/250/200 SAR, not
+  //   1.20/2.50/2.00. Unifying on SAR is tracked as tech-debt separately.
   const services = [
-    { id: '00000000-0000-4000-8000-000000000011', nameAr: 'كشف عام', nameEn: 'General consultation', durationMins: 30, price: '120.00' },
-    { id: '00000000-0000-4000-8000-000000000012', nameAr: 'تنظيف أسنان', nameEn: 'Dental cleaning', durationMins: 45, price: '250.00' },
-    { id: '00000000-0000-4000-8000-000000000013', nameAr: 'استشارة جلدية', nameEn: 'Dermatology consult', durationMins: 30, price: '200.00' },
+    { id: '00000000-0000-4000-8000-000000000011', nameAr: 'كشف عام', nameEn: 'General consultation', durationMins: 30, price: '12000.00', categoryId: '00000000-0000-4000-8000-00000000c001' },
+    { id: '00000000-0000-4000-8000-000000000012', nameAr: 'تنظيف أسنان', nameEn: 'Dental cleaning', durationMins: 45, price: '25000.00', categoryId: '00000000-0000-4000-8000-00000000c002' },
+    { id: '00000000-0000-4000-8000-000000000013', nameAr: 'استشارة جلدية', nameEn: 'Dermatology consult', durationMins: 30, price: '20000.00', categoryId: '00000000-0000-4000-8000-00000000c003' },
   ];
 
   for (const s of services) {
     await prisma.service.upsert({
       where: { id: s.id },
-      create: { ...s, price: s.price as any, currency: 'SAR', isActive: true, updatedAt: new Date() },
-      update: {},
+      create: { ...s, organizationId: DEFAULT_ORG_ID, price: s.price as any, currency: 'SAR', isActive: true, updatedAt: new Date() },
+      update: { categoryId: s.categoryId, price: s.price as any },
     });
 
     // Every service is bookable IN_PERSON by default — the wizard's step-4
@@ -109,6 +157,7 @@ async function main() {
       where: { serviceId_bookingType: { serviceId: s.id, bookingType: 'in_person' } },
       create: {
         id: `${s.id}-in-person`,
+        organizationId: DEFAULT_ORG_ID,
         serviceId: s.id,
         bookingType: 'in_person',
         price: s.price as any,
@@ -116,7 +165,7 @@ async function main() {
         isActive: true,
         updatedAt: new Date(),
       },
-      update: {},
+      update: { price: s.price as any },
     });
   }
 
@@ -130,7 +179,7 @@ async function main() {
   for (const es of empService) {
     await prisma.employeeService.upsert({
       where: { employeeId_serviceId: es },
-      create: es,
+      create: { ...es, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
   }
@@ -175,6 +224,7 @@ async function main() {
       where: { id: c.id },
       create: {
         id: c.id,
+        organizationId: DEFAULT_ORG_ID,
         name: c.name,
         firstName: c.firstName,
         lastName: c.lastName,
@@ -231,6 +281,7 @@ async function main() {
       where: { id: b.id },
       create: {
         id: b.id,
+        organizationId: DEFAULT_ORG_ID,
         branchId: BRANCH_ID,
         clientId: b.clientId,
         employeeId: b.employeeId,
@@ -264,7 +315,7 @@ async function main() {
   for (const r of ratings) {
     await prisma.rating.upsert({
       where: { id: r.id },
-      create: r,
+      create: { ...r, organizationId: DEFAULT_ORG_ID },
       update: {},
     });
   }

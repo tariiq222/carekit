@@ -43,6 +43,8 @@ export interface Employee {
     ratings: number
   }
   averageRating?: number
+  ratingCount?: number
+  bookingCount?: number
   branchIds?: string[]
   serviceIds?: string[]
 }

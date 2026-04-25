@@ -66,4 +66,7 @@ export const arBilling: Record<string, string> = {
   "billing.invoices.status.failed": "فشل",
   "billing.invoices.status.draft": "مسودة",
   "billing.invoices.status.void": "ملغاة",
+  "featureGate.locked.title": "هذه الميزة غير مفعّلة في خطتك",
+  "featureGate.locked.description": "قم بترقية اشتراكك لتفعيل هذه الميزة والاستفادة منها في لوحة التحكم.",
+  "featureGate.locked.upgrade": "ترقية الخطة",
 }

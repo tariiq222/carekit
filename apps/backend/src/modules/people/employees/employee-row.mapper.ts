@@ -32,9 +32,21 @@ export interface EmployeeListItem {
   branchIds: string[];
   serviceIds: string[];
   availability: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>;
+  averageRating: number | null;
+  ratingCount: number;
+  bookingCount: number;
 }
 
-export function mapEmployeeRow(e: EmployeeWithRelations): EmployeeListItem {
+export interface EmployeeRatingAggregate {
+  avg: number | null;
+  count: number;
+}
+
+export function mapEmployeeRow(
+  e: EmployeeWithRelations,
+  ratings: EmployeeRatingAggregate = { avg: null, count: 0 },
+  bookingCount = 0,
+): EmployeeListItem {
   return {
     id: e.id,
     userId: e.userId,
@@ -66,5 +78,8 @@ export function mapEmployeeRow(e: EmployeeWithRelations): EmployeeListItem {
       endTime: a.endTime,
       isActive: a.isActive,
     })),
+    averageRating: ratings.avg,
+    ratingCount: ratings.count,
+    bookingCount,
   };
 }

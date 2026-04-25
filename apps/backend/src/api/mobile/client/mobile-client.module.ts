@@ -5,6 +5,8 @@ import { PeopleModule } from '../../../modules/people/people.module';
 import { FinanceModule } from '../../../modules/finance/finance.module';
 import { AiModule } from '../../../modules/ai/ai.module';
 import { CommsModule } from '../../../modules/comms/comms.module';
+import { OrgExperienceModule } from '../../../modules/org-experience/org-experience.module';
+import { IdentityModule } from '../../../modules/identity/identity.module';
 import { MobileClientBookingsController } from './bookings.controller';
 import { MobileClientProfileController } from './profile.controller';
 import { MobileClientPaymentsController } from './payments.controller';
@@ -15,7 +17,7 @@ import { MobileClientUpcomingController } from './portal/upcoming.controller';
 import { MobileClientSummaryController } from './portal/summary.controller';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, PeopleModule, FinanceModule, AiModule, CommsModule],
+  imports: [DatabaseModule, BookingsModule, PeopleModule, FinanceModule, AiModule, CommsModule, OrgExperienceModule, IdentityModule],
   controllers: [
     MobileClientBookingsController,
     MobileClientProfileController,

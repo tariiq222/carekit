@@ -3,7 +3,8 @@
  * SaaS Plan 04 — billing skeleton
  */
 
-export type PlanSlug = 'BASIC' | 'PRO' | 'ENTERPRISE'
+// Slug is any admin-configured identifier — format enforced on the backend.
+export type PlanSlug = string
 export type BillingCycle = 'MONTHLY' | 'ANNUAL'
 export type SubscriptionStatus = 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELED'
 export type InvoiceStatus = 'DRAFT' | 'DUE' | 'PAID' | 'FAILED' | 'VOID'

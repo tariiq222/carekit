@@ -1,6 +1,6 @@
-import { apiRequest } from '../client.js'
-import { guestApiRequest } from './guest-client.js'
-import { buildQueryString } from '../types/api.js'
+import { apiRequest } from '../client'
+import { guestApiRequest } from './guest-client'
+import { buildQueryString } from '../types/api'
 import type {
   BookingListItem,
   BookingListQuery,
@@ -8,7 +8,7 @@ import type {
   BookingStats,
   CreateBookingPayload,
   UpdateBookingPayload,
-} from '../types/booking.js'
+} from '../types/booking'
 import type { GuestBookingPayload, GuestBookingResponse } from '@carekit/shared'
 
 export async function list(query: BookingListQuery = {}): Promise<BookingListResponse> {

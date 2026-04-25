@@ -15,8 +15,8 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
+import { ClientSessionGuard } from '../../../common/guards/client-session.guard';
+import { ClientSession } from '../../../common/auth/client-session.decorator';
 import { ApiStandardResponses } from '../../../common/swagger';
 import { ChatCompletionHandler } from '../../../modules/ai/chat-completion/chat-completion.handler';
 import { ListConversationsHandler } from '../../../modules/comms/chat/list-conversations.handler';
@@ -49,7 +49,7 @@ export class MobileListMessagesQuery {
 @ApiTags('Mobile Client / Chat')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(ClientSessionGuard)
 @Controller('mobile/client/chat')
 export class MobileClientChatController {
   constructor(
@@ -62,11 +62,11 @@ export class MobileClientChatController {
   @ApiCreatedResponse({ description: 'AI response returned' })
   @Post()
   chat(
-    @CurrentUser() user: JwtUser,
+    @ClientSession() user: ClientSession,
     @Body() body: MobileChatBody,
   ) {
     return this.chatCompletion.execute({
-      clientId: user.sub,
+      clientId: user.id,
       userMessage: body.userMessage,
       sessionId: body.sessionId,
     });
@@ -76,11 +76,11 @@ export class MobileClientChatController {
   @ApiOkResponse({ description: 'Paginated conversation list' })
   @Get('conversations')
   listConversationsEndpoint(
-    @CurrentUser() user: JwtUser,
+    @ClientSession() user: ClientSession,
     @Query() q: MobileListConversationsQuery,
   ) {
     return this.listConversations.execute({
-      clientId: user.sub,
+      clientId: user.id,
       page: q.page ?? 1,
       limit: q.limit ?? 20,
     });

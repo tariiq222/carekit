@@ -1,10 +1,10 @@
-import { apiRequest } from '../client.js'
+import { apiRequest } from '../client'
 import type {
   GetAvailabilityResponse,
   SetAvailabilityPayload,
   SetAvailabilityResponse,
   EmployeeAvailability,
-} from '../types/availability.js'
+} from '../types/availability'
 
 export async function get(
   employeeId: string,

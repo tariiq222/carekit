@@ -1,107 +1,137 @@
-import { View, StyleSheet } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { Check, Clock } from 'lucide-react-native';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeInDown, ZoomIn } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Check } from 'lucide-react-native';
 
-import { ThemedText } from '@/theme/components/ThemedText';
-import { ThemedButton } from '@/theme/components/ThemedButton';
-import { useTheme } from '@/theme/useTheme';
+import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
+import { Glass } from '@/theme/components/Glass';
+import { useDir } from '@/hooks/useDir';
+import { getFontName } from '@/theme/fonts';
 
 export default function BookingSuccessScreen() {
-  const { bookingId, pendingApproval } = useLocalSearchParams<{
-    bookingId: string;
-    pendingApproval: string;
-  }>();
-  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
-
-  const isPending = pendingApproval === 'true';
-  const StatusIcon = isPending ? Clock : Check;
-  const gradientColors: [string, string] = isPending
-    ? ['#F59E0B', '#F97316']
-    : ['#047857', '#059669'];
+  const dir = useDir();
+  const f400 = getFontName(dir.locale, '400');
+  const f600 = getFontName(dir.locale, '600');
+  const f700 = getFontName(dir.locale, '700');
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.colors.surface,
-          paddingTop: insets.top + 40,
-          paddingBottom: insets.bottom + 20,
-        },
-      ]}
-    >
-      <View style={styles.content}>
-        {/* Status Icon */}
-        <View style={styles.iconWrap}>
+    <AquaBackground>
+      <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        {/* Success icon */}
+        <Animated.View entering={ZoomIn.duration(900).easing(Easing.bezier(0.22, 1, 0.36, 1))}>
           <LinearGradient
-            colors={gradientColors}
+            colors={[sawaaColors.teal[400], sawaaColors.teal[600]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.successCircle}
+            style={styles.iconCircle}
           >
-            <StatusIcon size={36} strokeWidth={2.5} color="#FFF" />
+            <Check size={56} color="#fff" strokeWidth={3} />
           </LinearGradient>
-        </View>
+        </Animated.View>
 
-        <ThemedText variant="displaySm" align="center">
-          {isPending
-            ? t('payment.pendingApproval')
-            : t('appointments.confirmed')}
-        </ThemedText>
-        <ThemedText
-          variant="bodySm"
-          color={theme.colors.textSecondary}
-          align="center"
-          style={styles.sub}
-        >
-          {isPending
-            ? t('payment.pendingApprovalDesc')
-            : bookingId
-              ? `#${bookingId}`
-              : ''}
-        </ThemedText>
-      </View>
+        {/* Text */}
+        <Animated.View entering={FadeInDown.delay(200).duration(700).easing(Easing.out(Easing.cubic))} style={styles.textBlock}>
+          <Text style={[styles.title, { fontFamily: f700 }]}>
+            {dir.isRTL ? 'تم تأكيد حجزك' : 'Booking confirmed'}
+          </Text>
+          <Text style={[styles.subtitle, { fontFamily: f400 }]}>
+            {dir.isRTL
+              ? 'أرسلنا تفاصيل الجلسة إلى بريدك الإلكتروني'
+              : 'Session details sent to your email'}
+          </Text>
+        </Animated.View>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <ThemedButton
-          onPress={() => router.replace('/(client)/(tabs)/appointments')}
-          variant="primary"
-          size="lg"
-          full
+        {/* Summary card */}
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(800).easing(Easing.out(Easing.cubic))}
+          style={styles.summaryWrap}
         >
-          {t('client.appointments')}
-        </ThemedButton>
-        <ThemedButton
-          onPress={() => router.replace('/(client)/(tabs)/home')}
-          variant="ghost"
-          size="lg"
-          full
-        >
-          {t('tabs.home')}
-        </ThemedButton>
+          <Glass variant="strong" radius={sawaaRadius.xl} style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
+                {dir.isRTL ? 'المعالج' : 'Therapist'}
+              </Text>
+              <Text style={[styles.summaryValue, { fontFamily: f700 }]}>
+                {dir.isRTL ? 'د. فاطمة العمران' : 'Dr. Fatima Al-Omran'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
+                {dir.isRTL ? 'التاريخ والوقت' : 'Date & time'}
+              </Text>
+              <Text style={[styles.summaryValue, { fontFamily: f700 }]}>
+                {dir.isRTL ? 'الخميس ١٦ نوفمبر · ٦:٣٠ م' : 'Thu Nov 16 · 6:30 PM'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
+                {dir.isRTL ? 'رقم الحجز' : 'Booking #'}
+              </Text>
+              <Text style={[styles.summaryValue, { fontFamily: f700, color: sawaaColors.teal[700] }]}>
+                #SW-2842
+              </Text>
+            </View>
+          </Glass>
+        </Animated.View>
+
+        {/* Actions */}
+        <Animated.View entering={FadeInDown.delay(600).duration(800).easing(Easing.out(Easing.cubic))} style={styles.actions}>
+          <Pressable onPress={() => router.replace('/(client)/(tabs)/appointments')}>
+            <LinearGradient
+              colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.primaryBtn}
+            >
+              <Text style={[styles.primaryBtnText, { fontFamily: f700 }]}>
+                {dir.isRTL ? 'عرض مواعيدي' : 'View my appointments'}
+              </Text>
+            </LinearGradient>
+          </Pressable>
+          <Pressable
+            onPress={() => router.replace('/(client)/(tabs)/home')}
+            style={styles.secondaryBtn}
+          >
+            <Text style={[styles.secondaryBtnText, { fontFamily: f600 }]}>
+              {dir.isRTL ? 'العودة إلى الرئيسية' : 'Back to home'}
+            </Text>
+          </Pressable>
+        </Animated.View>
       </View>
-    </View>
+    </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24 },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  iconWrap: { marginBottom: 12 },
-  successCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  container: { flex: 1, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', gap: 24 },
+  iconCircle: {
+    width: 112, height: 112, borderRadius: 56,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 12 },
   },
-  sub: { marginTop: 4 },
-  actions: { gap: 12 },
+  textBlock: { alignItems: 'center', gap: 6 },
+  title: { fontSize: 26, color: sawaaColors.ink[900], textAlign: 'center' },
+  subtitle: { fontSize: 14, color: sawaaColors.ink[500], textAlign: 'center', lineHeight: 22 },
+  summaryWrap: { width: '100%' },
+  summaryCard: { padding: 0 },
+  summaryRow: { padding: 14, gap: 2 },
+  summaryLabel: { fontSize: 11.5, color: sawaaColors.ink[500] },
+  summaryValue: { fontSize: 13.5, color: sawaaColors.ink[900] },
+  divider: { height: 0.5, backgroundColor: 'rgba(255,255,255,0.5)' },
+  actions: { width: '100%', gap: 10 },
+  primaryBtn: {
+    borderRadius: 999, height: 52,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: sawaaColors.teal[600], shadowOpacity: 0.35, shadowRadius: 16, shadowOffset: { width: 0, height: 6 },
+  },
+  primaryBtnText: { color: '#fff', fontSize: 14 },
+  secondaryBtn: { height: 44, alignItems: 'center', justifyContent: 'center' },
+  secondaryBtnText: { color: sawaaColors.teal[700], fontSize: 13 },
 });

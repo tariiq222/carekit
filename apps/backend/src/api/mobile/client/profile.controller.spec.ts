@@ -1,7 +1,7 @@
 import { ClientGender, ClientSource } from '@prisma/client';
 import { MobileClientProfileController, MobileUpdateProfileBody } from './profile.controller';
 
-const USER = { sub: 'client-1', email: 'client@test.com', role: 'client' as const };
+const USER = { id: 'client-1', email: 'client@test.com', phone: null };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -17,7 +17,7 @@ describe('MobileClientProfileController', () => {
     it('passes clientId to handler', async () => {
       const { controller, getClient } = buildController();
       await controller.getProfile(USER as never);
-      expect(getClient.execute).toHaveBeenCalledWith({ clientId: USER.sub });
+      expect(getClient.execute).toHaveBeenCalledWith({ clientId: USER.id });
     });
 
     it('returns handler result', async () => {
@@ -33,7 +33,7 @@ describe('MobileClientProfileController', () => {
       const body: MobileUpdateProfileBody = { name: 'Jane Doe', phone: '+1234567890' };
       await controller.updateProfile(USER as never, body);
       expect(updateClient.execute).toHaveBeenCalledWith({
-        clientId: USER.sub,
+        clientId: USER.id,
         name: 'Jane Doe',
         phone: '+1234567890',
       });

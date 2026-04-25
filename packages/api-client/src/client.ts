@@ -1,4 +1,4 @@
-import { getRefreshMutex, setRefreshMutex } from './refresh-mutex.js'
+import { getRefreshMutex, setRefreshMutex } from './refresh-mutex'
 
 export interface ClientConfig {
   baseUrl: string

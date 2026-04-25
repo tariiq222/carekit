@@ -8,7 +8,7 @@
  * @see apps/dashboard/hooks/use-billing-features.ts
  */
 
-import type { PlanSlug, SubscriptionStatus } from "@prisma/client";
+import type { SubscriptionStatus } from "@prisma/client";
 
 /**
  * A single feature entry in the billing features response.
@@ -48,7 +48,7 @@ export interface FeatureEntry {
  * ```
  */
 export interface BillingFeaturesResponse {
-  planSlug: PlanSlug;
+  planSlug: string;
   status: SubscriptionStatus;
   features: Record<string, FeatureEntry>;
 }
