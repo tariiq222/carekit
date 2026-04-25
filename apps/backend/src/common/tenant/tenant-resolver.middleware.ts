@@ -60,19 +60,25 @@ export class TenantResolverMiddleware implements NestMiddleware {
     // Priority:
     //   1. JWT claim (authenticated users)
     //   2. X-Org-Id header (super-admins only — never trusted from regular users)
-    //   3. Subdomain resolver (added in Plan 09)
-    //   4. DEFAULT_ORGANIZATION_ID (permissive mode only)
+    //   3. X-Org-Id header on UNAUTHENTICATED public routes (mobile tenant-lock)
+    //   4. Subdomain resolver (added in Plan 09)
+    //   5. DEFAULT_ORGANIZATION_ID (permissive mode only)
     const fromJwt = req.user?.organizationId;
-    const fromHeader =
+    const fromSuperAdminHeader =
       req.user?.isSuperAdmin === true
-        ? (req.headers['x-org-id'] as string | undefined)
+        ? this.parseUuidHeader(req.headers['x-org-id'])
+        : undefined;
+    const fromPublicHeader =
+      !req.user && this.isPublicRoute(req.path ?? req.url ?? '')
+        ? this.parseUuidHeader(req.headers['x-org-id'])
         : undefined;
     const fromDefault =
       mode === 'permissive'
         ? this.config.get<string>('DEFAULT_ORGANIZATION_ID', DEFAULT_ORGANIZATION_ID)
         : undefined;
 
-    const organizationId = fromJwt ?? fromHeader ?? fromDefault;
+    const organizationId =
+      fromJwt ?? fromSuperAdminHeader ?? fromPublicHeader ?? fromDefault;
 
     if (!organizationId) {
       throw new TenantResolutionError(

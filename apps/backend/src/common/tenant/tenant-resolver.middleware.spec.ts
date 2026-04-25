@@ -27,11 +27,21 @@ describe('TenantResolverMiddleware', () => {
     return mod.get(TenantResolverMiddleware);
   };
 
-  const req = (overrides: Partial<{ user: unknown; headers: Record<string, unknown>; hostname: string }> = {}) =>
+  const req = (
+    overrides: Partial<{
+      user: unknown;
+      headers: Record<string, unknown>;
+      hostname: string;
+      path: string;
+      url: string;
+    }> = {},
+  ) =>
     ({
       user: undefined,
       headers: {},
       hostname: 'localhost',
+      path: '/api/v1/dashboard/bookings',
+      url: '/api/v1/dashboard/bookings',
       ...overrides,
     }) as never;
 
@@ -84,16 +94,17 @@ describe('TenantResolverMiddleware', () => {
 
   it('strict mode: accepts explicit header when super-admin', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+    const headerOrg = '550e8400-e29b-41d4-a716-446655440000';
     await new Promise<void>((done) => {
       cls.run(() =>
         mw.use(
           req({
             user: { id: 'u1', role: 'SUPER_ADMIN', isSuperAdmin: true },
-            headers: { 'x-org-id': 'org-header' },
+            headers: { 'x-org-id': headerOrg },
           }),
           {} as never,
           () => {
-            expect(ctx.getOrganizationId()).toBe('org-header');
+            expect(ctx.getOrganizationId()).toBe(headerOrg);
             done();
           },
         ),
