@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { NotificationType, RecipientType } from '@prisma/client';
 import { EventBusService, type DomainEventEnvelope } from '../../../infrastructure/events';
 import { SendNotificationHandler } from '../send-notification/send-notification.handler';
+import { GetClientPushTargetsHandler } from '../fcm-tokens/get-client-push-targets.handler';
 
 interface PaymentLink {
   bookingId: string;
@@ -27,7 +28,10 @@ interface GroupSessionPaymentLinksReadyPayload {
 export class OnGroupSessionPaymentLinksReadyHandler {
   private readonly logger = new Logger(OnGroupSessionPaymentLinksReadyHandler.name);
 
-  constructor(private readonly notify: SendNotificationHandler) {}
+  constructor(
+    private readonly notify: SendNotificationHandler,
+    private readonly pushTargets: GetClientPushTargetsHandler,
+  ) {}
 
   register(eventBus: EventBusService): void {
     eventBus.subscribe<GroupSessionPaymentLinksReadyPayload>(
@@ -48,13 +52,17 @@ export class OnGroupSessionPaymentLinksReadyHandler {
 
   private async notifyClient(link: PaymentLink): Promise<void> {
     try {
+      const { pushEnabled, tokens } = await this.pushTargets.execute({ clientId: link.clientId });
+      const channels: Array<'in-app' | 'push' | 'email' | 'sms'> = ['in-app'];
+      if (pushEnabled && tokens.length > 0) channels.push('push');
       await this.notify.execute({
         recipientId: link.clientId,
         recipientType: RecipientType.CLIENT,
         type: NotificationType.PAYMENT_REMINDER,
         title: 'اكتمل الحد الأدنى للجلسة الجماعية',
         body: `تم تأكيد الجلسة. يرجى إتمام الدفع خلال 24 ساعة لتأمين مقعدك.`,
-        channels: ['in-app', 'push'],
+        channels,
+        fcmTokens: tokens,
         metadata: {
           invoiceId: link.invoiceId,
           bookingId: link.bookingId,

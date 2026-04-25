@@ -47,8 +47,11 @@ export class SendNotificationHandler {
     // Remaining channels dispatch via external adapters.
     const tasks: Promise<void>[] = [];
 
-    if (dto.channels.includes('push') && dto.fcmToken) {
-      tasks.push(this.push.execute({ token: dto.fcmToken, title: dto.title, body: dto.body }));
+    if (dto.channels.includes('push')) {
+      const tokens = dto.fcmTokens ?? (dto.fcmToken ? [dto.fcmToken] : []);
+      for (const token of tokens) {
+        tasks.push(this.push.execute({ token, title: dto.title, body: dto.body }));
+      }
     }
 
     if (dto.channels.includes('email') && dto.recipientEmail && dto.emailTemplateSlug) {

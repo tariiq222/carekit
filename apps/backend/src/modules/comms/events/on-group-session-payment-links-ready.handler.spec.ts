@@ -15,14 +15,16 @@ const twoLinks = [
 describe('OnGroupSessionPaymentLinksReadyHandler', () => {
   it('sends a PAYMENT_REMINDER notification to each client', async () => {
     const notify = { execute: jest.fn().mockResolvedValue(undefined) };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     await handler.handle(makeEnvelope(twoLinks) as never);
     expect(notify.execute).toHaveBeenCalledTimes(2);
   });
 
   it('sends in-app and push channels', async () => {
     const notify = { execute: jest.fn().mockResolvedValue(undefined) };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     await handler.handle(makeEnvelope([twoLinks[0]]) as never);
     expect(notify.execute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -34,7 +36,8 @@ describe('OnGroupSessionPaymentLinksReadyHandler', () => {
 
   it('passes invoiceId and bookingId in metadata', async () => {
     const notify = { execute: jest.fn().mockResolvedValue(undefined) };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     await handler.handle(makeEnvelope([twoLinks[0]]) as never);
     expect(notify.execute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -45,7 +48,8 @@ describe('OnGroupSessionPaymentLinksReadyHandler', () => {
 
   it('does not throw when paymentLinks is empty', async () => {
     const notify = { execute: jest.fn() };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     await expect(handler.handle(makeEnvelope([]) as never)).resolves.toBeUndefined();
     expect(notify.execute).not.toHaveBeenCalled();
   });
@@ -56,7 +60,8 @@ describe('OnGroupSessionPaymentLinksReadyHandler', () => {
         .mockRejectedValueOnce(new Error('push failed'))
         .mockResolvedValueOnce(undefined),
     };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     await expect(handler.handle(makeEnvelope(twoLinks) as never)).resolves.toBeUndefined();
     expect(notify.execute).toHaveBeenCalledTimes(2);
   });
@@ -64,7 +69,8 @@ describe('OnGroupSessionPaymentLinksReadyHandler', () => {
   it('registers subscribe listener on register()', () => {
     const notify = { execute: jest.fn() };
     const eventBus = { subscribe: jest.fn() };
-    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never);
+    const pushTargets = { execute: jest.fn().mockResolvedValue({ pushEnabled: true, tokens: ['tok-1'] }) };
+    const handler = new OnGroupSessionPaymentLinksReadyHandler(notify as never, pushTargets as never);
     handler.register(eventBus as never);
     expect(eventBus.subscribe).toHaveBeenCalledWith(
       'group_session.payment_links_ready',
