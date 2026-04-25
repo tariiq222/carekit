@@ -134,8 +134,15 @@ type Cfg = {
   nativeBlur: number;
 };
 
+// Blur tokens — calibrated against sawaa-design/v2 prototype (styles.css backdrop-filter).
+// Web mainBlur is the CSS `blur()` value (px). Native nativeBlur is iOS BlurView intensity (0-100).
+// Reference web targets: clear≈18px / regular≈28px / strong≈40px.
+// Native intensity is non-linear; values below produce a comparable visual weight.
 export const GLASS_CFG: Record<Variant, Cfg> = {
-  clear:   { mainBlur: 30, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.32, nativeBlur: 45 },
-  regular: { mainBlur: 50, mainTintAlpha: 0.06, baseTintAlpha: 0.20, bloomAlpha: 0.32, borderAlpha: 0.40, nativeBlur: 75 },
-  strong:  { mainBlur: 65, mainTintAlpha: 0.09, baseTintAlpha: 0.28, bloomAlpha: 0.42, borderAlpha: 0.50, nativeBlur: 95 },
+  // clear — light glass for chips, secondary surfaces. web 18px ≈ native 50.
+  clear:   { mainBlur: 18, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.32, nativeBlur: 50 },
+  // regular — default card/sheet surface. web 28px ≈ native 70 (was 75; trimmed slightly to match prototype).
+  regular: { mainBlur: 28, mainTintAlpha: 0.06, baseTintAlpha: 0.20, bloomAlpha: 0.32, borderAlpha: 0.40, nativeBlur: 70 },
+  // strong — hero / CTA / modal. web 40px ≈ native 100 (max iOS intensity for prototype-matching density).
+  strong:  { mainBlur: 40, mainTintAlpha: 0.09, baseTintAlpha: 0.28, bloomAlpha: 0.42, borderAlpha: 0.50, nativeBlur: 100 },
 };
