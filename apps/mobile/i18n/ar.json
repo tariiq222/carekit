@@ -242,7 +242,21 @@
     "buildNumber": "رقم البناء",
     "languageChangeRestart": "تغيير اللغة يتطلب إعادة تشغيل التطبيق",
     "restartNow": "أعد التشغيل الآن",
-    "restartLater": "لاحقاً"
+    "restartLater": "لاحقاً",
+    "darkMode": "الوضع الليلي",
+    "profile": "الملف الشخصي",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "أدخل اسمك الكامل",
+    "phone": "رقم الجوال",
+    "email": "البريد الإلكتروني",
+    "saveProfile": "حفظ التعديلات",
+    "profileSaved": "تم تحديث الملف",
+    "profileSaveError": "تعذّر تحديث الملف",
+    "errors": {
+      "required": "مطلوب",
+      "invalidPhone": "يجب أن يكون الجوال بصيغة +9665XXXXXXXX",
+      "invalidEmail": "بريد إلكتروني غير صالح"
+    }
   },
   "notifications": {
     "title": "الإشعارات",
