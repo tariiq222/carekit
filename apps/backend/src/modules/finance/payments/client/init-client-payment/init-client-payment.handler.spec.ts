@@ -36,6 +36,7 @@ const buildPrisma = () => ({
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ id: 'payment-1' }),
     update: jest.fn().mockResolvedValue({ id: 'payment-1' }),
+    delete: jest.fn().mockResolvedValue({ id: 'payment-1' }),
   },
 });
 
@@ -115,13 +116,79 @@ describe('InitClientPaymentHandler', () => {
     prisma.payment.findFirst.mockResolvedValue({
       id: 'payment-existing',
       status: PaymentStatus.PENDING,
+      gatewayRef: 'moyasar-payment-existing',
     });
 
     const result = await handler.execute({ invoiceId, clientId });
 
     expect(result).toEqual({ paymentId: 'payment-existing', redirectUrl: '' });
+    expect(prisma.payment.delete).not.toHaveBeenCalled();
     expect(prisma.payment.create).not.toHaveBeenCalled();
     expect(moyasar.createPayment).not.toHaveBeenCalled();
+  });
+
+  it('deletes the pending row when Moyasar throws so the idempotency key is not claimed', async () => {
+    const { handler, prisma, moyasar } = buildHandler();
+    const error = new Error('Moyasar unavailable');
+    moyasar.createPayment.mockRejectedValue(error);
+
+    await expect(handler.execute({ invoiceId, clientId })).rejects.toThrow(error);
+
+    expect(prisma.payment.create).toHaveBeenCalledWith({
+      data: {
+        organizationId,
+        invoiceId,
+        amount: 230,
+        currency: 'SAR',
+        method: PaymentMethod.ONLINE_CARD,
+        status: PaymentStatus.PENDING,
+        idempotencyKey: `client:${invoiceId}`,
+      },
+      select: { id: true },
+    });
+    expect(prisma.payment.delete).toHaveBeenCalledWith({ where: { id: 'payment-1' } });
+    expect(prisma.payment.update).not.toHaveBeenCalled();
+  });
+
+  it('deletes an orphan idempotent payment and creates a fresh gateway payment', async () => {
+    const { handler, prisma, moyasar } = buildHandler();
+    prisma.payment.findFirst.mockResolvedValue({
+      id: 'payment-orphan',
+      status: PaymentStatus.PENDING,
+      gatewayRef: null,
+    });
+
+    const result = await handler.execute({ invoiceId, clientId });
+
+    expect(result).toEqual({
+      paymentId: 'payment-1',
+      redirectUrl: 'https://checkout.moyasar.com/pay/moyasar-payment-1',
+    });
+    expect(prisma.payment.delete).toHaveBeenCalledWith({ where: { id: 'payment-orphan' } });
+    expect(prisma.payment.create).toHaveBeenCalledWith({
+      data: {
+        organizationId,
+        invoiceId,
+        amount: 230,
+        currency: 'SAR',
+        method: PaymentMethod.ONLINE_CARD,
+        status: PaymentStatus.PENDING,
+        idempotencyKey: `client:${invoiceId}`,
+      },
+      select: { id: true },
+    });
+    expect(moyasar.createPayment).toHaveBeenCalledWith({
+      amountHalalas: 23000,
+      currency: 'SAR',
+      description: `Invoice payment - ${invoiceId}`,
+      callbackUrl: `http://localhost:3000/booking/payment-callback?bookingId=${bookingId}&invoiceId=${invoiceId}`,
+      metadata: { invoiceId, bookingId, source: 'mobile-client' },
+    });
+    expect(prisma.payment.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: { gatewayRef: 'moyasar-payment-1' },
+      select: { id: true },
+    });
   });
 
   it('throws ConflictException when an idempotent payment is already completed', async () => {

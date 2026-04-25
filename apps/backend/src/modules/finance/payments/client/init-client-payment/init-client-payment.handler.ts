@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
@@ -27,6 +28,8 @@ export interface InitClientPaymentResult {
 
 @Injectable()
 export class InitClientPaymentHandler {
+  private readonly logger = new Logger(InitClientPaymentHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
@@ -63,17 +66,21 @@ export class InitClientPaymentHandler {
     const idempotencyKey = `client:${invoice.id}`;
     const existingPayment = await this.prisma.payment.findFirst({
       where: { idempotencyKey },
-      select: { id: true, status: true },
+      select: { id: true, status: true, gatewayRef: true },
     });
 
     if (existingPayment) {
       if (existingPayment.status === PaymentStatus.COMPLETED) {
         throw new ConflictException('Payment for this invoice has already been completed');
       }
-      return {
-        paymentId: existingPayment.id,
-        redirectUrl: '',
-      };
+      if (!existingPayment.gatewayRef) {
+        await this.prisma.payment.delete({ where: { id: existingPayment.id } });
+      } else {
+        return {
+          paymentId: existingPayment.id,
+          redirectUrl: '',
+        };
+      }
     }
 
     const amountHalalas = Math.round(Number(invoice.total) * 100);
@@ -90,17 +97,26 @@ export class InitClientPaymentHandler {
       select: { id: true },
     });
 
-    const moyasarPayment = await this.moyasar.createPayment({
-      amountHalalas,
-      currency: invoice.currency,
-      description: `Invoice payment - ${invoice.id}`,
-      callbackUrl: this.buildCallbackUrl(invoice.bookingId, invoice.id),
-      metadata: {
-        invoiceId: invoice.id,
-        bookingId: invoice.bookingId,
-        source: 'mobile-client',
-      },
-    });
+    let moyasarPayment: Awaited<ReturnType<MoyasarApiClient['createPayment']>>;
+    try {
+      moyasarPayment = await this.moyasar.createPayment({
+        amountHalalas,
+        currency: invoice.currency,
+        description: `Invoice payment - ${invoice.id}`,
+        callbackUrl: this.buildCallbackUrl(invoice.bookingId, invoice.id),
+        metadata: {
+          invoiceId: invoice.id,
+          bookingId: invoice.bookingId,
+          source: 'mobile-client',
+        },
+      });
+    } catch (error) {
+      await this.deleteFailedPaymentInit(payment.id);
+      if (error instanceof Error) {
+        this.logger.error(`Moyasar payment creation failed for payment ${payment.id}`, error.stack);
+      }
+      throw error;
+    }
 
     const updatedPayment = await this.prisma.payment.update({
       where: { id: payment.id },
@@ -112,6 +128,17 @@ export class InitClientPaymentHandler {
       paymentId: updatedPayment.id,
       redirectUrl: moyasarPayment.redirectUrl ?? '',
     };
+  }
+
+  private async deleteFailedPaymentInit(paymentId: string): Promise<void> {
+    try {
+      await this.prisma.payment.delete({ where: { id: paymentId } });
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete client payment ${paymentId} after Moyasar failure`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
   }
 
   private buildCallbackUrl(bookingId: string, invoiceId: string): string {
