@@ -14,6 +14,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam,
   ApiOkResponse, ApiResponse, ApiProperty, ApiPropertyOptional,
@@ -27,6 +28,8 @@ import { ApiStandardResponses, ApiErrorDto } from '../../../common/swagger';
 import { ListPaymentsHandler } from '../../../modules/finance/list-payments/list-payments.handler';
 import { GetInvoiceHandler } from '../../../modules/finance/get-invoice/get-invoice.handler';
 import { BankTransferUploadHandler } from '../../../modules/finance/bank-transfer-upload/bank-transfer-upload.handler';
+import { InitClientPaymentHandler } from '../../../modules/finance/payments/client/init-client-payment/init-client-payment.handler';
+import { InitClientPaymentDto } from '../../../modules/finance/payments/client/init-client-payment/init-client-payment.dto';
 
 export class MobileListPaymentsQuery {
   @ApiPropertyOptional({ description: 'Page number (1-based)', example: 1 })
@@ -54,6 +57,7 @@ export class MobileClientPaymentsController {
     private readonly listPayments: ListPaymentsHandler,
     private readonly getInvoice: GetInvoiceHandler,
     private readonly bankTransferUpload: BankTransferUploadHandler,
+    private readonly initClientPayment: InitClientPaymentHandler,
   ) {}
 
   @Get()
@@ -77,6 +81,31 @@ export class MobileClientPaymentsController {
   @ApiResponse({ status: 404, description: 'Invoice not found', type: ApiErrorDto })
   getInvoiceEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.getInvoice.execute({ invoiceId: id });
+  }
+
+  @Post('init')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
+  @ApiOperation({ summary: 'Initialize a Moyasar payment for an authenticated client invoice' })
+  @ApiCreatedResponse({
+    description: 'Payment initialized',
+    schema: {
+      type: 'object',
+      required: ['paymentId', 'redirectUrl'],
+      properties: {
+        paymentId: { type: 'string', format: 'uuid' },
+        redirectUrl: { type: 'string', example: 'https://checkout.moyasar.com/pay/payment-id' },
+      },
+    },
+  })
+  initPaymentEndpoint(
+    @ClientSession() user: ClientSession,
+    @Body() body: InitClientPaymentDto,
+  ) {
+    return this.initClientPayment.execute({
+      clientId: user.id,
+      invoiceId: body.invoiceId,
+      method: body.method,
+    });
   }
 
   @Post('bank-transfer')
