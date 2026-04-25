@@ -89,12 +89,37 @@ export class AuthController {
       },
     });
 
-    // Workaround: isSuperAdmin is not being returned by Prisma ORM, so we add it manually
-    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    if (!user) {
+      return {
+        ...tokens,
+        user,
+        expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+      };
+    }
+
+    // SaaS-04 alignment: surface the active membership's organizationId on
+    // the login response so mobile/dashboard consumers don't need to decode
+    // the JWT to find their tenant. Mirrors LoginHandler's resolution order.
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: user.id, isActive: true },
+      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+      select: { organizationId: true },
+    });
+
+    // Match GetCurrentUserHandler: derive firstName/lastName from `name`
+    // by splitting on the first whitespace run.
+    const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
 
     return {
       ...tokens,
-      user: user ? { ...user, isSuperAdmin, permissions: flattenPermissions(user) } : user,
+      user: {
+        ...user,
+        firstName,
+        lastName: rest.join(' '),
+        isSuperAdmin: user.role === 'SUPER_ADMIN',
+        organizationId: membership?.organizationId ?? null,
+        permissions: flattenPermissions(user),
+      },
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
   }

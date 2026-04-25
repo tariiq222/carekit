@@ -19,6 +19,9 @@ function buildController() {
     user: {
       findUnique: jest.fn().mockResolvedValue(null),
     },
+    membership: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
   } as unknown as import('../../infrastructure/database').PrismaService;
   const tokens = {
     issueTokenPair: jest.fn().mockResolvedValue(TOKEN_PAIR),
@@ -53,6 +56,61 @@ describe('AuthController', () => {
       const { controller } = buildController();
       const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123' } as never);
       expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
+    });
+
+    it('returns user.firstName/lastName split from name + organizationId from membership', async () => {
+      const { controller, prisma } = buildController();
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: USER_ID,
+        email: 'admin@c.sa',
+        name: 'Tariq Al Walidi',
+        phone: null,
+        gender: null,
+        avatarUrl: null,
+        isActive: true,
+        role: 'OWNER',
+        customRoleId: null,
+        customRole: { permissions: [] },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
+
+      const result = await controller.loginEndpoint({ email: 'admin@c.sa', password: 'pw' } as never);
+
+      expect(result.user).toMatchObject({
+        firstName: 'Tariq',
+        lastName: 'Al Walidi',
+        organizationId: 'org_1',
+        isSuperAdmin: false,
+      });
+    });
+
+    it('returns organizationId=null when user has no active membership', async () => {
+      const { controller, prisma } = buildController();
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: USER_ID,
+        email: 'a@b.c',
+        name: 'Solo',
+        phone: null,
+        gender: null,
+        avatarUrl: null,
+        isActive: true,
+        role: 'CLIENT',
+        customRoleId: null,
+        customRole: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      (prisma.membership.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const result = await controller.loginEndpoint({ email: 'a@b.c', password: 'pw' } as never);
+
+      expect(result.user).toMatchObject({
+        firstName: 'Solo',
+        lastName: '',
+        organizationId: null,
+      });
     });
   });
 
