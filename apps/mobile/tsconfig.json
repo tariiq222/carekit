@@ -4,6 +4,9 @@
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
+      "react-native-gifted-chat": [
+        "./types/react-native-gifted-chat"
+      ],
       "@/*": [
         "./*"
       ]
