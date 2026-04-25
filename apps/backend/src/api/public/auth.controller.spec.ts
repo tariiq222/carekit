@@ -8,6 +8,18 @@ const TOKEN_PAIR = { accessToken: 'access', refreshToken: 'refresh' };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
+function buildRes(cookies: Record<string, string> = {}) {
+  return {
+    cookie: jest.fn(),
+    clearCookie: jest.fn(),
+    cookies,
+  } as unknown as import('express').Response;
+}
+
+function buildReq(cookies: Record<string, string> = {}) {
+  return { cookies } as unknown as import('express').Request;
+}
+
 function buildController() {
   const login = fn(TOKEN_PAIR);
   const logout = fn({ success: true });
@@ -47,7 +59,7 @@ describe('AuthController', () => {
   describe('loginEndpoint', () => {
     it('passes email and password to login handler', async () => {
       const { controller, login } = buildController();
-      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never);
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, buildRes());
       expect(login.execute).toHaveBeenCalledWith({
         email: 'a@b.com',
         password: 'pass123',
@@ -56,15 +68,28 @@ describe('AuthController', () => {
 
     it('returns token pair plus user and expiresIn from login handler', async () => {
       const { controller } = buildController();
-      const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never);
+      const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, buildRes());
       expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
+    });
+
+    it('sets ck_refresh httpOnly cookie on login', async () => {
+      const { controller, prisma } = buildController();
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: USER_ID, email: 'a@b.com', name: 'Test User', phone: null, gender: null,
+        avatarUrl: null, isActive: true, role: 'OWNER', customRoleId: null,
+        customRole: { permissions: [] }, createdAt: new Date(), updatedAt: new Date(),
+      });
+      (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
+      const res = buildRes();
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, res);
+      expect(res.cookie).toHaveBeenCalledWith('ck_refresh', 'refresh', expect.objectContaining({ httpOnly: true, sameSite: 'lax', path: '/' }));
     });
 
     it('rejects with BadRequestException when captcha verifier returns false', async () => {
       const { controller, captcha, login } = buildController();
       (captcha.verify as jest.Mock).mockResolvedValue(false);
 
-      const promise = controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'bad' } as never);
+      const promise = controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'bad' } as never, buildRes());
 
       await expect(promise).rejects.toThrow(BadRequestException);
       expect(login.execute).not.toHaveBeenCalled();
@@ -73,7 +98,7 @@ describe('AuthController', () => {
     it('calls captcha.verify with the request token before delegating to login handler', async () => {
       const { controller, captcha, login } = buildController();
 
-      await controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'tok-123' } as never);
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'tok-123' } as never, buildRes());
 
       expect(captcha.verify).toHaveBeenCalledWith('tok-123');
       const captchaOrder = (captcha.verify as jest.Mock).mock.invocationCallOrder[0];
@@ -99,7 +124,7 @@ describe('AuthController', () => {
       });
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
 
-      const result = await controller.loginEndpoint({ email: 'admin@c.sa', password: 'pw', hCaptchaToken: 'tok' } as never);
+      const result = await controller.loginEndpoint({ email: 'admin@c.sa', password: 'pw', hCaptchaToken: 'tok' } as never, buildRes());
 
       expect(result.user).toMatchObject({
         firstName: 'Tariq',
@@ -127,7 +152,7 @@ describe('AuthController', () => {
       });
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const result = await controller.loginEndpoint({ email: 'a@b.c', password: 'pw', hCaptchaToken: 'tok' } as never);
+      const result = await controller.loginEndpoint({ email: 'a@b.c', password: 'pw', hCaptchaToken: 'tok' } as never, buildRes());
 
       expect(result.user).toMatchObject({
         firstName: 'Solo',
@@ -153,8 +178,10 @@ describe('AuthController', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
       (tokens.issueTokenPair as jest.Mock).mockResolvedValue(TOKEN_PAIR);
 
-      const result = await controller.refreshEndpoint({ refreshToken: rawToken } as never);
+      const res = buildRes();
+      const result = await controller.refreshEndpoint({ refreshToken: rawToken } as never, buildReq(), res);
 
+      expect(res.cookie).toHaveBeenCalledWith('ck_refresh', 'refresh', expect.objectContaining({ httpOnly: true }));
       expect(prisma.refreshToken.findMany).toHaveBeenCalledWith({
         where: { tokenSelector: rawToken.slice(0, 8), revokedAt: null, expiresAt: { gt: expect.any(Date) } },
       });
@@ -173,7 +200,7 @@ describe('AuthController', () => {
       const { controller, prisma } = buildController();
       (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([]);
 
-      await expect(controller.refreshEndpoint({ refreshToken: 'bad' } as never))
+      await expect(controller.refreshEndpoint({ refreshToken: 'bad' } as never, buildReq(), buildRes()))
         .rejects.toThrow(UnauthorizedException);
     });
 
@@ -187,7 +214,7 @@ describe('AuthController', () => {
       (prisma.refreshToken.update as jest.Mock).mockResolvedValue({});
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(controller.refreshEndpoint({ refreshToken: rawToken } as never))
+      await expect(controller.refreshEndpoint({ refreshToken: rawToken } as never, buildReq(), buildRes()))
         .rejects.toThrow(UnauthorizedException);
     });
 
@@ -202,8 +229,31 @@ describe('AuthController', () => {
       (prisma.refreshToken.update as jest.Mock).mockResolvedValue({});
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
 
-      await expect(controller.refreshEndpoint({ refreshToken: rawToken } as never))
+      await expect(controller.refreshEndpoint({ refreshToken: rawToken } as never, buildReq(), buildRes()))
         .rejects.toThrow(UnauthorizedException);
+    });
+
+    it('reads refresh token from ck_refresh cookie (preferred over body)', async () => {
+      const rawToken = 'cookie-raw-token';
+      const tokenHash = await bcrypt.hash(rawToken, 10);
+      const matched = { id: 'rt-2', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+      const user = { id: USER_ID, email: 'a@b.com', isActive: true, customRole: { name: 'admin', permissions: [] } };
+
+      const { controller, prisma, tokens } = buildController();
+      (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([matched]);
+      (prisma.refreshToken.update as jest.Mock).mockResolvedValue({});
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
+      (tokens.issueTokenPair as jest.Mock).mockResolvedValue(TOKEN_PAIR);
+
+      await controller.refreshEndpoint(
+        { refreshToken: 'stale-body-token' } as never,
+        buildReq({ ck_refresh: rawToken }),
+        buildRes(),
+      );
+
+      expect(prisma.refreshToken.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ tokenSelector: rawToken.slice(0, 8) }) }),
+      );
     });
   });
 
@@ -216,18 +266,40 @@ describe('AuthController', () => {
       const { controller, logout, prisma } = buildController();
       (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([matched]);
 
-      await controller.logoutEndpoint({ refreshToken: rawToken } as never);
+      await controller.logoutEndpoint({ refreshToken: rawToken } as never, buildReq(), buildRes());
 
       expect(logout.execute).toHaveBeenCalledWith({
         userId: USER_ID,
       });
     });
 
+    it('clears ck_refresh cookie on logout', async () => {
+      const rawToken = 'raw-refresh';
+      const tokenHash = await bcrypt.hash(rawToken, 10);
+      const matched = { id: 'rt-1', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+
+      const { controller, prisma } = buildController();
+      (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([matched]);
+      const res = buildRes();
+
+      await controller.logoutEndpoint({ refreshToken: rawToken } as never, buildReq(), res);
+
+      expect(res.clearCookie).toHaveBeenCalledWith('ck_refresh', { path: '/' });
+    });
+
+    it('clears cookie and returns silently when no token is present', async () => {
+      const { controller } = buildController();
+      const res = buildRes();
+
+      await expect(controller.logoutEndpoint({} as never, buildReq(), res)).resolves.toBeUndefined();
+      expect(res.clearCookie).toHaveBeenCalledWith('ck_refresh', { path: '/' });
+    });
+
     it('throws UnauthorizedException when no token matches', async () => {
       const { controller, prisma } = buildController();
       (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([]);
 
-      await expect(controller.logoutEndpoint({ refreshToken: 'bad' } as never))
+      await expect(controller.logoutEndpoint({ refreshToken: 'bad' } as never, buildReq(), buildRes()))
         .rejects.toThrow(UnauthorizedException);
     });
   });

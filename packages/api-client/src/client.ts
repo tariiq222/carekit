@@ -3,7 +3,7 @@ import { getRefreshMutex, setRefreshMutex } from './refresh-mutex'
 export interface ClientConfig {
   baseUrl: string
   getAccessToken: () => string | null
-  getRefreshToken: () => string | null
+  getRefreshToken?: () => string | null
   onTokenRefreshed: (accessToken: string, refreshToken: string) => void
   onAuthFailure: () => void
 }
@@ -16,15 +16,12 @@ export function initClient(cfg: ClientConfig): void {
 
 async function doRefresh(): Promise<string> {
   if (!config) throw new Error('api-client not initialized')
-  const refreshToken = config.getRefreshToken()
-  if (!refreshToken) {
-    config.onAuthFailure()
-    throw new Error('No refresh token')
-  }
+  const refreshToken = config.getRefreshToken?.()
   const res = await fetch(`${config.baseUrl}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    credentials: 'include',
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
   })
   if (!res.ok) {
     config.onAuthFailure()

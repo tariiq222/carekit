@@ -47,7 +47,6 @@ function clearAuthState() {
   accessToken = null
   if (typeof window !== "undefined") {
     localStorage.removeItem("carekit_user")
-    localStorage.removeItem("carekit_refresh_token")
   }
 }
 
@@ -69,16 +68,11 @@ export { ApiError }
 async function tryRefreshToken(): Promise<boolean> {
   if (typeof window === "undefined") return false
 
-  const storedRefresh = localStorage.getItem("carekit_refresh_token")
-  if (!storedRefresh) return false
-
   try {
     const res = await fetch(resolveUrl("/auth/refresh"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refreshToken: storedRefresh }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
       credentials: "include",
     })
     if (!res.ok) return false
@@ -86,7 +80,6 @@ async function tryRefreshToken(): Promise<boolean> {
     const body = await res.json()
     const data = body.data ?? body
     setAccessToken(data.accessToken)
-    if (data.refreshToken) localStorage.setItem("carekit_refresh_token", data.refreshToken)
     return true
   } catch {
     return false
@@ -221,10 +214,8 @@ if (typeof window !== "undefined") {
   initClient({
     baseUrl: PROXY_BASE_URL,
     getAccessToken: () => accessToken,
-    getRefreshToken: () => localStorage.getItem("carekit_refresh_token"),
-    onTokenRefreshed: (a, r) => {
+    onTokenRefreshed: (a) => {
       setAccessToken(a)
-      if (r) localStorage.setItem("carekit_refresh_token", r)
     },
     onAuthFailure: () => {
       clearAuthState()

@@ -19,10 +19,11 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   })
 }
 
-export async function refreshToken(token: string): Promise<TokenPair> {
+export async function refreshToken(token?: string): Promise<TokenPair> {
   return apiRequest<TokenPair>('/auth/refresh', {
     method: 'POST',
-    body: JSON.stringify({ refreshToken: token }),
+    credentials: 'include',
+    body: JSON.stringify(token ? { refreshToken: token } : {}),
   })
 }
 

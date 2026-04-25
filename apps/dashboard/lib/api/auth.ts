@@ -14,7 +14,6 @@ export type AuthUser = UserPayload
 export type { AuthResponse }
 
 const USER_KEY = "carekit_user"
-const REFRESH_KEY = "carekit_refresh_token"
 
 export async function login(
   email: string,
@@ -33,15 +32,8 @@ export async function fetchMe(): Promise<AuthUser> {
 }
 
 export async function refreshToken(): Promise<AuthResponse> {
-  const stored = typeof window !== "undefined"
-    ? localStorage.getItem(REFRESH_KEY)
-    : null
-  if (!stored) throw new Error("No refresh token")
-
-  const tokens = await authApi.refreshToken(stored)
+  const tokens = await authApi.refreshToken()
   setAccessToken(tokens.accessToken)
-  if (tokens.refreshToken) localStorage.setItem(REFRESH_KEY, tokens.refreshToken)
-  // Refresh endpoint does not return user — keep the previously cached one.
   const cached = getStoredUser()
   return {
     accessToken: tokens.accessToken,
@@ -89,11 +81,9 @@ export function isAuthenticated(): boolean {
 function persistAuth(data: AuthResponse): void {
   localStorage.setItem(USER_KEY, JSON.stringify(data.user))
   setAccessToken(data.accessToken)
-  if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken)
 }
 
 function clearAuth(): void {
   localStorage.removeItem(USER_KEY)
-  localStorage.removeItem(REFRESH_KEY)
   setAccessToken(null)
 }

@@ -1,6 +1,8 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
+  Req, Res,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
@@ -72,7 +74,10 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials', type: ApiErrorDto })
-  async loginEndpoint(@Body() body: LoginDto) {
+  async loginEndpoint(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (!(await this.captcha.verify(body.hCaptchaToken))) {
       throw new BadRequestException('Invalid captcha token');
     }
@@ -117,6 +122,7 @@ export class AuthController {
     // by splitting on the first whitespace run.
     const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
 
+    this.setRefreshCookie(res, tokens.refreshToken);
     return {
       ...tokens,
       user: {
@@ -147,8 +153,14 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
-  async refreshEndpoint(@Body() body: RefreshTokenDto) {
-    const { refreshToken: rawToken } = body;
+  async refreshEndpoint(
+    @Body() body: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const rawToken = (req.cookies as Record<string, string>)?.['ck_refresh'] ?? body.refreshToken;
+    if (!rawToken) throw new UnauthorizedException('No refresh token');
+
     const record = await this.findActiveToken(rawToken);
 
     await this.prisma.refreshToken.update({
@@ -167,6 +179,7 @@ export class AuthController {
       organizationId: record.organizationId ?? DEFAULT_ORGANIZATION_ID,
       isSuperAdmin: user.role === 'SUPER_ADMIN',
     });
+    this.setRefreshCookie(res, tokens.refreshToken);
     return {
       ...tokens,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
@@ -179,8 +192,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke a refresh token (log out)' })
   @ApiOkResponse({ description: 'Token revoked; no body returned' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
-  async logoutEndpoint(@Body() body: LogoutDto) {
-    const { refreshToken: rawToken } = body;
+  async logoutEndpoint(
+    @Body() body: LogoutDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const rawToken = (req.cookies as Record<string, string>)?.['ck_refresh'] ?? body.refreshToken;
+    res.clearCookie('ck_refresh', { path: '/' });
+    if (!rawToken) return;
     const record = await this.findActiveToken(rawToken);
     await this.logout.execute({ userId: record.userId });
   }
@@ -268,6 +287,19 @@ export class AuthController {
       userId,
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
+    });
+  }
+
+  private setRefreshCookie(res: Response, token: string): void {
+    const ttlMs = this.parseTtlSeconds(
+      this.config.get<string>('JWT_REFRESH_TTL') ?? '30d',
+    ) * 1000;
+    res.cookie('ck_refresh', token, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: ttlMs,
     });
   }
 

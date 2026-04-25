@@ -56,9 +56,6 @@ function Inner() {
         return;
       }
       window.localStorage.setItem("admin.accessToken", res.accessToken);
-      if (res.refreshToken) {
-        window.localStorage.setItem("admin.refreshToken", res.refreshToken);
-      }
       document.cookie = `admin.authenticated=1; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24}`;
       router.push(next);
     } catch {

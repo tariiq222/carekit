@@ -9,11 +9,7 @@ export { ApiError } from '@carekit/api-client';
 
 import { initClient, apiRequest, ApiError } from '@carekit/api-client';
 
-// ---------------------------------------------------------------------------
-// Token storage keys — must match what the old custom wrapper used
-// ---------------------------------------------------------------------------
 const ACCESS_KEY = 'admin.accessToken';
-const REFRESH_KEY = 'admin.refreshToken';
 
 // ---------------------------------------------------------------------------
 // Initialise the shared client once
@@ -26,20 +22,15 @@ initClient({
   getAccessToken: () =>
     typeof window !== 'undefined' ? window.localStorage.getItem(ACCESS_KEY) : null,
 
-  getRefreshToken: () =>
-    typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_KEY) : null,
-
-  onTokenRefreshed: (accessToken, refreshToken) => {
+  onTokenRefreshed: (accessToken) => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(ACCESS_KEY, accessToken);
-      if (refreshToken) window.localStorage.setItem(REFRESH_KEY, refreshToken);
     }
   },
 
   onAuthFailure: () => {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(ACCESS_KEY);
-      window.localStorage.removeItem(REFRESH_KEY);
       document.cookie = 'admin.authenticated=; Max-Age=0; path=/';
       window.location.href = '/login';
     }
