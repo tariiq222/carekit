@@ -31,7 +31,7 @@ Prisma does not support `down` migrations. The safest approach is a **new forwar
    ```bash
    npx prisma migrate deploy
    ```
-7. **Log the rollback** in `docs/migration-log.md`
+7. **Log the rollback** in your team's incident channel and tag it with the original migration name (the historical `docs/operations/migration-log.md` is no longer maintained)
 
 ---
 

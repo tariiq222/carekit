@@ -32,6 +32,13 @@ This is the single source of truth for **which module owns which Prisma models**
 | `org-experience` | `organization.prisma` (shared) | Service, ServiceBookingConfig, ServiceDurationOption, EmployeeServiceOption, BrandingConfig, IntakeForm, IntakeField, Rating, OrganizationSettings |
 | `platform` | `platform.prisma` | Organization, Membership, Vertical, VerticalSeedDepartment, VerticalSeedServiceCategory, VerticalTerminologyOverride, Plan, Subscription, SubscriptionInvoice, UsageRecord, FeatureFlag, Integration, ProblemReport, ImpersonationSession, SuperAdminActionLog |
 
+> Two clusters live under `apps/backend/src/modules/` but own no Prisma
+> models: `integrations/` (Zoom credentials live as encrypted fields on the
+> `platform.Integration` model; public-branding read endpoints) and
+> `dashboard/` (read-only aggregate slice — `get-dashboard-stats`). They
+> consume models owned by other clusters and are deliberately absent from the
+> ownership table.
+
 ## Cross-Module Dependencies (as of 2026-04-23)
 
 Direction: `A → B` means module A imports from module B.

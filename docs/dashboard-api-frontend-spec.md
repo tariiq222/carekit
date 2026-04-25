@@ -1,5 +1,16 @@
 # CareKit Dashboard — API Contracts & Frontend Architecture
 
+> **STATUS: Pre-SaaS historical record.** This spec was written before the
+> multi-tenant SaaS refactor and the API surface has drifted significantly:
+> dashboard endpoints now live under `/api/v1/dashboard/<cluster>/...`
+> (audience-prefixed), tenant context is enforced via `X-Tenant-ID` + JWT
+> tenant binding (TENANT_ENFORCEMENT=strict), and the cluster split (org-config
+> vs org-experience, finance vs platform billing, etc.) is not reflected
+> below. The OpenAPI snapshot at `apps/backend/openapi.json` is the live
+> source of truth — regenerate via `npm run openapi:build-and-snapshot`.
+> Kept here for historical context on naming/intent only.
+
+
 ## جدول المحتويات
 1. [API Endpoints](#1-api-endpoints)
 2. [Frontend Hooks](#2-frontend-hooks)

@@ -2,6 +2,15 @@
 
 > **Audit Date:** March 2026 | **Status:** All findings remediated
 > **Auditor:** WebVue Technology Solutions — Internal Security Review
+>
+> **Note (2026-04-25):** Pre-SaaS audit. Stack versions listed below
+> (Next.js 14, Expo SDK 54) have since been upgraded to Next.js 15 / Expo
+> SDK 55, and the SaaS multi-tenancy work added stricter controls
+> (`TENANT_ENFORCEMENT=strict` default, dual-GUC RLS probe, JWT↔X-Tenant-ID
+> binding in `JwtGuard`). Findings/remediations documented here remain
+> accurate as of remediation; for the current security posture also see
+> `docs/audits/2026-04-12-backend-hardening-changelog.md` and the SaaS-02h
+> penetration suite under `apps/backend/test/e2e/security/`.
 
 ---
 

@@ -139,10 +139,12 @@ Core CRUD works. **One critical backend DTO bug** causes silent failures when us
 
 ## Screenshots
 
-- [departments-initial.png](docs/audits/departments-initial.png) — first load, 6 rows.
-- [delete-dialog.png](docs/audits/delete-dialog.png) — delete confirmation with `&quot;` artifact.
-- [departments-with-inactive.png](docs/audits/departments-with-inactive.png) — after toggling one to inactive.
-- [departments-mobile.png](docs/audits/departments-mobile.png) — 390px viewport.
+_(Original PNG attachments removed in the 2026-04-25 docs cleanup; descriptions kept for context.)_
+
+- `departments-initial.png` — first load, 6 rows.
+- `delete-dialog.png` — delete confirmation with `&quot;` artifact.
+- `departments-with-inactive.png` — after toggling one to inactive.
+- `departments-mobile.png` — 390px viewport.
 
 ---
 

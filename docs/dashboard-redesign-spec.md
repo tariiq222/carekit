@@ -1,6 +1,13 @@
 # CareKit Dashboard — Complete Redesign Specification
 
-> توثيق شامل لجميع صفحات Dashboard مع التصميم وربط الـ API
+> **STATUS: Pre-SaaS historical record.** This redesign brief was written
+> before the SaaS multi-tenancy work and before the dashboard's "Page Anatomy
+> — The Law" was codified in root `CLAUDE.md`. The page anatomy in root
+> `CLAUDE.md` (Breadcrumbs → PageHeader → StatsGrid → FilterBar → DataTable)
+> supersedes any layout described here. Kept for narrative on flows and
+> intent only — do not treat API shapes / page structures below as current.
+
+> توثيق شامل لجميع صفحات Dashboard مع التصميم وربط الـ API (تاريخي)
 
 ---
 

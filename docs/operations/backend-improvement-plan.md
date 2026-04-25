@@ -1,5 +1,13 @@
 # CareKit Backend — خطة التحسين الشاملة
 
+> **STATUS: Pre-SaaS historical plan (2026-04-01).** The "30 modules / 111
+> unit tests / 63 e2e" snapshot below is from before the SaaS refactor; the
+> backend has since been reorganized into 14 domain clusters with vertical
+> slices and runs >1000 unit + dozens of e2e specs (see SaaS-02 / SaaS-04 /
+> SaaS-05 status notes). Many phases described here have been delivered or
+> superseded by the SaaS plans under `docs/superpowers/plans/`. Kept for
+> historical context only.
+
 > **تاريخ الإنشاء:** 2026-04-01
 > **بناءً على:** تحليل معماري شامل للباك اند (30 موديول، 111 unit test، 63 e2e test)
 > **التقييم الحالي:** ⭐⭐⭐⭐½ (4.5/5)
