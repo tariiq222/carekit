@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { BullMqService } from '../../../infrastructure/queue/bull-mq.service';
 import { BookingAutocompleteCron } from './booking-autocomplete.cron';
 import { BookingExpiryCron } from './booking-expiry.cron';
@@ -69,7 +70,18 @@ export class CronTasksService implements OnModuleInit {
 
     for (const { name, cron } of jobs) {
       queue
-        .add(name, {}, { repeat: { pattern: cron }, jobId: `repeat:${name}` })
+        .add(
+          name,
+          {},
+          {
+            repeat: { pattern: cron },
+            jobId: `repeat:${name}`,
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 30_000 },
+            removeOnComplete: { count: 100 },
+            removeOnFail: { count: 500 },
+          },
+        )
         .catch((err: unknown) =>
           this.logger.error(`Failed to schedule ${name}`, err),
         );
@@ -79,40 +91,77 @@ export class CronTasksService implements OnModuleInit {
   }
 
   private registerWorker(): void {
-    this.bullMq.createWorker<object>(QUEUE_NAME, async (job) => {
-      switch (job.name) {
-        case CRON_JOBS.BOOKING_AUTOCOMPLETE:
-          await this.bookingAutocomplete.execute();
-          break;
-        case CRON_JOBS.BOOKING_EXPIRY:
-          await this.bookingExpiry.execute();
-          break;
-        case CRON_JOBS.BOOKING_NOSHOW:
-          await this.bookingNoShow.execute();
-          break;
-        case CRON_JOBS.APPOINTMENT_REMINDERS:
-          await this.appointmentReminders.execute();
-          break;
-        case CRON_JOBS.GROUP_SESSION_AUTOMATION:
-          await this.groupSessionAutomation.execute();
-          break;
-        case CRON_JOBS.REFRESH_TOKEN_CLEANUP:
-          await this.refreshTokenCleanup.execute();
-          break;
-        case CRON_JOBS.METER_USAGE:
-          await this.meterUsage.execute();
-          break;
-        case CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS:
-          await this.chargeDueSubscriptions.execute();
-          break;
-        case CRON_JOBS.ENFORCE_GRACE_PERIOD:
-          await this.enforceGracePeriod.execute();
-          break;
-        case CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS:
-          await this.expireImpersonationSessions.execute();
-          break;
-        default:
-          this.logger.warn(`Unknown cron job: ${job.name}`);
+    const worker = this.bullMq.createWorker<object>(QUEUE_NAME, async (job) => {
+      const started = Date.now();
+      try {
+        switch (job.name) {
+          case CRON_JOBS.BOOKING_AUTOCOMPLETE:
+            await this.bookingAutocomplete.execute();
+            break;
+          case CRON_JOBS.BOOKING_EXPIRY:
+            await this.bookingExpiry.execute();
+            break;
+          case CRON_JOBS.BOOKING_NOSHOW:
+            await this.bookingNoShow.execute();
+            break;
+          case CRON_JOBS.APPOINTMENT_REMINDERS:
+            await this.appointmentReminders.execute();
+            break;
+          case CRON_JOBS.GROUP_SESSION_AUTOMATION:
+            await this.groupSessionAutomation.execute();
+            break;
+          case CRON_JOBS.REFRESH_TOKEN_CLEANUP:
+            await this.refreshTokenCleanup.execute();
+            break;
+          case CRON_JOBS.METER_USAGE:
+            await this.meterUsage.execute();
+            break;
+          case CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS:
+            await this.chargeDueSubscriptions.execute();
+            break;
+          case CRON_JOBS.ENFORCE_GRACE_PERIOD:
+            await this.enforceGracePeriod.execute();
+            break;
+          case CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS:
+            await this.expireImpersonationSessions.execute();
+            break;
+          default:
+            this.logger.warn(`Unknown cron job: ${job.name}`);
+            return;
+        }
+        this.logger.log(`Cron ${job.name} ok in ${Date.now() - started}ms`);
+      } catch (err) {
+        this.logger.error(
+          `Cron ${job.name} failed (attempt ${job.attemptsMade + 1})`,
+          err instanceof Error ? err.stack : err,
+        );
+        Sentry.withScope((scope) => {
+          scope.setTag('cron.job', job.name);
+          scope.setTag('cron.queue', QUEUE_NAME);
+          scope.setContext('bullmq', {
+            jobId: job.id,
+            attemptsMade: job.attemptsMade,
+            attemptsAllowed: job.opts.attempts,
+          });
+          Sentry.captureException(err);
+        });
+        throw err; // re-throw so BullMQ records the failure and applies backoff
+      }
+    });
+
+    worker.on('failed', (job, err) => {
+      const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : true;
+      if (exhausted) {
+        this.logger.error(
+          `Cron ${job?.name ?? 'unknown'} EXHAUSTED retries — job ${job?.id} → DLQ`,
+          err.stack,
+        );
+        Sentry.withScope((scope) => {
+          scope.setLevel('fatal');
+          scope.setTag('cron.job', job?.name ?? 'unknown');
+          scope.setTag('cron.dlq', 'true');
+          Sentry.captureException(err);
+        });
       }
     });
   }
