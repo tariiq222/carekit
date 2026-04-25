@@ -24,6 +24,32 @@ export class TenantResolverMiddleware implements NestMiddleware {
     private readonly config: ConfigService,
   ) {}
 
+  /**
+   * Public mobile routes that may resolve their tenant from the X-Org-Id
+   * header. Webhook routes are excluded — they have their own system-context
+   * resolution flow (see SaaS-02e moyasar-webhook).
+   */
+  private isPublicRoute(path: string): boolean {
+    if (!path.startsWith('/api/v1/public/')) return false;
+    if (path.includes('/webhooks/')) return false;
+    return true;
+  }
+
+  /**
+   * Validates a header value as a well-formed UUID (RFC 4122, any version
+   * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
+   * Returns the trimmed value when valid, undefined otherwise.
+   */
+  private parseUuidHeader(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      trimmed,
+    )
+      ? trimmed
+      : undefined;
+  }
+
   use(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
     const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
