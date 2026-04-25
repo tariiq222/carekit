@@ -6,26 +6,28 @@ import { therapistKeys } from './useTherapists';
 
 interface SlotsParams {
   employeeId?: string;
+  branchId?: string;
   date?: string;
-  duration?: number;
+  durationMins?: number;
   serviceId?: string;
+  durationOptionId?: string;
   bookingType?: string;
 }
 
-interface SlotsResponse {
-  slots: Array<{ startTime: string; endTime: string; available: boolean }>;
-}
+type SlotsResponse = Array<{ startTime: string; endTime: string }>;
 
 export function useSlots(params: SlotsParams) {
-  const enabled = Boolean(params.employeeId && params.date);
+  const enabled = Boolean(params.employeeId && params.branchId && params.date);
   return useQuery<SlotsResponse>({
     queryKey: therapistKeys.slots(params as Record<string, unknown>),
     queryFn: () =>
       publicEmployeesService.getSlots({
         employeeId: params.employeeId as string,
+        branchId: params.branchId as string,
         date: params.date as string,
-        duration: params.duration,
+        durationMins: params.durationMins,
         serviceId: params.serviceId,
+        durationOptionId: params.durationOptionId,
         bookingType: params.bookingType,
       }),
     enabled,
