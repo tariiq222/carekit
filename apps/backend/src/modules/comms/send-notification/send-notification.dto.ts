@@ -63,8 +63,11 @@ export class SendNotificationDto {
   @IsArray() @ArrayNotEmpty() @IsIn(['push', 'email', 'sms', 'in-app'], { each: true })
   channels!: Array<'push' | 'email' | 'sms' | 'in-app'>;
 
-  @ApiPropertyOptional({ description: 'FCM device token for push delivery', example: 'fXm3...token' })
+  @ApiPropertyOptional({ description: 'FCM device token for push delivery (single-token, legacy)', example: 'fXm3...token' })
   @IsOptional() @IsString() fcmToken?: string;
+
+  @ApiPropertyOptional({ description: 'FCM device tokens for multi-device push delivery', example: ['fXm3...token-1', 'fXm3...token-2'] })
+  @IsOptional() @IsArray() @IsString({ each: true }) fcmTokens?: string[];
 
   @ApiPropertyOptional({ description: 'Recipient email address for email delivery', example: 'user@example.com' })
   @IsOptional() @IsEmail() recipientEmail?: string;

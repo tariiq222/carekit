@@ -426,6 +426,23 @@
         "properties": {},
         "type": "object"
       },
+      "ChangePlanForOrgDto": {
+        "properties": {
+          "newPlanId": {
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "newPlanId",
+          "reason"
+        ],
+        "type": "object"
+      },
       "ChatCompletionDto": {
         "properties": {
           "clientId": {
@@ -1133,6 +1150,16 @@
             "example": "2026-05-07T09:00:00.000Z",
             "type": "string"
           },
+          "endTime": {
+            "description": "Optional end-of-day cutoff on the last day (ISO 8601). Null = full last day.",
+            "example": "2026-05-07T14:00:00.000Z",
+            "type": "string"
+          },
+          "isStartTimeOnly": {
+            "default": false,
+            "description": "When true, only start-of-day onwards is blocked on startDate (partial first day).",
+            "type": "boolean"
+          },
           "reason": {
             "description": "Reason for the exception (e.g. annual leave)",
             "example": "Annual vacation",
@@ -1303,6 +1330,57 @@
           "clientId",
           "employeeId",
           "subtotal"
+        ],
+        "type": "object"
+      },
+      "CreatePlanDto": {
+        "properties": {
+          "currency": {
+            "default": "SAR",
+            "type": "string"
+          },
+          "isActive": {
+            "default": true,
+            "type": "boolean"
+          },
+          "limits": {
+            "description": "Plan limits (see schema comment)",
+            "type": "object"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "priceAnnual": {
+            "type": "number"
+          },
+          "priceMonthly": {
+            "type": "number"
+          },
+          "reason": {
+            "minLength": 10,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Uppercase letters, digits, underscores. 2–32 chars. Example: STARTER, TEAM_ANNUAL.",
+            "example": "STARTER",
+            "type": "string"
+          },
+          "sortOrder": {
+            "default": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "nameAr",
+          "nameEn",
+          "priceMonthly",
+          "priceAnnual",
+          "limits",
+          "reason"
         ],
         "type": "object"
       },
@@ -1679,54 +1757,41 @@
       "CreateVerticalDto": {
         "properties": {
           "descriptionAr": {
-            "description": "وصف التخصص بالعربية",
-            "example": "عيادات الطب العام والرعاية الأولية",
             "type": "string"
           },
           "descriptionEn": {
-            "description": "Vertical description in English",
-            "example": "General medicine and primary care clinics",
             "type": "string"
           },
           "iconUrl": {
-            "description": "URL for the vertical icon image",
-            "example": "https://cdn.carekit.app/icons/medical.svg",
             "type": "string"
           },
           "isActive": {
-            "description": "Whether this vertical is active in the catalog",
-            "example": true,
             "type": "boolean"
           },
           "nameAr": {
-            "description": "اسم التخصص بالعربية",
-            "example": "طب عام",
             "type": "string"
           },
           "nameEn": {
-            "description": "Vertical name in English",
-            "example": "General Medicine",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 10,
             "type": "string"
           },
           "slug": {
-            "description": "URL-safe slug for the vertical",
-            "example": "medical-general",
+            "description": "kebab-case unique slug",
             "type": "string"
           },
           "sortOrder": {
-            "description": "Display sort order (ascending)",
-            "example": 0,
             "type": "number"
           },
           "templateFamily": {
-            "description": "Template family that drives the seed data",
             "enum": [
               "MEDICAL",
               "CONSULTING",
               "SALON",
               "FITNESS"
             ],
-            "example": "MEDICAL",
             "type": "string"
           }
         },
@@ -1734,12 +1799,75 @@
           "slug",
           "nameAr",
           "nameEn",
-          "templateFamily"
+          "templateFamily",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "DeletePlanDto": {
+        "properties": {
+          "reason": {
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "DeleteVerticalDto": {
+        "properties": {
+          "reason": {
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
         ],
         "type": "object"
       },
       "DenyRefundDto": {
         "properties": {},
+        "type": "object"
+      },
+      "EmployeeCancelBookingDto": {
+        "properties": {
+          "cancelNotes": {
+            "description": "Free-text notes about the cancellation",
+            "example": "Emergency leave",
+            "type": "string"
+          },
+          "reason": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              }
+            ],
+            "description": "Cancellation reason",
+            "example": "EMPLOYEE_UNAVAILABLE"
+          }
+        },
+        "type": "object"
+      },
+      "EmployeeCancelRequestDto": {
+        "properties": {
+          "cancelNotes": {
+            "description": "Free-text notes about the cancellation request",
+            "example": "Need to reschedule",
+            "type": "string"
+          },
+          "reason": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              }
+            ],
+            "description": "Cancellation reason",
+            "example": "EMPLOYEE_UNAVAILABLE"
+          }
+        },
         "type": "object"
       },
       "EmployeeGender": {
@@ -1900,6 +2028,36 @@
         ],
         "type": "object"
       },
+      "GrantCreditDto": {
+        "properties": {
+          "amount": {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "number"
+          },
+          "currency": {
+            "default": "SAR",
+            "enum": [
+              "SAR"
+            ],
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "organizationId",
+          "amount",
+          "reason"
+        ],
+        "type": "object"
+      },
       "GuestClientInfoDto": {
         "properties": {
           "email": {
@@ -1935,6 +2093,28 @@
           "name",
           "phone",
           "email"
+        ],
+        "type": "object"
+      },
+      "InitClientPaymentDto": {
+        "properties": {
+          "invoiceId": {
+            "description": "Invoice UUID",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "method": {
+            "description": "Payment method requested by the mobile client",
+            "enum": [
+              "ONLINE_CARD",
+              "APPLE_PAY"
+            ],
+            "example": "ONLINE_CARD",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId"
         ],
         "type": "object"
       },
@@ -2129,6 +2309,29 @@
         ],
         "type": "object"
       },
+      "MobileRateBookingDto": {
+        "properties": {
+          "comment": {
+            "description": "Optional comment (max 2000 chars)",
+            "example": "Great session",
+            "type": "string"
+          },
+          "isPublic": {
+            "description": "Make this rating publicly visible",
+            "example": true,
+            "type": "boolean"
+          },
+          "score": {
+            "description": "Rating score from 1 to 5",
+            "example": 5,
+            "type": "number"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "type": "object"
+      },
       "MobileUpdateProfileBody": {
         "properties": {
           "avatarUrl": {
@@ -2179,6 +2382,17 @@
             "example": "+966501234567",
             "nullable": true,
             "type": "object"
+          },
+          "preferredLocale": {
+            "description": "Preferred locale (ISO 639-1)",
+            "example": "ar",
+            "nullable": true,
+            "type": "object"
+          },
+          "pushEnabled": {
+            "description": "Push notifications enabled",
+            "example": true,
+            "type": "boolean"
           },
           "source": {
             "allOf": [
@@ -2430,6 +2644,24 @@
         ],
         "type": "object"
       },
+      "RefundInvoiceDto": {
+        "properties": {
+          "amount": {
+            "description": "Amount in SAR. Omit for full refund of remaining balance.",
+            "minimum": 0.01,
+            "type": "number"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "RefundPaymentDto": {
         "properties": {
           "amount": {
@@ -2464,6 +2696,39 @@
         "required": [
           "password"
         ],
+        "type": "object"
+      },
+      "RegisterFcmTokenDto": {
+        "properties": {
+          "platform": {
+            "description": "Device platform",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "example": "ios",
+            "type": "string"
+          },
+          "token": {
+            "description": "Device push token (FCM/APNs)",
+            "example": "eXampleToken123",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ],
+        "type": "object"
+      },
+      "ReinstateOrganizationDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "RequestOtpDto": {
@@ -2544,6 +2809,19 @@
         "required": [
           "sessionToken",
           "newPassword"
+        ],
+        "type": "object"
+      },
+      "ResetUserPasswordDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
         ],
         "type": "object"
       },
@@ -2648,6 +2926,28 @@
         ],
         "type": "object"
       },
+      "StartImpersonationDto": {
+        "properties": {
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 10,
+            "type": "string"
+          },
+          "targetUserId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "organizationId",
+          "targetUserId",
+          "reason"
+        ],
+        "type": "object"
+      },
       "StartSubscriptionDto": {
         "properties": {},
         "type": "object"
@@ -2695,6 +2995,33 @@
           "clientId",
           "employeeId",
           "score"
+        ],
+        "type": "object"
+      },
+      "SuspendOrganizationDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "SwitchOrganizationDto": {
+        "properties": {
+          "organizationId": {
+            "description": "Target organization the caller wants to switch context to.",
+            "example": "00000000-0000-0000-0000-000000000002",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "organizationId"
         ],
         "type": "object"
       },
@@ -2978,6 +3305,17 @@
             "example": "+966501234567",
             "nullable": true,
             "type": "object"
+          },
+          "preferredLocale": {
+            "description": "Preferred locale (ISO 639-1)",
+            "example": "ar",
+            "nullable": true,
+            "type": "object"
+          },
+          "pushEnabled": {
+            "description": "Whether the client receives push notifications",
+            "example": true,
+            "type": "boolean"
           },
           "source": {
             "allOf": [
@@ -3300,6 +3638,42 @@
         ],
         "type": "object"
       },
+      "UpdatePlanDto": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "limits": {
+            "type": "object"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "priceAnnual": {
+            "type": "number"
+          },
+          "priceMonthly": {
+            "type": "number"
+          },
+          "reason": {
+            "minLength": 10,
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "UpdateProblemReportStatusDto": {
         "properties": {
           "resolution": {
@@ -3490,57 +3864,43 @@
       "UpdateVerticalDto": {
         "properties": {
           "descriptionAr": {
-            "description": "وصف التخصص بالعربية",
-            "example": "عيادات الطب العام والرعاية الأولية",
             "type": "string"
           },
           "descriptionEn": {
-            "description": "Vertical description in English",
-            "example": "General medicine and primary care clinics",
             "type": "string"
           },
           "iconUrl": {
-            "description": "URL for the vertical icon image",
-            "example": "https://cdn.carekit.app/icons/medical.svg",
             "type": "string"
           },
           "isActive": {
-            "description": "Whether this vertical is active in the catalog",
-            "example": true,
             "type": "boolean"
           },
           "nameAr": {
-            "description": "اسم التخصص بالعربية",
-            "example": "طب عام",
             "type": "string"
           },
           "nameEn": {
-            "description": "Vertical name in English",
-            "example": "General Medicine",
             "type": "string"
           },
-          "slug": {
-            "description": "URL-safe slug for the vertical",
-            "example": "medical-general",
+          "reason": {
+            "minLength": 10,
             "type": "string"
           },
           "sortOrder": {
-            "description": "Display sort order (ascending)",
-            "example": 0,
             "type": "number"
           },
           "templateFamily": {
-            "description": "Template family that drives the seed data",
             "enum": [
               "MEDICAL",
               "CONSULTING",
               "SALON",
               "FITNESS"
             ],
-            "example": "MEDICAL",
             "type": "string"
           }
         },
+        "required": [
+          "reason"
+        ],
         "type": "object"
       },
       "UpsertBrandingDto": {
@@ -4115,6 +4475,19 @@
         ],
         "type": "string"
       },
+      "WaiveInvoiceDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "ZatcaSubmitDto": {
         "properties": {
           "invoiceId": {
@@ -4153,6 +4526,1076 @@
   },
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/admin/audit-log": {
+      "get": {
+        "operationId": "AdminAuditLogController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actionType",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "superAdminUserId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read-only paginated super-admin action log",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/credits": {
+      "post": {
+        "operationId": "AdminBillingController_grant",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantCreditDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Grant a billing credit to an organization (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/invoices": {
+      "get": {
+        "operationId": "AdminBillingController_invoices",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "DUE",
+                "PAID",
+                "FAILED",
+                "VOID"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeDrafts",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List subscription invoices across tenants",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/invoices/{id}/refund": {
+      "post": {
+        "operationId": "AdminBillingController_refund",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundInvoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Refund a PAID invoice via Moyasar (full or partial; idempotent; audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/invoices/{id}/waive": {
+      "post": {
+        "operationId": "AdminBillingController_waive",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaiveInvoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Waive a DUE/FAILED invoice (sets status=VOID; audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/metrics": {
+      "get": {
+        "operationId": "AdminBillingController_metrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Aggregate billing metrics (MRR, ARR, churn, by-plan)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/subscriptions": {
+      "get": {
+        "operationId": "AdminBillingController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "TRIALING",
+                "ACTIVE",
+                "PAST_DUE",
+                "SUSPENDED",
+                "CANCELED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "planId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all subscriptions across tenants",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/subscriptions/{orgId}": {
+      "get": {
+        "operationId": "AdminBillingController_getOrg",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orgId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get full billing detail for one organization",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/subscriptions/{orgId}/plan": {
+      "patch": {
+        "operationId": "AdminBillingController_changePlan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orgId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePlanForOrgDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change an organization’s plan immediately (no proration; audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/impersonation": {
+      "post": {
+        "operationId": "AdminImpersonationController_start",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartImpersonationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start an impersonation session (15-min shadow JWT)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/impersonation/sessions": {
+      "get": {
+        "operationId": "AdminImpersonationController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "active",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "superAdminUserId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List impersonation sessions (active + historical)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/impersonation/{id}/end": {
+      "post": {
+        "operationId": "AdminImpersonationController_end",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End an active impersonation session manually",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/metrics/platform": {
+      "get": {
+        "operationId": "AdminMetricsController_platform",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Platform-wide metrics across all tenants",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/organizations": {
+      "get": {
+        "operationId": "AdminOrganizationsController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "suspended",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all organizations (cross-tenant)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{id}": {
+      "get": {
+        "operationId": "AdminOrganizationsController_show",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get organization detail with stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{id}/reinstate": {
+      "post": {
+        "operationId": "AdminOrganizationsController_reinstate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReinstateOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reinstate a suspended organization",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{id}/suspend": {
+      "post": {
+        "operationId": "AdminOrganizationsController_suspend",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend an organization (logs audit entry)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/plans": {
+      "get": {
+        "operationId": "AdminPlansController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all plans (admin view, includes inactive)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminPlansController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a plan (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/plans/{id}": {
+      "delete": {
+        "operationId": "AdminPlansController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a plan (sets isActive=false; audited)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminPlansController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a plan (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "AdminUsersController_search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cross-tenant user search",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/reset-password": {
+      "post": {
+        "operationId": "AdminUsersController_resetPassword",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetUserPasswordDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Issue a temporary password for a user (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/verticals": {
+      "get": {
+        "operationId": "AdminVerticalsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all verticals (admin view, includes inactive)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminVerticalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVerticalDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a vertical (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/verticals/{id}": {
+      "delete": {
+        "operationId": "AdminVerticalsController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteVerticalDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a vertical (audited)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminVerticalsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVerticalDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a vertical (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "AuthController_loginEndpoint",
@@ -4338,6 +5781,57 @@
         ]
       }
     },
+    "/api/v1/auth/memberships": {
+      "get": {
+        "description": "SaaS-06 — powers the tenant switcher. Returns one row per ACTIVE membership for the caller, with the organization summary attached.",
+        "operationId": "AuthController_membershipsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Array of MembershipSummary rows"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid JWT"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List organizations the current user belongs to",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
     "/api/v1/auth/password/change": {
       "patch": {
         "operationId": "AuthController_changePasswordEndpoint",
@@ -4469,6 +5963,96 @@
           }
         },
         "summary": "Rotate a refresh token and issue new token pair",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/switch-org": {
+      "post": {
+        "description": "SaaS-06 — issues a fresh access + refresh token pair scoped to the target organization. Caller must have an ACTIVE membership in the target.",
+        "operationId": "AuthController_switchOrgEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "example": 900,
+                      "type": "number"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "New access + refresh token pair scoped to the target org"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid JWT"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Caller has no active membership in the target organization"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Switch active organization context",
         "tags": [
           "Public / Auth"
         ]
@@ -4999,6 +6583,66 @@
         "summary": "Update a knowledge-base document",
         "tags": [
           "Dashboard / AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/my-features": {
+      "get": {
+        "operationId": "BillingController_myFeatures",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get my billing features with current usage",
+        "tags": [
+          "Dashboard / Billing"
         ]
       }
     },
@@ -5902,6 +7546,73 @@
           }
         ],
         "summary": "Create a recurring booking series",
+        "tags": [
+          "Dashboard / Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/stats": {
+      "get": {
+        "operationId": "DashboardBookingsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Today/pending counts and today revenue"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Today's booking counters + revenue for the dashboard StatsGrid",
         "tags": [
           "Dashboard / Bookings"
         ]
@@ -17662,6 +19373,66 @@
         ]
       }
     },
+    "/api/v1/dashboard/stats": {
+      "get": {
+        "operationId": "DashboardStatsController_getStatsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics aggregated for today"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get dashboard home page statistics for today",
+        "tags": [
+          "Dashboard / Stats"
+        ]
+      }
+    },
     "/api/v1/dashboard/verticals": {
       "post": {
         "operationId": "DashboardVerticalsController_create",
@@ -18219,6 +19990,14 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "invoiceId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
                   "type": "object"
                 }
               }
@@ -18458,6 +20237,192 @@
           }
         ],
         "summary": "Cancel a booking",
+        "tags": [
+          "Mobile Client / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings/{id}/join": {
+      "get": {
+        "operationId": "MobileClientBookingsController_joinBooking",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Zoom join URL"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get (or lazily create) the Zoom join URL for an ONLINE booking",
+        "tags": [
+          "Mobile Client / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings/{id}/rate": {
+      "post": {
+        "operationId": "MobileClientBookingsController_rateBooking",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MobileRateBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Rating submitted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit a rating for a completed booking",
         "tags": [
           "Mobile Client / Bookings"
         ]
@@ -18894,6 +20859,134 @@
         ]
       }
     },
+    "/api/v1/mobile/client/notifications/fcm-token": {
+      "delete": {
+        "operationId": "MobileClientNotificationsController_unregisterFcmEndpoint",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Tokens removed"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove all FCM tokens for the current client",
+        "tags": [
+          "Mobile Client / Notifications"
+        ]
+      },
+      "post": {
+        "operationId": "MobileClientNotificationsController_registerFcmEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterFcmTokenDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Token stored"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register an FCM/APNs device token for the current client",
+        "tags": [
+          "Mobile Client / Notifications"
+        ]
+      }
+    },
     "/api/v1/mobile/client/notifications/mark-read": {
       "patch": {
         "operationId": "MobileClientNotificationsController_markReadEndpoint",
@@ -19030,6 +21123,188 @@
           }
         ],
         "summary": "List the authenticated client's payments",
+        "tags": [
+          "Mobile Client / Payments"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/payments/bank-transfer": {
+      "post": {
+        "operationId": "MobileClientPaymentsController_uploadBankTransferEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "amount": {
+                    "example": 250,
+                    "type": "number"
+                  },
+                  "invoiceId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "receipt": {
+                    "description": "Receipt image or PDF",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "receipt",
+                  "invoiceId",
+                  "amount"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Receipt file + invoice metadata",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Receipt uploaded, payment recorded as PENDING_VERIFICATION"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a bank-transfer receipt for an invoice (client)",
+        "tags": [
+          "Mobile Client / Payments"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/payments/init": {
+      "post": {
+        "operationId": "MobileClientPaymentsController_initPaymentEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitClientPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "paymentId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "redirectUrl": {
+                      "example": "https://checkout.moyasar.com/pay/payment-id",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "paymentId",
+                    "redirectUrl"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Payment initialized"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Initialize a Moyasar payment for an authenticated client invoice",
         "tags": [
           "Mobile Client / Payments"
         ]
@@ -19461,6 +21736,592 @@
         "summary": "Update the authenticated client's profile",
         "tags": [
           "Mobile Client / Profile"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings": {
+      "get": {
+        "operationId": "MobileEmployeeBookingsController_listMyBookings",
+        "parameters": [
+          {
+            "description": "Filter by client",
+            "in": "query",
+            "name": "clientId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by employee",
+            "in": "query",
+            "name": "employeeId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by branch",
+            "in": "query",
+            "name": "branchId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by service",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by booking status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingStatus"
+            }
+          },
+          {
+            "description": "Filter by booking type",
+            "in": "query",
+            "name": "bookingType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingType"
+            }
+          },
+          {
+            "description": "Return bookings on or after this date (ISO 8601)",
+            "in": "query",
+            "name": "fromDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return bookings on or before this date (ISO 8601)",
+            "in": "query",
+            "name": "toDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-31T23:59:59.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search by booking id or client name",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "example": "bkg-1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter guest (online) vs walk-in bookings",
+            "in": "query",
+            "name": "isGuest",
+            "required": false,
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Paginated list of bookings"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bookings assigned to the authenticated employee",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings/{id}": {
+      "get": {
+        "operationId": "MobileEmployeeBookingsController_getBooking",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking detail"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a booking assigned to the authenticated employee",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings/{id}/cancel-request": {
+      "post": {
+        "operationId": "MobileEmployeeBookingsController_cancelRequest",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeCancelRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Cancellation request submitted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request cancellation for an assigned booking (requires admin approval)",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings/{id}/complete": {
+      "post": {
+        "operationId": "MobileEmployeeBookingsController_complete",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking marked complete"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark an assigned booking as complete",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings/{id}/employee-cancel": {
+      "post": {
+        "operationId": "MobileEmployeeBookingsController_employeeCancel",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeCancelBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking cancelled"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel an assigned booking (employee-initiated, immediate)",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/bookings/{id}/start": {
+      "post": {
+        "operationId": "MobileEmployeeBookingsController_start",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking marked as started"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the session for an assigned booking (check-in)",
+        "tags": [
+          "Mobile Employee / Bookings"
         ]
       }
     },
@@ -20544,6 +23405,98 @@
         ]
       }
     },
+    "/api/v1/public/branches/{id}": {
+      "get": {
+        "operationId": "PublicBranchesController_getOne",
+        "parameters": [
+          {
+            "description": "Branch id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "b_123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public-safe branch detail with business hours"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Get a single active branch by id (public-safe)",
+        "tags": [
+          "Public / Branches"
+        ]
+      }
+    },
+    "/api/v1/public/branches/{id}/employees": {
+      "get": {
+        "operationId": "PublicBranchesController_employees",
+        "parameters": [
+          {
+            "description": "Branch id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "b_123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public-safe employees linked to the branch"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "List public employees assigned to a branch",
+        "tags": [
+          "Public / Branches"
+        ]
+      }
+    },
     "/api/v1/public/branding": {
       "get": {
         "operationId": "PublicBrandingController_getBrandingEndpoint",
@@ -20780,14 +23733,14 @@
         ]
       }
     },
-    "/api/v1/public/employees/{slug}": {
+    "/api/v1/public/employees/{key}": {
       "get": {
         "operationId": "PublicEmployeesController_getOne",
         "parameters": [
           {
-            "description": "Public slug",
+            "description": "Public slug or employee UUID",
             "in": "path",
-            "name": "slug",
+            "name": "key",
             "required": true,
             "schema": {
               "example": "dr-ahmed",
@@ -20820,7 +23773,7 @@
             "description": "Unhandled server error"
           }
         },
-        "summary": "Get single public employee by slug",
+        "summary": "Get single public employee by slug or id",
         "tags": [
           "Public / Employees"
         ]

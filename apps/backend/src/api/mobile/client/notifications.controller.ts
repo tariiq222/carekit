@@ -1,7 +1,7 @@
-import { Controller, Get, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth, ApiOperation,
-  ApiOkResponse, ApiNoContentResponse,
+  ApiOkResponse, ApiNoContentResponse, ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
@@ -11,6 +11,9 @@ import { ClientSession } from '../../../common/auth/client-session.decorator';
 import { ApiStandardResponses } from '../../../common/swagger';
 import { ListNotificationsHandler } from '../../../modules/comms/notifications/list-notifications.handler';
 import { MarkReadHandler } from '../../../modules/comms/notifications/mark-read.handler';
+import { RegisterFcmTokenHandler } from '../../../modules/comms/fcm-tokens/register-fcm-token.handler';
+import { UnregisterFcmTokenHandler } from '../../../modules/comms/fcm-tokens/unregister-fcm-token.handler';
+import { RegisterFcmTokenDto } from '../../../modules/comms/fcm-tokens/register-fcm-token.dto';
 
 export class MobileListNotificationsQuery {
   @ApiPropertyOptional({ description: 'Return only unread notifications', example: true })
@@ -32,6 +35,8 @@ export class MobileClientNotificationsController {
   constructor(
     private readonly listNotifications: ListNotificationsHandler,
     private readonly markRead: MarkReadHandler,
+    private readonly registerFcm: RegisterFcmTokenHandler,
+    private readonly unregisterFcm: UnregisterFcmTokenHandler,
   ) {}
 
   @ApiOperation({ summary: 'List notifications for the current client' })
@@ -54,5 +59,24 @@ export class MobileClientNotificationsController {
   @Patch('mark-read')
   markReadEndpoint(@ClientSession() user: ClientSession) {
     return this.markRead.execute({ recipientId: user.id });
+  }
+
+  @ApiOperation({ summary: 'Register an FCM/APNs device token for the current client' })
+  @ApiCreatedResponse({ description: 'Token stored' })
+  @Post('fcm-token')
+  @HttpCode(201)
+  registerFcmEndpoint(
+    @ClientSession() user: ClientSession,
+    @Body() body: RegisterFcmTokenDto,
+  ) {
+    return this.registerFcm.execute({ clientId: user.id, ...body });
+  }
+
+  @ApiOperation({ summary: 'Remove all FCM tokens for the current client' })
+  @ApiNoContentResponse({ description: 'Tokens removed' })
+  @Delete('fcm-token')
+  @HttpCode(204)
+  async unregisterFcmEndpoint(@ClientSession() user: ClientSession) {
+    await this.unregisterFcm.execute({ clientId: user.id });
   }
 }

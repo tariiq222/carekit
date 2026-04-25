@@ -39,6 +39,9 @@ import { GetOrgSmsConfigHandler } from './org-sms-config/get-org-sms-config.hand
 import { UpsertOrgSmsConfigHandler } from './org-sms-config/upsert-org-sms-config.handler';
 import { TestSmsConfigHandler } from './org-sms-config/test-sms-config.handler';
 import { SmsDlrHandler } from './sms-dlr/sms-dlr.handler';
+import { RegisterFcmTokenHandler } from './fcm-tokens/register-fcm-token.handler';
+import { UnregisterFcmTokenHandler } from './fcm-tokens/unregister-fcm-token.handler';
+import { GetClientPushTargetsHandler } from './fcm-tokens/get-client-push-targets.handler';
 
 const handlers = [
   SendPushHandler,
@@ -68,6 +71,9 @@ const handlers = [
   CreateContactMessageHandler,
   ListContactMessagesHandler,
   UpdateContactMessageStatusHandler,
+  RegisterFcmTokenHandler,
+  UnregisterFcmTokenHandler,
+  GetClientPushTargetsHandler,
 ];
 
 const eventHandlers = [

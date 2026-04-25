@@ -38,6 +38,12 @@ export class MobileUpdateProfileBody {
 
   @ApiPropertyOptional({ description: 'Whether the account is active', example: true })
   @IsOptional() @IsBoolean() isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Preferred locale (ISO 639-1)', example: 'ar', nullable: true })
+  @IsOptional() @IsString() preferredLocale?: string | null;
+
+  @ApiPropertyOptional({ description: 'Push notifications enabled', example: true })
+  @IsOptional() @IsBoolean() pushEnabled?: boolean;
 }
 
 @ApiTags('Mobile Client / Profile')

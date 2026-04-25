@@ -21,6 +21,7 @@ import { useTheme } from '@/theme/useTheme';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { registerForPushAsync } from '@/services/push';
 import { getPrimaryRole } from '@/types/auth';
 import { hasSeenOnboarding } from '@/lib/onboarding';
 
@@ -127,6 +128,7 @@ export default function OtpVerifyScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
+        void registerForPushAsync();
         // OTP verification also auto-verifies email on backend
         const role = getPrimaryRole(response.data.user);
         if (role === 'employee') {

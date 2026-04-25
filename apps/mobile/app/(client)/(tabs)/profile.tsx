@@ -21,6 +21,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout } from '@/stores/slices/auth-slice';
+import { unregisterPushAsync } from '@/services/push';
 import { getFontName } from '@/theme/fonts';
 import { clientPortalService, type PortalSummary } from '@/services/client/portal';
 
@@ -239,7 +240,10 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(420).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Glass variant="regular" radius={sawaaRadius.pill} onPress={() => dispatch(logout())} interactive style={styles.logoutBtn}>
+          <Glass variant="regular" radius={sawaaRadius.pill} onPress={async () => {
+            try { await unregisterPushAsync(); } catch { /* best-effort */ }
+            dispatch(logout());
+          }} interactive style={styles.logoutBtn}>
             <Text style={[styles.logoutText, { fontFamily: f700 }]}>
               {dir.isRTL ? 'تسجيل الخروج' : 'Sign out'}
             </Text>

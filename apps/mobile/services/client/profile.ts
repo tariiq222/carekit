@@ -14,6 +14,8 @@ export interface ClientProfileUpdate {
   dateOfBirth?: string | null;
   avatarUrl?: string | null;
   notes?: string | null;
+  preferredLocale?: string | null;
+  pushEnabled?: boolean;
 }
 
 export interface ClientProfile {
@@ -26,6 +28,8 @@ export interface ClientProfile {
   avatarUrl: string | null;
   gender: string | null;
   dateOfBirth: string | null;
+  preferredLocale: string | null;
+  pushEnabled: boolean;
 }
 
 export const clientProfileService = {

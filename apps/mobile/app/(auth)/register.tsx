@@ -23,6 +23,7 @@ import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { registerForPushAsync } from '@/services/push';
 import { LabeledInput } from '@/components/ui/LabeledInput';
 
 export default function RegisterScreen() {
@@ -74,6 +75,7 @@ export default function RegisterScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
+        void registerForPushAsync();
         router.replace('/(client)/(tabs)/home');
       }
     } catch {

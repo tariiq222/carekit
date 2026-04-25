@@ -75,4 +75,10 @@ export class UpdateClientDto {
 
   @ApiPropertyOptional({ description: 'Whether the client is active', example: true })
   @IsOptional() @IsBoolean() isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Preferred locale (ISO 639-1)', example: 'ar', nullable: true })
+  @IsOptional() @IsString() @MaxLength(8) preferredLocale?: string | null;
+
+  @ApiPropertyOptional({ description: 'Whether the client receives push notifications', example: true })
+  @IsOptional() @IsBoolean() pushEnabled?: boolean;
 }

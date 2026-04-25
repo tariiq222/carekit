@@ -12,7 +12,18 @@ import { queryClient } from '@/services/query-client';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { DirContext, buildDirState } from '@/hooks/useDir';
 import { loadCurrentOrgId } from '@/services/tenant';
+import { useAppSelector } from '@/hooks/use-redux';
+import { registerForPushAsync } from '@/services/push';
 import '@/i18n';
+
+function PushBootstrap() {
+  const token = useAppSelector((s) => s.auth.token);
+  useEffect(() => {
+    if (!token) return;
+    void registerForPushAsync();
+  }, [token]);
+  return null;
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -28,6 +39,7 @@ export default function RootLayout() {
     <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
+          <PushBootstrap />
           <DirContext.Provider value={dirState}>
             <ThemeProvider language="ar">
               <SafeAreaProvider>

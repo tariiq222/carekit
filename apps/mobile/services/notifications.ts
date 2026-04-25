@@ -39,15 +39,15 @@ export const notificationsService = {
 
   async registerFcmToken(token: string, platform: 'ios' | 'android') {
     const response = await api.post<ApiResponse<unknown>>(
-      '/notifications/fcm-token',
+      '/mobile/client/notifications/fcm-token',
       { token, platform },
     );
     return response.data;
   },
 
   async unregisterFcmToken() {
-    const response = await api.delete<ApiResponse<{ deleted: boolean }>>(
-      '/notifications/fcm-token',
+    const response = await api.delete<ApiResponse<{ deleted: number }>>(
+      '/mobile/client/notifications/fcm-token',
     );
     return response.data;
   },

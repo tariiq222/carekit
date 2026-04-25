@@ -6,8 +6,15 @@ const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolved
 function build() {
   const listNotifications = fn({ data: [], meta: {} });
   const markRead = fn({ updated: 3 });
-  const controller = new MobileClientNotificationsController(listNotifications as never, markRead as never);
-  return { controller, listNotifications, markRead };
+  const registerFcm = fn({ id: 't1' });
+  const unregisterFcm = fn({ deleted: 1 });
+  const controller = new MobileClientNotificationsController(
+    listNotifications as never,
+    markRead as never,
+    registerFcm as never,
+    unregisterFcm as never,
+  );
+  return { controller, listNotifications, markRead, registerFcm, unregisterFcm };
 }
 
 describe('MobileClientNotificationsController', () => {
@@ -29,5 +36,19 @@ describe('MobileClientNotificationsController', () => {
     const { controller, markRead } = build();
     await controller.markReadEndpoint(USER);
     expect(markRead.execute).toHaveBeenCalledWith({ recipientId: USER.id });
+  });
+
+  it('registerFcmEndpoint — forwards clientId + body', async () => {
+    const { controller, registerFcm } = build();
+    await controller.registerFcmEndpoint(USER, { token: 'tok-A', platform: 'ios' });
+    expect(registerFcm.execute).toHaveBeenCalledWith({
+      clientId: USER.id, token: 'tok-A', platform: 'ios',
+    });
+  });
+
+  it('unregisterFcmEndpoint — clears all tokens for the client', async () => {
+    const { controller, unregisterFcm } = build();
+    await controller.unregisterFcmEndpoint(USER);
+    expect(unregisterFcm.execute).toHaveBeenCalledWith({ clientId: USER.id });
   });
 });
