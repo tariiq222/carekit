@@ -98,6 +98,7 @@ export class CreateGuestBookingHandler {
         await tx.usedOtpSession.create({
           data: {
             jti: cmd.sessionJti,
+            organizationId,
             expiresAt: new Date(cmd.sessionExp * 1000),
           },
         });

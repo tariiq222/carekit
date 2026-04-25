@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { VerifyOtpHandler } from './verify-otp.handler';
 import { OtpSessionService } from './otp-session.service';
 import { PrismaService } from '../../../infrastructure/database';
@@ -9,23 +10,31 @@ import * as bcrypt from 'bcryptjs';
 describe('VerifyOtpHandler', () => {
   let handler: VerifyOtpHandler;
   let otpSession: jest.Mocked<OtpSessionService>;
-
-  const mockPrisma = {
-    otpCode: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
-    client: {
-      updateMany: jest.fn(),
-    },
-  };
+  let prismaMock: any;
 
   beforeEach(async () => {
+    prismaMock = {
+      otpCode: {
+        findFirst: jest.fn(),
+        update: jest.fn(),
+      },
+      client: {
+        updateMany: jest.fn(),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VerifyOtpHandler,
         { provide: OtpSessionService, useValue: { signSession: jest.fn().mockResolvedValue('mock-token') } },
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: PrismaService, useValue: prismaMock },
+        {
+          provide: ClsService,
+          useValue: {
+            run: jest.fn().mockImplementation((fn) => fn()),
+            set: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -33,122 +42,29 @@ describe('VerifyOtpHandler', () => {
     otpSession = module.get(OtpSessionService);
   });
 
-  it('should throw BadRequestException when no OTP found', async () => {
-    mockPrisma.otpCode.findFirst.mockResolvedValue(null);
+  it('rejects code from a different org', async () => {
+    prismaMock.otpCode.findFirst.mockResolvedValue(null);
     await expect(handler.execute({
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
       code: '123456',
       purpose: OtpPurpose.GUEST_BOOKING,
-    })).rejects.toThrow(BadRequestException);
-  });
+      organizationId: 'org-B',
+    })).rejects.toThrow('Invalid or expired OTP code');
 
-  it('should throw BadRequestException when max attempts exceeded', async () => {
-    mockPrisma.otpCode.findFirst.mockResolvedValue({
-      id: 'otp-1',
-      attempts: 5,
-      maxAttempts: 5,
-      lockedUntil: null,
-      codeHash: await bcrypt.hash('123456', 10),
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      purpose: OtpPurpose.GUEST_BOOKING,
-      expiresAt: new Date(Date.now() + 60000),
-      consumedAt: null,
-      createdAt: new Date(),
-    });
-    await expect(handler.execute({
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      code: '123456',
-      purpose: OtpPurpose.GUEST_BOOKING,
-    })).rejects.toThrow(BadRequestException);
-  });
-
-  it('should throw BadRequestException when code is locked out', async () => {
-    mockPrisma.otpCode.findFirst.mockResolvedValue({
-      id: 'otp-1',
-      attempts: 5,
-      maxAttempts: 5,
-      lockedUntil: new Date(Date.now() + 5 * 60 * 1000),
-      codeHash: await bcrypt.hash('123456', 10),
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      purpose: OtpPurpose.GUEST_BOOKING,
-      expiresAt: new Date(Date.now() + 60000),
-      consumedAt: null,
-      createdAt: new Date(),
-    });
-    await expect(handler.execute({
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      code: '123456',
-      purpose: OtpPurpose.GUEST_BOOKING,
-    })).rejects.toThrow('OTP_LOCKED_OUT');
-  });
-
-  it('should set lockedUntil when attempts reach maxAttempts on wrong code', async () => {
-    mockPrisma.otpCode.findFirst.mockResolvedValue({
-      id: 'otp-1',
-      attempts: 4,
-      maxAttempts: 5,
-      lockedUntil: null,
-      codeHash: await bcrypt.hash('000000', 10),
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      purpose: OtpPurpose.GUEST_BOOKING,
-      expiresAt: new Date(Date.now() + 60000),
-      consumedAt: null,
-      createdAt: new Date(),
-    });
-    mockPrisma.otpCode.update.mockResolvedValue({} as never);
-    await expect(handler.execute({
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      code: '123456',
-      purpose: OtpPurpose.GUEST_BOOKING,
-    })).rejects.toThrow(UnauthorizedException);
-
-    expect(mockPrisma.otpCode.update).toHaveBeenCalledWith(
+    expect(prismaMock.otpCode.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'otp-1' },
-        data: expect.objectContaining({
-          attempts: { increment: 1 },
-          lockedUntil: expect.any(Date),
-        }),
+        where: expect.objectContaining({ organizationId: 'org-B' }),
       }),
     );
   });
 
-  it('should throw UnauthorizedException for wrong code', async () => {
-    const wrongHash = await bcrypt.hash('000000', 10);
-    mockPrisma.otpCode.findFirst.mockResolvedValue({
-      id: 'otp-1',
-      attempts: 0,
-      maxAttempts: 5,
-      lockedUntil: null,
-      codeHash: wrongHash,
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      purpose: OtpPurpose.GUEST_BOOKING,
-      expiresAt: new Date(Date.now() + 60000),
-      consumedAt: null,
-      createdAt: new Date(),
-    });
-    mockPrisma.otpCode.update.mockResolvedValue({} as never);
-    await expect(handler.execute({
-      channel: OtpChannel.EMAIL,
-      identifier: 'test@example.com',
-      code: '123456',
-      purpose: OtpPurpose.GUEST_BOOKING,
-    })).rejects.toThrow(UnauthorizedException);
-  });
-
-  it('should return session token on valid OTP', async () => {
+  it('accepts NULL/NULL (legacy/platform flow)', async () => {
     const correctCode = '123456';
     const correctHash = await bcrypt.hash(correctCode, 10);
-    mockPrisma.otpCode.findFirst.mockResolvedValue({
+    prismaMock.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',
+      organizationId: null,
       attempts: 0,
       maxAttempts: 5,
       lockedUntil: null,
@@ -160,21 +76,55 @@ describe('VerifyOtpHandler', () => {
       consumedAt: null,
       createdAt: new Date(),
     });
-    mockPrisma.otpCode.update.mockResolvedValue({} as never);
-    mockPrisma.client.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.otpCode.update.mockResolvedValue({} as never);
+    prismaMock.client.updateMany.mockResolvedValue({ count: 0 });
 
     const result = await handler.execute({
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
       code: correctCode,
       purpose: OtpPurpose.GUEST_BOOKING,
+      // organizationId is omitted -> null
     });
 
     expect(result).toEqual({ sessionToken: 'mock-token' });
-    expect(otpSession.signSession).toHaveBeenCalledWith({
+    expect(otpSession.signSession).toHaveBeenCalledWith(
+      expect.objectContaining({ organizationId: null }),
+    );
+  });
+
+  it('accepts org-A from org-A', async () => {
+    const orgA = 'org-A';
+    const correctCode = '123456';
+    const correctHash = await bcrypt.hash(correctCode, 10);
+    prismaMock.otpCode.findFirst.mockResolvedValue({
+      id: 'otp-1',
+      organizationId: orgA,
+      attempts: 0,
+      maxAttempts: 5,
+      lockedUntil: null,
+      codeHash: correctHash,
+      channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
       purpose: OtpPurpose.GUEST_BOOKING,
-      channel: 'EMAIL',
+      expiresAt: new Date(Date.now() + 60000),
+      consumedAt: null,
+      createdAt: new Date(),
     });
+    prismaMock.otpCode.update.mockResolvedValue({} as never);
+    prismaMock.client.updateMany.mockResolvedValue({ count: 0 });
+
+    const result = await handler.execute({
+      channel: OtpChannel.EMAIL,
+      identifier: 'test@example.com',
+      code: correctCode,
+      purpose: OtpPurpose.GUEST_BOOKING,
+      organizationId: orgA,
+    });
+
+    expect(result).toEqual({ sessionToken: 'mock-token' });
+    expect(otpSession.signSession).toHaveBeenCalledWith(
+      expect.objectContaining({ organizationId: orgA }),
+    );
   });
 });

@@ -5,6 +5,7 @@ import { OtpPurpose, OtpChannel } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface OtpSessionPayload {
+  organizationId: string | null;
   identifier: string;
   purpose: OtpPurpose;
   channel: OtpChannel;
