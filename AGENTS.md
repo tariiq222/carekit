@@ -1,6 +1,8 @@
 # Maestro v10 — CareKit Agents
 
-A tiered multi-agent system built entirely on Claude Code, tuned for the CareKit monorepo. A cheap Router triages every request, then routes to one of three paths (Fast / Standard / Deep) with different budgets, agents, and deliverables.
+> **Status (2026-04-25): available, not mandatory.** Day-to-day CareKit work flows through superpowers skills (`writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `brainstorming`) on plain feature branches. The roster below is real — each agent has a spec in `.claude/agents/*.md` and the `/plan`, `/execute`, `/verify`, `/maestro` slash commands resolve — but you opt into Maestro per task; you do not have to route every request through it.
+
+A tiered multi-agent system built entirely on Claude Code, tuned for the CareKit monorepo. When invoked, a cheap Router triages the request and routes it to one of three paths (Fast / Standard / Deep) with different budgets, agents, and deliverables.
 
 ---
 
@@ -11,11 +13,10 @@ A tiered multi-agent system built entirely on Claude Code, tuned for the CareKit
 | `CLAUDE.md` | Project rules, stack, domain map, design law |
 | `MAESTRO.md` | Maestro v10 entry point — how to activate |
 | `AGENTS.md` | This file — agent roster + flow |
-| `PATHS.md` | Path playbook — budgets, agents, SLA per path |
-| `WORKTREES.md` | Git worktree policy for DEEP tasks |
+| `PATHS.md` | Path playbook — budgets, agents, SLA per path (heuristic) |
 | `.claude/agents/*.md` | Individual agent specs |
 
-Read `PATHS.md` for every task to pick the right lane.
+For worktree mechanics, use `superpowers:using-git-worktrees` (the previous `WORKTREES.md` and its 5110/5120/5130 port table were retired). When you do invoke Maestro, skim `PATHS.md` to pick a lane.
 
 ---
 
@@ -160,7 +161,7 @@ Fahad tracks spend live. Exceeding budget by 20% halts and asks for user approva
 | STANDARD | `feat/*` or `fix/*` | Main workspace | ✅ |
 | DEEP | `feat/*` with worktree | **Isolated worktree** | ✅ |
 
-See `WORKTREES.md` for the worktree protocol.
+For worktree mechanics, use the `superpowers:using-git-worktrees` skill.
 
 **Commit rules (from CLAUDE.md):** one system only per commit · ≤ 10 files or ≤ 500 lines · conventional format (`feat(bookings): …`).
 
@@ -210,16 +211,16 @@ Coverage thresholds (backend): **40% branch, 50% fn/line** — enforce via `npm 
 
 ---
 
-## 8. Entry Point
+## 8. Entry Point (when Maestro is invoked)
 
-For every user request:
+Once you opt into Maestro for a task (via `/plan`, `/execute`, `/verify`, `/maestro`, or `/output-style maestro`):
 
 1. **Yazid routes first** (~200 tokens, < $0.01)
 2. Based on path, follow `PATHS.md`
-3. Fahad never skips the Router — no direct execution without a path
+3. Fahad never skips the Router *within a Maestro run* — no direct execution without a path
 4. Fahad reports budget + cost at delivery
 
-**Never start execution without a routing decision from Yazid.**
+Outside a Maestro run, just use superpowers skills + plain feature branches as usual.
 
 ---
 

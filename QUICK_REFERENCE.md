@@ -68,19 +68,15 @@ npm run typecheck --workspace=dashboard      # tsc --noEmit
 
 ## Worktree Commands (DEEP path)
 
+Use the `superpowers:using-git-worktrees` skill for the full protocol. Quick form:
+
 ```bash
-# Create (from main workspace)
 git worktree add ../carekit-feat-X -b feat/X main
-
-# List
 git worktree list
-
-# Remove (after merge)
-git worktree remove ../carekit-feat-X
-git branch -d feat/X
+git worktree remove ../carekit-feat-X && git branch -d feat/X
 ```
 
-Worktree ports: backend 5110, 5120, 5130 · dashboard 5113, 5123, 5133 · mobile 5112, 5122, 5132 · website 5114, 5124, 5134.
+Pick any free port in **5000–5999** for the worktree's services; there is no longer a fixed port table.
 
 ## Gate Matrix
 

@@ -1,6 +1,8 @@
 # MAESTRO.md — Maestro v10 Entry Point (CareKit edition)
 
-CareKit uses **Maestro v10** — a tiered multi-agent system with a Planner-Verifier architecture that separates planning from code writing. This file is the orchestration entry; project specifics still live in `CLAUDE.md`.
+> **Status (2026-04-25): available scaffold, not mandatory.** The dominant CareKit workflow is now superpowers skills (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`) running on plain feature branches. Maestro v10 — the agents in `.claude/agents/` and the slash commands in `.claude/commands/` — is real and resolvable, and you may opt into it for tasks that benefit from a Planner-Verifier split. Treat the rules below as guidance for *when you choose to invoke Maestro*, not as a gate on every change.
+
+CareKit ships with **Maestro v10** — a tiered multi-agent system with a Planner-Verifier architecture that separates planning from code writing. This file is the orchestration entry for that system; project specifics still live in `CLAUDE.md`.
 
 ## Three Ways to Activate Maestro
 
@@ -43,9 +45,10 @@ Want Maestro active for whole session?          → /output-style maestro
 
 1. `CLAUDE.md` — CareKit project rules, stack, domain map, design law
 2. `AGENTS.md` — agent roster + flow (Maestro v10)
-3. `PATHS.md` — path playbook (FAST/STANDARD/DEEP) with CareKit scripts
-4. `WORKTREES.md` — git worktree policy for DEEP tasks (carekit_ DB prefix, ports 5110+)
-5. `.claude/commands/maestro.md` — master command with templates
+3. `PATHS.md` — path playbook (FAST/STANDARD/DEEP heuristic) with CareKit scripts
+4. `.claude/commands/maestro.md` — master command with templates
+
+(There is no longer a `WORKTREES.md`; the worktree port table was retired. If you need worktree isolation, use `superpowers:using-git-worktrees`.)
 
 ## Models
 
@@ -65,15 +68,17 @@ When verifying any work (auto-run on /execute, manual via /verify):
 | 4. Behavioral tests (Saad) | 90% | Missing or wrong test coverage → Kiwi TCMS |
 | 5. Manual UX check (you) | 100% | Visual bugs, RTL, Chrome DevTools MCP walk-through |
 
-## Unbreakable Rules (CareKit-specific overlay)
+## Rules (when you invoke Maestro)
 
-1. Every code task goes through Yazid's routing first — no direct execution
+These apply *inside* a Maestro run. They do not gate normal feature work done via superpowers skills or direct edits.
+
+1. Within a Maestro run, route through Yazid first — no direct execution mid-flow
 2. Claude Code never writes code in PLAN_ONLY mode
 3. Verification uses real `npm run …` / `turbo run …` commands, not guesses
-4. DEEP tasks **suggest** a worktree but don't force
-5. Budget reported at end of every task (advisory, no hard caps)
-6. Tenant scoping via **`organizationId`** — read from `TenantContextService` (CLS-backed, `apps/backend/src/common/tenant/`). Never read tenant id from request body. Honor the `TENANT_ENFORCEMENT` feature flag (dormant during SaaS Plan 01 rollout, strangler pattern)
-7. Ports 5000–5999 only; worktree ports start at 5110 (see `WORKTREES.md`)
+4. DEEP tasks **suggest** a worktree but don't force (use `superpowers:using-git-worktrees` for the mechanics)
+5. Budget reported at end of every Maestro task (advisory, no hard caps)
+6. Tenant scoping via **`organizationId`** — read from `TenantContextService` (CLS-backed, `apps/backend/src/common/tenant/`). Never read tenant id from request body. `TENANT_ENFORCEMENT` defaults to **`strict`** since Plan 02h (2026-04-22) — request-scoped Postgres GUCs + RLS are live
+7. Ports 5000–5999 only
 8. File length ≤ 350 lines; split before you cross
 9. Prisma migrations are immutable — never `prisma db push`, never manual SQL
 10. All UI strings behind i18n keys (next-intl, AR/EN); RTL-first with logical properties (`ps-`/`pe-`/`ms-`/`me-`)

@@ -1,8 +1,8 @@
 # Path Playbook — Maestro v10 (CareKit)
 
-Every request routes to one of three paths. Each has a **fixed budget**, **specific agents**, and **clear SLA**.
+This file is **guidance, not law**. It only applies when you have explicitly opted into Maestro for a task (see `MAESTRO.md`). Most CareKit work runs through superpowers skills on plain feature branches and never hits this playbook.
 
-This file is law. Fahad does not deviate from it.
+When you *do* run Maestro, every request routes to one of three paths — each with a target budget, suggested agents, and an SLA. Fahad uses these as heuristics, not hard contracts.
 
 ---
 
@@ -165,7 +165,7 @@ Request → Yazid → Fahad classify
                      ↓
                   Fahad plan (full decomposition)
                      ↓
-                  Create git worktree (see WORKTREES.md)
+                  Create git worktree (use superpowers:using-git-worktrees)
                      ↓
                   Execute (parallel where possible)
                      ↓
@@ -188,7 +188,7 @@ cd ../carekit-feat-waitlist
 npm install                          # own node_modules
 cp .env.example .env                 # own env
 # Override: DATABASE_URL=postgresql://localhost/carekit_feat_waitlist
-# Override: PORT=5110 (see WORKTREES.md for the port table)
+# Override: PORT=<pick a free port in 5000–5999>  (no fixed worktree port table anymore)
 npx prisma migrate dev               # against worktree's own DB
 
 # Work happens here without touching main workspace
