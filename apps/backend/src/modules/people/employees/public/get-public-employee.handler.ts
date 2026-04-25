@@ -28,6 +28,17 @@ export class GetPublicEmployeeHandler {
       },
     });
     if (!row) throw new NotFoundException('Employee not found');
-    return row;
+
+    const ratings = await this.prisma.rating.aggregate({
+      where: { employeeId: row.id, isPublic: true },
+      _avg: { score: true },
+      _count: { _all: true },
+    });
+
+    return {
+      ...row,
+      ratingAverage: ratings._avg.score ?? null,
+      ratingCount: ratings._count._all,
+    };
   }
 }
