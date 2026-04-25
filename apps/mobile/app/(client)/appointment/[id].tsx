@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -19,10 +19,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
-import {
-  clientBookingsService,
-  type ClientBookingRow,
-} from '@/services/client';
+import { useBooking, useCancelBooking } from '@/hooks/queries';
 
 export default function AppointmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,22 +31,9 @@ export default function AppointmentDetailScreen() {
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const [booking, setBooking] = useState<ClientBookingRow | null>(null);
-  const [cancelling, setCancelling] = useState(false);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    clientBookingsService.getById(id).then(
-      (res) => {
-        if (!cancelled) setBooking(res);
-      },
-      () => {},
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const { data: booking } = useBooking(id);
+  const cancelMutation = useCancelBooking();
+  const cancelling = cancelMutation.isPending;
 
   const therapistName = booking
     ? (dir.isRTL
@@ -90,19 +74,19 @@ export default function AppointmentDetailScreen() {
         {
           text: dir.isRTL ? 'إلغاء الحجز' : 'Cancel',
           style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              await clientBookingsService.cancel(id, dir.isRTL ? 'إلغاء من العميل' : 'Client cancelled');
-              router.back();
-            } catch (err) {
-              Alert.alert(
-                dir.isRTL ? 'تعذّر الإلغاء' : 'Cancel failed',
-                err instanceof Error ? err.message : String(err),
-              );
-            } finally {
-              setCancelling(false);
-            }
+          onPress: () => {
+            cancelMutation.mutate(
+              { id, reason: dir.isRTL ? 'إلغاء من العميل' : 'Client cancelled' },
+              {
+                onSuccess: () => router.back(),
+                onError: (err) => {
+                  Alert.alert(
+                    dir.isRTL ? 'تعذّر الإلغاء' : 'Cancel failed',
+                    err instanceof Error ? err.message : String(err),
+                  );
+                },
+              },
+            );
           },
         },
       ],
