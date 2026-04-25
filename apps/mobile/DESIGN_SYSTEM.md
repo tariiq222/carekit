@@ -1,6 +1,15 @@
 # CareKit Mobile — Design System
 
-Source of truth for the "Mental Health Home" visual language. Derived from [`src/theme.ts`](src/theme.ts) + [`src/components/Glass.tsx`](src/components/Glass.tsx). Port to `apps/mobile/theme/` when ready.
+> **STATUS (2026-04-25):** Visual-language reference for the "Mental Health
+> Home" prototype. The runtime tokens have since been ported to
+> [`apps/mobile/theme/`](theme/) (`tokens.ts`, `glass.ts`). The `src/*`
+> paths referenced below are from the original prototype and no longer
+> exist in this app — treat them as historical citations. Use this doc
+> for the *principles*, and consult `apps/mobile/theme/` for the
+> currently-shipping values. App-level conventions live in
+> [`CLAUDE.md`](CLAUDE.md).
+
+Source of truth for the "Mental Health Home" visual language.
 
 ---
 
@@ -313,7 +322,9 @@ export const DURATION = { short: 220, medium: 360 } as const;
 
 // Shadow tiers — tinted with deepTeal, never pure black.
 // For full web 4-layer stacks + native elevation values, see
-// docs/design-prototypes/mental-health-home/src/theme.ts (SHADOW, SHADOW_SOFT, SHADOW_RAISED).
+// the historical prototype's SHADOW / SHADOW_SOFT / SHADOW_RAISED tokens
+// (docs/design-prototypes/ has been removed; runtime values now live in
+// apps/mobile/theme/tokens.ts and apps/mobile/theme/glass.ts).
 
 export const GLASS_CFG = {
   clear:   { mainBlur: 30, mainTintAlpha: 0.04, baseTintAlpha: 0.12, bloomAlpha: 0.22, borderAlpha: 0.32, nativeBlur: 45 },
@@ -322,9 +333,9 @@ export const GLASS_CFG = {
 } as const;
 ```
 
-For the full 4-layer shadow stacks, copy [`SHADOW`, `SHADOW_SOFT`, `SHADOW_RAISED` from `src/theme.ts`](src/theme.ts#L46-L88) verbatim.
+For the full 4-layer shadow stacks, see `SHADOW`, `SHADOW_SOFT`, `SHADOW_RAISED` in [`apps/mobile/theme/tokens.ts`](theme/tokens.ts).
 
-For the 8-layer Glass component, copy [`src/components/Glass.tsx`](src/components/Glass.tsx) verbatim — the layer order is load-bearing.
+For the Glass component, see [`apps/mobile/theme/glass.ts`](theme/glass.ts) — the layer order is load-bearing.
 
 ---
 

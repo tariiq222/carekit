@@ -1,5 +1,10 @@
 # Refactor Roadmap — CareKit Dashboard
 
+> **STATUS (2026-04-25):** Pre-SaaS historical record. The "Completed Refactors"
+> section captures Phases 3–8 from the single-organization era and is kept for
+> archaeology. The maintenance cycles + ADRs below remain valid practice.
+> Current architectural rules live in [`apps/dashboard/CLAUDE.md`](../CLAUDE.md).
+
 > **الغرض:** جدول صيانة دوري لمنع تراكم الدين التقني.
 > **التحديث:** بعد كل sprint، راجع هذا الملف وحدّث حالة كل بند.
 > **المبدأ:** الكود الجيد يحتاج صيانة دورية — لا يكفي أن تكتبه صحيحاً مرة واحدة.

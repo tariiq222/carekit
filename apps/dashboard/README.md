@@ -25,7 +25,7 @@ npm run dev
 
 | الأمر | الوظيفة |
 | ----- | ------- |
-| `npm run dev` | بيئة التطوير على port 3000 |
+| `npm run dev` | بيئة التطوير على port 5103 |
 | `npm run build` | بناء production |
 | `npm run typecheck` | فحص TypeScript |
 | `npm run lint` | فحص القواعد المعمارية |
@@ -39,10 +39,10 @@ npm run dev
 
 | الملف | اقرأه عند |
 | ----- | --------- |
+| **[CLAUDE.md](./CLAUDE.md)** | قواعد التطوير الكاملة (Layer rules, i18n, billing, terminology) |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | أول مرة تعمل على المشروع |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | قبل إضافة أي ملف أو feature |
 | **[DESIGN-SYSTEM.md](./DESIGN-SYSTEM.md)** | قبل كتابة أي UI |
-| **[components-policy.md](./components-policy.md)** | قبل إنشاء أي مكون |
+| **[tokens.md](./tokens.md)** | مرجع الـ design tokens |
 | **[CODEOWNERS](./CODEOWNERS)** | لمعرفة من يراجع ماذا |
 | **[docs/refactor-roadmap.md](./docs/refactor-roadmap.md)** | جدول الصيانة الدوري |
 
@@ -53,8 +53,9 @@ npm run dev
 ```text
 app/(dashboard)/[feature]/    ← Pages (orchestration only)
 components/features/[feature]/ ← Feature UI components
-components/ui/                 ← shadcn primitives (لا تُعدَّل)
-hooks/                         ← React Query hooks
+components/ui/                 ← App-local wrappers only (date-picker, nationality-select)
+@carekit/ui                    ← shadcn primitives (workspace package — لا تُعدَّل)
+hooks/                         ← TanStack Query hooks
 lib/api/                       ← Network calls
 lib/types/                     ← TypeScript types
 lib/schemas/                   ← Zod validation
@@ -65,15 +66,15 @@ lib/translations/              ← i18n strings (ar + en)
 
 ---
 
-## Features (20)
+## Features
 
 | المجموعة | الـ Features |
 | --------- | ----------- |
 | Clinical Core | bookings, clients, employees |
 | Financial | payments, invoices, coupons |
 | Compliance | zatca |
-| Catalog | services, branches, intake-forms |
-| Config | settings, branding |
+| Catalog | services, branches, categories, departments, intake-forms |
+| Config | settings (incl. billing, sms), branding, content |
 | Users | users |
-| AI & Comms | chatbot, notifications |
+| AI & Comms | chatbot, contact-messages, notifications |
 | Operations | reports, ratings, activity-log |

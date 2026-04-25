@@ -1,17 +1,16 @@
-# CareKit Backend v2
+# CareKit Backend
 
-Rebuild from scratch on Bounded Contexts + Vertical Slices.
+NestJS 11 modular monolith — **Domain Clusters + Vertical Slices** (see [CLAUDE.md](./CLAUDE.md)).
 
-- Spec: [`docs/superpowers/specs/2026-04-11-backend-architecture-design.md`](../../docs/superpowers/specs/2026-04-11-backend-architecture-design.md)
-- Kanban: [`docs/plan/kanban.html`](../../docs/plan/kanban.html)
-- v1 snapshot: `git checkout backend-v1-archive -- apps/backend/`
+- Architecture spec: [`docs/superpowers/specs/2026-04-11-backend-architecture-design.md`](../../docs/superpowers/specs/2026-04-11-backend-architecture-design.md)
+- Multi-tenancy guide: [`docs/saas-tenancy.md`](./docs/saas-tenancy.md)
 
 ## Quick start
 
 ```bash
 cp .env.example .env
 npm install
-npm run dev   # http://localhost:5100
+npm run dev   # http://localhost:5100 (PORT=5100)
 ```
 
 ## Layout
@@ -19,19 +18,13 @@ npm run dev   # http://localhost:5100
 ```text
 apps/backend/
 ├── prisma/
-│   └── schema/            # Prisma DSL — one .prisma file per BC (p1-t2)
+│   └── schema/            # Prisma DSL — one .prisma file per cluster
 ├── src/
-│   ├── config/            # env validation (Joi). Typed configs added per-BC.
-│   ├── common/            # p1-t6..t9 — guards, interceptors, filters
-│   ├── infrastructure/    # adapters for external systems (one folder each)
-│   │   ├── database/      # p1-t2 — PrismaService wrapper
-│   │   ├── queue/         # p1-t3 — BullMQ
-│   │   ├── cache/         # p1-t3 — Redis
-│   │   ├── storage/       # p1-t4 — MinIO
-│   │   ├── mail/          # p1-t5 — SMTP + FCM
-│   │   └── events/        # p1-t9 — BaseEvent + event-bus
-│   ├── modules/           # p2..p11 — one folder per bounded context
-│   ├── api/               # p12 — dashboard / mobile / public controllers
+│   ├── config/            # env validation (Joi)
+│   ├── common/            # guards, interceptors, filters, pipes, base events
+│   ├── infrastructure/    # tech adapters (database, queue, cache, mail, storage, events, ai, sms, zoom)
+│   ├── modules/           # 14 domain clusters (see CLAUDE.md)
+│   ├── api/               # HTTP layer — dashboard / mobile / public controllers
 │   ├── main.ts
 │   └── app.module.ts
 ```
@@ -49,21 +42,18 @@ Prisma schema DSL lives at the package root — NOT inside `src/infrastructure/d
 3. The **generated Prisma client** (`@prisma/client`) is what belongs in the infrastructure layer — not the schema source. `PrismaService` in `src/infrastructure/database/prisma.service.ts` wraps the generated client. That's the architectural boundary.
 4. Split-schema strategy (one `.prisma` file per BC) is native to Prisma 7's `schema` folder — no custom tooling needed.
 
-### Vertical Slices inside modules
+### Vertical Slices inside clusters
 
-Each bounded context under `src/modules/<bc>/` is further subdivided by **slice** (feature), not by layer:
+Each cluster under `src/modules/<cluster>/` is subdivided by **use case** (slice), not by layer:
 
 ```text
 modules/identity/
   login/              ← slice
-    login.command.ts
     login.dto.ts
     login.handler.ts
-    login.controller.ts
-    login.spec.ts
-    login.e2e-spec.ts
+    login.handler.spec.ts
   refresh-token/      ← slice
     ...
 ```
 
-No shared `controllers/`, `services/`, or `dtos/` folders. Every feature ships with all its layers in one place. See `docs/superpowers/specs/2026-04-11-backend-architecture-design.md`.
+No shared `controllers/`, `services/`, or `repositories/` folders. Controllers live separately under `src/api/<audience>/`. See [CLAUDE.md](./CLAUDE.md) and `docs/superpowers/specs/2026-04-11-backend-architecture-design.md`.

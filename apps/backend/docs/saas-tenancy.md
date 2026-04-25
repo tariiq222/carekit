@@ -1,6 +1,6 @@
 # CareKit Multi-Tenancy — Engineering Guide
 
-This backend is transitioning from single-tenant to multi-tenant SaaS. The transition is **in progress** — not every cluster is scoped yet. Use this document to understand what's enforced today, what isn't, and how to contribute new tenant-aware code correctly.
+This backend is multi-tenant SaaS. As of SaaS-02h (2026-04-22), `TENANT_ENFORCEMENT=strict` is the platform default and every cluster is scoped (52 tenant-scoped models). Use this document to understand the contract and how to contribute new tenant-aware code correctly.
 
 ## Model at a glance
 
@@ -20,11 +20,9 @@ Three modes:
 
 | Mode | Meaning |
 |---|---|
-| `off` (default) | No tenant resolution. The Prisma scoping extension is a no-op. RLS policies are installed but unused. System behaves as single-tenant. |
-| `permissive` | Middleware resolves an org from JWT → X-Org-Id (super-admin only) → `DEFAULT_ORGANIZATION_ID`. Handlers can assume a tenant is always set. |
-| `strict` | As permissive, but missing resolution throws `TenantResolutionError`. |
-
-Production target after Plan 10 is `strict`. Every phase after Plan 01 runs in `permissive` until the last cluster is migrated.
+| `off` | Migration-bootstrap only. No tenant resolution; the Prisma scoping extension is a no-op. Do not use outside of bootstrap scripts. |
+| `permissive` | Middleware resolves an org from JWT → X-Org-Id (super-admin only) → `DEFAULT_ORGANIZATION_ID`. Handlers can assume a tenant is always set. Reserved for local dev. |
+| `strict` (**default**) | As permissive, but any scoped-model query without CLS tenant context throws `UnauthorizedTenantAccessError`. The platform default since SaaS-02h. |
 
 ## The `id` naming convention (important)
 

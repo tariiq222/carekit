@@ -1,7 +1,7 @@
 # CONTRIBUTING — CareKit Dashboard
 
 > اقرأ هذا الملف أولاً قبل كتابة أي سطر كود.
-> يُكمّل: `ARCHITECTURE.md` (البنية) + `DESIGN-SYSTEM.md` (التصميم) + `CLAUDE.md` (القواعد الكاملة).
+> يُكمّل: `CLAUDE.md` (القواعد الكاملة + Layer rules) + `DESIGN-SYSTEM.md` (التصميم) + `tokens.md` (مرجع التوكنز).
 
 ---
 
@@ -34,10 +34,9 @@ npm run format
 
 | الملف | ما ستعرفه |
 |-------|-----------|
-| `CLAUDE.md` | قواعد المشروع الكاملة |
-| `ARCHITECTURE.md` | طبقات الكود وقواعد الاستيراد |
-| `DESIGN-SYSTEM.md` | tokens، مكونات، RTL |
-| `components-policy.md` | متى تنشئ مكوناً جديداً |
+| `CLAUDE.md` | قواعد المشروع الكاملة + Layer rules + i18n + billing + terminology |
+| `DESIGN-SYSTEM.md` | الـ frosted-glass design system، RTL، component patterns |
+| `tokens.md` | مرجع الـ design tokens (الألوان، spacing، shadows…) |
 
 ---
 
@@ -52,7 +51,8 @@ dashboard/
 │       └── create/page.tsx   # صفحة الإنشاء
 │
 ├── components/
-│   ├── ui/                   # shadcn primitives — لا تُعدَّل
+│   ├── ui/                   # App-local wrappers فقط (date-picker, nationality-select)
+│   │                         #   shadcn primitives → @carekit/ui (workspace package)
 │   └── features/
 │       ├── [feature]/        # مكونات خاصة بكل feature
 │       └── *.tsx             # shared components (3+ features)
@@ -196,8 +196,8 @@ docs(arch): update hook ownership rules
 **Q: أين أضع منطق مشترك بين featureين؟**
 A: إذا feature واحدة → داخلها. إذا featureان → انتظر الثالثة ثم انقل لـ `components/features/` root أو `lib/`.
 
-**Q: هل أستطيع تعديل ملفات `components/ui/`؟**
-A: لا. هي shadcn primitives ثابتة. إذا احتجت تعديلاً → أنشئ wrapper في `components/features/`.
+**Q: هل أستطيع تعديل shadcn primitives؟**
+A: لا. الـ primitives موجودة في `@carekit/ui` (workspace package). إذا احتجت تعديلاً → عدّلها داخل `packages/ui/src/primitives/` لتظل مشتركة بين dashboard/admin/website. `components/ui/` في الـ dashboard للـ wrappers المحلية فقط (date-picker, nationality-select).
 
 **Q: أين أحفظ constants؟**
 A: في `lib/types/[feature].ts` كـ `const` عادية، أو `lib/utils.ts` إذا كانت عامة.
