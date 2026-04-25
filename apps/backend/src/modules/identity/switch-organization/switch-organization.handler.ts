@@ -52,6 +52,11 @@ export class SwitchOrganizationHandler {
       throw new UnauthorizedException('User not found or inactive');
     }
 
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: cmd.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
     return this.tokens.issueTokenPair(user, {
       organizationId: membership.organizationId,
       membershipId: membership.id,

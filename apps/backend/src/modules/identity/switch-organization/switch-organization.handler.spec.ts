@@ -29,6 +29,7 @@ describe('SwitchOrganizationHandler', () => {
           useValue: {
             membership: { findUnique: jest.fn() },
             user: { findUnique: jest.fn() },
+            refreshToken: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
           } as unknown as PrismaService,
         },
         {
@@ -96,6 +97,23 @@ describe('SwitchOrganizationHandler', () => {
     await expect(
       handler.execute({ userId: 'user-1', targetOrganizationId: 'org-d' }),
     ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('revokes all active refresh tokens before issuing a new pair', async () => {
+    prisma.membership.findUnique.mockResolvedValue({
+      id: 'm-6',
+      organizationId: 'org-f',
+      isActive: true,
+    });
+    prisma.user.findUnique.mockResolvedValue(userBase);
+
+    await handler.execute({ userId: 'user-1', targetOrganizationId: 'org-f' });
+
+    expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+    expect(tokens.issueTokenPair).toHaveBeenCalled();
   });
 
   it('propagates SUPER_ADMIN flag', async () => {
