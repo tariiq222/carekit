@@ -25,7 +25,7 @@ export interface SaudiBank {
 }
 
 export const SAUDI_BANKS: SaudiBank[] = [
-  // ── البنوك المحلية (SAMA list) ──
+  // ── Local banks (SAMA list) ──
   { id: "alrajhi",  nameAr: "مصرف الراجحي",           nameEn: "Al Rajhi Bank",           domain: "alrajhibank.com.sa", color: "#006400", initials: "AR" },
   { id: "snb",      nameAr: "البنك الأهلي السعودي",    nameEn: "Saudi National Bank",     domain: "alahli.com",         faviconUrl: "https://www.alahli.com/-/media/project/snb/shared/icons/favicon.png", color: "#1B4F72", initials: "SN" },
   { id: "riyad",    nameAr: "بنك الرياض",              nameEn: "Riyad Bank",              domain: "riyadbank.com",      color: "#C8102E", initials: "RB" },
@@ -37,7 +37,7 @@ export const SAUDI_BANKS: SaudiBank[] = [
   { id: "aljazira", nameAr: "بنك الجزيرة",             nameEn: "Bank AlJazira",           domain: "bankaljazira.com.sa",faviconUrl: "https://www.aljazirabank.com.sa/Portals/0/Images/ajb-logo.ico", color: "#8B0000", initials: "AJ" },
   { id: "albilad",  nameAr: "بنك البلاد",              nameEn: "Bank Albilad",            domain: "bankalbilad.com.sa", faviconUrl: "https://www.bankalbilad.com.sa/SiteAssets/favicon.ico", color: "#006633", initials: "AB" },
   { id: "gib",      nameAr: "بنك الخليج الدولي",       nameEn: "Gulf International Bank", domain: "gibonline.com",      color: "#154360", initials: "GI" },
-  // ── فروع البنوك الأجنبية ──
+  // ── Foreign bank branches ──
   { id: "enbd",     nameAr: "بنك الإمارات دبي الوطني", nameEn: "Emirates NBD",            domain: "emiratesnbd.com.sa", faviconUrl: "https://www.emiratesnbd.com.sa/-/media/enbd/images/logos/favicon.png", color: "#C0392B", initials: "EN" },
   { id: "nbb",      nameAr: "بنك البحرين الوطني",      nameEn: "National Bank of Bahrain", domain: "nbbonline.com",     color: "#003366", initials: "NB" },
   { id: "nbk",      nameAr: "بنك الكويت الوطني",       nameEn: "National Bank of Kuwait", domain: "nbk.com",            color: "#003366", initials: "NK" },
@@ -49,7 +49,7 @@ export const SAUDI_BANKS: SaudiBank[] = [
   { id: "mufg",     nameAr: "بنك MUFG",                nameEn: "MUFG Bank",               domain: "mufg.jp",            color: "#C8102E", initials: "MU" },
   { id: "fab",      nameAr: "بنك أبوظبي الأول",        nameEn: "First Abu Dhabi Bank",    domain: "bankfab.com",        color: "#003087", initials: "FA" },
   { id: "sc",       nameAr: "بنك ستاندرد تشارترد",     nameEn: "Standard Chartered",      domain: "sc.com",             color: "#00A3E0", initials: "SC" },
-  // ── البنوك الرقمية ──
+  // ── Digital banks ──
   { id: "stcbank",  nameAr: "بنك STC",                 nameEn: "STC Bank",                domain: "stcbank.com.sa",     color: "#6C3483", initials: "ST" },
   { id: "d360",     nameAr: "البنك السعودي الرقمي",    nameEn: "D360 Bank",               domain: "d360.com",           faviconUrl: "https://d360.com/favicon.ico", color: "#1A1A2E", initials: "D3" },
 ]
