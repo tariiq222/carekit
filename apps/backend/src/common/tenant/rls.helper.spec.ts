@@ -11,21 +11,21 @@ describe('RlsHelper', () => {
     expect(tx.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 
-  it('emits SET LOCAL for both GUC names when org is set', async () => {
+  it('sets only app.current_org_id', async () => {
     const ctx = { getOrganizationId: () => 'org-abc' } as unknown as TenantContextService;
     const helper = new RlsHelper({} as PrismaService, ctx);
     const tx = { $executeRawUnsafe: jest.fn().mockResolvedValue(undefined) };
     await helper.applyInTransaction(tx);
-    expect(tx.$executeRawUnsafe).toHaveBeenNthCalledWith(1, "SET LOCAL app.current_org_id = 'org-abc'");
-    expect(tx.$executeRawUnsafe).toHaveBeenNthCalledWith(2, "SET LOCAL app.current_organization_id = 'org-abc'");
+    expect(tx.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+    expect(tx.$executeRawUnsafe).toHaveBeenCalledWith("SET LOCAL app.current_org_id = 'org-abc'");
   });
 
-  it('escapes single quotes in the id for both GUCs', async () => {
+  it('escapes single quotes in the id', async () => {
     const ctx = { getOrganizationId: () => "o'rg" } as unknown as TenantContextService;
     const helper = new RlsHelper({} as PrismaService, ctx);
     const tx = { $executeRawUnsafe: jest.fn().mockResolvedValue(undefined) };
     await helper.applyInTransaction(tx);
-    expect(tx.$executeRawUnsafe).toHaveBeenNthCalledWith(1, "SET LOCAL app.current_org_id = 'o''rg'");
-    expect(tx.$executeRawUnsafe).toHaveBeenNthCalledWith(2, "SET LOCAL app.current_organization_id = 'o''rg'");
+    expect(tx.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+    expect(tx.$executeRawUnsafe).toHaveBeenCalledWith("SET LOCAL app.current_org_id = 'o''rg'");
   });
 });
