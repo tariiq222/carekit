@@ -10,3 +10,4 @@ export { useChat, chatKeys } from './useChat';
 export { useEmployeeClients, employeeClientsKeys } from './useEmployeeClients';
 export { useEmployeeDayBookings, employeeDayBookingsKeys } from './useEmployeeDayBookings';
 export { useBranding, brandingKeys } from './useBranding';
+export { useHome, useSummary, useUpcoming, portalKeys } from './usePortal';
