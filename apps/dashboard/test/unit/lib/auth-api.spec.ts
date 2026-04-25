@@ -46,6 +46,8 @@ const fakeUser = {
   id: "1",
   email: "a@b.com",
   name: "A B",
+  firstName: "A",
+  lastName: "B",
   phone: null,
   gender: null,
   avatarUrl: null,
@@ -54,6 +56,7 @@ const fakeUser = {
   customRoleId: null,
   isSuperAdmin: false,
   permissions: [],
+  organizationId: "org_test",
 }
 
 describe("auth api", () => {

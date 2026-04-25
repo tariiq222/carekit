@@ -5,6 +5,11 @@ export interface UserPayload {
   id: string
   email: string
   name: string
+  // Derived from `name` by the backend (split on first whitespace run).
+  // Optional only to tolerate legacy tokens that pre-date the SaaS-04
+  // alignment; new responses always include them.
+  firstName?: string
+  lastName?: string
   phone: string | null
   gender: string | null
   avatarUrl: string | null
@@ -13,6 +18,9 @@ export interface UserPayload {
   customRoleId: string | null
   isSuperAdmin: boolean
   permissions: string[]
+  // Resolved from the user's active Membership. Null when the user has
+  // no active membership yet (e.g. freshly created super-admin in seeds).
+  organizationId: string | null
   createdAt?: string
   updatedAt?: string
 }

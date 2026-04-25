@@ -9,7 +9,9 @@ const fakeRefresh = 'refresh.jwt'
 const fakeUser: UserPayload = {
   id: 'usr_1',
   email: 'admin@carekit.app',
-  name: 'Admin',
+  name: 'Admin Owner',
+  firstName: 'Admin',
+  lastName: 'Owner',
   phone: null,
   gender: null,
   avatarUrl: null,
@@ -18,6 +20,7 @@ const fakeUser: UserPayload = {
   customRoleId: null,
   isSuperAdmin: false,
   permissions: ['booking:read'],
+  organizationId: 'org_1',
 }
 
 const fakeAuth: AuthResponse = {
