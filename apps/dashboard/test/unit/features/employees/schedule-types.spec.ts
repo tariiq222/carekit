@@ -1,22 +1,21 @@
 import { describe, expect, it } from "vitest"
 import {
   DAY_NAMES_EN,
-  DAY_NAMES_AR,
+  DAY_NAME_KEYS,
   nextBreakKey,
 } from "@/components/features/employees/create/schedule-types"
 
-describe("DAY_NAMES_EN / DAY_NAMES_AR", () => {
+describe("DAY_NAMES_EN / DAY_NAME_KEYS", () => {
   it("are 7-tuples starting at Sunday", () => {
     expect(DAY_NAMES_EN).toHaveLength(7)
-    expect(DAY_NAMES_AR).toHaveLength(7)
+    expect(DAY_NAME_KEYS).toHaveLength(7)
     expect(DAY_NAMES_EN[0]).toBe("Sunday")
-    expect(DAY_NAMES_AR[0]).toBe("الأحد")
+    expect(DAY_NAME_KEYS[0]).toBe("employees.day.0")
   })
 
-  it("AR and EN align index-by-index on the same weekday", () => {
-    const expectedAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
-    DAY_NAMES_AR.forEach((name, i) => {
-      expect(name).toBe(expectedAr[i])
+  it("DAY_NAME_KEYS align index-by-index with JS day numbers", () => {
+    DAY_NAME_KEYS.forEach((key, i) => {
+      expect(key).toBe(`employees.day.${i}`)
     })
   })
 })

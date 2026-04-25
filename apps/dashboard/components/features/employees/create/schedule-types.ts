@@ -23,12 +23,6 @@ export const DAY_NAME_KEYS = [
   "employees.day.6",
 ] as const
 
-/** @deprecated Use `DAY_NAME_KEYS` with `t()` at the call site instead. */
-export const DAY_NAMES_AR = [
-  "الأحد", "الاثنين", "الثلاثاء", "الأربعاء",
-  "الخميس", "الجمعة", "السبت",
-] as const
-
 export interface LocalBreak {
   key: string
   dayOfWeek: number
