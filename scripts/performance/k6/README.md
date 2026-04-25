@@ -1,6 +1,6 @@
 # CareKit k6 Load Tests
 
-Performance tests for the CareKit backend API (`http://localhost:5000/api/v1`).
+Performance tests for the CareKit backend API (`http://localhost:5100/api/v1`).
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ The backend must be running on port 5000 before running tests:
 ```bash
 # From repo root
 npm run docker:up    # Start PostgreSQL + Redis
-npm run dev:backend  # NestJS on :5000
+npm run dev:backend  # NestJS on :5100 (default)
 ```
 
 ## Environment Variables
@@ -42,7 +42,7 @@ npm run dev:backend  # NestJS on :5000
 ### Run all scenarios
 
 ```bash
-cd performance/k6
+cd scripts/performance/k6
 ./run-all.sh
 ```
 

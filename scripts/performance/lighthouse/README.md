@@ -6,7 +6,7 @@ Performance audits for the Next.js admin dashboard using [LHCI](https://github.c
 
 1. **Node.js 18+** installed
 2. **Google Chrome** installed (LHCI drives a real browser)
-3. **Dashboard running** on `http://localhost:5001`
+3. **Dashboard running** on `http://localhost:5103`
 
 ```bash
 # From repo root
@@ -25,17 +25,17 @@ Or use `npx` — the audit script falls back automatically if `lhci` is not on P
 
 ```bash
 # From repo root
-bash performance/lighthouse/run-audit.sh
+bash scripts/performance/lighthouse/run-audit.sh
 ```
 
 The script:
-1. Verifies the dashboard is reachable on `:5001`
+1. Verifies the dashboard is reachable on `:5103`
 2. Runs `lhci autorun` — 3 Lighthouse passes per URL × 8 pages
 3. Asserts all metrics against the thresholds in `lighthouserc.js`
 4. Uploads reports to temporary public storage and prints the shareable URL
 5. Exits non-zero if any assertion fails (safe for CI)
 
-HTML reports are saved to `performance/lighthouse/results/`.
+HTML reports are saved to `scripts/performance/lighthouse/results/`.
 
 ## Thresholds
 
@@ -78,6 +78,6 @@ HTML reports are saved to `performance/lighthouse/results/`.
 
 ## Reading Results
 
-Open any `.html` file in `performance/lighthouse/results/` in a browser for the full Lighthouse report with waterfall, screenshots, and per-audit details.
+Open any `.html` file in `scripts/performance/lighthouse/results/` in a browser for the full Lighthouse report with waterfall, screenshots, and per-audit details.
 
 The `manifest.json` in the same folder lists all run summaries and is machine-readable for trend tracking.

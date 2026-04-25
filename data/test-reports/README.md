@@ -53,7 +53,7 @@ it('[EM-001][Employees/list-employees][P2-Medium] عرض قائمة الممار
 
 - اختبارات بنفس `Module/slice` تُجمَّع معاً في قسم واحد في التقرير
 - `CL-UI-046a` و `CL-UI-046b` يُربطان بالسيناريو الأب `CL-046` تلقائياً
-- عدة اختبارات لنفس السيناريو (مثلاً Jest + Playwright) تُظهَر كـ sub-tests داخل الصف
+- عدة اختبارات لنفس السيناريو تُظهَر كـ sub-tests داخل الصف
 
 ## 🚀 workflow الاستخدام
 
@@ -76,11 +76,9 @@ cd apps/backend && npm run test:e2e
 ```
 يُنتج `test-results-clients.json` ثم يُشغّل `test:report` تلقائياً.
 
-**Dashboard Playwright:**
-```bash
-cd apps/dashboard && npm run test:e2e
-```
-يُنتج `playwright-clients-results.json` ثم يُشغّل `test:report` تلقائياً.
+**Dashboard E2E:** Playwright was removed 2026-04-16. Dashboard QA is now
+manual via Chrome DevTools MCP — those runs land in Kiwi TCMS via
+`npm run kiwi:sync-manual`, not in this HTML report.
 
 ### فتح التقرير
 ```bash
@@ -89,10 +87,7 @@ npm run test:report:open        # يولّد التقرير ويفتحه في ا
 npm run test:report             # يولّد فقط
 ```
 
-أو مباشرة:
-```
-start c:/pro/carekit/test-reports/output/test-report.html
-```
+أو مباشرة افتح: `data/test-reports/output/test-report.html`
 
 ## 🛠️ وسم اختبارات قديمة دفعة واحدة
 
@@ -134,7 +129,6 @@ py test-reports/scripts/tag_tests.py
 
 السكريبت يمسح `apps/**/*` عن:
 - أي ملف يطابق `test-results-*.json` (Jest)
-- أي ملف يطابق `playwright-*-results.json` (Playwright)
 
 إذا أضفت موديول جديد (مثل Employees)، فقط شغّل اختبارات E2E له بأي اسم:
 ```bash

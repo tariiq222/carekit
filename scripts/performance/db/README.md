@@ -14,13 +14,13 @@
 
 ```bash
 # Against local dev DB
-psql $DATABASE_URL -f performance/db/analyze-queries.sql
+psql $DATABASE_URL -f scripts/performance/db/analyze-queries.sql
 
 # Against staging (read-only replica — safe)
-psql "postgres://user:pass@staging-host/carekit" -f performance/db/analyze-queries.sql
+psql "postgres://user:pass@staging-host/carekit" -f scripts/performance/db/analyze-queries.sql
 
 # Pipe output to a file for review
-psql $DATABASE_URL -f performance/db/analyze-queries.sql > /tmp/explain-output.txt 2>&1
+psql $DATABASE_URL -f scripts/performance/db/analyze-queries.sql > /tmp/explain-output.txt 2>&1
 ```
 
 Before running, replace the UUID placeholders:
@@ -54,10 +54,10 @@ Key terms to look for:
 
 ## Adding the Slow Query Logger to PrismaService
 
-In `backend/src/database/prisma.service.ts`:
+In `apps/backend/src/infrastructure/database/prisma.service.ts`:
 
 ```ts
-import { slowQueryMiddleware } from '../../performance/db/prisma-query-logger.js';
+import { slowQueryMiddleware } from '../../scripts/performance/db/prisma-query-logger.js';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -71,7 +71,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 Custom thresholds (e.g., tighter in CI):
 
 ```ts
-import { createSlowQueryMiddleware } from '../../performance/db/prisma-query-logger.js';
+import { createSlowQueryMiddleware } from '../../scripts/performance/db/prisma-query-logger.js';
 
 this.$use(createSlowQueryMiddleware({ warnMs: 50, errorMs: 200 }));
 ```

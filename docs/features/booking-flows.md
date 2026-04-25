@@ -1,6 +1,15 @@
 # Booking System — State & Flow Diagrams
 
-> مخططات تدفق الحجز والإلغاء وإعادة الجدولة والدفع.
+> **STATUS: Pre-SaaS historical record.** State names below use the original
+> lowercase pre-SaaS strings (`pending`, `confirmed`, `pending_cancellation`,
+> `cancelled_reschedule`). The live `BookingStatus` enum is UPPERCASE with a
+> different shape — `PENDING | PENDING_GROUP_FILL | AWAITING_PAYMENT |
+> CONFIRMED | CANCELLED | COMPLETED | NO_SHOW | EXPIRED | CANCEL_REQUESTED`.
+> The state-machine intent is still useful as a narrative; for actual values
+> see `apps/backend/prisma/schema/bookings.prisma` and the per-slice handlers
+> under `apps/backend/src/modules/bookings/`.
+>
+> مخططات تدفق الحجز والإلغاء وإعادة الجدولة والدفع (تاريخي).
 > للمخطط الهيكلي: [booking-erd.md](booking-erd.md) | للقيود: [booking-constraints.md](booking-constraints.md)
 
 ---

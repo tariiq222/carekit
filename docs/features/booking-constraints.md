@@ -1,6 +1,19 @@
 # Booking System — Relations, Constraints & Pricing
 
-> جداول تحليلية لجميع العلاقات والقيود وهرمية التسعير.
+> **STATUS: Pre-SaaS historical record.** Tables below describe the pre-SaaS
+> relational model — they reference deleted/renamed entities (`Role`,
+> `Permission`, `RolePermission`, `UserRole`, `Specialty` as separate model,
+> `EmployeeVacation`). The current architecture uses CASL with `CustomRole`
+> + `Permission` in the `identity` cluster, and bookings have **no Prisma FK
+> relations** to `Client`/`Branch`/`Employee`/`Service` (cross-cluster IDs are
+> plain strings, integrity is event-driven). Source of truth:
+> `apps/backend/prisma/schema/bookings.prisma`,
+> `apps/backend/prisma/schema/identity.prisma`, and
+> `docs/architecture/module-ownership.md`. Pricing-hierarchy section below
+> still reflects intent but the live `EmployeeService`/`Service` shapes have
+> shifted — verify against `org-experience` schema before quoting.
+>
+> جداول تحليلية للعلاقات والقيود وهرمية التسعير (تاريخي).
 > للمخططات البصرية: [booking-erd.md](booking-erd.md) | للـ Enums: [booking-enums.md](booking-enums.md)
 
 ---

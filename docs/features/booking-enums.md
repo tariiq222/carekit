@@ -1,8 +1,16 @@
 # Booking System — Enums Reference
 
-> مرجع لجميع الـ Enums المستخدمة في نظام المواعيد.
+> **STATUS: Pre-SaaS historical record (2026-03-26).** The values below were the
+> original lowercase enum strings used before the SaaS multi-tenancy refactor.
+> The **live** Prisma enums are now UPPERCASE and partially renamed — see
+> `apps/backend/prisma/schema/bookings.prisma` for the source of truth
+> (`BookingStatus.PENDING|CONFIRMED|...`, `BookingType.INDIVIDUAL|WALK_IN|GROUP|ONLINE`,
+> `WaitlistStatus.WAITING|PROMOTED|EXPIRED|REMOVED`, plus `CancellationReason`,
+> `RecurringFrequency`, `ZoomMeetingStatus`, `GroupSessionStatus`, `RefundType`).
+> Kept for narrative/i18n value mapping only — do NOT treat as authoritative.
+>
+> مرجع لجميع الـ Enums المستخدمة في نظام المواعيد (تاريخي).
 > للمخطط الكامل وتدفقات العمل: [booking-erd.md](booking-erd.md)
-> **آخر تحديث:** 2026-03-26 — مزامنة مع Sprint 4.7 (shared/enums)
 
 ## BookingType
 

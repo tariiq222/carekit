@@ -1,6 +1,14 @@
 # Booking System — Entity Relationship Diagram
 
-## مخطط العلاقات الكامل لنظام المواعيد
+> **STATUS: Pre-SaaS historical record.** This ERD pre-dates the SaaS
+> multi-tenancy refactor and the cluster split. It depicts FK relations
+> (`Booking → User`, `Employee → Specialty`, etc.) that **no longer exist** —
+> bookings now reference `clientId`/`employeeId`/`serviceId` as plain strings
+> across cluster boundaries. Use as a conceptual map only. Source of truth:
+> the per-cluster Prisma files under `apps/backend/prisma/schema/` and
+> `docs/architecture/module-ownership.md`.
+
+## مخطط العلاقات الكامل لنظام المواعيد (تاريخي)
 
 ```mermaid
 erDiagram
