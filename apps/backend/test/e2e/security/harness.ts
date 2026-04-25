@@ -20,8 +20,15 @@ export interface SecurityHarness extends IsolationHarness {
   rlsProbeUrl: () => string;
 }
 
-const RLS_PROBE_DB =
+// Probe DSN derives from whichever DB the app is actually using. Resolved
+// lazily inside `rlsProbeUrl()` because at module-load time `dotenv` may not
+// yet have populated `DATABASE_URL`. Without this fallback the previous
+// hardcoded default (`carekit_test`) connected to a DB that does not exist
+// in dev (where DATABASE_URL points at carekit_rls_hardening), and every
+// rls-backstop test failed with "relation does not exist".
+const resolveProbeDb = (): string =>
   process.env.TEST_DATABASE_URL ??
+  process.env.DATABASE_URL ??
   'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
 
 /**
@@ -55,9 +62,9 @@ export async function bootSecurityHarness(): Promise<SecurityHarness> {
   };
 
   const rlsProbeUrl = (): string => {
-    // Swap username/password into the TEST_DATABASE_URL.
+    // Swap username/password into whichever DB the app is using.
     // Parse scheme://user:pass@host:port/db?query
-    const url = new URL(RLS_PROBE_DB);
+    const url = new URL(resolveProbeDb());
     url.username = 'carekit_rls_probe';
     url.password = RLS_PROBE_PASSWORD;
     return url.toString();
