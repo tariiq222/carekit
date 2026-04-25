@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
+import { useTerminology } from '@/hooks/useTerminology';
+import { VERTICAL_SLUG } from '@/constants/config';
 import { useAppSelector } from '@/hooks/use-redux';
 import { getFontName } from '@/theme/fonts';
 import { useHome, useTherapists } from '@/hooks/queries';
@@ -18,6 +20,7 @@ import { TherapistsRow } from '@/components/features/home/TherapistsRow';
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t: termT } = useTerminology(VERTICAL_SLUG);
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
   const f400 = getFontName(dir.locale, '400');
@@ -130,7 +133,7 @@ export default function HomeScreen() {
           style={[styles.sectionHead, { flexDirection: dir.row }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'المعالجون' : 'Therapists'}
+            {termT('employee.plural', dir.isRTL ? 'المعالجون' : 'Therapists')}
           </Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>

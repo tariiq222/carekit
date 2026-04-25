@@ -7,6 +7,8 @@ import { sawaaColors } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useAppSelector } from '@/hooks/use-redux';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
+import { getFontName } from '@/theme/fonts';
+import { useDir } from '@/hooks/useDir';
 
 interface HomeTopBarProps {
   f600: string;
@@ -14,9 +16,12 @@ interface HomeTopBarProps {
 
 export function HomeTopBar({ f600 }: HomeTopBarProps) {
   const router = useRouter();
+  const dir = useDir();
+  const fBadge = getFontName(dir.locale, '700');
   const user = useAppSelector((s) => s.auth.user);
   const initial = (user?.firstName ?? 'س').charAt(0);
   const { count: unreadCount } = useUnreadCount();
+  const badgeLabel = unreadCount > 99 ? '99+' : String(unreadCount);
 
   return (
     <View style={styles.topBar}>
@@ -32,7 +37,18 @@ export function HomeTopBar({ f600 }: HomeTopBarProps) {
             style={styles.iconBtnInner}
           >
             <Bell size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
-            {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
+            {unreadCount > 0 ? (
+              <View
+                style={[
+                  styles.bellBadge,
+                  badgeLabel.length > 2 ? styles.bellBadgeWide : null,
+                ]}
+              >
+                <Text style={[styles.bellBadgeText, { fontFamily: fBadge }]}>
+                  {badgeLabel}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         </Glass>
       </View>
@@ -59,16 +75,29 @@ const styles = StyleSheet.create({
   iconBtn: { width: 42, height: 42 },
   iconBtnInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatarBtn: { width: 42, height: 42 },
-  bellDot: {
+  bellBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 4,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: sawaaColors.accent.rose,
     borderWidth: 1.5,
     borderColor: '#fff',
+  },
+  bellBadgeWide: {
+    minWidth: 22,
+    paddingHorizontal: 5,
+  },
+  bellBadgeText: {
+    fontSize: 9.5,
+    lineHeight: 12,
+    color: '#fff',
+    textAlign: 'center',
   },
   avatarInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 15, color: sawaaColors.teal[700] },
