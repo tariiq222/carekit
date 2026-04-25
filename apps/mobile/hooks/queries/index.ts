@@ -9,3 +9,4 @@ export { useCancelBooking, useRateBooking } from './useBookingMutations';
 export { useChat, chatKeys } from './useChat';
 export { useEmployeeClients, employeeClientsKeys } from './useEmployeeClients';
 export { useEmployeeDayBookings, employeeDayBookingsKeys } from './useEmployeeDayBookings';
+export { useBranding, brandingKeys } from './useBranding';
