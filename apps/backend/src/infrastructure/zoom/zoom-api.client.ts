@@ -1,4 +1,5 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { createHash } from 'crypto';
 
 export interface ZoomMeetingRequest {
   topic: string;
@@ -28,7 +29,11 @@ export class ZoomApiClient {
     clientSecret: string,
     accountId: string,
   ): Promise<string> {
-    const cached = this.tokenCache.get(orgId);
+    // Cache key binds orgId AND a credential fingerprint so a one-off "test
+    // config" call with arbitrary creds cannot poison the cache for live
+    // bookings using the persisted credentials.
+    const cacheKey = this.cacheKey(orgId, clientId, accountId);
+    const cached = this.tokenCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.token;
     }
@@ -54,12 +59,28 @@ export class ZoomApiClient {
 
     const data: ZoomTokenResponse = await res.json();
     // Cache with 60s buffer
-    this.tokenCache.set(orgId, {
+    this.tokenCache.set(cacheKey, {
       token: data.access_token,
       expiresAt: Date.now() + (data.expires_in - 60) * 1000,
     });
 
     return data.access_token;
+  }
+
+  /** Drop any cached OAuth tokens for an org. Call after credential rotation. */
+  invalidateToken(orgId: string): void {
+    const prefix = `${orgId}:`;
+    for (const key of this.tokenCache.keys()) {
+      if (key.startsWith(prefix)) this.tokenCache.delete(key);
+    }
+  }
+
+  private cacheKey(orgId: string, clientId: string, accountId: string): string {
+    const fingerprint = createHash('sha256')
+      .update(`${clientId}|${accountId}`)
+      .digest('hex')
+      .slice(0, 16);
+    return `${orgId}:${fingerprint}`;
   }
 
   async createMeeting(

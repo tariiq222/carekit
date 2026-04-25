@@ -49,9 +49,9 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks();
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new CreateZoomMeetingHandler(
-      prisma as any,
-      zoomApi as any,
-      zoomCredentials as any,
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
     );
 
     await expect(handler.execute({ bookingId: 'bad' })).rejects.toThrow(
@@ -67,9 +67,9 @@ describe('CreateZoomMeetingHandler', () => {
       zoomMeetingStatus: ZoomMeetingStatus.CREATED,
     });
     const handler = new CreateZoomMeetingHandler(
-      prisma as any,
-      zoomApi as any,
-      zoomCredentials as any,
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -81,9 +81,9 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks();
     (prisma as unknown as { integration: { findFirst: jest.Mock } }).integration.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new CreateZoomMeetingHandler(
-      prisma as any,
-      zoomApi as any,
-      zoomCredentials as any,
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -100,9 +100,9 @@ describe('CreateZoomMeetingHandler', () => {
   it('calls Zoom API and updates booking with meeting details on success', async () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks();
     const handler = new CreateZoomMeetingHandler(
-      prisma as any,
-      zoomApi as any,
-      zoomCredentials as any,
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -123,9 +123,9 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks();
     zoomApi.createMeeting.mockRejectedValue(new Error('Zoom Outage'));
     const handler = new CreateZoomMeetingHandler(
-      prisma as any,
-      zoomApi as any,
-      zoomCredentials as any,
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });

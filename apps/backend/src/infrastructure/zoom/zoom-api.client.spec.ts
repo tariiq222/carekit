@@ -35,6 +35,48 @@ describe('ZoomApiClient', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('does not reuse a cached token across different credential fingerprints (anti-poisoning)', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ access_token: 'token-A', expires_in: 3600 }),
+      } as Response);
+
+      // Live creds for org-1 → token cached under fingerprint(client, account).
+      const tokenLive = await client.getAccessToken('org-1', 'client', 'secret', 'account');
+      expect(tokenLive).toBe('token-A');
+
+      // Test handler probes different creds for the SAME org. Must NOT return the
+      // cached live token — must call Zoom again with the probe creds.
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'token-B', expires_in: 3600 }),
+      } as Response);
+      const tokenProbe = await client.getAccessToken('org-1', 'OTHER', 'OTHER', 'OTHER');
+      expect(tokenProbe).toBe('token-B');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+
+      // And the live creds still hit the cache, not Zoom.
+      const tokenLiveAgain = await client.getAccessToken('org-1', 'client', 'secret', 'account');
+      expect(tokenLiveAgain).toBe('token-A');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('invalidateToken clears all cached tokens for an org', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ access_token: 'token-A', expires_in: 3600 }),
+      } as Response);
+
+      await client.getAccessToken('org-1', 'client', 'secret', 'account');
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+
+      client.invalidateToken('org-1');
+
+      // After invalidation, next call must re-fetch.
+      await client.getAccessToken('org-1', 'client', 'secret', 'account');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
     it('should throw if auth fails', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
