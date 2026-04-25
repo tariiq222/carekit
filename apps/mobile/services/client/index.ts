@@ -4,6 +4,7 @@ export { clientProfileService } from './profile';
 export type { ClientProfile, ClientProfileUpdate } from './profile';
 export { publicCatalogService } from './catalog';
 export { publicBranchesService } from './branches';
+export { publicBrandingService } from './branding';
 export { publicEmployeesService } from './employees';
 export type { PublicService } from './catalog';
 export type { PublicEmployeeItem } from './employees';
