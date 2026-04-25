@@ -19,7 +19,9 @@ const REFRESH_KEY = 'admin.refreshToken';
 // Initialise the shared client once
 // ---------------------------------------------------------------------------
 initClient({
-  baseUrl: '',
+  // baseUrl is the same-origin proxy prefix; Next rewrites /api/proxy/:path*
+  // → backend /api/v1/:path* (see next.config.mjs).
+  baseUrl: '/api/proxy',
 
   getAccessToken: () =>
     typeof window !== 'undefined' ? window.localStorage.getItem(ACCESS_KEY) : null,
@@ -45,11 +47,12 @@ initClient({
 });
 
 // ---------------------------------------------------------------------------
-// Proxy path prefixes (used by Next.js rewrites in next.config.mjs)
-// /api/proxy/admin/*  → backend /api/v1/admin/*
-// /api/proxy/*        → backend /api/v1/*  (public routes)
+// Path prefixes — initClient already prepends /api/proxy as baseUrl.
+// adminRequest paths get an extra /admin segment to land at /api/v1/admin/*.
+// publicRequest is a separate fetch (no token, no refresh) used by feature
+// slices for unauthenticated endpoints; it owns the full /api/proxy prefix.
 // ---------------------------------------------------------------------------
-const ADMIN_BASE = '/api/proxy/admin';
+const ADMIN_BASE = '/admin';
 const PUBLIC_BASE = '/api/proxy';
 
 /**
