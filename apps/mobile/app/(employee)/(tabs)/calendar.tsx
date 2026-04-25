@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Calendar as CalendarIcon, Clock } from 'lucide-react-native';
+import { Clock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar as RNCalendar } from 'react-native-calendars';
 import { router } from 'expo-router';
@@ -11,8 +11,7 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
-import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
-import type { Booking } from '@/types/models';
+import { useEmployeeDayBookings } from '@/hooks/queries/useEmployeeDayBookings';
 
 export default function CalendarScreen() {
   const { t } = useTranslation();
@@ -22,19 +21,8 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0],
   );
-  const [dayBookings, setDayBookings] = useState<Booking[]>([]);
 
-  const loadDay = useCallback(async (date: string) => {
-    setSelectedDate(date);
-    try {
-      const res = await bookingsService.getAll({ status: ['confirmed', 'pending'], date });
-      if (res.data) {
-        setDayBookings(res.data.items);
-      }
-    } catch {
-      setDayBookings([]);
-    }
-  }, []);
+  const { data: dayBookings = [] } = useEmployeeDayBookings(selectedDate);
 
   return (
     <View
@@ -49,7 +37,7 @@ export default function CalendarScreen() {
 
       <ThemedCard style={styles.calCard}>
         <RNCalendar
-          onDayPress={(day: { dateString: string }) => loadDay(day.dateString)}
+          onDayPress={(day: { dateString: string }) => setSelectedDate(day.dateString)}
           markedDates={{
             [selectedDate]: {
               selected: true,
@@ -69,7 +57,6 @@ export default function CalendarScreen() {
         />
       </ThemedCard>
 
-      {/* Day Appointments */}
       <ThemedText variant="subheading" style={styles.dayTitle}>
         {new Date(selectedDate).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
           weekday: 'long',
