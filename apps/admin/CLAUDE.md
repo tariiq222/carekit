@@ -74,13 +74,41 @@ to a shared API barrel — there isn't one.
 - `/login` — sign-in form
 - `/` — overview (platform metrics cards)
 - `/organizations` — list + search + status filter
-- `/organizations/[id]` — detail + suspend / reinstate dialogs
+- `/organizations/[id]` — detail + suspend / reinstate / impersonate dialogs
+- `/plans` — billing plan CRUD (cross-tenant)
+- `/verticals` — vertical CRUD with terminology overrides
+- `/billing` — subscription oversight (SaaS-05c): read state, waive,
+  grant credit, change plan, refund (Moyasar live)
+- `/users` — cross-tenant user search + temp-password reset
+- `/metrics` — platform-wide stats with groupBy charts
+- `/impersonation-sessions` — active + historic shadow sessions
 - `/audit-log` — filtered read-only log
 
-Stubs still to build in a follow-up: `/users`, `/plans`, `/verticals`,
-`/metrics` (dedicated page with groupBy charts),
-`/impersonation-sessions`, and the "Impersonate" action inside the org
-detail page. Each becomes its own `features/<cluster>/<action>/` slice.
+Delivered via PRs #40, #41, #45. Every feature lives in its own
+`features/<cluster>/<action>/` slice (see `features/`: `audit-log`,
+`auth`, `billing`, `impersonation`, `organizations`, `plans`,
+`platform-metrics`, `users`, `verticals`).
+
+## Billing oversight (`/billing`, SaaS-05c)
+
+Read-only-by-default surface for the platform's own SaaS billing —
+mirrors backend `modules/platform/admin/billing/`. Capabilities:
+
+- Read: subscription state, plan, status, current period, usage,
+  payment history, outstanding invoices.
+- **Waive invoice** — mark a tenant invoice paid without charge;
+  requires `reason` ≥ 10 chars; written to `SuperAdminActionLog`.
+- **Grant credit** — apply a credit balance to the tenant's next
+  invoice; reason required.
+- **Change plan** — move a tenant between Plans (proration handled
+  backend-side); reason required.
+- **Refund** — issues a live Moyasar refund against the original
+  platform-side payment (NOT the tenant's own Moyasar). Reason
+  required, audit log entry written, Moyasar refund id stored.
+
+This is the platform's own Moyasar account (the "platform" half of the
+two-Moyasar architecture). Tenant-customer refunds happen in the
+clinic dashboard against the tenant's own Moyasar — never here.
 
 ## Development
 

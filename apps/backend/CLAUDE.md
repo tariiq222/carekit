@@ -13,9 +13,10 @@ src/
 │   ├── mobile/{client,employee}/
 │   └── public/               ← Unauthenticated (webhooks, healthcheck)
 ├── modules/                  ← Domain code (clusters of vertical slices)
-│   ├── bookings/             finance/   identity/   people/
-│   ├── comms/                org-config/  org-experience/
-│   ├── ops/                  ai/   media/   platform/
+│   ├── ai/                   bookings/   comms/        content/
+│   ├── dashboard/            finance/    identity/     integrations/
+│   ├── media/                ops/        org-config/   org-experience/
+│   ├── people/               platform/
 ├── infrastructure/           ← Shared tech: database, cache, queue, mail, storage, ai, events
 ├── common/                   ← Guards, filters, interceptors, pipes, base events
 ├── config/                   app.module.ts                main.ts
@@ -26,17 +27,20 @@ src/
 
 | Cluster | Slices inside |
 |---|---|
-| `bookings/` | create-/cancel-/reschedule-/confirm-/check-in-/complete-/no-show-/expire-booking, check-availability, recurring, waitlist, zoom |
-| `finance/` | payments, invoices, coupons, ZATCA, moyasar-webhook, refund, bank-transfer |
-| `identity/` | login, logout, refresh-token, current-user, users, roles, CASL |
-| `people/` | clients, employees |
-| `comms/` | email, sms (per-tenant), push, notifications, chat, email-templates, org-sms-config, sms-dlr |
-| `org-config/` | branches, business-hours, categories, departments |
-| `org-experience/` | branding, intake-forms, ratings, services |
-| `ops/` | generate-report, cron-tasks, health-check, log-activity |
-| `ai/` | chat-completion, chatbot-config, embed-document, manage-knowledge-base, semantic-search |
-| `media/` | files |
-| `platform/` | feature-flags, integrations, problem-reports |
+| `identity/` | login, logout, refresh-token, get-current-user, client-auth, otp, list-memberships, switch-organization, users, roles, casl |
+| `people/` | clients, employees, specialties |
+| `bookings/` | create-/cancel-/confirm-/check-in-/reschedule-/complete-/no-show-/expire-booking, check-availability, create-recurring-booking, waitlist, walk-in, create-zoom-meeting, retry-zoom-meeting |
+| `finance/` | payments, moyasar-api, moyasar-webhook, refunds, coupons, zatca-config, zatca-submit, bank-transfer-upload |
+| `comms/` | notifications, fcm-tokens, email-templates, send-email, send-sms, send-push, org-sms-config, sms-dlr, contact-messages, chat |
+| `ai/` | chatbot RAG (streaming), knowledge-base, pgvector embeddings, semantic-search |
+| `media/` | uploads, MinIO presigned URLs |
+| `ops/` | health-check, cron-tasks (BullMQ), generate-report, log-activity |
+| `content/` | site-settings |
+| `org-config/` | branches, categories, departments, business-hours |
+| `org-experience/` | branding, intake-forms, ratings, services, org-settings |
+| `integrations/` | zoom (encrypted creds get/upsert/test), public branding |
+| `platform/` | admin (super-admin), billing, verticals, feature-flags, problem-reports |
+| `dashboard/` | get-dashboard-stats |
 
 ### Vertical slice anatomy
 
@@ -110,6 +114,24 @@ npm run prisma:studio                # GUI
 - **Prompt structure in `chat-completion.handler.ts`:** system + KB context first, user message last — this is the correct ordering for any cache-friendly model. Do not rearrange.
 - **To enable Anthropic native prompt caching** (cache_control breakpoints, ~10× cheaper reads): requires switching ChatAdapter from OpenRouter to `@anthropic-ai/sdk` directly. This is an intentional future decision, not an oversight.
 - **Semantic search** (`semantic-search.handler.ts`) uses `pgvector` via `PrismaService.$queryRaw`. Always pass `topK` to limit chunks; default is 5.
+
+## Verticals + Terminology (SaaS-03)
+
+- **Verticals** (`modules/platform/verticals/`) define the activity type a tenant operates under (clinic, salon, gym, etc.) — seeded via 11 verticals × 4 family templates.
+- **Terminology packs** rewrite domain nouns per vertical (e.g., `client` → `patient` / `member`). Backend exposes the active pack via `GetTerminologyHandler`; UIs consume through the shared `useTerminology` hook.
+- The platform-internal name stays English (`Vertical`); user-facing Arabic is "القطاع".
+
+## Billing / Subscriptions (SaaS-04)
+
+- **Platform billing** lives at `modules/platform/billing/` — plans, subscriptions, invoices, usage metering, dunning. Two Moyasar accounts are in play: the **platform** account collects tenant subscription fees; each tenant's own Moyasar handles their booking-payment revenue.
+- Hybrid model: flat plan fee + usage overage. SMS is **not** metered by the platform (per-tenant providers — see SaaS-02g-sms).
+- Super-admin oversight (waive, grant, change-plan, refund) lives under `modules/platform/admin/` and is exposed only to the `apps/admin` control plane (separate Next.js app on its own port).
+
+## Integrations cluster (`modules/integrations/`)
+
+- **Zoom** (`integrations/zoom/`) owns the encrypted-credentials lifecycle: get/upsert/test of `accountId`, `clientId`, `clientSecret` per tenant. Credentials are AES-256-GCM encrypted with `organizationId` as AAD — the `Get*` handler never returns ciphertext.
+- The bookings cluster (`bookings/create-zoom-meeting/`, `bookings/retry-zoom-meeting/`) **consumes** integrations via `ZoomMeetingService`. Never reach into Zoom credentials from a booking handler — go through the integrations slice.
+- Public branding read endpoints also live here (used by unauthenticated mobile/website surfaces).
 
 ## Conventions that catch new contributors
 
