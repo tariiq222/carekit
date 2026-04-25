@@ -155,7 +155,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           prop === 'basePrisma' ||
           prop === 'extended' ||
           prop === '$allTenants' ||
-          prop === '$allTenantsUnsafe' ||
           prop === '$connect' ||
           prop === '$disconnect'
         ) {
@@ -186,10 +185,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     if (this.cls?.get<boolean | undefined>(SUPER_ADMIN_CONTEXT_CLS_KEY) !== true) {
       throw new ForbiddenException('super_admin_context_required');
     }
-    return this.basePrisma;
-  }
-
-  get $allTenantsUnsafe(): PrismaClient {
     return this.basePrisma;
   }
 }

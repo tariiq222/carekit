@@ -29,4 +29,11 @@ describe('PrismaService', () => {
     await service.onModuleDestroy();
     expect(disconnectSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('does not expose $allTenantsUnsafe', () => {
+    // The Proxy whitelist in PrismaService routes whitelisted props to the target (base class).
+    // After removal, accessing $allTenantsUnsafe should hit the extended client and return undefined.
+    const value = (service as unknown as Record<string, unknown>).$allTenantsUnsafe;
+    expect(value).toBeUndefined();
+  });
 });
