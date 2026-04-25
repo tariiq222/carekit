@@ -39,6 +39,16 @@ async function doRefresh(): Promise<string> {
   return data.accessToken
 }
 
+// Auth endpoints must NEVER trigger the 401-refresh flow:
+// - /auth/login: a 401 means bad credentials, not an expired session
+// - /auth/refresh: refresh failure should surface directly, not loop
+// - /auth/logout: 401 here is meaningless and would mask the original error
+const AUTH_ENDPOINTS_NO_RETRY = ['/auth/login', '/auth/refresh', '/auth/logout']
+
+function isAuthEndpoint(path: string): boolean {
+  return AUTH_ENDPOINTS_NO_RETRY.some((suffix) => path.endsWith(suffix))
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -55,7 +65,7 @@ export async function apiRequest<T>(
 
   const res = await fetch(`${config.baseUrl}${path}`, { ...options, headers })
 
-  if (res.status === 401 && !retried) {
+  if (res.status === 401 && !retried && !isAuthEndpoint(path)) {
     let mutex = getRefreshMutex()
     if (!mutex) {
       mutex = doRefresh()
