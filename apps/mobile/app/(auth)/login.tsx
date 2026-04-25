@@ -25,6 +25,7 @@ import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { registerForPushAsync } from '@/services/push';
 import { getPrimaryRole } from '@/types/auth';
 import { getFontName } from '@/theme/fonts';
 import { hasSeenOnboarding } from '@/lib/onboarding';
@@ -93,6 +94,7 @@ export default function LoginScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
+        void registerForPushAsync();
         await navigateByRole(response.data.user);
       }
     } catch {
