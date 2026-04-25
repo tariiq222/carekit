@@ -64,8 +64,8 @@ export default function LoginScreen() {
   }, [email, password, t]);
 
   const navigateByRole = useCallback(
-    async (user: { roles: Array<{ slug: string }> }) => {
-      const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
+    async (user: Parameters<typeof getPrimaryRole>[0]) => {
+      const role = getPrimaryRole(user);
       if (role === 'employee') {
         router.replace('/(employee)/(tabs)/today');
         return;

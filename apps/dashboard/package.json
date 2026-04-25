@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@carekit/ui": "*",
+    "@hcaptcha/react-hcaptcha": "^1.17.4",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",

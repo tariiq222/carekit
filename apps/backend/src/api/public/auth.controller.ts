@@ -1,6 +1,8 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
+  Req, Res,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +29,8 @@ import { IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
+import { Inject, BadRequestException } from '@nestjs/common';
+import { CAPTCHA_VERIFIER, CaptchaVerifier } from '../../modules/comms/contact-messages/captcha.verifier';
 
 class ChangePasswordDto {
   @ApiProperty({ description: 'Current account password', example: 'P@ssw0rd123' })
@@ -50,6 +54,7 @@ export class AuthController {
     private readonly listMemberships: ListMembershipsHandler,
     private readonly switchOrganization: SwitchOrganizationHandler,
     private readonly config: ConfigService,
+    @Inject(CAPTCHA_VERIFIER) private readonly captcha: CaptchaVerifier,
   ) {}
 
   @Post('login')
@@ -69,7 +74,14 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials', type: ApiErrorDto })
-  async loginEndpoint(@Body() body: LoginDto) {
+  async loginEndpoint(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (!(await this.captcha.verify(body.hCaptchaToken))) {
+      throw new BadRequestException('Invalid captcha token');
+    }
+
     const tokens = await this.login.execute({ email: body.email, password: body.password });
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
@@ -89,12 +101,38 @@ export class AuthController {
       },
     });
 
-    // Workaround: isSuperAdmin is not being returned by Prisma ORM, so we add it manually
-    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    if (!user) {
+      return {
+        ...tokens,
+        user,
+        expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+      };
+    }
 
+    // SaaS-04 alignment: surface the active membership's organizationId on
+    // the login response so mobile/dashboard consumers don't need to decode
+    // the JWT to find their tenant. Mirrors LoginHandler's resolution order.
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: user.id, isActive: true },
+      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+      select: { organizationId: true },
+    });
+
+    // Match GetCurrentUserHandler: derive firstName/lastName from `name`
+    // by splitting on the first whitespace run.
+    const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
+
+    this.setRefreshCookie(res, tokens.refreshToken);
     return {
       ...tokens,
-      user: user ? { ...user, isSuperAdmin, permissions: flattenPermissions(user) } : user,
+      user: {
+        ...user,
+        firstName,
+        lastName: rest.join(' '),
+        isSuperAdmin: user.role === 'SUPER_ADMIN',
+        organizationId: membership?.organizationId ?? null,
+        permissions: flattenPermissions(user),
+      },
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
   }
@@ -115,8 +153,14 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
-  async refreshEndpoint(@Body() body: RefreshTokenDto) {
-    const { refreshToken: rawToken } = body;
+  async refreshEndpoint(
+    @Body() body: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const rawToken = (req.cookies as Record<string, string>)?.['ck_refresh'] ?? body.refreshToken;
+    if (!rawToken) throw new UnauthorizedException('No refresh token');
+
     const record = await this.findActiveToken(rawToken);
 
     await this.prisma.refreshToken.update({
@@ -135,6 +179,7 @@ export class AuthController {
       organizationId: record.organizationId ?? DEFAULT_ORGANIZATION_ID,
       isSuperAdmin: user.role === 'SUPER_ADMIN',
     });
+    this.setRefreshCookie(res, tokens.refreshToken);
     return {
       ...tokens,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
@@ -147,8 +192,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke a refresh token (log out)' })
   @ApiOkResponse({ description: 'Token revoked; no body returned' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
-  async logoutEndpoint(@Body() body: LogoutDto) {
-    const { refreshToken: rawToken } = body;
+  async logoutEndpoint(
+    @Body() body: LogoutDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const rawToken = (req.cookies as Record<string, string>)?.['ck_refresh'] ?? body.refreshToken;
+    res.clearCookie('ck_refresh', { path: '/' });
+    if (!rawToken) return;
     const record = await this.findActiveToken(rawToken);
     await this.logout.execute({ userId: record.userId });
   }
@@ -236,6 +287,19 @@ export class AuthController {
       userId,
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
+    });
+  }
+
+  private setRefreshCookie(res: Response, token: string): void {
+    const ttlMs = this.parseTtlSeconds(
+      this.config.get<string>('JWT_REFRESH_TTL') ?? '30d',
+    ) * 1000;
+    res.cookie('ck_refresh', token, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: ttlMs,
     });
   }
 

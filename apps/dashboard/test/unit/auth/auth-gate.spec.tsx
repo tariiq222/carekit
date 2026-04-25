@@ -15,7 +15,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 // ---------------------------------------------------------------------------
 // We test AuthGate by controlling what useAuth returns
@@ -25,6 +25,16 @@ const mockUseAuth = vi.fn()
 
 vi.mock('@/components/providers/auth-provider', () => ({
   useAuth: () => mockUseAuth(),
+}))
+
+vi.mock("@hcaptcha/react-hcaptcha", () => ({
+  default: ({ onVerify }: { onVerify: (token: string) => void }) => {
+    // Automatically verify in tests so the submit button is enabled
+    useEffect(() => {
+      onVerify("test-token")
+    }, [onVerify])
+    return <div data-testid="hcaptcha" />
+  },
 }))
 
 // Stub HugeIcons to avoid SVG rendering issues in jsdom
@@ -128,10 +138,12 @@ describe('AuthGate', () => {
 
     await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'admin@carekit-test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'Admin@Pass123')
-    await userEvent.click(screen.getByRole('button', { name: /تسجيل الدخول/ }))
+    const btn = screen.getByRole('button', { name: /تسجيل الدخول/ })
+    await waitFor(() => expect(btn).not.toBeDisabled())
+    await userEvent.click(btn)
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('admin@carekit-test.com', 'Admin@Pass123')
+      expect(mockLogin).toHaveBeenCalledWith('admin@carekit-test.com', 'Admin@Pass123', 'test-token')
     })
   })
 
@@ -143,7 +155,9 @@ describe('AuthGate', () => {
 
     await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'bad@test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'wrongpass')
-    await userEvent.click(screen.getByRole('button', { name: /تسجيل الدخول/ }))
+    const btn = screen.getByRole('button', { name: /تسجيل الدخول/ })
+    await waitFor(() => expect(btn).not.toBeDisabled())
+    await userEvent.click(btn)
 
     await waitFor(() => {
       expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
@@ -227,6 +241,7 @@ describe('AuthGate', () => {
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'Pass123!')
 
     const btn = screen.getByRole('button', { name: /تسجيل الدخول/ })
+    await waitFor(() => expect(btn).not.toBeDisabled())
     await userEvent.click(btn)
 
     expect(btn).toBeDisabled()

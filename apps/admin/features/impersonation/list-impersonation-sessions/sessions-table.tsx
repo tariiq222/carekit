@@ -1,5 +1,6 @@
 'use client';
 
+import { useSyncExternalStore } from 'react';
 import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
@@ -19,9 +20,23 @@ interface Props {
   isLoading: boolean;
 }
 
+// Re-render once a minute so expired sessions flip status without a manual refresh.
+function subscribeToMinute(callback: () => void): () => void {
+  const id = setInterval(callback, 60_000);
+  return () => clearInterval(id);
+}
+
+function useNow(): number {
+  return useSyncExternalStore(
+    subscribeToMinute,
+    () => Date.now(),
+    () => 0, // SSR snapshot — every session renders as not-expired on the server
+  );
+}
+
 export function SessionsTable({ items, isLoading }: Props) {
   const endMutation = useEndImpersonation();
-  const now = Date.now();
+  const now = useNow();
 
   return (
     <Table>

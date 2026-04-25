@@ -1,82 +1,58 @@
 /**
  * Auth API — CareKit Dashboard
  *
- * Refresh tokens are managed via httpOnly cookies (set by backend).
- * Only the short-lived accessToken is kept in memory.
+ * Thin wrapper over @carekit/api-client/authApi. The shared package owns
+ * request shape, envelope unwrapping, and 401 retry logic; this file only
+ * adds persist/clear localStorage helpers and dashboard-specific aliases.
  */
 
-import { api, setAccessToken, getAccessToken } from "@/lib/api"
+import { authApi } from "@carekit/api-client"
+import type { AuthResponse, UserPayload } from "@carekit/api-client"
+import { setAccessToken, getAccessToken } from "@/lib/api"
 
-/* ─── Types ─── */
+export type AuthUser = UserPayload
+export type { AuthResponse }
 
-export interface AuthUser {
-  id: string
-  email: string
-  name: string
-  phone: string | null
-  gender: string | null
-  role: string
-  avatarUrl: string | null
-  isActive: boolean
-  permissions?: string[]
-}
-
-export interface AuthResponse {
-  user: AuthUser
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-}
-
-/* ─── Constants ─── */
-
-const USER_KEY    = "carekit_user"
-const REFRESH_KEY = "carekit_refresh_token"
-
-/* ─── API Calls ─── */
+const USER_KEY = "carekit_user"
 
 export async function login(
   email: string,
   password: string,
+  hCaptchaToken: string,
 ): Promise<AuthResponse> {
-  const data = await api.post<AuthResponse>("/auth/login", {
-    email,
-    password,
-  })
-
+  const data = await authApi.login({ email, password, hCaptchaToken })
   persistAuth(data)
   return data
 }
 
 export async function fetchMe(): Promise<AuthUser> {
-  const data = await api.get<AuthUser>("/auth/me")
+  const data = await authApi.getMe()
   localStorage.setItem(USER_KEY, JSON.stringify(data))
   return data
 }
 
 export async function refreshToken(): Promise<AuthResponse> {
-  const storedRefresh = typeof window !== "undefined"
-    ? localStorage.getItem(REFRESH_KEY)
-    : null
-  if (!storedRefresh) throw new Error("No refresh token")
-
-  const data = await api.post<AuthResponse>("/auth/refresh", { refreshToken: storedRefresh })
-
-  setAccessToken(data.accessToken)
-  if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken)
-  return data
+  const tokens = await authApi.refreshToken()
+  setAccessToken(tokens.accessToken)
+  const cached = getStoredUser()
+  return {
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    expiresIn: tokens.expiresIn,
+    user: cached as UserPayload,
+  }
 }
 
 export async function logoutApi(): Promise<void> {
   try {
-    await api.post("/auth/logout")
+    await authApi.logout()
   } catch {
-    // Ignore logout API errors — clear local state regardless
+    // Ignore — clear local state regardless
   }
   clearAuth()
 }
 
-export function logout() {
+export function logout(): void {
   clearAuth()
 }
 
@@ -84,10 +60,8 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<void> {
-  await api.patch("/auth/password/change", { currentPassword, newPassword })
+  await authApi.changePassword({ currentPassword, newPassword })
 }
-
-/* ─── Local State Helpers ─── */
 
 export function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null
@@ -104,16 +78,12 @@ export function isAuthenticated(): boolean {
   return !!getAccessToken()
 }
 
-/* ─── Internal ─── */
-
-function persistAuth(data: AuthResponse) {
+function persistAuth(data: AuthResponse): void {
   localStorage.setItem(USER_KEY, JSON.stringify(data.user))
   setAccessToken(data.accessToken)
-  if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken)
 }
 
-function clearAuth() {
+function clearAuth(): void {
   localStorage.removeItem(USER_KEY)
-  localStorage.removeItem(REFRESH_KEY)
   setAccessToken(null)
 }

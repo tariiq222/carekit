@@ -24,7 +24,7 @@ interface AuthContextValue {
   user: AuthUser | null
   loading: boolean
   permissions: string[]
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, hCaptchaToken: string) => Promise<void>
   logout: () => Promise<void>
   isAuthenticated: boolean
   canDo: (module: string, action: string) => boolean
@@ -83,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [scheduleRefresh])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await apiLogin(email, password)
+  const login = useCallback(async (email: string, password: string, hCaptchaToken: string) => {
+    const res = await apiLogin(email, password, hCaptchaToken)
     setUser(res.user)
     setPermissions(res.user.permissions ?? [])
     scheduleRefresh(res.expiresIn)

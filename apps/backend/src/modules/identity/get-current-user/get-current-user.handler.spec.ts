@@ -12,7 +12,13 @@ describe('GetCurrentUserHandler', () => {
     const module = await Test.createTestingModule({
       providers: [
         GetCurrentUserHandler,
-        { provide: PrismaService, useValue: { user: { findUnique: jest.fn() } } },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: { findUnique: jest.fn() },
+            membership: { findFirst: jest.fn().mockResolvedValue(null) },
+          },
+        },
       ],
     }).compile();
     handler = module.get(GetCurrentUserHandler);
@@ -20,7 +26,7 @@ describe('GetCurrentUserHandler', () => {
   });
 
   it('returns user when found', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'A B' });
     const result = await handler.execute({ userId: 'u1' });
     expect(result.id).toBe('u1');
   });
@@ -28,5 +34,26 @@ describe('GetCurrentUserHandler', () => {
   it('throws NotFoundException when user not found', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     await expect(handler.execute({ userId: 'u1' })).rejects.toThrow(NotFoundException);
+  });
+
+  it('returns firstName/lastName split from name', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'Tariq Al Walidi' });
+    const result = await handler.execute({ userId: 'u1' });
+    expect(result.firstName).toBe('Tariq');
+    expect(result.lastName).toBe('Al Walidi');
+  });
+
+  it('returns organizationId from the active membership', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: 'Solo' });
+    prisma.membership.findFirst.mockResolvedValue({ organizationId: 'org_42' });
+    const result = await handler.execute({ userId: 'u1' });
+    expect(result.organizationId).toBe('org_42');
+  });
+
+  it('returns organizationId=null when user has no active membership', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: 'Solo' });
+    prisma.membership.findFirst.mockResolvedValue(null);
+    const result = await handler.execute({ userId: 'u1' });
+    expect(result.organizationId).toBeNull();
   });
 });

@@ -35,16 +35,20 @@ const mockedApi = api as unknown as { post: jest.Mock; get: jest.Mock };
 const baseUser: User = {
   id: 'u1',
   email: 'a@b.c',
+  name: 'A B',
   firstName: 'A',
   lastName: 'B',
   phone: null,
   gender: null,
+  avatarUrl: null,
   isActive: true,
-  emailVerified: true,
-  createdAt: '2026-01-01T00:00:00Z',
-  roles: [{ id: 'r1', name: 'Client', slug: 'client' }],
+  role: 'CLIENT',
+  customRoleId: null,
+  isSuperAdmin: false,
   permissions: [],
   organizationId: 'org-1',
+  emailVerified: true,
+  createdAt: '2026-01-01T00:00:00Z',
 };
 
 beforeEach(() => {

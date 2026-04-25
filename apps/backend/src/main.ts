@@ -7,6 +7,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { LoggingInterceptor, AuditInterceptor } from './common/interceptors';
 import { PrismaService } from './infrastructure/database';
@@ -21,6 +22,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(helmet());
+  app.use(cookieParser());
 
   app.setGlobalPrefix('api/v1');
 

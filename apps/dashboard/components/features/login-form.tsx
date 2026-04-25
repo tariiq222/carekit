@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
@@ -9,15 +10,20 @@ import { useLocale } from "@/components/locale-provider"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EyeIcon, ScanEyeIcon } from "@hugeicons/core-free-icons"
 
+const DEV_SITE_KEY = "10000000-ffff-ffff-ffff-000000000001"
+const SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? DEV_SITE_KEY
+
 export function LoginForm() {
   const { t } = useLocale()
   const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [hcaptchaToken, setHcaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
   const [loading, setLoading] = useState(false)
+  const captchaRef = useRef<HCaptcha>(null)
 
   useEffect(() => {
     const reason = sessionStorage.getItem("carekit_auth_reason")
@@ -34,12 +40,15 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!hcaptchaToken) return
     setError("")
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, hcaptchaToken)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid credentials")
+      captchaRef.current?.resetCaptcha()
+      setHcaptchaToken(null)
     } finally {
       setLoading(false)
     }
@@ -49,7 +58,7 @@ export function LoginForm() {
     setError("")
     setLoading(true)
     try {
-      await login(devEmail!, devPassword!)
+      await login(devEmail!, devPassword!, hcaptchaToken ?? "dev-token")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Dev login failed")
     } finally {
@@ -155,9 +164,19 @@ export function LoginForm() {
             </div>
           </div>
 
+          <div className="flex justify-center py-2">
+            <HCaptcha
+              ref={captchaRef}
+              sitekey={SITE_KEY}
+              onVerify={(token) => setHcaptchaToken(token)}
+              onExpire={() => setHcaptchaToken(null)}
+              theme="light"
+            />
+          </div>
+
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || !hcaptchaToken}
             className="mt-1 h-11 w-full text-sm font-semibold shadow-primary"
           >
             {loading ? t("login.signingIn") : t("login.signIn")}

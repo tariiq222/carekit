@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef } from "react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -15,6 +16,9 @@ import {
 import { Input } from "@carekit/ui/primitives/input";
 import { Label } from "@carekit/ui/primitives/label";
 import { login } from "./login.api";
+
+const DEV_SITE_KEY = "10000000-ffff-ffff-ffff-000000000001";
+const SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? DEV_SITE_KEY;
 
 export function LoginForm() {
   return (
@@ -31,15 +35,20 @@ function Inner() {
   const t = useTranslations("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hcaptchaToken, setHcaptchaToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const captchaRef = useRef<HCaptcha>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!hcaptchaToken) return;
     setSubmitting(true);
     try {
-      const res = await login({ email, password });
+      const res = await login({ email, password, hCaptchaToken: hcaptchaToken });
       if (!res.user?.isSuperAdmin) {
         toast.error(t("error.notAuthorized"));
+        captchaRef.current?.resetCaptcha();
+        setHcaptchaToken(null);
         return;
       }
       if (!res.accessToken) {
@@ -47,13 +56,12 @@ function Inner() {
         return;
       }
       window.localStorage.setItem("admin.accessToken", res.accessToken);
-      if (res.refreshToken) {
-        window.localStorage.setItem("admin.refreshToken", res.refreshToken);
-      }
       document.cookie = `admin.authenticated=1; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24}`;
       router.push(next);
     } catch {
       toast.error(t("error.failed"));
+      captchaRef.current?.resetCaptcha();
+      setHcaptchaToken(null);
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +98,16 @@ function Inner() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" disabled={submitting} className="mt-2">
+            <div className="flex justify-center py-2">
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={SITE_KEY}
+                onVerify={(token) => setHcaptchaToken(token)}
+                onExpire={() => setHcaptchaToken(null)}
+                theme="light"
+              />
+            </div>
+            <Button type="submit" disabled={submitting || !hcaptchaToken} className="mt-2">
               {submitting ? t("submitting") : t("submit")}
             </Button>
           </form>

@@ -8,6 +8,7 @@
  * Only the short-lived accessToken is kept in memory.
  */
 
+import { initClient } from "@carekit/api-client"
 import type { ApiResponse, PaginatedResponse } from "@/lib/types/common"
 
 export type { ApiResponse, PaginatedResponse }
@@ -46,7 +47,6 @@ function clearAuthState() {
   accessToken = null
   if (typeof window !== "undefined") {
     localStorage.removeItem("carekit_user")
-    localStorage.removeItem("carekit_refresh_token")
   }
 }
 
@@ -68,16 +68,11 @@ export { ApiError }
 async function tryRefreshToken(): Promise<boolean> {
   if (typeof window === "undefined") return false
 
-  const storedRefresh = localStorage.getItem("carekit_refresh_token")
-  if (!storedRefresh) return false
-
   try {
     const res = await fetch(resolveUrl("/auth/refresh"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refreshToken: storedRefresh }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
       credentials: "include",
     })
     if (!res.ok) return false
@@ -85,7 +80,6 @@ async function tryRefreshToken(): Promise<boolean> {
     const body = await res.json()
     const data = body.data ?? body
     setAccessToken(data.accessToken)
-    if (data.refreshToken) localStorage.setItem("carekit_refresh_token", data.refreshToken)
     return true
   } catch {
     return false
@@ -208,6 +202,25 @@ export const api = {
       ...(options?.data !== undefined ? { body: JSON.stringify(options.data) } : {}),
     })
   },
+}
+
+/* ─── Shared @carekit/api-client wiring ─── */
+//
+// authApi (login / refreshToken / getMe / logout / changePassword) uses the
+// shared apiRequest. We initialise it once with this module's in-memory
+// access token and the same /api/proxy prefix so login flows hit the same
+// backend rewrite as the bespoke `request` above.
+if (typeof window !== "undefined") {
+  initClient({
+    baseUrl: PROXY_BASE_URL,
+    getAccessToken: () => accessToken,
+    onTokenRefreshed: (a) => {
+      setAccessToken(a)
+    },
+    onAuthFailure: () => {
+      clearAuthState()
+    },
+  })
 }
 
 /* ─── Helpers ─── */

@@ -2192,6 +2192,10 @@
             "example": "user@example.com",
             "type": "string"
           },
+          "hCaptchaToken": {
+            "description": "hCaptcha verification token",
+            "type": "string"
+          },
           "password": {
             "description": "Account password (min 8 characters)",
             "example": "P@ssw0rd123",
@@ -2201,7 +2205,8 @@
         },
         "required": [
           "email",
-          "password"
+          "password",
+          "hCaptchaToken"
         ],
         "type": "object"
       },
@@ -4382,6 +4387,28 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpsertZoomConfigDto": {
+        "properties": {
+          "zoomAccountId": {
+            "example": "your_account_id",
+            "type": "string"
+          },
+          "zoomClientId": {
+            "example": "your_client_id",
+            "type": "string"
+          },
+          "zoomClientSecret": {
+            "example": "your_client_secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zoomClientId",
+          "zoomClientSecret",
+          "zoomAccountId"
+        ],
         "type": "object"
       },
       "UserGender": {
@@ -8585,6 +8612,94 @@
         ]
       }
     },
+    "/api/v1/dashboard/bookings/{id}/zoom/retry": {
+      "post": {
+        "operationId": "DashboardBookingsController_retryZoomMeeting",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Zoom meeting retry attempted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retry creating Zoom meeting for a booking",
+        "tags": [
+          "Dashboard / Bookings"
+        ]
+      }
+    },
     "/api/v1/dashboard/comms/chat/conversations": {
       "get": {
         "operationId": "DashboardCommsController_listConversationsEndpoint",
@@ -12559,6 +12674,204 @@
         "summary": "Remove a role from a user",
         "tags": [
           "Dashboard / Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoom": {
+      "get": {
+        "operationId": "DashboardIntegrationsController_getZoom",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Configured + active flags"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Zoom integration status (no secrets returned)",
+        "tags": [
+          "Dashboard / Integrations"
+        ]
+      },
+      "put": {
+        "operationId": "DashboardIntegrationsController_upsertZoom",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertZoomConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Configured + active flags (no secrets returned)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update Zoom S2S OAuth credentials",
+        "tags": [
+          "Dashboard / Integrations"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoom/test": {
+      "post": {
+        "operationId": "DashboardIntegrationsController_testZoom",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertZoomConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ ok: boolean, error?: string }"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Validate Zoom credentials by exchanging for an access token",
+        "tags": [
+          "Dashboard / Integrations"
         ]
       }
     },
@@ -20989,11 +21302,22 @@
     },
     "/api/v1/mobile/client/notifications/mark-read": {
       "patch": {
+        "description": "Pass `notificationId` in the body to mark a single notification; omit to mark all.",
         "operationId": "MobileClientNotificationsController_markReadEndpoint",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkReadDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "204": {
-            "description": "All notifications marked as read"
+            "description": "Notifications marked as read"
           },
           "400": {
             "content": {
@@ -21041,7 +21365,67 @@
             "bearer": []
           }
         ],
-        "summary": "Mark all notifications as read for the current client",
+        "summary": "Mark notifications as read (all or a single one)",
+        "tags": [
+          "Mobile Client / Notifications"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/notifications/unread-count": {
+      "get": {
+        "operationId": "MobileClientNotificationsController_getUnreadCountEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Unread count value"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get unread notification count for the current client",
         "tags": [
           "Mobile Client / Notifications"
         ]

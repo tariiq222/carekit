@@ -1,19 +1,10 @@
-import { publicRequest } from '@/lib/api-client';
+import '@/lib/api-client'; // ensure initClient runs before any authApi call
+import { authApi } from '@carekit/api-client';
+import type { AuthResponse, LoginPayload } from '@carekit/api-client';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken?: string;
-  user: { id: string; email: string; isSuperAdmin?: boolean };
-}
+export type LoginRequest = LoginPayload;
+export type LoginResponse = AuthResponse;
 
 export function login(body: LoginRequest): Promise<LoginResponse> {
-  return publicRequest<LoginResponse>('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  return authApi.login(body);
 }

@@ -1,4 +1,4 @@
-export type { UserPayload, TokenPair, AuthResponse } from './auth'
+export type { UserPayload, TokenPair, AuthResponse, ChangePasswordPayload } from './auth'
 export type {
   UserGender,
   UserRole,

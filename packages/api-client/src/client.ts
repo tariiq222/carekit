@@ -3,7 +3,7 @@ import { getRefreshMutex, setRefreshMutex } from './refresh-mutex'
 export interface ClientConfig {
   baseUrl: string
   getAccessToken: () => string | null
-  getRefreshToken: () => string | null
+  getRefreshToken?: () => string | null
   onTokenRefreshed: (accessToken: string, refreshToken: string) => void
   onAuthFailure: () => void
 }
@@ -16,15 +16,12 @@ export function initClient(cfg: ClientConfig): void {
 
 async function doRefresh(): Promise<string> {
   if (!config) throw new Error('api-client not initialized')
-  const refreshToken = config.getRefreshToken()
-  if (!refreshToken) {
-    config.onAuthFailure()
-    throw new Error('No refresh token')
-  }
+  const refreshToken = config.getRefreshToken?.()
   const res = await fetch(`${config.baseUrl}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    credentials: 'include',
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
   })
   if (!res.ok) {
     config.onAuthFailure()
@@ -37,6 +34,16 @@ async function doRefresh(): Promise<string> {
       : (raw as { accessToken: string; refreshToken: string })
   config.onTokenRefreshed(data.accessToken, data.refreshToken)
   return data.accessToken
+}
+
+// Auth endpoints must NEVER trigger the 401-refresh flow:
+// - /auth/login: a 401 means bad credentials, not an expired session
+// - /auth/refresh: refresh failure should surface directly, not loop
+// - /auth/logout: 401 here is meaningless and would mask the original error
+const AUTH_ENDPOINTS_NO_RETRY = ['/auth/login', '/auth/refresh', '/auth/logout']
+
+function isAuthEndpoint(path: string): boolean {
+  return AUTH_ENDPOINTS_NO_RETRY.some((suffix) => path.endsWith(suffix))
 }
 
 export async function apiRequest<T>(
@@ -55,7 +62,7 @@ export async function apiRequest<T>(
 
   const res = await fetch(`${config.baseUrl}${path}`, { ...options, headers })
 
-  if (res.status === 401 && !retried) {
+  if (res.status === 401 && !retried && !isAuthEndpoint(path)) {
     let mutex = getRefreshMutex()
     if (!mutex) {
       mutex = doRefresh()

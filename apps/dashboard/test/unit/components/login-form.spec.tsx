@@ -1,11 +1,22 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { useEffect } from "react"
 
 const loginMock = vi.fn()
 
 vi.mock("@/components/providers/auth-provider", () => ({
   useAuth: () => ({ login: loginMock }),
+}))
+
+vi.mock("@hcaptcha/react-hcaptcha", () => ({
+  default: ({ onVerify }: { onVerify: (token: string) => void }) => {
+    // Automatically verify in tests so the submit button is enabled
+    useEffect(() => {
+      onVerify("test-token")
+    }, [onVerify])
+    return <div data-testid="hcaptcha" />
+  },
 }))
 
 import { LoginForm } from "@/components/features/login-form"
@@ -51,7 +62,7 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("admin@test.com", "password123")
+      expect(loginMock).toHaveBeenCalledWith("admin@test.com", "password123", "test-token")
     })
   })
 
@@ -130,7 +141,7 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByText(/Dev Admin Login/i))
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("dev@test.com", "devpass")
+      expect(loginMock).toHaveBeenCalledWith("dev@test.com", "devpass", "test-token")
     })
   })
 

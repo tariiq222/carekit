@@ -1,37 +1,48 @@
 /**
- * Auth types — matches backend UserPayload + AuthResponse exactly
+ * Auth types — re-exports the canonical UserPayload from @carekit/api-client
+ * so the mobile screens read the same shape the backend actually returns,
+ * plus mobile-only enums and form payloads.
  */
 
+import type { UserPayload, AuthResponse as CanonicalAuthResponse } from '@carekit/api-client';
+
+// The canonical user payload returned by /auth/login + /auth/me, extended
+// with mobile-only fields the backend does not (yet) return. Re-exported as
+// `User` so existing mobile imports keep working without churn.
+//
+// firstName/lastName/organizationId now arrive at runtime — they were
+// silently undefined before the SaaS-04 alignment.
+//
+// emailVerified + employeeId are NOT yet returned by the backend; they're
+// kept here as optional so consumers compile, but values are `undefined` at
+// runtime. Wiring them through is tracked in a follow-up issue (the
+// EmailVerificationBanner stays hidden, the employee availability page
+// needs its own membership/employee lookup).
+export type User = UserPayload & {
+  emailVerified?: boolean;
+  employeeId?: string | null;
+};
+
+/** Mobile-only nav role bucket (distinct from the backend Prisma UserRole). */
 export type UserRole = 'client' | 'employee' | 'super_admin' | 'receptionist' | 'accountant';
 
-export interface UserRoleItem {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string | null;
-  gender: string | null;
-  isActive: boolean;
-  emailVerified: boolean;
-  createdAt: string;
-  roles: UserRoleItem[];
-  permissions: string[];
-  avatarUrl?: string | null;
-  organizationId: string | null;
-  employeeId?: string | null;
-}
-
-/** Derived primary role from roles[] array */
+/**
+ * Maps the backend's `role` string (e.g. 'CLINIC_OWNER', 'RECEPTIONIST',
+ * 'EMPLOYEE') onto the mobile's client/employee/staff bucket used for
+ * bottom-tab routing. Pre-SaaS-04 this read user.roles[0].slug — a field
+ * the backend never returned, so the function silently always returned
+ * 'client'. Now reads `user.role`, the field the backend has always sent.
+ */
 export function getPrimaryRole(user: User): UserRole {
-  if (!user.roles.length) return 'client';
-  const slug = user.roles[0].slug;
-  return (slug as UserRole) ?? 'client';
+  const role = (user.role ?? '').toUpperCase();
+  if (!role) return 'client';
+  if (role === 'SUPER_ADMIN') return 'super_admin';
+  if (role === 'RECEPTIONIST') return 'receptionist';
+  if (role === 'ACCOUNTANT') return 'accountant';
+  if (role === 'CLIENT') return 'client';
+  // CLINIC_OWNER, EMPLOYEE, and any other staff bucket route through the
+  // employee tabs.
+  return 'employee';
 }
 
 export interface AuthState {
@@ -57,15 +68,15 @@ export interface VerifyOtpRequest {
   code: string;
 }
 
-/** Matches backend AuthResponse exactly */
+/**
+ * Mobile wraps the canonical AuthResponse in the legacy `{success, data}`
+ * envelope its callers (login screen, otp-verify, register) expect. The
+ * shared @carekit/api-client returns the unwrapped shape, so services/auth.ts
+ * re-wraps it before resolving to this interface.
+ */
 export interface AuthResponse {
   success: boolean;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    user: User;
-  };
+  data: CanonicalAuthResponse | undefined;
 }
 
 /** Which mobile app flow the user belongs to */

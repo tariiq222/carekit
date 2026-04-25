@@ -1,100 +1,82 @@
+/**
+ * Website client-auth API — thin wrapper around @carekit/api-client modules.
+ *
+ * The shared package owns request shape, envelope unwrapping, and error
+ * formatting. This file only re-exports under the historical *Api names so
+ * existing callers (auth-store, login-form, register-form, etc.) keep
+ * working without changes.
+ */
+
+import {
+  setClientBaseUrl,
+  initClientAuth,
+  clientLogin,
+  clientRegister,
+  clientLogout,
+  clientResetPassword,
+  setMeBaseUrl,
+  getMe,
+  getMyBookings,
+  cancelMyBooking,
+  rescheduleMyBooking,
+} from '@carekit/api-client'
 import type {
   ClientAuthResponse,
   ClientLoginPayload,
   ClientRegisterPayload,
   ClientProfile,
   ClientBookingListResponse,
-} from '@carekit/shared';
+} from '@carekit/shared'
 
-import { getApiBase } from '@/lib/api-base';
+import { getApiBase } from '@/lib/api-base'
+
+// Initialise the shared modules once with the website's API base. We pass a
+// no-op refresh-token getter because the website uses an httpOnly cookie for
+// refresh — the browser sends it automatically on `credentials: 'include'`.
+let initialised = false
+function ensureInitialised(): void {
+  if (initialised) return
+  const base = getApiBase()
+  setClientBaseUrl(base)
+  setMeBaseUrl(base)
+  initClientAuth({ getRefreshToken: () => null })
+  initialised = true
+}
 
 export async function clientLoginApi(
   payload: ClientLoginPayload,
 ): Promise<ClientAuthResponse> {
-  const res = await fetch(`${getApiBase()}/public/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Login failed' }));
-    throw new Error((err as { message?: string }).message ?? 'Login failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as ClientAuthResponse;
+  ensureInitialised()
+  return clientLogin(payload)
 }
 
 export async function clientRegisterApi(
   payload: ClientRegisterPayload,
 ): Promise<ClientAuthResponse> {
-  const res = await fetch(`${getApiBase()}/public/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${payload.otpSessionToken}`,
-    },
-    credentials: 'include',
-    body: JSON.stringify({ password: payload.password, name: payload.name }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Registration failed' }));
-    throw new Error((err as { message?: string }).message ?? 'Registration failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as ClientAuthResponse;
+  ensureInitialised()
+  return clientRegister(payload)
 }
 
 export async function getMeApi(): Promise<ClientProfile> {
-  const res = await fetch(`${getApiBase()}/public/me`, {
-    credentials: 'include',
-  });
-  if (res.status === 401) {
-    throw new Error('Unauthorized');
-  }
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Failed to fetch profile' }));
-    throw new Error((err as { message?: string }).message ?? 'Failed to fetch profile');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as ClientProfile;
+  ensureInitialised()
+  return getMe()
 }
 
 export async function getMyBookingsApi(
   page = 1,
   pageSize = 10,
 ): Promise<ClientBookingListResponse> {
-  const res = await fetch(
-    `${getApiBase()}/public/me/bookings?page=${page}&pageSize=${pageSize}`,
-    { credentials: 'include' },
-  );
-  if (res.status === 401) {
-    throw new Error('Unauthorized');
-  }
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Failed to fetch bookings' }));
-    throw new Error((err as { message?: string }).message ?? 'Failed to fetch bookings');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as ClientBookingListResponse;
+  ensureInitialised()
+  return getMyBookings(page, pageSize)
 }
 
 export async function cancelMyBookingApi(
   bookingId: string,
   reason?: string,
 ): Promise<{ status: string; requiresApproval: boolean }> {
-  const res = await fetch(`${getApiBase()}/public/me/bookings/${bookingId}/cancel`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ reason }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Cancel failed' }));
-    throw new Error((err as { message?: string }).message ?? 'Cancel failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as { status: string; requiresApproval: boolean };
+  ensureInitialised()
+  const result = await cancelMyBooking(bookingId, { reason })
+  return { status: result.status, requiresApproval: result.requiresApproval }
 }
 
 export async function rescheduleMyBookingApi(
@@ -102,38 +84,19 @@ export async function rescheduleMyBookingApi(
   newScheduledAt: string,
   newDurationMins?: number,
 ): Promise<{ booking: unknown }> {
-  const res = await fetch(`${getApiBase()}/public/me/bookings/${bookingId}/reschedule`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ newScheduledAt, newDurationMins }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Reschedule failed' }));
-    throw new Error((err as { message?: string }).message ?? 'Reschedule failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as { booking: unknown };
+  ensureInitialised()
+  return rescheduleMyBooking(bookingId, { newScheduledAt, newDurationMins })
 }
 
 export async function clientLogoutApi(): Promise<void> {
-  await fetch(`${getApiBase()}/public/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  });
+  ensureInitialised()
+  await clientLogout()
 }
 
 export async function clientResetPasswordApi(payload: {
-  sessionToken: string;
-  newPassword: string;
+  sessionToken: string
+  newPassword: string
 }): Promise<void> {
-  const res = await fetch(`${getApiBase()}/public/auth/reset-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Password reset failed' }));
-    throw new Error((err as { message?: string }).message ?? 'Password reset failed');
-  }
+  ensureInitialised()
+  return clientResetPassword(payload)
 }
