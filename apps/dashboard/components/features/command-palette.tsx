@@ -34,6 +34,8 @@ type CommandEntry = {
   shortcut?: string
 }
 
+// i18n-allow: bilingual search hints are intentional — fed to fuzzy matcher,
+// not rendered. Display labels go through `labelKey` + t().
 const QUICK_ACTIONS: CommandEntry[] = [
   { id: "new-booking", labelKey: "cmd.newBooking", searchTerms: "new booking حجز جديد", href: "/bookings?new=1", icon: Add01Icon, shortcut: "⌘N" },
   { id: "search-clients", labelKey: "cmd.searchClients", searchTerms: "search clients البحث مرضى", href: "/clients", icon: UserMultiple02Icon },

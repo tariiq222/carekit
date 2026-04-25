@@ -1,16 +1,16 @@
 "use client"
 
 /**
- * DatePicker — الـ date picker الرسمي الوحيد في النظام
+ * DatePicker — the only canonical date picker in the system.
  *
- * الاستخدام الصحيح:
+ * Correct usage:
  *   import { DatePicker } from "@/components/ui/date-picker"
  *   <DatePicker value={value} onChange={onChange} />
  *
- * ممنوع:
+ * Forbidden:
  *   - <Input type="date" ...>
- *   - أي date picker محلي داخل الصفحات
- *   - استيراد react-day-picker أو date-fns مباشرة في صفحات الـ feature
+ *   - any local date picker inside feature pages
+ *   - importing react-day-picker or date-fns directly in feature pages
  */
 
 import * as React from "react"
