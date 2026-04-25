@@ -28,18 +28,18 @@ function TopBar({ f600 }: { f600: string }) {
   return (
     <View style={styles.topBar}>
       <View style={styles.topBarLeft}>
-        <Glass variant="regular" radius={22} style={styles.iconBtn}>
+        <Glass variant="regular" radius={21} style={styles.iconBtn}>
           <Pressable onPress={() => {}} style={styles.iconBtnInner}>
-            <Search size={18} color={sawaaColors.teal[700]} strokeWidth={1.75} />
+            <Search size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
           </Pressable>
         </Glass>
-        <Glass variant="regular" radius={22} style={styles.iconBtn}>
+        <Glass variant="regular" radius={21} style={styles.iconBtn}>
           <Pressable onPress={() => router.push('/(client)/(tabs)/notifications')} style={styles.iconBtnInner}>
-            <Bell size={18} color={sawaaColors.teal[700]} strokeWidth={1.75} />
+            <Bell size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
           </Pressable>
         </Glass>
       </View>
-      <Glass variant="regular" radius={22} style={styles.avatarBtn}>
+      <Glass variant="regular" radius={21} style={styles.avatarBtn}>
         <Pressable onPress={() => router.push('/(client)/(tabs)/profile')} style={styles.avatarInner}>
           <Text style={[styles.avatarText, { fontFamily: f600 }]}>{initial}</Text>
         </Pressable>
@@ -313,11 +313,11 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, gap: 16 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
   topBarLeft: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 44, height: 44 },
+  iconBtn: { width: 42, height: 42 },
   iconBtnInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  avatarBtn: { width: 44, height: 44 },
+  avatarBtn: { width: 42, height: 42 },
   avatarInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 16, color: sawaaColors.teal[700] },
+  avatarText: { fontSize: 15, color: sawaaColors.teal[700] },
   greetingBlock: { paddingHorizontal: 4, marginTop: 4 },
   dateLabel: { fontSize: 12, color: sawaaColors.teal[700], opacity: 0.75 },
   greeting: { fontSize: 26, lineHeight: 34, color: sawaaColors.ink[900], marginTop: 2 },
