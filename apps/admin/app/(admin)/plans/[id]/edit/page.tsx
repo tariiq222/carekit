@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { Button } from '@carekit/ui/primitives/button';
 import { Input } from '@carekit/ui/primitives/input';
 import { Label } from '@carekit/ui/primitives/label';
@@ -26,30 +26,12 @@ interface FormState {
   reason: string;
 }
 
+type Plan = NonNullable<ReturnType<typeof useListPlans>['data']>[number];
+
 export default function EditPlanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const { data, isLoading, error } = useListPlans();
   const plan = useMemo(() => data?.find((p) => p.id === id), [data, id]);
-
-  const [form, setForm] = useState<FormState | null>(null);
-  const [limits, setLimits] = useState<PlanLimits | null>(null);
-
-  useEffect(() => {
-    if (plan && form === null) {
-      setForm({
-        nameAr: plan.nameAr,
-        nameEn: plan.nameEn,
-        priceMonthly: String(plan.priceMonthly),
-        priceAnnual: String(plan.priceAnnual),
-        currency: plan.currency,
-        reason: '',
-      });
-      setLimits(hydrateLimits(plan.limits));
-    }
-  }, [plan, form]);
-
-  const mutation = useUpdatePlan();
 
   if (error) {
     return (
@@ -59,9 +41,29 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  if (isLoading || !plan || !form || !limits) {
+  if (isLoading || !plan) {
     return <Skeleton className="h-96" />;
   }
+
+  // Mount the editable form only after plan is available.
+  // The `key` ensures useState lazy initializers re-run if the user navigates
+  // between two plan ids without unmounting the route.
+  return <PlanEditForm key={plan.id} plan={plan} />;
+}
+
+function PlanEditForm({ plan }: { plan: Plan }) {
+  const router = useRouter();
+  const mutation = useUpdatePlan();
+
+  const [form, setForm] = useState<FormState>(() => ({
+    nameAr: plan.nameAr,
+    nameEn: plan.nameEn,
+    priceMonthly: String(plan.priceMonthly),
+    priceAnnual: String(plan.priceAnnual),
+    currency: plan.currency,
+    reason: '',
+  }));
+  const [limits, setLimits] = useState<PlanLimits>(() => hydrateLimits(plan.limits));
 
   const isValid =
     form.nameAr.trim().length > 0 &&
@@ -71,7 +73,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
     form.reason.trim().length >= 10;
 
   const set = (field: keyof FormState) => (value: string) =>
-    setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
+    setForm((prev) => ({ ...prev, [field]: value }));
 
   const submit = () => {
     if (!isValid) return;
