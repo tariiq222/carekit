@@ -4,7 +4,7 @@ import axios, {
 } from 'axios';
 import { router } from 'expo-router';
 
-import { API_URL, TENANT_ID } from '@/constants/config';
+import { API_URL } from '@/constants/config';
 import type { ApiResponse } from '@/types/api';
 import { store } from '@/stores/store';
 import { logout } from '@/stores/slices/auth-slice';
@@ -13,6 +13,7 @@ import {
   setSecureItem,
   deleteSecureItem,
 } from '@/stores/secure-storage';
+import { clearCurrentOrgId, getCurrentOrgIdSync } from './tenant';
 
 const ORG_SUSPENDED_CODE = 'ORG_SUSPENDED';
 
@@ -26,12 +27,15 @@ const api = axios.create({
 
 // Tenant header: every request — public and authenticated. On authenticated
 // routes the backend's TenantResolverMiddleware ignores this header (JWT
-// claim wins); on public routes it locks the binary to a single tenant.
+// claim wins); on public routes it scopes catalog data to the active tenant.
+// Reads from secure-store cache (hydrated at boot via loadCurrentOrgId),
+// falling back to the build-time default for first-launch / pre-login state.
 api.interceptors.request.use((config) => {
+  const orgId = getCurrentOrgIdSync();
   if (config.headers && typeof (config.headers as { set?: unknown }).set === 'function') {
-    (config.headers as { set: (k: string, v: string) => void }).set('X-Org-Id', TENANT_ID);
+    (config.headers as { set: (k: string, v: string) => void }).set('X-Org-Id', orgId);
   } else if (config.headers) {
-    (config.headers as Record<string, string>)['X-Org-Id'] = TENANT_ID;
+    (config.headers as Record<string, string>)['X-Org-Id'] = orgId;
   }
   return config;
 });
@@ -65,6 +69,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && responseCode === ORG_SUSPENDED_CODE) {
       await deleteSecureItem('accessToken');
       await deleteSecureItem('refreshToken');
+      await clearCurrentOrgId();
       store.dispatch(logout());
       router.replace('/(auth)/suspended');
       return Promise.reject(error);
@@ -97,6 +102,7 @@ api.interceptors.response.use(
         // Refresh failed — clear tokens + Redux state
         await deleteSecureItem('accessToken');
         await deleteSecureItem('refreshToken');
+        await clearCurrentOrgId();
         store.dispatch(logout());
       }
     }

@@ -9,6 +9,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '@/stores/store';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { DirContext, buildDirState } from '@/hooks/useDir';
+import { loadCurrentOrgId } from '@/services/tenant';
 import '@/i18n';
 
 export default function RootLayout() {
@@ -16,6 +17,7 @@ export default function RootLayout() {
     if (!I18nManager.isRTL) {
       I18nManager.allowRTL(true);
     }
+    void loadCurrentOrgId();
   }, []);
 
   const dirState = buildDirState('ar');
