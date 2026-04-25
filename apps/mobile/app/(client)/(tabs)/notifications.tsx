@@ -82,7 +82,9 @@ const FILTERS = [
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const f300 = getFontName(dir.locale, '300');
   const f400 = getFontName(dir.locale, '400');
+  const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [active, setActive] = useState('all');
@@ -99,7 +101,7 @@ export default function NotificationsScreen() {
           <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'الإشعارات' : 'Notifications'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+          <Text style={[styles.subtitle, { fontFamily: f500, textAlign: dir.textAlign }]}>
             {dir.isRTL
               ? `لديكِ ${unreadCount === 1 ? 'إشعار جديد' : `${unreadCount} إشعارات جديدة`}`
               : `${unreadCount} new ${unreadCount === 1 ? 'notification' : 'notifications'}`}
@@ -168,11 +170,11 @@ export default function NotificationsScreen() {
                     <Text style={[styles.itemTitle, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
                       {dir.isRTL ? n.title.ar : n.title.en}
                     </Text>
-                    <Text style={[styles.when, { fontFamily: f400 }]}>
+                    <Text style={[styles.when, { fontFamily: f300 }]}>
                       {dir.isRTL ? n.when.ar : n.when.en}
                     </Text>
                   </View>
-                  <Text style={[styles.itemBody, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                  <Text style={[styles.itemBody, { fontFamily: f500, textAlign: dir.textAlign }]}>
                     {dir.isRTL ? n.body.ar : n.body.en}
                   </Text>
                 </View>

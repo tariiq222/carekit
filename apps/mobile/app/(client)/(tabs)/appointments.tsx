@@ -73,6 +73,7 @@ export default function AppointmentsScreen() {
   const dir = useDir();
   const router = useRouter();
   const f400 = getFontName(dir.locale, '400');
+  const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [tab, setTab] = useState<TabKey>('upcoming');
@@ -119,7 +120,7 @@ export default function AppointmentsScreen() {
           <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'مواعيدي' : 'Appointments'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+          <Text style={[styles.subtitle, { fontFamily: f500, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'جلساتك الحالية والسابقة' : 'Your upcoming and past sessions'}
           </Text>
         </Animated.View>
@@ -210,7 +211,7 @@ export default function AppointmentsScreen() {
                           ) : (
                             <MapPin size={12} color={sawaaColors.accent.violet} strokeWidth={2} />
                           )}
-                          <Text style={[styles.metaText, { fontFamily: f400 }]}>{location}</Text>
+                          <Text style={[styles.metaText, { fontFamily: f500 }]}>{location}</Text>
                         </View>
                       </View>
                       <Chevron size={16} color={sawaaColors.ink[400]} strokeWidth={2} />
