@@ -29,6 +29,10 @@ export * as publicBranchesApi from './modules/public-branches'
 export * as contactMessagesApi from './modules/contact-messages'
 export * as otpApi from './modules/otp'
 export * as publicAvailabilityApi from './modules/public-availability'
+export * as groupSessionsApi from './modules/group-sessions'
+export * as mediaApi from './modules/media'
+export * as orgSmsConfigApi from './modules/org-sms-config'
+export * as zoomApi from './modules/zoom'
 export { setOtpSessionToken, getOtpSessionToken, setGuestBaseUrl } from './modules/guest-client'
 export {
   setClientBaseUrl,
