@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,18 @@ import { useDir } from '@/hooks/useDir';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout } from '@/stores/slices/auth-slice';
 import { getFontName } from '@/theme/fonts';
+import { clientPortalService, type PortalSummary } from '@/services/client/portal';
+
+const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatLastVisit(iso: string | null, isRTL: boolean): string {
+  if (!iso) return isRTL ? '—' : '—';
+  const d = new Date(iso);
+  const month = isRTL ? MONTHS_AR[d.getMonth()] : MONTHS_EN[d.getMonth()];
+  const day = isRTL ? d.getDate().toLocaleString('ar-SA') : d.getDate();
+  return `${day} ${month}`;
+}
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -33,18 +45,55 @@ export default function ProfileScreen() {
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const [darkMode, setDarkMode] = useState(false);
+  const [summary, setSummary] = useState<PortalSummary | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
 
   const displayName = user
     ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email
-    : dir.isRTL ? 'سارة العتيبي' : 'Sara Al-Otaibi';
-  const email = user?.email ?? 'sara.o@mail.com';
-  const initial = (user?.firstName ?? (dir.isRTL ? 'س' : 'S')).charAt(0);
+    : '—';
+  const email = user?.email ?? '';
+  const initial = (user?.firstName ?? '·').charAt(0);
 
-  const stats = [
-    { n: 24, ar: 'جلسة', en: 'Sessions' },
-    { n: 168, ar: 'دقيقة تأمل', en: 'Min meditation' },
-    { n: 12, ar: 'سجل يومي', en: 'Journal entries' },
+  const loadSummary = React.useCallback(async () => {
+    try {
+      const data = await clientPortalService.getSummary();
+      setSummary(data);
+    } catch {
+      // leave previous summary in place; the screen renders dashes if null
+    }
+  }, []);
+
+  useEffect(() => { void loadSummary(); }, [loadSummary]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadSummary();
+    setRefreshing(false);
+  };
+
+  const stats: Array<{ value: string; ar: string; en: string }> = [
+    {
+      value: summary
+        ? (dir.isRTL ? summary.totalBookings.toLocaleString('ar-SA') : String(summary.totalBookings))
+        : '—',
+      ar: 'جلسة',
+      en: 'Sessions',
+    },
+    {
+      value: summary ? formatLastVisit(summary.lastVisit, dir.isRTL) : '—',
+      ar: 'آخر زيارة',
+      en: 'Last visit',
+    },
+    {
+      value: summary
+        ? (dir.isRTL
+            ? `${summary.outstandingBalance.toLocaleString('ar-SA')} ر.س`
+            : `${summary.outstandingBalance.toLocaleString('en-US')} SAR`)
+        : '—',
+      ar: 'مبلغ مستحق',
+      en: 'Outstanding',
+    },
   ];
 
   type SettingItem = {
@@ -70,6 +119,7 @@ export default function ProfileScreen() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 20, paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={sawaaColors.teal[600]} />}
       >
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
           <Text style={[styles.pageTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
@@ -95,14 +145,18 @@ export default function ProfileScreen() {
                 <Text style={[styles.profileEmail, { fontFamily: f400, textAlign: dir.textAlign }]}>
                   {email}
                 </Text>
-                <View style={[styles.membership, { flexDirection: dir.row }]}>
-                  <Leaf size={11} color={sawaaColors.teal[700]} strokeWidth={2} />
-                  <Text style={[styles.membershipText, { fontFamily: f600 }]}>
-                    {dir.isRTL ? 'عضوية بريميوم · ٤ أشهر' : 'Premium · 4 months'}
-                  </Text>
-                </View>
+                {summary && summary.totalBookings > 0 ? (
+                  <View style={[styles.membership, { flexDirection: dir.row }]}>
+                    <Leaf size={11} color={sawaaColors.teal[700]} strokeWidth={2} />
+                    <Text style={[styles.membershipText, { fontFamily: f600 }]}>
+                      {dir.isRTL
+                        ? `${summary.totalBookings.toLocaleString('ar-SA')} جلسة سابقة`
+                        : `${summary.totalBookings} past session${summary.totalBookings === 1 ? '' : 's'}`}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
-              <Glass variant="regular" radius={14} onPress={() => {}} interactive style={styles.editBtn}>
+              <Glass variant="regular" radius={14} onPress={() => router.push('/(client)/settings')} interactive style={styles.editBtn}>
                 <Text style={[styles.editText, { fontFamily: f600 }]}>
                   {dir.isRTL ? 'تعديل' : 'Edit'}
                 </Text>
@@ -112,8 +166,8 @@ export default function ProfileScreen() {
             <View style={[styles.statsRow, { flexDirection: dir.row }]}>
               {stats.map((s, i) => (
                 <View key={i} style={styles.statBox}>
-                  <Text style={[styles.statN, { fontFamily: f700 }]}>
-                    {dir.isRTL ? s.n.toLocaleString('ar-SA') : s.n}
+                  <Text style={[styles.statN, { fontFamily: f700 }]} numberOfLines={1}>
+                    {s.value}
                   </Text>
                   <Text style={[styles.statL, { fontFamily: f400 }]}>
                     {dir.isRTL ? s.ar : s.en}

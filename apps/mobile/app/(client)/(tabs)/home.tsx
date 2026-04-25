@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { useAppSelector } from '@/hooks/use-redux';
 import { getFontName } from '@/theme/fonts';
+import { clientPortalService, type PortalBookingRow } from '@/services/client/portal';
+import { publicEmployeesService, type PublicEmployeeItem } from '@/services/client/employees';
 
 const MOODS = [
   { emo: '😔', ar: 'متعبة', en: 'Tired', color: '#8ca8c4' },
@@ -48,6 +50,26 @@ function TopBar({ f600 }: { f600: string }) {
   );
 }
 
+function formatRelativeTime(when: Date, now: Date, isRTL: boolean): string {
+  const diffMs = when.getTime() - now.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+  const diffH = Math.round(diffMin / 60);
+  const h = when.getHours();
+  const m = String(when.getMinutes()).padStart(2, '0');
+  const suffix = h < 12 ? (isRTL ? 'ص' : 'AM') : (isRTL ? 'م' : 'PM');
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const time = `${h12}:${m} ${suffix}`;
+  if (diffMin < 0) return time;
+  if (diffMin < 60) {
+    return isRTL ? `بعد ${diffMin} دقيقة · ${time}` : `In ${diffMin}m · ${time}`;
+  }
+  if (diffH < 24) {
+    return isRTL ? `بعد ${diffH} ساعة · ${time}` : `In ${diffH}h · ${time}`;
+  }
+  const days = Math.round(diffH / 24);
+  return isRTL ? `بعد ${days} يوم · ${time}` : `In ${days}d · ${time}`;
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
@@ -65,11 +87,48 @@ export default function HomeScreen() {
     month: 'long',
   });
 
+  const [nextBooking, setNextBooking] = useState<PortalBookingRow | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [therapists, setTherapists] = useState<PublicEmployeeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadHome = React.useCallback(async () => {
+    try {
+      const [home, therapistList] = await Promise.all([
+        clientPortalService.getHome(),
+        publicEmployeesService.list().catch(() => [] as PublicEmployeeItem[]),
+      ]);
+      setNextBooking(home.upcomingBookings?.[0] ?? null);
+      setUnreadCount(home.unreadNotifications?.length ?? 0);
+      setTherapists(therapistList.slice(0, 6));
+    } catch {
+      // Network/auth errors leave the screen in its empty state — better
+      // than masking with stale mock data.
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await loadHome();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [loadHome]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadHome();
+    setRefreshing(false);
+  };
+
   return (
     <AquaBackground>
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 8, paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={sawaaColors.teal[600]} />}
       >
         <TopBar f600={f600} />
 
@@ -120,41 +179,73 @@ export default function HomeScreen() {
         <Animated.View entering={FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}
           style={[styles.sectionHead, { flexDirection: dir.row }]}>
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'يومك اليوم' : 'Your day'}
+            {dir.isRTL ? 'القادم' : 'Up next'}
           </Text>
-          <Text style={[styles.sectionMeta, { fontFamily: f600, color: sawaaColors.teal[700] }]}>
-            {dir.isRTL ? '٦ أنشطة' : '6 activities'}
-          </Text>
+          {unreadCount > 0 ? (
+            <Pressable onPress={() => router.push('/(client)/(tabs)/notifications')}>
+              <Text style={[styles.sectionMeta, { fontFamily: f600, color: sawaaColors.teal[700] }]}>
+                {dir.isRTL
+                  ? `${unreadCount.toLocaleString('ar-SA')} تنبيه جديد`
+                  : `${unreadCount} new alert${unreadCount === 1 ? '' : 's'}`}
+              </Text>
+            </Pressable>
+          ) : null}
         </Animated.View>
 
         {/* Next session card */}
         <Animated.View entering={FadeInDown.delay(300).duration(700).easing(Easing.out(Easing.cubic))} style={styles.cardWrap}>
-          <Glass variant="strong" radius={sawaaRadius.xl} style={styles.sessionCard}>
-            <Pressable
-              onPress={() => router.push('/(client)/(tabs)/appointments')}
-              style={[styles.sessionRow, { flexDirection: dir.row }]}
-            >
-              <LinearGradient
-                colors={[sawaaColors.teal[400], sawaaColors.teal[600]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.sessionIcon}
+          {loading ? (
+            <Glass variant="strong" radius={sawaaRadius.xl} style={[styles.sessionCard, styles.sessionLoading]}>
+              <ActivityIndicator color={sawaaColors.teal[600]} />
+            </Glass>
+          ) : nextBooking ? (
+            <Glass variant="strong" radius={sawaaRadius.xl} style={styles.sessionCard}>
+              <Pressable
+                onPress={() => router.push(`/(client)/appointment/${nextBooking.id}`)}
+                style={[styles.sessionRow, { flexDirection: dir.row }]}
               >
-                <Video size={22} color="#fff" strokeWidth={1.75} />
-              </LinearGradient>
-              <View style={styles.sessionMid}>
-                <Text style={[styles.sessionTime, { fontFamily: f600, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'بعد ساعتين · ٤:٠٠ م' : 'In 2h · 4:00 PM'}
+                <LinearGradient
+                  colors={[sawaaColors.teal[400], sawaaColors.teal[600]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.sessionIcon}
+                >
+                  <Video size={22} color="#fff" strokeWidth={1.75} />
+                </LinearGradient>
+                <View style={styles.sessionMid}>
+                  <Text style={[styles.sessionTime, { fontFamily: f600, textAlign: dir.textAlign }]}>
+                    {(() => {
+                      const iso = nextBooking.scheduledAt
+                        ?? `${nextBooking.date}T${nextBooking.startTime}:00Z`;
+                      const when = new Date(iso);
+                      return formatRelativeTime(when, new Date(), dir.isRTL);
+                    })()}
+                  </Text>
+                  <Text style={[styles.sessionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                    {nextBooking.employee
+                      ? (dir.isRTL
+                          ? `جلسة مع ${nextBooking.employee.user.firstName} ${nextBooking.employee.user.lastName}`.trim()
+                          : `Session with ${nextBooking.employee.user.firstName} ${nextBooking.employee.user.lastName}`.trim())
+                      : (dir.isRTL ? 'جلسة قادمة' : 'Upcoming session')}
+                  </Text>
+                </View>
+                <View style={styles.sessionGo}>
+                  <ArrowIcon size={14} color="#fff" strokeWidth={2} />
+                </View>
+              </Pressable>
+            </Glass>
+          ) : (
+            <Glass variant="regular" radius={sawaaRadius.xl} style={[styles.sessionCard, styles.emptySession]}>
+              <Text style={[styles.emptyText, { fontFamily: f600, textAlign: dir.textAlign }]}>
+                {dir.isRTL ? 'لا توجد جلسات قادمة' : 'No upcoming sessions'}
+              </Text>
+              <Pressable onPress={() => router.push('/(client)/therapists')} hitSlop={8}>
+                <Text style={[styles.emptyCta, { fontFamily: f700 }]}>
+                  {dir.isRTL ? 'احجزي الآن' : 'Book now'}
                 </Text>
-                <Text style={[styles.sessionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'جلسة مع د. فاطمة العمران' : 'Session with Dr. Fatima'}
-                </Text>
-              </View>
-              <View style={styles.sessionGo}>
-                <ArrowIcon size={14} color="#fff" strokeWidth={2} />
-              </View>
-            </Pressable>
-          </Glass>
+              </Pressable>
+            </Glass>
+          )}
         </Animated.View>
 
         {/* ── Featured Clinics ─────────────────────────────────────── */}
@@ -267,42 +358,48 @@ export default function HomeScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.hScrollContent, { flexDirection: dir.row }]}
-          >
-            {[
-              { initial: 'ف', nameAr: 'د. فاطمة العمران', nameEn: 'Dr. Fatima', specAr: 'معرفي سلوكي', specEn: 'CBT', rating: 4.9, gradient: ['#f7cbb7', '#e88f6c'] as const },
-              { initial: 'م', nameAr: 'د. منى السالم', nameEn: 'Dr. Mona', specAr: 'علاج أسري', specEn: 'Family', rating: 4.8, gradient: ['#c9e4ff', '#7aa8e0'] as const },
-              { initial: 'ع', nameAr: 'د. علي الزهراني', nameEn: 'Dr. Ali', specAr: 'قلق واكتئاب', specEn: 'Anxiety', rating: 4.7, gradient: ['#d4c8f0', '#8c78d0'] as const },
-              { initial: 'ن', nameAr: 'د. نورة العتيبي', nameEn: 'Dr. Noura', specAr: 'مراهقين', specEn: 'Teens', rating: 4.9, gradient: ['#ffd5a8', '#e09b5a'] as const },
-            ].map((t, i) => (
-              <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.therapistSmallCard}>
-                <Pressable onPress={() => router.push('/(client)/employee/1')} style={styles.therapistSmallInner}>
-                  <LinearGradient
-                    colors={t.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.therapistSmallAvatar}
-                  >
-                    <Text style={[styles.therapistSmallAvatarText, { fontFamily: f700 }]}>{t.initial}</Text>
-                    <View style={styles.onlineDotSmall} />
-                  </LinearGradient>
-                  <Text style={[styles.therapistSmallName, { fontFamily: f700, textAlign: dir.textAlign }]} numberOfLines={1}>
-                    {dir.isRTL ? t.nameAr : t.nameEn}
-                  </Text>
-                  <Text style={[styles.therapistSmallSpec, { fontFamily: f400, textAlign: dir.textAlign }]} numberOfLines={1}>
-                    {dir.isRTL ? t.specAr : t.specEn}
-                  </Text>
-                  <View style={[styles.therapistSmallRating, { flexDirection: dir.row }]}>
-                    <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
-                    <Text style={[styles.therapistSmallRatingText, { fontFamily: f600 }]}>{t.rating}</Text>
-                  </View>
-                </Pressable>
-              </Glass>
-            ))}
-          </ScrollView>
+          {therapists.length === 0 ? (
+            <Glass variant="regular" radius={sawaaRadius.xl} style={styles.emptyTherapists}>
+              <Text style={[styles.emptyText, { fontFamily: f600, textAlign: dir.textAlign }]}>
+                {dir.isRTL ? 'لا يوجد معالجون متاحون حالياً' : 'No therapists available right now'}
+              </Text>
+            </Glass>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[styles.hScrollContent, { flexDirection: dir.row }]}
+            >
+              {therapists.map((t) => {
+                const name = (dir.isRTL ? t.nameAr : t.nameEn) ?? t.nameAr ?? t.nameEn ?? '';
+                const specialty = (dir.isRTL ? t.specialtyAr : t.specialty) ?? t.specialty ?? t.specialtyAr ?? '';
+                const initial = name.trim().charAt(0) || '·';
+                return (
+                  <Glass key={t.id} variant="strong" radius={sawaaRadius.xl} style={styles.therapistSmallCard}>
+                    <Pressable
+                      onPress={() => router.push(`/(client)/employee/${t.slug ?? t.id}`)}
+                      style={styles.therapistSmallInner}
+                    >
+                      <LinearGradient
+                        colors={[sawaaColors.teal[400], sawaaColors.teal[600]]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.therapistSmallAvatar}
+                      >
+                        <Text style={[styles.therapistSmallAvatarText, { fontFamily: f700 }]}>{initial}</Text>
+                      </LinearGradient>
+                      <Text style={[styles.therapistSmallName, { fontFamily: f700, textAlign: dir.textAlign }]} numberOfLines={1}>
+                        {name}
+                      </Text>
+                      <Text style={[styles.therapistSmallSpec, { fontFamily: f400, textAlign: dir.textAlign }]} numberOfLines={1}>
+                        {specialty || (t.title ?? '')}
+                      </Text>
+                    </Pressable>
+                  </Glass>
+                );
+              })}
+            </ScrollView>
+          )}
         </Animated.View>
       </ScrollView>
     </AquaBackground>
@@ -338,6 +435,11 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, color: sawaaColors.ink[900] },
   sectionMeta: { fontSize: 12 },
   sessionCard: { padding: 14 },
+  sessionLoading: { alignItems: 'center', justifyContent: 'center', minHeight: 76 },
+  emptySession: { padding: 18, alignItems: 'center', gap: 8 },
+  emptyText: { fontSize: 13, color: sawaaColors.ink[700] },
+  emptyCta: { fontSize: 13, color: sawaaColors.teal[700] },
+  emptyTherapists: { padding: 24, alignItems: 'center' },
   sessionRow: { alignItems: 'center', gap: 12 },
   sessionIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   sessionMid: { flex: 1 },
