@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SmtpService } from '../../../infrastructure/mail';
+import { AuthenticaClient } from '../../../infrastructure/authentica';
 import { EmailChannelAdapter } from './email-channel.adapter';
+import { SmsChannelAdapter } from './sms-channel.adapter';
 import { NotificationChannelRegistry } from './notification-channel-registry';
 import { OtpChannel } from '@prisma/client';
 
@@ -45,34 +47,84 @@ describe('EmailChannelAdapter', () => {
   });
 });
 
+describe('SmsChannelAdapter', () => {
+  let adapter: SmsChannelAdapter;
+  let authentica: jest.Mocked<AuthenticaClient>;
+
+  beforeEach(async () => {
+    const authenticaMock = {
+      isConfigured: jest.fn().mockReturnValue(true),
+      sendOtp: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        SmsChannelAdapter,
+        { provide: AuthenticaClient, useValue: authenticaMock },
+      ],
+    }).compile();
+
+    adapter = module.get<SmsChannelAdapter>(SmsChannelAdapter);
+    authentica = module.get(AuthenticaClient);
+  });
+
+  it('sends SMS via AuthenticaClient', async () => {
+    await adapter.send('+966500000000', '123456');
+    expect(authentica.sendOtp).toHaveBeenCalledWith({
+      channel: 'SMS',
+      identifier: '+966500000000',
+      code: '123456',
+    });
+  });
+
+  it('skips when Authentica is not configured', async () => {
+    authentica.isConfigured.mockReturnValue(false);
+    await adapter.send('+966500000000', '123456');
+    expect(authentica.sendOtp).not.toHaveBeenCalled();
+  });
+});
+
 describe('NotificationChannelRegistry', () => {
   let registry: NotificationChannelRegistry;
   let emailAdapter: EmailChannelAdapter;
+  let smsAdapter: SmsChannelAdapter;
 
   beforeEach(async () => {
     const smtpMock = {
       isAvailable: jest.fn().mockReturnValue(true),
       sendMail: jest.fn().mockResolvedValue(undefined),
     };
+    const authenticaMock = {
+      isConfigured: jest.fn().mockReturnValue(true),
+      sendOtp: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailChannelAdapter,
+        SmsChannelAdapter,
         NotificationChannelRegistry,
         { provide: SmtpService, useValue: smtpMock },
+        { provide: AuthenticaClient, useValue: authenticaMock },
       ],
     }).compile();
 
     registry = module.get<NotificationChannelRegistry>(NotificationChannelRegistry);
     emailAdapter = module.get<EmailChannelAdapter>(EmailChannelAdapter);
+    smsAdapter = module.get<SmsChannelAdapter>(SmsChannelAdapter);
   });
 
-  it('should resolve EMAIL channel', () => {
+  it('resolves EMAIL channel', () => {
     const channel = registry.resolve(OtpChannel.EMAIL);
     expect(channel).toBe(emailAdapter);
   });
 
-  it('should throw for unknown channel kind', () => {
-    expect(() => registry.resolve('SMS' as OtpChannel)).toThrow('No notification channel registered for kind: SMS');
+  it('resolves SMS channel', () => {
+    const channel = registry.resolve(OtpChannel.SMS);
+    expect(channel).toBe(smsAdapter);
+  });
+
+  it('throws for unknown channel kind', () => {
+    expect(() => registry.resolve('WHATSAPP' as OtpChannel)).toThrow('No notification channel registered for kind: WHATSAPP');
   });
 });
