@@ -27,6 +27,7 @@ import { Textarea } from "@carekit/ui"
 
 import { createWalkInClient } from "@/lib/api/clients"
 import { useLocale } from "@/components/locale-provider"
+import { COUNTRIES } from "@/lib/countries-data"
 import { cn } from "@/lib/utils"
 import { BLOOD_TYPES, BLOOD_LABELS } from "@/lib/schemas/client.schema"
 import {
@@ -115,7 +116,12 @@ const step1Fields = ["firstName", "lastName", "phone"] as const
 /* ── Main form ── */
 
 export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const defaultNationality = (() => {
+    const sa = COUNTRIES.find((c) => c.code === "SA")
+    if (!sa) return ""
+    return locale === "ar" ? sa.ar : sa.en
+  })()
   const form = useForm<WalkInClientFormData>({ resolver: zodResolver(walkInClientSchema) })
   const [step, setStep] = useState<1 | 2>(1)
   const [creating, setCreating] = useState(false)
@@ -191,11 +197,11 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
                   )} />
                 </FormField>
                 <FormField label={t("bookings.walkin.field.nationality")} icon={<HugeiconsIcon icon={Location04Icon} size={13} className="shrink-0" />}>
-                  <Controller control={form.control} name="nationality" defaultValue="السعودية" render={({ field }) => (
+                  <Controller control={form.control} name="nationality" defaultValue={defaultNationality} render={({ field }) => (
                     <NationalitySelect
-                      value={field.value ?? "السعودية"}
+                      value={field.value ?? defaultNationality}
                       onChange={field.onChange}
-                      locale="ar"
+                      locale={locale === "ar" ? "ar" : "en"}
                     />
                   )} />
                 </FormField>

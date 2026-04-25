@@ -310,4 +310,5 @@ export const enBookings: Record<string, string> = {
   "bookings.walkin.button.previous": "Previous",
   "bookings.walkin.button.creating": "Creating...",
   "bookings.walkin.button.createAndContinue": "Create Patient & Continue",
+  "bookings.minutesAbbrev": "min",
 }

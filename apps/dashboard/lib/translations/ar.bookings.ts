@@ -310,4 +310,5 @@ export const arBookings: Record<string, string> = {
   "bookings.walkin.button.previous": "السابق",
   "bookings.walkin.button.creating": "جاري الإنشاء...",
   "bookings.walkin.button.createAndContinue": "إنشاء المريض والمتابعة",
+  "bookings.minutesAbbrev": "د",
 }

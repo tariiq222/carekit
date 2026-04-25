@@ -75,7 +75,7 @@ export function BookingEmployeeSection({
   durationOptions,
   visibility,
 }: BookingEmployeeSectionProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
 
   return (
     <div className="px-4 py-4 flex flex-col gap-3">
@@ -154,7 +154,7 @@ export function BookingEmployeeSection({
               <SelectContent>
                 {durationOptions.sort((a, b) => a.sortOrder - b.sortOrder).map((opt) => (
                   <SelectItem key={opt.id} value={opt.id} className="font-numeric">
-                    {opt.labelAr || opt.label} ({opt.durationMinutes} د)
+                    {(locale === "ar" ? opt.labelAr : opt.label) || opt.label} ({opt.durationMinutes} {t("bookings.minutesAbbrev")})
                   </SelectItem>
                 ))}
               </SelectContent>
