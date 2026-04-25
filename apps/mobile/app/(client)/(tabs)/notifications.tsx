@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Bell, Calendar, Check, CheckCheck, FileText, MessageCircle, Star, Video } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
@@ -10,6 +10,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useNotifications } from '@/hooks/use-notifications';
+import { resolveNotificationHref } from '@/utils/notification-deeplink';
 import type { Notification } from '@/types/models';
 
 interface IconConfig {
@@ -74,6 +75,7 @@ type FilterKey = typeof FILTERS[number]['key'];
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const router = useRouter();
   const f400 = getFontName(dir.locale, '400');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
@@ -93,6 +95,15 @@ export default function NotificationsScreen() {
     useCallback(() => {
       refresh();
     }, [refresh]),
+  );
+
+  const handlePress = useCallback(
+    (n: Notification) => {
+      if (!n.isRead) markAsRead(n.id);
+      const href = resolveNotificationHref(n);
+      if (href) router.push(href);
+    },
+    [markAsRead, router],
   );
 
   const visible = useMemo(() => {
@@ -201,7 +212,7 @@ export default function NotificationsScreen() {
                 key={n.id}
                 entering={FadeInDown.delay(150 + i * 50).duration(600).easing(Easing.out(Easing.cubic))}
               >
-                <Pressable onPress={() => unread && markAsRead(n.id)}>
+                <Pressable onPress={() => handlePress(n)}>
                   <Glass variant={unread ? 'strong' : 'regular'} radius={sawaaRadius.xl} style={styles.card}>
                     <View style={[styles.row, { flexDirection: dir.row }]}>
                       <View style={[

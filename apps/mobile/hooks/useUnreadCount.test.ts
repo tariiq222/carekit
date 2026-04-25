@@ -33,7 +33,7 @@ afterEach(() => {
 
 describe('useUnreadCount', () => {
   it('fetches the unread count on mount and exposes it via `count`', async () => {
-    mockedGet.mockResolvedValue({ data: { count: 4 } });
+    mockedGet.mockResolvedValue({ count: 4 });
 
     const { result } = renderHook(() => useUnreadCount());
 
@@ -42,7 +42,7 @@ describe('useUnreadCount', () => {
   });
 
   it('polls every 60s while focused', async () => {
-    mockedGet.mockResolvedValue({ data: { count: 1 } });
+    mockedGet.mockResolvedValue({ count: 1 });
 
     renderHook(() => useUnreadCount());
 
@@ -57,8 +57,8 @@ describe('useUnreadCount', () => {
   });
 
   it('keeps the previous value when the request fails', async () => {
-    mockedGet.mockResolvedValueOnce({ data: { count: 3 } });
-    mockedGet.mockResolvedValueOnce({ data: { count: 3 } });
+    mockedGet.mockResolvedValueOnce({ count: 3 });
+    mockedGet.mockResolvedValueOnce({ count: 3 });
     const { result } = renderHook(() => useUnreadCount());
     await waitFor(() => expect(result.current.count).toBe(3));
 

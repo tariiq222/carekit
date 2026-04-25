@@ -28,7 +28,7 @@ export function useUnreadCount(): UseUnreadCountResult {
   const refresh = useCallback(async () => {
     try {
       const res = await notificationsService.getUnreadCount();
-      if (mountedRef.current) setCount(res.data?.count ?? 0);
+      if (mountedRef.current) setCount(res.count ?? 0);
     } catch {
       // Silent — keep last known value.
     }

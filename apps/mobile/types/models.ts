@@ -171,4 +171,16 @@ export interface Notification {
   bodyEn: string;
   isRead: boolean;
   createdAt: string;
+  /**
+   * Optional structured payload set by the backend for deep-linking.
+   * Common keys: `bookingId`, `conversationId`, `invoiceId`.
+   */
+  metadata?: NotificationMetadata | null;
+}
+
+export interface NotificationMetadata {
+  bookingId?: string;
+  conversationId?: string;
+  invoiceId?: string;
+  [key: string]: string | number | boolean | null | undefined;
 }
