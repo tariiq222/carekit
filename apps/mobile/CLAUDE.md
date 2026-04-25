@@ -24,7 +24,10 @@ app/
 ## Conventions
 
 - **Routing**: Expo Router file-based — `_layout.tsx` defines navigators
-- **State**: Redux Toolkit slices in `stores/` — no Context for global state
+- **State**:
+  - **Redux Toolkit is for `auth` only** (token + refreshToken + user, persisted via `redux-persist` to Expo Secure Store). No new slices without explicit discussion — adding one is a design change, not a routine task.
+  - **All server data → TanStack Query v5** in `hooks/queries/` (one hook per resource, exported through `hooks/queries/index.ts`). Chat, bookings, notifications, therapists, etc. live here.
+  - Transient UI state (modals, form drafts, local typing indicators) → component-level `useState`/`useReducer`. Not Redux.
 - **API**: Axios services in `services/` — one file per domain
 - **i18n**: `i18next` + `react-i18next` — translation files in `i18n/`
 - **Theme**: Design tokens in `theme/` — use token values, no hardcoded colors

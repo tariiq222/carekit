@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import type { IMessage, BubbleProps, InputToolbarProps, SendProps } from 'react-native-gifted-chat';
@@ -8,48 +8,35 @@ import { SendHorizonal, RotateCcw } from 'lucide-react-native';
 
 import { ThemedText } from '@/theme/components/ThemedText';
 import { useTheme } from '@/theme/useTheme';
-import { useAppDispatch, useAppSelector } from '@/hooks/use-redux';
-import { startSession, sendMessage, addUserMessage, clearChat } from '@/stores/slices/chat-slice';
+import { useChat } from '@/hooks/queries/useChat';
 import { ChatQuickActions } from '@/components/chat/chat-quick-actions';
 import { ChatTypingIndicator } from '@/components/chat/chat-typing-indicator';
-
-const BOT_USER = { _id: 'bot', name: 'Assistant' };
 
 export default function ChatScreen() {
   const { t } = useTranslation();
   const { theme, isRTL } = useTheme();
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
 
   const {
-    currentSessionId,
     messages,
     isTyping,
-    isLoading,
     quickReplies,
     botConfig,
     error,
-  } = useAppSelector((state) => state.chat);
-
-  useEffect(() => {
-    if (!currentSessionId) {
-      dispatch(startSession(isRTL ? 'ar' : 'en'));
-    }
-  }, [currentSessionId, dispatch, isRTL]);
+    sendMessage,
+    reset,
+  } = useChat(isRTL ? 'ar' : 'en');
 
   const handleSend = useCallback(
     (newMessages: IMessage[] = []) => {
-      if (!currentSessionId || newMessages.length === 0) return;
-      const msg = newMessages[0];
-
-      dispatch(addUserMessage(msg));
-      dispatch(sendMessage({ sessionId: currentSessionId, content: msg.text }));
+      if (newMessages.length === 0) return;
+      sendMessage(newMessages[0]);
     },
-    [currentSessionId, dispatch],
+    [sendMessage],
   );
 
   const handleQuickAction = useCallback(
-    (action: string, label: string) => {
+    (_action: string, label: string) => {
       const msg: IMessage = {
         _id: `user-${Date.now()}`,
         text: label,
@@ -60,11 +47,6 @@ export default function ChatScreen() {
     },
     [handleSend],
   );
-
-  const handleNewChat = useCallback(() => {
-    dispatch(clearChat());
-    dispatch(startSession(isRTL ? 'ar' : 'en'));
-  }, [dispatch, isRTL]);
 
   const renderBubble = (props: BubbleProps<IMessage>) => (
     <Bubble
@@ -113,7 +95,7 @@ export default function ChatScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.surface, paddingTop: insets.top }]}>
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <ThemedText variant="heading">{botName}</ThemedText>
-        <Pressable onPress={handleNewChat} hitSlop={8}>
+        <Pressable onPress={reset} hitSlop={8}>
           <RotateCcw size={20} color={theme.colors.textSecondary} />
         </Pressable>
       </View>
