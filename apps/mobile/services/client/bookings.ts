@@ -1,5 +1,4 @@
 import api from '../api';
-import type { BookingType } from '@/types/models';
 
 export type BookingStatus =
   | 'PENDING'
@@ -53,15 +52,14 @@ export interface BookingsListResponse {
   };
 }
 
+/** Matches backend MobileCreateBookingDto exactly. */
 interface CreateBookingData {
   branchId: string;
   employeeId: string;
   serviceId: string;
   scheduledAt: string;
-  durationMins: number;
-  bookingType: BookingType;
+  durationOptionId?: string;
   notes?: string;
-  couponCode?: string;
 }
 
 interface ListParams {
