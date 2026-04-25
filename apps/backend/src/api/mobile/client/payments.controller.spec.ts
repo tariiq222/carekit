@@ -9,10 +9,14 @@ function buildController() {
   const listPayments = fn({ data: [], meta: {} });
   const getInvoice = fn({ id: 'inv-1', total: 100 });
   const bankTransferUpload = fn({ id: 'pay-1' });
+  const initClientPayment = fn({ paymentId: 'pay-1', redirectUrl: 'https://moyasar.test/p/pay-1' });
   const controller = new MobileClientPaymentsController(
-    listPayments as never, getInvoice as never, bankTransferUpload as never,
+    listPayments as never,
+    getInvoice as never,
+    bankTransferUpload as never,
+    initClientPayment as never,
   );
-  return { controller, listPayments, getInvoice, bankTransferUpload };
+  return { controller, listPayments, getInvoice, bankTransferUpload, initClientPayment };
 }
 
 describe('MobileClientPaymentsController', () => {
