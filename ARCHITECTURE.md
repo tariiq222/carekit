@@ -1,42 +1,41 @@
 # CareKit Architecture
 
-**Version:** 1.0
-**Last updated:** 2026-03-26
-**Status:** Active — Phase 8 Enterprise Readiness
+**Version**: 2.0 (multi-tenant SaaS)
+**Last reauthored**: 2026-04-25 — replaces v1.0 (2026-03-26, pre-SaaS)
+
+CareKit is a multi-tenant SaaS clinic platform. One deployment serves many organizations (tenants), each with isolated data, branding, vertical configuration, and billing. A super-admin control plane (`apps/admin`) operates the platform; per-tenant clinic admins use `apps/dashboard`; clients and employees use `apps/mobile`; the public marketing site is `apps/website`.
 
 ---
 
-## Overview
-
-CareKit is a white-label smart clinic management platform deployed independently per client. Each deployment is a self-contained Docker stack on the client's infrastructure.
+## Topology
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT DEPLOYMENT                         │
-│                                                                  │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
-│  │  Mobile  │  │  Dashboard   │  │     Custom Website        │  │
-│  │ (iOS/    │  │  (Next.js)   │  │  (per-client, WebVue)     │  │
-│  │ Android) │  │  Port 3001   │  │  Port 80/443              │  │
-│  └────┬─────┘  └──────┬───────┘  └──────────────────────────┘  │
-│       │               │                                          │
-│  ┌────▼───────────────▼──────────────────────────────────┐      │
-│  │                    Nginx (Reverse Proxy)                │      │
-│  └──────────────────────────┬────────────────────────────┘      │
-│                             │                                    │
-│  ┌──────────────────────────▼────────────────────────────┐      │
-│  │               NestJS Backend (Port 3000)                │      │
-│  │   Auth │ Bookings │ Payments │ AI Chatbot │ Reports    │      │
-│  └──────┬──────────┬──────────┬────────────┬─────────────┘      │
-│         │          │          │            │                     │
-│  ┌──────▼──┐ ┌─────▼──┐ ┌────▼───┐ ┌─────▼──┐                 │
-│  │PostgreSQL│ │  Redis │ │ MinIO  │ │ BullMQ │                 │
-│  │  Port   │ │Port    │ │ (S3)   │ │Queues  │                 │
-│  │  5432   │ │6379    │ │Port    │ │        │                 │
-│  └─────────┘ └────────┘ │9000    │ └────────┘                 │
-│                          └────────┘                             │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                          Public Internet                              │
+└──────────┬──────────────┬───────────────┬────────────┬───────────────┘
+           │              │               │            │
+       Tenant A        Tenant B       Super-admin   Marketing
+       Dashboard       Dashboard      (apps/admin)  (apps/website)
+       :5103           :5103           :5104          :5105
+       Mobile          Mobile
+       :5102           :5102
+           │              │               │            │
+           └──────────────┴───────────────┴────────────┘
+                              │
+                       Nginx reverse proxy
+                              │
+                  ┌───────────┴───────────┐
+                  │  apps/backend (5100)  │
+                  │  NestJS 11 monolith   │
+                  └───────────┬───────────┘
+                              │
+       ┌──────────────────────┼─────────────────────┐
+       │                      │                     │
+   PostgreSQL           Redis (BullMQ)           MinIO
+   + pgvector + RLS     queues + cache           uploads
 ```
+
+All four web apps and the mobile app talk to a single backend. The backend resolves the tenant per request, applies RLS, and routes to vertical-slice handlers. There is **no per-tenant deployment** — multi-tenancy lives in the data layer.
 
 ---
 
@@ -44,292 +43,239 @@ CareKit is a white-label smart clinic management platform deployed independently
 
 ```
 carekit/
-├── backend/              # NestJS API server
-│   ├── prisma/
-│   │   ├── schema/       # Split Prisma schemas (one per domain)
-│   │   ├── migrations/   # Committed migration files
-│   │   └── seed*.ts      # Database seeders
-│   └── src/
-│       ├── common/       # Guards, filters, interceptors, decorators
-│       ├── config/       # App configuration (env vars)
-│       ├── database/     # Prisma service
-│       └── modules/      # Feature modules (one per domain)
-│
-├── dashboard/            # Next.js admin dashboard
-│   ├── src/
-│   │   ├── app/          # App Router pages
-│   │   ├── components/   # UI components (ui/ + features/)
-│   │   ├── hooks/        # TanStack Query hooks
-│   │   └── lib/          # API clients, types, schemas, i18n
-│   ├── ARCHITECTURE.md   # Dashboard-specific layer rules
-│   ├── DESIGN-SYSTEM.md  # Visual design rules
-│   └── CONTRIBUTING.md   # Dashboard-specific onboarding
-│
-├── mobile/               # React Native (Expo SDK 54)
-│   └── src/
-│       ├── app/          # Expo Router file-based routes
-│       ├── components/   # Shared UI components
-│       ├── store/        # Redux Toolkit slices
-│       └── services/     # API client (axios)
-│
-├── shared/               # Types and constants shared across apps
-│   ├── types/
-│   └── constants/
-│
-├── docker/               # Docker infrastructure
-│   ├── docker-compose.yml
-│   ├── docker-compose.prod.yml
-│   └── nginx/
-│
-└── docs/                 # All documentation
-    ├── core/             # PRD, API spec, system architecture
-    ├── features/         # Feature-specific docs (booking flows, ERDs)
-    ├── audits/           # Gap analysis, security audit reports
-    ├── design/           # DS specs, accessibility, mobile screens
-    ├── operations/       # Migration log, runbooks
-    └── progress/         # Sprint plan, achievements log
+├── apps/
+│   ├── backend/         # NestJS 11 — all business logic
+│   ├── dashboard/       # Next.js 15 — per-tenant clinic admin
+│   ├── admin/           # Next.js 15 — super-admin SaaS control plane
+│   ├── website/         # Next.js 15 — public marketing/info site
+│   └── mobile/          # Expo SDK 55 — client + employee + auth
+├── packages/
+│   ├── api-client/      # @carekit/api-client — typed fetch
+│   ├── shared/          # @carekit/shared — types/enums/i18n/seeds
+│   └── ui/              # @carekit/ui — 33 primitives + 2 hooks
+├── docker/              # docker-compose.yml + Nginx
+├── data/kiwi/           # Manual-QA plan JSONs synced to Kiwi TCMS
+├── scripts/             # build/test helpers + Kiwi sync
+└── docs/
+    ├── architecture/    # module-ownership.md (live SoT)
+    ├── operations/      # rollback runbook
+    ├── design/          # rtl-guidelines, accessibility
+    ├── features/        # booking enums/erd/flows
+    └── superpowers/     # plans, specs, qa, runbooks
 ```
 
 ---
 
-## Feature Boundaries
-
-The following 20 features represent the official domain boundaries of CareKit. Each feature is isolated: its own module (backend), its own component directory (dashboard), its own hooks and API client.
-
-| # | Feature | Backend Module | Dashboard Page | Description |
-|---|---------|---------------|----------------|-------------|
-| 1 | Auth | `auth/` | `login/` | Email + OTP, JWT, refresh tokens |
-| 2 | Users | `users/` | `users/` | Staff accounts, invitations |
-| 3 | Roles & Permissions | `roles/`, `permissions/` | `users/roles/` | CASL dynamic RBAC |
-| 4 | Employees | `employees/` | `employees/` | Profiles, availability, specialties |
-| 5 | Services | `services/`, `specialties/` | `services/` | Service catalog, pricing |
-| 6 | Clients | `clients/` | `clients/` | Client profiles, walk-in registration |
-| 7 | Bookings | `bookings/` | `bookings/` | Scheduling, cancellation, expiry |
-| 8 | Payments | `payments/` | `payments/` | Moyasar, bank transfer, webhook |
-| 9 | Invoices | `invoices/` | `invoices/` | Invoice generation, PDF export |
-| 10 | ZATCA | `zatca/` | `zatca/` | Saudi e-invoice compliance, XML |
-| 11 | Coupons | `coupons/` | `coupons/` | Discount codes, usage tracking |
-| 12 | Ratings | `ratings/` | `ratings/` | Star ratings, feedback collection |
-| 13 | Problem Reports | `problem-reports/` | `problem-reports/` | Client complaints, admin alerts |
-| 14 | AI Chatbot | `chatbot/` | `chatbot/` | OpenRouter chatbot, knowledge base |
-| 15 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-visit medical questionnaires |
-| 16 | Notifications | `notifications/` | `notifications/` | FCM push, in-app, email |
-| 18 | Branches | `branches/` | `branches/` | Multi-location clinic support |
-| 19 | Branding | `org-experience/branding/` | `branding/` | Per-client branding config (colors, logo, system name) |
-| 20 | Reports | `reports/` | `reports/` | Analytics, revenue, occupancy |
-
-**Also present (infrastructure):**
-- `activity-log/` — Audit trail for all admin actions
-- `tasks/` — BullMQ cron jobs and processors
-- `email/`, `email-templates/` — Transactional email service
-- `integrations/` — Zoom API, MinIO, external services
-- `health/` — Liveness and readiness probes
-
----
-
-## Backend Architecture
+## Backend Architecture (`apps/backend`)
 
 ### Request Pipeline
 
 ```
 HTTP Request
-    │
-    ▼
-[Nginx] — Rate limiting, SSL termination
-    │
-    ▼
-[NestJS] GlobalPrefix: /api/v1
-    │
-    ├─ [CORS Middleware]
-    ├─ [Helmet Security Headers]
-    ├─ [Request Logger Interceptor]
-    ├─ [JWT Auth Guard] — validates token, loads user
-    ├─ [CASL Permission Guard] — checks ability for route
-    ├─ [Validation Pipe] — class-validator DTOs
-    │
-    ▼
-[Controller] — thin, delegates to service
-    │
-    ▼
-[Service] — all business logic lives here
-    │
-    ├─ [Prisma Service] — database access
-    ├─ [Redis Service] — caching, rate limiting
-    ├─ [Queue Service] — async job dispatch
-    └─ [External APIs] — Moyasar, Zoom, FCM, OpenRouter
-    │
-    ▼
-[Response Interceptor] — wraps in { success, data, error }
-    │
-    ▼
-HTTP Response
+   │
+   ▼
+GlobalExceptionFilter ─────────────► structured JSON error
+   │
+   ▼
+RequestIdInterceptor               (correlation)
+   │
+   ▼
+TenantResolverMiddleware           common/tenant/tenant-resolver.middleware.ts
+   │  resolves organizationId from JWT/host/header
+   │  populates AsyncLocalStorage tenant context
+   ▼
+JwtAuthGuard / RolesGuard / CASL   identity/casl
+   │
+   ▼
+FeatureGuard                       platform/billing — gate by plan/feature-flag
+   │
+   ▼
+ZodValidationPipe                  per-DTO Zod schemas
+   │
+   ▼
+Controller (api/{admin,dashboard,mobile,public}/*.controller.ts)
+   │
+   ▼
+Vertical-slice handler             modules/<cluster>/<action>/handler.ts
+   │
+   ▼
+Prisma (with TenantScopingExtension) — applies RLS + organizationId where
+   │
+   ▼
+PostgreSQL (RLS policies) + Redis (BullMQ) + MinIO
 ```
 
-### Module Structure (per feature)
+### Module Convention — Vertical Slices
+
+Every backend feature is a **vertical slice** — a folder containing one action:
 
 ```
-modules/[feature]/
-├── [feature].module.ts          # Module definition
-├── [feature].controller.ts      # HTTP routes (≤ 350 lines)
-├── [feature].service.ts         # Business logic (≤ 350 lines)
-├── [feature]-[sub].service.ts   # Sub-service if split needed
-├── dto/
-│   ├── create-[feature].dto.ts
-│   └── update-[feature].dto.ts
-└── tests/
-    └── [feature].service.spec.ts
+apps/backend/src/modules/bookings/create-booking/
+├── create-booking.controller.ts        (or registered in api/<surface>/)
+├── create-booking.handler.ts           (business logic)
+├── create-booking.dto.ts               (Zod schema + types)
+├── create-booking.spec.ts              (unit tests)
+└── create-booking.e2e.spec.ts          (integration tests)
 ```
+
+Never use `<feature>.controller.ts + <feature>.service.ts + repository` pattern. One folder per intent.
+
+### Cluster Tree (14 clusters)
+
+Source of truth for owned models: `docs/architecture/module-ownership.md`.
+
+| Cluster | Purpose | Notable Slices |
+|---------|---------|----------------|
+| `identity/` | auth, users, multi-org | client-auth, otp, casl, roles, switch-organization, list-memberships |
+| `people/` | humans the clinic interacts with | clients, employees, specialties |
+| `bookings/` | appointment lifecycle | create, cancel, confirm, check-in, reschedule, recurring, waitlist, walk-in, create-zoom-meeting, retry-zoom-meeting |
+| `finance/` | money | payments, moyasar-api, moyasar-webhook, refunds, coupons, zatca-config, zatca-submit, bank-transfer-upload |
+| `comms/` | outbound channels | notifications, fcm-tokens, email-templates, send-email, send-sms, org-sms-config, sms-dlr, contact-messages |
+| `ai/` | retrieval/generation | chatbot RAG (streaming), knowledge-base, pgvector embeddings |
+| `media/` | files | uploads, MinIO presigned URLs |
+| `ops/` | operational glue | health-check, cron-tasks, generate-report, log-activity |
+| `content/` | static-ish content | site-settings |
+| `org-config/` | structural config | branches, categories, departments, business-hours |
+| `org-experience/` | client-facing surface | branding, intake-forms, ratings, services, org-settings |
+| `integrations/` | third-party | zoom (encrypted creds), public branding |
+| `platform/` | SaaS control plane | **admin**, **billing**, **verticals**, **feature-flags**, problem-reports |
+| `dashboard/` | tenant home | get-dashboard-stats |
+
+### Multi-Tenancy
+
+- **`organizationId`** column on every tenant-scoped model (12 schemas, 147 occurrences). Singletons (`BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `ZatcaConfig`, `OrganizationSmsConfig`) use `organizationId` as a unique key.
+- **`TENANT_ENFORCEMENT='strict'`** is the default and the only mode allowed in production (validated at boot in `common/tenant/tenant.module.ts`).
+- **Postgres RLS**: 9 SaaS-phase migrations install row-level policies per cluster. Bypass via the dedicated `carekit_rls_probe` role only in admin/cron contexts.
+- **Tenant context** is propagated via `AsyncLocalStorage` (`common/tenant/tenant-context.service.ts`) and applied to Prisma via `TenantScopingExtension`.
+- **API surfaces** (`src/api/`):
+  - `admin/*` — super-admin only, requires `SUPER_ADMIN` role; can act on any org
+  - `dashboard/*` — per-tenant admin, scoped to caller's `organizationId`
+  - `mobile/{client,employee}/*` — scoped to caller's org via JWT
+  - `public/*` — anonymous endpoints (e.g., `public/branding/:orgSlug`, `public/billing-webhook`)
 
 ### Data Layer
 
-- **PostgreSQL 16** — primary data store
-- **Prisma ORM** — schema-first, all changes via migrations
-- **Redis 7** — caching (TTL-based), BullMQ job queues, rate limiting state
-- **MinIO** — S3-compatible object storage (receipts, avatars, documents, chatbot files)
+- **Prisma split schemas** at `apps/backend/prisma/schema/` (12 files): `ai`, `bookings`, `comms`, `content`, `finance`, `identity`, `main`, `media`, `ops`, `organization`, `people`, `platform`. Combined at build by Prisma 7's multi-file feature.
+- **Migrations** are immutable. Never modify or consolidate.
+- **pgvector** powers chatbot embeddings (`ai.prisma`).
+- **MinIO** holds uploads; signed URLs flow through `media/`.
 
-### Async Processing (BullMQ Queues)
+### Background Jobs
 
-| Queue | Processor | Jobs |
-|-------|-----------|------|
-| `notifications` | `tasks.processor.ts` | Push notifications, email dispatch |
-| `booking-events` | `booking-expiry.service.ts` | Expiry, no-show, cancellation timeout |
-| `payments` | `moyasar-webhook.service.ts` | Webhook retry, payment verification |
-| `cleanup` | `cleanup.service.ts` | Soft-delete purge, expired session cleanup |
+BullMQ queues backed by Redis. Cron-style jobs live under `ops/cron-tasks/`. Notable:
+- `charge-due-subscriptions` — billing
+- `email-template-render` — outbound email
+- `chatbot-embed-document` — RAG ingest
+- `sms-dlr-update` — SMS delivery receipts
 
----
+### Auth
 
-## Dashboard Architecture
-
-See `dashboard/ARCHITECTURE.md` for full details. Summary:
-
-### Layer Hierarchy (one-way imports)
-
-```
-app/(dashboard)/[feature]/page.tsx
-    └── components/features/[feature]/
-            └── hooks/use-[feature].ts
-                    └── lib/api/[feature].ts
-                            └── lib/types/[feature].ts
-```
-
-### Design System Governance
-
-1. **Tokens:** `app/globals.css` — single source of all CSS variables
-2. **Components:** `components/ui/` (shadcn primitives, do not modify) + `components/features/` (feature UI)
-3. **Icons:** `@hugeicons/react` exclusively — no Lucide, no Material Icons
-4. **Visual style:** Frosted Glass — `backdrop-blur` on cards, semi-transparent surfaces
-5. **RTL:** All spacing uses `start`/`end` directional utilities
+JWT access + refresh (separate `RefreshToken` and `ClientRefreshToken` per identity type), CASL ability per role, OTP via Authentica for client signup. Super-admin uses a separate JWT scope and host allowlist (`ADMIN_HOSTS`).
 
 ---
 
-## Security Architecture
+## Frontend Architecture
 
-### Authentication Flow
+### `apps/dashboard` — per-tenant clinic admin
 
-```
-Client Login (Email OTP):
-  POST /api/v1/auth/request-otp → sends OTP to email
-  POST /api/v1/auth/verify-otp → returns { accessToken, refreshToken }
+- Next.js 15 App Router, React 19, Tailwind 4, next-intl (AR/EN)
+- 22 features under `app/(dashboard)/`: bookings, clients, employees, services, branches, categories, departments, intake-forms, branding, content, contact-messages, coupons, invoices, payments, ratings, notifications, reports, activity-log, users, zatca, settings
+- TanStack Query hooks in `hooks/queries/<feature>/`
+- UI: `@carekit/ui` primitives (do not modify in place); compose them in `components/features/`
+- Terminology: `useTerminology()` reads vertical-driven labels (Plan 03)
+- Billing UI: `useCurrentSubscription()`, `useFeatureEnabled()`, `<FeatureGate />` (Plan 04)
 
-Staff Login (Password):
-  POST /api/v1/auth/login → returns { accessToken, refreshToken }
+### `apps/admin` — super-admin SaaS control plane
 
-Token Refresh:
-  POST /api/v1/auth/refresh → rotates refresh token (single-use)
-```
+- Next.js 15, separate auth scope, host-restricted to `ADMIN_HOSTS`
+- Routes under `app/(admin)/`: organizations, plans, verticals, billing, audit-log, impersonation-sessions, metrics, users
+- Talks only to `src/api/admin/*` controllers
+- Billing oversight: read state, waive, grant credit, change plan, refund (Moyasar live)
 
-### Authorization (CASL)
+### `apps/website` — public marketing/info site
 
-```
-User → has many Roles → each Role has many Permissions
-Permission { action: 'view'|'create'|'edit'|'delete', subject: 'Booking'|'Payment'|... }
+- Next.js 15, public routes only (login, register, support-groups, therapists, contact, sitemap, robots)
+- No tenant context — talks to `public/*` controllers
 
-Every controller method:
-  @UseGuards(JwtAuthGuard, CaslGuard)
-  @RequireAbility('view', 'Booking')
-  async getBooking() { ... }
-```
+### `apps/mobile` — Expo client + employee
 
-### Data Security
-
-- Passwords: `bcrypt` (rounds: 12)
-- JWT: RS256 asymmetric signing, 15-min access token, 7-day refresh token
-- Secrets: environment variables only — never in code or Docker images
-- SQL: Prisma parameterized queries — no raw SQL injection risk
-- File uploads: validated mime type + size limit before MinIO storage
-- CORS: whitelist of allowed origins per deployment
+- Expo SDK 55, Expo Router, Redux Toolkit (auth slice only) + TanStack Query
+- Route groups: `(auth)`, `(client)`, `(employee)` with tab navigators under `(tabs)/`
+- Theme reads `PublicBranding` from backend (per-tenant)
+- Terminology: mirrors dashboard's `useTerminology()` (`hooks/useTerminology.ts`)
+- FCM push: `services/push.ts` + deep links
+- Zoom: `JoinVideoCallButton` + `video-call.tsx` screens for client and employee
 
 ---
 
-## Infrastructure
+## Cross-Cutting Concerns
 
-### Docker Compose Services
+### Verticals + Terminology (Plan 03)
 
-| Service | Image | Port | Purpose |
-|---------|-------|------|---------|
-| `api` | `carekit-backend` | 3000 | NestJS API |
-| `dashboard` | `carekit-dashboard` | 3001 | Next.js dashboard |
-| `postgres` | `postgres:16` | 5432 | Primary database |
-| `redis` | `redis:7-alpine` | 6379 | Cache + queues |
-| `minio` | `minio/minio` | 9000/9001 | Object storage |
-| `nginx` | `nginx:alpine` | 80/443 | Reverse proxy |
+A `Vertical` defines a clinic type (e.g., dental, mental-health). Each ships terminology overrides (e.g., "patient" → "client"). On org creation, `seed-organization-from-vertical` provisions default departments/categories and a terminology pack. `useTerminology()` reads the active org's pack at runtime.
 
-### Environment Variables
+### Billing + Subscriptions (Plan 04)
 
-All secrets must be in `.env` (never committed). See `.env.example` for required keys:
+`platform/billing/` runs the subscription lifecycle:
+- Plans CRUD (admin-only)
+- Subscription state machine (TRIALING / ACTIVE / PAST_DUE / SUSPENDED / CANCELLED)
+- `enforce-limits.guard.ts` and `feature.guard.ts` gate per-feature access
+- `charge-due-subscriptions.task.ts` runs nightly via BullMQ
+- Hybrid Moyasar — platform Moyasar bills tenants; per-tenant Moyasar bills the tenant's clients
 
-```
-DATABASE_URL
-REDIS_URL
-JWT_PRIVATE_KEY / JWT_PUBLIC_KEY
-OPENROUTER_API_KEY
-MOYASAR_API_KEY / MOYASAR_WEBHOOK_SECRET
-ZOOM_API_KEY / ZOOM_API_SECRET
-FCM_PROJECT_ID / FCM_PRIVATE_KEY
-MINIO_ACCESS_KEY / MINIO_SECRET_KEY
-RESEND_API_KEY
-```
+### Per-tenant SMS (Plan 02g-sms)
+
+`OrganizationSmsConfig` (singleton) holds AES-GCM-encrypted Unifonic/Taqnyat credentials (orgId as AAD). `send-sms.handler.ts` picks the adapter by config; DLR webhook updates `SmsDelivery`. Platform never sends SMS on the tenant's behalf.
+
+### Branding (Plan 02c → 04-15 rename)
+
+`BrandingConfig` (singleton) per org. Public read-only via `GET /public/branding/:orgSlug` → consumed by dashboard, mobile (theme slice), and website. Tokens map to CSS custom properties (dashboard) or React Native theme (mobile).
+
+### Zoom
+
+`integrations/zoom` stores encrypted account creds per org. Booking creation triggers `create-zoom-meeting` (with retry); the mobile app shows `JoinVideoCallButton` within the appointment window.
 
 ---
 
-## Pre-PR Checklist (13 items)
+## Development Environment
 
-Before any PR is merged, all 13 items must pass:
+### Ports (5000–5999 reserved)
 
-- [ ] No file exceeds 350 lines
-- [ ] No `any` TypeScript type
-- [ ] No hardcoded hex colors
-- [ ] No `text-gray-*` Tailwind classes
-- [ ] No raw `<input>` / `<select>` / `<textarea>` elements
-- [ ] No Lucide icons (use Hugeicons)
-- [ ] No cross-feature imports in dashboard
-- [ ] No `prisma db push` (use `migrate dev`)
-- [ ] RTL layout tested (Arabic `dir="rtl"`)
-- [ ] Loading / Error / Empty states implemented
-- [ ] Unit tests pass (`npm run test` in backend)
-- [ ] TypeScript builds (`npm run build`)
-- [ ] Swagger decorators present on new endpoints
+| Service | Port |
+|---------|------|
+| Backend | 5100 |
+| Mobile (Expo) | 5102 |
+| Dashboard | 5103 |
+| Admin | 5104 |
+| Website | 5105 |
+| PostgreSQL | 5430 |
+| Redis | 5440 |
+| MinIO | 5450 |
+| Kiwi TCMS | 6443 |
+
+### Required env
+
+- `DATABASE_URL` — Postgres
+- `REDIS_URL` — Redis
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`
+- `MINIO_*` — uploads
+- `MOYASAR_PLATFORM_*`, `MOYASAR_TENANT_DEFAULT_*` — billing + tenant payments
+- `ZOOM_ENCRYPTION_KEY` — credential encryption
+- `SMS_ENCRYPTION_KEY` — per-tenant SMS creds
+- `AUTHENTICA_API_KEY` — OTP
+- `TENANT_ENFORCEMENT=strict` — required in prod
+- `ADMIN_HOSTS` — comma-separated hosts permitted to serve super-admin
 
 ---
 
-## Documentation Map
+## Pre-PR Checklist (architectural)
 
-| Need | Document |
-|------|----------|
-| Getting started | `CONTRIBUTING.md` (this repo root) |
-| Architecture overview | `ARCHITECTURE.md` (this file) |
-| Dashboard specifics | `dashboard/ARCHITECTURE.md` |
-| Design rules | `dashboard/DESIGN-SYSTEM.md` |
-| Component policy | `dashboard/components-policy.md` |
-| Full API spec | `docs/core/api-spec.md` |
-| Product requirements | `docs/core/CareKit-PRD-EN.md` |
-| Booking flows | `docs/features/booking-flow-analysis.md` |
-| Database ERD | `docs/features/booking-erd.md` |
-| Migration history | `docs/operations/migration-log.md` |
-| Rollback procedures | `docs/operations/migration-rollback-runbook.md` |
-| Security audit | `docs/audits/security-audit-summary.md` |
-| Sprint plan | `docs/progress/sprint-plan.md` |
-| Completed work | `docs/progress/achievements.md` |
-| Technical debt & ADRs | `docs/refactor-roadmap.md` |
-| Code ownership | `CODEOWNERS` |
-| AI assistant rules | `CLAUDE.md` |
+- [ ] No `any` in TypeScript (strict)
+- [ ] New scoped models include `organizationId` + RLS policy in the migration
+- [ ] Tenant-isolation e2e test added for any new tenant-scoped feature
+- [ ] User-facing strings have AR + EN entries (parity)
+- [ ] Feature gated through `FeatureGuard` if plan-tier-restricted
+- [ ] Vertical-slice convention respected (no service/repository sprawl)
+- [ ] 350-line max per file
+- [ ] Tests pass (unit + e2e)
+- [ ] Migrations are additive (no edit/squash)
