@@ -27,6 +27,8 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
 import { SettingsProfileSection } from './settings-profile-section';
+import { clientProfileService } from '@/services/client/profile';
+import { registerForPushAsync, unregisterPushAsync } from '@/services/push';
 
 const LANGUAGE_KEY = '@carekit/language';
 const PUSH_KEY = '@carekit/push-enabled';
@@ -63,6 +65,9 @@ export default function SettingsScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await i18n.changeLanguage(lang);
       await AsyncStorage.setItem(LANGUAGE_KEY, lang);
+      clientProfileService
+        .updateProfile({ preferredLocale: lang })
+        .catch((err) => console.warn('[Settings] Failed to sync locale to server:', err));
       Alert.alert(t('settings.languageChangeRestart'), '', [
         { text: t('settings.restartLater'), style: 'cancel' },
         {
@@ -81,6 +86,16 @@ export default function SettingsScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setPushEnabled(val);
       await AsyncStorage.setItem(PUSH_KEY, String(val));
+      try {
+        await clientProfileService.updateProfile({ pushEnabled: val });
+      } catch (err) {
+        console.warn('[Settings] Failed to sync push pref to server:', err);
+      }
+      if (val) {
+        await registerForPushAsync();
+      } else {
+        await unregisterPushAsync();
+      }
     },
     [],
   );
