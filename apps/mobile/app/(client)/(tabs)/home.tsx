@@ -10,6 +10,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { useAppSelector } from '@/hooks/use-redux';
+import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { getFontName } from '@/theme/fonts';
 import { clientPortalService, type PortalBookingRow } from '@/services/client/portal';
 import { publicEmployeesService, type PublicEmployeeItem } from '@/services/client/employees';
@@ -26,6 +27,7 @@ function TopBar({ f600 }: { f600: string }) {
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
   const initial = (user?.firstName ?? 'س').charAt(0);
+  const { count: unreadCount } = useUnreadCount();
 
   return (
     <View style={styles.topBar}>
@@ -38,6 +40,7 @@ function TopBar({ f600 }: { f600: string }) {
         <Glass variant="regular" radius={21} style={styles.iconBtn}>
           <Pressable onPress={() => router.push('/(client)/(tabs)/notifications')} style={styles.iconBtnInner}>
             <Bell size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
+            {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
           </Pressable>
         </Glass>
       </View>
@@ -413,6 +416,12 @@ const styles = StyleSheet.create({
   iconBtn: { width: 42, height: 42 },
   iconBtnInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatarBtn: { width: 42, height: 42 },
+  bellDot: {
+    position: 'absolute', top: 10, right: 10,
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: sawaaColors.accent.rose,
+    borderWidth: 1.5, borderColor: '#fff',
+  },
   avatarInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 15, color: sawaaColors.teal[700] },
   greetingBlock: { paddingHorizontal: 4, marginTop: 4 },

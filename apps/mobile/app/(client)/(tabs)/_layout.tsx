@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Pressable, StyleSheet, Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -11,19 +11,12 @@ import { Glass } from '@/theme';
 import { C, RADII, SHADOW_RAISED } from '@/theme/glass';
 import { sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
-import { notificationsService } from '@/services/notifications';
+import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { getFontName } from '@/theme/fonts';
 
 export default function ClientTabsLayout() {
   const { t } = useTranslation();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    notificationsService
-      .getUnreadCount()
-      .then((res) => setUnreadCount(res.data?.count ?? 0))
-      .catch(() => {});
-  }, []);
+  const { count: unreadCount } = useUnreadCount();
 
   return (
     <Tabs
