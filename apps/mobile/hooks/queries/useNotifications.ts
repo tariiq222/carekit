@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { notificationsService } from '@/services/notifications';
-import type { PaginatedResponse } from '@/types/api';
-import type { Notification } from '@/types/models';
+import {
+  notificationsService,
+  type NotificationListResponse,
+} from '@/services/notifications';
 
 export const notificationKeys = {
   all: ['notifications'] as const,
@@ -12,8 +13,16 @@ export const notificationKeys = {
 };
 
 export function useNotifications(params?: { page?: number; perPage?: number }) {
-  return useQuery<PaginatedResponse<Notification>>({
+  return useQuery<NotificationListResponse>({
     queryKey: notificationKeys.list(params),
     queryFn: () => notificationsService.getAll(params),
+  });
+}
+
+export function useUnreadNotificationsCount() {
+  return useQuery<{ count: number }>({
+    queryKey: notificationKeys.unreadCount(),
+    queryFn: () => notificationsService.getUnreadCount(),
+    staleTime: 30_000,
   });
 }

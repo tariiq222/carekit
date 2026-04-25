@@ -23,9 +23,9 @@ export function useNotifications() {
         page: pageNum,
         perPage: PER_PAGE,
       });
-      const items = res.data.items;
+      const items = res.items;
       setNotifications((prev) => (replace ? items : [...prev, ...items]));
-      setHasMore(pageNum < res.data.totalPages);
+      setHasMore(pageNum < res.meta.totalPages);
     } catch {
       // Silent fail — user can pull to refresh
     }
@@ -34,7 +34,7 @@ export function useNotifications() {
   const fetchUnread = useCallback(async () => {
     try {
       const res = await notificationsService.getUnreadCount();
-      setUnreadCount(res.data?.count ?? 0);
+      setUnreadCount(res.count ?? 0);
     } catch {
       // Silent fail
     }
