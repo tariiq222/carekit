@@ -34,14 +34,16 @@ describe('TenantResolverMiddleware', () => {
       hostname: string;
       path: string;
       url: string;
+      originalUrl: string;
     }> = {},
   ) =>
     ({
       user: undefined,
       headers: {},
       hostname: 'localhost',
-      path: '/api/v1/dashboard/bookings',
+      originalUrl: '/api/v1/dashboard/bookings',
       url: '/api/v1/dashboard/bookings',
+      originalUrl: '/api/v1/dashboard/bookings',
       ...overrides,
     }) as never;
 
@@ -140,7 +142,7 @@ describe('TenantResolverMiddleware', () => {
         cls.run(() =>
           mw.use(
             req({
-              path: '/api/v1/public/services/departments',
+              originalUrl: '/api/v1/public/services/departments',
               headers: { 'x-org-id': VALID },
             }),
             {} as never,
@@ -160,7 +162,7 @@ describe('TenantResolverMiddleware', () => {
           mw.use(
             req({
               user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'CLIENT' },
-              path: '/api/v1/public/services/departments',
+              originalUrl: '/api/v1/public/services/departments',
               headers: { 'x-org-id': VALID },
             }),
             {} as never,
@@ -179,7 +181,7 @@ describe('TenantResolverMiddleware', () => {
         cls.run(() =>
           mw.use(
             req({
-              path: '/api/v1/dashboard/bookings',
+              originalUrl: '/api/v1/dashboard/bookings',
               headers: { 'x-org-id': VALID },
             }),
             {} as never,
@@ -195,7 +197,7 @@ describe('TenantResolverMiddleware', () => {
         cls.run(() =>
           mw.use(
             req({
-              path: '/api/v1/public/services/departments',
+              originalUrl: '/api/v1/public/services/departments',
               headers: { 'x-org-id': 'not-a-uuid' },
             }),
             {} as never,
@@ -211,7 +213,7 @@ describe('TenantResolverMiddleware', () => {
         cls.run(() =>
           mw.use(
             req({
-              path: '/api/v1/public/sms/webhooks/unifonic/org-1',
+              originalUrl: '/api/v1/public/sms/webhooks/unifonic/org-1',
               headers: { 'x-org-id': VALID },
             }),
             {} as never,

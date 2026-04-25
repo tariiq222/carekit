@@ -49,10 +49,9 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
 
   it('public route: X-Org-Id resolves to that tenant (returns 200)', async () => {
     const res = await req
-      .get('/api/v1/public/services/departments')
+      .get('/public/services/departments')
       .set('X-Org-Id', orgAId)
       .expect(200);
-
     // Body shape is a bare array of PublicDepartment.
     // No departments are seeded for fresh test orgs, so length may be 0.
     expect(Array.isArray(res.body)).toBe(true);
@@ -60,12 +59,12 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
 
   it('public route: different X-Org-Id values do not bleed across tenants', async () => {
     const aRes = await req
-      .get('/api/v1/public/services/departments')
+      .get('/public/services/departments')
       .set('X-Org-Id', orgAId)
       .expect(200);
 
     const bRes = await req
-      .get('/api/v1/public/services/departments')
+      .get('/public/services/departments')
       .set('X-Org-Id', orgBId)
       .expect(200);
 
@@ -77,10 +76,15 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
     expect(aIds.some((id) => bIds.includes(id))).toBe(false);
   });
 
-  it('public route: invalid UUID falls through (permissive default org)', async () => {
-    await req
-      .get('/api/v1/public/services/departments')
-      .set('X-Org-Id', 'not-a-uuid')
-      .expect(200);
+  it('public route: invalid UUID is rejected in strict mode', async () => {
+    // Test env runs TENANT_ENFORCEMENT=strict (the platform default). An
+    // invalid UUID is silently dropped by the parser, leaving no resolved
+    // org → middleware throws TenantResolutionError (400). In permissive
+    // dev mode the same request would fall through to DEFAULT_ORGANIZATION_ID.
+    const res = await req
+      .get('/public/services/departments')
+      .set('X-Org-Id', 'not-a-uuid');
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ code: 'TENANT_RESOLUTION_FAILED' });
   });
 });

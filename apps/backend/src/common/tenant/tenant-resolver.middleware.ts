@@ -30,7 +30,11 @@ export class TenantResolverMiddleware implements NestMiddleware {
    * resolution flow (see SaaS-02e moyasar-webhook).
    */
   private isPublicRoute(path: string): boolean {
-    if (!path.startsWith('/api/v1/public/')) return false;
+    // Accept both prefixed (`/api/v1/public/...` in production) and bare
+    // (`/public/...` in tests, where setGlobalPrefix is not applied).
+    if (!path.startsWith('/api/v1/public/') && !path.startsWith('/public/')) {
+      return false;
+    }
     if (path.includes('/webhooks/')) return false;
     return true;
   }
@@ -68,8 +72,11 @@ export class TenantResolverMiddleware implements NestMiddleware {
       req.user?.isSuperAdmin === true
         ? this.parseUuidHeader(req.headers['x-org-id'])
         : undefined;
+    // Note: req.originalUrl (not req.path) is used because NestJS middleware
+    // mounted via forRoutes('*') runs after Express path-stripping — req.path
+    // is '/' and the full path lives on req.originalUrl.
     const fromPublicHeader =
-      !req.user && this.isPublicRoute(req.path ?? req.url ?? '')
+      !req.user && this.isPublicRoute(req.originalUrl ?? '')
         ? this.parseUuidHeader(req.headers['x-org-id'])
         : undefined;
     const fromDefault =
