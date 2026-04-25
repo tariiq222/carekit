@@ -11,7 +11,7 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
-import { bookingsService } from '@/services/bookings';
+import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
 import type { Booking } from '@/types/models';
 
 export default function CalendarScreen() {

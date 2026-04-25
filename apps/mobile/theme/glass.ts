@@ -1,5 +1,10 @@
 import { Platform } from "react-native";
 
+// React Native's ViewStyle doesn't model web-only CSS (boxShadow, backdropFilter,
+// transition). On web, RN-Web forwards these to the DOM, so we type them as a
+// loose CSS bag instead of `any`.
+type WebStyle = Record<string, string | number>;
+
 export const C = {
   deepTeal: "#154F57",
   softTeal: "#76B9C4",
@@ -51,7 +56,7 @@ export const SHADOW =
     ? ({
         boxShadow:
           "0 1px 2px rgba(21,79,87,0.06), 0 3px 6px rgba(21,79,87,0.05), 0 10px 20px rgba(21,79,87,0.07), 0 24px 48px rgba(21,79,87,0.09)",
-      } as any)
+      } as WebStyle)
     : ({
         shadowColor: C.deepTeal,
         shadowOpacity: 0.14,
@@ -65,7 +70,7 @@ export const SHADOW_SOFT =
     ? ({
         boxShadow:
           "0 1px 2px rgba(21,79,87,0.05), 0 4px 12px rgba(21,79,87,0.07)",
-      } as any)
+      } as WebStyle)
     : ({
         shadowColor: C.deepTeal,
         shadowOpacity: 0.1,
@@ -79,7 +84,7 @@ export const SHADOW_RAISED =
     ? ({
         boxShadow:
           "0 2px 4px rgba(21,79,87,0.07), 0 6px 14px rgba(21,79,87,0.07), 0 18px 36px rgba(21,79,87,0.10), 0 36px 72px rgba(21,79,87,0.12)",
-      } as any)
+      } as WebStyle)
     : ({
         shadowColor: C.deepTeal,
         shadowOpacity: 0.18,
@@ -95,7 +100,7 @@ export const GLASS_WEB =
         WebkitBackdropFilter: "blur(30px) saturate(180%)",
         boxShadow:
           "inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(255,255,255,0.25), 0 10px 40px rgba(21,79,87,0.14)",
-      } as any)
+      } as WebStyle)
     : null;
 
 export const GLASS_WEB_STRONG =
@@ -105,7 +110,7 @@ export const GLASS_WEB_STRONG =
         WebkitBackdropFilter: "blur(40px) saturate(200%)",
         boxShadow:
           "inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(255,255,255,0.3), 0 14px 46px rgba(21,79,87,0.18)",
-      } as any)
+      } as WebStyle)
     : null;
 
 export const INTERACTIVE_WEB =
@@ -113,7 +118,7 @@ export const INTERACTIVE_WEB =
     ? ({
         transition: "transform 220ms cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 220ms",
         cursor: "pointer",
-      } as any)
+      } as WebStyle)
     : null;
 
 export const EASE = {

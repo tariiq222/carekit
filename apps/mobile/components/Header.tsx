@@ -51,7 +51,7 @@ export const Header = ({
     if (open) setTimeout(() => inputRef.current?.focus(), DURATION);
   }, [open]);
 
-  const webTransition: any =
+  const webTransition: Record<string, string> | null =
     Platform.OS === "web"
       ? { transition: `all ${DURATION}ms ${EASE}` }
       : null;
@@ -143,7 +143,7 @@ export const Header = ({
                     Platform.OS === "web"
                       ? ({
                           transition: `opacity 180ms ease-out ${open ? 180 : 0}ms`,
-                        } as any)
+                        } as Record<string, string>)
                       : null,
                   ]}
                   pointerEvents={open ? "auto" : "none"}
@@ -163,7 +163,7 @@ export const Header = ({
                     Platform.OS === "web"
                       ? ({
                           transition: `opacity 180ms ease-out ${open ? 220 : 0}ms, width 200ms ease-out, margin 200ms ease-out`,
-                        } as any)
+                        } as Record<string, string>)
                       : null,
                   ]}
                   pointerEvents={open ? "auto" : "none"}

@@ -26,7 +26,7 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
-import { bookingsService } from '@/services/bookings';
+import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
 import type { Booking } from '@/types/models';
 
 function getMinutesUntil(date: string, time: string): number {

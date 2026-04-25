@@ -47,14 +47,19 @@ export function useIncreasedContrast() {
       mq.addEventListener?.("change", handler);
       return () => mq.removeEventListener?.("change", handler);
     }
-    // Native — iOS 13+
-    (AccessibilityInfo as any).isHighTextContrastEnabled?.()
-      .then((v: boolean) => setOn(!!v))
+    // Native — iOS 13+. These APIs are typed loosely on RN, so we narrow them
+    // to a structural shape rather than reach for `any`.
+    const a11y = AccessibilityInfo as unknown as {
+      isHighTextContrastEnabled?: () => Promise<boolean>;
+      addEventListener: (
+        event: string,
+        handler: (value: boolean) => void,
+      ) => { remove?: () => void };
+    };
+    a11y.isHighTextContrastEnabled?.()
+      .then((v) => setOn(!!v))
       .catch(() => {});
-    const sub = AccessibilityInfo.addEventListener(
-      "highTextContrastChanged" as any,
-      (v: boolean) => setOn(!!v)
-    );
+    const sub = a11y.addEventListener("highTextContrastChanged", (v) => setOn(!!v));
     return () => sub?.remove?.();
   }, []);
 
