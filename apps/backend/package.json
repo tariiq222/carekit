@@ -27,6 +27,7 @@
     "prisma:hooks": "prisma db execute --file prisma/hooks/ensure_vector_indexes.sql",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "seed:sawa": "tsx prisma/seeds/sawa-customer.ts",
     "reset:org-suspension": "tsx scripts/reset-org-suspension.ts",
     "openapi:export": "tsx scripts/export-openapi.ts",
     "openapi:snapshot": "WRITE_OPENAPI_SPEC=1 tsx -e \"require('./dist/main.js')\"",
