@@ -72,6 +72,7 @@ describe('authApi.login', () => {
     const result = await authApi.login({
       email: 'admin@carekit.app',
       password: 'pw',
+      hCaptchaToken: 'tok',
     })
 
     expect(result).toEqual(fakeAuth)
@@ -82,6 +83,7 @@ describe('authApi.login', () => {
     expect(JSON.parse(init?.body as string)).toEqual({
       email: 'admin@carekit.app',
       password: 'pw',
+      hCaptchaToken: 'tok',
     })
   })
 
@@ -91,6 +93,7 @@ describe('authApi.login', () => {
     const result = await authApi.login({
       email: 'a@b.c',
       password: 'pw',
+      hCaptchaToken: 'tok',
     })
 
     expect(result).toEqual(fakeAuth)
@@ -102,7 +105,7 @@ describe('authApi.login', () => {
     )
 
     await expect(
-      authApi.login({ email: 'a@b.c', password: 'wrong' }),
+      authApi.login({ email: 'a@b.c', password: 'wrong', hCaptchaToken: 'tok' }),
     ).rejects.toMatchObject({ status: 401, message: 'Bad credentials' })
   })
 })

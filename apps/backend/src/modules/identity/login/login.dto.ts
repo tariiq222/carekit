@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -10,4 +10,9 @@ export class LoginDto {
   @IsString()
   @MinLength(8)
   password!: string;
+
+  @ApiProperty({ description: 'hCaptcha verification token' })
+  @IsString()
+  @IsNotEmpty()
+  hCaptchaToken!: string;
 }

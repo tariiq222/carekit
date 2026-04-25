@@ -73,9 +73,9 @@ describe("auth api", () => {
       user: fakeUser,
     })
 
-    const result = await login("a@b.com", "pass")
+    const result = await login("a@b.com", "pass", "tok")
 
-    expect(loginMock).toHaveBeenCalledWith({ email: "a@b.com", password: "pass" })
+    expect(loginMock).toHaveBeenCalledWith({ email: "a@b.com", password: "pass", hCaptchaToken: "tok" })
     expect(setAccessTokenMock).toHaveBeenCalledWith("token123")
     expect(localStorage.getItem("carekit_user")).toContain("a@b.com")
     expect(localStorage.getItem("carekit_refresh_token")).toBe("rt123")

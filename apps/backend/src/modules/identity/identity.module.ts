@@ -33,7 +33,7 @@ import { VerifyOtpHandler } from './otp/verify-otp.handler';
 import { OtpSessionService } from './otp/otp-session.service';
 import { OtpSessionGuard } from './otp/otp-session.guard';
 import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
-import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
+import { CAPTCHA_VERIFIER, createCaptchaVerifier } from '../comms/contact-messages/captcha.verifier';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
 import { RegisterHandler } from './client-auth/register.handler';
 import { ClientLoginHandler } from './client-auth/client-login.handler';
@@ -89,7 +89,7 @@ const handlers = [
     RedisService,
     CaslAbilityFactory,
     ClientSessionGuard,
-    { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
+    { provide: CAPTCHA_VERIFIER, useFactory: createCaptchaVerifier },
     ...handlers,
     OtpSessionService,
     OtpSessionGuard,
@@ -106,6 +106,7 @@ const handlers = [
     OtpSessionService,
     OtpSessionGuard,
     RegisterHandler,
+    CAPTCHA_VERIFIER,
     ...handlers,
   ],
 })

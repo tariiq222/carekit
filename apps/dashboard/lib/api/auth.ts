@@ -19,8 +19,9 @@ const REFRESH_KEY = "carekit_refresh_token"
 export async function login(
   email: string,
   password: string,
+  hCaptchaToken: string,
 ): Promise<AuthResponse> {
-  const data = await authApi.login({ email, password })
+  const data = await authApi.login({ email, password, hCaptchaToken })
   persistAuth(data)
   return data
 }

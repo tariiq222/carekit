@@ -27,6 +27,8 @@ import { IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
+import { Inject, BadRequestException } from '@nestjs/common';
+import { CAPTCHA_VERIFIER, CaptchaVerifier } from '../../modules/comms/contact-messages/captcha.verifier';
 
 class ChangePasswordDto {
   @ApiProperty({ description: 'Current account password', example: 'P@ssw0rd123' })
@@ -50,6 +52,7 @@ export class AuthController {
     private readonly listMemberships: ListMembershipsHandler,
     private readonly switchOrganization: SwitchOrganizationHandler,
     private readonly config: ConfigService,
+    @Inject(CAPTCHA_VERIFIER) private readonly captcha: CaptchaVerifier,
   ) {}
 
   @Post('login')
@@ -70,6 +73,10 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials', type: ApiErrorDto })
   async loginEndpoint(@Body() body: LoginDto) {
+    if (!(await this.captcha.verify(body.hCaptchaToken))) {
+      throw new BadRequestException('Invalid captcha token');
+    }
+
     const tokens = await this.login.execute({ email: body.email, password: body.password });
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
