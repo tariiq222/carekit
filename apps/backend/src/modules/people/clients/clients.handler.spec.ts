@@ -175,6 +175,29 @@ describe('Clients handlers', () => {
         updateHandler.execute({ clientId: 'c1', firstName: 'x' }),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('updates preferredLocale and pushEnabled', async () => {
+      prisma.client.findFirst.mockResolvedValue(mockClient);
+      prisma.client.update.mockResolvedValue({
+        ...mockClient,
+        preferredLocale: 'en',
+        pushEnabled: false,
+      });
+
+      const result = await updateHandler.execute({
+        clientId: 'c1',
+        preferredLocale: 'en',
+        pushEnabled: false,
+      });
+
+      expect(prisma.client.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ preferredLocale: 'en', pushEnabled: false }),
+        }),
+      );
+      expect(result.preferredLocale).toBe('en');
+      expect(result.pushEnabled).toBe(false);
+    });
   });
 
   describe('ListClientsHandler', () => {

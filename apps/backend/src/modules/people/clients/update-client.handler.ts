@@ -60,6 +60,8 @@ export class UpdateClientHandler {
         source: cmd.source,
         accountType: cmd.accountType,
         isActive: cmd.isActive,
+        preferredLocale: cmd.preferredLocale,
+        pushEnabled: cmd.pushEnabled,
       },
     });
 

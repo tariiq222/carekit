@@ -2383,6 +2383,17 @@
             "nullable": true,
             "type": "object"
           },
+          "preferredLocale": {
+            "description": "Preferred locale (ISO 639-1)",
+            "example": "ar",
+            "nullable": true,
+            "type": "object"
+          },
+          "pushEnabled": {
+            "description": "Push notifications enabled",
+            "example": true,
+            "type": "boolean"
+          },
           "source": {
             "allOf": [
               {
@@ -3294,6 +3305,17 @@
             "example": "+966501234567",
             "nullable": true,
             "type": "object"
+          },
+          "preferredLocale": {
+            "description": "Preferred locale (ISO 639-1)",
+            "example": "ar",
+            "nullable": true,
+            "type": "object"
+          },
+          "pushEnabled": {
+            "description": "Whether the client receives push notifications",
+            "example": true,
+            "type": "boolean"
           },
           "source": {
             "allOf": [
