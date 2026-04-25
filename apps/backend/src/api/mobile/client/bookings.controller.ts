@@ -103,7 +103,16 @@ export class MobileClientBookingsController {
   @Post()
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
-  @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
+  @ApiCreatedResponse({
+    description: 'Booking created',
+    schema: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        invoiceId: { type: 'string', format: 'uuid', nullable: true },
+      },
+    },
+  })
   createBooking(
     @ClientSession() user: ClientSession,
     @Body() body: MobileCreateBookingDto,

@@ -17,6 +17,10 @@ const mockBooking = {
   currency: 'SAR', status: 'PENDING',
 };
 
+const mockInvoice = {
+  id: 'invoice-1',
+};
+
 const mockService = {
   id: 'svc-1', durationMins: 60, price: 200, currency: 'SAR',
 };
@@ -25,7 +29,11 @@ const buildPrisma = () => {
   const prisma = {
     booking: {
       findFirst: jest.fn().mockResolvedValue(null),
+      count: jest.fn().mockResolvedValue(0),
       create: jest.fn().mockResolvedValue(mockBooking),
+    },
+    invoice: {
+      create: jest.fn().mockResolvedValue(mockInvoice),
     },
     branch: {
       findFirst: jest.fn().mockResolvedValue({ id: 'branch-1' }),
@@ -61,13 +69,77 @@ const dto = {
 };
 
 describe('CreateBookingHandler', () => {
-  it('creates booking with price and duration derived from Service', async () => {
+  it('creates booking and invoice with price and duration derived from Service', async () => {
     const prisma = buildPrisma();
     const result = await new CreateBookingHandler(prisma as never, mockTenant as never, buildPriceResolver() as never, buildSettingsHandler() as never, {} as never).execute(dto);
     expect(prisma.booking.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING', employeeId: 'emp-1' }) }),
     );
+    expect(prisma.invoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          organizationId: '00000000-0000-0000-0000-000000000001',
+          bookingId: 'book-1',
+          clientId: 'client-1',
+          branchId: 'branch-1',
+          employeeId: 'emp-1',
+          subtotal: 200,
+          vatRate: 0.15,
+          vatAmt: 30,
+          total: 230,
+          currency: 'SAR',
+          status: 'ISSUED',
+        }),
+        select: { id: true },
+      }),
+    );
     expect(result.id).toBe('book-1');
+    expect(result.invoiceId).toBe('invoice-1');
+  });
+
+  it('does not create an invoice when pay-at-clinic is selected', async () => {
+    const prisma = buildPrisma();
+    const result = await new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler({ payAtClinicEnabled: true }) as never,
+      {} as never,
+    ).execute({ ...dto, payAtClinic: true });
+
+    expect(prisma.invoice.create).not.toHaveBeenCalled();
+    expect(result.invoiceId).toBeNull();
+  });
+
+  it('does not create an invoice for a pending group session', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn()
+      .mockResolvedValueOnce(mockService)
+      .mockResolvedValueOnce({
+        id: 'svc-1',
+        minParticipants: 2,
+        maxParticipants: 5,
+        reserveWithoutPayment: true,
+      });
+    prisma.booking.create = jest.fn().mockResolvedValue({
+      ...mockBooking,
+      bookingType: 'GROUP',
+      status: 'PENDING_GROUP_FILL',
+    });
+
+    const result = await new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler() as never,
+      { execute: jest.fn().mockResolvedValue(undefined) } as never,
+    ).execute(dto);
+
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING_GROUP_FILL', bookingType: 'GROUP' }) }),
+    );
+    expect(prisma.invoice.create).not.toHaveBeenCalled();
+    expect(result.invoiceId).toBeNull();
   });
 
   it('throws ConflictException when employee has overlapping booking', async () => {

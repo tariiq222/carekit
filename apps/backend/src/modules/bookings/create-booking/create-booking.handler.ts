@@ -12,6 +12,10 @@ import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-s
 import { GroupSessionMinReachedHandler } from '../group-session-min-reached/group-session-min-reached.handler';
 import { CreateBookingDto } from './create-booking.dto';
 
+const VAT_RATE = 0.15;
+
+const roundMoney = (amount: number): number => Number(amount.toFixed(2));
+
 export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expiresAt'> & {
   scheduledAt: Date;
   expiresAt?: Date;
@@ -166,7 +170,7 @@ export class CreateBookingHandler {
           }
         }
 
-        return tx.booking.create({
+        const booking = await tx.booking.create({
           data: {
             organizationId,
             branchId: dto.branchId,
@@ -189,6 +193,33 @@ export class CreateBookingHandler {
             status: initialStatus,
           },
         });
+
+        let invoice: { id: string } | null = null;
+        if (!dto.payAtClinic && !isGroupService) {
+          const subtotal = discountedPrice ?? price;
+          const vatAmt = roundMoney(subtotal * VAT_RATE);
+          const total = roundMoney(subtotal + vatAmt);
+
+          invoice = await tx.invoice.create({
+            data: {
+              organizationId,
+              branchId: booking.branchId,
+              clientId: booking.clientId,
+              employeeId: booking.employeeId,
+              bookingId: booking.id,
+              subtotal,
+              vatRate: VAT_RATE,
+              vatAmt,
+              total,
+              currency: booking.currency,
+              status: 'ISSUED',
+              issuedAt: new Date(),
+            },
+            select: { id: true },
+          });
+        }
+
+        return { ...booking, invoiceId: invoice?.id ?? null };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
