@@ -11,6 +11,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { clientBookingsService, type ClientBookingRow } from '@/services/client/bookings';
+import { clientPaymentsService, type ClientInvoice } from '@/services/client/payments';
 
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -39,13 +40,19 @@ export default function BookingSuccessScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
-  const { bookingId } = useLocalSearchParams<{ bookingId?: string; paymentMethod?: string }>();
+  const { bookingId, invoiceId, paymentId } = useLocalSearchParams<{
+    bookingId?: string;
+    invoiceId?: string;
+    paymentId?: string;
+  }>();
   const f400 = getFontName(dir.locale, '400');
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
 
   const [booking, setBooking] = useState<ClientBookingRow | null>(null);
   const [loading, setLoading] = useState(!!bookingId);
+  const [invoice, setInvoice] = useState<ClientInvoice | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(!!invoiceId);
 
   useEffect(() => {
     if (!bookingId) return;
@@ -64,9 +71,43 @@ export default function BookingSuccessScreen() {
     return () => { cancelled = true; };
   }, [bookingId]);
 
+  useEffect(() => {
+    if (!invoiceId) {
+      setInvoice(null);
+      setInvoiceLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setInvoiceLoading(true);
+    (async () => {
+      try {
+        const data = await clientPaymentsService.getInvoice(invoiceId);
+        if (!cancelled) setInvoice(data);
+      } catch {
+        if (!cancelled) setInvoice(null);
+      } finally {
+        if (!cancelled) setInvoiceLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [invoiceId]);
+
   const therapistName = booking?.employee
     ? (dir.isRTL ? booking.employee.nameAr : booking.employee.nameEn) ?? booking.employee.nameAr ?? booking.employee.nameEn
     : null;
+  const fallbackPaymentCopy = dir.isRTL
+    ? 'سنتواصل معكِ قريباً لترتيب الدفع وإرسال تفاصيل الجلسة'
+    : 'We\'ll reach out shortly to arrange payment and send session details';
+  const hasPendingPayment = invoice?.payments?.some((payment) =>
+    payment.status === 'PENDING' || payment.status === 'PENDING_VERIFICATION',
+  ) ?? false;
+  const paymentStatusCopy = invoiceLoading
+    ? (dir.isRTL ? 'جاري تحديث حالة الدفع...' : 'Checking payment status...')
+    : invoice?.status === 'PAID'
+      ? (dir.isRTL ? 'تم استلام الدفع' : 'Payment received')
+      : invoice?.status === 'PENDING' || hasPendingPayment
+        ? (dir.isRTL ? 'بانتظار التحقق من الدفع' : 'Awaiting payment verification')
+        : fallbackPaymentCopy;
 
   return (
     <AquaBackground>
@@ -87,9 +128,7 @@ export default function BookingSuccessScreen() {
             {dir.isRTL ? 'تم تأكيد حجزك' : 'Booking confirmed'}
           </Text>
           <Text style={[styles.subtitle, { fontFamily: f400 }]}>
-            {dir.isRTL
-              ? 'سنتواصل معكِ قريباً لترتيب الدفع وإرسال تفاصيل الجلسة'
-              : 'We\'ll reach out shortly to arrange payment and send session details'}
+            {paymentStatusCopy}
           </Text>
         </Animated.View>
 
@@ -136,6 +175,19 @@ export default function BookingSuccessScreen() {
                     {bookingId ? shortBookingRef(bookingId) : '—'}
                   </Text>
                 </View>
+                {paymentId ? (
+                  <>
+                    <View style={styles.divider} />
+                    <View style={styles.summaryRow}>
+                      <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
+                        {dir.isRTL ? 'رقم الدفع' : 'Payment #'}
+                      </Text>
+                      <Text style={[styles.summaryValue, { fontFamily: f700 }]}>
+                        {shortBookingRef(paymentId)}
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
               </>
             )}
           </Glass>

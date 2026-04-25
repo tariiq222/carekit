@@ -11,6 +11,12 @@ export interface ClientPaymentInitResponse {
 export interface ClientInvoice {
   id: string;
   status: string;
+  payments?: ClientInvoicePayment[];
+}
+
+export interface ClientInvoicePayment {
+  id: string;
+  status: string;
 }
 
 export interface ClientBankTransferUploadResponse {
