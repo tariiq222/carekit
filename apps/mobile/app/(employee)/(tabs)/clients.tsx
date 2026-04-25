@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -15,7 +15,7 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
-import { clientsService } from '@/services/clients';
+import { useEmployeeClients } from '@/hooks/queries/useEmployeeClients';
 
 interface ClientItem {
   id: string;
@@ -31,40 +31,29 @@ export default function ClientsScreen() {
   const { theme, isRTL } = useTheme();
 
   const [search, setSearch] = useState('');
-  const [clients, setClients] = useState<ClientItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
 
-  const fetchClients = useCallback(async (searchTerm: string) => {
-    setLoading(true);
-    try {
-      const res = await clientsService.getAll({ search: searchTerm || undefined, limit: 50 });
-      if (res.success) {
-        setClients(
-          (res.data.items ?? []).map((p) => ({
-            id: p.id,
-            name: `${p.firstName} ${p.lastName}`,
-            avatarUrl: p.avatarUrl,
-            lastVisit: null,
-            visitCount: 0,
-          }))
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, isFetching } = useEmployeeClients({ search: debouncedSearch });
 
-  useEffect(() => {
-    fetchClients('');
-  }, [fetchClients]);
+  const clients = useMemo<ClientItem[]>(
+    () =>
+      (data ?? []).map((p) => ({
+        id: p.id,
+        name: `${p.firstName} ${p.lastName}`,
+        avatarUrl: p.avatarUrl,
+        lastVisit: null,
+        visitCount: 0,
+      })),
+    [data],
+  );
 
   const handleSearch = (text: string) => {
     setSearch(text);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => fetchClients(text), 400);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(text), 400);
   };
 
   return (
@@ -78,7 +67,6 @@ export default function ClientsScreen() {
         {t('employee.clients')}
       </ThemedText>
 
-      {/* Search */}
       <View style={[styles.searchBar, theme.shadows.md, { backgroundColor: theme.colors.white }]}>
         <Search size={18} strokeWidth={1.5} color={theme.colors.textSecondary} />
         <TextInput
@@ -89,13 +77,15 @@ export default function ClientsScreen() {
           textAlign={isRTL ? 'right' : 'left'}
           style={[styles.searchInput, { color: theme.colors.textPrimary, fontFamily }]}
         />
+        {isFetching && !isLoading ? (
+          <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+        ) : null}
       </View>
 
-      {loading && clients.length === 0 && (
+      {isLoading && clients.length === 0 ? (
         <ActivityIndicator style={{ marginTop: 40 }} size="large" />
-      )}
+      ) : null}
 
-      {/* List */}
       <FlatList
         data={clients}
         keyExtractor={(item) => item.id}
@@ -133,7 +123,7 @@ export default function ClientsScreen() {
           </Pressable>
         )}
         ListEmptyComponent={
-          !loading ? (
+          !isLoading ? (
             <View style={styles.empty}>
               <UsersIcon size={48} strokeWidth={1} color={theme.colors.textMuted} />
               <ThemedText variant="body" color={theme.colors.textMuted} align="center">
