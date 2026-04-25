@@ -19,6 +19,7 @@ const TEST_JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
 const TEST_JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min';
 export const TEST_JWT_CLIENT_ACCESS_SECRET = 'test-client-access-secret-32chars';
 export const TEST_JWT_CLIENT_REFRESH_TTL = '14d';
+const TEST_SMS_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
@@ -71,6 +72,7 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
   process.env.JWT_REFRESH_SECRET = TEST_JWT_REFRESH_SECRET;
   process.env.JWT_ACCESS_TTL = '15m';
   process.env.JWT_REFRESH_TTL = '30d';
+  process.env.SMS_PROVIDER_ENCRYPTION_KEY = TEST_SMS_PROVIDER_ENCRYPTION_KEY;
 
   const CONFIG_MAP: Record<string, string | number> = {
     DATABASE_URL: TEST_DATABASE_URL,
@@ -96,6 +98,7 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     MINIO_ACCESS_KEY: 'minioadmin',
     MINIO_SECRET_KEY: 'minioadmin123',
     MINIO_BUCKET: 'carekit',
+    SMS_PROVIDER_ENCRYPTION_KEY: TEST_SMS_PROVIDER_ENCRYPTION_KEY,
   };
 
   const moduleRef: TestingModule = await Test.createTestingModule({
@@ -110,9 +113,10 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     })
     .overrideProvider(ConfigService)
     .useValue({
-      get: (key: string) => CONFIG_MAP[key],
+      get: (key: string, defaultValue?: string | number) =>
+        CONFIG_MAP[key] ?? process.env[key] ?? defaultValue,
       getOrThrow: (key: string) => {
-        const val = CONFIG_MAP[key];
+        const val = CONFIG_MAP[key] ?? process.env[key];
         if (val === undefined) throw new Error(`Config key ${key} not found`);
         return val;
       },
