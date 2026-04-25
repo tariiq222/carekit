@@ -65,6 +65,8 @@ model Client {
   loginAttempts     Int               @default(0)
   lockoutUntil      DateTime?
   lastLoginAt       DateTime?
+  preferredLocale   String?           @db.VarChar(8)
+  pushEnabled       Boolean           @default(true)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

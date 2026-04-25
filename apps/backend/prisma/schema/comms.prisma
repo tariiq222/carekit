@@ -174,3 +174,17 @@ model SmsDelivery {
   @@index([status])
   @@index([createdAt])
 }
+
+model FcmToken {
+  id             String   @id @default(uuid())
+  organizationId String
+  clientId       String
+  token          String
+  platform       String   @db.VarChar(8)
+  lastSeenAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@unique([clientId, token], name: "fcm_token_per_client")
+  @@index([organizationId])
+  @@index([clientId])
+}
