@@ -11,6 +11,8 @@ export interface PublicEmployeeItem {
   publicBioAr: string | null;
   publicBioEn: string | null;
   publicImageUrl: string | null;
+  ratingAverage?: number | null;
+  ratingCount?: number;
 }
 
 export const publicEmployeesService = {

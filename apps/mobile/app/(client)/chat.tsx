@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight, Send, Sparkles } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Send } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
@@ -64,9 +65,13 @@ export default function ChatScreen() {
           </Glass>
           <View style={styles.headerMid}>
             <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
-              <Sparkles size={14} color={sawaaColors.teal[600]} strokeWidth={2} />
+              <Image
+                source={require('@/assets/sawa/icon.png')}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
               <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'المساعد' : 'Assistant'}
+                {dir.isRTL ? 'سَواء' : 'Sawaa'}
               </Text>
             </View>
             <Text style={[styles.headerSub, { fontFamily: f400 }]}>
@@ -153,6 +158,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   headerMid: { flex: 1, alignItems: 'center' },
   headerTitleRow: { alignItems: 'center', gap: 6 },
+  headerLogo: { width: 18, height: 18, borderRadius: 4 },
   headerTitle: { fontSize: 15, color: sawaaColors.ink[900] },
   headerSub: { fontSize: 11, color: sawaaColors.ink[500], marginTop: 2 },
   headerPlaceholder: { width: 40 },
