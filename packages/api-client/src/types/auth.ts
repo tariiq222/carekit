@@ -21,6 +21,10 @@ export interface UserPayload {
   // Resolved from the user's active Membership. Null when the user has
   // no active membership yet (e.g. freshly created super-admin in seeds).
   organizationId: string | null
+  // Vertical slug of the active membership's organization (e.g. 'clinic',
+  // 'salon'). Powers useTerminology() in dashboard/mobile without a second
+  // round-trip. Null when the org has no vertical assigned yet.
+  verticalSlug: string | null
   createdAt?: string
   updatedAt?: string
 }
