@@ -66,3 +66,46 @@ export const sawaaBlur = {
 } as const;
 
 export type SawaaColors = typeof sawaaColors;
+
+// Primary color system (for multi-tenant branding)
+export const sawaaTokens = {
+  // Color primitives
+  colors: sawaaColors,
+  
+  // Branding tokens (override via tenant config)
+  primary: {
+    light: '#1D4ED8',   // CareKit default blue
+    dark: '#0037B0',    // Dark variant
+  },
+  secondary: {
+    light: '#7C3AED',   // Purple
+    dark: '#5B21B6',
+  },
+  accent: {
+    light: '#82CC17',   // CareKit lime green
+    dark: '#65A30D',
+  },
+  
+  // Radius system
+  radius: sawaaRadius,
+  
+  // Spacing system
+  spacing: sawaaSpacing,
+  
+  // Blur system
+  blur: sawaaBlur,
+} as const;
+
+// Branding override helper (for per-tenant customization)
+export function getBrandingTokens(brandingConfig?: { primaryColor?: string; primaryColorDark?: string }) {
+  if (!brandingConfig) return sawaaTokens;
+  return {
+    ...sawaaTokens,
+    primary: {
+      light: brandingConfig.primaryColor || sawaaTokens.primary.light,
+      dark: brandingConfig.primaryColorDark || sawaaTokens.primary.dark,
+    },
+  };
+}
+
+export type SawaaTokens = typeof sawaaTokens;
