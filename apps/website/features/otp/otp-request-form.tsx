@@ -1,15 +1,10 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import type HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { GuestClientInfo } from '@carekit/shared';
 import { OtpChannel, OtpPurpose } from '@carekit/shared';
-
-const DEV_SITE_KEY = '10000000-ffff-ffff-ffff-000000000001';
-
-const SITE_KEY =
-  process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ??
-  (process.env.NODE_ENV !== 'production' ? DEV_SITE_KEY : '');
+import { CaptchaField } from './captcha-field';
 
 interface OtpRequestFormProps {
   client: GuestClientInfo;
@@ -58,15 +53,11 @@ export function OtpRequestForm({
         We will send a verification code to {client.email}
       </div>
 
-      {SITE_KEY && (
-        <HCaptcha
-          ref={captchaRef}
-          sitekey={SITE_KEY}
-          onVerify={(token) => onHcaptchaVerify(token)}
-          onExpire={() => onHcaptchaVerify('')}
-          theme="light"
-        />
-      )}
+      <CaptchaField
+        ref={captchaRef}
+        onVerify={(token) => onHcaptchaVerify(token)}
+        onExpire={() => onHcaptchaVerify('')}
+      />
 
       {error && (
         <div

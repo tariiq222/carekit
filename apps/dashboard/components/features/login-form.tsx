@@ -1,17 +1,15 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import HCaptcha from "@hcaptcha/react-hcaptcha"
+import type HCaptcha from "@hcaptcha/react-hcaptcha"
 import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useLocale } from "@/components/locale-provider"
+import { CaptchaField } from "@/components/features/shared/captcha-field"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EyeIcon, ScanEyeIcon } from "@hugeicons/core-free-icons"
-
-const DEV_SITE_KEY = "10000000-ffff-ffff-ffff-000000000001"
-const SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? DEV_SITE_KEY
 
 export function LoginForm() {
   const { t } = useLocale()
@@ -165,12 +163,10 @@ export function LoginForm() {
           </div>
 
           <div className="flex justify-center py-2">
-            <HCaptcha
+            <CaptchaField
               ref={captchaRef}
-              sitekey={SITE_KEY}
               onVerify={(token) => setHcaptchaToken(token)}
               onExpire={() => setHcaptchaToken(null)}
-              theme="light"
             />
           </div>
 
