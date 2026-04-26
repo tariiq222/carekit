@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
 import { fetchActivityLogs } from "@/lib/api/activity-log"
 import type { ActivityLogQuery } from "@/lib/types/activity-log"
+import { ApiError } from "@/lib/api"
 
 const QUERY_KEY = ["activity-log"] as const
 
@@ -38,11 +39,14 @@ export function useActivityLogs() {
     setPage(1)
   }, [])
 
-  // Handle NestJS validation errors (array of messages) gracefully
+  // NestJS validation errors (array messages) are flattened by parseErrorBody()
+  // in lib/api.ts → joined as a comma-separated string. So plain Error.message
+  // is sufficient here. ApiError is checked first to keep code/status reachable
+  // for future consumers.
   const errorMessage = error
-    ? Array.isArray((error as any)?.message)
-      ? (error as any).message[0]
-      : error.message
+    ? error instanceof ApiError
+      ? error.message
+      : (error.message ?? null)
     : null
 
   return {
