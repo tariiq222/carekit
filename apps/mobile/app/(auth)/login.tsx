@@ -266,9 +266,9 @@ export default function LoginScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/(auth)/reset-password');
+                  router.push('/(auth)/forgot-password');
                 }}
-                style={{ marginTop: 8, alignItems: 'center' }}
+                style={{ marginTop: 8, alignSelf: dir.isRTL ? 'flex-start' : 'flex-end' }}
               >
                 <Text
                   style={[
@@ -276,7 +276,7 @@ export default function LoginScreen() {
                     { fontFamily: f600 }
                   ]}
                 >
-                  {t('auth.forgotPassword')}
+                  {t('auth.forgotPassword.linkLabel')}
                 </Text>
               </Pressable>
 
