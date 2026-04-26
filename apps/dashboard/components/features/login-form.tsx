@@ -162,6 +162,15 @@ export function LoginForm() {
             </div>
           </div>
 
+          <div className="flex justify-end">
+            <a
+              href="/forgot-password"
+              className="text-sm text-primary hover:underline ms-auto"
+            >
+              {t("forgotPassword.linkLabel")}
+            </a>
+          </div>
+
           <div className="flex justify-center py-2">
             <CaptchaField
               ref={captchaRef}

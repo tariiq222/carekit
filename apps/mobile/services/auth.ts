@@ -131,6 +131,53 @@ export const authService = {
     const refreshToken = await getSecureItem('refreshToken');
     return { accessToken, refreshToken };
   },
+
+  /**
+   * POST /public/otp/request — send OTP for password reset.
+   * Uses purpose CLIENT_PASSWORD_RESET so it cannot be confused with login OTPs.
+   */
+  async requestPasswordResetOtp(email: string): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>('/public/otp/request', {
+      channel: 'EMAIL',
+      identifier: email,
+      purpose: 'CLIENT_PASSWORD_RESET',
+      hCaptchaToken: '',
+    });
+    return response.data;
+  },
+
+  /**
+   * POST /public/otp/verify — verify the reset OTP, returns a short-lived sessionToken.
+   */
+  async verifyPasswordResetOtp(
+    email: string,
+    code: string,
+  ): Promise<{ sessionToken: string }> {
+    const response = await api.post<{ sessionToken: string }>(
+      '/public/otp/verify',
+      {
+        channel: 'EMAIL',
+        identifier: email,
+        code,
+        purpose: 'CLIENT_PASSWORD_RESET',
+      },
+    );
+    return response.data;
+  },
+
+  /**
+   * POST /public/auth/reset-password — set the new password using the verified sessionToken.
+   */
+  async resetClientPassword(
+    sessionToken: string,
+    newPassword: string,
+  ): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>(
+      '/public/auth/reset-password',
+      { sessionToken, newPassword },
+    );
+    return response.data;
+  },
 };
 
 async function persistTokens(data: NonNullable<AuthResponse['data']>) {

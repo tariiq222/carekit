@@ -236,4 +236,30 @@ export const arMisc: Record<string, string> = {
   // — Shared UI —
   "common.sarAlt": "ريال",
   "common.removeColor": "إزالة اللون",
+
+  // — Forgot Password —
+  "forgotPassword.title": "نسيت كلمة المرور",
+  "forgotPassword.subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
+  "forgotPassword.emailLabel": "البريد الإلكتروني",
+  "forgotPassword.submit": "إرسال رابط الاستعادة",
+  "forgotPassword.submitting": "جارٍ الإرسال...",
+  "forgotPassword.back": "العودة لتسجيل الدخول",
+  "forgotPassword.successTitle": "تحقق من بريدك",
+  "forgotPassword.successBody": "إذا كان هناك حساب بهذا البريد، فقد أرسلنا رابط إعادة تعيين كلمة المرور. ينتهي الرابط خلال 30 دقيقة.",
+  "forgotPassword.linkLabel": "نسيت كلمة المرور؟",
+  "forgotPassword.requestFailed": "فشل الطلب. الرجاء المحاولة مرة أخرى.",
+
+  // — Reset Password —
+  "resetPassword.title": "إعادة تعيين كلمة المرور",
+  "resetPassword.subtitle": "اختر كلمة مرور جديدة لحسابك",
+  "resetPassword.newPasswordLabel": "كلمة المرور الجديدة",
+  "resetPassword.confirmLabel": "تأكيد كلمة المرور",
+  "resetPassword.submit": "إعادة تعيين",
+  "resetPassword.submitting": "جارٍ إعادة التعيين...",
+  "resetPassword.successTitle": "تم تحديث كلمة المرور",
+  "resetPassword.successBody": "يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+  "resetPassword.backToLogin": "تسجيل الدخول",
+  "resetPassword.invalidToken": "الرابط غير صالح أو منتهي الصلاحية",
+  "resetPassword.passwordMismatch": "كلمتا المرور غير متطابقتين",
+  "resetPassword.weakPassword": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
 }

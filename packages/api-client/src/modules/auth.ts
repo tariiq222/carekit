@@ -44,4 +44,21 @@ export async function changePassword(
   })
 }
 
+export async function requestStaffPasswordReset(email: string): Promise<void> {
+  return apiRequest<void>('/auth/request-password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function performStaffPasswordReset(
+  token: string,
+  newPassword: string,
+): Promise<void> {
+  return apiRequest<void>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  })
+}
+
 export type { AuthResponse, ChangePasswordPayload, TokenPair, UserPayload }

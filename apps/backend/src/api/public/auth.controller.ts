@@ -25,6 +25,11 @@ import { ChangePasswordHandler } from '../../modules/identity/users/change-passw
 import { ListMembershipsHandler } from '../../modules/identity/list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from '../../modules/identity/switch-organization/switch-organization.handler';
 import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
+import { RequestPasswordResetHandler } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.handler';
+import { RequestPasswordResetDto } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.dto';
+import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
+import { PerformPasswordResetDto } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.dto';
+import { Public } from '../../common/guards/jwt.guard';
 import { IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
@@ -55,6 +60,8 @@ export class AuthController {
     private readonly switchOrganization: SwitchOrganizationHandler,
     private readonly config: ConfigService,
     @Inject(CAPTCHA_VERIFIER) private readonly captcha: CaptchaVerifier,
+    private readonly requestPasswordReset: RequestPasswordResetHandler,
+    private readonly performPasswordReset: PerformPasswordResetHandler,
   ) {}
 
   @Post('login')
@@ -288,6 +295,24 @@ export class AuthController {
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
     });
+  }
+
+  @Public()
+  @Post('request-password-reset')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Request a password reset email for a staff (User) account' })
+  async requestPasswordResetEndpoint(@Body() dto: RequestPasswordResetDto): Promise<void> {
+    await this.requestPasswordReset.execute(dto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Reset staff (User) password using a token from the reset email' })
+  async performPasswordResetEndpoint(@Body() dto: PerformPasswordResetDto): Promise<void> {
+    await this.performPasswordReset.execute(dto);
   }
 
   private setRefreshCookie(res: Response, token: string): void {

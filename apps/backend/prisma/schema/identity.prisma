@@ -56,21 +56,22 @@ enum UserGender {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  isSuperAdmin  Boolean        @default(false)
-  passwordHash  String
-  name          String
-  phone         String?
-  gender        UserGender?
-  avatarUrl     String?
-  isActive      Boolean        @default(true)
-  role          UserRole       @default(RECEPTIONIST)
-  customRoleId  String?
-  customRole    CustomRole?    @relation(fields: [customRoleId], references: [id])
-  refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  isSuperAdmin        Boolean              @default(false)
+  passwordHash        String
+  name                String
+  phone               String?
+  gender              UserGender?
+  avatarUrl           String?
+  isActive            Boolean              @default(true)
+  role                UserRole             @default(RECEPTIONIST)
+  customRoleId        String?
+  customRole          CustomRole?          @relation(fields: [customRoleId], references: [id])
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   @@index([isSuperAdmin])
 }
@@ -92,6 +93,23 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenSelector])
   @@index([organizationId])
+}
+
+model PasswordResetToken {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique
+  // First 8 chars of the raw token used as a fast lookup key — mirrors RefreshToken.tokenSelector.
+  // Lets us do an indexed DB lookup before the bcrypt/sha256 compare, avoiding scans.
+  tokenSelector String
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([tokenSelector])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model ClientRefreshToken {

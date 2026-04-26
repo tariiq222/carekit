@@ -44,6 +44,9 @@ import { ResetPasswordHandler } from './client-auth/reset-password/reset-passwor
 import { PasswordHistoryService } from './client-auth/shared/password-history.service';
 import { ListMembershipsHandler } from './list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from './switch-organization/switch-organization.handler';
+import { RequestPasswordResetHandler } from './user-password-reset/request-password-reset/request-password-reset.handler';
+import { PerformPasswordResetHandler } from './user-password-reset/perform-password-reset/perform-password-reset.handler';
+import { CommsModule } from '../comms/comms.module';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -52,6 +55,8 @@ const handlers = [
   CreateRoleHandler, DeleteRoleHandler, AssignPermissionsHandler, ListRolesHandler,
   ListPermissionsHandler,
   ChangePasswordHandler,
+  RequestPasswordResetHandler,
+  PerformPasswordResetHandler,
   RequestOtpHandler,
   VerifyOtpHandler,
   RegisterHandler,
@@ -69,6 +74,7 @@ const handlers = [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     NotificationChannelModule,
+    CommsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

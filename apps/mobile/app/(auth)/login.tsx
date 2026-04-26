@@ -262,6 +262,24 @@ export default function LoginScreen() {
                 ) : null}
               </View>
 
+              {/* Forgot Password Link */}
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/(auth)/forgot-password');
+                }}
+                style={{ marginTop: 8, alignSelf: dir.isRTL ? 'flex-start' : 'flex-end' }}
+              >
+                <Text
+                  style={[
+                    styles.forgotPasswordLink,
+                    { fontFamily: f600 }
+                  ]}
+                >
+                  {t('auth.forgotPassword.linkLabel')}
+                </Text>
+              </Pressable>
+
               {/* Login Button */}
               <PrimaryButton
                 label={loading ? t('common.loading') : t('auth.login')}
@@ -314,4 +332,5 @@ const styles = StyleSheet.create({
   registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
   registerText: { fontSize: 14, color: C.subtle },
   registerLink: { fontSize: 14, color: C.deepTeal },
+  forgotPasswordLink: { fontSize: 13, color: C.deepTeal },
 });
