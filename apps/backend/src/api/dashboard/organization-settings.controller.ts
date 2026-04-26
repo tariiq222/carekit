@@ -43,6 +43,8 @@ import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/
 import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
 import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
+import { PrismaService } from '../../infrastructure/database';
+import { TenantContextService } from '../../common/tenant/tenant-context.service';
 
 @ApiTags('Dashboard / Org Experience')
 @ApiBearerAuth()
@@ -72,6 +74,8 @@ export class DashboardOrganizationSettingsController {
     private readonly setServiceBookingConfigs: SetServiceBookingConfigsHandler,
     private readonly getServiceBookingConfigs: GetServiceBookingConfigsHandler,
     private readonly listServiceEmployees: ListServiceEmployeesHandler,
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -266,5 +270,17 @@ export class DashboardOrganizationSettingsController {
   @ApiOkResponse({ description: 'Booking settings updated' })
   upsertBookingSettingsEndpoint(@Body() body: Record<string, unknown>) {
     return this.upsertBookingSettings.execute({ branchId: null, ...body });
+  }
+
+  @Patch('mark-onboarded')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Mark the organization onboarding wizard as completed' })
+  @ApiNoContentResponse({ description: 'Onboarding marked complete' })
+  async markOnboardedEndpoint() {
+    const organizationId = this.tenant.requireOrganizationId();
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { onboardingCompletedAt: new Date() },
+    });
   }
 }

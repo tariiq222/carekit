@@ -24,6 +24,8 @@ function buildController() {
   const getServiceBookingConfigs = fn({ id: 'sbc-1' });
   const listServiceEmployees = fn([]);
   const uploadLogo = fn({ fileId: 'f-1', url: 'https://example.com/logo.png' });
+  const prisma = { organization: { update: jest.fn().mockResolvedValue({}) } };
+  const tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') };
   const controller = new DashboardOrganizationSettingsController(
     createService as never, updateService as never, listServices as never, getService as never, archiveService as never,
     upsertBranding as never, getBranding as never, uploadLogo as never,
@@ -33,8 +35,10 @@ function buildController() {
     getBookingSettings as never, upsertBookingSettings as never,
     setServiceBookingConfigs as never, getServiceBookingConfigs as never,
     listServiceEmployees as never,
+    prisma as never,
+    tenant as never,
   );
-  return { controller, createService, updateService, listServices, getService, archiveService, upsertBranding, getBranding, uploadLogo, createIntakeForm, getIntakeForm, listIntakeForms, deleteIntakeForm, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings, setServiceBookingConfigs, getServiceBookingConfigs };
+  return { controller, createService, updateService, listServices, getService, archiveService, upsertBranding, getBranding, uploadLogo, createIntakeForm, getIntakeForm, listIntakeForms, deleteIntakeForm, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings, setServiceBookingConfigs, getServiceBookingConfigs, prisma, tenant };
 }
 
 describe('DashboardOrganizationSettingsController', () => {
