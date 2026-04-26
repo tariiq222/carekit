@@ -1,4 +1,4 @@
-export { initClient, apiRequest, ApiError } from './client'
+export { initClient, apiRequest, ApiError, ORG_SUSPENDED_CODE } from './client'
 export type { ClientConfig } from './client'
 export * from './types/index'
 export * as authApi from './modules/auth'

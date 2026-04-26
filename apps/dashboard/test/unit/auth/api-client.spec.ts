@@ -110,7 +110,11 @@ describe('API Client (lib/api.ts)', () => {
     expect(url).toMatch(/^\/api\/proxy\/auth\/login/)
   })
 
-  it('should use direct API URL for non-cookie endpoints', async () => {
+  it('should route every endpoint through the same-origin /api/proxy prefix', async () => {
+    // The split direct/proxy routing was removed when lib/api delegated to
+    // @carekit/api-client. The Next rewrite (next.config.mjs) forwards
+    // /api/proxy/:path* → backend, so a single base keeps cookie-bearing
+    // and authenticated endpoints on the same origin.
     const { api } = await import('@/lib/api')
 
     fetchMock.mockResolvedValueOnce({
@@ -122,8 +126,7 @@ describe('API Client (lib/api.ts)', () => {
     await api.get('/clients')
 
     const [url] = fetchMock.mock.calls[0]
-    expect(url).not.toMatch(/^\/api\/proxy/)
-    expect(url).toContain('/clients')
+    expect(url).toMatch(/^\/api\/proxy\/clients/)
   })
 
   // =========================================================================
@@ -243,6 +246,44 @@ describe('API Client (lib/api.ts)', () => {
     await expect(api.get('/clients')).rejects.toThrow()
     expect(getAccessToken()).toBeNull()
     expect(localStorage.getItem('carekit_user')).toBeNull()
+  })
+
+  // =========================================================================
+  // ORG_SUSPENDED — must NOT trigger refresh; redirects to "/" once
+  // =========================================================================
+
+  it('should clear auth, set sessionStorage flag, and redirect once on ORG_SUSPENDED', async () => {
+    const locationHref = { value: 'http://localhost:5103/clients' }
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { get href() { return locationHref.value }, set href(v: string) { locationHref.value = v } },
+    })
+
+    const { api, setAccessToken, getAccessToken } = await import('@/lib/api')
+    setAccessToken('suspended-tok')
+    localStorage.setItem('carekit_user', JSON.stringify({ id: 'u1' }))
+
+    const suspendedRes = {
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+      json: () =>
+        Promise.resolve({ statusCode: 401, error: 'ORG_SUSPENDED', message: 'Tenant suspended' }),
+      clone: function () { return suspendedRes },
+    }
+    fetchMock.mockResolvedValueOnce(suspendedRes)
+
+    await expect(api.get('/clients')).rejects.toMatchObject({
+      status: 401,
+      code: 'ORG_SUSPENDED',
+    })
+
+    // No refresh attempt (would be a 2nd fetch call)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(getAccessToken()).toBeNull()
+    expect(localStorage.getItem('carekit_user')).toBeNull()
+    expect(sessionStorage.getItem('carekit_auth_reason')).toBe('ORG_SUSPENDED')
+    expect(locationHref.value).toBe('/')
   })
 
   // =========================================================================
