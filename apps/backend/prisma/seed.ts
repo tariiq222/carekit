@@ -128,6 +128,24 @@ async function main() {
     update: {},
   });
 
+  // 5. Business hours for the main branch (Sun–Thu 09:00–17:00 open, Fri/Sat closed).
+  // Required so dev create-booking flow can find available slots.
+  for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Fri, Sat
+    await prisma.businessHour.upsert({
+      where: { branchId_dayOfWeek: { branchId: 'main-branch', dayOfWeek } },
+      create: {
+        organizationId: DEFAULT_ORG_ID,
+        branchId:       'main-branch',
+        dayOfWeek,
+        startTime:      '09:00',
+        endTime:        '17:00',
+        isOpen:         !isWeekend,
+      },
+      update: {},
+    });
+  }
+
   await prisma.$disconnect();
 
   console.log('─────────────────────────────────────────────');
@@ -136,6 +154,7 @@ async function main() {
   console.log(`✔  Branding singleton ready`);
   console.log(`✔  OrganizationSettings singleton ready`);
   console.log(`✔  Main branch created`);
+  console.log(`✔  BusinessHours seeded (Sun–Thu 09:00–17:00, Fri/Sat closed)`);
   console.log('─────────────────────────────────────────────');
 }
 
