@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { I18nManager } from 'react-native';
-import { Slot } from 'expo-router';
+import { Slot, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as ReduxProvider } from 'react-redux';
@@ -25,6 +25,26 @@ function PushBootstrap() {
   return null;
 }
 
+function AuthRouter() {
+  const router = useRouter();
+  const token = useAppSelector((s) => s.auth.token);
+  const activeMembership = useAppSelector((s) => s.auth.activeMembership);
+
+  useEffect(() => {
+    if (!token) {
+      router.replace('/(auth)/login');
+      return;
+    }
+    if (activeMembership) {
+      router.replace('/(employee)/(tabs)/today');
+      return;
+    }
+    router.replace('/(client)/(tabs)/home');
+  }, [token, activeMembership, router]);
+
+  return null;
+}
+
 export default function RootLayout() {
   useEffect(() => {
     if (!I18nManager.isRTL) {
@@ -40,6 +60,7 @@ export default function RootLayout() {
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <PushBootstrap />
+          <AuthRouter />
           <DirContext.Provider value={dirState}>
             <ThemeProvider language="ar">
               <SafeAreaProvider>
