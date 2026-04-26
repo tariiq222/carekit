@@ -24,5 +24,31 @@
       "noToken": "Login succeeded but no access token was returned.",
       "failed": "Sign-in failed"
     }
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email and we'll send a reset link.",
+    "email": "Email",
+    "submit": "Send Reset Link",
+    "submitting": "Sending…",
+    "back": "Back to Sign In",
+    "successTitle": "Check your email",
+    "successBody": "If an account exists for that email, we've sent a password reset link. The link expires in 30 minutes.",
+    "linkLabel": "Forgot password?",
+    "requestFailed": "Request failed. Please try again."
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "description": "Choose a new password for your CareKit super-admin account.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Reset Password",
+    "submitting": "Resetting…",
+    "successTitle": "Password updated",
+    "successBody": "You can now sign in with your new password.",
+    "backToLogin": "Go to sign in",
+    "invalidToken": "This link is invalid or has expired",
+    "passwordMismatch": "Passwords do not match",
+    "weakPassword": "Password must be at least 8 characters"
   }
 }

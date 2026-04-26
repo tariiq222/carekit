@@ -3,6 +3,7 @@
 import { Suspense, useState, useRef } from "react";
 import type HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CaptchaField } from "./captcha-field";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ function Inner() {
   const params = useSearchParams();
   const next = params.get("next") ?? "/";
   const t = useTranslations("login");
+  const tForgot = useTranslations("forgotPassword");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hcaptchaToken, setHcaptchaToken] = useState<string | null>(null);
@@ -96,6 +98,9 @@ function Inner() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            <Link href="/forgot-password" className="text-sm text-primary hover:underline ms-auto">
+              {tForgot("linkLabel")}
+            </Link>
             <div className="flex justify-center py-2">
               <CaptchaField
                 ref={captchaRef}
