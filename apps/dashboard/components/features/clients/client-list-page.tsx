@@ -38,7 +38,7 @@ export function ClientListPage() {
   // Vertical-aware label: "العملاء"/"Clients" for clinic verticals,
   // "المرضى"/"Patients" for medical, "المتدربون"/"Members" for fitness, …
   const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
-  const titleLabel = term("client.plural")
+  const titleLabel = term("client.plural", t("nav.clients"))
   const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch, page, setPage } = useClients()
   const { toggleActiveMut } = useClientMutations()
   const stats = useClientStats()

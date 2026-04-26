@@ -47,13 +47,15 @@ export function useTerminology(verticalSlug: string | undefined) {
 
   /**
    * Resolve a terminology key to a localised string.
-   * Falls back to the key itself when the pack hasn't loaded yet or the
-   * key is absent from the pack.
+   * Falls back to the optional `fallback` argument (or the key itself)
+   * when the pack hasn't loaded yet or the key is absent. Pass a fallback
+   * for any org that may have no vertical assigned (dev seed, legacy tenants)
+   * so the raw key never leaks into the UI.
    */
-  const t = (key: string): string => {
+  const t = (key: string, fallback?: string): string => {
     const token = query.data?.[key]
-    if (!token) return key
-    return token[locale] ?? token.ar ?? key
+    if (!token) return fallback ?? key
+    return token[locale] ?? token.ar ?? fallback ?? key
   }
 
   return {

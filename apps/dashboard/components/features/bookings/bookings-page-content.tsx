@@ -46,7 +46,7 @@ export function BookingsPageContent({
   const { user } = useAuth()
   // "المواعيد"/"Appointments" for clinical, "الحصص"/"Classes" for fitness, …
   const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
-  const titleLabel = term("appointment.plural")
+  const titleLabel = term("appointment.plural", t("nav.bookings"))
   const queryClient = useQueryClient()
   const { data: stats, isLoading: statsLoading } = useBookingsStats()
 
