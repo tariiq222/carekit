@@ -11,6 +11,7 @@ import { queryKeys } from "@/lib/query-keys"
 import { fetchServices } from "@/lib/api/services"
 import type { Service } from "@/lib/types/service"
 import { cn } from "@/lib/utils"
+import { formatPrice } from "@/lib/money"
 
 /* ─── Meta text builder ─── */
 
@@ -25,14 +26,13 @@ function buildMeta(service: Service, t: (key: string) => string): string {
   }
 
   // Price — runtime convention is halalas-as-Decimal (see docs/superpowers/
-  // tech-debt/price-units-*). The /services list + service-columns divide by
-  // 100 for display; this dialog must match or the operator sees 100× the real
-  // price. TODO(price-units): remove /100 once the halalas↔SAR unification
-  // migration lands (owner-only — touches payments/ZATCA).
+  // tech-debt/price-units-*). Use formatPrice() to convert/format so this
+  // dialog matches the /services list and service-columns. The eventual
+  // halalas↔SAR unification migration (owner-only — payments/ZATCA) will
+  // only need to update lib/money.ts.
   if (!service.hidePriceOnBooking) {
     const currency = t("bookings.wizard.step.service.currency")
-    const price = Number(service.price) / 100
-    parts.push(`${price.toFixed(2)} ${currency}`)
+    parts.push(`${formatPrice(Number(service.price))} ${currency}`)
   }
 
   return parts.join(" · ")

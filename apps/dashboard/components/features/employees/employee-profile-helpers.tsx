@@ -27,6 +27,7 @@ import { useLocale } from "@/components/locale-provider"
 import { Skeleton } from "@carekit/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
+import { sarToHalalas } from "@/lib/money"
 
 /* ─── ProfileSkeleton ─── */
 
@@ -196,9 +197,11 @@ interface PricingCardProps {
 export function PricingCard({ priceClinic, pricePhone, priceVideo, locale }: PricingCardProps) {
   const { t } = useLocale()
   const loc = locale === "ar" ? "ar" : "en"
-  // priceClinic/Phone/Video stored in SAR (not halalat), multiply by 100 for FormattedCurrency
+  // priceClinic/Phone/Video are stored in SAR (not halalas) on the employee
+  // record — promote to halalas via sarToHalalas() so FormattedCurrency
+  // (halalas-native) renders correctly.
   const fmt = (v: number | null) => v != null
-    ? <FormattedCurrency amount={v * 100} locale={loc} decimals={2} />
+    ? <FormattedCurrency amount={sarToHalalas(v)} locale={loc} decimals={2} />
     : "—"
   return (
     <Card>
