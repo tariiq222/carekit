@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import type { FormEvent } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -11,6 +11,14 @@ import { useLocale } from "@/components/locale-provider"
 import { performStaffPasswordReset } from "@/lib/api/auth"
 
 export function ResetPasswordForm() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordFormInner />
+    </Suspense>
+  )
+}
+
+function ResetPasswordFormInner() {
   const { t } = useLocale()
   const searchParams = useSearchParams()
   const router = useRouter()

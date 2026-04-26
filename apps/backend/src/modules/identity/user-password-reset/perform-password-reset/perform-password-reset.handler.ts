@@ -21,14 +21,17 @@ export class PerformPasswordResetHandler {
       where: { tokenSelector, tokenHash },
     });
 
+    // Single error message for all terminal states (not-found / consumed / expired)
+    // to prevent attackers from probing whether a userId already had a successful reset.
+    const REJECT_MSG = 'Invalid or expired reset link';
     if (!record) {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException(REJECT_MSG);
     }
     if (record.consumedAt) {
-      throw new UnauthorizedException('Token already used');
+      throw new UnauthorizedException(REJECT_MSG);
     }
     if (record.expiresAt.getTime() < Date.now()) {
-      throw new UnauthorizedException('Token expired');
+      throw new UnauthorizedException(REJECT_MSG);
     }
 
     const passwordHash = await this.passwords.hash(dto.newPassword);
