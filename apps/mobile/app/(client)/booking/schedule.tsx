@@ -47,7 +47,7 @@ export default function BookingScheduleScreen() {
     const out: Date[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 7; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       out.push(d);

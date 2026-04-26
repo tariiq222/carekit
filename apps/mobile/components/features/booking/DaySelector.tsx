@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
@@ -40,7 +40,12 @@ export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySele
         <Text style={[styles.monthTitle, { fontFamily: f700 }]}>{monthLabel}</Text>
         <View />
       </View>
-      <View style={[styles.daysRow, { flexDirection: dir.row }]}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.daysRow, { flexDirection: dir.row }]}
+        inverted={dir.isRTL}
+      >
         {days.map((d, i) => {
           const isActive = i === dayIdx;
           const dow = d.getDay();
@@ -80,7 +85,7 @@ export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySele
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
     </Glass>
   );
 }
@@ -94,9 +99,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   monthTitle: { fontSize: 13.5, color: sawaaColors.ink[900] },
-  daysRow: { justifyContent: 'space-between', gap: 6 },
+  daysRow: { gap: 8, paddingHorizontal: 4 },
   dayCell: {
-    flex: 1,
+    width: 60,
     paddingVertical: 10,
     borderRadius: 16,
     alignItems: 'center',
