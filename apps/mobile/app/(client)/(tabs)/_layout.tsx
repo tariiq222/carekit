@@ -38,13 +38,10 @@ export default function ClientTabsLayout() {
 
 type TabBarProps = BottomTabBarProps;
 
-const HIDDEN_ON = new Set(['chat']);
-
 function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
   const dir = useDir();
   const insets = useSafeAreaInsets();
-
-  if (HIDDEN_ON.has(state.routes[state.index]?.name ?? '')) return null;
+  const isChat = state.routes[state.index]?.name === 'chat';
 
   return (
     <Glass
@@ -54,6 +51,7 @@ function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
         styles.tabBar,
         SHADOW_RAISED,
         { bottom: insets.bottom + 14, left: 14, right: 14 },
+        isChat && { opacity: 0.7 },
       ]}
     >
       <View style={[styles.tabBarInner, { flexDirection: dir.row }]}>

@@ -64,6 +64,13 @@ export default function ResetPasswordScreen() {
     }
   }, [code, email, t]);
 
+  // Auto-submit OTP when 6 digits are entered
+  useEffect(() => {
+    if (code.length === 6 && step === 'otp' && !loading) {
+      onVerifyOtp();
+    }
+  }, [code, step, loading, onVerifyOtp]);
+
   const onResetPassword = useCallback(async () => {
     setError(null);
     if (newPassword.length < 8) {
@@ -148,6 +155,8 @@ export default function ResetPasswordScreen() {
                         }}
                         keyboardType="number-pad"
                         maxLength={6}
+                        textContentType="oneTimeCode"
+                        autoComplete="sms-otp"
                         style={[
                           styles.codeInput,
                           { fontFamily: f700 },

@@ -24,6 +24,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
 import { clientsService, type ClientRecord } from '@/services/clients';
+import { getStatusLabel } from '@/lib/status-helpers';
 import type { Booking } from '@/types/models';
 
 export default function DoctorClientRecordScreen() {
@@ -148,7 +149,7 @@ export default function DoctorClientRecordScreen() {
                         })}
                       </ThemedText>
                     </View>
-                    <StatusPill status={v.status} label={v.status} />
+                    <StatusPill status={v.status} label={t(getStatusLabel(v.status))} />
                   </View>
                 </ThemedCard>
               </Pressable>

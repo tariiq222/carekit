@@ -80,8 +80,15 @@ export default function ChatTabScreen() {
         style={styles.flex}
         keyboardVerticalOffset={0}
       >
+        {/* Swipe Hint */}
+        <View style={[styles.hintWrap, { paddingTop: insets.top + 6 }]}>
+          <Text style={[styles.hintText, { fontFamily: f400 }]}>
+            {t('chatbot.swipeHint')}
+          </Text>
+        </View>
+
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
+        <View style={[styles.header, { paddingTop: 4, flexDirection: dir.row }]}>
           <View style={styles.headerSide} />
           <View style={styles.headerMid}>
             <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
@@ -225,6 +232,16 @@ export default function ChatTabScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  hintWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 2,
+  },
+  hintText: {
+    fontSize: 10,
+    color: sawaaColors.ink[400],
+    opacity: 0.8,
+  },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 12,

@@ -29,6 +29,7 @@
     "createAccountSub": "أنشئ حسابك للبدء بحجز مواعيدك",
     "otpTitle": "رمز التحقق",
     "otpSub": "أدخل الرمز المرسل إلى بريدك الإلكتروني",
+    "otpBoxLabel": "خانة الرمز {{index}} من {{total}}",
     "otpSentTo": "تم إرسال الرمز إلى",
     "resendOtp": "إعادة إرسال الرمز",
     "resendIn": "إعادة الإرسال خلال",
@@ -360,7 +361,8 @@
     "errorSending": "فشل إرسال الرسالة. حاول مرة أخرى.",
     "maxMessages": "وصلت الحد الأقصى لعدد الرسائل في هذه الجلسة.",
     "bookingConfirmed": "تم حجز الموعد بنجاح!",
-    "cancellationSubmitted": "تم إرسال طلب الإلغاء لمراجعة الإدارة."
+    "cancellationSubmitted": "تم إرسال طلب الإلغاء لمراجعة الإدارة.",
+    "swipeHint": "اسحبي للرجوع →"
   },
   "availability": {
     "title": "إدارة التوفر",

@@ -29,6 +29,7 @@
     "createAccountSub": "Create your account to start booking appointments",
     "otpTitle": "Verification Code",
     "otpSub": "Enter the code sent to your email",
+    "otpBoxLabel": "OTP digit {{index}} of {{total}}",
     "otpSentTo": "Code sent to",
     "resendOtp": "Resend Code",
     "resendIn": "Resend in",
@@ -360,7 +361,8 @@
     "errorSending": "Failed to send message. Please try again.",
     "maxMessages": "You have reached the maximum number of messages for this session.",
     "bookingConfirmed": "Appointment booked successfully!",
-    "cancellationSubmitted": "Cancellation request submitted for admin review."
+    "cancellationSubmitted": "Cancellation request submitted for admin review.",
+    "swipeHint": "Swipe to go back ←"
   },
   "availability": {
     "title": "Manage Availability",

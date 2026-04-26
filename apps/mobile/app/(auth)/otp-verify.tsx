@@ -58,6 +58,13 @@ export default function OtpVerifyScreen() {
     return () => clearInterval(timer);
   }, [countdown]);
 
+  // Auto-submit when all digits are filled
+  useEffect(() => {
+    if (otp.every((digit) => digit !== '') && !loading) {
+      handleVerify();
+    }
+  }, [otp, handleVerify, loading]);
+
   const sendOtp = useCallback(async () => {
     if (!email) return;
     try {
@@ -236,13 +243,17 @@ export default function OtpVerifyScreen() {
                 keyboardType="number-pad"
                 maxLength={1}
                 selectTextOnFocus
+                textContentType="oneTimeCode"
+                autoComplete="sms-otp"
+                accessibilityLabel={t('auth.otpBoxLabel', {
+                  index: index + 1,
+                  total: OTP_LENGTH,
+                })}
                 style={[
                   styles.otpBox,
                   {
                     backgroundColor: theme.colors.surfaceHigh,
-                    borderColor: digit
-                      ? '#1D4ED866'
-                      : 'transparent',
+                    borderColor: digit ? '#1D4ED866' : 'transparent',
                     color: theme.colors.textPrimary,
                   },
                 ]}
