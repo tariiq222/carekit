@@ -319,6 +319,8 @@
         width: 600px;
         height: 600px;
         background: radial-gradient(circle, var(--blob-primary, var(--primary-ultra-light)) 0%, transparent 70%);
+        will-change: transform;
+        transform: translateZ(0);
     }
     body::after {
         bottom: -100px;
@@ -326,6 +328,8 @@
         width: 500px;
         height: 500px;
         background: radial-gradient(circle, var(--blob-accent, var(--accent-ultra-light)) 0%, transparent 70%);
+        will-change: transform;
+        transform: translateZ(0);
     }
 }
 

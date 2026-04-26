@@ -4,7 +4,7 @@ import { MobileSidebarTrigger } from "@/components/mobile-sidebar-trigger"
 import { SidebarInset, SidebarProvider } from "@carekit/ui"
 import { AuthGate } from "@/components/providers/auth-gate"
 import { CommandPalette } from "@/components/features/command-palette"
-import { BillingProvider } from "@/lib/billing/billing-context"
+import { BillingShell } from "@/components/billing-shell"
 
 export default function DashboardLayout({
   children,
@@ -13,7 +13,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGate>
-      <BillingProvider>
+      <BillingShell>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="min-h-0 relative z-[1]">
@@ -25,7 +25,7 @@ export default function DashboardLayout({
           </SidebarInset>
           <MobileSidebarTrigger />
         </SidebarProvider>
-      </BillingProvider>
+      </BillingShell>
     </AuthGate>
   )
 }

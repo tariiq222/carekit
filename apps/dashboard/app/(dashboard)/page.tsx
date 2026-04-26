@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
@@ -57,28 +58,33 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-12">
       {/* Group 1: Overview — greeting + stats + alerts */}
-      <section className="flex flex-col gap-6">
-        <GreetingHeader
-          userName={userName}
-          dateLabel={dateLabel}
-          bookingsCount={0}
-        />
+      <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-muted" />}>
+        <section className="flex flex-col gap-6">
+          <GreetingHeader
+            userName={userName}
+            dateLabel={dateLabel}
+            bookingsCount={0}
+          />
 
-        <DashboardStats stats={dashboardStats} />
-        <AttentionAlerts
-          pendingPayments={dashboardStats?.pendingPayments ?? 0}
-          cancelRequests={dashboardStats?.cancelRequests ?? 0}
-        />
-      </section>
+          <DashboardStats stats={dashboardStats} />
+          <AttentionAlerts
+            pendingPayments={dashboardStats?.pendingPayments ?? 0}
+            cancelRequests={dashboardStats?.cancelRequests ?? 0}
+          />
+        </section>
+      </Suspense>
 
       {/* Group 2: Quick Actions */}
-      <section className="flex flex-col gap-4">
-        <SectionHeader icon={FlashIcon} title={t("dashboard.quickActions")} />
-        <QuickActions />
-      </section>
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
+        <section className="flex flex-col gap-4">
+          <SectionHeader icon={FlashIcon} title={t("dashboard.quickActions")} />
+          <QuickActions />
+        </section>
+      </Suspense>
 
       {/* Group 3: Operational — schedule + activity + charts */}
-      <section className="flex flex-col gap-5">
+      <Suspense fallback={<div className="h-[400px] animate-pulse rounded-xl bg-muted" />}>
+        <section className="flex flex-col gap-5">
         <SectionHeader
           icon={Analytics01Icon}
           title={t("dashboard.operations")}
@@ -113,7 +119,8 @@ export default function DashboardPage() {
           <RevenueChart />
           <RecentPayments />
         </div>
-      </section>
+        </section>
+      </Suspense>
     </div>
   )
 }

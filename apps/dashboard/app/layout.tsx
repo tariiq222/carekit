@@ -12,9 +12,10 @@ import { LocaleProvider } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 
 const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["latin", "arabic"],
+  subsets: ["arabic"],
   variable: "--font-arabic",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 })
 
 export default function RootLayout({

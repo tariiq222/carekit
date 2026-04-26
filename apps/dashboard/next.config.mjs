@@ -7,6 +7,18 @@ const nextConfig = {
     NEXT_PUBLIC_DEV_EMAIL: isProduction ? "" : (process.env.NEXT_PUBLIC_DEV_EMAIL ?? ""),
     NEXT_PUBLIC_DEV_PASSWORD: isProduction ? "" : (process.env.NEXT_PUBLIC_DEV_PASSWORD ?? ""),
   },
+  async headers() {
+    return [
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/_next/image",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
+      },
+    ]
+  },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
     // Strip /api/proxy prefix then forward to backend
