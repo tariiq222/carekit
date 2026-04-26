@@ -14,6 +14,7 @@ import { Skeleton } from "@carekit/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { useClient } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
+import { formatLocaleDate } from "@/lib/date"
 
 interface ClientDetailSheetProps {
   clientId: string | null
@@ -87,7 +88,7 @@ export function ClientDetailSheet({
                   />
                   <DetailRow
                     label={t("clients.detail.joined")}
-                    value={new Date(client.createdAt).toLocaleDateString()}
+                    value={formatLocaleDate(client.createdAt, locale)}
                     numeric
                   />
                 </DetailSection>

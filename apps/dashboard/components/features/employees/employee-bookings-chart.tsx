@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { fetchBookings } from "@/lib/api/bookings"
+import { formatPrice } from "@/lib/money"
 import { useLocale } from "@/components/locale-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
@@ -85,8 +86,8 @@ function fmtDate(dateStr: string, locale: string, period: Period): string {
   return new Date(dateStr).toLocaleDateString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US", opts)
 }
 
-function fmtRevenue(halalat: number, locale: string): string {
-  return (halalat / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })
+function fmtRevenue(halalat: number, _locale: string): string {
+  return formatPrice(halalat, { decimals: 0, locale: "en" })
 }
 
 /* ─── Main ─── */

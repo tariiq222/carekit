@@ -14,6 +14,13 @@ import {
 } from "@carekit/ui"
 
 /* ─── Saudi Banks — full SAMA licensed list ─── */
+/**
+ * EXCEPTION (semantic-tokens-only rule): the `color` field below is each
+ * bank's official external brand color (SAMA-licensed institutions). These
+ * render the fallback chip when the favicon CDN is unreachable, so they
+ * MUST stay as literal hex — they are not theme surfaces and must not
+ * follow the per-tenant branding tokens.
+ */
 export interface SaudiBank {
   id: string
   nameAr: string

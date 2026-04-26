@@ -21,6 +21,7 @@ import {
   useEmployeeVacations,
 } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
+import { formatLocaleDate } from "@/lib/date"
 import { DAY_NAME_KEYS } from "./create/schedule-types"
 import { EmployeeServicesSection } from "./employee-services-section"
 
@@ -122,9 +123,9 @@ export function EmployeeVacationsSection({ employeeId }: WithId) {
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium tabular-nums text-foreground">
-                    {new Date(v.startDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                    {formatLocaleDate(v.startDate, locale)}
                     {" – "}
-                    {new Date(v.endDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                    {formatLocaleDate(v.endDate, locale)}
                   </span>
                   {v.reason && (
                     <span className="text-xs text-muted-foreground">{v.reason}</span>

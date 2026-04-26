@@ -7,6 +7,17 @@ import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { isValidHex, contrastRatio, pickForeground } from "@/lib/color-utils"
 
+/**
+ * EXCEPTION (semantic-tokens-only rule): WCAG contrast computation requires
+ * concrete hex inputs — `contrastRatio()` cannot resolve CSS custom
+ * properties. These two constants are *math defaults* used only when the
+ * tenant has not yet picked a background color in the wizard. They never
+ * paint the surface (which uses `var(--background)`); they only feed the
+ * preview's score calculation. Keep them literal.
+ */
+const FALLBACK_PREVIEW_BG_HEX = "#f8f9fa"
+const PREVIEW_TEXT_BLACK_HEX = "#1a1a1a"
+
 function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
   const pass = ratio >= 4.5
   const large = ratio >= 3
@@ -122,7 +133,7 @@ export function BrandingColorsSection({
                 <div className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium shadow-sm" style={{ background: colorPrimary, color: pickForeground(colorPrimary) }}>
                   {organizationNameEn || organizationNameAr || "CareKit"}
                 </div>
-                <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} />
+                <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : FALLBACK_PREVIEW_BG_HEX)} />
               </div>
 
               {isValidHex(colorAccent) && (
@@ -130,13 +141,13 @@ export function BrandingColorsSection({
                   <div className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium" style={{ background: colorAccent, color: pickForeground(colorAccent) }}>
                     {t("branding.preview.badge")}
                   </div>
-                  <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.accentOnBg")} />
+                  <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : FALLBACK_PREVIEW_BG_HEX)} label={t("branding.preview.accentOnBg")} />
                 </div>
               )}
 
               <div className="flex items-center gap-3">
                 <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{t("branding.preview.primaryText")}</p>
-                <ContrastBadge ratio={contrastRatio("#1a1a1a", isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label={t("branding.preview.textOnBg")} />
+                <ContrastBadge ratio={contrastRatio(PREVIEW_TEXT_BLACK_HEX, isValidHex(colorBackground) ? colorBackground : FALLBACK_PREVIEW_BG_HEX)} label={t("branding.preview.textOnBg")} />
               </div>
             </div>
           </div>

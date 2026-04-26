@@ -1,4 +1,5 @@
 import { Badge } from "@carekit/ui"
+import { formatLocaleDate } from "@/lib/date"
 import type { ClientBookingPreview } from "@/lib/types/client"
 
 const STATUS_STYLES: Record<string, string> = {
@@ -30,7 +31,7 @@ export function ClientBookingRow({ booking, locale, t }: Props) {
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         <span className="font-numeric text-xs text-muted-foreground">
-          {new Date(booking.date).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+          {formatLocaleDate(booking.date, locale)}
         </span>
         <Badge variant="outline" className={statusStyle}>
           {t(`clients.dialog.status.${booking.status}`) || booking.status}

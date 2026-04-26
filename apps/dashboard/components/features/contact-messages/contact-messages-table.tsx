@@ -7,6 +7,7 @@ import { Badge } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useContactMessages, useUpdateContactMessageStatus } from "@/hooks/use-contact-messages"
 import { ErrorBanner } from "@/components/features/error-banner"
+import { formatLocaleDate } from "@/lib/date"
 import type { ContactMessageStatus } from "@/lib/api/contact-messages"
 import { useState } from "react"
 
@@ -20,7 +21,6 @@ const STATUS_OPTIONS: { value: ContactMessageStatus | "ALL"; labelKey: string }[
 
 export function ContactMessagesTable() {
   const { locale, t } = useLocale()
-  const isAr = locale === "ar"
   const [statusFilter, setStatusFilter] = useState<ContactMessageStatus | "ALL">("ALL")
 
   const { data, isLoading, error } = useContactMessages({
@@ -81,7 +81,7 @@ export function ContactMessagesTable() {
                   <Badge variant={msg.status === "NEW" ? "default" : "secondary"}>{msg.status}</Badge>
                 </TableCell>
                 <TableCell className="text-sm tabular-nums">
-                  {new Date(msg.createdAt).toLocaleDateString(isAr ? "ar-SA" : "en-US", {
+                  {formatLocaleDate(msg.createdAt, locale, {
                     year: "numeric",
                     month: "short",
                     day: "numeric",

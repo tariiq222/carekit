@@ -1,5 +1,6 @@
 import { Badge } from "@carekit/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
+import { formatLocaleDate } from "@/lib/date"
 import type { ClientBookingPreview } from "@/lib/types/client"
 
 interface Props {
@@ -21,7 +22,7 @@ export function ClientInvoiceRow({ booking, locale, t }: Props) {
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="text-sm font-medium text-foreground truncate">{serviceName}</span>
         <span className="font-numeric text-xs text-muted-foreground">
-          {new Date(booking.date).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+          {formatLocaleDate(booking.date, locale)}
         </span>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">

@@ -36,6 +36,7 @@ import {
   useZatcaMutations,
 } from "@/hooks/use-zatca"
 import { useLocale } from "@/components/locale-provider"
+import { formatLocaleDate } from "@/lib/date"
 import {
   zatcaOnboardSchema,
   type ZatcaOnboardFormData,
@@ -53,7 +54,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function ZatcaTab() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { data: config, isLoading: configLoading } = useZatcaConfig()
   const { data: status, isLoading: statusLoading } = useOnboardingStatus()
   const { onboardMut } = useZatcaMutations()
@@ -250,9 +251,7 @@ export function ZatcaTab() {
                       <CardContent className="pt-3 pb-3">
                         <InfoRow
                           label={t("zatca.onboardedAt")}
-                          value={new Date(
-                            status.onboardedAt
-                          ).toLocaleDateString("ar-SA", {
+                          value={formatLocaleDate(status.onboardedAt, locale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",

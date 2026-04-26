@@ -16,6 +16,7 @@ import {
 } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useSmsDeliveries } from "@/hooks/use-sms-config"
+import { formatLocaleDate } from "@/lib/date"
 import type { SmsDeliveryStatus } from "@/lib/types/sms"
 
 function StatusBadge({ status }: { status: SmsDeliveryStatus }) {
@@ -43,19 +44,16 @@ function StatusBadge({ status }: { status: SmsDeliveryStatus }) {
 
 export function SmsDeliveryLogTable() {
   const { locale, t } = useLocale()
-  const isAr = locale === "ar"
   const { deliveries, loading } = useSmsDeliveries()
 
   const format = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleDateString(isAr ? "ar-SA" : "en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "—"
+    formatLocaleDate(iso, locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
 
   return (
     <Card>
