@@ -47,7 +47,7 @@ describe('VerifyOtpHandler', () => {
     await expect(handler.execute({
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
-      code: '123456',
+      code: '1234',
       purpose: OtpPurpose.GUEST_BOOKING,
       organizationId: 'org-B',
     })).rejects.toThrow('Invalid or expired OTP code');
@@ -60,7 +60,7 @@ describe('VerifyOtpHandler', () => {
   });
 
   it('accepts NULL/NULL (legacy/platform flow)', async () => {
-    const correctCode = '123456';
+    const correctCode = '1234';
     const correctHash = await bcrypt.hash(correctCode, 10);
     prismaMock.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',
@@ -95,7 +95,7 @@ describe('VerifyOtpHandler', () => {
 
   it('accepts org-A from org-A', async () => {
     const orgA = 'org-A';
-    const correctCode = '123456';
+    const correctCode = '1234';
     const correctHash = await bcrypt.hash(correctCode, 10);
     prismaMock.otpCode.findFirst.mockResolvedValue({
       id: 'otp-1',

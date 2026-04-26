@@ -9,7 +9,7 @@ import { CAPTCHA_VERIFIER, type CaptchaVerifier } from '../../comms/contact-mess
 import { RequestOtpDto } from './request-otp.dto';
 
 const OTP_EXPIRY_MINUTES = 10;
-const MAX_OTP_CODE = 999999;
+const MAX_OTP_CODE = 9999;
 const MAX_REQUESTS_PER_IDENTIFIER_PER_HOUR = 5;
 
 export type RequestOtpCommand = RequestOtpDto;
@@ -58,7 +58,7 @@ export class RequestOtpHandler {
         throw new HttpException('Too many OTP requests for this identifier', HttpStatus.TOO_MANY_REQUESTS);
       }
 
-      const rawCode = Math.floor(Math.random() * MAX_OTP_CODE).toString().padStart(6, '0');
+      const rawCode = Math.floor(Math.random() * MAX_OTP_CODE).toString().padStart(4, '0');
       const codeHash = await bcrypt.hash(rawCode, 10);
       const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 

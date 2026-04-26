@@ -32,17 +32,17 @@ describe('EmailChannelAdapter', () => {
   });
 
   it('should send email via smtp', async () => {
-    await adapter.send('test@example.com', '123456');
+    await adapter.send('test@example.com', '1234');
     expect(smtp.sendMail).toHaveBeenCalledWith(
       'test@example.com',
       'رمز التحقق / Verification Code',
-      expect.stringContaining('123456'),
+      expect.stringContaining('1234'),
     );
   });
 
   it('should not throw when smtp is unavailable', async () => {
     smtp.isAvailable.mockReturnValue(false);
-    await expect(adapter.send('test@example.com', '123456')).resolves.not.toThrow();
+    await expect(adapter.send('test@example.com', '1234')).resolves.not.toThrow();
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 });
@@ -69,17 +69,17 @@ describe('SmsChannelAdapter', () => {
   });
 
   it('sends SMS via AuthenticaClient', async () => {
-    await adapter.send('+966500000000', '123456');
+    await adapter.send('+966500000000', '1234');
     expect(authentica.sendOtp).toHaveBeenCalledWith({
       channel: 'SMS',
       identifier: '+966500000000',
-      code: '123456',
+      code: '1234',
     });
   });
 
   it('skips when Authentica is not configured', async () => {
     authentica.isConfigured.mockReturnValue(false);
-    await adapter.send('+966500000000', '123456');
+    await adapter.send('+966500000000', '1234');
     expect(authentica.sendOtp).not.toHaveBeenCalled();
   });
 });

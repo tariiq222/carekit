@@ -149,7 +149,7 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
 
       const res = await req
         .post('/public/otp/verify')
-        .send({ identifier: id, channel: 'EMAIL', purpose: 'GUEST_BOOKING', code: '000000' });
+        .send({ identifier: id, channel: 'EMAIL', purpose: 'GUEST_BOOKING', code: '0000' });
 
       expect(res.status).toBe(401);
     });
