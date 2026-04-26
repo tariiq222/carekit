@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW } from '@/theme/glass';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useAppDispatch } from '@/hooks/use-redux';
@@ -118,9 +118,9 @@ export default function RegisterScreen() {
             style={styles.backBtn}
           >
             {dir.isRTL ? (
-              <ChevronRight size={22} color={C.deepTeal} strokeWidth={1.75} />
+              <ChevronRight size={22} color={sawaaColors.teal[700]} strokeWidth={1.75} />
             ) : (
-              <ChevronLeft size={22} color={C.deepTeal} strokeWidth={1.75} />
+              <ChevronLeft size={22} color={sawaaColors.teal[700]} strokeWidth={1.75} />
             )}
           </Glass>
 
@@ -141,7 +141,7 @@ export default function RegisterScreen() {
             {t('auth.createAccountSub')}
           </Text>
 
-          <Glass variant="regular" radius={RADII.card} style={[styles.form, SHADOW, { marginTop: 24 }]}>
+          <Glass variant="regular" radius={sawaaTokens.radius.lg} style={[styles.form, { marginTop: 24 }]}>
             <View style={styles.formInner}>
               <View style={[styles.row, { flexDirection: dir.row }]}>
                 <View style={styles.half}>
@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignSelf: 'flex-start',
   },
-  title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
+  title: { fontSize: 32, fontWeight: '800', color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20 },
   form: { padding: 24 },
   formInner: { gap: 16 },
   row: { gap: 12 },
   half: { flex: 1 },
   loginRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
-  loginText: { fontSize: 14, color: C.subtle },
-  loginLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  loginText: { fontSize: 14, color: sawaaColors.ink[500] },
+  loginLink: { fontSize: 14, fontWeight: '700', color: sawaaColors.teal[700] },
 });
