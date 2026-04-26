@@ -106,7 +106,13 @@ export class RegisterTenantHandler {
     }
 
     // Set CLS tenant context so StartSubscriptionHandler.execute() can call requireOrganizationId()
-    this.tenant.set(result.orgId);
+    this.tenant.set({
+      organizationId: result.orgId,
+      membershipId: result.membershipId,
+      id: result.userId,
+      role: 'ADMIN',
+      isSuperAdmin: false,
+    });
 
     await this.startSubscription.execute({ planId: plan.id, billingCycle: 'MONTHLY' });
 
