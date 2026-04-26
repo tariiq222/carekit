@@ -88,6 +88,10 @@
   },
   "home": {
     "greeting": "Hello",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Good night",
     "upcomingAppointment": "Your Next Appointment",
     "noUpcoming": "No upcoming appointments",
     "bookNow": "Book your first appointment",

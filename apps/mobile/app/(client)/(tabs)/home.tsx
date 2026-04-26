@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text } from 'react-n
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
@@ -20,6 +21,7 @@ import { TherapistsRow } from '@/components/features/home/TherapistsRow';
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t } = useTranslation();
   const { t: termT } = useTerminology(VERTICAL_SLUG);
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
@@ -32,6 +34,14 @@ export default function HomeScreen() {
     day: 'numeric',
     month: 'long',
   });
+
+  const getGreeting = (hour: number) => {
+    if (hour >= 5 && hour < 12) return t('home.greetingMorning');
+    if (hour >= 12 && hour < 17) return t('home.greetingAfternoon');
+    if (hour >= 17 && hour <= 23) return t('home.greetingEvening');
+    return t('home.greetingNight');
+  };
+  const greeting = getGreeting(new Date().getHours());
 
   const homeQuery = useHome();
   const therapistsQuery = useTherapists();
@@ -74,7 +84,7 @@ export default function HomeScreen() {
             {today}
           </Text>
           <Text style={[styles.greeting, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? `صباح الخير، ${firstName}` : `Good morning, ${firstName}`}
+            {`${greeting}، ${firstName}`}
           </Text>
         </Animated.View>
 

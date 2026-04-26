@@ -87,7 +87,11 @@
     "records": "سجلاتي"
   },
   "home": {
-    "greeting": "أهلاً",
+    "greeting": "مرحباً",
+    "greetingMorning": "صباح الخير",
+    "greetingAfternoon": "مساء الخير",
+    "greetingEvening": "مساء الخير",
+    "greetingNight": "تصبح على خير",
     "upcomingAppointment": "موعدك القادم",
     "noUpcoming": "لا توجد مواعيد قادمة",
     "bookNow": "احجز موعدك الأول",
