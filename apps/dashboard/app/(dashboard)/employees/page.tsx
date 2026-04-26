@@ -26,7 +26,7 @@ function EmployeesPageInner() {
   // "الأطباء"/"Doctors" (medical), "المصففون"/"Stylists" (salon),
   // "المدربون"/"Trainers" (fitness), "المستشارون"/"Consultants" (consulting).
   const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
-  const titleLabel = term("employee.plural")
+  const titleLabel = term("employee.plural", t("nav.employees"))
 
   const {
     employees,
