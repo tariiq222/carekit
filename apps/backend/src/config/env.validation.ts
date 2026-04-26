@@ -116,4 +116,94 @@ export const envValidationSchema = Joi.object({
   PLATFORM_DEFAULT_PLAN_SLUG: Joi.string()
     .pattern(/^[A-Z][A-Z0-9_]{1,31}$/)
     .default('BASIC'),
-}).unknown(true);
+
+  // Dedicated OTP-token secret. Falls back to JWT_ACCESS_SECRET in dev with a
+  // warning; production REQUIRES a distinct secret so a leaked OTP token
+  // cannot forge an access token.
+  JWT_OTP_SECRET: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(16).required(),
+    otherwise: Joi.string().min(16).allow('').optional(),
+  }),
+
+  // Client refresh-token TTL (mobile + website). String like '7d' / '30d'.
+  JWT_CLIENT_REFRESH_TTL: Joi.string().default('7d'),
+
+  // Public URLs used in emails/notifications/redirects. Must be HTTPS in prod.
+  DASHBOARD_PUBLIC_URL: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().uri({ scheme: ['https'] }).required(),
+    otherwise: Joi.string().uri().allow('').optional(),
+  }),
+  PUBLIC_WEBSITE_URL: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().uri({ scheme: ['https'] }).required(),
+    otherwise: Joi.string().uri().allow('').optional(),
+  }),
+
+  // Super-admin panel (SaaS-05b) — AdminHostGuard accepts only these Host headers.
+  // Required in prod so super-admin endpoints aren't reachable from arbitrary hosts.
+  ADMIN_HOSTS: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().required(),
+    otherwise: Joi.string().allow('').default('localhost:5104,localhost:5100'),
+  }),
+
+  // Authentica platform OTP — REQUIRED in prod since OTP is the primary mobile/website
+  // login mechanism. https://portal.authentica.sa/settings/apikeys/
+  AUTHENTICA_API_KEY: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(8).required(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
+  AUTHENTICA_BASE_URL: Joi.string().uri().default('https://api.authentica.sa'),
+  AUTHENTICA_DEFAULT_TEMPLATE_ID: Joi.string().default('1'),
+
+  // CAPTCHA (auth bot protection on OTP endpoints).
+  // 'noop' is the dev default; production REQUIRES 'hcaptcha' or 'turnstile'.
+  CAPTCHA_PROVIDER: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().valid('hcaptcha', 'turnstile').required(),
+    otherwise: Joi.string().valid('noop', 'hcaptcha', 'turnstile').default('noop'),
+  }),
+  HCAPTCHA_SECRET: Joi.when('CAPTCHA_PROVIDER', {
+    is: 'hcaptcha',
+    then: Joi.string().min(8).required(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
+
+  // ZATCA API config — only consulted when ZATCA_ENABLED=true.
+  ZATCA_API_URL: Joi.string().uri().allow('').optional(),
+  ZATCA_API_KEY: Joi.string().allow('').optional(),
+})
+  .unknown(true)
+  // Production safety net: refuse to boot if any sensitive value is still a
+  // dev placeholder. The strings here are the literal dev defaults committed
+  // to .env.example. If any of them slip into production, fail fast — a
+  // running app with a known JWT secret is far worse than a non-running app.
+  .custom((value, helpers) => {
+    if (value.NODE_ENV !== 'production') return value;
+    const placeholderSubstrings = ['change-me', 'CHANGE_ME', 'dev-', 'sk_test_'];
+    const sensitiveKeys = [
+      'JWT_ACCESS_SECRET',
+      'JWT_REFRESH_SECRET',
+      'JWT_OTP_SECRET',
+      'JWT_CLIENT_ACCESS_SECRET',
+      'SMS_PROVIDER_ENCRYPTION_KEY',
+      'ZOOM_PROVIDER_ENCRYPTION_KEY',
+      'MOYASAR_PLATFORM_SECRET_KEY',
+      'MOYASAR_PLATFORM_WEBHOOK_SECRET',
+      'HCAPTCHA_SECRET',
+      'AUTHENTICA_API_KEY',
+    ];
+    for (const key of sensitiveKeys) {
+      const v = value[key];
+      if (typeof v !== 'string' || v.length === 0) continue;
+      if (placeholderSubstrings.some((p) => v.includes(p))) {
+        return helpers.error('any.invalid', {
+          message: `${key} contains a dev placeholder and must be replaced before running in production`,
+        });
+      }
+    }
+    return value;
+  }, 'placeholder rejection in production');

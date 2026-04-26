@@ -1,13 +1,18 @@
 # Production overrides for CareKit
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
-# Requires: .env.prod file with all secrets
+# Requires: .env.prod populated from .env.prod.example with real secrets.
+#
+# Env-var keys here mirror the Joi schema in apps/backend/src/config/env.validation.ts.
+# If a key is renamed in the schema, this file MUST follow — the backend aborts boot
+# on unknown/invalid required vars.
 
 services:
   migrate:
     build:
       context: ..
       dockerfile: apps/backend/Dockerfile
-    command: ["sh", "-c", "npx prisma migrate deploy"]
+    container_name: carekit-migrate
+    command: ["sh", "-c", "npx prisma migrate deploy --schema=prisma/schema"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
@@ -18,43 +23,179 @@ services:
   backend:
     restart: unless-stopped
     environment:
+      # Runtime
       NODE_ENV: production
       PORT: "5100"
+
+      # Database (Prisma)
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      JWT_EXPIRATION: 15m
-      JWT_REFRESH_EXPIRATION: 7d
+
+      # Redis (BullMQ + cache + token blacklist)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: "0"
+
+      # MinIO (object storage)
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
-      MINIO_BUCKET: carekit
-      BACKEND_URL: ${BACKEND_URL}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
-      MOYASAR_API_KEY: ${MOYASAR_API_KEY}
-      MOYASAR_WEBHOOK_SECRET: ${MOYASAR_WEBHOOK_SECRET}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT}
-      MAIL_USER: ${MAIL_USER}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_FROM: ${MAIL_FROM}
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID}
-      ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID}
-      ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET}
+      MINIO_BUCKET: ${MINIO_BUCKET:-carekit}
+      MINIO_USE_SSL: "${MINIO_USE_SSL:-false}"
+
+      # CORS — comma-separated, no trailing slash
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      # Sentry — optional
+      SENTRY_DSN: ${SENTRY_DSN:-}
+
+      # ZATCA — keep 'false' until UBL 2.1 builder is compliance-reviewed
+      ZATCA_ENABLED: "${ZATCA_ENABLED:-false}"
+      ZATCA_API_URL: ${ZATCA_API_URL:-}
+      ZATCA_API_KEY: ${ZATCA_API_KEY:-}
+
+      # JWT (Identity BC)
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-30d}
+      JWT_OTP_SECRET: ${JWT_OTP_SECRET}
+
+      # Client JWT — separate namespace for mobile/website clients
+      JWT_CLIENT_ACCESS_SECRET: ${JWT_CLIENT_ACCESS_SECRET}
+      JWT_CLIENT_ACCESS_TTL: ${JWT_CLIENT_ACCESS_TTL:-7d}
+
+      # SMTP (Comms BC)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+
+      # FCM (push notifications)
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_CLIENT_EMAIL: ${FCM_CLIENT_EMAIL:-}
+      FCM_PRIVATE_KEY: ${FCM_PRIVATE_KEY:-}
+
+      # OpenAI / OpenRouter (AI BC)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_CHAT_MODEL: ${OPENROUTER_CHAT_MODEL:-anthropic/claude-3.5-haiku}
+
+      # Tenant Moyasar (per-tenant booking payments)
+      MOYASAR_API_KEY: ${MOYASAR_API_KEY:-}
+      MOYASAR_WEBHOOK_SECRET: ${MOYASAR_WEBHOOK_SECRET:-}
+
+      # Multi-tenancy
+      TENANT_ENFORCEMENT: "${TENANT_ENFORCEMENT:-strict}"
+      DEFAULT_ORGANIZATION_ID: ${DEFAULT_ORGANIZATION_ID:-00000000-0000-0000-0000-000000000001}
+
+      # Per-tenant SMS + Zoom credential encryption — both REQUIRED at boot
+      SMS_PROVIDER_ENCRYPTION_KEY: ${SMS_PROVIDER_ENCRYPTION_KEY}
+      ZOOM_PROVIDER_ENCRYPTION_KEY: ${ZOOM_PROVIDER_ENCRYPTION_KEY}
+      SMS_WEBHOOK_URL_BASE: ${SMS_WEBHOOK_URL_BASE:-}
+
+      # Platform Moyasar (SaaS-04 — charges clinics for their subscription)
+      MOYASAR_PLATFORM_SECRET_KEY: ${MOYASAR_PLATFORM_SECRET_KEY:-}
+      MOYASAR_PLATFORM_WEBHOOK_SECRET: ${MOYASAR_PLATFORM_WEBHOOK_SECRET:-}
+      SAAS_TRIAL_DAYS: "${SAAS_TRIAL_DAYS:-14}"
+      SAAS_GRACE_PERIOD_DAYS: "${SAAS_GRACE_PERIOD_DAYS:-2}"
+      BILLING_CRON_ENABLED: "${BILLING_CRON_ENABLED:-false}"
+      PLATFORM_DEFAULT_PLAN_SLUG: ${PLATFORM_DEFAULT_PLAN_SLUG:-BASIC}
+
+      # Super-admin panel (SaaS-05b)
+      ADMIN_HOSTS: ${ADMIN_HOSTS}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
+      DASHBOARD_PUBLIC_URL: ${DASHBOARD_PUBLIC_URL}
+
+      # Authentica (platform OTP)
+      AUTHENTICA_API_KEY: ${AUTHENTICA_API_KEY}
+      AUTHENTICA_BASE_URL: ${AUTHENTICA_BASE_URL:-https://api.authentica.sa}
+      AUTHENTICA_DEFAULT_TEMPLATE_ID: ${AUTHENTICA_DEFAULT_TEMPLATE_ID:-1}
+
+      # CAPTCHA (auth bot protection)
+      CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-hcaptcha}
+      HCAPTCHA_SECRET: ${HCAPTCHA_SECRET}
+
+      # Public site URL (used in emails/notifications)
+      PUBLIC_WEBSITE_URL: ${PUBLIC_WEBSITE_URL}
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     expose:
       - "5100"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5100/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: apps/dashboard/Dockerfile
+    container_name: carekit-dashboard
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5103"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "5103"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5103/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  admin:
+    build:
+      context: ..
+      dockerfile: apps/admin/Dockerfile
+    container_name: carekit-admin
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5104"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "5104"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5104/ >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -73,19 +214,21 @@ services:
     build:
       context: ..
       dockerfile: apps/website/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: carekit-website
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: "5104"
-      NEXT_PUBLIC_API_URL: http://backend:5100
+      PORT: "5105"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     depends_on:
       backend:
         condition: service_healthy
     expose:
-      - "5104"
+      - "5105"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:5104/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5105/ >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -227,6 +370,10 @@ services:
       - nginx_logs:/var/log/nginx
     depends_on:
       backend:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+      admin:
         condition: service_healthy
       website:
         condition: service_healthy

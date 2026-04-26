@@ -31,7 +31,7 @@ RUN npm run build --workspace=website
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=5104
+ENV PORT=5105
 ENV HOSTNAME=0.0.0.0
 
 # Standalone output includes a minimal node_modules + server.js.
@@ -40,5 +40,5 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=builder /app/apps/website/.next/standalone ./
 COPY --from=builder /app/apps/website/.next/static ./apps/website/.next/static
 
-EXPOSE 5104
+EXPOSE 5105
 CMD ["node", "apps/website/server.js"]
