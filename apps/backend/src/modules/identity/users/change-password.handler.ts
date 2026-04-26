@@ -19,6 +19,11 @@ export class ChangePasswordHandler {
     const user = await this.prisma.user.findUnique({ where: { id: cmd.userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    // passwordHash became nullable when mobile OTP-only auth landed — a passwordless
+    // mobile-first user reaching this dashboard endpoint must set a password first
+    // (different flow), not change one.
+    if (!user.passwordHash) throw new BadRequestException('Current password is incorrect');
+
     const isValid = await this.password.verify(cmd.currentPassword, user.passwordHash);
     if (!isValid) throw new BadRequestException('Current password is incorrect');
 
