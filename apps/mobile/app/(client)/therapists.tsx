@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useMemo, useState, useCallback } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Search, Star } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
@@ -11,6 +12,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useTherapists } from '@/hooks/queries';
+import { useReduceMotion } from '@/hooks/useA11y';
 
 const GRADIENTS: Array<readonly [string, string]> = [
   ['#f7cbb7', '#e88f6c'],
@@ -37,6 +39,8 @@ export default function TherapistsListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t } = useTranslation();
+  const reduceMotion = useReduceMotion();
   const f400 = getFontName(dir.locale, '400');
   const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
@@ -60,144 +64,163 @@ export default function TherapistsListScreen() {
     );
   }, [list, query]);
 
+  const renderItem = useCallback(({ item: t, index: i }: { item: typeof list[0]; index: number }) => {
+    const name = (dir.isRTL ? t.nameAr : t.nameEn) ?? t.nameEn ?? t.nameAr ?? '—';
+    const spec = (dir.isRTL ? t.specialtyAr : t.specialty) ?? t.specialty ?? t.specialtyAr ?? '';
+    const gradient = gradientFor(t.id);
+    const initial = name.charAt(0);
+    const navKey = t.slug ?? t.id;
+
+    return (
+      <Animated.View
+        entering={reduceMotion ? undefined : FadeInDown.delay(280 + i * 80).duration(700).easing(Easing.out(Easing.cubic))}
+      >
+        <Glass variant="strong" radius={sawaaRadius.xl} style={styles.therapistCard}>
+          <Pressable
+            onPress={() => router.push(`/(client)/employee/${navKey}`)}
+            style={[styles.therapistRow, { flexDirection: dir.row }]}
+            accessibilityRole="button"
+            accessibilityLabel={`${name}, ${spec}`}
+            testID={`therapist-${t.id}`}
+          >
+            <LinearGradient
+              colors={gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
+              <Text style={[styles.avatarText, { fontFamily: f700 }]}>{initial}</Text>
+            </LinearGradient>
+            <View style={styles.therapistBody}>
+              <View style={[styles.therapistTop, { flexDirection: dir.row }]}>
+                <Text style={[styles.therapistName, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
+                  {name}
+                </Text>
+              </View>
+              <Text style={[styles.therapistSpec, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                {spec}
+              </Text>
+              {t.title ? (
+                <View style={[styles.therapistMeta, { flexDirection: dir.row }]}>
+                  <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
+                  <Text style={[styles.therapistExp, { fontFamily: f500 }]}>
+                    {t.title}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </Pressable>
+        </Glass>
+      </Animated.View>
+    );
+  }, [dir, f400, f500, f700, reduceMotion, router]);
+
+  const ListHeader = useMemo(() => (
+    <View style={styles.header}>
+      <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(500)}>
+        <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
+          <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
+        </Glass>
+      </Animated.View>
+
+      <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
+        <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
+          {dir.isRTL ? 'اختاري معالجاً' : 'Choose a therapist'}
+        </Text>
+        <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
+          {dir.isRTL
+            ? `${list.length} معالج متاحين الآن`
+            : `${list.length} therapists available`}
+        </Text>
+      </Animated.View>
+
+      <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
+        <Glass variant="strong" radius={sawaaRadius.xl} style={styles.searchCard}>
+          <View style={[styles.searchRow, { flexDirection: dir.row }]}>
+            <Search size={17} color={sawaaColors.ink[500]} strokeWidth={1.75} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={dir.isRTL ? 'اكتبي اسم المعالج أو التخصص' : 'Search by name or specialty'}
+              placeholderTextColor={sawaaColors.ink[400]}
+              accessibilityLabel={t('a11y.searchTherapists')}
+              testID="therapist-search"
+              style={[
+                styles.searchInput,
+                { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
+              ]}
+            />
+          </View>
+        </Glass>
+      </Animated.View>
+
+      <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(220).duration(600).easing(Easing.out(Easing.cubic))}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.chipsRow, { flexDirection: dir.row }]}
+        >
+          {CHIPS.map((c) => {
+            const isActive = c.key === activeChip;
+            return (
+              <Pressable key={c.key} onPress={() => setActiveChip(c.key)}>
+                <Glass
+                  variant={isActive ? 'strong' : 'regular'}
+                  radius={14}
+                  style={[
+                    styles.chip,
+                    isActive && { backgroundColor: sawaaColors.teal[700] },
+                  ]}
+                >
+                  <Text style={[
+                    styles.chipText,
+                    { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[700] },
+                  ]}>
+                    {dir.isRTL ? c.ar : c.en}
+                  </Text>
+                </Glass>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </Animated.View>
+    </View>
+  ), [BackIcon, activeChip, dir, f400, f600, f700, list.length, query, reduceMotion, router, t]);
+
+  const ListEmpty = useMemo(() => {
+    if (loading) {
+      return (
+        <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
+          {dir.isRTL ? 'جاري التحميل…' : 'Loading…'}
+        </Text>
+      );
+    }
+    return (
+      <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
+        {dir.isRTL ? 'لا يوجد معالجون بعد' : 'No therapists yet'}
+      </Text>
+    );
+  }, [dir.isRTL, f400, loading]);
+
   return (
     <AquaBackground>
-      <ScrollView
+      <FlatList
+        data={filtered}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
-      >
-        <Animated.View entering={FadeInDown.duration(500)}>
-          <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
-            <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
-          </Glass>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'اختاري معالجاً' : 'Choose a therapist'}
-          </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL
-              ? `${list.length} معالج متاحين الآن`
-              : `${list.length} therapists available`}
-          </Text>
-        </Animated.View>
-
-        {/* Search */}
-        <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Glass variant="strong" radius={sawaaRadius.xl} style={styles.searchCard}>
-            <View style={[styles.searchRow, { flexDirection: dir.row }]}>
-              <Search size={17} color={sawaaColors.ink[500]} strokeWidth={1.75} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder={dir.isRTL ? 'اكتبي اسم المعالج أو التخصص' : 'Search by name or specialty'}
-                placeholderTextColor={sawaaColors.ink[400]}
-                style={[
-                  styles.searchInput,
-                  { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
-                ]}
-              />
-            </View>
-          </Glass>
-        </Animated.View>
-
-        {/* Chips */}
-        <Animated.View entering={FadeInDown.delay(220).duration(600).easing(Easing.out(Easing.cubic))}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.chipsRow, { flexDirection: dir.row }]}
-          >
-            {CHIPS.map((c) => {
-              const isActive = c.key === activeChip;
-              return (
-                <Pressable key={c.key} onPress={() => setActiveChip(c.key)}>
-                  <Glass
-                    variant={isActive ? 'strong' : 'regular'}
-                    radius={14}
-                    style={[
-                      styles.chip,
-                      isActive && { backgroundColor: sawaaColors.teal[700] },
-                    ]}
-                  >
-                    <Text style={[
-                      styles.chipText,
-                      { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[700] },
-                    ]}>
-                      {dir.isRTL ? c.ar : c.en}
-                    </Text>
-                  </Glass>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </Animated.View>
-
-        {loading ? (
-          <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
-            {dir.isRTL ? 'جاري التحميل…' : 'Loading…'}
-          </Text>
-        ) : filtered.length === 0 ? (
-          <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
-            {dir.isRTL ? 'لا يوجد معالجون بعد' : 'No therapists yet'}
-          </Text>
-        ) : (
-          filtered.map((t, i) => {
-            const name = (dir.isRTL ? t.nameAr : t.nameEn) ?? t.nameEn ?? t.nameAr ?? '—';
-            const spec = (dir.isRTL ? t.specialtyAr : t.specialty) ?? t.specialty ?? t.specialtyAr ?? '';
-            const gradient = gradientFor(t.id);
-            const initial = name.charAt(0);
-            const navKey = t.slug ?? t.id;
-            return (
-              <Animated.View
-                key={t.id}
-                entering={FadeInDown.delay(280 + i * 80).duration(700).easing(Easing.out(Easing.cubic))}
-              >
-                <Glass variant="strong" radius={sawaaRadius.xl} style={styles.therapistCard}>
-                  <Pressable
-                    onPress={() => router.push(`/(client)/employee/${navKey}`)}
-                    style={[styles.therapistRow, { flexDirection: dir.row }]}
-                  >
-                    <LinearGradient
-                      colors={gradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.avatar}
-                    >
-                      <Text style={[styles.avatarText, { fontFamily: f700 }]}>{initial}</Text>
-                    </LinearGradient>
-                    <View style={styles.therapistBody}>
-                      <View style={[styles.therapistTop, { flexDirection: dir.row }]}>
-                        <Text style={[styles.therapistName, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
-                          {name}
-                        </Text>
-                      </View>
-                      <Text style={[styles.therapistSpec, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                        {spec}
-                      </Text>
-                      {t.title ? (
-                        <View style={[styles.therapistMeta, { flexDirection: dir.row }]}>
-                          <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
-                          <Text style={[styles.therapistExp, { fontFamily: f500 }]}>
-                            {t.title}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  </Pressable>
-                </Glass>
-              </Animated.View>
-            );
-          })
-        )}
-      </ScrollView>
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={ListEmpty}
+        scrollEventThrottle={16}
+      />
     </AquaBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 16, gap: 14 },
+  scroll: { paddingHorizontal: 16 },
+  header: { gap: 14, marginBottom: 14 },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
   title: { fontSize: 22, color: sawaaColors.ink[900], paddingHorizontal: 4 },
   subtitle: { fontSize: 12, color: sawaaColors.ink[500], marginTop: 2, paddingHorizontal: 4 },
@@ -207,35 +230,17 @@ const styles = StyleSheet.create({
   chipsRow: { gap: 6, paddingHorizontal: 2, paddingVertical: 2 },
   chip: { paddingHorizontal: 12, paddingVertical: 7 },
   chipText: { fontSize: 11.5 },
-  therapistCard: { padding: 0, overflow: 'hidden' },
+  therapistCard: { padding: 0, overflow: 'hidden', marginBottom: 14 },
   therapistRow: { alignItems: 'stretch' },
   avatar: {
     width: 84, alignItems: 'center', justifyContent: 'flex-end',
     paddingBottom: 8, position: 'relative',
   },
   avatarText: { fontSize: 36, color: 'rgba(255,255,255,0.95)' },
-  onlineDot: {
-    position: 'absolute', top: 8, right: 8,
-    width: 9, height: 9, borderRadius: 5,
-    backgroundColor: '#4bd67a', borderWidth: 1.5, borderColor: '#fff',
-  },
   therapistBody: { flex: 1, padding: 12 },
   therapistTop: { justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
   therapistName: { fontSize: 14, color: sawaaColors.ink[900] },
-  priceChip: {
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
-    backgroundColor: 'rgba(20,168,154,0.14)',
-  },
-  priceText: { fontSize: 10.5, color: sawaaColors.teal[700] },
   therapistSpec: { fontSize: 11.5, color: sawaaColors.ink[500], marginTop: 3 },
   therapistMeta: { alignItems: 'center', gap: 6, marginTop: 8 },
-  therapistRating: { fontSize: 11, color: sawaaColors.ink[900] },
-  dot: { fontSize: 11, color: sawaaColors.ink[400] },
   therapistExp: { fontSize: 11, color: sawaaColors.ink[500] },
-  availableChip: {
-    marginLeft: 'auto',
-    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
-    backgroundColor: 'rgba(75,214,122,0.18)',
-  },
-  availableText: { fontSize: 10, color: '#1f8f3e' },
 });

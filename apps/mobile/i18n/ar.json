@@ -382,5 +382,27 @@
     "4": "الخميس",
     "5": "الجمعة",
     "6": "السبت"
+  },
+  "a11y": {
+    "buttonBack": "زر العودة",
+    "tabUpcoming": "المواعيد القادمة",
+    "tabCompleted": "المواعيد المنتهية",
+    "tabCancelled": "المواعيد الملغاة",
+    "tabNotifications": "الإشعارات",
+    "tabProfile": "الملف الشخصي",
+    "tabChat": "الدردشة",
+    "cardOpenAppointment": "فتح تفاصيل الموعد",
+    "refreshAppointments": "تحديث المواعيد",
+    "messageInput": "حقل إدخال الرسالة",
+    "sendMessage": "زر إرسال الرسالة",
+    "searchTherapists": "البحث عن المعالجين",
+    "selectTimeSlot": "اختر وقت الموعد",
+    "confirmBooking": "تأكيد الحجز",
+    "selectPaymentMethod": "اختر طريقة الدفع",
+    "checkoutTitle": "الدفع",
+    "profileSettings": "الإعدادات",
+    "profileLogout": "زر تسجيل الخروج",
+    "filterOpen": "فتح المرشحات",
+    "sortOpen": "فتح خيارات الفرز"
   }
 }
