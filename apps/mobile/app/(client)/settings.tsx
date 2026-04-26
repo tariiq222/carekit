@@ -26,6 +26,7 @@ import Constants from 'expo-constants';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
+import { UnverifiedEmailBanner } from '@/components/features/auth/UnverifiedEmailBanner';
 import { SettingsProfileSection } from './settings-profile-section';
 import { OrganizationSwitcherSection } from '@/components/features/settings/OrganizationSwitcherSection';
 import { clientProfileService } from '@/services/client/profile';
@@ -135,6 +136,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Profile Section (server-backed) */}
+        <UnverifiedEmailBanner />
         <SettingsProfileSection />
 
         {/* Language Section (local-only) */}

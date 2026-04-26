@@ -20,6 +20,7 @@ import type { UserPayload, AuthResponse as CanonicalAuthResponse } from '@careki
 // needs its own membership/employee lookup).
 export type User = UserPayload & {
   emailVerified?: boolean;
+  emailVerifiedAt?: string | null;
   employeeId?: string | null;
 };
 

@@ -21,6 +21,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { UnverifiedEmailBanner } from '@/components/features/auth/UnverifiedEmailBanner';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout, setUser } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
@@ -108,6 +109,7 @@ export default function EmployeeProfileScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface, paddingTop: insets.top + 16 }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <UnverifiedEmailBanner />
         <ThemedText variant="displaySm" style={styles.title}>
           {t('employee.profile')}
         </ThemedText>
