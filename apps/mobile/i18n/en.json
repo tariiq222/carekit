@@ -50,7 +50,27 @@
     "registerError": "Registration failed. Please try again",
     "otpError": "Invalid code. Please try again",
     "otpSent": "Verification code sent successfully",
-    "employeeNote": "Employees and staff are registered from the admin dashboard"
+    "employeeNote": "Employees and staff are registered from the admin dashboard",
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email and we'll send a 6-digit code",
+      "emailLabel": "Email",
+      "submit": "Send Code",
+      "back": "Back to Sign In",
+      "linkLabel": "Forgot password?"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "otpStepSubtitle": "Enter the 6-digit code sent to {{email}}",
+      "passwordStepSubtitle": "Choose a new password",
+      "codeLabel": "Verification Code",
+      "newPasswordLabel": "New Password",
+      "verifyCode": "Verify Code",
+      "submit": "Reset Password",
+      "success": "Password reset successful. Please sign in.",
+      "invalidCode": "Invalid or expired code",
+      "weakPassword": "Password must be at least 8 characters"
+    }
   },
   "tabs": {
     "home": "Home",
