@@ -22,18 +22,36 @@ export class GetCurrentUserHandler {
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
       select: {
+        id: true,
         organizationId: true,
+        role: true,
         organization: { select: { vertical: { select: { slug: true } } } },
       },
     });
 
-    const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
     return {
-      ...user,
-      firstName,
-      lastName: rest.join(' '),
-      organizationId: membership?.organizationId ?? null,
-      verticalSlug: membership?.organization?.vertical?.slug ?? null,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        phoneVerifiedAt: user.phoneVerifiedAt,
+        emailVerifiedAt: user.emailVerifiedAt,
+        isActive: user.isActive,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        gender: user.gender,
+        customRole: user.customRole,
+        permissions: user.customRole?.permissions ?? [],
+      },
+      activeMembership: membership
+        ? {
+            id: membership.id,
+            organizationId: membership.organizationId,
+            role: membership.role,
+            verticalSlug: membership.organization?.vertical?.slug ?? null,
+          }
+        : null,
     };
   }
 }
