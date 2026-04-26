@@ -115,7 +115,7 @@ export default function ForgotPasswordScreen() {
                         setEmail(text.trim());
                         if (error) setError(null);
                       }}
-                      placeholder="you@example.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       placeholderTextColor={C.subtle}
                       keyboardType="email-address"
                       autoCapitalize="none"
