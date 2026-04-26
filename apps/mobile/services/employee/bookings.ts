@@ -6,11 +6,13 @@ import type { Booking, BookingStatus, BookingType } from '@/types/models';
 // (see apps/backend/src/api/mobile/employee/bookings.controller.ts) and enforce
 // ownership: the authenticated employee can only act on bookings assigned to them.
 
-interface CreateBookingData {
-  employeeId: string;
-  type: BookingType;
-  date: string;
-  startTime: string;
+export interface CreateEmployeeBookingData {
+  branchId: string;
+  clientId: string;
+  serviceId: string;
+  scheduledAt: string;
+  durationOptionId?: string;
+  bookingType?: BookingType;
   notes?: string;
 }
 
@@ -32,11 +34,8 @@ export const employeeBookingsService = {
     return response.data;
   },
 
-  async create(data: CreateBookingData) {
-    // Employee-initiated booking creation still goes through the dashboard endpoint.
-    // The mobile app does not expose this flow today; left here for parity with older
-    // call sites until the Employee app gets its own create-booking screen.
-    const response = await api.post<ApiResponse<Booking>>('/dashboard/bookings', data);
+  async create(data: CreateEmployeeBookingData) {
+    const response = await api.post<ApiResponse<Booking>>('/mobile/employee/bookings', data);
     return response.data;
   },
 

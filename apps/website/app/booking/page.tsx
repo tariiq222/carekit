@@ -10,6 +10,7 @@ import { BookingSummary } from '@/features/booking/booking-summary';
 import { BranchStep } from '@/features/booking/branch-step';
 import { ClientInfoStep } from '@/features/booking/client-info-step';
 import { useOtpSession } from '@/features/otp/use-otp-session';
+import { publicFetch } from '@/lib/public-fetch';
 import {
   getPublicAvailability,
   getPublicBranches,
@@ -62,22 +63,27 @@ export default function BookingWizardPage() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const { token } = useOtpSession();
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
-    fetch(`${base}/public/employees`)
-      .then((r) => (r.ok ? r.json() : null))
+    publicFetch<{ data?: EmployeeWithUser[] } | EmployeeWithUser[]>('/public/employees')
       .then((json) => {
-        if (!json) return;
-        setEmployees(json.data ?? json);
+        const list = Array.isArray(json) ? json : (json.data ?? []);
+        setEmployees(list);
       })
-      .catch(() => {});
-    fetch(`${base}/public/catalog`)
-      .then((r) => (r.ok ? r.json() : null))
+      .catch((err) => {
+        console.error('Failed to load employees', err);
+        setLoadError('Failed to load therapists. Please try again later.');
+      });
+    publicFetch<{ data?: { services: Service[] } } | { services: Service[] }>('/public/catalog')
       .then((json) => {
-        if (!json) return;
-        setServices(((json.data ?? json).services as Service[]) ?? []);
+        const payload = 'data' in json && json.data ? json.data : (json as { services: Service[] });
+        setServices(payload.services ?? []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load catalog', err);
+        setLoadError('Failed to load services. Please try again later.');
+      });
     getPublicBranches().then((bs) => {
       setBranches(bs);
       if (bs.length === 1) setSelectedBranch(bs[0]);
@@ -166,7 +172,7 @@ export default function BookingWizardPage() {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1rem' }}>
       <ProgressBar current={stepIndex} total={totalSteps} />
 
-      {submitError && (
+      {(loadError || submitError) && (
         <div
           style={{
             marginBottom: '1rem',
@@ -177,7 +183,7 @@ export default function BookingWizardPage() {
             fontSize: '0.875rem',
           }}
         >
-          {submitError}
+          {loadError || submitError}
         </div>
       )}
 

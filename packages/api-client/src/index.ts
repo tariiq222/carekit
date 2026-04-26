@@ -41,6 +41,7 @@ export {
   clientRegister,
   clientRefresh,
   clientLogout,
+  clientResetPassword,
 } from './modules/client-auth'
 export {
   setMeBaseUrl,

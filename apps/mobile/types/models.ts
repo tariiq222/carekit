@@ -1,13 +1,13 @@
 /** Booking types */
-export type BookingType = 'in_person' | 'online' | 'walk_in';
+export type BookingType = 'in_person' | 'online' | 'walk_in' | 'group';
 export type BookingStatus =
   | 'pending'
+  | 'pending_group_fill'
+  | 'awaiting_payment'
   | 'confirmed'
-  | 'checked_in'
-  | 'in_progress'
   | 'completed'
   | 'cancelled'
-  | 'pending_cancellation'
+  | 'cancel_requested'
   | 'no_show'
   | 'expired';
 export type PaymentStatus = 'pending' | 'awaiting' | 'paid' | 'refunded' | 'failed' | 'rejected';
@@ -66,6 +66,7 @@ export interface Booking {
   serviceId?: string;
   type: BookingType;
   status: BookingStatus;
+  checkedInAt?: string | null;
   date: string;
   startTime: string;
   endTime: string;

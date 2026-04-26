@@ -52,7 +52,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
 
   const appointmentDate = formatDate(booking.date)
 
-  const canReschedule = !["completed", "cancelled", "no_show", "pending_cancellation", "in_progress", "expired"].includes(booking.status)
+  const canReschedule = !["completed", "cancelled", "no_show", "cancel_requested", "expired"].includes(booking.status)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

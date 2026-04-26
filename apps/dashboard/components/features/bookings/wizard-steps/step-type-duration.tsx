@@ -36,6 +36,7 @@ const BOOKING_TYPE_META: Record<BookingType, { icon: IconSvgElement }> = {
   in_person: { icon: Building01Icon },
   online: { icon: VideoReplayIcon },
   walk_in: { icon: WalkingIcon },
+  group: { icon: Building01Icon },
 }
 
 function getTypeLabel(type: string, t: (key: string) => string): string {
@@ -43,6 +44,7 @@ function getTypeLabel(type: string, t: (key: string) => string): string {
     in_person: t("bookings.wizard.step.typeDuration.inPerson"),
     online: t("bookings.wizard.step.typeDuration.online"),
     walk_in: t("bookings.wizard.step.typeDuration.walkIn"),
+    group: t("bookings.type.group"),
   }
   return map[type] ?? type
 }

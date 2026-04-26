@@ -277,6 +277,7 @@ export const arEmployees: Record<string, string> = {
   "employees.chart.type.inPerson": "عيادة",
   "employees.chart.type.online": "عن بُعد",
   "employees.chart.type.walkIn": "مباشر",
+  "employees.chart.type.group": "جماعي",
 
   // — Column helpers —
   "employees.col.experienceYrs": "سنة",

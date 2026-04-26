@@ -188,7 +188,7 @@ export const arClients: Record<string, string> = {
   "clients.dialog.status.confirmed": "مؤكد",
   "clients.dialog.status.pending": "قيد الانتظار",
   "clients.dialog.status.cancelled": "ملغي",
-  "clients.dialog.status.pending_cancellation": "طلب إلغاء",
+  "clients.dialog.status.cancel_requested": "طلب إلغاء",
 
   // ── صفحة التعديل ──
   "clients.edit.title": "تعديل المستفيد",

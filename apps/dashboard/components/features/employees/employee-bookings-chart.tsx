@@ -17,31 +17,40 @@ import {
 /* ─── Constants ─── */
 
 const STATUS_HEX: Record<BookingStatus, string> = {
-  completed: "hsl(var(--success))", confirmed: "hsl(var(--primary))", pending: "hsl(var(--warning))",
-  cancelled: "hsl(var(--error))", pending_cancellation: "hsl(var(--warning))", no_show: "hsl(var(--muted-foreground))",
-  checked_in: "hsl(var(--info))", in_progress: "hsl(var(--primary))", expired: "hsl(var(--muted))",
+  completed: "hsl(var(--success))",
+  confirmed: "hsl(var(--primary))",
+  pending: "hsl(var(--warning))",
+  pending_group_fill: "hsl(var(--warning))",
+  awaiting_payment: "hsl(var(--warning))",
+  cancelled: "hsl(var(--error))",
+  cancel_requested: "hsl(var(--warning))",
+  no_show: "hsl(var(--muted-foreground))",
+  expired: "hsl(var(--muted))",
 }
 const TYPE_HEX: Record<BookingType, string> = {
-  in_person: "hsl(var(--primary))", online: "hsl(var(--info))",
+  in_person: "hsl(var(--primary))",
+  online: "hsl(var(--info))",
   walk_in: "hsl(var(--accent))",
+  group: "hsl(var(--accent))",
 }
 const STATUS_KEY: Record<BookingStatus, string> = {
   completed: "employees.chart.status.completed",
   confirmed: "employees.chart.status.confirmed",
   pending: "employees.chart.status.pending",
+  pending_group_fill: "employees.chart.status.pending",
+  awaiting_payment: "employees.chart.status.pending",
   cancelled: "employees.chart.status.cancelled",
-  pending_cancellation: "employees.chart.status.pendingCancellation",
+  cancel_requested: "employees.chart.status.pendingCancellation",
   no_show: "employees.chart.status.noShow",
-  checked_in: "employees.chart.status.checkedIn",
-  in_progress: "employees.chart.status.inProgress",
   expired: "employees.chart.status.expired",
 }
 const TYPE_KEY: Record<BookingType, string> = {
   in_person: "employees.chart.type.inPerson",
   online: "employees.chart.type.online",
   walk_in: "employees.chart.type.walkIn",
+  group: "employees.chart.type.group",
 }
-const STATUSES: BookingStatus[] = ["completed", "confirmed", "pending", "cancelled", "no_show", "pending_cancellation"]
+const STATUSES: BookingStatus[] = ["completed", "confirmed", "pending", "cancelled", "no_show", "cancel_requested"]
 const TYPES: BookingType[] = ["in_person", "online", "walk_in"]
 
 /* ─── Helpers ─── */

@@ -1,19 +1,25 @@
 import type { PublicEmployee } from '@carekit/api-client';
 
-import { getApiBase } from '@/lib/api-base';
+import { publicFetch } from '@/lib/public-fetch';
+
+function unwrap<T>(json: unknown): T {
+  if (json && typeof json === 'object' && 'data' in json) {
+    return (json as { data: T }).data;
+  }
+  return json as T;
+}
 
 export async function listPublicEmployees(): Promise<PublicEmployee[]> {
-  const res = await fetch(`${getApiBase()}/public/employees`, {
+  const json = await publicFetch<unknown>('/public/employees', {
     next: { revalidate: 60, tags: ['public-employees'] },
   });
-  if (!res.ok) throw new Error(`Failed: ${res.status}`);
-  return res.json() as Promise<PublicEmployee[]>;
+  return unwrap<PublicEmployee[]>(json);
 }
 
 export async function getPublicEmployee(slug: string): Promise<PublicEmployee> {
-  const res = await fetch(`${getApiBase()}/public/employees/${encodeURIComponent(slug)}`, {
-    next: { revalidate: 60, tags: ['public-employees', `employee-${slug}`] },
-  });
-  if (!res.ok) throw new Error(`Failed: ${res.status}`);
-  return res.json() as Promise<PublicEmployee>;
+  const json = await publicFetch<unknown>(
+    `/public/employees/${encodeURIComponent(slug)}`,
+    { next: { revalidate: 60, tags: ['public-employees', `employee-${slug}`] } },
+  );
+  return unwrap<PublicEmployee>(json);
 }

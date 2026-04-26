@@ -188,7 +188,7 @@ export const enClients: Record<string, string> = {
   "clients.dialog.status.confirmed": "Confirmed",
   "clients.dialog.status.pending": "Pending",
   "clients.dialog.status.cancelled": "Cancelled",
-  "clients.dialog.status.pending_cancellation": "Cancellation Requested",
+  "clients.dialog.status.cancel_requested": "Cancellation Requested",
 
   // ── Edit page ──
   "clients.edit.title": "Edit Client",

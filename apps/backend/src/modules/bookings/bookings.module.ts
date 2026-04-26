@@ -40,9 +40,11 @@ import { ClientRescheduleBookingHandler } from './client/client-reschedule-booki
 import { ListPublicGroupSessionsHandler } from './public/list-public-group-sessions.handler';
 import { GetPublicGroupSessionHandler } from './public/get-public-group-session.handler';
 import { BookGroupSessionHandler } from './public/book-group-session.handler';
+import { CreateEmployeeBookingHandler } from './create-employee-booking/create-employee-booking.handler';
 
 const handlers = [
   CreateBookingHandler,
+  CreateEmployeeBookingHandler,
   CreateRecurringBookingHandler,
   CancelBookingHandler,
   RescheduleBookingHandler,

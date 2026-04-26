@@ -13,12 +13,14 @@ const TYPE_ICON = {
   in_person: Building2,
   online: Video,
   walk_in: Building2,
+  group: Building2,
 };
 
 const TYPE_COLOR = {
   in_person: '#1D4ED8',
   online: '#7C3AED',
   walk_in: '#059669',
+  group: '#7C3AED',
 };
 
 interface AppointmentCardProps {
@@ -37,7 +39,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
     confirmed: t('appointments.confirmed'),
     completed: t('appointments.completed'),
     cancelled: t('appointments.cancelledStatus'),
-    pending_cancellation: t('appointments.pendingCancellation'),
+    cancel_requested: t('appointments.pendingCancellation'),
   };
 
   const practName = `${booking.employee.user.firstName} ${booking.employee.user.lastName}`;

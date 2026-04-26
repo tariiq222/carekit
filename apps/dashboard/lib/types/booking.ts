@@ -16,17 +16,18 @@ export type BookingType =
   | "in_person"
   | "online"
   | "walk_in"
+  | "group"
 
 export type BookingStatus =
   | "pending"
+  | "pending_group_fill"
+  | "awaiting_payment"
   | "confirmed"
   | "completed"
   | "cancelled"
-  | "pending_cancellation"
   | "no_show"
-  | "checked_in"
-  | "in_progress"
   | "expired"
+  | "cancel_requested"
 
 export type RefundType = "full" | "partial" | "none"
 
@@ -85,6 +86,7 @@ export interface Booking {
   startTime: string
   endTime: string
   status: BookingStatus
+  checkedInAt: string | null
   notes: string | null
   zoomJoinUrl: string | null
   zoomHostUrl: string | null
@@ -192,9 +194,7 @@ export interface BookingStats {
   pending: number
   completed: number
   cancelled: number
-  pendingCancellation: number
-  checkedIn: number
-  inProgress: number
+  cancelRequested: number
   noShow: number
   expired: number
 }

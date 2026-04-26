@@ -8,13 +8,13 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -35,6 +35,8 @@ import { CompleteBookingHandler } from '../../../modules/bookings/complete-booki
 import { CompleteBookingDto } from '../../../modules/bookings/complete-booking/complete-booking.dto';
 import { CancelBookingHandler } from '../../../modules/bookings/cancel-booking/cancel-booking.handler';
 import { RequestCancelBookingHandler } from '../../../modules/bookings/request-cancel-booking/request-cancel-booking.handler';
+import { CreateEmployeeBookingHandler } from '../../../modules/bookings/create-employee-booking/create-employee-booking.handler';
+import { CreateEmployeeBookingDto } from '../../../modules/bookings/create-employee-booking/create-employee-booking.dto';
 
 export class EmployeeCancelBookingDto {
   @ApiPropertyOptional({
@@ -86,7 +88,22 @@ export class MobileEmployeeBookingsController {
     private readonly completeHandler: CompleteBookingHandler,
     private readonly cancelHandler: CancelBookingHandler,
     private readonly requestCancelHandler: RequestCancelBookingHandler,
+    private readonly createEmployeeHandler: CreateEmployeeBookingHandler,
   ) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new booking on the authenticated employee calendar' })
+  @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
+  createMyBooking(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: CreateEmployeeBookingDto,
+  ) {
+    return this.createEmployeeHandler.execute({
+      ...dto,
+      employeeId: user.sub,
+    });
+  }
 
   @Get()
   @ApiOperation({ summary: 'List bookings assigned to the authenticated employee' })

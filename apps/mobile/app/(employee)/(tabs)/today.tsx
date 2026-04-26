@@ -31,12 +31,14 @@ const TYPE_ICON = {
   in_person: Building2,
   online: Video,
   walk_in: Building2,
+  group: Building2,
 };
 
 const TYPE_COLOR = {
   in_person: '#1D4ED8',
   online: '#7C3AED',
   walk_in: '#059669',
+  group: '#7C3AED',
 };
 
 export default function TodayScreen() {

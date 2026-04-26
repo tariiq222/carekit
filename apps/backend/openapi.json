@@ -1067,6 +1067,56 @@
         ],
         "type": "object"
       },
+      "CreateEmployeeBookingDto": {
+        "properties": {
+          "bookingType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingType"
+              }
+            ],
+            "description": "Booking type",
+            "example": "INDIVIDUAL"
+          },
+          "branchId": {
+            "description": "Branch where the booking takes place",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "Client being booked",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "durationOptionId": {
+            "description": "Specific duration option to resolve price and duration",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Free-text notes for the booking",
+            "example": "Walk-in client",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "description": "ISO 8601 start datetime",
+            "example": "2026-05-01T09:00:00.000Z",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service to be performed",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "branchId",
+          "clientId",
+          "serviceId",
+          "scheduledAt"
+        ],
+        "type": "object"
+      },
       "CreateEmployeeDto": {
         "properties": {
           "avatarUrl": {
@@ -2411,6 +2461,65 @@
         },
         "type": "object"
       },
+      "MoyasarWebhookDto": {
+        "properties": {
+          "amount": {
+            "description": "Amount in the smallest currency unit (halalas)",
+            "example": 10000,
+            "type": "number"
+          },
+          "currency": {
+            "description": "ISO 4217 currency code",
+            "example": "SAR",
+            "type": "string"
+          },
+          "id": {
+            "description": "Moyasar payment ID",
+            "example": "pay_abc123",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable message from Moyasar (e.g. failure reason)",
+            "example": "Insufficient funds",
+            "type": "string"
+          },
+          "metadata": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoyasarWebhookMetadataDto"
+              }
+            ],
+            "description": "Metadata attached when the payment was initiated"
+          },
+          "status": {
+            "description": "Payment status reported by Moyasar",
+            "enum": [
+              "paid",
+              "failed",
+              "refunded"
+            ],
+            "example": "paid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amount",
+          "currency"
+        ],
+        "type": "object"
+      },
+      "MoyasarWebhookMetadataDto": {
+        "properties": {
+          "invoiceId": {
+            "description": "Invoice UUID embedded in the payment metadata",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "OnboardEmployeeDto": {
         "properties": {
           "avatarUrl": {
@@ -2755,6 +2864,10 @@
           "identifier": {
             "description": "Email address or phone number (E.164 format)",
             "example": "user@example.com",
+            "type": "string"
+          },
+          "organizationId": {
+            "description": "Target organization ID",
             "type": "string"
           },
           "purpose": {
@@ -4450,6 +4563,10 @@
           "identifier": {
             "description": "Email address or phone number",
             "example": "user@example.com",
+            "type": "string"
+          },
+          "organizationId": {
+            "description": "Target organization ID",
             "type": "string"
           },
           "purpose": {
@@ -22287,6 +22404,81 @@
         "tags": [
           "Mobile Employee / Bookings"
         ]
+      },
+      "post": {
+        "operationId": "MobileEmployeeBookingsController_createMyBooking",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new booking on the authenticated employee calendar",
+        "tags": [
+          "Mobile Employee / Bookings"
+        ]
       }
     },
     "/api/v1/mobile/employee/bookings/{id}": {
@@ -24512,6 +24704,31 @@
           }
         },
         "summary": "Initialize a Moyasar payment for a guest booking (requires OTP session)",
+        "tags": [
+          "Public / Payments"
+        ]
+      }
+    },
+    "/api/v1/public/payments/webhook": {
+      "post": {
+        "operationId": "PublicPaymentWebhookController_handle",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoyasarWebhookDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Moyasar booking-payment webhook",
         "tags": [
           "Public / Payments"
         ]
