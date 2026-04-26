@@ -7,6 +7,7 @@ import { Card } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchRevenueReport } from "@/lib/api/reports"
+import { formatLocaleDate } from "@/lib/date"
 
 function getWeekRange(): { dateFrom: string; dateTo: string } {
   const now = new Date()
@@ -18,10 +19,7 @@ function getWeekRange(): { dateFrom: string; dateTo: string } {
 }
 
 function formatDayLabel(dateStr: string, locale: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
-    weekday: "short",
-  })
+  return formatLocaleDate(dateStr, locale, { weekday: "short" })
 }
 
 export function RevenueChart() {
