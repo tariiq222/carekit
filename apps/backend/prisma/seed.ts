@@ -146,6 +146,32 @@ async function main() {
     });
   }
 
+  // 6. Email template for password reset (first seeded template)
+  await prisma.emailTemplate.upsert({
+    where: { organizationId_slug: { organizationId: DEFAULT_ORG_ID, slug: 'user_password_reset' } },
+    update: {},
+    create: {
+      organizationId: DEFAULT_ORG_ID,
+      slug: 'user_password_reset',
+      nameAr: 'إعادة تعيين كلمة المرور',
+      nameEn: 'Password Reset',
+      subjectAr: 'إعادة تعيين كلمة المرور — CareKit',
+      subjectEn: 'Reset your CareKit password',
+      htmlBody: `<div style="font-family: 'IBM Plex Sans Arabic', system-ui; padding: 24px; max-width: 560px;">
+  <h2 style="color: #354FD8;">Reset your CareKit password</h2>
+  <p>Hi {{userName}},</p>
+  <p>We received a request to reset your CareKit password. Click the button below to set a new one. This link expires in 30 minutes.</p>
+  <p style="margin: 24px 0;">
+    <a href="{{resetUrl}}" style="background:#354FD8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">
+      Reset password
+    </a>
+  </p>
+  <p style="color:#6b7280;font-size:14px;">If you didn't request this, you can safely ignore this email.</p>
+</div>`,
+      isActive: true,
+    },
+  });
+
   await prisma.$disconnect();
 
   console.log('─────────────────────────────────────────────');
@@ -155,6 +181,7 @@ async function main() {
   console.log(`✔  OrganizationSettings singleton ready`);
   console.log(`✔  Main branch created`);
   console.log(`✔  BusinessHours seeded (Sun–Thu 09:00–17:00, Fri/Sat closed)`);
+  console.log(`✔  Email template "user_password_reset" upserted`);
   console.log('─────────────────────────────────────────────');
 }
 
