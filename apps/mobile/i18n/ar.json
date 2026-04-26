@@ -257,6 +257,26 @@
       "required": "مطلوب",
       "invalidPhone": "يجب أن يكون الجوال بصيغة +9665XXXXXXXX",
       "invalidEmail": "بريد إلكتروني غير صالح"
+    },
+    "tenant": {
+      "title": "المؤسسات",
+      "current": "الحالية",
+      "primary": "الافتراضية",
+      "switchingTitle": "جاري التبديل…",
+      "switchSuccess": "تم التبديل",
+      "switchError": "تعذّر التبديل",
+      "confirmTitle": "تبديل المؤسسة",
+      "confirmBody": "تبديل السياق إلى {{org}}؟",
+      "role": {
+        "OWNER": "المالك",
+        "ADMIN": "مدير",
+        "STAFF": "موظف",
+        "MEMBER": "عضو",
+        "CLINIC_OWNER": "مالك العيادة",
+        "RECEPTIONIST": "موظف استقبال",
+        "EMPLOYEE": "موظف",
+        "CLIENT": "عميل"
+      }
     }
   },
   "notifications": {
@@ -278,7 +298,14 @@
     "meetingStartsIn": "يبدأ الاجتماع خلال",
     "refresh": "تحديث",
     "openingZoom": "جاري فتح Zoom...",
-    "meetingInfo": "معلومات الاجتماع"
+    "meetingInfo": "معلومات الاجتماع",
+    "bookingNotFound": "تعذّر العثور على الحجز",
+    "sessionEnded": "انتهت الجلسة",
+    "meetingUnavailable": "تعذّر إنشاء الاجتماع",
+    "opensIn": "يفتح الانضمام خلال {{minutes}} دقيقة",
+    "serviceLabel": "الخدمة",
+    "withLabel": "مع",
+    "timeLabel": "الموعد"
   },
   "verification": {
     "bannerTitle": "فعّل بريدك الإلكتروني للاستفادة من كامل الخدمات",

@@ -41,7 +41,7 @@ export default function AppointmentDetailScreen() {
         ? booking.employee?.nameAr ?? booking.employee?.nameEn
         : booking.employee?.nameEn ?? booking.employee?.nameAr) ?? '—'
     : '—';
-  const isOnline = booking?.bookingType === 'ONLINE';
+  const isOnline = booking?.bookingType === 'online';
   const scheduledDate = booking
     ? new Date(booking.scheduledAt).toLocaleDateString(dir.isRTL ? 'ar-SA' : 'en-US', {
         weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',

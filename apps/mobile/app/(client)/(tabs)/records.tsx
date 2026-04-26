@@ -74,9 +74,10 @@ export default function RecordsScreen() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      // Backend filter `status=COMPLETED` is supported (see MobileListBookingsDto).
+      // status filter is uppercased by the service layer; backend mobile DTO
+      // validates the Prisma enum verbatim.
       const res = await clientBookingsService.list({
-        status: 'COMPLETED',
+        status: 'completed',
         limit: 50,
       });
       setItems(res.items);
@@ -171,7 +172,7 @@ export default function RecordsScreen() {
               ? b.service?.nameAr ?? b.service?.nameEn
               : b.service?.nameEn ?? b.service?.nameAr) ?? '';
             const initial = therapistName.charAt(0);
-            const isVideo = b.bookingType === 'ONLINE';
+            const isVideo = b.bookingType === 'online';
 
             return (
               <Animated.View

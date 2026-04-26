@@ -1,15 +1,6 @@
-/** Booking types */
-export type BookingType = 'in_person' | 'online' | 'walk_in' | 'group';
-export type BookingStatus =
-  | 'pending'
-  | 'pending_group_fill'
-  | 'awaiting_payment'
-  | 'confirmed'
-  | 'completed'
-  | 'cancelled'
-  | 'cancel_requested'
-  | 'no_show'
-  | 'expired';
+/** Booking types — re-exported from the canonical enum module. */
+export type { BookingType, BookingStatus } from './booking-enums';
+import type { BookingType, BookingStatus } from './booking-enums';
 export type PaymentStatus = 'pending' | 'awaiting' | 'paid' | 'refunded' | 'failed' | 'rejected';
 export type PaymentMethod = 'moyasar' | 'bank_transfer' | 'cash';
 export type TransferVerificationStatus =
@@ -64,7 +55,23 @@ export interface Booking {
   employeeId: string;
   employee: Employee;
   serviceId?: string;
+  /**
+   * Embedded service summary returned by the mobile employee/client booking
+   * endpoints (mapped from the Prisma `Service` relation). All fields are
+   * optional because the dashboard mapper omits them on some response shapes.
+   */
+  service?: {
+    id?: string;
+    nameAr?: string | null;
+    nameEn?: string | null;
+    duration?: number;
+  };
   type: BookingType;
+  /** Alias of `type` — matches the field name used by the client mobile API
+   * (`/mobile/client/bookings`). Kept optional because the employee endpoints
+   * still emit the legacy `type` field. Consumers should prefer
+   * `booking.bookingType ?? booking.type`. */
+  bookingType?: BookingType;
   status: BookingStatus;
   checkedInAt?: string | null;
   date: string;

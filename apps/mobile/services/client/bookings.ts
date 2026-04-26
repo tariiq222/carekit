@@ -1,16 +1,7 @@
 import api from '../api';
+import type { BookingStatus, BookingType } from '@/types/booking-enums';
 
-export type BookingStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'CANCEL_REQUESTED'
-  | 'NO_SHOW'
-  | 'AWAITING_PAYMENT'
-  | 'EXPIRED';
-
-export type BookingTypeEnum = 'ONLINE' | 'INDIVIDUAL' | 'GROUP' | 'WALK_IN';
+export type { BookingStatus, BookingType };
 
 export interface ClientBookingRow {
   id: string;
@@ -18,7 +9,7 @@ export interface ClientBookingRow {
   scheduledAt: string;
   durationMins: number;
   status: BookingStatus;
-  bookingType: BookingTypeEnum;
+  bookingType: BookingType;
   employeeId: string;
   employee?: {
     id: string;
@@ -66,9 +57,22 @@ interface CreateBookingData {
 }
 
 interface ListParams {
-  status?: string;
+  status?: string | string[];
   page?: number;
   limit?: number;
+}
+
+/**
+ * The backend `MobileListBookingsDto` validates `status` against the Prisma
+ * `BookingStatus` enum (UPPERCASE) and does NOT apply a class-transformer
+ * `@Transform(toUpperCase)` like the dashboard DTO. So callers that pass the
+ * canonical lowercase form (`'completed'`) would otherwise get a 400.
+ *
+ * We uppercase here at the request boundary; response payloads remain in the
+ * canonical lowercase form (the mobile mapper handles that on the way back).
+ */
+function upperStatus(s: string | string[]): string | string[] {
+  return Array.isArray(s) ? s.map((v) => v.toUpperCase()) : s.toUpperCase();
 }
 
 interface RateData {
@@ -79,9 +83,12 @@ interface RateData {
 
 export const clientBookingsService = {
   async list(params?: ListParams) {
+    const outgoing = params?.status !== undefined
+      ? { ...params, status: upperStatus(params.status) }
+      : params;
     const response = await api.get<BookingsListResponse>(
       '/mobile/client/bookings',
-      { params },
+      { params: outgoing },
     );
     return response.data;
   },

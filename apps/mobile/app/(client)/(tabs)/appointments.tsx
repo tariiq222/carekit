@@ -46,10 +46,10 @@ function hashGradient(id: string) {
 }
 
 function tabOf(status: ClientBookingStatus): TabKey {
-  if (status === 'CANCELLED' || status === 'CANCEL_REQUESTED' || status === 'EXPIRED') {
+  if (status === 'cancelled' || status === 'cancel_requested' || status === 'expired') {
     return 'cancelled';
   }
-  if (status === 'COMPLETED' || status === 'NO_SHOW') return 'past';
+  if (status === 'completed' || status === 'no_show') return 'past';
   return 'upcoming';
 }
 
@@ -171,7 +171,7 @@ export default function AppointmentsScreen() {
               ? b.employee?.nameAr ?? b.employee?.nameEn
               : b.employee?.nameEn ?? b.employee?.nameAr) ?? '—';
             const initial = therapistName.charAt(0);
-            const isVideo = b.bookingType === 'ONLINE';
+            const isVideo = b.bookingType === 'online';
             const location = isVideo
               ? (dir.isRTL ? 'جلسة فيديو' : 'Video call')
               : (dir.isRTL ? b.branch?.nameAr ?? b.branch?.nameEn ?? '' : b.branch?.nameEn ?? b.branch?.nameAr ?? '');

@@ -257,6 +257,26 @@
       "required": "Required",
       "invalidPhone": "Phone must be in +9665XXXXXXXX format",
       "invalidEmail": "Invalid email"
+    },
+    "tenant": {
+      "title": "Organizations",
+      "current": "Current",
+      "primary": "Primary",
+      "switchingTitle": "Switching…",
+      "switchSuccess": "Switched",
+      "switchError": "Could not switch",
+      "confirmTitle": "Switch organization",
+      "confirmBody": "Switch context to {{org}}?",
+      "role": {
+        "OWNER": "Owner",
+        "ADMIN": "Admin",
+        "STAFF": "Staff",
+        "MEMBER": "Member",
+        "CLINIC_OWNER": "Clinic owner",
+        "RECEPTIONIST": "Receptionist",
+        "EMPLOYEE": "Employee",
+        "CLIENT": "Client"
+      }
     }
   },
   "notifications": {
@@ -278,7 +298,14 @@
     "meetingStartsIn": "Meeting starts in",
     "refresh": "Refresh",
     "openingZoom": "Opening Zoom...",
-    "meetingInfo": "Meeting Information"
+    "meetingInfo": "Meeting Information",
+    "bookingNotFound": "Booking not found",
+    "sessionEnded": "Session ended",
+    "meetingUnavailable": "Meeting unavailable",
+    "opensIn": "Joining opens in {{minutes}} min",
+    "serviceLabel": "Service",
+    "withLabel": "With",
+    "timeLabel": "When"
   },
   "verification": {
     "bannerTitle": "Verify your email to access all services",

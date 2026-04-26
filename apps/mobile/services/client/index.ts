@@ -12,7 +12,7 @@ export type {
   BookingsListResponse,
   ClientBookingRow,
   BookingStatus as ClientBookingStatus,
-  BookingTypeEnum as ClientBookingType,
+  BookingType as ClientBookingType,
 } from './bookings';
 export type { PaymentsListResponse } from './payments';
 export type {

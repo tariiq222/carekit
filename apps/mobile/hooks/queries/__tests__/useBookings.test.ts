@@ -44,11 +44,11 @@ describe('useClientBookings', () => {
     mockedList.mockResolvedValueOnce(payload);
 
     const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useClientBookings({ status: 'CONFIRMED' }), { wrapper: Wrapper });
+    const { result } = renderHook(() => useClientBookings({ status: 'confirmed' }), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(payload);
-    expect(mockedList).toHaveBeenCalledWith({ status: 'CONFIRMED' });
+    expect(mockedList).toHaveBeenCalledWith({ status: 'confirmed' });
   });
 
   it('surfaces errors via isError', async () => {
@@ -60,8 +60,8 @@ describe('useClientBookings', () => {
   });
 
   it('exposes a stable cache key shape', () => {
-    const key = clientBookingsKeys.list({ status: 'CONFIRMED', page: 2 });
-    expect(key).toEqual(['bookings', 'list', { status: 'CONFIRMED', page: 2 }]);
+    const key = clientBookingsKeys.list({ status: 'confirmed', page: 2 });
+    expect(key).toEqual(['bookings', 'list', { status: 'confirmed', page: 2 }]);
   });
 });
 
@@ -101,7 +101,7 @@ describe('useBooking', () => {
 
 describe('useCancelBooking', () => {
   it('calls cancel and invalidates booking caches on success', async () => {
-    mockedCancel.mockResolvedValueOnce({ id: 'b1', status: 'CANCELLED' });
+    mockedCancel.mockResolvedValueOnce({ id: 'b1', status: 'cancelled' });
     const { qc, Wrapper } = makeWrapper();
     const invalidateSpy = jest.spyOn(qc, 'invalidateQueries');
 

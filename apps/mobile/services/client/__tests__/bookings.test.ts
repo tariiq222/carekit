@@ -17,8 +17,8 @@ const sampleRow: ClientBookingRow = {
   invoiceId: 'inv-1',
   scheduledAt: '2026-05-01T10:00:00Z',
   durationMins: 30,
-  status: 'CONFIRMED',
-  bookingType: 'ONLINE',
+  status: 'confirmed',
+  bookingType: 'online',
   employeeId: 'e1',
   branchId: 'br1',
   serviceId: 's1',
@@ -32,7 +32,7 @@ beforeEach(() => {
 });
 
 describe('clientBookingsService.list', () => {
-  it('GETs /mobile/client/bookings with optional params', async () => {
+  it('GETs /mobile/client/bookings and UPPERCASES the status param (backend DTO has no Transform)', async () => {
     const payload: BookingsListResponse = {
       items: [sampleRow],
       meta: {
@@ -46,11 +46,35 @@ describe('clientBookingsService.list', () => {
     };
     mockedApi.get.mockResolvedValueOnce({ data: payload });
 
-    const r = await clientBookingsService.list({ status: 'CONFIRMED', page: 1, limit: 10 });
+    const r = await clientBookingsService.list({ status: 'confirmed', page: 1, limit: 10 });
 
     expect(r).toEqual(payload);
     expect(mockedApi.get).toHaveBeenCalledWith('/mobile/client/bookings', {
       params: { status: 'CONFIRMED', page: 1, limit: 10 },
+    });
+  });
+
+  it('uppercases lowercase `completed` (the records.tsx case that was 400-ing)', async () => {
+    mockedApi.get.mockResolvedValueOnce({ data: { items: [], meta: {} } });
+    await clientBookingsService.list({ status: 'completed', limit: 50 });
+    expect(mockedApi.get).toHaveBeenCalledWith('/mobile/client/bookings', {
+      params: { status: 'COMPLETED', limit: 50 },
+    });
+  });
+
+  it('uppercases each entry when status is an array', async () => {
+    mockedApi.get.mockResolvedValueOnce({ data: { items: [], meta: {} } });
+    await clientBookingsService.list({ status: ['pending', 'confirmed'] });
+    expect(mockedApi.get).toHaveBeenCalledWith('/mobile/client/bookings', {
+      params: { status: ['PENDING', 'CONFIRMED'] },
+    });
+  });
+
+  it('leaves params untouched when status is omitted', async () => {
+    mockedApi.get.mockResolvedValueOnce({ data: { items: [], meta: {} } });
+    await clientBookingsService.list({ page: 2 });
+    expect(mockedApi.get).toHaveBeenCalledWith('/mobile/client/bookings', {
+      params: { page: 2 },
     });
   });
 
@@ -109,9 +133,9 @@ describe('clientBookingsService.create', () => {
 
 describe('clientBookingsService.cancel / reschedule / rate / getJoinUrl', () => {
   it('cancel hits /cancel with reason body', async () => {
-    mockedApi.post.mockResolvedValueOnce({ data: { ...sampleRow, status: 'CANCELLED' } });
+    mockedApi.post.mockResolvedValueOnce({ data: { ...sampleRow, status: 'cancelled' } });
     const r = await clientBookingsService.cancel('b1', 'changed plan');
-    expect(r.status).toBe('CANCELLED');
+    expect(r.status).toBe('cancelled');
     expect(mockedApi.post).toHaveBeenCalledWith(
       '/mobile/client/bookings/b1/cancel',
       { reason: 'changed plan' },

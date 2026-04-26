@@ -5,5 +5,5 @@ import { VideoCallScreen } from '@/components/features/VideoCallScreen';
  * Route: /(employee)/video-call?bookingId=xxx
  */
 export default function EmployeeVideoCallScreen() {
-  return <VideoCallScreen />;
+  return <VideoCallScreen role="employee" />;
 }

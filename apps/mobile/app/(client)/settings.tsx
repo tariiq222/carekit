@@ -27,6 +27,7 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
 import { SettingsProfileSection } from './settings-profile-section';
+import { OrganizationSwitcherSection } from '@/components/features/settings/OrganizationSwitcherSection';
 import { clientProfileService } from '@/services/client/profile';
 import { registerForPushAsync, unregisterPushAsync } from '@/services/push';
 
@@ -151,6 +152,9 @@ export default function SettingsScreen() {
             onPress={() => handleLanguageSelect('en')}
           />
         </ThemedCard>
+
+        {/* Tenant switcher (only renders when user has 2+ memberships) */}
+        <OrganizationSwitcherSection />
 
         {/* Notifications + Appearance (local-only) */}
         <ThemedCard padding={20} style={{ marginBottom: 16 }}>
