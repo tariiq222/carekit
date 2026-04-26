@@ -11,7 +11,6 @@ import { FeatureKey } from "@carekit/shared/constants"
 import { SessionsTab } from "@/components/features/chatbot/sessions-tab"
 import { KnowledgeBaseTab } from "@/components/features/chatbot/knowledge-base-tab"
 import { ConfigTab } from "@/components/features/chatbot/config-tab"
-import { AnalyticsTab } from "@/components/features/chatbot/analytics-tab"
 
 export default function ChatbotPage() {
   const { t } = useLocale()
@@ -38,9 +37,6 @@ export default function ChatbotPage() {
             <TabsTrigger value="config">
               {t("chatbot.tabs.config")}
             </TabsTrigger>
-            <TabsTrigger value="analytics">
-              {t("chatbot.tabs.analytics")}
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -54,10 +50,6 @@ export default function ChatbotPage() {
 
         <TabsContent value="config">
           <ConfigTab />
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <AnalyticsTab />
         </TabsContent>
       </Tabs>
     </ListPageShell>
