@@ -23,7 +23,7 @@ async function call(path: string, init: RequestInit) {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { t } = useLocale()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -34,10 +34,10 @@ export default function OnboardingPage() {
   const [step3, setStep3] = useState<Step3Data>(defaultStep3Data)
 
   useEffect(() => {
-    if (!user) router.replace("/")
-  }, [user, router])
+    if (!authLoading && !user) router.replace("/")
+  }, [authLoading, user, router])
 
-  if (!user) return null
+  if (authLoading || !user) return null
 
   const authHeader = {
     Authorization: `Bearer ${getAccessToken() ?? ""}`,
@@ -107,15 +107,15 @@ export default function OnboardingPage() {
         body: JSON.stringify({ nameAr: step3.branchName, city: step3.city, isMain: true }),
       })
       const branch = (await branchRes.json()) as { id: string }
-      const items = Object.entries(step3.hours)
+      const schedule = Object.entries(step3.hours)
         .filter(([, h]) => h.enabled)
-        .map(([day, h]) => ({ dayOfWeek: Number(day), startTime: h.open, endTime: h.close, isClosed: false }))
-      if (items.length > 0) {
+        .map(([day, h]) => ({ dayOfWeek: Number(day), startTime: h.open, endTime: h.close, isOpen: true }))
+      if (schedule.length > 0) {
         await call(`/api/v1/dashboard/organization/hours`, {
           method: "POST",
           headers: authHeader,
           credentials: "include",
-          body: JSON.stringify({ branchId: branch.id, items }),
+          body: JSON.stringify({ branchId: branch.id, schedule }),
         })
       }
       setStep(4)
