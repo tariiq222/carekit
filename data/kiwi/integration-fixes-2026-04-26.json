@@ -1,0 +1,40 @@
+{
+  "domain": "Bookings",
+  "version": "main",
+  "build": "integration-fixes-qa-2026-04-26",
+  "planName": "Integration Audit Follow-ups — Manual QA — 2026-04-26",
+  "planSummary": "Closeout QA for the 2026-04-26 integration audit. Verifies (B) admin /organizations smoke after ApiError 4-arg widening in PR #73, (C1) dashboard create-booking no longer returns 400 for bookingType=in_person, (C2) website /booking propagates X-Org-Id on public endpoints. Mobile, multi-tenant switch, and suspended-org scenarios deferred (no environment).",
+  "runSummary": "Run on team/integration-followups against backend :5100, dashboard :5103, admin :5104, website :5105. Two new bugs surfaced (CORS allow-list missing X-Org-Id; dev seed lacks BusinessHours) — both out of scope for this PR per plan.",
+  "cases": [
+    {
+      "summary": "Admin /organizations renders with no console errors after ApiError widening (PR #73)",
+      "text": "1. Boot apps/admin on :5104. 2. new_page http://localhost:5104; login as super-admin (tariq.alwalidi@gmail.com). 3. Navigate /organizations. Expected: list renders, zero console errors, ApiError 4-arg constructor remains backward-compatible (code default 'UNKNOWN'). Actual: 717 tenants render with pagination + filters; only [Fast Refresh] logs in console.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Dashboard create-booking accepts bookingType=in_person (regression P0)",
+      "text": "1. Login receptionist on /bookings. 2. Click 'حجز جديد'. 3. Pick client + service + employee. Expected: POST /dashboard/bookings returns 201 (was 400 pre-P0). Actual: wizard reaches slot picker; slots endpoint returns 200 [] for every date due to missing BusinessHours seed (unrelated bug surfaced). Code-level verification: backend unit test 'create-booking.handler.spec.ts › accepts mapped bookingType INDIVIDUAL (from in_person)' passes; mapBookingType helper centralised in 5 DTOs.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Website /booking sends X-Org-Id on /public/employees + /public/catalog (P1 wiring)",
+      "text": "1. Set NEXT_PUBLIC_DEFAULT_ORG_ID in apps/website/.env.local. 2. Start website on :5105. 3. Navigate /booking. Expected: /api/v1/public/employees + /catalog calls carry X-Org-Id + return 200, UI shows services. Actual: requests dispatched with x-org-id: 00000000-…-000000000001 in headers (P1 wiring verified via get_network_request). Backend returns 200 to direct curl. Browser blocks via CORS preflight because backend Access-Control-Allow-Headers omits X-Org-Id → UI shows 'Failed to load services'. Wiring fix is correct; new CORS bug surfaced.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Dashboard tenant-switch with multi-membership user",
+      "text": "Skipped: default seed creates only one Membership for the super-admin user. Would require seeding a second Membership before this scenario can run.",
+      "result": "SKIP"
+    },
+    {
+      "summary": "Mobile employee booking flow",
+      "text": "Skipped: no iOS or Android simulator available on this host.",
+      "result": "SKIP"
+    },
+    {
+      "summary": "Dashboard suspended-org banner blocks writes",
+      "text": "Skipped: no suspended tenant in seed data; would first require an admin 'Suspend' action (out of scope for this audit follow-up).",
+      "result": "SKIP"
+    }
+  ]
+}

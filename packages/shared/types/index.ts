@@ -1,6 +1,5 @@
 export type * from "./api";
 export type * from "./auth";
-export type * from "./booking";
 export type * from "./billing-features";
 export type * from "./client-auth";
 export type * from "./employee";
