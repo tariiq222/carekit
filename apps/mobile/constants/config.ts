@@ -27,3 +27,6 @@ export const APP_SCHEME = 'sawa';
 export const DEFAULT_LANGUAGE = 'ar';
 export const SUPPORTED_LANGUAGES = ['ar', 'en'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+export const PRIVACY_POLICY_URL =
+  process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? 'https://sawa.sa/privacy';

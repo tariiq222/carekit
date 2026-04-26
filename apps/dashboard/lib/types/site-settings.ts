@@ -84,6 +84,80 @@ export const HERO_DEFAULTS: HeroFormValues = {
   badgeFloatBottomValue: 'هيئة التخصصات',
 }
 
+// ─── Privacy Policy ──────────────────────────────────────────────────────────
+
+export interface PrivacyPolicyFormValues {
+  ar: string
+  en: string
+}
+
+export const PRIVACY_POLICY_KEY_AR   = 'legal.privacy.ar'
+export const PRIVACY_POLICY_KEY_EN   = 'legal.privacy.en'
+export const PRIVACY_POLICY_KEY_DATE = 'legal.privacy.updatedAt'
+
+export const PRIVACY_POLICY_DEFAULTS: PrivacyPolicyFormValues = {
+  ar: `سياسة الخصوصية
+
+نحن ملتزمون بحماية خصوصيتك وفقاً لنظام حماية البيانات الشخصية في المملكة العربية السعودية.
+
+١. البيانات التي نجمعها
+- الاسم الأول والأخير
+- البريد الإلكتروني
+- رقم الهاتف (اختياري)
+- تاريخ المواعيد والجلسات
+- صور وثائق الدفع (عند اختيار التحويل البنكي)
+- معرّف الجهاز لأغراض الإشعارات الفورية
+
+٢. الغرض من الجمع
+نستخدم هذه البيانات لـ: تقديم خدمات الحجز والجلسات، التواصل معك بشأن مواعيدك، معالجة المدفوعات، وإرسال الإشعارات ذات الصلة.
+
+٣. مشاركة البيانات
+لا نبيع بياناتك. قد نشاركها مع: مزوّدي معالجة المدفوعات (بوّابات الدفع المرخّصة)، خدمات الإشعارات (FCM)، وخدمات مؤتمرات الفيديو — وذلك بالقدر اللازم فقط لتقديم الخدمة.
+
+٤. الاحتفاظ بالبيانات
+نحتفظ ببياناتك طوال فترة نشاط حسابك. يمكنك طلب الحذف في أي وقت.
+
+٥. حقوقك
+وفقاً لنظام حماية البيانات الشخصية، يحق لك: الاطلاع على بياناتك، تصحيحها، طلب حذفها، أو الاعتراض على معالجتها. للتواصل: أرسل طلبك عبر التطبيق أو تواصل مع فريق الدعم.
+
+٦. الأمان
+نستخدم تشفير TLS أثناء النقل وتشفير قاعدة البيانات في حالة السكون لحماية بياناتك.
+
+٧. التعديلات
+نُخطرك بأي تغييرات جوهرية عبر التطبيق أو البريد الإلكتروني قبل نفاذها بـ 14 يوماً.`,
+  en: `Privacy Policy
+
+We are committed to protecting your privacy in compliance with the Saudi Personal Data Protection Law (PDPL).
+
+1. Data We Collect
+- First and last name
+- Email address
+- Phone number (optional)
+- Appointment and session history
+- Payment documents (when using bank transfer)
+- Device identifier for push notifications
+
+2. Purpose of Collection
+We use this data to: deliver booking and session services, communicate with you about appointments, process payments, and send relevant notifications.
+
+3. Data Sharing
+We do not sell your data. We may share it with: licensed payment processors, notification services (FCM), and video conferencing providers — only as necessary to deliver the service.
+
+4. Retention
+We retain your data while your account is active. You may request deletion at any time.
+
+5. Your Rights
+Under the PDPL, you have the right to: access, correct, delete, or object to the processing of your data. Contact us via the app or our support team.
+
+6. Security
+We use TLS encryption in transit and database encryption at rest to protect your data.
+
+7. Changes
+We will notify you of material changes via the app or email at least 14 days before they take effect.`,
+}
+
+// ─── Home page section intros ─────────────────────────────────────────────────
+
 /**
  * Home page section intros (Features/Clinics/Team/FAQ/Testimonials/Blog/SupportGroups/CTA).
  * Mirrors website/features/site-content/section-intros. Each section exposes the

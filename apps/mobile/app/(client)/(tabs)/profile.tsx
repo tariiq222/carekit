@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +24,7 @@ import { logout } from '@/stores/slices/auth-slice';
 import { unregisterPushAsync } from '@/services/push';
 import { getFontName } from '@/theme/fonts';
 import { useSummary } from '@/hooks/queries';
+import { PRIVACY_POLICY_URL } from '@/constants/config';
 
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -101,7 +102,7 @@ export default function ProfileScreen() {
   };
 
   const settingsItems: SettingItem[] = [
-    { icon: <Lock size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />, label: { ar: 'الخصوصية والأمان', en: 'Privacy & Security' }, color: sawaaColors.teal[600] },
+    { icon: <Lock size={18} color={sawaaColors.teal[600]} strokeWidth={1.75} />, label: { ar: 'الخصوصية والأمان', en: 'Privacy & Security' }, color: sawaaColors.teal[600], onPress: () => Linking.openURL(PRIVACY_POLICY_URL) },
     { icon: <Bell size={18} color={sawaaColors.accent.violet} strokeWidth={1.75} />, label: { ar: 'الإشعارات', en: 'Notifications' }, color: sawaaColors.accent.violet, meta: { ar: 'مفعّلة', en: 'On' } },
     { icon: <Moon size={18} color={sawaaColors.ink[700]} strokeWidth={1.75} />, label: { ar: 'الوضع الليلي', en: 'Dark mode' }, color: sawaaColors.ink[700], toggle: darkMode, onToggle: () => setDarkMode((v) => !v) },
     { icon: <Heart size={18} color={sawaaColors.accent.rose} strokeWidth={1.75} />, label: { ar: 'الصحة النفسية', en: 'Wellness' }, color: sawaaColors.accent.rose },
