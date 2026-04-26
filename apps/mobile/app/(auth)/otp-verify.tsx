@@ -7,6 +7,7 @@ import {
   Pressable,
   Alert,
   StyleSheet,
+  Text,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -19,19 +20,23 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { useTheme } from '@/theme/useTheme';
 import { useAppDispatch } from '@/hooks/use-redux';
-import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
-import { authService } from '@/services/auth';
+import { setAuthSession, setUser } from '@/stores/slices/auth-slice';
+import { useVerifyOtp, useRequestLoginOtp, useMe } from '@/hooks/queries';
 import { registerForPushAsync } from '@/services/push';
-import { getPrimaryRole } from '@/types/auth';
-import { hasSeenOnboarding } from '@/lib/onboarding';
+import { setCurrentOrgId } from '@/services/tenant';
 
-const OTP_LENGTH = 6;
+const OTP_LENGTH = 4;
 const RESEND_COOLDOWN = 60;
 
 export default function OtpVerifyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const params = useLocalSearchParams<{
+    identifier: string;
+    purpose: 'register' | 'login';
+    maskedIdentifier: string;
+  }>();
+  const { identifier = '', purpose = 'register', maskedIdentifier = '' } = params;
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { theme, isRTL } = useTheme();
@@ -39,17 +44,13 @@ export default function OtpVerifyScreen() {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
-  const [otpSent, setOtpSent] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
-  // Send OTP on mount
-  useEffect(() => {
-    if (email && !otpSent) {
-      sendOtp();
-    }
-  }, [email, otpSent]);
+  const verifyOtp = useVerifyOtp();
+  const requestLoginOtp = useRequestLoginOtp();
+  const { refetch: refetchMe } = useMe();
 
-  // Countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
@@ -58,22 +59,9 @@ export default function OtpVerifyScreen() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const sendOtp = useCallback(async () => {
-    if (!email) return;
-    try {
-      await authService.sendOtp({ email });
-      setOtpSent(true);
-      setCountdown(RESEND_COOLDOWN);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      Alert.alert(t('common.error'), t('auth.otpError'));
-    }
-  }, [email, t]);
-
   const handleChange = useCallback(
     (text: string, index: number) => {
       if (text.length > 1) {
-        // Handle paste
         const pasted = text.slice(0, OTP_LENGTH).split('');
         const newOtp = [...otp];
         pasted.forEach((char, i) => {
@@ -113,31 +101,37 @@ export default function OtpVerifyScreen() {
     [otp],
   );
 
+  const navigateAfterVerify = useCallback(
+    async (activeMembership: { id: string; organizationId: string; role: string } | null) => {
+      if (activeMembership) {
+        await setCurrentOrgId(activeMembership.organizationId);
+        router.replace('/(employee)/(tabs)/today');
+      } else {
+        router.replace('/(client)/(tabs)/home');
+      }
+    },
+    [router],
+  );
+
   const handleVerify = useCallback(async () => {
     const code = otp.join('');
     if (code.length !== OTP_LENGTH) return;
 
     setIsLoading(true);
-    dispatch(setLoading(true));
 
     try {
-      const response = await authService.verifyOtp({
-        email: email ?? '',
-        code,
-      });
-      if (response.success && response.data) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        void registerForPushAsync();
-        // OTP verification also auto-verifies email on backend
-        const role = getPrimaryRole(response.data.user);
-        if (role === 'employee') {
-          router.replace('/(employee)/(tabs)/today');
-        } else {
-          const seen = await hasSeenOnboarding();
-          router.replace(seen ? '/(client)/(tabs)/home' : '/(auth)/onboarding');
-        }
+      const result = await verifyOtp.mutateAsync({ identifier, code, purpose });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      dispatch(setAuthSession({ tokens: result.tokens, activeMembership: result.activeMembership }));
+      void registerForPushAsync();
+
+      const meResult = await refetchMe();
+      if (meResult.data?.data) {
+        dispatch(setUser(meResult.data.data as any));
       }
+
+      await navigateAfterVerify(result.activeMembership);
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('common.error'), t('auth.otpError'));
@@ -145,9 +139,23 @@ export default function OtpVerifyScreen() {
       inputRefs.current[0]?.focus();
     } finally {
       setIsLoading(false);
-      dispatch(setLoading(false));
     }
-  }, [otp, email, dispatch, router, t]);
+  }, [otp, identifier, purpose, verifyOtp, dispatch, refetchMe, navigateAfterVerify, t]);
+
+  const handleResend = useCallback(async () => {
+    if (purpose !== 'login') return;
+    setResendLoading(true);
+    try {
+      await requestLoginOtp.mutateAsync({ identifier });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCountdown(RESEND_COOLDOWN);
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(t('common.error'), t('error.generic'));
+    } finally {
+      setResendLoading(false);
+    }
+  }, [purpose, identifier, requestLoginOtp, t]);
 
   const isComplete = otp.every((d) => d !== '');
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -164,7 +172,6 @@ export default function OtpVerifyScreen() {
             { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 20 },
           ]}
         >
-          {/* Back Button */}
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -179,7 +186,6 @@ export default function OtpVerifyScreen() {
             />
           </Pressable>
 
-          {/* Header */}
           <View style={styles.header}>
             <LinearGradient
               colors={['#0037B0', '#1D4ED8']}
@@ -198,7 +204,7 @@ export default function OtpVerifyScreen() {
             </LinearGradient>
 
             <ThemedText variant="displaySm" align="center">
-              {t('auth.otpTitle')}
+              {t('otp.title')}
             </ThemedText>
             <ThemedText
               variant="bodySm"
@@ -206,21 +212,10 @@ export default function OtpVerifyScreen() {
               color={theme.colors.textSecondary}
               style={styles.sub}
             >
-              {t('auth.otpSub')}
+              {t('otp.sentTo')} {maskedIdentifier}
             </ThemedText>
-            {email && (
-              <ThemedText
-                variant="body"
-                align="center"
-                color="#1D4ED8"
-                style={styles.email}
-              >
-                {email}
-              </ThemedText>
-            )}
           </View>
 
-          {/* OTP Boxes */}
           <View style={styles.otpRow}>
             {otp.map((digit, index) => (
               <TextInput
@@ -250,7 +245,6 @@ export default function OtpVerifyScreen() {
             ))}
           </View>
 
-          {/* Verify Button */}
           <View style={styles.actions}>
             <ThemedButton
               onPress={handleVerify}
@@ -260,30 +254,39 @@ export default function OtpVerifyScreen() {
               loading={loading}
               disabled={!isComplete || loading}
             >
-              {t('auth.verify')}
+              {loading ? t('otp.submitting') : t('otp.submit')}
             </ThemedButton>
 
-            {/* Resend */}
             <View style={styles.resendRow}>
-              {countdown > 0 ? (
+              {purpose === 'login' ? (
+                countdown > 0 ? (
+                  <ThemedText
+                    variant="bodySm"
+                    color={theme.colors.textMuted}
+                    align="center"
+                  >
+                    {t('otp.resendIn', { seconds: countdown })}
+                  </ThemedText>
+                ) : (
+                  <Pressable onPress={handleResend} disabled={resendLoading}>
+                    <ThemedText
+                      variant="bodySm"
+                      color="#1D4ED8"
+                      align="center"
+                      style={styles.link}
+                    >
+                      {resendLoading ? t('common.loading') : t('otp.resend')}
+                    </ThemedText>
+                  </Pressable>
+                )
+              ) : (
                 <ThemedText
                   variant="bodySm"
                   color={theme.colors.textMuted}
                   align="center"
                 >
-                  {t('auth.resendIn')} {countdown} {t('auth.seconds')}
+                  {t('otp.registerNoResend') ?? 'Tap back and re-submit if you didn\'t receive the code.'}
                 </ThemedText>
-              ) : (
-                <Pressable onPress={sendOtp}>
-                  <ThemedText
-                    variant="bodySm"
-                    color="#1D4ED8"
-                    align="center"
-                    style={styles.link}
-                  >
-                    {t('auth.resendOtp')}
-                  </ThemedText>
-                </Pressable>
               )}
             </View>
           </View>
@@ -314,7 +317,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sub: { marginTop: 8 },
-  email: { marginTop: 4, fontWeight: '600' },
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'center',

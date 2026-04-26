@@ -45,12 +45,15 @@ export function getPrimaryRole(user: User): UserRole {
   return 'employee';
 }
 
+export type ActiveMembership = { id: string; organizationId: string; role: string };
+
 export interface AuthState {
   token: string | null;
   refreshToken: string | null;
   user: User | null;
   isLoading: boolean;
   organizationId: string | null;
+  activeMembership: ActiveMembership | null;
 }
 
 export interface LoginRequest {

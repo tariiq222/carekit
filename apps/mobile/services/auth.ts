@@ -38,8 +38,16 @@ export const registerUser = (body: RegisterPayload) =>
 export const requestLoginOtp = (body: RequestLoginOtpPayload) =>
   api.post<RequestLoginOtpResponse>('/api/v1/mobile/auth/request-login-otp', body).then(r => r.data);
 
-export const verifyMobileOtp = (body: VerifyOtpPayload) =>
-  api.post<VerifyOtpResponse>('/api/v1/mobile/auth/verify-otp', body).then(r => r.data);
+export const verifyMobileOtp = async (body: VerifyOtpPayload): Promise<VerifyOtpResponse> => {
+  const response = await api.post<VerifyOtpResponse>('/api/v1/mobile/auth/verify-otp', body);
+  const data = response.data;
+  await setSecureItem('accessToken', data.tokens.accessToken);
+  await setSecureItem('refreshToken', data.tokens.refreshToken);
+  if (data.activeMembership) {
+    await setCurrentOrgId(data.activeMembership.organizationId);
+  }
+  return data;
+};
 
 export const requestEmailVerification = () =>
   api.post<{ success: true }>('/api/v1/mobile/auth/request-email-verification').then(r => r.data);

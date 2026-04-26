@@ -25,6 +25,7 @@
     "otp.submit": "Verify",
     "otp.submitting": "Verifying...",
     "otp.sentTo": "Code sent to",
+    "otp.registerNoResend": "Go back and re-submit if you didn't receive the code.",
     "otp.noAccount": "Don't have an account?",
     "otp.createAccount": "Create Account",
     "error.generic": "Something went wrong. Please try again.",
