@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW } from '@/theme/glass';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { AquaBackground, PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { authService } from '@/services/auth';
@@ -94,8 +94,8 @@ export default function ForgotPasswordScreen() {
           <Animated.View entering={FadeInUp.delay(400).duration(800).easing(Easing.out(Easing.cubic))}>
             <Glass
               variant="regular"
-              radius={RADII.card}
-              style={[styles.form, SHADOW, { marginTop: 32 }]}
+              radius={sawaaTokens.radius.lg}
+              style={[styles.form, { marginTop: 32 }]}
             >
               <View style={styles.formInner}>
                 {/* Email */}
@@ -108,7 +108,7 @@ export default function ForgotPasswordScreen() {
                   >
                     {t('auth.forgotPassword.emailLabel')}
                   </Text>
-                  <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                  <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
                     <TextInput
                       value={email}
                       onChangeText={(text) => {
@@ -116,7 +116,7 @@ export default function ForgotPasswordScreen() {
                         if (error) setError(null);
                       }}
                       placeholder={t('auth.emailPlaceholder')}
-                      placeholderTextColor={C.subtle}
+                      placeholderTextColor={sawaaColors.ink[500]}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoComplete="email"
@@ -173,15 +173,15 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { paddingHorizontal: 24 },
-  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
+  title: { fontSize: 32, color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
+  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, color: C.deepTeal },
+  label: { fontSize: 14, color: sawaaColors.teal[700] },
   input: { padding: 14 },
-  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
-  error: { fontSize: 12, color: '#E74C3C' },
+  inputText: { flex: 1, fontSize: 14, color: sawaaColors.teal[700] },
+  error: { fontSize: 12, color: sawaaColors.accent.coral },
   backRow: { alignItems: 'center', marginTop: 8 },
-  backLink: { fontSize: 14, color: C.deepTeal },
+  backLink: { fontSize: 14, color: sawaaColors.teal[700] },
 });
