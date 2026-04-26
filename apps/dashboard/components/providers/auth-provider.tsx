@@ -15,7 +15,7 @@ import {
   fetchMe,
   refreshToken,
 } from "@/lib/api/auth"
-import type { AuthUser } from "@/lib/api/auth"
+import type { AuthUser, AuthResponse } from "@/lib/api/auth"
 import { setAccessToken } from "@/lib/api"
 
 /* ─── Context Shape ─── */
@@ -25,6 +25,7 @@ interface AuthContextValue {
   loading: boolean
   permissions: string[]
   login: (email: string, password: string, hCaptchaToken: string) => Promise<void>
+  loginWithTokens: (res: AuthResponse) => void
   logout: () => Promise<void>
   isAuthenticated: boolean
   canDo: (module: string, action: string) => boolean
@@ -90,6 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     scheduleRefresh(res.expiresIn)
   }, [scheduleRefresh])
 
+  const loginWithTokens = useCallback((res: AuthResponse) => {
+    setUser(res.user)
+    setPermissions(res.user.permissions ?? [])
+    scheduleRefresh(res.expiresIn)
+  }, [scheduleRefresh])
+
   const logout = useCallback(async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     await logoutApi()
@@ -115,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         permissions,
         login,
+        loginWithTokens,
         logout,
         isAuthenticated: !!user,
         canDo,
