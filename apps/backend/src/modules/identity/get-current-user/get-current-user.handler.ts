@@ -23,7 +23,12 @@ export class GetCurrentUserHandler {
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
       select: {
         organizationId: true,
-        organization: { select: { vertical: { select: { slug: true } } } },
+        organization: {
+          select: {
+            onboardingCompletedAt: true,
+            vertical: { select: { slug: true } },
+          },
+        },
       },
     });
 
@@ -34,6 +39,7 @@ export class GetCurrentUserHandler {
       lastName: rest.join(' '),
       organizationId: membership?.organizationId ?? null,
       verticalSlug: membership?.organization?.vertical?.slug ?? null,
+      onboardingCompletedAt: membership?.organization?.onboardingCompletedAt ?? null,
     };
   }
 }
