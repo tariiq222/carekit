@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, useState, useRef } from "react";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import type HCaptcha from "@hcaptcha/react-hcaptcha";
+import { CaptchaField } from "./captcha-field";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -16,9 +17,6 @@ import {
 import { Input } from "@carekit/ui/primitives/input";
 import { Label } from "@carekit/ui/primitives/label";
 import { login } from "./login.api";
-
-const DEV_SITE_KEY = "10000000-ffff-ffff-ffff-000000000001";
-const SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? DEV_SITE_KEY;
 
 export function LoginForm() {
   return (
@@ -99,12 +97,10 @@ function Inner() {
               />
             </div>
             <div className="flex justify-center py-2">
-              <HCaptcha
+              <CaptchaField
                 ref={captchaRef}
-                sitekey={SITE_KEY}
                 onVerify={(token) => setHcaptchaToken(token)}
                 onExpire={() => setHcaptchaToken(null)}
-                theme="light"
               />
             </div>
             <Button type="submit" disabled={submitting || !hcaptchaToken} className="mt-2">

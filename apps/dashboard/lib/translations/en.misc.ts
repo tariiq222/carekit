@@ -209,6 +209,7 @@ export const enMisc: Record<string, string> = {
   "login.signingIn": "Signing in...",
   "login.signIn": "Sign in",
   "login.orgSuspended": "This organization has been suspended. Contact the platform admin to restore access.",
+  "login.captchaDevMode": "Dev mode — captcha skipped",
 
   // — Error banner —
   "common.retry": "Retry",
