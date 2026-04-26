@@ -62,6 +62,9 @@ export default function BookingScheduleScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzLabel = dir.isRTL ? 'بتوقيتك المحلي' : `Your local time`;
+
   // Resolve a branch if the previous screen didn't pass one — use the first
   // visible public branch as the default.
   useEffect(() => {
@@ -194,7 +197,7 @@ export default function BookingScheduleScreen() {
             {dir.isRTL ? 'الأوقات المتاحة' : 'Available times'}
           </Text>
           <Text style={[styles.tz, { fontFamily: f400 }]}>
-            {dir.isRTL ? 'بتوقيت الرياض' : 'Riyadh time'}
+            {tzLabel}
           </Text>
         </Animated.View>
 
