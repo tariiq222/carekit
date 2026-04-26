@@ -18,6 +18,7 @@ function buildController(bookingRow: { id: string; employeeId: string } | null) 
   const completeHandler = fn({ id: 'b1' });
   const cancelHandler = fn({ id: 'b1' });
   const requestCancelHandler = fn({ id: 'b1' });
+  const createEmployeeHandler = fn({ id: 'b1' });
 
   const controller = new MobileEmployeeBookingsController(
     prisma as never,
@@ -27,6 +28,7 @@ function buildController(bookingRow: { id: string; employeeId: string } | null) 
     completeHandler as never,
     cancelHandler as never,
     requestCancelHandler as never,
+    createEmployeeHandler as never,
   );
 
   return {
@@ -34,6 +36,7 @@ function buildController(bookingRow: { id: string; employeeId: string } | null) 
     prisma,
     listHandler,
     getHandler,
+    createEmployeeHandler,
     checkInHandler,
     completeHandler,
     cancelHandler,
@@ -42,6 +45,17 @@ function buildController(bookingRow: { id: string; employeeId: string } | null) 
 }
 
 describe('MobileEmployeeBookingsController', () => {
+  describe('createMyBooking', () => {
+    it('delegates to createEmployeeHandler with employeeId derived from JWT', async () => {
+      const { controller, createEmployeeHandler } = buildController(null);
+      const dto = { branchId: 'b-1', clientId: 'c-1', serviceId: 's-1', scheduledAt: '2026-05-01T10:00:00Z' };
+      await controller.createMyBooking(USER as never, dto as never);
+      expect(createEmployeeHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ...dto, employeeId: USER.sub }),
+      );
+    });
+  });
+
   describe('listMyBookings', () => {
     it('forces employeeId to authenticated user.sub', async () => {
       const { controller, listHandler } = buildController(null);

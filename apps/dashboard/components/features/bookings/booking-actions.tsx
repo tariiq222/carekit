@@ -31,16 +31,20 @@ interface BookingActionsProps {
   onAction: () => void
 }
 
-/* ── Transition map: status → available actions ── */
+/* ── Transition map: status → available actions ──
+ * Aligned with DB BookingStatus. `pending_group_fill` and
+ * `awaiting_payment` reuse the `pending` action set since the dashboard
+ * collapses them to `pending` for display via mapStatusForUi.
+ */
 const statusActions = {
   pending: ["confirm", "cancel"] as const,
-  confirmed: ["checkin", "cancel"] as const,
-  pending_cancellation: ["approve_cancel", "reject_cancel"] as const,
+  pending_group_fill: ["confirm", "cancel"] as const,
+  awaiting_payment: ["confirm", "cancel"] as const,
+  confirmed: ["complete", "noshow", "cancel"] as const,
+  cancel_requested: ["approve_cancel", "reject_cancel"] as const,
   completed: [] as const,
   cancelled: [] as const,
   no_show: [] as const,
-  checked_in: ["start", "complete", "noshow", "cancel"] as const,
-  in_progress: ["complete", "noshow"] as const,
   expired: [] as const,
 }
 
@@ -57,14 +61,13 @@ const getActionMeta = (t: (k: string) => string) => ({
 
 const getStatusLabels = (t: (k: string) => string): Record<string, string> => ({
   pending:              t("bookings.actions.status.pending"),
+  pending_group_fill:   t("bookings.actions.status.pending"),
+  awaiting_payment:     t("bookings.actions.status.pending"),
   confirmed:            t("bookings.actions.status.confirmed"),
   completed:            t("bookings.actions.status.completed"),
   cancelled:            t("bookings.actions.status.cancelled"),
-  pending_cancellation: t("bookings.actions.status.pendingCancellation"),
+  cancel_requested:     t("bookings.actions.status.cancel_requested"),
   no_show:              t("bookings.actions.status.noShow"),
-  checked_in:           t("bookings.actions.status.checkin"),
-  checkin:              t("bookings.actions.status.checkin"),
-  in_progress:          t("bookings.actions.status.inProgress"),
   expired:              t("bookings.actions.status.expired"),
 })
 

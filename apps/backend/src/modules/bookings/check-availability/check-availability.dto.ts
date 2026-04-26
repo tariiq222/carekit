@@ -1,5 +1,5 @@
 import { BookingType } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
@@ -9,6 +9,17 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+/**
+ * Dashboard sends booking-type as the UI's snake_case alias (in_person / online / walk_in).
+ * The DB enum is INDIVIDUAL / ONLINE / WALK_IN / GROUP — map the UI alias before validating.
+ */
+const mapBookingType = (v: unknown) => {
+  if (typeof v !== 'string' || !v) return v;
+  const lower = v.toLowerCase();
+  if (lower === 'in_person') return 'INDIVIDUAL';
+  return v.toUpperCase();
+};
 
 export class CheckAvailabilityDto {
   @ApiProperty({ description: 'Employee whose availability to check', example: '00000000-0000-0000-0000-000000000000' })
@@ -30,5 +41,5 @@ export class CheckAvailabilityDto {
   @IsOptional() @IsUUID() durationOptionId?: string;
 
   @ApiPropertyOptional({ description: 'Booking type context for availability check', enum: BookingType, enumName: 'BookingType', example: BookingType.INDIVIDUAL })
-  @IsOptional() @IsEnum(BookingType) bookingType?: BookingType;
+  @IsOptional() @Transform(({ value }) => mapBookingType(value)) @IsEnum(BookingType) bookingType?: BookingType;
 }

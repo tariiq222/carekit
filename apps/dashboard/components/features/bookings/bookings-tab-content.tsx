@@ -119,6 +119,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
               { value: "all", label: t("bookings.filters.allTypes") },
               { value: "in_person", label: t("bookings.filters.inPerson") },
               { value: "online", label: t("bookings.filters.online") },
+              { value: "group", label: t("bookings.filters.group") },
               ...(isEnabled("walk_in")
                 ? [{ value: "walk_in", label: t("bookings.filters.walkIn") }]
                 : []),
@@ -160,10 +161,8 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
               { value: "confirmed", label: t("bookings.filters.confirmed") },
               { value: "completed", label: t("bookings.filters.completed") },
               { value: "cancelled", label: t("bookings.filters.cancelled") },
-              { value: "pending_cancellation", label: t("bookings.filters.cancelRequested") },
+              { value: "cancel_requested", label: t("bookings.filters.cancelRequested") },
               { value: "no_show", label: t("bookings.filters.noShow") },
-              { value: "checked_in", label: t("bookings.filters.checkedIn") },
-              { value: "in_progress", label: t("bookings.filters.inProgress") },
               { value: "expired", label: t("bookings.filters.expired") },
             ],
             onValueChange: (v) => setFilters({ status: v as typeof filters.status }),

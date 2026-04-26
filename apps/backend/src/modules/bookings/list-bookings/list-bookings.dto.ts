@@ -16,16 +16,10 @@ const mapBookingType = (v: unknown) => {
 };
 
 /**
- * Dashboard uses a few synonyms for booking status that do not exist in the DB enum:
- *   pending_cancellation → CANCEL_REQUESTED
- *   checked_in / in_progress — not modeled at the DB level, treated as undefined so
- *   the handler omits the filter (returns empty unless no-op upstream).
+ * Dashboard sends booking status as lowercase string.
  */
 const mapBookingStatus = (v: unknown) => {
   if (typeof v !== 'string' || !v) return v;
-  const lower = v.toLowerCase();
-  if (lower === 'pending_cancellation') return 'CANCEL_REQUESTED';
-  if (lower === 'checked_in' || lower === 'in_progress') return undefined;
   return v.toUpperCase();
 };
 

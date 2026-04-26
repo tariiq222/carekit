@@ -10,12 +10,12 @@ import { arSA, enUS } from "date-fns/locale"
 
 const STATUS_COLORS: Record<string, string> = {
   pending:              "bg-warning/10 text-warning border-warning/20",
+  pending_group_fill:   "bg-warning/10 text-warning border-warning/20",
+  awaiting_payment:     "bg-warning/10 text-warning border-warning/20",
   confirmed:            "bg-success/10 text-success border-success/20",
-  checked_in:           "bg-info/10 text-info border-info/20",
-  in_progress:          "bg-primary/10 text-primary border-primary/20",
   completed:            "bg-success/10 text-success border-success/20",
   cancelled:            "bg-error/10 text-error border-error/20",
-  pending_cancellation: "bg-warning/10 text-warning border-warning/20",
+  cancel_requested:     "bg-warning/10 text-warning border-warning/20",
   no_show:              "bg-error/10 text-error border-error/20",
   expired:              "bg-muted text-muted-foreground border-border",
 }

@@ -99,6 +99,16 @@ export const bookingStatusStyles = {
     text: "text-warning",
     border: "border-warning/20",
   },
+  pending_group_fill: {
+    bg: "bg-warning/10",
+    text: "text-warning",
+    border: "border-warning/20",
+  },
+  awaiting_payment: {
+    bg: "bg-warning/10",
+    text: "text-warning",
+    border: "border-warning/20",
+  },
   confirmed: {
     bg: "bg-success/10",
     text: "text-success",
@@ -114,7 +124,7 @@ export const bookingStatusStyles = {
     text: "text-error",
     border: "border-error/20",
   },
-  pending_cancellation: {
+  cancel_requested: {
     bg: "bg-warning/10",
     text: "text-warning",
     border: "border-warning/20",
@@ -123,16 +133,6 @@ export const bookingStatusStyles = {
     bg: "bg-error/10",
     text: "text-error",
     border: "border-error/20",
-  },
-  checked_in: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    border: "border-primary/20",
-  },
-  in_progress: {
-    bg: "bg-accent/10",
-    text: "text-accent",
-    border: "border-accent/20",
   },
   expired: {
     bg: "bg-muted",
@@ -157,6 +157,11 @@ export const bookingTypeStyles = {
     bg: "bg-success/10",
     text: "text-success",
     border: "border-success/20",
+  },
+  group: {
+    bg: "bg-accent/10",
+    text: "text-accent",
+    border: "border-accent/20",
   },
 } as const
 

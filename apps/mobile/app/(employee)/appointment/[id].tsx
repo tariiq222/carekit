@@ -36,6 +36,7 @@ const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
   in_person: { icon: Building2, color: '#1D4ED8' },
   online: { icon: Video, color: '#7C3AED' },
   walk_in: { icon: Building2, color: '#059669' },
+  group: { icon: Building2, color: '#7C3AED' },
 };
 
 export default function DoctorAppointmentDetailScreen() {
@@ -73,13 +74,11 @@ export default function DoctorAppointmentDetailScreen() {
   const statusLabels: Record<string, string> = {
     pending:              t('appointments.pending'),
     confirmed:            t('appointments.confirmed'),
-    checked_in:           t('appointments.checkedIn'),
-    in_progress:          t('appointments.inProgress'),
     completed:            t('appointments.completed'),
     cancelled:            t('appointments.cancelledStatus'),
     no_show:              t('appointments.noShow'),
     expired:              t('appointments.expired'),
-    pending_cancellation: t('appointments.pendingCancellation'),
+    cancel_requested:     t('appointments.pendingCancellation'),
   };
 
   const handleMarkComplete = () => {
@@ -143,6 +142,11 @@ export default function DoctorAppointmentDetailScreen() {
     ]);
   };
 
+  const isCheckedIn = !!booking.checkedInAt;
+  const canStartSession = booking.status === 'confirmed' && !isCheckedIn;
+  const canComplete = booking.status === 'confirmed' && isCheckedIn;
+  const canCancel = booking.status === 'confirmed' || booking.status === 'pending';
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
       <ScrollView
@@ -166,7 +170,7 @@ export default function DoctorAppointmentDetailScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <ThemedText variant="body" style={{ fontWeight: '500' }}>
-                {t(`booking.${booking.type === 'in_person' ? 'inPerson' : booking.type === 'walk_in' ? 'walkIn' : 'online'}`)}
+                {t(`booking.${booking.type === 'in_person' ? 'inPerson' : booking.type === 'walk_in' ? 'walkIn' : booking.type === 'group' ? 'group' : 'online'}`)}
               </ThemedText>
             </View>
           </View>
@@ -188,7 +192,7 @@ export default function DoctorAppointmentDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actions}>
-          {booking.status === 'checked_in' && (
+          {canStartSession && (
             <ThemedButton
               onPress={handleStartSession}
               variant="primary"
@@ -199,7 +203,7 @@ export default function DoctorAppointmentDetailScreen() {
               {t('doctor.startSession')}
             </ThemedButton>
           )}
-          {booking.status === 'in_progress' && (
+          {canComplete && (
             <ThemedButton
               onPress={handleMarkComplete}
               variant="secondary"
@@ -210,7 +214,7 @@ export default function DoctorAppointmentDetailScreen() {
               {t('doctor.markCompleted')}
             </ThemedButton>
           )}
-          {(booking.status === 'confirmed' || booking.status === 'checked_in') && (
+          {canCancel && (
             <ThemedButton
               onPress={handleEmployeeCancel}
               variant="ghost"

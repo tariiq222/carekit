@@ -46,6 +46,7 @@ export function mapBookingRow(b: Booking, relations: BookingRelations) {
     startTime,
     endTime,
     status: mapStatusForUi(b.status),
+    checkedInAt: b.checkedInAt?.toISOString() ?? null,
     notes: b.notes ?? null,
     zoomJoinUrl: b.zoomJoinUrl ?? null,
     zoomHostUrl: b.zoomHostUrl ?? null,
@@ -113,14 +114,11 @@ function mapTypeForUi(t: string): string {
   return lower;
 }
 
-/** DB enum → dashboard BookingStatus union. The dashboard's closed set is:
- * pending / confirmed / completed / cancelled / pending_cancellation /
- * no_show / checked_in / in_progress / expired.
- * awaiting_payment and pending_group_fill are treated as `pending` for UX.
+/** DB enum → dashboard BookingStatus union.
+ * awaiting_payment and pending_group_fill are treated as `pending` for UX simplicity.
  */
 function mapStatusForUi(s: string): string {
   const lower = s.toLowerCase();
-  if (lower === 'cancel_requested') return 'pending_cancellation';
   if (lower === 'awaiting_payment' || lower === 'pending_group_fill') return 'pending';
   return lower;
 }

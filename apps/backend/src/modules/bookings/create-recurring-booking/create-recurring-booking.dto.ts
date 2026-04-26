@@ -1,4 +1,5 @@
 import { BookingType, RecurringFrequency } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -13,6 +14,17 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+/**
+ * Dashboard sends booking-type as the UI's snake_case alias (in_person / online / walk_in).
+ * The DB enum is INDIVIDUAL / ONLINE / WALK_IN / GROUP — map the UI alias before validating.
+ */
+const mapBookingType = (v: unknown) => {
+  if (typeof v !== 'string' || !v) return v;
+  const lower = v.toLowerCase();
+  if (lower === 'in_person') return 'INDIVIDUAL';
+  return v.toUpperCase();
+};
 
 /**
  * Payload for creating a recurring series of bookings.
@@ -50,7 +62,7 @@ export class CreateRecurringBookingDto {
   @IsOptional() @IsString() currency?: string;
 
   @ApiPropertyOptional({ description: 'Booking type', enum: BookingType, enumName: 'BookingType', example: BookingType.INDIVIDUAL })
-  @IsOptional() @IsEnum(BookingType) bookingType?: BookingType;
+  @IsOptional() @Transform(({ value }) => mapBookingType(value)) @IsEnum(BookingType) bookingType?: BookingType;
 
   @ApiPropertyOptional({ description: 'Notes applied to each booking in the series', example: 'Weekly follow-up' })
   @IsOptional() @IsString() notes?: string;

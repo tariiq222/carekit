@@ -1,7 +1,6 @@
 import type { AvailableSlot, GuestBookingPayload, GuestBookingResponse } from '@carekit/shared';
 import type { PublicEmployee } from '@carekit/api-client';
-
-import { getApiBase } from '@/lib/api-base';
+import { publicFetch } from '@/lib/public-fetch';
 
 export interface PublicBranch {
   id: string;
@@ -11,15 +10,17 @@ export interface PublicBranch {
   addressAr: string | null;
 }
 
-export async function getPublicBranches(): Promise<PublicBranch[]> {
-  try {
-    const res = await fetch(`${getApiBase()}/public/branches`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return (json.data ?? json) as PublicBranch[];
-  } catch {
-    return [];
+/** Backend public endpoints sometimes return `{ data: T }`, sometimes `T` directly. */
+function unwrap<T>(json: unknown): T {
+  if (json && typeof json === 'object' && 'data' in json) {
+    return (json as { data: T }).data;
   }
+  return json as T;
+}
+
+export async function getPublicBranches(): Promise<PublicBranch[]> {
+  const json = await publicFetch<unknown>('/public/branches', { cache: 'no-store' });
+  return unwrap<PublicBranch[]>(json);
 }
 
 export async function getPublicAvailability(
@@ -29,60 +30,44 @@ export async function getPublicAvailability(
 ): Promise<AvailableSlot[]> {
   const params = new URLSearchParams({ date });
   if (serviceId) params.set('serviceId', serviceId);
-  const res = await fetch(
-    `${getApiBase()}/public/employees/${employeeId}/availability?${params}`,
+  const json = await publicFetch<unknown>(
+    `/public/employees/${employeeId}/availability?${params}`,
     { cache: 'no-store' },
   );
-  if (!res.ok) throw new Error(`Failed to fetch availability: ${res.status}`);
-  const json = await res.json();
-  return (json.data ?? json) as AvailableSlot[];
+  return unwrap<AvailableSlot[]>(json);
 }
 
 export async function listPublicEmployees(): Promise<PublicEmployee[]> {
-  const res = await fetch(`${getApiBase()}/public/employees`, {
+  const json = await publicFetch<unknown>('/public/employees', {
     next: { revalidate: 60, tags: ['public-employees'] },
   });
-  if (!res.ok) throw new Error(`Failed to fetch employees: ${res.status}`);
-  const json = await res.json();
-  return (json.data ?? json) as PublicEmployee[];
+  return unwrap<PublicEmployee[]>(json);
 }
 
 export async function createGuestBooking(
   payload: GuestBookingPayload,
   sessionToken: string,
 ): Promise<GuestBookingResponse> {
-  const res = await fetch(`${getApiBase()}/public/bookings`, {
+  const json = await publicFetch<unknown>('/public/bookings', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${sessionToken}`,
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error((err as { message?: string }).message ?? 'Booking failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as GuestBookingResponse;
+  return unwrap<GuestBookingResponse>(json);
 }
 
 export async function initGuestPayment(
   bookingId: string,
   sessionToken: string,
 ): Promise<{ paymentId: string; redirectUrl: string }> {
-  const res = await fetch(`${getApiBase()}/public/payments/init`, {
+  const json = await publicFetch<unknown>('/public/payments/init', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${sessionToken}`,
     },
     body: JSON.stringify({ bookingId }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error((err as { message?: string }).message ?? 'Payment init failed');
-  }
-  const json = await res.json();
-  return (json.data ?? json) as { paymentId: string; redirectUrl: string };
+  return unwrap<{ paymentId: string; redirectUrl: string }>(json);
 }

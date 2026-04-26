@@ -50,7 +50,7 @@ const items = [
     titleKey: "bookings.stats.cancelRequests",
     icon: Cancel01Icon,
     color: "error",
-    statField: "pendingCancellation" as const,
+    statField: "cancelRequested" as const,
     trend: 5,
     trendUp: false,
   },

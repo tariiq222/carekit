@@ -5,8 +5,10 @@ const STATUS_STYLES: Record<string, string> = {
   completed:            "border-success/30 bg-success/10 text-success",
   confirmed:            "border-info/30 bg-info/10 text-info",
   pending:              "border-warning/30 bg-warning/10 text-warning",
+  pending_group_fill:   "border-warning/30 bg-warning/10 text-warning",
+  awaiting_payment:     "border-warning/30 bg-warning/10 text-warning",
   cancelled:            "border-destructive/30 bg-destructive/10 text-destructive",
-  pending_cancellation: "border-warning/30 bg-warning/10 text-warning",
+  cancel_requested:     "border-warning/30 bg-warning/10 text-warning",
 }
 
 interface Props {

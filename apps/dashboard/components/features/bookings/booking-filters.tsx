@@ -86,6 +86,8 @@ export function BookingFilters({
               <SelectItem value="all">{t("bookings.filters.allTypes")}</SelectItem>
               <SelectItem value="in_person">{t("bookings.filters.inPerson")}</SelectItem>
               <SelectItem value="online">{t("bookings.filters.online")}</SelectItem>
+              <SelectItem value="walk_in">{t("bookings.filters.walkIn")}</SelectItem>
+              <SelectItem value="group">{t("bookings.filters.group")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -116,10 +118,11 @@ export function BookingFilters({
               <SelectItem value="confirmed">{t("bookings.filters.confirmed")}</SelectItem>
               <SelectItem value="completed">{t("bookings.filters.completed")}</SelectItem>
               <SelectItem value="cancelled">{t("bookings.filters.cancelled")}</SelectItem>
-              <SelectItem value="pending_cancellation">
+              <SelectItem value="cancel_requested">
                 {t("bookings.filters.cancelRequested")}
               </SelectItem>
               <SelectItem value="no_show">{t("bookings.filters.noShow")}</SelectItem>
+              <SelectItem value="expired">{t("bookings.filters.expired")}</SelectItem>
             </SelectContent>
           </Select>
 

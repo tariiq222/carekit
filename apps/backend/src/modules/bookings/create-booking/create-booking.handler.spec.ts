@@ -163,6 +163,28 @@ describe('CreateBookingHandler', () => {
     );
   });
 
+  it('accepts mapped bookingType INDIVIDUAL (from in_person)', async () => {
+    const prisma = buildPrisma();
+    await new CreateBookingHandler(prisma as never, mockTenant as never, buildPriceResolver() as never, buildSettingsHandler() as never, {} as never).execute({
+      ...dto,
+      bookingType: 'INDIVIDUAL' as any,
+    });
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ bookingType: 'INDIVIDUAL' }) }),
+    );
+  });
+
+  it('accepts uppercase passthrough for bookingType (e.g. WALK_IN)', async () => {
+    const prisma = buildPrisma();
+    await new CreateBookingHandler(prisma as never, mockTenant as never, buildPriceResolver() as never, buildSettingsHandler() as never, {} as never).execute({
+      ...dto,
+      bookingType: 'WALK_IN' as any,
+    });
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ bookingType: 'WALK_IN' }) }),
+    );
+  });
+
   it('throws NotFoundException when branch not found', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);

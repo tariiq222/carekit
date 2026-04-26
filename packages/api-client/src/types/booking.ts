@@ -2,16 +2,23 @@ import type { PaginatedResponse, PaginationParams } from './api'
 
 export type BookingStatus =
   | 'pending'
+  | 'pending_group_fill'
+  | 'awaiting_payment'
   | 'confirmed'
-  | 'checked_in'
-  | 'in_progress'
-  | 'completed'
   | 'cancelled'
-  | 'pending_cancellation'
+  | 'completed'
   | 'no_show'
   | 'expired'
+  | 'cancel_requested'
 
-export type BookingType = 'in_person' | 'online' | 'walk_in'
+/**
+ * Booking type (snake_case in UI/API, mapped to UPPER_CASE in DB).
+ * in_person -> INDIVIDUAL
+ * online -> ONLINE
+ * walk_in -> WALK_IN
+ * group -> GROUP
+ */
+export type BookingType = 'in_person' | 'online' | 'walk_in' | 'group'
 
 export interface BookingListItem {
   id: string
@@ -20,6 +27,7 @@ export interface BookingListItem {
   endTime: string
   status: BookingStatus
   type: BookingType
+  checkedInAt: string | null
   isWalkIn: boolean
   bookedPrice: number | null
   notes: string | null

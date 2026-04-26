@@ -8,13 +8,13 @@ import type { BookingStatus, BookingType } from "@/lib/types/booking"
 
 const statusTranslationKeys: Record<BookingStatus, string> = {
   pending: "bookings.status.pending",
+  pending_group_fill: "bookings.status.pending",
+  awaiting_payment: "bookings.status.pending",
   confirmed: "bookings.status.confirmed",
   completed: "bookings.status.completed",
   cancelled: "bookings.status.cancelled",
-  pending_cancellation: "bookings.status.cancelRequested",
-  no_show: "bookings.status.noShow",
-  checked_in: "bookings.status.checkedIn",
-  in_progress: "bookings.status.inProgress",
+  cancel_requested: "bookings.status.cancel_requested",
+  no_show: "bookings.status.no_show",
   expired: "bookings.status.expired",
 }
 
@@ -22,6 +22,7 @@ const typeTranslationKeys: Record<BookingType, string> = {
   in_person: "bookings.type.inPerson",
   online: "bookings.type.online",
   walk_in: "bookings.type.walkIn",
+  group: "bookings.type.group",
 }
 
 interface StatusBadgeProps {

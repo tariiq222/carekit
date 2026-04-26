@@ -37,12 +37,12 @@ describe('therapists.api', () => {
   });
 
   it('listPublicEmployees throws on non-ok response', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 503 });
-    await expect(listPublicEmployees()).rejects.toThrow('Failed: 503');
+    fetchMock.mockResolvedValue({ ok: false, status: 503, json: () => Promise.resolve({ error: 'service unavailable' }) });
+    await expect(listPublicEmployees()).rejects.toThrow('PublicFetchError: 503');
   });
 
   it('getPublicEmployee URL-encodes the slug and tags the slug', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(sample) });
+    fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: sample }) });
     await getPublicEmployee('dr smith/خاص');
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain(encodeURIComponent('dr smith/خاص'));
@@ -52,7 +52,7 @@ describe('therapists.api', () => {
   });
 
   it('getPublicEmployee throws on non-ok response', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 404 });
-    await expect(getPublicEmployee('missing')).rejects.toThrow('Failed: 404');
+    fetchMock.mockResolvedValue({ ok: false, status: 404, json: () => Promise.resolve({ error: 'not found' }) });
+    await expect(getPublicEmployee('missing')).rejects.toThrow('PublicFetchError: 404');
   });
 });

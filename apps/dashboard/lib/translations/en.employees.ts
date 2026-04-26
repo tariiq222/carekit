@@ -277,6 +277,7 @@ export const enEmployees: Record<string, string> = {
   "employees.chart.type.inPerson": "In-Person",
   "employees.chart.type.online": "Online",
   "employees.chart.type.walkIn": "Walk-in",
+  "employees.chart.type.group": "Group",
 
   // — Column helpers —
   "employees.col.experienceYrs": "yrs",

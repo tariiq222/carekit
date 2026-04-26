@@ -7,7 +7,7 @@ const STATUS_COLOR: Record<string, string> = {
   confirmed: colors.status.confirmed,
   completed: colors.status.completed,
   cancelled: colors.status.cancelled,
-  pending_cancellation: colors.status.pendingCancellation,
+  cancel_requested: colors.status.pendingCancellation,
   available: colors.secondary[500],
   paid: colors.payment.paid,
   refunded: colors.payment.refunded,
