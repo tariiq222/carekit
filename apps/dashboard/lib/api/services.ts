@@ -178,6 +178,10 @@ export async function uploadServiceImage(serviceId: string, file: File): Promise
 
   if (!uploadRes.ok) {
     const body = await uploadRes.json().catch(() => ({})) as { message?: string }
+    console.error("[services] uploadServiceImage upload failed", {
+      status: uploadRes.status,
+      body,
+    })
     throw new Error(body?.message ?? uploadRes.statusText)
   }
 
@@ -191,6 +195,11 @@ export async function uploadServiceImage(serviceId: string, file: File): Promise
 
   if (!presignedRes.ok) {
     const body = await presignedRes.json().catch(() => ({})) as { message?: string }
+    console.error("[services] uploadServiceImage presigned-url failed", {
+      status: presignedRes.status,
+      mediaId: uploaded.id,
+      body,
+    })
     throw new Error(body?.message ?? presignedRes.statusText)
   }
 

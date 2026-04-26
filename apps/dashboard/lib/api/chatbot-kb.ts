@@ -91,6 +91,10 @@ export async function uploadKnowledgeFile(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
+    console.error("[chatbot-kb] uploadKnowledgeFile failed", {
+      status: res.status,
+      body,
+    })
     throw new Error(body?.message ?? body?.error?.message ?? res.statusText)
   }
 
