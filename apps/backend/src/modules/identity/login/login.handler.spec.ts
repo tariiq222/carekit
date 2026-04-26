@@ -88,6 +88,13 @@ describe('LoginHandler', () => {
     ).rejects.toThrow(UnauthorizedException);
   });
 
+  it('rejects users with null passwordHash (mobile-only accounts)', async () => {
+    prisma.user.findUnique.mockResolvedValue({ ...mockUser, passwordHash: null } as never);
+    await expect(
+      handler.execute({ email: 'a@b.com', password: 'whatever' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
   describe('SaaS-01 tenant claims', () => {
     it('passes the active membership to TokenService.issueTokenPair', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as never);
