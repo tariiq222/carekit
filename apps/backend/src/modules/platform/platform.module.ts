@@ -55,8 +55,12 @@ import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/
 import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 import { FinanceModule } from '../finance/finance.module';
+import { RegisterTenantHandler } from './tenant-registration/register-tenant.handler';
+import { IdentityModule } from '../identity/identity.module';
+import { BillingModule } from './billing/billing.module';
 
 const ADMIN_HANDLERS = [
+  RegisterTenantHandler,
   ListOrganizationsHandler,
   GetOrganizationHandler,
   SuspendOrganizationHandler,
@@ -93,6 +97,8 @@ const ADMIN_HANDLERS = [
     TenantModule,
     VerticalsModule,
     FinanceModule,
+    IdentityModule,
+    BillingModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -101,6 +107,7 @@ const ADMIN_HANDLERS = [
       }),
     }),
   ],
+
   controllers: [
     DashboardPlatformController,
     DashboardVerticalsController,

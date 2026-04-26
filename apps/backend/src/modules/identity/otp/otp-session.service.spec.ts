@@ -24,7 +24,7 @@ describe('OtpSessionService', () => {
       const svc = module.get(OtpSessionService);
       const jwt = module.get(JwtService) as jest.Mocked<JwtService>;
 
-      await svc.signSession({ identifier: 'u@c.sa', purpose: OtpPurpose.GUEST_BOOKING, channel: OtpChannel.EMAIL });
+      await svc.signSession({ identifier: 'u@c.sa', purpose: OtpPurpose.GUEST_BOOKING, channel: OtpChannel.EMAIL, organizationId: null });
 
       expect(jwt.sign).toHaveBeenCalledWith(
         expect.objectContaining({ identifier: 'u@c.sa' }),
@@ -40,7 +40,7 @@ describe('OtpSessionService', () => {
       const svc = module.get(OtpSessionService);
       const jwt = module.get(JwtService) as jest.Mocked<JwtService>;
 
-      await svc.signSession({ identifier: 'u@c.sa', purpose: OtpPurpose.GUEST_BOOKING, channel: OtpChannel.EMAIL });
+      await svc.signSession({ identifier: 'u@c.sa', purpose: OtpPurpose.GUEST_BOOKING, channel: OtpChannel.EMAIL, organizationId: null });
 
       expect(jwt.sign).toHaveBeenCalledWith(
         expect.anything(),

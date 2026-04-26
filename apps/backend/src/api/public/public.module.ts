@@ -29,9 +29,11 @@ import { BillingWebhookController } from './billing-webhook.controller';
 import { PublicPaymentWebhookController } from './payment-webhook.controller';
 import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 import { VerticalsModule } from '../../modules/platform/verticals/verticals.module';
+import { PublicTenantsController } from './tenants.controller';
+import { PlatformModule } from '../../modules/platform/platform.module';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule],
-  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule, PlatformModule],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController, PublicTenantsController],
 })
 export class PublicModule {}
