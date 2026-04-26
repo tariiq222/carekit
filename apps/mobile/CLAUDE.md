@@ -87,7 +87,8 @@ Subdirectories: `services/client/` (client-only endpoints), `services/employee/`
 
 - No `any` in TypeScript
 - No hardcoded strings — use i18n keys (and `useTerminology` for vertical-sensitive nouns)
-- No hardcoded colors — branding tokens from backend
+- No hardcoded colors — **STRICT: No hex colors (#...) or ad-hoc RGBA in components.** Use `sawaaTokens` or `sawaaColors` from `@/theme/sawaa/tokens`.
+- **Deprecated: `theme/glass.ts` has been deleted.** Use the unified Sawaa design system.
 - 350-line max per file
 - Client and Employee routes must stay strictly separated
 - Expo Secure Store for sensitive data (tokens), AsyncStorage for non-sensitive preferences

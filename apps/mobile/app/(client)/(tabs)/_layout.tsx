@@ -8,8 +8,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Calendar, FileText, Home, MessageCircle } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { RADII, SHADOW_RAISED } from '@/theme/glass';
-import { sawaaColors } from '@/theme/sawaa';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
@@ -46,10 +45,9 @@ function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
   return (
     <Glass
       variant="strong"
-      radius={RADII.pill}
+      radius={sawaaTokens.radius.pill}
       style={[
         styles.tabBar,
-        SHADOW_RAISED,
         { bottom: insets.bottom + 14, left: 14, right: 14 },
         isChat && { opacity: 0.7 },
       ]}

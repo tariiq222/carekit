@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW } from '@/theme/glass';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { AquaBackground, PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { authService } from '@/services/auth';
@@ -131,8 +131,8 @@ export default function ResetPasswordScreen() {
           <Animated.View entering={FadeInUp.delay(400).duration(800).easing(Easing.out(Easing.cubic))}>
             <Glass
               variant="regular"
-              radius={RADII.card}
-              style={[styles.form, SHADOW, { marginTop: 32 }]}
+              radius={sawaaTokens.radius.lg}
+              style={[styles.form, { marginTop: 32 }]}
             >
               <View style={styles.formInner}>
                 {step === 'otp' ? (
@@ -146,7 +146,7 @@ export default function ResetPasswordScreen() {
                     >
                       {t('auth.resetPassword.codeLabel')}
                     </Text>
-                    <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                    <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
                       <TextInput
                         value={code}
                         onChangeText={(v) => {
@@ -161,7 +161,7 @@ export default function ResetPasswordScreen() {
                           styles.codeInput,
                           { fontFamily: f700 },
                         ]}
-                        placeholderTextColor={C.subtle}
+                        placeholderTextColor={sawaaColors.ink[500]}
                       />
                     </Glass>
                     {error ? (
@@ -186,7 +186,7 @@ export default function ResetPasswordScreen() {
                     >
                       {t('auth.resetPassword.newPasswordLabel')}
                     </Text>
-                    <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                    <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
                       <View style={[styles.inputRow, { flexDirection: dir.row }]}>
                         <TextInput
                           value={newPassword}
@@ -195,7 +195,7 @@ export default function ResetPasswordScreen() {
                             if (error) setError(null);
                           }}
                           placeholder="••••••••"
-                          placeholderTextColor={C.subtle}
+                          placeholderTextColor={sawaaColors.ink[500]}
                           secureTextEntry={!showPassword}
                           style={[
                             styles.inputText,
@@ -208,8 +208,8 @@ export default function ResetPasswordScreen() {
                           hitSlop={8}
                         >
                           {showPassword
-                            ? <Eye size={20} color={C.subtle} strokeWidth={1.75} />
-                            : <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
+                            ? <Eye size={20} color={sawaaColors.ink[500]} strokeWidth={1.75} />
+                            : <EyeOff size={20} color={sawaaColors.ink[500]} strokeWidth={1.75} />
                           }
                         </Pressable>
                       </View>
@@ -267,18 +267,18 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { paddingHorizontal: 24 },
-  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
+  title: { fontSize: 32, color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
+  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, color: C.deepTeal },
+  label: { fontSize: 14, color: sawaaColors.teal[700] },
   input: { padding: 14 },
   inputRow: { alignItems: 'center', alignSelf: 'stretch', width: '100%' },
-  codeInput: { fontSize: 28, color: C.deepTeal, textAlign: 'center', letterSpacing: 8, alignSelf: 'stretch' },
-  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
+  codeInput: { fontSize: 28, color: sawaaColors.teal[700], textAlign: 'center', letterSpacing: 8, alignSelf: 'stretch' },
+  inputText: { flex: 1, fontSize: 14, color: sawaaColors.teal[700] },
   eyeBtn: { padding: 4 },
-  error: { fontSize: 12, color: '#E74C3C' },
+  error: { fontSize: 12, color: sawaaColors.accent.coral },
   backRow: { alignItems: 'center', marginTop: 8 },
-  backLink: { fontSize: 14, color: C.deepTeal },
+  backLink: { fontSize: 14, color: sawaaColors.teal[700] },
 });

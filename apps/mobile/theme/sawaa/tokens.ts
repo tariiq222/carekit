@@ -67,6 +67,44 @@ export const sawaaBlur = {
 
 export type SawaaColors = typeof sawaaColors;
 
+export type GlassVariant = 'regular' | 'strong' | 'clear';
+
+export type GlassCfg = {
+  mainBlur: number;
+  mainTintAlpha: number;
+  baseTintAlpha: number;
+  bloomAlpha: number;
+  borderAlpha: number;
+  nativeBlur: number;
+};
+
+export const GLASS_CFG: Record<GlassVariant, GlassCfg> = {
+  clear: {
+    mainBlur: 18,
+    mainTintAlpha: 0.04,
+    baseTintAlpha: 0.12,
+    bloomAlpha: 0.22,
+    borderAlpha: 0.32,
+    nativeBlur: 50,
+  },
+  regular: {
+    mainBlur: 28,
+    mainTintAlpha: 0.06,
+    baseTintAlpha: 0.20,
+    bloomAlpha: 0.32,
+    borderAlpha: 0.40,
+    nativeBlur: 70,
+  },
+  strong: {
+    mainBlur: 40,
+    mainTintAlpha: 0.09,
+    baseTintAlpha: 0.28,
+    bloomAlpha: 0.42,
+    borderAlpha: 0.50,
+    nativeBlur: 100,
+  },
+};
+
 // Primary color system (for multi-tenant branding)
 export const sawaaTokens = {
   // Color primitives

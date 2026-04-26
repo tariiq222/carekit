@@ -11,7 +11,7 @@ import {
   UIManager,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { C, RADII } from "@/theme/glass";
+import { sawaaTokens, sawaaColors } from "@/theme/sawaa/tokens";
 import { Glass } from "@/theme";
 import { useDir } from "@/hooks/useDir";
 
@@ -66,8 +66,8 @@ export const Header = ({
             {avatarUrl ? (
               <Image source={{ uri: avatarUrl }} style={s.avatar} />
             ) : (
-              <View style={[s.avatar, { backgroundColor: C.softTeal, alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: C.deepTeal }}>
+              <View style={[s.avatar, { backgroundColor: sawaaColors.teal[100], alignItems: 'center', justifyContent: 'center' }]}>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: sawaaColors.teal[700] }}>
                   {greeting.charAt(0)}
                 </Text>
               </View>
@@ -90,7 +90,7 @@ export const Header = ({
           >
             <Pressable onPress={onNotificationPress}>
               <Glass variant="regular" radius={22} interactive style={s.iconBtn}>
-                <Ionicons name="notifications-outline" size={20} color={C.deepTeal} />
+                <Ionicons name="notifications-outline" size={20} color={sawaaColors.teal[700]} />
                 {hasUnreadNotifications && <View style={s.bellDot} />}
               </Glass>
             </Pressable>
@@ -123,7 +123,7 @@ export const Header = ({
                 ]}
               >
                 <View style={s.iconAnchor}>
-                  <Ionicons name="search" size={20} color={C.deepTeal} />
+                  <Ionicons name="search" size={20} color={sawaaColors.teal[700]} />
                 </View>
 
                 <TextInput
@@ -131,7 +131,7 @@ export const Header = ({
                   value={q}
                   onChangeText={setQ}
                   placeholder={placeholder}
-                  placeholderTextColor={C.subtle}
+                  placeholderTextColor={sawaaColors.ink[500]}
                   editable={open}
                   style={[
                     s.input,
@@ -168,7 +168,7 @@ export const Header = ({
                   ]}
                   pointerEvents={open ? "auto" : "none"}
                 >
-                  <Ionicons name="close" size={16} color={C.deepTeal} />
+                  <Ionicons name="close" size={16} color={sawaaColors.teal[700]} />
                 </Pressable>
               </View>
             </Glass>
@@ -179,7 +179,7 @@ export const Header = ({
 
       <View style={[s.greetingBlock, { alignItems: dir.alignStart }]}>
         <View style={[s.greetingRow, { flexDirection: dir.row }]}>
-          <Ionicons name="leaf" size={22} color={C.deepTeal} />
+          <Ionicons name="leaf" size={22} color={sawaaColors.teal[700]} />
           <Text
             style={[
               s.greeting,
@@ -211,7 +211,7 @@ const s = StyleSheet.create({
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: C.deepTeal,
+    shadowColor: sawaaColors.teal[700],
     shadowOpacity: 0.20,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
@@ -257,7 +257,7 @@ const s = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     fontSize: 14,
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     height: 40,
     paddingHorizontal: 4,
   },
@@ -284,7 +284,7 @@ const s = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: C.notifDot,
+    backgroundColor: sawaaColors.accent.coral,
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.95)",
   },
@@ -294,12 +294,12 @@ const s = StyleSheet.create({
   greeting: {
     fontSize: 32,
     fontWeight: "800",
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     lineHeight: 42,
   },
   greetingSub: {
     fontSize: 14,
-    color: C.subtle,
+    color: sawaaColors.ink[500],
     fontWeight: "400",
   },
 });

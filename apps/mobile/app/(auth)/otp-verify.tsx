@@ -58,13 +58,6 @@ export default function OtpVerifyScreen() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  // Auto-submit when all digits are filled
-  useEffect(() => {
-    if (otp.every((digit) => digit !== '') && !loading) {
-      handleVerify();
-    }
-  }, [otp, handleVerify, loading]);
-
   const sendOtp = useCallback(async () => {
     if (!email) return;
     try {
@@ -155,6 +148,13 @@ export default function OtpVerifyScreen() {
       dispatch(setLoading(false));
     }
   }, [otp, email, dispatch, router, t]);
+
+  // Auto-submit when all digits are filled
+  useEffect(() => {
+    if (otp.every((digit) => digit !== '') && !loading) {
+      handleVerify();
+    }
+  }, [otp, handleVerify, loading]);
 
   const isComplete = otp.every((d) => d !== '');
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;

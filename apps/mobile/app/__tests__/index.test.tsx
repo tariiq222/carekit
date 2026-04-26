@@ -72,6 +72,7 @@ const clientUser: User = {
   isSuperAdmin: false,
   permissions: [],
   organizationId: 'org-1',
+  verticalSlug: null,
   emailVerified: true,
   createdAt: '2026-01-01T00:00:00Z',
 };
