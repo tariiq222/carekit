@@ -42,7 +42,7 @@ function displayName(
 
 export function TenantSwitcher() {
   const { locale, t } = useLocale()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { data: memberships, isLoading } = useMemberships()
   const switchOrg = useSwitchOrganization()
 
@@ -51,11 +51,12 @@ export function TenantSwitcher() {
   if (isLoading) return null
   if (!memberships || memberships.length <= 1) return null
 
-  // The first membership matches the org the current JWT targets,
-  // because the backend orders by role/createdAt (same ordering as login).
-  // We don't have the current org on the AuthUser yet (Plan 07), so we
-  // treat the first entry as the active one for now.
-  const active = memberships[0]
+  // Match the active org against AuthUser.organizationId (resolved from the
+  // JWT's active membership in get-current-user.handler). Fall back to the
+  // first entry only for legacy sessions where organizationId is null.
+  const active =
+    memberships.find((m) => m.organizationId === user?.organizationId) ??
+    memberships[0]
 
   const handleSelect = (target: Membership) => {
     if (target.organizationId === active?.organizationId) return
