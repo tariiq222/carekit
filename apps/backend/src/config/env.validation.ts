@@ -52,6 +52,7 @@ export const envValidationSchema = Joi.object({
 
   // JWT (Identity BC)
   JWT_ACCESS_SECRET: Joi.string().min(16).required(),
+  // Refresh tokens are opaque DB-stored tokens (bcrypt selector pattern); JWT_REFRESH_SECRET is reserved for future JWT-signed refresh token migration.
   JWT_REFRESH_SECRET: Joi.string().min(16).required(),
   JWT_ACCESS_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TTL: Joi.string().default('30d'),

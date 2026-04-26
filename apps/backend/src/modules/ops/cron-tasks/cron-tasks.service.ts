@@ -23,6 +23,7 @@ export const CRON_JOBS = {
   GROUP_SESSION_AUTOMATION: 'group-session-automation',
   REFRESH_TOKEN_CLEANUP: 'refresh-token-cleanup',
   METER_USAGE: 'meter-usage',
+  COMPUTE_OVERAGE: 'compute-overage',
   CHARGE_DUE_SUBSCRIPTIONS: 'charge-due-subscriptions',
   ENFORCE_GRACE_PERIOD: 'enforce-grace-period',
   EXPIRE_IMPERSONATION_SESSIONS: 'expire-impersonation-sessions',
@@ -63,6 +64,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.GROUP_SESSION_AUTOMATION, cron: '*/30 * * * *' },
       { name: CRON_JOBS.REFRESH_TOKEN_CLEANUP, cron: '0 3 * * *' },
       { name: CRON_JOBS.METER_USAGE, cron: '0 2 * * *' },           // daily at 02:00 AST
+      { name: CRON_JOBS.COMPUTE_OVERAGE, cron: '1 2 * * *' },
       { name: CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS, cron: '0 * * * *' }, // hourly
       { name: CRON_JOBS.ENFORCE_GRACE_PERIOD, cron: '0 * * * *' },   // hourly
       { name: CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, cron: '* * * * *' }, // every minute
@@ -116,6 +118,9 @@ export class CronTasksService implements OnModuleInit {
           case CRON_JOBS.METER_USAGE:
             await this.meterUsage.execute();
             break;
+          case CRON_JOBS.COMPUTE_OVERAGE:
+            await this.computeOverage.execute();
+            break;
           case CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS:
             await this.chargeDueSubscriptions.execute();
             break;
@@ -164,10 +169,5 @@ export class CronTasksService implements OnModuleInit {
         });
       }
     });
-  }
-
-  /** Expose ComputeOverageCron for use by other billing crons in the same process. */
-  getComputeOverage(): ComputeOverageCron {
-    return this.computeOverage;
   }
 }

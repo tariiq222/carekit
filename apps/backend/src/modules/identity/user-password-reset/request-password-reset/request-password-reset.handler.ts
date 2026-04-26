@@ -24,7 +24,7 @@ export class RequestPasswordResetHandler {
     });
 
     if (!user || !user.isActive) {
-      this.logger.log(`Password reset requested for unknown/inactive email: ${dto.email}`);
+      this.logger.log('Password reset requested for unknown or inactive account');
       return;
     }
 

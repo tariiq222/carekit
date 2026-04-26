@@ -13,6 +13,9 @@ const buildPrisma = () => ({
   refreshToken: {
     deleteMany: jest.fn().mockResolvedValue({ count: 5 }),
   },
+  passwordResetToken: {
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
   waitlistEntry: {
     findMany: jest.fn().mockResolvedValue([]),
   },

@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { PrismaService } from '../../../../infrastructure/database';
 import { PasswordService } from '../../shared/password.service';
@@ -32,6 +32,14 @@ export class PerformPasswordResetHandler {
     }
     if (record.expiresAt.getTime() < Date.now()) {
       throw new UnauthorizedException(REJECT_MSG);
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: record.userId },
+      select: { passwordHash: true },
+    });
+    if (user && await this.passwords.verify(dto.newPassword, user.passwordHash)) {
+      throw new BadRequestException('PASSWORD_REUSED');
     }
 
     const passwordHash = await this.passwords.hash(dto.newPassword);

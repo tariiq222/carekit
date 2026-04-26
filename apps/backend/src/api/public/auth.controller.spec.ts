@@ -82,7 +82,7 @@ describe('AuthController', () => {
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
       const res = buildRes();
       await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, res);
-      expect(res.cookie).toHaveBeenCalledWith('ck_refresh', 'refresh', expect.objectContaining({ httpOnly: true, sameSite: 'lax', path: '/' }));
+      expect(res.cookie).toHaveBeenCalledWith('ck_refresh', 'refresh', expect.objectContaining({ httpOnly: true, sameSite: 'strict', path: '/' }));
     });
 
     it('rejects with BadRequestException when captcha verifier returns false', async () => {

@@ -10,10 +10,12 @@ services:
     environment:
       DATABASE_URL: postgresql://carekit:carekit_dev_password@postgres:5432/carekit_dev
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: dev-jwt-secret-change-in-production-32c
-      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-x
-      JWT_EXPIRATION: 15m
-      JWT_REFRESH_EXPIRATION: 7d
+      JWT_ACCESS_SECRET: dev-jwt-access-secret-change-me-32c
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-change-me-32c
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      SMS_PROVIDER_ENCRYPTION_KEY: ZGV2LXNtcy1lbmNyeXB0aW9uLWtleS1jaGFuZ2VtZSE= # required: replace in production (must be exactly 32 bytes)
+      ZOOM_PROVIDER_ENCRYPTION_KEY: ZGV2LXpvb20tZW5jcnlwdGlvbi1rZXktY2hhbmdlbWU= # required: replace in production
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: minioadmin
