@@ -63,6 +63,10 @@ export async function changePassword(
   await authApi.changePassword({ currentPassword, newPassword })
 }
 
+export async function requestStaffPasswordReset(email: string): Promise<void> {
+  await authApi.requestStaffPasswordReset(email)
+}
+
 export function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null
   const raw = localStorage.getItem(USER_KEY)

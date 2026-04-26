@@ -236,4 +236,30 @@ export const enMisc: Record<string, string> = {
   // — Shared UI —
   "common.sarAlt": "Riyal",
   "common.removeColor": "Remove color",
+
+  // — Forgot Password —
+  "forgotPassword.title": "Forgot Password",
+  "forgotPassword.subtitle": "Enter your email and we'll send a reset link",
+  "forgotPassword.emailLabel": "Email",
+  "forgotPassword.submit": "Send Reset Link",
+  "forgotPassword.submitting": "Sending...",
+  "forgotPassword.back": "Back to Sign In",
+  "forgotPassword.successTitle": "Check your email",
+  "forgotPassword.successBody": "If an account exists for that email, we've sent a password reset link. The link expires in 30 minutes.",
+  "forgotPassword.linkLabel": "Forgot password?",
+  "forgotPassword.requestFailed": "Request failed. Please try again.",
+
+  // — Reset Password —
+  "resetPassword.title": "Reset Password",
+  "resetPassword.subtitle": "Choose a new password for your account",
+  "resetPassword.newPasswordLabel": "New Password",
+  "resetPassword.confirmLabel": "Confirm Password",
+  "resetPassword.submit": "Reset Password",
+  "resetPassword.submitting": "Resetting...",
+  "resetPassword.successTitle": "Password updated",
+  "resetPassword.successBody": "You can now sign in with your new password.",
+  "resetPassword.backToLogin": "Go to sign in",
+  "resetPassword.invalidToken": "This link is invalid or has expired",
+  "resetPassword.passwordMismatch": "Passwords do not match",
+  "resetPassword.weakPassword": "Password must be at least 8 characters",
 }
