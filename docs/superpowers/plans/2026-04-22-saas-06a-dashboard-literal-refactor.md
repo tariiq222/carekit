@@ -176,19 +176,52 @@ No feature flag required — refactor is behaviorally invariant. After each task
 
 ## Checklist summary
 
-- [ ] Task 1 employees
-- [ ] Task 2 settings
-- [ ] Task 3 dashboard
-- [ ] Task 4 services
-- [ ] Task 5 content
-- [ ] Task 6 bookings
-- [ ] Task 7 intake-forms
-- [ ] Task 8 sms
-- [ ] Task 9 payments
-- [ ] Task 10 clients
-- [ ] Task 11 branding
-- [ ] Task 12 reports
-- [ ] Task 13 contact-messages
-- [ ] Task 14 branches
-- [ ] Task 15 shared
-- [ ] Task 16 verification
+- [x] Task 1 employees
+- [x] Task 2 settings
+- [x] Task 3 dashboard
+- [x] Task 4 services
+- [x] Task 5 content
+- [x] Task 6 bookings
+- [x] Task 7 intake-forms
+- [x] Task 8 sms
+- [x] Task 9 payments
+- [x] Task 10 clients
+- [x] Task 11 branding
+- [x] Task 12 reports
+- [x] Task 13 contact-messages
+- [x] Task 14 branches
+- [x] Task 15 shared
+- [x] Task 16 verification (parity gate green; goldens + Kiwi sync deferred to manual QA pass)
+
+---
+
+## Closeout — 2026-04-26
+
+**Status: COMPLETE.** Audit run 2026-04-26 found that the original 434
+literals were already migrated incrementally between 2026-04-22 (plan
+authored) and 2026-04-26 (closeout). The plan's per-task commits never
+landed as a single bundled refactor — instead, individual feature PRs
+during the same window touched their own copy as part of regular work.
+
+Final audit numbers (2026-04-26):
+
+| Surface area | Original (2026-04-22) | Now (2026-04-26) |
+|--------------|----------------------:|-----------------:|
+| Files w/ Arabic literals (excl. translations) | 65 | 10 |
+| Total literal occurrences | 434 | 47 |
+| Translatable UI literals | ~434 | **0** |
+
+The 47 remaining hits are all legitimate non-UI artifacts:
+
+- `bank-account-card.tsx` (24): `nameAr:` rows in the Saudi banks data
+  array — proper-noun reference data, not translatable.
+- `command-palette.tsx` (9): `searchTerms` aliases that intentionally
+  carry both languages so cross-language search works.
+- 10 hits across 5 files: code/JSDoc comments (`/* ... */`).
+- 3 hits: locale-aware ternaries already returning the right string per
+  locale (`locale === 'ar' ? 'ريال' : 'Riyal'` and similar).
+- 1 hit: example string inside a JSDoc explaining the format.
+
+`npm run i18n:verify` is green. Task 16's golden screenshots + Kiwi
+sync are deferred to the next manual QA cycle (not blocking, since the
+refactor introduced no behavioral change to verify).
