@@ -75,7 +75,7 @@ export default function BookingWizardPage() {
         console.error('Failed to load employees', err);
         setLoadError('Failed to load therapists. Please try again later.');
       });
-    publicFetch<{ data?: { services: Service[] } } | { services: Service[] }>('/public/catalog')
+    publicFetch<{ data?: { services: Service[] } } | { services: Service[] }>('/public/services')
       .then((json) => {
         const payload = 'data' in json && json.data ? json.data : (json as { services: Service[] });
         setServices(payload.services ?? []);
