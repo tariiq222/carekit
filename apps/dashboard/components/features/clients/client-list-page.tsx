@@ -27,11 +27,18 @@ import { Button } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { useClients, useClientMutations, useClientStats } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useTerminology } from "@/hooks/use-terminology"
 import type { Client } from "@/lib/types/client"
 
 export function ClientListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
+  const { user } = useAuth()
+  // Vertical-aware label: "العملاء"/"Clients" for clinic verticals,
+  // "المرضى"/"Patients" for medical, "المتدربون"/"Members" for fitness, …
+  const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
+  const titleLabel = term("client.plural")
   const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch, page, setPage } = useClients()
   const { toggleActiveMut } = useClientMutations()
   const stats = useClientStats()
@@ -65,7 +72,7 @@ export function ClientListPage() {
       <Breadcrumbs />
 
       <PageHeader
-        title={t("clients.title")}
+        title={titleLabel}
         description={t("clients.description")}
       >
         <Button variant="outline" className="gap-2 rounded-full px-5" disabled>

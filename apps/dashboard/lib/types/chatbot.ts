@@ -143,24 +143,6 @@ export interface QuickReply {
   action: string
 }
 
-/* ─── Analytics ─── */
-
-export interface SessionStats {
-  totalSessions: number
-  avgMessagesPerSession: number
-  handoffRate: number
-  totalMessages: number
-  languageDistribution: Record<string, number>
-  topIntents: { intent: string; count: number }[]
-  topTools: { tool: string; count: number }[]
-  estimatedTokens: number
-}
-
-export interface TopQuestion {
-  content: string
-  count: number
-}
-
 /* ─── Query Params ─── */
 
 export interface ChatSessionListQuery extends PaginatedQuery {

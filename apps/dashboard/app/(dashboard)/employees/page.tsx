@@ -12,6 +12,8 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
 import { useEmployees } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useTerminology } from "@/hooks/use-terminology"
 
 export default function EmployeesPage() {
   return <Suspense><EmployeesPageInner /></Suspense>
@@ -20,6 +22,11 @@ export default function EmployeesPage() {
 function EmployeesPageInner() {
   const router = useRouter()
   const { t } = useLocale()
+  const { user } = useAuth()
+  // "الأطباء"/"Doctors" (medical), "المصففون"/"Stylists" (salon),
+  // "المدربون"/"Trainers" (fitness), "المستشارون"/"Consultants" (consulting).
+  const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
+  const titleLabel = term("employee.plural")
 
   const {
     employees,
@@ -42,7 +49,7 @@ function EmployeesPageInner() {
       <Breadcrumbs />
 
       <PageHeader
-        title={t("employees.title")}
+        title={titleLabel}
         description={t("employees.description")}
       >
         <Button

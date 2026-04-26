@@ -1,11 +1,21 @@
 import { getRefreshMutex, setRefreshMutex } from './refresh-mutex'
 
+// Backend signals tenant suspension via 401 + this code in the error body.
+// When detected, callers should clear local auth and redirect to root —
+// the refresh-token loop is intentionally skipped (refreshing a suspended
+// tenant just bounces back the same 401).
+export const ORG_SUSPENDED_CODE = 'ORG_SUSPENDED'
+
 export interface ClientConfig {
   baseUrl: string
   getAccessToken: () => string | null
   getRefreshToken?: () => string | null
   onTokenRefreshed: (accessToken: string, refreshToken: string) => void
   onAuthFailure: () => void
+  // Optional callback fired when the backend returns 401 + ORG_SUSPENDED.
+  // Hosts (dashboard) typically clear local auth state and full-reload to
+  // surface a banner. Admin app passes a no-op since suspension UX differs.
+  onOrgSuspended?: () => void
 }
 
 let config: ClientConfig | null = null
@@ -63,6 +73,15 @@ export async function apiRequest<T>(
   const res = await fetch(`${config.baseUrl}${path}`, { ...options, headers })
 
   if (res.status === 401 && !retried && !isAuthEndpoint(path)) {
+    // Tenant-suspended responses must NOT trigger the refresh loop —
+    // the refresh would just produce another 401. Surface immediately
+    // and let the host (dashboard) clear local state + redirect.
+    const peek = await peekErrorBody(res)
+    if (peek.code === ORG_SUSPENDED_CODE) {
+      config.onOrgSuspended?.()
+      throw new ApiError(401, peek.message, peek.body, ORG_SUSPENDED_CODE)
+    }
+
     let mutex = getRefreshMutex()
     if (!mutex) {
       mutex = doRefresh()
@@ -73,12 +92,8 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new ApiError(
-      res.status,
-      (body as { message?: string }).message ?? res.statusText,
-      body,
-    )
+    const peek = await peekErrorBody(res)
+    throw new ApiError(res.status, peek.message, peek.body, peek.code)
   }
 
   if (res.status === 204) return undefined as T
@@ -96,11 +111,50 @@ export async function apiRequest<T>(
   return json as T
 }
 
+interface PeekedError {
+  body: unknown
+  code: string
+  message: string
+}
+
+// Mirror dashboard's parseErrorBody — handle the four NestJS shapes:
+//   { statusCode, message, error: string }              ← default
+//   { statusCode, message: string[], error }            ← validation
+//   { statusCode, message: { error, message }, error }  ← custom conflict
+//   { error: { code, message } }                        ← legacy envelope
+async function peekErrorBody(res: Response): Promise<PeekedError> {
+  const body = (await res
+    .clone()
+    .json()
+    .catch(() => ({}))) as Record<string, unknown>
+  const nestedMessage =
+    body && typeof body.message === 'object' && body.message !== null && !Array.isArray(body.message)
+      ? (body.message as { error?: string; message?: string })
+      : null
+  const errorObj =
+    body && typeof body.error === 'object' && body.error !== null
+      ? (body.error as { code?: string; message?: string })
+      : null
+  const code: string =
+    nestedMessage?.error ??
+    errorObj?.code ??
+    (typeof body.error === 'string' ? (body.error as string) : undefined) ??
+    (typeof body.message === 'string' ? (body.message as string) : undefined) ??
+    'UNKNOWN'
+  const rawMessage =
+    nestedMessage?.message ??
+    errorObj?.message ??
+    (Array.isArray(body.message) ? (body.message as string[]).join(', ') : (body.message as string | undefined))
+  const message = rawMessage ?? res.statusText
+  return { body, code, message }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
     public readonly body: unknown,
+    public readonly code: string = 'UNKNOWN',
   ) {
     super(message)
     this.name = 'ApiError'

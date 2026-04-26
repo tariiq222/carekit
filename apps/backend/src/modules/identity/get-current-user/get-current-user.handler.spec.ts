@@ -45,9 +45,32 @@ describe('GetCurrentUserHandler', () => {
 
   it('returns organizationId from the active membership', async () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: 'Solo' });
-    prisma.membership.findFirst.mockResolvedValue({ organizationId: 'org_42' });
+    prisma.membership.findFirst.mockResolvedValue({
+      organizationId: 'org_42',
+      organization: { vertical: { slug: 'clinic' } },
+    });
     const result = await handler.execute({ userId: 'u1' });
     expect(result.organizationId).toBe('org_42');
+  });
+
+  it('returns verticalSlug from the active membership organization', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: 'Solo' });
+    prisma.membership.findFirst.mockResolvedValue({
+      organizationId: 'org_42',
+      organization: { vertical: { slug: 'salon' } },
+    });
+    const result = await handler.execute({ userId: 'u1' });
+    expect(result.verticalSlug).toBe('salon');
+  });
+
+  it('returns verticalSlug=null when org has no vertical assigned', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: 'Solo' });
+    prisma.membership.findFirst.mockResolvedValue({
+      organizationId: 'org_42',
+      organization: { vertical: null },
+    });
+    const result = await handler.execute({ userId: 'u1' });
+    expect(result.verticalSlug).toBeNull();
   });
 
   it('returns organizationId=null when user has no active membership', async () => {
@@ -55,5 +78,6 @@ describe('GetCurrentUserHandler', () => {
     prisma.membership.findFirst.mockResolvedValue(null);
     const result = await handler.execute({ userId: 'u1' });
     expect(result.organizationId).toBeNull();
+    expect(result.verticalSlug).toBeNull();
   });
 });

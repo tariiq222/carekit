@@ -2,17 +2,11 @@
 
 import { useState } from "react"
 import { subDays, format } from "date-fns"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Download04Icon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
-import { Button } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
-import { FeatureGate } from "@/components/feature-gate"
-import { FeatureKey } from "@carekit/shared/constants"
-import { FeatureDisabledState } from "@/components/features/feature-disabled-state"
 import { FilterBar } from "@/components/features/filter-bar"
 import { EmployeeCombobox } from "@/components/features/reports/employee-combobox"
 
@@ -31,40 +25,18 @@ export default function ReportsPage() {
   const [dateTo, setDateTo] = useState(today)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
 
-  const handleExport = () => {
-    // TODO: re-implement export when backend adds report export endpoints
-  }
-
-  const showExport = false
+  // Export intentionally not rendered — backend has no report-export endpoint
+  // yet (ops/generate-report ships CSV/Excel builders but no HTTP route).
+  // Re-add an outline Button here once the endpoint lands.
 
   return (
-    <FeatureGate
-      feature={FeatureKey.ADVANCED_REPORTS}
-      fallback={
-        <FeatureDisabledState
-          title={t("reports.title")}
-          description={t("reports.description")}
-        />
-      }
-    >
     <ListPageShell>
       <Breadcrumbs />
 
       <PageHeader
         title={t("reports.title")}
         description={t("reports.description")}
-      >
-        {showExport && (
-          <Button
-            className="gap-2 rounded-full px-5"
-            disabled={!dateFrom || !dateTo}
-            onClick={handleExport}
-          >
-            <HugeiconsIcon icon={Download04Icon} size={16} />
-            {t("reports.exportCsv")}
-          </Button>
-        )}
-      </PageHeader>
+      />
 
       {/* Date Filter — shared across all tabs */}
       <FilterBar
@@ -112,6 +84,5 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
     </ListPageShell>
-    </FeatureGate>
   )
 }

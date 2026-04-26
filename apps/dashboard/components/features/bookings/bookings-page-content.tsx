@@ -27,6 +27,8 @@ import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
 import { useBookingsStats } from "@/hooks/use-bookings"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useTerminology } from "@/hooks/use-terminology"
 import type { Booking } from "@/lib/types/booking"
 import type { BookingSettings } from "@/lib/api/booking-settings"
 
@@ -41,6 +43,10 @@ export function BookingsPageContent({
   const tabParam = searchParams.get("tab")
   const defaultTab = tabParam === "waitlist" ? "waitlist" : "bookings"
   const { t } = useLocale()
+  const { user } = useAuth()
+  // "المواعيد"/"Appointments" for clinical, "الحصص"/"Classes" for fitness, …
+  const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
+  const titleLabel = term("appointment.plural")
   const queryClient = useQueryClient()
   const { data: stats, isLoading: statsLoading } = useBookingsStats()
 
@@ -71,7 +77,7 @@ export function BookingsPageContent({
       <div className="flex flex-col gap-2">
         <Breadcrumbs />
         <PageHeader
-          title={t("bookings.title")}
+          title={titleLabel}
           description={t("bookings.description")}
         >
           <Button

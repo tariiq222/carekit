@@ -84,7 +84,10 @@ function setLocale(locale: "ar" | "en") {
 describe("TenantSwitcher", () => {
   beforeEach(() => {
     mockUseSwitchOrg.mockReturnValue({ mutate: vi.fn(), isPending: false })
-    mockUseAuth.mockReturnValue({ isAuthenticated: true })
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { organizationId: "org-a" },
+    })
     setLocale("ar")
   })
 
@@ -127,5 +130,34 @@ describe("TenantSwitcher", () => {
     })
     render(<TenantSwitcher />)
     expect(screen.getByRole("button")).toHaveTextContent("Clinic A")
+  })
+
+  it("uses AuthUser.organizationId, not memberships[0], to mark active org", () => {
+    // Memberships return [orgA, orgB] but the current JWT targets orgB.
+    // Pre-fix code keyed off memberships[0] (orgA) — wrong. Post-fix
+    // must surface orgB as active.
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { organizationId: "org-b" },
+    })
+    mockUseMemberships.mockReturnValue({
+      data: [orgA, orgB],
+      isLoading: false,
+    })
+    render(<TenantSwitcher />)
+    expect(screen.getByRole("button")).toHaveTextContent("العيادة ب")
+  })
+
+  it("falls back to memberships[0] when AuthUser.organizationId is null (legacy session)", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { organizationId: null },
+    })
+    mockUseMemberships.mockReturnValue({
+      data: [orgA, orgB],
+      isLoading: false,
+    })
+    render(<TenantSwitcher />)
+    expect(screen.getByRole("button")).toHaveTextContent("العيادة أ")
   })
 })
