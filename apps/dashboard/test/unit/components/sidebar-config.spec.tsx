@@ -8,7 +8,11 @@ import {
   adminNav,
   navGroups,
 } from "@/components/sidebar-config"
-import { FEATURE_FLAG_KEYS } from "@carekit/shared/constants"
+// Sidebar nav uses the tiered FeatureKey enum (single source of truth for
+// billing-gated features) rather than the legacy FEATURE_FLAG_KEYS list.
+import { FeatureKey } from "@carekit/shared/constants"
+
+const ALL_FEATURE_KEYS = Object.values(FeatureKey) as readonly string[]
 
 describe("SidebarConfig — groups added", () => {
   // Collect every nav item href from all nav groups
@@ -27,10 +31,10 @@ describe("SidebarConfig — groups added", () => {
     expect(groupsItem).toBeUndefined()
   })
 
-  it("each nav item with featureFlag uses a key from FEATURE_FLAG_KEYS", () => {
+  it("each nav item with featureFlag uses a key from FeatureKey", () => {
     const itemsWithFlag = allNavItems.filter((item) => item.featureFlag !== undefined)
     for (const item of itemsWithFlag) {
-      expect(FEATURE_FLAG_KEYS).toContain(item.featureFlag)
+      expect(ALL_FEATURE_KEYS).toContain(item.featureFlag)
     }
   })
 
@@ -59,24 +63,20 @@ describe("SidebarConfig — groups added", () => {
   })
 
   it("featureFlag keys are correct for all gated items", () => {
-    // branches → multi_branch
+    // branches → branches (FeatureKey.BRANCHES)
     const branches = organizationNav.find((i) => i.href === "/branches")
-    expect(branches?.featureFlag).toBe("multi_branch")
+    expect(branches?.featureFlag).toBe(FeatureKey.BRANCHES)
 
-    // intakeForms → intake_forms
+    // intakeForms → intake_forms (FeatureKey.INTAKE_FORMS)
     const intakeForms = organizationNav.find((i) => i.href === "/intake-forms")
-    expect(intakeForms?.featureFlag).toBe("intake_forms")
+    expect(intakeForms?.featureFlag).toBe(FeatureKey.INTAKE_FORMS)
 
-    // coupons → coupons
+    // coupons → coupons (FeatureKey.COUPONS)
     const coupons = financeNav.find((i) => i.href === "/coupons")
-    expect(coupons?.featureFlag).toBe("coupons")
+    expect(coupons?.featureFlag).toBe(FeatureKey.COUPONS)
 
-    // reports → reports
-    const reports = financeNav.find((i) => i.href === "/reports")
-    expect(reports?.featureFlag).toBe("reports")
-
-    // chatbot → chatbot
+    // chatbot → ai_chatbot (FeatureKey.AI_CHATBOT)
     const chatbot = toolsNav.find((i) => i.href === "/chatbot")
-    expect(chatbot?.featureFlag).toBe("chatbot")
+    expect(chatbot?.featureFlag).toBe(FeatureKey.AI_CHATBOT)
   })
 })

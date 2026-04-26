@@ -10,7 +10,11 @@ export function getRefreshMutex(): Promise<string> | null {
 
 export function setRefreshMutex(p: Promise<string>): void {
   refreshPromise = p
+  // .finally rethrows the underlying rejection; without a trailing .catch the
+  // returned promise becomes an unhandled-rejection in tests/strict runtimes.
+  // Real awaiters of `p` still see the rejection — this only swallows the
+  // bookkeeping promise we don't return.
   p.finally(() => {
     refreshPromise = null
-  })
+  }).catch(() => {})
 }

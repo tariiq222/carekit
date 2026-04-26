@@ -13,7 +13,7 @@ vi.mock("@hcaptcha/react-hcaptcha", () => ({
   default: ({ onVerify }: { onVerify: (token: string) => void }) => {
     // Automatically verify in tests so the submit button is enabled
     useEffect(() => {
-      onVerify("test-token")
+      onVerify("dev-bypass")
     }, [onVerify])
     return <div data-testid="hcaptcha" />
   },
@@ -62,7 +62,7 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("admin@test.com", "password123", "test-token")
+      expect(loginMock).toHaveBeenCalledWith("admin@test.com", "password123", "dev-bypass")
     })
   })
 
@@ -141,7 +141,7 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByText(/Dev Admin Login/i))
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("dev@test.com", "devpass", "test-token")
+      expect(loginMock).toHaveBeenCalledWith("dev@test.com", "devpass", "dev-bypass")
     })
   })
 

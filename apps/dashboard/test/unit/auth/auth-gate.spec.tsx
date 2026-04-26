@@ -143,7 +143,10 @@ describe('AuthGate', () => {
     await userEvent.click(btn)
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('admin@carekit-test.com', 'Admin@Pass123', 'test-token')
+      // CaptchaField emits "dev-bypass" when no hCaptcha site key is wired in
+      // the test environment (per components/features/shared/captcha-field.tsx).
+      // The @hcaptcha/react-hcaptcha mock above is unused in this path.
+      expect(mockLogin).toHaveBeenCalledWith('admin@carekit-test.com', 'Admin@Pass123', 'dev-bypass')
     })
   })
 

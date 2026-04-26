@@ -4,11 +4,16 @@ const buildCronMock = () => ({ execute: jest.fn().mockResolvedValue(undefined) }
 
 const buildBullMq = () => {
   const queue = { add: jest.fn().mockResolvedValue(undefined) };
+  const worker = { on: jest.fn() };
   let workerProcessor: ((job: { name: string }) => Promise<void>) | null = null;
   return {
     getQueue: jest.fn().mockReturnValue(queue),
-    createWorker: jest.fn((_, processor) => { workerProcessor = processor as typeof workerProcessor; }),
+    createWorker: jest.fn((_, processor) => {
+      workerProcessor = processor as typeof workerProcessor;
+      return worker;
+    }),
     queue,
+    worker,
     getProcessor: () => workerProcessor!,
   };
 };
@@ -60,6 +65,7 @@ describe('CronTasksService', () => {
     const service = new CronTasksService(bullMq as never, ...mocks.map(m => m as never) as [never, never, never, never, never, never, never, never, never, never, never]);
     service.onModuleInit();
     expect(bullMq.createWorker).toHaveBeenCalledWith('ops-cron', expect.any(Function));
+    expect(bullMq.worker.on).toHaveBeenCalledWith('failed', expect.any(Function));
   });
 
   // Worker routing — maps each schedulable job to its handler mock index

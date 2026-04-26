@@ -65,7 +65,9 @@ describe("auth api", () => {
     localStorage.clear()
   })
 
-  it("login delegates to authApi.login and persists tokens + user", async () => {
+  it("login delegates to authApi.login and persists access token + user", async () => {
+    // Refresh tokens are managed as HttpOnly cookies by @carekit/api-client; the
+    // dashboard wrapper only persists the access token + user payload locally.
     loginMock.mockResolvedValueOnce({
       accessToken: "token123",
       refreshToken: "rt123",
@@ -78,7 +80,6 @@ describe("auth api", () => {
     expect(loginMock).toHaveBeenCalledWith({ email: "a@b.com", password: "pass", hCaptchaToken: "tok" })
     expect(setAccessTokenMock).toHaveBeenCalledWith("token123")
     expect(localStorage.getItem("carekit_user")).toContain("a@b.com")
-    expect(localStorage.getItem("carekit_refresh_token")).toBe("rt123")
     expect(result.accessToken).toBe("token123")
   })
 
@@ -92,8 +93,10 @@ describe("auth api", () => {
     expect(result.email).toBe("a@b.com")
   })
 
-  it("refreshToken passes the stored refresh token and updates access token", async () => {
-    localStorage.setItem("carekit_refresh_token", "stored-rt")
+  it("refreshToken delegates to authApi.refreshToken and updates access token", async () => {
+    // The api-client owns refresh-token retrieval (HttpOnly cookie); the
+    // dashboard wrapper only forwards the call and re-persists the new
+    // access token returned by the server.
     refreshTokenMock.mockResolvedValueOnce({
       accessToken: "newToken",
       refreshToken: "newRt",
@@ -102,15 +105,15 @@ describe("auth api", () => {
 
     const result = await refreshToken()
 
-    expect(refreshTokenMock).toHaveBeenCalledWith("stored-rt")
+    expect(refreshTokenMock).toHaveBeenCalledOnce()
     expect(setAccessTokenMock).toHaveBeenCalledWith("newToken")
-    expect(localStorage.getItem("carekit_refresh_token")).toBe("newRt")
     expect(result.accessToken).toBe("newToken")
   })
 
-  it("refreshToken throws when no stored refresh token", async () => {
-    await expect(refreshToken()).rejects.toThrow("No refresh token")
-    expect(refreshTokenMock).not.toHaveBeenCalled()
+  it("refreshToken propagates errors from the api-client", async () => {
+    refreshTokenMock.mockRejectedValueOnce(new Error("Refresh failed"))
+    await expect(refreshToken()).rejects.toThrow("Refresh failed")
+    expect(setAccessTokenMock).not.toHaveBeenCalled()
   })
 
   it("logoutApi delegates to authApi.logout and clears state", async () => {

@@ -5,6 +5,7 @@ import { Video } from 'lucide-react-native';
 
 import { sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { getFontName } from '@/theme/fonts';
+import { FEATURE_FLAGS } from '@/constants/feature-flags';
 
 interface Props {
   /** Client uses join URL; employee uses start URL (host link). */
@@ -27,6 +28,8 @@ export function JoinVideoCallButton({
   isRTL,
   variant,
 }: Props) {
+  if (!FEATURE_FLAGS.videoCalls) return null;
+
   const f600 = getFontName(isRTL ? 'ar' : 'en', '600');
   const f700 = getFontName(isRTL ? 'ar' : 'en', '700');
 

@@ -85,6 +85,9 @@ export async function apiRequest<T>(
     let mutex = getRefreshMutex()
     if (!mutex) {
       mutex = doRefresh()
+      // setRefreshMutex attaches the unhandled-rejection sentinel — see
+      // refresh-mutex.ts. Awaiters of `mutex` below still observe the
+      // original rejection.
       setRefreshMutex(mutex)
     }
     await mutex

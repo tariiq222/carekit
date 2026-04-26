@@ -16,7 +16,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // We need to import the module fresh each test to reset module-level state
-// (accessToken and refreshPromise are module-level vars in lib/api.ts)
+// (accessToken and refreshPromise are module-level vars in lib/api.ts).
+// 'Refresh failed' rejection suppression lives in test/setup.ts so every
+// suite that touches api-client benefits from it, not just this one.
 // ---------------------------------------------------------------------------
 
 describe('API Client (lib/api.ts)', () => {

@@ -3,6 +3,44 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
+// Reactive URL-state mock for next/navigation — useIntakeForms reads search
+// params and writes via router.replace; we simulate that here so the hook
+// behaves end-to-end in jsdom.
+const navState = vi.hoisted(() => ({
+  params: new URLSearchParams(),
+  listeners: new Set<() => void>(),
+  notify() { this.listeners.forEach((l) => l()) },
+  reset() { this.params = new URLSearchParams(); this.listeners.clear() },
+}))
+
+vi.mock("next/navigation", async () => {
+  const { useState, useEffect } = await import("react")
+  return {
+    useRouter: () => ({
+      replace: (url: string) => {
+        const q = url.indexOf("?")
+        navState.params = new URLSearchParams(q >= 0 ? url.slice(q + 1) : "")
+        navState.notify()
+      },
+      push: vi.fn(),
+      refresh: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      prefetch: vi.fn(),
+    }),
+    usePathname: () => "/intake-forms",
+    useSearchParams: () => {
+      const [, force] = useState(0)
+      useEffect(() => {
+        const fn = () => force((n) => n + 1)
+        navState.listeners.add(fn)
+        return () => { navState.listeners.delete(fn) }
+      }, [])
+      return navState.params
+    },
+  }
+})
+
 const {
   fetchIntakeForms,
   fetchIntakeForm,
@@ -44,7 +82,7 @@ function makeWrapper() {
 }
 
 describe("useIntakeForms", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches intake forms and returns items", async () => {
     const forms = [{ id: "f-1", title: "Pre-visit Form" }]
@@ -88,23 +126,27 @@ describe("useIntakeForms", () => {
     expect(fetchIntakeForms).toHaveBeenCalledWith({ serviceId: "svc-1" })
   })
 
-  it("setQuery triggers re-fetch with new query", async () => {
+  it("setQuery is now a deprecated no-op (state is URL-driven)", async () => {
+    // Migration note: setQuery used to drive an internal useState. After the
+    // URL-state refactor, the hook reads from useSearchParams and writes via
+    // router.push. setQuery is kept for backwards compatibility but only logs.
     fetchIntakeForms.mockResolvedValue([])
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     const { result } = renderHook(() => useIntakeForms(), { wrapper: makeWrapper() })
-
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+    fetchIntakeForms.mockClear()
     act(() => { result.current.setQuery({ serviceId: "svc-2" }) })
 
-    await waitFor(() =>
-      expect(fetchIntakeForms).toHaveBeenCalledWith({ serviceId: "svc-2" }),
-    )
+    expect(warnSpy).toHaveBeenCalled()
+    expect(fetchIntakeForms).not.toHaveBeenCalled()
+    warnSpy.mockRestore()
   })
 })
 
 describe("useIntakeForm", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("fetches a single intake form by id", async () => {
     const form = { id: "f-1", title: "Pre-visit Form", fields: [] }
@@ -124,7 +166,7 @@ describe("useIntakeForm", () => {
 })
 
 describe("useIntakeFormMutations", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); navState.reset() })
 
   it("create calls createIntakeForm", async () => {
     createIntakeForm.mockResolvedValueOnce({ id: "f-new" })
