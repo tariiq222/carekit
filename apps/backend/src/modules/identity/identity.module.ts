@@ -47,6 +47,11 @@ import { SwitchOrganizationHandler } from './switch-organization/switch-organiza
 import { RequestPasswordResetHandler } from './user-password-reset/request-password-reset/request-password-reset.handler';
 import { PerformPasswordResetHandler } from './user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { CommsModule } from '../comms/comms.module';
+import { RegisterMobileUserHandler } from './register-mobile-user/register-mobile-user.handler';
+import { RequestMobileLoginOtpHandler } from './request-mobile-login-otp/request-mobile-login-otp.handler';
+import { VerifyMobileOtpHandler } from './verify-mobile-otp/verify-mobile-otp.handler';
+import { RequestEmailVerificationHandler } from './request-email-verification/request-email-verification.handler';
+import { VerifyEmailHandler } from './verify-email/verify-email.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -67,6 +72,11 @@ const handlers = [
   ResetPasswordHandler,
   ListMembershipsHandler,
   SwitchOrganizationHandler,
+  RegisterMobileUserHandler,
+  RequestMobileLoginOtpHandler,
+  VerifyMobileOtpHandler,
+  RequestEmailVerificationHandler,
+  VerifyEmailHandler,
 ];
 
 @Module({
