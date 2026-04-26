@@ -12,6 +12,7 @@ import { Badge } from "@carekit/ui"
 import { Separator } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
+import { halalasToSar } from "@/lib/money"
 import { useEmployee } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { ScheduleSection } from "./schedule-section"
@@ -105,7 +106,7 @@ export function EmployeeDetailSheet({
                     label={t("detail.clinicVisit")}
                     value={
                       p.priceClinic != null
-                        ? (p.priceClinic / 100).toFixed(2)
+                        ? halalasToSar(p.priceClinic).toFixed(2)
                         : "—"
                     }
                     numeric
@@ -114,7 +115,7 @@ export function EmployeeDetailSheet({
                     label={t("detail.phoneConsultation")}
                     value={
                       p.pricePhone != null
-                        ? (p.pricePhone / 100).toFixed(2)
+                        ? halalasToSar(p.pricePhone).toFixed(2)
                         : "—"
                     }
                     numeric
@@ -123,7 +124,7 @@ export function EmployeeDetailSheet({
                     label={t("detail.videoConsultation")}
                     value={
                       p.priceVideo != null
-                        ? (p.priceVideo / 100).toFixed(2)
+                        ? halalasToSar(p.priceVideo).toFixed(2)
                         : "—"
                     }
                     numeric

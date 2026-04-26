@@ -21,6 +21,7 @@ const fakeUser: UserPayload = {
   isSuperAdmin: false,
   permissions: ['booking:read'],
   organizationId: 'org_1',
+  verticalSlug: null,
 }
 
 const fakeAuth: AuthResponse = {

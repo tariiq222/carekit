@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { halalasToSar } from "@/lib/money"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Add01Icon,
@@ -229,7 +230,7 @@ function buildTypeBadges(
         const key = TYPE_LABEL_MAP[st.bookingType]
         const typeLabel = key ? t(`employees.services.${key}`) : st.bookingType
         const price = st.price != null
-          ? (st.price / 100).toFixed(0)
+          ? halalasToSar(st.price).toFixed(0)
           : t("employees.services.defaultPrice")
         const duration = st.duration != null
           ? String(st.duration)
@@ -249,11 +250,11 @@ function buildTypeBadges(
     const duration = ps.customDuration ?? ps.service.duration
     const priceVal =
       type === "clinic_visit" && ps.priceClinic != null
-        ? (ps.priceClinic / 100).toFixed(0)
+        ? halalasToSar(ps.priceClinic).toFixed(0)
         : type === "phone_consultation" && ps.pricePhone != null
-          ? (ps.pricePhone / 100).toFixed(0)
+          ? halalasToSar(ps.pricePhone).toFixed(0)
           : type === "video_consultation" && ps.priceVideo != null
-            ? (ps.priceVideo / 100).toFixed(0)
+            ? halalasToSar(ps.priceVideo).toFixed(0)
             : t("employees.services.defaultPrice")
 
     return {

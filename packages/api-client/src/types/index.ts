@@ -141,12 +141,6 @@ export type {
   ReportDateParams,
 } from './report'
 export type {
-  ChatbotConfig,
-  ChatbotAnalytics,
-  ChatbotTopQuestion,
-  UpdateChatbotConfigPayload,
-} from './chatbot-admin'
-export type {
   GroupStatus,
   GroupListItem,
   GroupListQuery,

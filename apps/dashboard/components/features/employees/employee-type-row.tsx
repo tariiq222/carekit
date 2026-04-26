@@ -7,6 +7,7 @@ import { Button } from "@carekit/ui"
 import { Input } from "@carekit/ui"
 import { Label } from "@carekit/ui"
 import { Switch } from "@carekit/ui"
+import { halalasToSar, sarToHalalas } from "@/lib/money"
 import type { ServiceBookingType } from "@/lib/types/service"
 import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 
@@ -33,7 +34,7 @@ export function EmployeeTypeRow({
   onUpdate,
   onRemove,
 }: EmployeeTypeRowProps) {
-  const defaultPrice = serviceDefault ? (serviceDefault.price / 100).toFixed(2) : ""
+  const defaultPrice = serviceDefault ? halalasToSar(serviceDefault.price).toFixed(2) : ""
   const defaultDuration = serviceDefault ? String(serviceDefault.durationMins) : ""
   const hasDefault = !!serviceDefault
 
@@ -45,7 +46,7 @@ export function EmployeeTypeRow({
     : t("employees.services.required")
 
   const priceDisplay =
-    config.price != null ? (config.price / 100).toFixed(2) : ""
+    config.price != null ? halalasToSar(config.price).toFixed(2) : ""
   const durationDisplay =
     config.duration != null ? String(config.duration) : ""
 
@@ -53,7 +54,7 @@ export function EmployeeTypeRow({
     if (val === "") {
       onUpdate({ price: null })
     } else {
-      onUpdate({ price: Math.round(parseFloat(val) * 100) })
+      onUpdate({ price: sarToHalalas(parseFloat(val)) })
     }
   }
 
