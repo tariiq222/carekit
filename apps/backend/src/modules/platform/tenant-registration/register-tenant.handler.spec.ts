@@ -60,7 +60,7 @@ describe('RegisterTenantHandler', () => {
   });
 
   it('throws ConflictException when email already exists (P2002 on user.email)', async () => {
-    const txConflict = { ...txMock, user: { create: jest.fn().mockRejectedValue({ code: 'P2002', message: 'Unique constraint failed on email' }) } };
+    const txConflict = { ...txMock, user: { create: jest.fn().mockRejectedValue({ code: 'P2002', meta: { target: ['email'] }, message: 'Unique constraint failed on email' }) } };
     prisma.$transaction = jest.fn(async (cb) => cb(txConflict));
     await expect(handler.execute({ name: 'Ali', email: 'a@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }))
       .rejects.toThrow(ConflictException);
@@ -90,8 +90,8 @@ describe('RegisterTenantHandler', () => {
     expect(startSub.execute).toHaveBeenCalledWith(expect.objectContaining({ billingCycle: 'MONTHLY' }));
   });
 
-  it('returns accessToken and refreshToken', async () => {
+  it('returns accessToken, refreshToken, and userId', async () => {
     const result = await handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' });
-    expect(result).toMatchObject({ accessToken: 'at', refreshToken: 'rt' });
+    expect(result).toMatchObject({ accessToken: 'at', refreshToken: 'rt', userId: 'user-1' });
   });
 });

@@ -44,6 +44,19 @@ export class TenantResolverMiddleware implements NestMiddleware {
   }
 
   /**
+   * Tenant-bootstrap routes that legitimately have no tenant yet — they
+   * CREATE the tenant. Skip resolution entirely so strict mode doesn't
+   * reject the request before the controller runs. These handlers must
+   * call `tenant.set()` themselves once the org exists.
+   */
+  private isTenantBootstrapRoute(path: string): boolean {
+    return (
+      path.endsWith('/public/tenants/register') ||
+      path.endsWith('/api/v1/public/tenants/register')
+    );
+  }
+
+  /**
    * Validates a header value as a well-formed UUID (RFC 4122, any version
    * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
    * Returns the trimmed value when valid, undefined otherwise.
@@ -62,6 +75,10 @@ export class TenantResolverMiddleware implements NestMiddleware {
     const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
     if (mode === 'off') {
+      return next();
+    }
+
+    if (this.isTenantBootstrapRoute(req.originalUrl ?? '')) {
       return next();
     }
 

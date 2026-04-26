@@ -44,6 +44,7 @@ export const enRegister: Record<string, string> = {
   "onboarding.back": "Back",
   "onboarding.skip": "Skip",
   "onboarding.saving": "Saving...",
+  "onboarding.error.generic": "Could not complete the step, please try again",
 
   "trialBanner.trialing": "{days} days left in your free trial",
   "trialBanner.trialingLastDay": "Last day of your free trial",

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
@@ -12,9 +13,18 @@ function slugify(text: string): string {
   return text
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\u0600-\u06FF-]/g, '')
+    .replace(/[^\w؀-ۿ-]/g, '')
     .toLowerCase()
     .slice(0, 60);
+}
+
+function isPrismaUniqueOn(err: unknown, target: string): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as { code?: string; meta?: { target?: string | string[] } };
+  if (e.code !== 'P2002') return false;
+  const t = e.meta?.target;
+  if (!t) return false;
+  return Array.isArray(t) ? t.some((x) => x.includes(target)) : t.includes(target);
 }
 
 @Injectable()
@@ -39,70 +49,81 @@ export class RegisterTenantHandler {
     const passwordHash = await this.password.hash(dto.password);
     const baseSlug = slugify(dto.businessNameAr) || 'org';
 
-    let result: { orgId: string; userId: string; membershipId: string };
+    // Generate a slug with a 6-hex random suffix to avoid races on the
+    // unique constraint. We retry up to 3 times on slug-only collisions
+    // before giving up. Email collisions surface as the proper 409.
+    const maxAttempts = 3;
+    let attempt = 0;
+    let result: { orgId: string; userId: string; membershipId: string } | undefined;
 
-    try {
-      result = await this.prisma.$transaction(async (tx) => {
-        // Slugify + collision suffix
-        const existingCount = await (tx as typeof this.prisma).organization.count({
-          where: { slug: { startsWith: baseSlug } },
+    while (attempt < maxAttempts) {
+      attempt += 1;
+      const slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
+      try {
+        result = await this.prisma.$transaction(async (tx) => {
+          const org = await tx.organization.create({
+            data: {
+              slug,
+              nameAr: dto.businessNameAr,
+              nameEn: dto.businessNameEn ?? null,
+              status: 'TRIALING',
+              trialEndsAt,
+            },
+          });
+
+          const user = await tx.user.create({
+            data: {
+              email: dto.email,
+              name: dto.name,
+              phone: dto.phone,
+              passwordHash,
+              role: 'ADMIN',
+              isActive: true,
+            },
+          });
+
+          const membership = await tx.membership.create({
+            data: {
+              userId: user.id,
+              organizationId: org.id,
+              role: 'OWNER',
+              isActive: true,
+              acceptedAt: new Date(),
+            },
+          });
+
+          await tx.brandingConfig.create({
+            data: {
+              organizationId: org.id,
+              organizationNameAr: dto.businessNameAr,
+              organizationNameEn: dto.businessNameEn ?? null,
+            },
+          });
+
+          await tx.organizationSettings.create({
+            data: {
+              organizationId: org.id,
+              timezone: 'Asia/Riyadh',
+              vatRate: 0.15,
+            },
+          });
+
+          return { orgId: org.id, userId: user.id, membershipId: membership.id };
         });
-        const slug = existingCount === 0 ? baseSlug : `${baseSlug}-${existingCount}`;
-
-        const org = await tx.organization.create({
-          data: {
-            slug,
-            nameAr: dto.businessNameAr,
-            nameEn: dto.businessNameEn ?? null,
-            status: 'TRIALING',
-            trialEndsAt,
-          },
-        });
-
-        const user = await tx.user.create({
-          data: {
-            email: dto.email,
-            name: dto.name,
-            phone: dto.phone,
-            passwordHash,
-            role: 'ADMIN',
-            isActive: true,
-          },
-        });
-
-        const membership = await tx.membership.create({
-          data: {
-            userId: user.id,
-            organizationId: org.id,
-            role: 'OWNER',
-            isActive: true,
-            acceptedAt: new Date(),
-          },
-        });
-
-        await tx.brandingConfig.create({
-          data: {
-            organizationId: org.id,
-            organizationNameAr: dto.businessNameAr,
-            organizationNameEn: dto.businessNameEn ?? null,
-          },
-        });
-
-        await tx.organizationSettings.create({
-          data: {
-            organizationId: org.id,
-            timezone: 'Asia/Riyadh',
-            vatRate: 0.15,
-          },
-        });
-
-        return { orgId: org.id, userId: user.id, membershipId: membership.id };
-      });
-    } catch (err: unknown) {
-      if (typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002') {
-        throw new ConflictException('Email already registered');
+        break;
+      } catch (err: unknown) {
+        if (isPrismaUniqueOn(err, 'email')) {
+          throw new ConflictException('Email already registered');
+        }
+        if (isPrismaUniqueOn(err, 'slug') && attempt < maxAttempts) {
+          continue;
+        }
+        throw err;
       }
-      throw err;
+    }
+
+    if (!result) {
+      throw new ConflictException('Could not allocate a unique organization slug — please retry');
     }
 
     // Set CLS tenant context so StartSubscriptionHandler.execute() can call requireOrganizationId()
@@ -123,10 +144,12 @@ export class RegisterTenantHandler {
       include: { customRole: { include: { permissions: true } } },
     });
 
-    return this.tokens.issueTokenPair(userForTokens, {
+    const tokenPair = await this.tokens.issueTokenPair(userForTokens, {
       organizationId: result.orgId,
       membershipId: result.membershipId,
       isSuperAdmin: false,
     });
+
+    return { ...tokenPair, userId: result.userId };
   }
 }

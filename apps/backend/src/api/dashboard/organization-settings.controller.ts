@@ -45,6 +45,14 @@ import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-book
 import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
 import { PrismaService } from '../../infrastructure/database';
 import { TenantContextService } from '../../common/tenant/tenant-context.service';
+import { SeedOrganizationFromVerticalHandler } from '../../modules/platform/verticals/seed-organization-from-vertical.handler';
+import { IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+class SeedVerticalDto {
+  @ApiProperty({ description: 'Vertical slug to seed (e.g. clinic, salon)', example: 'clinic' })
+  @IsString() verticalSlug!: string;
+}
 
 @ApiTags('Dashboard / Org Experience')
 @ApiBearerAuth()
@@ -76,6 +84,7 @@ export class DashboardOrganizationSettingsController {
     private readonly listServiceEmployees: ListServiceEmployeesHandler,
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly seedFromVertical: SeedOrganizationFromVerticalHandler,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -281,6 +290,33 @@ export class DashboardOrganizationSettingsController {
     await this.prisma.organization.update({
       where: { id: organizationId },
       data: { onboardingCompletedAt: new Date() },
+    });
+  }
+
+  @Post('seed-vertical')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Seed organization with departments + service categories from a vertical',
+    description:
+      'Idempotent: skips when departments already exist. Also stamps Organization.verticalId so '
+      + 'useTerminology() resolves the right pack on /auth/me.',
+  })
+  @ApiOkResponse({ description: 'Seed result (skipped if already seeded)' })
+  async seedVerticalEndpoint(@Body() body: SeedVerticalDto) {
+    const organizationId = this.tenant.requireOrganizationId();
+    const vertical = await this.prisma.vertical.findFirst({
+      where: { slug: body.verticalSlug, isActive: true },
+      select: { id: true },
+    });
+    if (vertical) {
+      await this.prisma.organization.update({
+        where: { id: organizationId },
+        data: { verticalId: vertical.id },
+      });
+    }
+    return this.seedFromVertical.execute({
+      organizationId,
+      verticalSlug: body.verticalSlug,
     });
   }
 }

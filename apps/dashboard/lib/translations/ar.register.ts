@@ -44,6 +44,7 @@ export const arRegister: Record<string, string> = {
   "onboarding.back": "السابق",
   "onboarding.skip": "تخطّ",
   "onboarding.saving": "جاري الحفظ...",
+  "onboarding.error.generic": "تعذّر إكمال الخطوة، حاول مرة أخرى",
 
   "trialBanner.trialing": "باقي {days} يوم في فترتك التجريبية",
   "trialBanner.trialingLastDay": "آخر يوم في فترتك التجريبية",

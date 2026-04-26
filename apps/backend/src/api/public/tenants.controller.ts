@@ -1,23 +1,64 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiResponse } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 import { RegisterTenantDto } from '../../modules/platform/tenant-registration/register-tenant.dto';
 import { RegisterTenantHandler } from '../../modules/platform/tenant-registration/register-tenant.handler';
+import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
+import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
 
 @ApiTags('Public / Tenants')
 @ApiPublicResponses()
 @Controller('tenants')
 export class PublicTenantsController {
-  constructor(private readonly registerTenant: RegisterTenantHandler) {}
+  constructor(
+    private readonly registerTenant: RegisterTenantHandler,
+    private readonly getCurrentUser: GetCurrentUserHandler,
+    private readonly config: ConfigService,
+  ) {}
 
   @Post('register')
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new tenant organization with a 14-day free trial' })
-  @ApiCreatedResponse({ description: 'Organization created; returns access + refresh tokens' })
+  @ApiCreatedResponse({ description: 'Organization created; returns access + refresh tokens with user payload' })
   @ApiResponse({ status: 409, description: 'Email already registered', type: ApiErrorDto })
-  async registerEndpoint(@Body() dto: RegisterTenantDto) {
-    return this.registerTenant.execute(dto);
+  async registerEndpoint(
+    @Body() dto: RegisterTenantDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.registerTenant.execute(dto);
+    const user = await this.getCurrentUser.execute({ userId: tokens.userId });
+
+    this.setRefreshCookie(res, tokens.refreshToken);
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+      user: { ...user, permissions: flattenPermissions(user) },
+    };
+  }
+
+  private setRefreshCookie(res: Response, token: string): void {
+    const ttlMs =
+      this.parseTtlSeconds(this.config.get<string>('JWT_REFRESH_TTL') ?? '30d') * 1000;
+    res.cookie('ck_refresh', token, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: ttlMs,
+    });
+  }
+
+  private parseTtlSeconds(ttl: string): number {
+    const match = /^(\d+)([smhd])$/.exec(ttl);
+    if (!match) return 900;
+    const n = parseInt(match[1], 10);
+    const multipliers: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+    return n * multipliers[match[2]];
   }
 }
