@@ -6,6 +6,7 @@
 
 -- CreateTable
 CREATE TABLE "OrganizationPaymentConfig" (
+  "id"                 TEXT          NOT NULL,
   "organizationId"     TEXT          NOT NULL,
   "publishableKey"     TEXT          NOT NULL,
   "secretKeyEnc"       TEXT          NOT NULL,
@@ -16,8 +17,11 @@ CREATE TABLE "OrganizationPaymentConfig" (
   "createdAt"          TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt"          TIMESTAMP(3)  NOT NULL,
 
-  CONSTRAINT "OrganizationPaymentConfig_pkey" PRIMARY KEY ("organizationId")
+  CONSTRAINT "OrganizationPaymentConfig_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationPaymentConfig_organizationId_key" ON "OrganizationPaymentConfig"("organizationId");
 
 -- AddForeignKey
 ALTER TABLE "OrganizationPaymentConfig"

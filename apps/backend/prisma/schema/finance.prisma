@@ -208,7 +208,8 @@ model RefundRequest {
 // `saas_moyasar_architecture` for the TWO-Moyasar design.
 
 model OrganizationPaymentConfig {
-  organizationId     String    @id
+  id                 String    @id @default(uuid())
+  organizationId     String    @unique // singleton per org (matches BrandingConfig pattern)
   publishableKey     String // pk_test_… / pk_live_… — not secret, stored plain
   secretKeyEnc       String // AES-256-GCM ciphertext (base64), AAD = organizationId
   webhookSecretEnc   String? // optional, AES-256-GCM
