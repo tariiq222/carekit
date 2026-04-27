@@ -20,6 +20,7 @@ import type { UserPayload, AuthResponse as CanonicalAuthResponse } from '@careki
 // needs its own membership/employee lookup).
 export type User = UserPayload & {
   emailVerified?: boolean;
+  emailVerifiedAt?: string | null;
   employeeId?: string | null;
 };
 
@@ -45,12 +46,15 @@ export function getPrimaryRole(user: User): UserRole {
   return 'employee';
 }
 
+export type ActiveMembership = { id: string; organizationId: string; role: string };
+
 export interface AuthState {
   token: string | null;
   refreshToken: string | null;
   user: User | null;
   isLoading: boolean;
   organizationId: string | null;
+  activeMembership: ActiveMembership | null;
 }
 
 export interface LoginRequest {

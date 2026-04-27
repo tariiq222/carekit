@@ -52,6 +52,8 @@ import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/d
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
 import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
+import { AttachMembershipHandler } from '../../modules/identity/attach-membership/attach-membership.handler';
+import { AttachMembershipDto } from '../../modules/identity/attach-membership/attach-membership.dto';
 
 class EmployeeSlotsQuery {
   @IsDateString() date!: string;
@@ -97,6 +99,7 @@ export class DashboardPeopleController {
     private readonly listEmployeeRatings: ListEmployeeRatingsHandler,
     private readonly employeeStats: EmployeeStatsHandler,
     private readonly uploadAvatar: UploadAvatarHandler,
+    private readonly attachMembership: AttachMembershipHandler,
   ) {}
   // ── Clients ────────────────────────────────────────────────────────────────
   @Post('clients')
@@ -196,6 +199,14 @@ export class DashboardPeopleController {
   @ApiCreatedResponse({ description: 'Employee onboarded' })
   onboardEmployeeEndpoint(@Body() body: OnboardEmployeeDto) {
     return this.onboardEmployee.execute(body);
+  }
+
+  @Post('employees/attach-membership')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Attach an existing user as an employee to the organization' })
+  @ApiCreatedResponse({ description: 'Membership created' })
+  attachMembershipEndpoint(@Body() body: AttachMembershipDto) {
+    return this.attachMembership.execute(body);
   }
 
   @Get('employees')

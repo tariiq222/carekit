@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { AuthState, User } from '@/types/auth';
+import type { AuthState, User, ActiveMembership } from '@/types/auth';
 
 const initialState: AuthState = {
   token: null,
@@ -8,6 +8,7 @@ const initialState: AuthState = {
   user: null,
   isLoading: false,
   organizationId: null,
+  activeMembership: null,
 };
 
 const authSlice = createSlice({
@@ -27,6 +28,20 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.organizationId = action.payload.user.organizationId ?? null;
     },
+    setAuthSession(
+      state,
+      action: PayloadAction<{
+        tokens: { accessToken: string; refreshToken: string };
+        activeMembership: ActiveMembership | null;
+      }>,
+    ) {
+      state.token = action.payload.tokens.accessToken;
+      state.refreshToken = action.payload.tokens.refreshToken;
+      state.activeMembership = action.payload.activeMembership;
+      if (action.payload.activeMembership) {
+        state.organizationId = action.payload.activeMembership.organizationId;
+      }
+    },
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
     },
@@ -41,6 +56,7 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.user = null;
       state.organizationId = null;
+      state.activeMembership = null;
     },
     setOrganizationId(state, action: PayloadAction<string | null>) {
       state.organizationId = action.payload;
@@ -48,6 +64,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, setToken, setUser, setLoading, logout, setOrganizationId } =
+export const { setCredentials, setAuthSession, setToken, setUser, setLoading, logout, setOrganizationId } =
   authSlice.actions;
 export default authSlice.reducer;

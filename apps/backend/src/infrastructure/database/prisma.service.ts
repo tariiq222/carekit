@@ -88,6 +88,8 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // 2026-04-26 — OTP scoping fix
   'OtpCode',
   'UsedOtpSession',
+  // 2026-04-28 — mobile OTP-only auth
+  'EmailVerificationToken',
   // 04 — billing (Plan and SubscriptionInvoice are deliberately PLATFORM-level
   // and NOT scoped — they describe CareKit's catalog / receivables respectively).
   'Subscription',

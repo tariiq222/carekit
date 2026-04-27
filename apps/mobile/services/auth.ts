@@ -19,6 +19,39 @@ import type {
 } from '@/types/auth';
 import type { ApiResponse } from '@/types/api';
 
+export type RegisterPayload = { firstName: string; lastName: string; phone: string; email: string };
+export type RegisterResponse = { userId: string; maskedPhone: string };
+
+export type RequestLoginOtpPayload = { identifier: string };
+export type RequestLoginOtpResponse = { maskedIdentifier: string };
+
+export type VerifyOtpPayload = { identifier: string; code: string; purpose: 'register' | 'login' };
+export type ActiveMembership = { id: string; organizationId: string; role: string };
+export type VerifyOtpResponse = {
+  tokens: { accessToken: string; refreshToken: string };
+  activeMembership: ActiveMembership | null;
+};
+
+export const registerUser = (body: RegisterPayload) =>
+  api.post<RegisterResponse>('/api/v1/mobile/auth/register', body).then(r => r.data);
+
+export const requestLoginOtp = (body: RequestLoginOtpPayload) =>
+  api.post<RequestLoginOtpResponse>('/api/v1/mobile/auth/request-login-otp', body).then(r => r.data);
+
+export const verifyMobileOtp = async (body: VerifyOtpPayload): Promise<VerifyOtpResponse> => {
+  const response = await api.post<VerifyOtpResponse>('/api/v1/mobile/auth/verify-otp', body);
+  const data = response.data;
+  await setSecureItem('accessToken', data.tokens.accessToken);
+  await setSecureItem('refreshToken', data.tokens.refreshToken);
+  if (data.activeMembership) {
+    await setCurrentOrgId(data.activeMembership.organizationId);
+  }
+  return data;
+};
+
+export const requestEmailVerification = () =>
+  api.post<{ success: true }>('/api/v1/mobile/auth/request-email-verification').then(r => r.data);
+
 interface RegisterRequest {
   firstName: string;
   lastName: string;

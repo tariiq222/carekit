@@ -9,6 +9,8 @@ enum OtpPurpose {
   GUEST_BOOKING
   CLIENT_LOGIN
   CLIENT_PASSWORD_RESET
+  MOBILE_REGISTER
+  MOBILE_LOGIN
 }
 
 model OtpCode {
@@ -56,24 +58,30 @@ enum UserGender {
 }
 
 model User {
-  id                  String               @id @default(uuid())
-  email               String               @unique
-  isSuperAdmin        Boolean              @default(false)
-  passwordHash        String
-  name                String
-  phone               String?
-  gender              UserGender?
-  avatarUrl           String?
-  isActive            Boolean              @default(true)
-  role                UserRole             @default(RECEPTIONIST)
-  customRoleId        String?
-  customRole          CustomRole?          @relation(fields: [customRoleId], references: [id])
-  refreshTokens       RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  isSuperAdmin            Boolean                  @default(false)
+  passwordHash            String?
+  firstName               String?
+  lastName                String?
+  name                    String
+  phone                   String?                  @unique
+  phoneVerifiedAt         DateTime?
+  emailVerifiedAt         DateTime?
+  gender                  UserGender?
+  avatarUrl               String?
+  isActive                Boolean                  @default(true)
+  role                    UserRole                 @default(RECEPTIONIST)
+  customRoleId            String?
+  customRole              CustomRole?              @relation(fields: [customRoleId], references: [id])
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
 
   @@index([isSuperAdmin])
+  @@index([phone])
 }
 
 model RefreshToken {
@@ -110,6 +118,23 @@ model PasswordResetToken {
   @@index([tokenSelector])
   @@index([userId])
   @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id             String    @id @default(uuid())
+  organizationId String?
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash      String    @unique
+  tokenSelector  String
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenSelector])
+  @@index([expiresAt])
+  @@index([organizationId])
 }
 
 model ClientRefreshToken {

@@ -12,7 +12,7 @@ export class VerifyOtpDto {
   @IsNotEmpty()
   identifier!: string;
 
-  @ApiProperty({ description: '6-digit OTP code', example: '123456' })
+  @ApiProperty({ description: '4-digit OTP code', example: '1234' })
   @IsString()
   @IsNotEmpty()
   code!: string;

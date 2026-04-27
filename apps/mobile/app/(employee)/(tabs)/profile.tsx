@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { View, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
+import { Linking, View, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -21,9 +21,11 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { UnverifiedEmailBanner } from '@/components/features/auth/UnverifiedEmailBanner';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout, setUser } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { PRIVACY_POLICY_URL } from '@/constants/config';
 
 interface MenuItemProps {
   icon: React.ElementType;
@@ -107,6 +109,7 @@ export default function EmployeeProfileScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface, paddingTop: insets.top + 16 }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <UnverifiedEmailBanner />
         <ThemedText variant="displaySm" style={styles.title}>
           {t('employee.profile')}
         </ThemedText>
@@ -140,7 +143,7 @@ export default function EmployeeProfileScreen() {
 
         <View style={styles.menuGroup}>
           <MenuItem icon={Info} label={t('profile.about')} onPress={() => {}} />
-          <MenuItem icon={Shield} label={t('profile.privacy')} onPress={() => {}} />
+          <MenuItem icon={Shield} label={t('profile.privacy')} onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} />
         </View>
 
         <View style={styles.menuGroup}>

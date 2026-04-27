@@ -128,3 +128,26 @@ export interface EmployeeStats {
 export async function fetchEmployeeStats(): Promise<EmployeeStats> {
   return api.get<EmployeeStats>("/dashboard/people/employees/stats")
 }
+
+export interface AttachMembershipPayload {
+  identifier: string
+  role: string
+  branchId?: string
+}
+
+export interface Membership {
+  id: string
+  userId: string
+  organizationId: string
+  role: string
+  isActive: boolean
+  acceptedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export async function attachMembership(
+  payload: AttachMembershipPayload,
+): Promise<Membership> {
+  return api.post<Membership>("/dashboard/people/employees/attach-membership", payload)
+}

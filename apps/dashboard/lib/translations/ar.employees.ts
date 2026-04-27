@@ -339,4 +339,22 @@ export const arEmployees: Record<string, string> = {
   "vacation.deleteError": "فشل حذف الإجازة",
   "vacation.delete": "حذف",
   "vacation.deleting": "جارٍ الحذف...",
+
+  // — Attach Existing User —
+  "employees.attach.button": "إرفاق مستخدم موجود",
+  "employees.attach.title": "إرفاق مستخدم موجود",
+  "employees.attach.description": "ابحث عن مستخدم موجود لإضافته كممارس.",
+  "employees.attach.identifierLabel": "رقم الهاتف أو البريد الإلكتروني",
+  "employees.attach.roleLabel": "الدور",
+  "employees.attach.roleAdmin": "مدير",
+  "employees.attach.roleReceptionist": "استقبال",
+  "employees.attach.roleEmployee": "ممارس",
+  "employees.attach.roleAccountant": "محاسب",
+  "employees.attach.cancel": "إلغاء",
+  "employees.attach.submit": "إرفاق المستخدم",
+  "employees.attach.submitting": "جارٍ الإرفاق...",
+  "employees.attach.success": "تم إرفاق المستخدم بنجاح",
+  "employees.attach.error": "فشل إرفاق المستخدم",
+  "employees.attach.userNotFound": "المستخدم غير موجود — يجب أن يسجل في التطبيق أولاً.",
+  "employees.attach.membershipExists": "المستخدم لديه عضوية بالفعل في هذه المنشأة.",
 }

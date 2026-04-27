@@ -20,28 +20,22 @@ import { Glass } from '@/theme';
 import { C, RADII, SHADOW } from '@/theme/glass';
 import { PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
-import { useAppDispatch } from '@/hooks/use-redux';
-import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
-import { authService } from '@/services/auth';
-import { registerForPushAsync } from '@/services/push';
+import { useRegister } from '@/hooks/queries';
 import { LabeledInput } from '@/components/ui/LabeledInput';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
   const dir = useDir();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+  const register = useRegister();
 
   const clearError = (field: string) => {
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
@@ -49,43 +43,37 @@ export default function RegisterScreen() {
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
+    if (!firstName.trim()) newErrors.firstName = t('auth.register.firstNameError');
+    if (!lastName.trim()) newErrors.lastName = t('auth.register.lastNameError');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
-    if (!lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
-    if (!email || !emailRegex.test(email)) newErrors.email = t('auth.invalidEmail');
-    if (!phone.trim()) newErrors.phone = t('auth.phoneRequired');
-    if (!password) newErrors.password = t('auth.passwordRequired');
-    else if (password.length < 8) newErrors.password = t('auth.passwordMinLength');
-    if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordMismatch');
-
+    if (!email || !emailRegex.test(email)) newErrors.email = t('auth.register.emailError');
+    if (!phone.trim()) newErrors.phone = t('auth.register.phoneError');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [firstName, lastName, email, phone, password, confirmPassword, t]);
+  }, [firstName, lastName, email, phone, t]);
 
   const handleRegister = useCallback(async () => {
     if (!validate()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-    setIsLoading(true);
-    dispatch(setLoading(true));
+
     try {
-      const response = await authService.register({ firstName, lastName, email, phone, password });
-      if (response.success && response.data) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        void registerForPushAsync();
-        router.replace('/(client)/(tabs)/home');
-      }
+      const result = await register.mutateAsync({ firstName, lastName, phone, email });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.push({
+        pathname: '/(auth)/otp-verify',
+        params: {
+          purpose: 'register',
+          identifier: phone,
+          maskedIdentifier: result.maskedPhone,
+        },
+      });
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('common.error'), t('auth.registerError'));
-    } finally {
-      setIsLoading(false);
-      dispatch(setLoading(false));
     }
-  }, [firstName, lastName, email, phone, password, validate, dispatch, router, t]);
+  }, [firstName, lastName, phone, email, validate, register, router, t]);
 
   return (
     <View style={styles.container}>
@@ -130,7 +118,7 @@ export default function RegisterScreen() {
               { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
             ]}
           >
-            {t('auth.createAccountTitle')}
+            {t('auth.register.title')}
           </Text>
           <Text
             style={[
@@ -146,7 +134,7 @@ export default function RegisterScreen() {
               <View style={[styles.row, { flexDirection: dir.row }]}>
                 <View style={styles.half}>
                   <LabeledInput
-                    label={t('auth.firstName')}
+                    label={t('auth.register.firstName')}
                     value={firstName}
                     onChangeText={(v) => {
                       setFirstName(v);
@@ -159,7 +147,7 @@ export default function RegisterScreen() {
                 </View>
                 <View style={styles.half}>
                   <LabeledInput
-                    label={t('auth.lastName')}
+                    label={t('auth.register.lastName')}
                     value={lastName}
                     onChangeText={(v) => {
                       setLastName(v);
@@ -173,21 +161,7 @@ export default function RegisterScreen() {
               </View>
 
               <LabeledInput
-                label={t('auth.email')}
-                value={email}
-                onChangeText={(v) => {
-                  setEmail(v);
-                  clearError('email');
-                }}
-                placeholder={t('auth.emailPlaceholder')}
-                error={errors.email}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                dir={dir}
-              />
-
-              <LabeledInput
-                label={t('auth.phone')}
+                label={t('auth.register.phone')}
                 value={phone}
                 onChangeText={(v) => {
                   setPhone(v);
@@ -200,44 +174,28 @@ export default function RegisterScreen() {
               />
 
               <LabeledInput
-                label={t('auth.password')}
-                value={password}
+                label={t('auth.register.email')}
+                value={email}
                 onChangeText={(v) => {
-                  setPassword(v);
-                  clearError('password');
+                  setEmail(v);
+                  clearError('email');
                 }}
-                placeholder={t('auth.passwordPlaceholder')}
-                error={errors.password}
-                secureTextEntry
-                showVisibilityToggle
-                isVisible={showPassword}
-                onToggleVisibility={() => setShowPassword((s) => !s)}
-                dir={dir}
-              />
-
-              <LabeledInput
-                label={t('auth.confirmPassword')}
-                value={confirmPassword}
-                onChangeText={(v) => {
-                  setConfirmPassword(v);
-                  clearError('confirmPassword');
-                }}
-                placeholder={t('auth.confirmPasswordPlaceholder')}
-                error={errors.confirmPassword}
-                secureTextEntry
-                isVisible={showPassword}
+                placeholder={t('auth.emailPlaceholder')}
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
                 dir={dir}
               />
 
               <PrimaryButton
-                label={loading ? t('common.loading') : t('auth.register')}
+                label={register.isPending ? t('auth.register.submitting') : t('auth.register.submit')}
                 onPress={handleRegister}
-                disabled={loading}
+                disabled={register.isPending}
                 style={{ marginTop: 8 }}
               />
 
               <View style={[styles.loginRow, { flexDirection: dir.row }]}>
-                <Text style={styles.loginText}>{t('auth.haveAccount')} </Text>
+                <Text style={styles.loginText}>{t('auth.hasAccount')} </Text>
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

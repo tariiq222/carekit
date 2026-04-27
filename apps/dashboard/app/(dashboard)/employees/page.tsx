@@ -1,15 +1,16 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, StarIcon } from "@hugeicons/core-free-icons"
+import { Add01Icon, StarIcon, UserGroupIcon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { Button } from "@carekit/ui"
 import { EmployeesListContent } from "@/components/features/employees/employees-list-content"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
+import { AttachExistingUserDialog } from "@/components/features/employees/attach-existing-user-dialog"
 import { useEmployees } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -23,6 +24,7 @@ function EmployeesPageInner() {
   const router = useRouter()
   const { t } = useLocale()
   const { user } = useAuth()
+  const [attachOpen, setAttachOpen] = useState(false)
   // "الأطباء"/"Doctors" (medical), "المصففون"/"Stylists" (salon),
   // "المدربون"/"Trainers" (fitness), "المستشارون"/"Consultants" (consulting).
   const { t: term } = useTerminology(user?.verticalSlug ?? undefined)
@@ -60,6 +62,14 @@ function EmployeesPageInner() {
           <HugeiconsIcon icon={StarIcon} size={16} />
           {t("employees.tabs.ratings")}
         </Button>
+        <Button
+          variant="outline"
+          className="gap-2 rounded-full px-5"
+          onClick={() => setAttachOpen(true)}
+        >
+          <HugeiconsIcon icon={UserGroupIcon} size={16} />
+          {t("employees.attach.button")}
+        </Button>
         <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/employees/create")}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
           {t("employees.addEmployee")}
@@ -81,6 +91,8 @@ function EmployeesPageInner() {
         hasFilters={hasFilters}
         resetFilters={resetFilters}
       />
+
+      <AttachExistingUserDialog open={attachOpen} onOpenChange={setAttachOpen} />
     </ListPageShell>
   )
 }

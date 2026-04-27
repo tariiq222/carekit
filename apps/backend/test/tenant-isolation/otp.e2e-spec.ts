@@ -35,7 +35,7 @@ describe('OTP cross-org scoping isolation', () => {
       .send({
         channel: OtpChannel.EMAIL,
         identifier,
-        code: '123456', // We don't know the real code, but it should fail with "Invalid or expired" not "Invalid code" if not found
+        code: '1234', // We don't know the real code, but it should fail with "Invalid or expired" not "Invalid code" if not found
         purpose: OtpPurpose.GUEST_BOOKING,
         organizationId: orgB.id,
       });

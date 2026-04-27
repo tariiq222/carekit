@@ -59,7 +59,7 @@ describe('AuthenticaClient', () => {
       const input: AuthenticaSendOtpInput = {
         channel: 'SMS',
         identifier: '+966512345678',
-        code: '123456',
+        code: '1234',
       };
       await client.sendOtp(input);
 
@@ -73,7 +73,7 @@ describe('AuthenticaClient', () => {
       expect(JSON.parse((init as RequestInit).body as string)).toEqual({
         method: 'sms',
         phone: '+966512345678',
-        otp: '123456',
+        otp: '1234',
         template_id: 1,
       });
     });
@@ -82,7 +82,7 @@ describe('AuthenticaClient', () => {
       fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify({ success: true, data: {}, message: 'ok' }), { status: 200 }),
       );
-      await client.sendOtp({ channel: 'EMAIL', identifier: 'a@b.c', code: '111111' });
+      await client.sendOtp({ channel: 'EMAIL', identifier: 'a@b.c', code: '1111' });
       const [, init] = fetchMock.mock.calls[0];
       const body = JSON.parse((init as RequestInit).body as string);
       expect(body.method).toBe('email');
@@ -100,10 +100,10 @@ describe('AuthenticaClient', () => {
         ),
       );
       await expect(
-        client.sendOtp({ channel: 'SMS', identifier: '0512345678', code: '123456' }),
+        client.sendOtp({ channel: 'SMS', identifier: '0512345678', code: '1234' }),
       ).rejects.toThrow(AuthenticaError);
       await expect(
-        client.sendOtp({ channel: 'SMS', identifier: '0512345678', code: '123456' }),
+        client.sendOtp({ channel: 'SMS', identifier: '0512345678', code: '1234' }),
       ).rejects.toThrow('Phone format invalid');
     });
   });

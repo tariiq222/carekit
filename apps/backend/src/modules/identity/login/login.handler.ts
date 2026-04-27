@@ -22,6 +22,11 @@ export class LoginHandler {
     if (!user) throw new UnauthorizedException('Invalid credentials');
     if (!user.isActive) throw new UnauthorizedException('Account is inactive');
 
+    // passwordHash became nullable when mobile OTP-only auth landed — staff
+    // accounts always have one, but defensive null check guards against any
+    // mobile-first / passwordless user being routed to the dashboard login.
+    if (!user.passwordHash) throw new UnauthorizedException('Invalid credentials');
+
     const valid = await this.password.verify(cmd.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 

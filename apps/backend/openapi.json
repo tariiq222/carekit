@@ -2646,6 +2646,24 @@
         ],
         "type": "string"
       },
+      "PerformPasswordResetDto": {
+        "properties": {
+          "newPassword": {
+            "description": "New password (≥8 chars)",
+            "example": "newSecure123",
+            "type": "string"
+          },
+          "token": {
+            "description": "Reset token from the email link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ],
+        "type": "object"
+      },
       "PermissionEntryDto": {
         "properties": {
           "action": {
@@ -2835,6 +2853,37 @@
         ],
         "type": "object"
       },
+      "RegisterMobileUserDto": {
+        "properties": {
+          "email": {
+            "description": "Email",
+            "example": "sara@example.com",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name",
+            "example": "سارة",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "example": "الأحمد",
+            "type": "string"
+          },
+          "phone": {
+            "description": "E.164 phone",
+            "example": "+966501234567",
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email"
+        ],
+        "type": "object"
+      },
       "ReinstateOrganizationDto": {
         "properties": {
           "reason": {
@@ -2843,6 +2892,19 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "RequestMobileLoginOtpDto": {
+        "properties": {
+          "identifier": {
+            "description": "Phone (E.164) or email",
+            "example": "+966501234567",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier"
+        ],
         "type": "object"
       },
       "RequestOtpDto": {
@@ -2875,7 +2937,9 @@
             "enum": [
               "GUEST_BOOKING",
               "CLIENT_LOGIN",
-              "CLIENT_PASSWORD_RESET"
+              "CLIENT_PASSWORD_RESET",
+              "MOBILE_REGISTER",
+              "MOBILE_LOGIN"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -2886,6 +2950,19 @@
           "identifier",
           "purpose",
           "hCaptchaToken"
+        ],
+        "type": "object"
+      },
+      "RequestPasswordResetDto": {
+        "properties": {
+          "email": {
+            "description": "Staff email address",
+            "example": "admin@clinic.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
         ],
         "type": "object"
       },
@@ -4544,6 +4621,33 @@
         ],
         "type": "string"
       },
+      "VerifyMobileOtpDto": {
+        "properties": {
+          "code": {
+            "description": "4-digit OTP code",
+            "example": "1234",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Phone or email used to request the OTP",
+            "type": "string"
+          },
+          "purpose": {
+            "description": "Whether this verifies a registration or a login OTP",
+            "enum": [
+              "register",
+              "login"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier",
+          "code",
+          "purpose"
+        ],
+        "type": "object"
+      },
       "VerifyOtpDto": {
         "properties": {
           "channel": {
@@ -4556,8 +4660,8 @@
             "type": "string"
           },
           "code": {
-            "description": "6-digit OTP code",
-            "example": "123456",
+            "description": "4-digit OTP code",
+            "example": "1234",
             "type": "string"
           },
           "identifier": {
@@ -4574,7 +4678,9 @@
             "enum": [
               "GUEST_BOOKING",
               "CLIENT_LOGIN",
-              "CLIENT_PASSWORD_RESET"
+              "CLIENT_PASSWORD_RESET",
+              "MOBILE_REGISTER",
+              "MOBILE_LOGIN"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -5740,6 +5846,305 @@
         ]
       }
     },
+    "/api/v1/api/v1/mobile/auth/register": {
+      "post": {
+        "operationId": "MobileClientAuthController_registerUser",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterMobileUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Register a new mobile user (creates user + sends SMS OTP)",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/api/v1/mobile/auth/request-email-verification": {
+      "post": {
+        "operationId": "MobileClientAuthController_requestEmail",
+        "parameters": [],
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Send email verification link to the authenticated user",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/api/v1/mobile/auth/request-login-otp": {
+      "post": {
+        "operationId": "MobileClientAuthController_requestLoginOtp",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestMobileLoginOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Request a login OTP via phone or verified email",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/api/v1/mobile/auth/verify-otp": {
+      "post": {
+        "operationId": "MobileClientAuthController_verifyMobileOtp",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMobileOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify register/login OTP and issue tokens",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/api/v1/public/verify-email": {
+      "get": {
+        "operationId": "PublicVerifyEmailController_verify",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify an email-verification token",
+        "tags": [
+          "Public / Identity"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "AuthController_loginEndpoint",
@@ -6107,6 +6512,96 @@
           }
         },
         "summary": "Rotate a refresh token and issue new token pair",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/request-password-reset": {
+      "post": {
+        "operationId": "AuthController_requestPasswordResetEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Request a password reset email for a staff (User) account",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_performPasswordResetEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerformPasswordResetDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Reset staff (User) password using a token from the reset email",
         "tags": [
           "Public / Auth"
         ]

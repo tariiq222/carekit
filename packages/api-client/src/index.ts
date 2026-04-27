@@ -19,7 +19,6 @@ export * as couponsApi from './modules/coupons'
 export * as intakeFormsApi from './modules/intake-forms'
 export * as notificationsApi from './modules/notifications'
 export * as reportsApi from './modules/reports'
-export * as chatbotAdminApi from './modules/chatbot-admin'
 export * as groupsApi from './modules/groups'
 export * as usersApi from './modules/users'
 export * as organizationSettingsApi from "./modules/organization-settings"

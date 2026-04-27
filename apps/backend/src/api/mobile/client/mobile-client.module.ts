@@ -15,6 +15,7 @@ import { MobileClientNotificationsController } from './notifications.controller'
 import { MobileClientHomeController } from './portal/home.controller';
 import { MobileClientUpcomingController } from './portal/upcoming.controller';
 import { MobileClientSummaryController } from './portal/summary.controller';
+import { MobileClientAuthController } from './auth.controller';
 
 @Module({
   imports: [DatabaseModule, BookingsModule, PeopleModule, FinanceModule, AiModule, CommsModule, OrgExperienceModule, IdentityModule],
@@ -27,6 +28,7 @@ import { MobileClientSummaryController } from './portal/summary.controller';
     MobileClientHomeController,
     MobileClientUpcomingController,
     MobileClientSummaryController,
+    MobileClientAuthController,
   ],
 })
 export class MobileClientModule {}

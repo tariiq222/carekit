@@ -339,4 +339,22 @@ export const enEmployees: Record<string, string> = {
   "vacation.deleteError": "Failed to delete vacation",
   "vacation.delete": "Delete",
   "vacation.deleting": "Deleting...",
+
+  // — Attach Existing User —
+  "employees.attach.button": "Attach Existing User",
+  "employees.attach.title": "Attach Existing User",
+  "employees.attach.description": "Search for an existing user by phone or email to add as an employee.",
+  "employees.attach.identifierLabel": "Phone or Email",
+  "employees.attach.roleLabel": "Role",
+  "employees.attach.roleAdmin": "Admin",
+  "employees.attach.roleReceptionist": "Receptionist",
+  "employees.attach.roleEmployee": "Employee",
+  "employees.attach.roleAccountant": "Accountant",
+  "employees.attach.cancel": "Cancel",
+  "employees.attach.submit": "Attach User",
+  "employees.attach.submitting": "Attaching...",
+  "employees.attach.success": "User attached successfully",
+  "employees.attach.error": "Failed to attach user",
+  "employees.attach.userNotFound": "User not found — they must register on the mobile app first.",
+  "employees.attach.membershipExists": "User already has a membership in this organization.",
 }
