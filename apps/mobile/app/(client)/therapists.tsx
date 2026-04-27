@@ -11,6 +11,7 @@ import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useTherapists } from '@/hooks/queries';
+import { applyTherapistFilters, type TherapistChip } from './therapistsFilter';
 
 const GRADIENTS: Array<readonly [string, string]> = [
   ['#f7cbb7', '#e88f6c'],
@@ -42,23 +43,16 @@ export default function TherapistsListScreen() {
   const f600 = getFontName(dir.locale, '600');
   const f700 = getFontName(dir.locale, '700');
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const [activeChip, setActiveChip] = useState('available');
+  const [activeChip, setActiveChip] = useState<TherapistChip>('available');
   const [query, setQuery] = useState('');
   const { data, isLoading } = useTherapists();
   const list = useMemo(() => data ?? [], [data]);
   const loading = isLoading;
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return list;
-    const q = query.toLowerCase();
-    return list.filter(
-      (e) =>
-        e.nameAr?.toLowerCase().includes(q) ||
-        e.nameEn?.toLowerCase().includes(q) ||
-        e.specialty?.toLowerCase().includes(q) ||
-        e.specialtyAr?.toLowerCase().includes(q),
-    );
-  }, [list, query]);
+  const filtered = useMemo(
+    () => applyTherapistFilters(list, query, activeChip),
+    [list, query, activeChip],
+  );
 
   return (
     <AquaBackground>
@@ -112,7 +106,7 @@ export default function TherapistsListScreen() {
             {CHIPS.map((c) => {
               const isActive = c.key === activeChip;
               return (
-                <Pressable key={c.key} onPress={() => setActiveChip(c.key)}>
+                <Pressable key={c.key} onPress={() => setActiveChip((prev) => prev === c.key ? null : c.key as TherapistChip)}>
                   <Glass
                     variant={isActive ? 'strong' : 'regular'}
                     radius={14}

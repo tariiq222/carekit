@@ -11,8 +11,12 @@ export interface PublicEmployeeItem {
   publicBioAr: string | null;
   publicBioEn: string | null;
   publicImageUrl: string | null;
+  gender: string | null;
+  employmentType: string;
   ratingAverage?: number | null;
   ratingCount?: number;
+  minServicePrice: number | null;
+  isAvailableToday: boolean;
 }
 
 export const publicEmployeesService = {
