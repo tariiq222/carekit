@@ -3,6 +3,7 @@ import { DashboardFinanceController } from '../../api/dashboard/finance.controll
 import { RefundsController } from '../../api/dashboard/refunds.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
+import { PaymentsInfraModule } from '../../infrastructure/payments/payments.module';
 import { StorageModule } from '../../infrastructure/storage';
 import { TenantModule } from '../../common/tenant';
 import { BillingModule } from '../platform/billing/billing.module';
@@ -71,7 +72,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, StorageModule, TenantModule, BillingModule],
+  imports: [DatabaseModule, MessagingModule, PaymentsInfraModule, StorageModule, TenantModule, BillingModule],
   controllers: [DashboardFinanceController, RefundsController],
   providers: [
     ...handlers,

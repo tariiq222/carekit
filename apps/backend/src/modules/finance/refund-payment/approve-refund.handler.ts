@@ -46,10 +46,13 @@ export class ApproveRefundHandler {
     });
 
     try {
-      const moyasarRefund = await this.moyasarClient.createRefund({
-        paymentId: refundRequest.paymentId,
-        amount: Math.round(Number(refundRequest.amount) * 100),
-      });
+      const moyasarRefund = await this.moyasarClient.createRefund(
+        refundRequest.organizationId,
+        {
+          paymentId: refundRequest.paymentId,
+          amount: Math.round(Number(refundRequest.amount) * 100),
+        },
+      );
 
       const updated = await this.prisma.refundRequest.update({
         where: { id: cmd.refundRequestId },
