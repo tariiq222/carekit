@@ -52,6 +52,7 @@ import { RequestMobileLoginOtpHandler } from './request-mobile-login-otp/request
 import { VerifyMobileOtpHandler } from './verify-mobile-otp/verify-mobile-otp.handler';
 import { RequestEmailVerificationHandler } from './request-email-verification/request-email-verification.handler';
 import { VerifyEmailHandler } from './verify-email/verify-email.handler';
+import { AttachMembershipHandler } from './attach-membership/attach-membership.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -77,6 +78,7 @@ const handlers = [
   VerifyMobileOtpHandler,
   RequestEmailVerificationHandler,
   VerifyEmailHandler,
+  AttachMembershipHandler,
 ];
 
 @Module({
