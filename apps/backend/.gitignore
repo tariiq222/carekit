@@ -1,8 +1,45 @@
-node_modules
-dist
-coverage
-coverage-e2e
-.env
-.env.local
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# NestJS / TypeScript cache
+.tsc-cache/
+
+# Test artifacts
+coverage/
+coverage-e2e/
+.nyc_output/
+
+# Prisma — local SQLite caches (we use Postgres; never commit *.db)
+prisma/*.db
+prisma/*.db-journal
+
+# OpenAPI generated outputs we DO want to track:
+# - openapi.json is committed (CI snapshot gate)
+# Anything else generated stays local:
+openapi.tmp.json
+
+# Logs
 *.log
+npm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# Turborepo
+.turbo/
+
+# OS
 .DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp

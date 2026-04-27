@@ -1,50 +1,58 @@
-# Dependencies
+# ─── Dependencies ─────────────────────────────────────────────
 node_modules/
 
-# Build outputs
+# ─── Build outputs ────────────────────────────────────────────
 dist/
+build/
 .next/
 .expo/
 out/
 *.tsbuildinfo
 
-# Legacy / archived (do not track)
-_archived_dashboard/
-/dashboard/
-
-# Turborepo
+# ─── Turborepo / Monorepo caches ──────────────────────────────
 .turbo/
 
-# Git worktrees
+# ─── Git worktrees ────────────────────────────────────────────
 .worktrees/
 
-# Environment variables
+# ─── Environment variables ────────────────────────────────────
 *.env
+.env
 .env.*
 !.env.example
 !.env.prod.example
 
-# OS files
+# ─── OS files ─────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# IDE
+# iCloud / macOS duplicate-file artifacts
+* 2.*
+* 3.*
+* 4.*
+*\ 2/
+*\ 3/
+node_modules\ 2/
+
+# ─── Editors / IDEs ───────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
-# Logs
+# ─── Logs ─────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pic-test/*.log
+pnpm-debug.log*
 
-# Coverage
+# ─── Coverage & test artifacts ────────────────────────────────
 coverage/
-
-# Test result artifacts
+coverage-e2e/
 **/test-results/
 **/test-results-*.json
 **/playwright-report/
@@ -52,65 +60,41 @@ coverage/
 test-reports/output/
 **/~$*
 
-# Docker volumes (local)
+# ─── Docker volumes (local) ───────────────────────────────────
 docker/data/
 
-# Prisma
-backend/prisma/*.db
-
-# Expo
-mobile/.expo/
-mobile/ios/
-mobile/android/
-
-# Next.js
-dashboard/.next/
-dashboard/out/
-
-# Temporary files
+# ─── Temporary files ──────────────────────────────────────────
 *.tmp
 *.temp
 
-# Screenshots & test images (local dev artifacts)
+# ─── Screenshots & local dev artifacts ────────────────────────
 pic-test/
 docs/screenshots/
 
-# Performance test artifacts
+# ─── Performance test artifacts ───────────────────────────────
 performance/k6/results/
+scripts/performance/results/
 
-# Claude Code local config (not for repo)
+# ─── Local Claude Code / agent config ─────────────────────────
 .claude/
 .kilo/
+.opencode/
 
-# Playwright MCP artifacts
+# ─── Browser MCP artifacts ────────────────────────────────────
 .playwright-mcp/
+.chrome-devtools-mcp/
 
-# Root-level build artifacts
-/.next/
-/.expo/
-.worktrees/
-
-# Maestro System
+# ─── Maestro / orchestration scratch ──────────────────────────
+IMPLEMENTATION_PLAN.md
 .opencode/maestro-memory.db
-node_modules 2/
-*.mcp 2.json
-*.mcp 3.json
-*.mcp 4.json
 
-# Python cache (from test-reports scripts)
+# ─── Python cache (test-reports + scripts) ────────────────────
 __pycache__/
 *.pyc
+*.pyo
 
-# Debug artifacts
-apps/backend/_check-admin.ts
-
-# Sawaa design source (reference only, not tracked)
+# ─── Reference / source-of-other-projects (not tracked) ───────
 docs/superpowers/assets/sawaa-source/
 
-# Mobile app paused — source kept but excluded from active dev workflow
-# until active development resumes (re-add to root package.json workspaces
-# + ci.yml, then run `npm install` to regenerate package-lock.json).
-apps/mobile/node_modules/
-apps/mobile/.expo/
-apps/mobile/ios/
-apps/mobile/android/
+# ─── Legacy / archived (do not track) ─────────────────────────
+_archived_dashboard/
