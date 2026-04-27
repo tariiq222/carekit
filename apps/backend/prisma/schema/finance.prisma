@@ -200,3 +200,21 @@ model RefundRequest {
   @@index([status])
   @@index([organizationId])
 }
+
+// ─── Per-tenant Moyasar credentials (singleton per org) ──────────────────────
+// Tenant uses their own Moyasar account to collect booking-payment revenue.
+// Platform Moyasar (apps/backend/src/modules/platform/billing/) is a separate
+// account that collects subscription fees from tenants. See memory
+// `saas_moyasar_architecture` for the TWO-Moyasar design.
+
+model OrganizationPaymentConfig {
+  organizationId     String    @id
+  publishableKey     String // pk_test_… / pk_live_… — not secret, stored plain
+  secretKeyEnc       String // AES-256-GCM ciphertext (base64), AAD = organizationId
+  webhookSecretEnc   String? // optional, AES-256-GCM
+  isLive             Boolean   @default(false)
+  lastVerifiedAt     DateTime?
+  lastVerifiedStatus String? // 'OK' | 'INVALID_KEY' | 'NETWORK_ERROR'
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}

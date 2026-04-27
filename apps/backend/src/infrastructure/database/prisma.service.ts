@@ -60,6 +60,8 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'RefundRequest',
   'ZatcaSubmission',
   'ZatcaConfig',
+  // P0 2026-04-27 — per-tenant Moyasar credentials
+  'OrganizationPaymentConfig',
   // 02f — comms + ai
   'EmailTemplate',
   'Notification',
