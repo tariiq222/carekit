@@ -39,6 +39,9 @@ import { RequestRefundHandler } from './refund-payment/request-refund.handler';
 import { ApproveRefundHandler } from './refund-payment/approve-refund.handler';
 import { DenyRefundHandler } from './refund-payment/deny-refund.handler';
 import { ListRefundsHandler } from './refund-payment/list-refunds.handler';
+import { GetMoyasarConfigHandler } from './moyasar-config/get-moyasar-config.handler';
+import { UpsertMoyasarConfigHandler } from './moyasar-config/upsert-moyasar-config.handler';
+import { TestMoyasarConfigHandler } from './moyasar-config/test-moyasar-config.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -69,6 +72,9 @@ const handlers = [
   ApproveRefundHandler,
   DenyRefundHandler,
   ListRefundsHandler,
+  GetMoyasarConfigHandler,
+  UpsertMoyasarConfigHandler,
+  TestMoyasarConfigHandler,
 ];
 
 @Module({

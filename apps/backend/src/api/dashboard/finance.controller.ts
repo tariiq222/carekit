@@ -42,6 +42,10 @@ import { VerifyPaymentHandler } from '../../modules/finance/verify-payment/verif
 import { VerifyPaymentDto } from '../../modules/finance/verify-payment/verify-payment.dto';
 import { BankTransferUploadHandler } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.handler';
 import { BankTransferUploadDto } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.dto';
+import { GetMoyasarConfigHandler } from '../../modules/finance/moyasar-config/get-moyasar-config.handler';
+import { UpsertMoyasarConfigHandler } from '../../modules/finance/moyasar-config/upsert-moyasar-config.handler';
+import { TestMoyasarConfigHandler } from '../../modules/finance/moyasar-config/test-moyasar-config.handler';
+import { UpsertMoyasarConfigDto } from '../../modules/finance/moyasar-config/upsert-moyasar-config.dto';
 
 @ApiTags('Dashboard / Finance')
 @ApiBearerAuth()
@@ -68,6 +72,9 @@ export class DashboardFinanceController {
     private readonly refundPayment: RefundPaymentHandler,
     private readonly verifyPayment: VerifyPaymentHandler,
     private readonly bankTransferUpload: BankTransferUploadHandler,
+    private readonly getMoyasarConfig: GetMoyasarConfigHandler,
+    private readonly upsertMoyasarConfig: UpsertMoyasarConfigHandler,
+    private readonly testMoyasarConfig: TestMoyasarConfigHandler,
   ) {}
 
   // ── Invoices ──────────────────────────────────────────────────────────────
@@ -267,5 +274,29 @@ export class DashboardFinanceController {
     @Body() body: { vatRegistrationNumber: string; sellerName: string },
   ) {
     return this.onboardZatca.execute(body);
+  }
+
+  // ── Per-tenant Moyasar credentials ────────────────────────────────────────
+
+  @Get('moyasar/config')
+  @ApiOperation({ summary: 'Get the per-tenant Moyasar configuration (secret key masked)' })
+  @ApiOkResponse({ description: 'Moyasar configuration or null if unconfigured' })
+  getMoyasarConfigEndpoint() {
+    return this.getMoyasarConfig.execute();
+  }
+
+  @Patch('moyasar/config')
+  @ApiOperation({ summary: 'Create or update the per-tenant Moyasar configuration' })
+  @ApiOkResponse({ description: 'Moyasar configuration saved (secrets encrypted at rest)' })
+  upsertMoyasarConfigEndpoint(@Body() body: UpsertMoyasarConfigDto) {
+    return this.upsertMoyasarConfig.execute(body);
+  }
+
+  @Post('moyasar/config/test')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Probe Moyasar with the stored credentials and persist verification status' })
+  @ApiOkResponse({ description: 'Connectivity test result' })
+  testMoyasarConfigEndpoint() {
+    return this.testMoyasarConfig.execute();
   }
 }
