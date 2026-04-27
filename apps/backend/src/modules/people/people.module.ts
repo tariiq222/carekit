@@ -4,6 +4,7 @@ import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MediaModule } from '../media/media.module';
 import { BookingsModule } from '../bookings/bookings.module';
+import { IdentityModule } from '../identity/identity.module';
 import { UploadAvatarHandler } from './employees/upload-avatar/upload-avatar.handler';
 import { CreateClientHandler } from './clients/create-client.handler';
 import { UpdateClientHandler } from './clients/update-client.handler';
@@ -47,7 +48,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MediaModule, MulterModule.register({ storage: memoryStorage() }), forwardRef(() => BookingsModule)],
+  imports: [DatabaseModule, MediaModule, MulterModule.register({ storage: memoryStorage() }), forwardRef(() => BookingsModule), forwardRef(() => IdentityModule)],
   controllers: [DashboardPeopleController],
   providers: [...handlers],
   exports: [...handlers],

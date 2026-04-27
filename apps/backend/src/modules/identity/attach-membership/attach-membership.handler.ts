@@ -41,7 +41,6 @@ export class AttachMembershipHandler {
         userId: user.id,
         organizationId,
         role: cmd.role as never,
-        branchId: cmd.branchId,
         isActive: true,
       },
     });
