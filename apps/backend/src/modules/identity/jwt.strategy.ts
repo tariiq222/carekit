@@ -31,7 +31,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const ability = this.casl.buildForUser(user);
 
     return {
+      // Both `id` and `sub` carry the same User.id. The codebase has historic
+      // splits — tenant middleware + half the controllers read `user.id`,
+      // while admin/impersonation + mobile/employee controllers read
+      // `user.sub`. Exposing both keeps every audit-trail call site correct
+      // until the codebase is unified on `id` (separate cleanup ticket).
       id: user.id,
+      sub: user.id,
       email: user.email,
       role: user.role,
       customRoleId: user.customRoleId,
