@@ -4,6 +4,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { BookingsModule } from '../bookings/bookings.module';
+import { BillingModule } from '../platform/billing/billing.module';
 import { CronTasksService } from './cron-tasks/cron-tasks.service';
 import { BookingAutocompleteCron } from './cron-tasks/booking-autocomplete.cron';
 import { BookingExpiryCron } from './cron-tasks/booking-expiry.cron';
@@ -22,9 +23,6 @@ import { ComputeOverageCron } from '../platform/billing/compute-overage/compute-
 import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period/enforce-grace-period.cron';
 import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
-import { UsageAggregatorService } from '../platform/billing/usage-aggregator.service';
-import { SubscriptionStateMachine } from '../platform/billing/subscription-state-machine';
-import { SubscriptionCacheService } from '../platform/billing/subscription-cache.service';
 
 const handlers = [
   LogActivityHandler,
@@ -49,16 +47,15 @@ const cronHandlers = [
   ExpireImpersonationSessionsCron,
 ];
 
-const billingServices = [
-  UsageAggregatorService,
-  SubscriptionStateMachine,
-  SubscriptionCacheService,
-];
-
+// Note: UsageAggregatorService, SubscriptionStateMachine and
+// SubscriptionCacheService are *exported* from BillingModule. Re-declaring
+// them here would create separate instances — the in-memory UsageAggregator
+// Map would diverge between the request-time interceptor and the cron flush,
+// silently dropping every increment. Import BillingModule instead.
 @Module({
-  imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule],
+  imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule, BillingModule],
   controllers: [DashboardOpsController],
-  providers: [...handlers, ...cronHandlers, ...billingServices, RedisService, CronTasksService],
+  providers: [...handlers, ...cronHandlers, RedisService, CronTasksService],
   exports: [...handlers],
 })
 export class OpsModule implements OnModuleInit {
