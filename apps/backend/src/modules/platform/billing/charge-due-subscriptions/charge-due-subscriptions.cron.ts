@@ -66,11 +66,14 @@ export class ChargeDueSubscriptionsCron {
       },
     });
 
-    // TODO(Task 11): integrate MoyasarSubscriptionClient.chargeWithToken
-    // For now, leave invoice in DUE status — Moyasar webhook will trigger
-    // recordPayment / recordFailure once Task 11 initiates the charge attempt.
-    this.logger.log(
-      `Invoice ${invoice.id} created for subscription ${sub.id} — awaiting Moyasar charge`,
+    // Until MoyasarSubscriptionClient.chargeWithToken is integrated (see
+    // docs/superpowers/specs/2026-04-28-charge-due-subscriptions-moyasar-design.md),
+    // the invoice is left in DUE state and a WARN is emitted so monitoring
+    // surfaces the gap. Refusing to log silently — accumulating DUE invoices
+    // without alerting was the pre-2026-04-28 behavior and meant zero
+    // platform revenue was collected.
+    this.logger.warn(
+      `Invoice ${invoice.id} created in DUE state for subscription ${sub.id} — Moyasar charge integration pending; manual reconciliation required`,
     );
   }
 }
