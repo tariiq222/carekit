@@ -1,5 +1,6 @@
 import { TenantContextService } from './tenant-context.service';
 import { TenantEnforcementMode } from './tenant.constants';
+import { UnauthorizedTenantAccessError } from './tenant.errors';
 
 /**
  * Set of Prisma model names that carry `organizationId` and must be scoped.
@@ -75,9 +76,19 @@ export function buildTenantScopingExtension(
           if (ctx.isSystemContext()) return query(args);
 
           const current = ctx.get();
-          // No tenant context (e.g., system jobs pre-context) — skip scoping.
-          // Plan 02 tightens this: cluster rollout enables strict-mode crash.
-          if (!current?.organizationId) return query(args);
+          // No tenant context: under `strict` we fail closed — a scoped-model
+          // query without a resolved tenant is a programming error (handler
+          // ran outside an authenticated request and outside `systemContext`).
+          // Under `permissive` (dev only) we let it through to keep ad-hoc
+          // scripts and migration bootstraps working.
+          if (!current?.organizationId) {
+            if (mode === 'strict') {
+              throw new UnauthorizedTenantAccessError(
+                `Refusing ${operation} on scoped model "${model}" — no tenant context resolved`,
+              );
+            }
+            return query(args);
+          }
 
           const existing = (args as { where?: Record<string, unknown> }).where ?? {};
           const scoped = { ...existing, organizationId: current.organizationId };
