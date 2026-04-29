@@ -7,7 +7,7 @@ export interface AccountStatusChangedVars {
   orgName: string;
   status: AccountStatusKind;
   reason?: string;
-  contactUrl: string;
+  contactUrl?: string;
 }
 
 export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
@@ -17,7 +17,7 @@ export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
 } {
   const name = escapeHtml(vars.ownerName);
   const org = escapeHtml(vars.orgName);
-  const url = escapeHtml(vars.contactUrl);
+  const url = vars.contactUrl ? escapeHtml(vars.contactUrl) : '#';
   const reason = vars.reason ? escapeHtml(vars.reason) : null;
 
   if (vars.status === 'SUSPENDED') {
