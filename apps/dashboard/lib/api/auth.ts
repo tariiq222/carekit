@@ -14,6 +14,7 @@ export type AuthUser = UserPayload
 export type { AuthResponse }
 
 const USER_KEY = "carekit_user"
+const IMPERSONATION_KEY = "carekit_impersonation"
 
 export async function login(
   email: string,
@@ -56,6 +57,23 @@ export function logout(): void {
   clearAuth()
 }
 
+export function acceptImpersonationToken(token: string): void {
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem(IMPERSONATION_KEY, "1")
+  }
+  setAccessToken(token)
+}
+
+export function clearImpersonationMarker(): void {
+  if (typeof window === "undefined") return
+  sessionStorage.removeItem(IMPERSONATION_KEY)
+}
+
+export function isImpersonating(): boolean {
+  if (typeof window === "undefined") return false
+  return sessionStorage.getItem(IMPERSONATION_KEY) === "1"
+}
+
 export async function changePassword(
   currentPassword: string,
   newPassword: string,
@@ -96,5 +114,6 @@ function persistAuth(data: AuthResponse): void {
 
 function clearAuth(): void {
   localStorage.removeItem(USER_KEY)
+  clearImpersonationMarker()
   setAccessToken(null)
 }

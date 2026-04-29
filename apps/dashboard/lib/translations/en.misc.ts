@@ -214,6 +214,10 @@ export const enMisc: Record<string, string> = {
   // — Error banner —
   "common.retry": "Retry",
 
+  // — Impersonation —
+  "impersonation.banner": "You are viewing this organization through an admin impersonation session.",
+  "impersonation.endSession": "End session",
+
   // — Header —
   "header.toggleLanguage": "العربية",
 

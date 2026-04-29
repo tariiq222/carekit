@@ -214,6 +214,10 @@ export const arMisc: Record<string, string> = {
   // — Error banner —
   "common.retry": "إعادة المحاولة",
 
+  // — Impersonation —
+  "impersonation.banner": "أنت تعرض هذه المنظمة بجلسة انتحال من لوحة الإدارة.",
+  "impersonation.endSession": "إنهاء الجلسة",
+
   // — Header —
   "header.toggleLanguage": "English",
 

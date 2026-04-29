@@ -10,6 +10,8 @@ import {
 } from "react"
 import type { ReactNode } from "react"
 import {
+  acceptImpersonationToken,
+  clearImpersonationMarker,
   login as apiLogin,
   logoutApi,
   fetchMe,
@@ -31,6 +33,19 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
+function consumeImpersonationTokenFromUrl(): string | null {
+  if (typeof window === "undefined") return null
+
+  const url = new URL(window.location.href)
+  const token = url.searchParams.get("_impersonation")
+  if (!token) return null
+
+  url.searchParams.delete("_impersonation")
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`
+  window.history.replaceState(window.history.state, "", nextUrl || "/")
+  return token
+}
 
 /* ─── Provider ─── */
 
@@ -62,6 +77,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // If either fails, the session is truly expired — clear local state.
   useEffect(() => {
     scheduleRefreshRef.current = scheduleRefresh
+
+    const impersonationToken = consumeImpersonationTokenFromUrl()
+    if (impersonationToken) {
+      acceptImpersonationToken(impersonationToken)
+      fetchMe()
+        .then((u) => {
+          setUser(u)
+          setPermissions(u.permissions ?? [])
+        })
+        .catch(() => {
+          setAccessToken(null)
+          clearImpersonationMarker()
+          setUser(null)
+          setPermissions([])
+          localStorage.removeItem("carekit_user")
+        })
+        .finally(() => setLoading(false))
+
+      return () => {
+        if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+      }
+    }
+
     refreshToken()
       .then((res) => {
         scheduleRefresh(res.expiresIn)
