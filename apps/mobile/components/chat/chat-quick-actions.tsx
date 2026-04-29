@@ -11,7 +11,7 @@ interface ChatQuickActionsProps {
 }
 
 export function ChatQuickActions({ quickReplies, onPress }: ChatQuickActionsProps) {
-  const { isRTL, theme } = useTheme();
+  const { theme } = useTheme();
 
   if (quickReplies.length === 0) return null;
 
@@ -21,11 +21,11 @@ export function ChatQuickActions({ quickReplies, onPress }: ChatQuickActionsProp
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={[
         styles.container,
-        { flexDirection: isRTL ? 'row-reverse' : 'row' },
+        { flexDirection: 'row' },
       ]}
     >
       {quickReplies.map((reply) => {
-        const label = isRTL ? reply.label_ar : reply.label_en;
+        const label = reply.label_ar;
         return (
           <Pressable
             key={reply.action}

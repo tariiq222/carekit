@@ -6,7 +6,6 @@ import * as Haptics from 'expo-haptics';
 
 import { sawaaColors } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import type { DirState } from '@/hooks/useDir';
 
 export interface Slot {
   startTime: string;
@@ -29,7 +28,6 @@ interface TimeSlotsGridProps {
   slots: Slot[];
   selectedIdx: number | null;
   onSelect: (idx: number) => void;
-  dir: DirState;
   f500: string;
   f600: string;
 }
@@ -40,7 +38,6 @@ export function TimeSlotsGrid({
   slots,
   selectedIdx,
   onSelect,
-  dir,
   f500,
   f600,
 }: TimeSlotsGridProps) {
@@ -64,7 +61,7 @@ export function TimeSlotsGrid({
     return (
       <View style={styles.statusBlock}>
         <Text style={[styles.statusText, { fontFamily: f500 }]}>
-          {dir.isRTL ? 'لا توجد أوقات متاحة في هذا اليوم' : 'No available times on this day'}
+          {'لا توجد أوقات متاحة في هذا اليوم'}
         </Text>
       </View>
     );
@@ -73,7 +70,7 @@ export function TimeSlotsGrid({
   return (
     <Animated.View
       entering={FadeInDown.delay(80).duration(500).easing(Easing.out(Easing.cubic))}
-      style={[styles.slotsGrid, { flexDirection: dir.row }]}
+      style={[styles.slotsGrid, { flexDirection: 'row' }]}
     >
       {slots.map((s, i) => {
         const isSelected = selectedIdx === i;
@@ -101,7 +98,7 @@ export function TimeSlotsGrid({
                   { fontFamily: f600, color: isSelected ? '#fff' : sawaaColors.ink[900] },
                 ]}
               >
-                {formatTime(s.startTime, dir.isRTL)}
+                {formatTime(s.startTime, true)}
               </Text>
             </Glass>
           </Pressable>

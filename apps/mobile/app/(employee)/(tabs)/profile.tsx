@@ -12,7 +12,6 @@ import {
   Shield,
   LogOut,
   ChevronLeft,
-  ChevronRight,
   Stethoscope,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,8 +35,8 @@ interface MenuItemProps {
 }
 
 function MenuItem({ icon: Icon, label, value, danger, onPress }: MenuItemProps) {
-  const { theme, isRTL } = useTheme();
-  const Chevron = isRTL ? ChevronLeft : ChevronRight;
+  const { theme } = useTheme();
+  const Chevron = ChevronLeft;
   return (
     <Pressable
       onPress={onPress}

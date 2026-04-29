@@ -1,12 +1,11 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Video } from 'lucide-react-native';
+import { ChevronLeft, Video } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import type { DirState } from '@/hooks/useDir';
 import type { PortalBookingRow } from '@/services/client/portal';
 
 function formatRelativeTime(when: Date, now: Date, isRTL: boolean): string {
@@ -28,14 +27,13 @@ function formatRelativeTime(when: Date, now: Date, isRTL: boolean): string {
 interface UpNextCardProps {
   loading: boolean;
   booking: PortalBookingRow | null;
-  dir: DirState;
   f600: string;
   f700: string;
 }
 
-export function UpNextCard({ loading, booking, dir, f600, f700 }: UpNextCardProps) {
+export function UpNextCard({ loading, booking, f600, f700 }: UpNextCardProps) {
   const router = useRouter();
-  const ArrowIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const ArrowIcon = ChevronLeft;
 
   if (loading) {
     return (
@@ -48,12 +46,12 @@ export function UpNextCard({ loading, booking, dir, f600, f700 }: UpNextCardProp
   if (!booking) {
     return (
       <Glass variant="regular" radius={sawaaRadius.xl} style={[styles.sessionCard, styles.emptySession]}>
-        <Text style={[styles.emptyText, { fontFamily: f600, textAlign: dir.textAlign }]}>
-          {dir.isRTL ? 'لا توجد جلسات قادمة' : 'No upcoming sessions'}
+        <Text style={[styles.emptyText, { fontFamily: f600, textAlign: 'right' }]}>
+          {'لا توجد جلسات قادمة'}
         </Text>
         <Pressable onPress={() => router.push('/(client)/therapists')} hitSlop={8}>
           <Text style={[styles.emptyCta, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'احجزي الآن' : 'Book now'}
+            {'احجزي الآن'}
           </Text>
         </Pressable>
       </Glass>
@@ -70,7 +68,7 @@ export function UpNextCard({ loading, booking, dir, f600, f700 }: UpNextCardProp
     <Glass variant="strong" radius={sawaaRadius.xl} style={styles.sessionCard}>
       <Pressable
         onPress={() => router.push(`/(client)/appointment/${booking.id}`)}
-        style={[styles.sessionRow, { flexDirection: dir.row }]}
+        style={[styles.sessionRow, { flexDirection: 'row' }]}
       >
         <LinearGradient
           colors={[sawaaColors.teal[400], sawaaColors.teal[600]]}
@@ -81,17 +79,11 @@ export function UpNextCard({ loading, booking, dir, f600, f700 }: UpNextCardProp
           <Video size={22} color="#fff" strokeWidth={1.75} />
         </LinearGradient>
         <View style={styles.sessionMid}>
-          <Text style={[styles.sessionTime, { fontFamily: f600, textAlign: dir.textAlign }]}>
-            {formatRelativeTime(when, new Date(), dir.isRTL)}
+          <Text style={[styles.sessionTime, { fontFamily: f600, textAlign: 'right' }]}>
+            {formatRelativeTime(when, new Date(), true)}
           </Text>
-          <Text style={[styles.sessionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {employeeName
-              ? dir.isRTL
-                ? `جلسة مع ${employeeName}`
-                : `Session with ${employeeName}`
-              : dir.isRTL
-                ? 'جلسة قادمة'
-                : 'Upcoming session'}
+          <Text style={[styles.sessionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {employeeName ? `جلسة مع ${employeeName}` : 'جلسة قادمة'}
           </Text>
         </View>
         <View style={styles.sessionGo}>

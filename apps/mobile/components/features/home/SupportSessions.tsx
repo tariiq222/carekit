@@ -4,7 +4,6 @@ import { Users } from 'lucide-react-native';
 
 import { sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import type { DirState } from '@/hooks/useDir';
 
 const SESSIONS = [
   {
@@ -31,35 +30,34 @@ const SESSIONS = [
 ];
 
 interface SupportSessionsProps {
-  dir: DirState;
   f400: string;
   f700: string;
 }
 
-export function SupportSessions({ dir, f400, f700 }: SupportSessionsProps) {
+export function SupportSessions({ f400, f700 }: SupportSessionsProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.hScrollContent, { flexDirection: dir.row }]}
+      contentContainerStyle={[styles.hScrollContent, { flexDirection: 'row' }]}
     >
       {SESSIONS.map((s, i) => (
         <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.supportCard}>
-          <View style={[styles.supportInner, { flexDirection: dir.row }]}>
+          <View style={[styles.supportInner, { flexDirection: 'row' }]}>
             <View style={[styles.supportIcon, { backgroundColor: `${s.color}22` }]}>
               <Users size={18} color={s.color} strokeWidth={1.75} />
             </View>
             <View style={styles.supportText}>
-              <Text numberOfLines={1} style={[styles.supportTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? s.titleAr : s.titleEn}
+              <Text numberOfLines={1} style={[styles.supportTitle, { fontFamily: f700, textAlign: 'right' }]}>
+                {s.titleAr}
               </Text>
-              <Text numberOfLines={1} style={[styles.supportMeta, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? s.metaAr : s.metaEn}
+              <Text numberOfLines={1} style={[styles.supportMeta, { fontFamily: f400, textAlign: 'right' }]}>
+                {s.metaAr}
               </Text>
             </View>
             <Pressable style={styles.supportCta}>
               <Text style={[styles.supportCtaText, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'انضم' : 'Join'}
+                {'انضم'}
               </Text>
             </Pressable>
           </View>

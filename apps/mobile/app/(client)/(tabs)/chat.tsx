@@ -21,21 +21,19 @@ import { useState } from 'react';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useChat } from '@/hooks/queries/useChat';
 
 export default function ChatTabScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
 
   const { messages, isTyping, error, sendMessage, reset, quickReplies } =
-    useChat(dir.isRTL ? 'ar' : 'en');
+    useChat('ar');
 
   const [text, setText] = useState('');
   const scrollRef = useRef<ScrollView>(null);
@@ -81,21 +79,21 @@ export default function ChatTabScreen() {
         keyboardVerticalOffset={0}
       >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: 'row' }]}>
           <View style={styles.headerSide} />
           <View style={styles.headerMid}>
-            <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
+            <View style={[styles.headerTitleRow, { flexDirection: 'row' }]}>
               <Image
                 source={require('@/assets/sawa/icon.png')}
                 style={styles.headerLogo}
                 resizeMode="contain"
               />
               <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'سَواء' : 'Sawaa'}
+                {'سَواء'}
               </Text>
             </View>
             <Text style={[styles.headerSub, { fontFamily: f400 }]}>
-              {dir.isRTL ? 'دائمًا متاح · سرّي تمامًا' : 'Always here · Private'}
+              {'دائمًا متاح · سرّي تمامًا'}
             </Text>
           </View>
           <View style={styles.headerSide}>
@@ -135,7 +133,7 @@ export default function ChatTabScreen() {
                     <Text
                       style={[
                         styles.bubbleMeText,
-                        { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+                        { fontFamily: f500, textAlign: 'right', writingDirection: 'rtl' },
                       ]}
                     >
                       {m.text}
@@ -146,7 +144,7 @@ export default function ChatTabScreen() {
                     <Text
                       style={[
                         styles.bubbleThemText,
-                        { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+                        { fontFamily: f500, textAlign: 'right', writingDirection: 'rtl' },
                       ]}
                     >
                       {m.text}
@@ -166,9 +164,9 @@ export default function ChatTabScreen() {
           ) : null}
 
           {!isTyping && quickReplies.length > 0 ? (
-            <View style={[styles.quickWrap, { flexDirection: dir.row }]}>
+            <View style={[styles.quickWrap, { flexDirection: 'row' }]}>
               {quickReplies.slice(0, 3).map((q) => {
-                const label = dir.isRTL ? q.label_ar : q.label_en;
+                const label = q.label_ar;
                 return (
                   <Pressable key={q.action} onPress={() => sendQuick(label)}>
                     <Glass variant="strong" radius={sawaaRadius.pill} style={styles.quickPill}>
@@ -184,18 +182,18 @@ export default function ChatTabScreen() {
         {/* Input bar */}
         <View style={[styles.inputWrap, { paddingBottom: insets.bottom + 12 }]}>
           <Glass variant="strong" radius={sawaaRadius.pill} style={styles.inputPill}>
-            <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+            <View style={[styles.inputRow, { flexDirection: 'row' }]}>
               <TextInput
                 value={text}
                 onChangeText={setText}
-                placeholder={t('chatbot.placeholder', dir.isRTL ? 'اكتبي رسالتكِ…' : 'Type a message…')}
+                placeholder={t('chatbot.placeholder', 'اكتبي رسالتكِ…')}
                 placeholderTextColor={sawaaColors.ink[400]}
                 style={[
                   styles.input,
                   {
                     fontFamily: f400,
-                    textAlign: dir.textAlign,
-                    writingDirection: dir.writingDirection,
+                    textAlign: 'right',
+                    writingDirection: 'rtl',
                     color: sawaaColors.ink[900],
                   },
                 ]}

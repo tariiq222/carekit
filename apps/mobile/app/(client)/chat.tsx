@@ -15,11 +15,10 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight, Send } from 'lucide-react-native';
+import { ChevronRight, Send } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
 type Msg = { id: string; me: boolean; text: { ar: string; en: string } };
@@ -32,12 +31,11 @@ const INITIAL_MSGS: Msg[] = [
 export default function ChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
   const [msgs, setMsgs] = useState<Msg[]>(INITIAL_MSGS);
   const [text, setText] = useState('');
   const scrollRef = useRef<ScrollView>(null);
@@ -59,23 +57,23 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: 'row' }]}>
           <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
             <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
           </Glass>
           <View style={styles.headerMid}>
-            <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
+            <View style={[styles.headerTitleRow, { flexDirection: 'row' }]}>
               <Image
                 source={require('@/assets/sawa/icon.png')}
                 style={styles.headerLogo}
                 resizeMode="contain"
               />
               <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'سَواء' : 'Sawaa'}
+                {'سَواء'}
               </Text>
             </View>
             <Text style={[styles.headerSub, { fontFamily: f400 }]}>
-              {dir.isRTL ? 'يعتمد على الذكاء الاصطناعي' : 'AI-powered'}
+              {'يعتمد على الذكاء الاصطناعي'}
             </Text>
           </View>
           <View style={styles.headerPlaceholder} />
@@ -100,14 +98,14 @@ export default function ChatScreen() {
                   end={{ x: 1, y: 1 }}
                   style={[styles.bubble, styles.bubbleMe]}
                 >
-                  <Text style={[styles.bubbleMeText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
-                    {dir.isRTL ? m.text.ar : m.text.en}
+                  <Text style={[styles.bubbleMeText, { fontFamily: f500, textAlign: 'right', writingDirection: 'rtl' }]}>
+                    {m.text.ar}
                   </Text>
                 </LinearGradient>
               ) : (
                 <Glass variant="strong" radius={sawaaRadius.xl} style={[styles.bubble, styles.bubbleThem]}>
-                  <Text style={[styles.bubbleThemText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
-                    {dir.isRTL ? m.text.ar : m.text.en}
+                  <Text style={[styles.bubbleThemText, { fontFamily: f500, textAlign: 'right', writingDirection: 'rtl' }]}>
+                    {m.text.ar}
                   </Text>
                 </Glass>
               )}
@@ -118,15 +116,15 @@ export default function ChatScreen() {
         {/* Input bar */}
         <View style={[styles.inputWrap, { paddingBottom: insets.bottom + 12 }]}>
           <Glass variant="strong" radius={sawaaRadius.pill} style={styles.inputPill}>
-            <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+            <View style={[styles.inputRow, { flexDirection: 'row' }]}>
               <TextInput
                 value={text}
                 onChangeText={setText}
-                placeholder={dir.isRTL ? 'اكتبي رسالتكِ…' : 'Type a message…'}
+                placeholder={'اكتبي رسالتكِ…'}
                 placeholderTextColor={sawaaColors.ink[400]}
                 style={[
                   styles.input,
-                  { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
+                  { fontFamily: f400, textAlign: 'right', writingDirection: 'rtl', color: sawaaColors.ink[900] },
                 ]}
                 onSubmitEditing={send}
                 returnKeyType="send"
@@ -138,7 +136,7 @@ export default function ChatScreen() {
                   end={{ x: 1, y: 1 }}
                   style={[styles.sendBtn, !text.trim() && { opacity: 0.55 }]}
                 >
-                  <Send size={16} color="#fff" strokeWidth={2} style={{ transform: [{ scaleX: dir.isRTL ? -1 : 1 }] }} />
+                  <Send size={16} color="#fff" strokeWidth={2} style={{ transform: [{ scaleX: -1 }] }} />
                 </LinearGradient>
               </Pressable>
             </View>

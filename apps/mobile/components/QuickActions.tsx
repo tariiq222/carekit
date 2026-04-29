@@ -3,7 +3,6 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { C, RADII, SHADOW_RAISED } from "@/theme/glass";
 import { Glass } from "@/theme";
-import { useDir } from "@/hooks/useDir";
 
 type QuickAction = {
   id: string;
@@ -17,18 +16,17 @@ type QuickActionsProps = {
 };
 
 export const QuickActions = ({ actions }: QuickActionsProps) => {
-  const dir = useDir();
   return (
     <View style={s.outer}>
       <Glass variant="strong" radius={RADII.floating} style={[s.panel, SHADOW_RAISED]}>
-        <View style={[s.tilesRow, { flexDirection: dir.row }]}>
+        <View style={[s.tilesRow, { flexDirection: 'row' }]}>
           {actions.map((a, i) => (
             <React.Fragment key={a.id}>
               <Pressable style={s.tile} onPress={a.onPress}>
                 <View style={s.iconBubble}>
                   <Ionicons name={a.icon} size={22} color={C.deepTeal} />
                 </View>
-                <Text style={s.label}>{a.label[dir.locale]}</Text>
+                <Text style={s.label}>{a.label.ar}</Text>
               </Pressable>
               {i < actions.length - 1 ? <View style={s.divider} /> : null}
             </React.Fragment>

@@ -21,11 +21,11 @@
  */
 
 export const fontAssets = {
-  Handicrafts_400Regular: require('../assets/fonts/TheYearofHandicraftsTTF-Reg.ttf'),
-  Handicrafts_500Medium: require('../assets/fonts/TheYearofHandicraftsTTF-Med.ttf'),
-  Handicrafts_600SemiBold: require('../assets/fonts/TheYearofHandicraftsTTF-SemBd.ttf'),
-  Handicrafts_700Bold: require('../assets/fonts/TheYearofHandicraftsTTF-Bold.ttf'),
-  Handicrafts_900Black: require('../assets/fonts/TheYearofHandicraftsTTF-Black.ttf'),
+  'TheYearofHandicraftsTTF-Reg': require('../assets/fonts/TheYearofHandicraftsTTF-Reg.ttf'),
+  'TheYearofHandicraftsTTF-Med': require('../assets/fonts/TheYearofHandicraftsTTF-Med.ttf'),
+  'TheYearofHandicraftsTTF-SemBd': require('../assets/fonts/TheYearofHandicraftsTTF-SemBd.ttf'),
+  'TheYearofHandicraftsTTF-Bold': require('../assets/fonts/TheYearofHandicraftsTTF-Bold.ttf'),
+  'TheYearofHandicraftsTTF-Black': require('../assets/fonts/TheYearofHandicraftsTTF-Black.ttf'),
 };
 
 type Weight = '300' | '400' | '500' | '600' | '700' | '900';
@@ -33,12 +33,12 @@ type Weight = '300' | '400' | '500' | '600' | '700' | '900';
 const weightMap: Record<Weight, string> = {
   // Light asset not bundled → degrade to Regular. Consumers pair 300 with smaller
   // sizes (timestamps, captions) so the visual difference reads anyway.
-  '300': 'Handicrafts_400Regular',
-  '400': 'Handicrafts_400Regular',
-  '500': 'Handicrafts_500Medium',
-  '600': 'Handicrafts_600SemiBold',
-  '700': 'Handicrafts_700Bold',
-  '900': 'Handicrafts_900Black',
+  '300': 'TheYearofHandicraftsTTF-Reg',
+  '400': 'TheYearofHandicraftsTTF-Reg',
+  '500': 'TheYearofHandicraftsTTF-Med',
+  '600': 'TheYearofHandicraftsTTF-SemBd',
+  '700': 'TheYearofHandicraftsTTF-Bold',
+  '900': 'TheYearofHandicraftsTTF-Black',
 };
 
 export function getFontName(_language: string, weight: string = '400'): string {

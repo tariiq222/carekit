@@ -10,7 +10,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
-  ChevronLeft,
   ChevronRight,
   Globe,
   Bell,
@@ -40,11 +39,11 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL, language } = useTheme();
+  const { theme, language } = useTheme();
 
   const [pushEnabled, setPushEnabled] = useState(false);
   const [darkEnabled, setDarkEnabled] = useState(false);
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const BackIcon = ChevronRight;
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
   const buildNumber =

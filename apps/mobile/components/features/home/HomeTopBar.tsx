@@ -8,7 +8,6 @@ import { Glass } from '@/theme/components/Glass';
 import { useAppSelector } from '@/hooks/use-redux';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { getFontName } from '@/theme/fonts';
-import { useDir } from '@/hooks/useDir';
 
 interface HomeTopBarProps {
   f600: string;
@@ -16,8 +15,7 @@ interface HomeTopBarProps {
 
 export function HomeTopBar({ f600 }: HomeTopBarProps) {
   const router = useRouter();
-  const dir = useDir();
-  const fBadge = getFontName(dir.locale, '700');
+  const fBadge = getFontName('ar', '700');
   const user = useAppSelector((s) => s.auth.user);
   const initial = (user?.firstName ?? 'س').charAt(0);
   const { count: unreadCount } = useUnreadCount();
@@ -25,12 +23,15 @@ export function HomeTopBar({ f600 }: HomeTopBarProps) {
 
   return (
     <View style={styles.topBar}>
-      <View style={styles.topBarLeft}>
-        <Glass variant="regular" radius={21} style={styles.iconBtn}>
-          <Pressable onPress={() => {}} style={styles.iconBtnInner}>
-            <Search size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
-          </Pressable>
-        </Glass>
+      <Glass variant="regular" radius={21} style={styles.avatarBtn}>
+        <Pressable
+          onPress={() => router.push('/(client)/(tabs)/profile')}
+          style={styles.avatarInner}
+        >
+          <Text style={[styles.avatarText, { fontFamily: f600 }]}>{initial}</Text>
+        </Pressable>
+      </Glass>
+      <View style={styles.topBarActions}>
         <Glass variant="regular" radius={21} style={styles.iconBtn}>
           <Pressable
             onPress={() => router.push('/(client)/(tabs)/notifications')}
@@ -51,15 +52,12 @@ export function HomeTopBar({ f600 }: HomeTopBarProps) {
             ) : null}
           </Pressable>
         </Glass>
+        <Glass variant="regular" radius={21} style={styles.iconBtn}>
+          <Pressable onPress={() => {}} style={styles.iconBtnInner}>
+            <Search size={19} color={sawaaColors.teal[700]} strokeWidth={1.75} />
+          </Pressable>
+        </Glass>
       </View>
-      <Glass variant="regular" radius={21} style={styles.avatarBtn}>
-        <Pressable
-          onPress={() => router.push('/(client)/(tabs)/profile')}
-          style={styles.avatarInner}
-        >
-          <Text style={[styles.avatarText, { fontFamily: f600 }]}>{initial}</Text>
-        </Pressable>
-      </Glass>
     </View>
   );
 }
@@ -71,14 +69,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 4,
   },
-  topBarLeft: { flexDirection: 'row', gap: 8 },
+  topBarActions: { flexDirection: 'row', gap: 8 },
   iconBtn: { width: 42, height: 42 },
   iconBtnInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   avatarBtn: { width: 42, height: 42 },
   bellBadge: {
     position: 'absolute',
     top: 4,
-    right: 2,
+    end: 2,
     minWidth: 16,
     height: 16,
     paddingHorizontal: 4,

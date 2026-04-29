@@ -35,6 +35,18 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-notifications',
     'expo-image-picker',
+    [
+      'expo-font',
+      {
+        fonts: [
+          './assets/fonts/TheYearofHandicraftsTTF-Reg.ttf',
+          './assets/fonts/TheYearofHandicraftsTTF-Med.ttf',
+          './assets/fonts/TheYearofHandicraftsTTF-SemBd.ttf',
+          './assets/fonts/TheYearofHandicraftsTTF-Bold.ttf',
+          './assets/fonts/TheYearofHandicraftsTTF-Black.ttf',
+        ],
+      },
+    ],
   ],
 };
 

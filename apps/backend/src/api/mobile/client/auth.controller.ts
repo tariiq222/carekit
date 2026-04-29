@@ -12,7 +12,7 @@ import { VerifyMobileOtpHandler } from '../../../modules/identity/verify-mobile-
 import { RequestEmailVerificationHandler } from '../../../modules/identity/request-email-verification/request-email-verification.handler';
 
 @ApiTags('Mobile Client / Identity')
-@Controller('api/v1/mobile/auth')
+@Controller('mobile/auth')
 export class MobileClientAuthController {
   constructor(
     private readonly register: RegisterMobileUserHandler,

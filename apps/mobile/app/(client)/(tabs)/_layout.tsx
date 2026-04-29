@@ -10,7 +10,6 @@ import { Calendar, FileText, Home, MessageCircle } from 'lucide-react-native';
 import { Glass } from '@/theme';
 import { RADII, SHADOW_RAISED } from '@/theme/glass';
 import { sawaaColors } from '@/theme/sawaa';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
 export default function ClientTabsLayout() {
@@ -41,7 +40,6 @@ type TabBarProps = BottomTabBarProps;
 const HIDDEN_ON = new Set(['chat']);
 
 function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
-  const dir = useDir();
   const insets = useSafeAreaInsets();
 
   if (HIDDEN_ON.has(state.routes[state.index]?.name ?? '')) return null;
@@ -53,10 +51,10 @@ function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
       style={[
         styles.tabBar,
         SHADOW_RAISED,
-        { bottom: insets.bottom + 14, left: 14, right: 14 },
+        { bottom: insets.bottom + 14, start: 14, end: 14 },
       ]}
     >
-      <View style={[styles.tabBarInner, { flexDirection: dir.row }]}>
+      <View style={[styles.tabBarInner, { flexDirection: 'row' }]}>
         {state.routes.map((route, index) => {
           if (!VISIBLE_TABS.has(route.name)) return null;
           const descriptor = descriptors[route.key];
@@ -103,9 +101,8 @@ function TabItem({
   focused: boolean;
   onPress: () => void;
 }) {
-  const dir = useDir();
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const color = focused ? sawaaColors.teal[700] : sawaaColors.ink[700];
   const Icon = getIcon(routeName);
 
@@ -126,7 +123,7 @@ function TabItem({
           style={[
             styles.label,
             { fontFamily: focused ? f700 : f600, color },
-            { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+            { textAlign: 'right', writingDirection: 'rtl' },
           ]}
           numberOfLines={1}
         >
@@ -175,8 +172,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     bottom: -4,
-    left: -10,
-    right: -10,
+    start: -10,
+    end: -10,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.55)',
     borderWidth: 0.5,

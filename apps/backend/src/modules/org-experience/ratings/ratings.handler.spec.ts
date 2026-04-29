@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
 import { SubmitRatingHandler } from './submit-rating.handler';
 import { ListRatingsHandler } from './list-ratings.handler';
 import { TenantContextService } from '../../../common/tenant';
@@ -17,12 +23,22 @@ const mockRating = {
   createdAt: new Date(),
 };
 
+const completedBooking = {
+  id: 'booking-1',
+  status: BookingStatus.COMPLETED,
+  clientId: 'client-1',
+  employeeId: 'emp-1',
+};
+
 const buildPrisma = () => ({
   rating: {
     findUnique: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue(mockRating),
     findMany: jest.fn().mockResolvedValue([mockRating]),
     count: jest.fn().mockResolvedValue(1),
+  },
+  booking: {
+    findFirst: jest.fn().mockResolvedValue(completedBooking),
   },
   $transaction: jest.fn().mockImplementation((ops) => Promise.all(ops as Promise<unknown>[])),
 });
@@ -50,6 +66,43 @@ describe('SubmitRatingHandler', () => {
     const handler = new SubmitRatingHandler(prisma as never, buildTenant());
     await expect(handler.execute({ ...validDto, score: 6 })).rejects.toThrow(BadRequestException);
     await expect(handler.execute({ ...validDto, score: 0 })).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when booking does not exist (or cross-tenant)', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
+    const handler = new SubmitRatingHandler(prisma as never, buildTenant());
+    await expect(handler.execute(validDto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws BadRequestException when booking is not COMPLETED', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({
+      ...completedBooking,
+      status: BookingStatus.CONFIRMED,
+    });
+    const handler = new SubmitRatingHandler(prisma as never, buildTenant());
+    await expect(handler.execute(validDto)).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws ForbiddenException when clientId does not own the booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({
+      ...completedBooking,
+      clientId: 'someone-else',
+    });
+    const handler = new SubmitRatingHandler(prisma as never, buildTenant());
+    await expect(handler.execute(validDto)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws BadRequestException when employeeId does not match booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({
+      ...completedBooking,
+      employeeId: 'different-employee',
+    });
+    const handler = new SubmitRatingHandler(prisma as never, buildTenant());
+    await expect(handler.execute(validDto)).rejects.toThrow(BadRequestException);
   });
 
   it('throws ConflictException when rating already exists', async () => {

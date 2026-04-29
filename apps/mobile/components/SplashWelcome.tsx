@@ -21,11 +21,10 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Leaf, ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { Leaf, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW, SHADOW_RAISED } from '@/theme/glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
 type Props = { onContinue: () => void };
@@ -33,11 +32,10 @@ type Props = { onContinue: () => void };
 export function SplashWelcome({ onContinue }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f700 = getFontName(dir.locale, '700');
-  const ArrowIcon = dir.isRTL ? ArrowLeft : ArrowRight;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f700 = getFontName('ar', '700');
+  const ArrowIcon = ArrowLeft;
 
   // Content entrance
   const appear = useSharedValue(0);
@@ -185,7 +183,7 @@ export function SplashWelcome({ onContinue }: Props) {
           <Text
             style={[
               styles.title,
-              { fontFamily: f700, writingDirection: dir.writingDirection },
+              { fontFamily: f700, writingDirection: 'rtl' },
             ]}
           >
             {t('splash.title')}
@@ -193,7 +191,7 @@ export function SplashWelcome({ onContinue }: Props) {
           <Text
             style={[
               styles.subtitle,
-              { fontFamily: f500, writingDirection: dir.writingDirection },
+              { fontFamily: f500, writingDirection: 'rtl' },
             ]}
           >
             {t('splash.tagline')}
@@ -202,7 +200,7 @@ export function SplashWelcome({ onContinue }: Props) {
 
         {/* Footer: progress + CTA + privacy */}
         <View style={styles.footer}>
-          <View style={[styles.progress, { flexDirection: dir.row }]}>
+          <View style={[styles.progress, { flexDirection: 'row' }]}>
             <View style={[styles.dot, styles.dotInactive]} />
             <Animated.View style={[styles.dot, styles.dotActive, shimmerStyle]} />
             <View style={[styles.dot, styles.dotInactive]} />
@@ -214,11 +212,11 @@ export function SplashWelcome({ onContinue }: Props) {
             accessibilityLabel={t('splash.cta')}
             style={({ pressed }) => [styles.ctaWrap, pressed && { transform: [{ scale: 0.98 }] }]}
           >
-            <Glass variant="strong" radius={RADII.pill} style={[styles.cta, SHADOW, { flexDirection: dir.row }]}>
+            <Glass variant="strong" radius={RADII.pill} style={[styles.cta, SHADOW, { flexDirection: 'row' }]}>
               <Text
                 style={[
                   styles.ctaText,
-                  { fontFamily: f700, writingDirection: dir.writingDirection },
+                  { fontFamily: f700, writingDirection: 'rtl' },
                 ]}
               >
                 {t('splash.cta')}
@@ -229,12 +227,12 @@ export function SplashWelcome({ onContinue }: Props) {
             </Glass>
           </Pressable>
 
-          <View style={[styles.privacy, { flexDirection: dir.row }]}>
+          <View style={[styles.privacy, { flexDirection: 'row' }]}>
             <ShieldCheck size={14} color={C.subtle} strokeWidth={2} />
             <Text
               style={[
                 styles.privacyText,
-                { fontFamily: f400, writingDirection: dir.writingDirection },
+                { fontFamily: f400, writingDirection: 'rtl' },
               ]}
             >
               {t('splash.privacy')}
@@ -318,16 +316,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
   },
-  blobA: { top: -60, left: -80 },
-  blobB: { bottom: -80, right: -60 },
+  blobA: { top: -60, start: -80 },
+  blobB: { bottom: -80, end: -60 },
   bracket: {
     position: 'absolute',
     width: 42,
     height: 42,
     borderColor: 'rgba(255,255,255,0.6)',
   },
-  bracketTL: { top: 24, left: 20, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderTopLeftRadius: 18 },
-  bracketTR: { top: 24, right: 20, borderTopWidth: 1.5, borderRightWidth: 1.5, borderTopRightRadius: 18 },
-  bracketBL: { bottom: 24, left: 20, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderBottomLeftRadius: 18 },
-  bracketBR: { bottom: 24, right: 20, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderBottomRightRadius: 18 },
+  bracketTL: { top: 24, start: 20, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderTopLeftRadius: 18 },
+  bracketTR: { top: 24, end: 20, borderTopWidth: 1.5, borderRightWidth: 1.5, borderTopRightRadius: 18 },
+  bracketBL: { bottom: 24, start: 20, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderBottomLeftRadius: 18 },
+  bracketBR: { bottom: 24, end: 20, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderBottomRightRadius: 18 },
 });

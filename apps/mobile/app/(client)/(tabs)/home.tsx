@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AquaBackground, sawaaColors } from '@/theme/sawaa';
-import { useDir } from '@/hooks/useDir';
 import { useTerminology } from '@/hooks/useTerminology';
 import { VERTICAL_SLUG } from '@/constants/config';
 import { useAppSelector } from '@/hooks/use-redux';
@@ -19,15 +18,14 @@ import { TherapistsRow } from '@/components/features/home/TherapistsRow';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const { t: termT } = useTerminology(VERTICAL_SLUG);
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const firstName = user?.firstName ?? (dir.isRTL ? 'سارة' : 'Sara');
-  const today = new Date().toLocaleDateString(dir.isRTL ? 'ar-SA' : 'en-US', {
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const firstName = user?.firstName ?? 'سارة';
+  const today = new Date().toLocaleDateString('ar-SA', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -70,11 +68,11 @@ export default function HomeScreen() {
           entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}
           style={styles.greetingBlock}
         >
-          <Text style={[styles.dateLabel, { fontFamily: f600, textAlign: dir.textAlign }]}>
+          <Text style={[styles.dateLabel, { fontFamily: f600, textAlign: 'right' }]}>
             {today}
           </Text>
-          <Text style={[styles.greeting, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? `صباح الخير، ${firstName}` : `Good morning, ${firstName}`}
+          <Text style={[styles.greeting, { fontFamily: f700, textAlign: 'right' }]}>
+            {`صباح الخير، ${firstName}`}
           </Text>
         </Animated.View>
 
@@ -82,62 +80,60 @@ export default function HomeScreen() {
           <>
             <Animated.View
               entering={FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}
-              style={[styles.sectionHead, { flexDirection: dir.row }]}
+              style={[styles.sectionHead, { flexDirection: 'row' }]}
             >
               <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'القادم' : 'Up next'}
+                {'القادم'}
               </Text>
               {unreadCount > 0 ? (
                 <Pressable onPress={() => router.push('/(client)/(tabs)/notifications')}>
                   <Text style={[styles.sectionMeta, { fontFamily: f600, color: sawaaColors.teal[700] }]}>
-                    {dir.isRTL
-                      ? `${unreadCount.toLocaleString('ar-SA')} تنبيه جديد`
-                      : `${unreadCount} new alert${unreadCount === 1 ? '' : 's'}`}
+                    {`${unreadCount.toLocaleString('ar-SA')} تنبيه جديد`}
                   </Text>
                 </Pressable>
               ) : null}
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(300).duration(700).easing(Easing.out(Easing.cubic))}>
-              <UpNextCard loading={loading} booking={nextBooking} dir={dir} f600={f600} f700={f700} />
+              <UpNextCard loading={loading} booking={nextBooking} f600={f600} f700={f700} />
             </Animated.View>
           </>
         ) : null}
 
         <Animated.View
           entering={FadeInDown.delay(380).duration(700).easing(Easing.out(Easing.cubic))}
-          style={[styles.sectionHead, { flexDirection: dir.row }]}
+          style={[styles.sectionHead, { flexDirection: 'row' }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'العيادات المميزة' : 'Featured Clinics'}
+            {'العيادات المميزة'}
           </Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(440).duration(700).easing(Easing.out(Easing.cubic))}>
-          <FeaturedClinics dir={dir} f600={f600} f700={f700} />
+          <FeaturedClinics f600={f600} f700={f700} />
         </Animated.View>
 
         <Animated.View
           entering={FadeInDown.delay(520).duration(700).easing(Easing.out(Easing.cubic))}
-          style={[styles.sectionHead, { flexDirection: dir.row }]}
+          style={[styles.sectionHead, { flexDirection: 'row' }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'جلسات الدعم' : 'Support sessions'}
+            {'جلسات الدعم'}
           </Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(580).duration(700).easing(Easing.out(Easing.cubic))}>
-          <SupportSessions dir={dir} f400={f400} f700={f700} />
+          <SupportSessions f400={f400} f700={f700} />
         </Animated.View>
 
         <Animated.View
           entering={FadeInDown.delay(640).duration(700).easing(Easing.out(Easing.cubic))}
-          style={[styles.sectionHead, { flexDirection: dir.row }]}
+          style={[styles.sectionHead, { flexDirection: 'row' }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
-            {termT('employee.plural', dir.isRTL ? 'المعالجون' : 'Therapists')}
+            {termT('employee.plural', 'المعالجون')}
           </Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>
-          <TherapistsRow therapists={therapists} dir={dir} f400={f400} f600={f600} f700={f700} />
+          <TherapistsRow therapists={therapists} f400={f400} f600={f600} f700={f700} />
         </Animated.View>
       </ScrollView>
     </AquaBackground>

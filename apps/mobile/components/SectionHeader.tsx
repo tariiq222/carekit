@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 
 import { C } from '@/theme/glass';
-import { useDir } from '@/hooks/useDir';
 
 type SectionHeaderProps = {
   title: string;
@@ -17,7 +16,6 @@ export function SectionHeader({
   action,
   style,
 }: SectionHeaderProps) {
-  const dir = useDir();
   const titleStyle = size === 'screen' ? styles.titleScreen : styles.titleSection;
   const accentStyle = size === 'screen' ? styles.accentScreen : styles.accentSection;
 
@@ -25,16 +23,16 @@ export function SectionHeader({
     <View
       style={[
         styles.row,
-        { flexDirection: dir.row },
+        { flexDirection: 'row' },
         style,
       ]}
     >
-      <View style={[styles.labelWrap, { flexDirection: dir.row }]}>
+      <View style={[styles.labelWrap, { flexDirection: 'row' }]}>
         <View style={accentStyle} />
         <Text
           style={[
             titleStyle,
-            { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+            { textAlign: 'right', writingDirection: 'rtl' },
           ]}
           numberOfLines={1}
         >

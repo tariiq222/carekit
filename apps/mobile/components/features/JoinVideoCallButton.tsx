@@ -25,20 +25,20 @@ export function JoinVideoCallButton({
   scheduledAt,
   durationMins,
   status,
-  isRTL,
+  isRTL: _isRTL,
   variant,
 }: Props) {
   if (!FEATURE_FLAGS.videoCalls) return null;
 
-  const f600 = getFontName(isRTL ? 'ar' : 'en', '600');
-  const f700 = getFontName(isRTL ? 'ar' : 'en', '700');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
 
   const { withinWindow, label } = useMemo(() => {
     if (status === 'FAILED') {
-      return { withinWindow: false, label: isRTL ? 'تعذّر إنشاء الاجتماع' : 'Meeting unavailable' };
+      return { withinWindow: false, label: 'تعذّر إنشاء الاجتماع' };
     }
     if (status !== 'CREATED' || !url) {
-      return { withinWindow: false, label: isRTL ? 'سيظهر الرابط قبل الموعد' : 'Link appears before session' };
+      return { withinWindow: false, label: 'سيظهر الرابط قبل الموعد' };
     }
     const start = new Date(scheduledAt).getTime();
     const end = start + durationMins * 60 * 1000;
@@ -48,19 +48,17 @@ export function JoinVideoCallButton({
       const minsUntilOpen = Math.max(1, Math.round((opensAt - now) / 60000));
       return {
         withinWindow: false,
-        label: isRTL ? `يفتح خلال ${minsUntilOpen} دقيقة` : `Opens in ${minsUntilOpen} min`,
+        label: `يفتح خلال ${minsUntilOpen} دقيقة`,
       };
     }
     if (now > end) {
-      return { withinWindow: false, label: isRTL ? 'انتهت الجلسة' : 'Session ended' };
+      return { withinWindow: false, label: 'انتهت الجلسة' };
     }
     return {
       withinWindow: true,
-      label: variant === 'start'
-        ? (isRTL ? 'بدء الاجتماع' : 'Start meeting')
-        : (isRTL ? 'انضمام للجلسة' : 'Join session'),
+      label: variant === 'start' ? 'بدء الاجتماع' : 'انضمام للجلسة',
     };
-  }, [status, url, scheduledAt, durationMins, isRTL, variant]);
+  }, [status, url, scheduledAt, durationMins, variant]);
 
   const onPress = () => {
     if (!withinWindow || !url) return;

@@ -4,11 +4,10 @@ import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Search, Star } from 'lucide-react-native';
+import { ChevronRight, Search, Star } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useTherapists } from '@/hooks/queries';
 
@@ -36,12 +35,11 @@ const CHIPS = [
 export default function TherapistsListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
   const [activeChip, setActiveChip] = useState('available');
   const [query, setQuery] = useState('');
   const { data, isLoading } = useTherapists();
@@ -73,29 +71,27 @@ export default function TherapistsListScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'اختاري معالجاً' : 'Choose a therapist'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'اختاري معالجاً'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL
-              ? `${list.length} معالج متاحين الآن`
-              : `${list.length} therapists available`}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {`${list.length} معالج متاحين الآن`}
           </Text>
         </Animated.View>
 
         {/* Search */}
         <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.searchCard}>
-            <View style={[styles.searchRow, { flexDirection: dir.row }]}>
+            <View style={[styles.searchRow, { flexDirection: 'row' }]}>
               <Search size={17} color={sawaaColors.ink[500]} strokeWidth={1.75} />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder={dir.isRTL ? 'اكتبي اسم المعالج أو التخصص' : 'Search by name or specialty'}
+                placeholder={'اكتبي اسم المعالج أو التخصص'}
                 placeholderTextColor={sawaaColors.ink[400]}
                 style={[
                   styles.searchInput,
-                  { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
+                  { fontFamily: f400, textAlign: 'right', writingDirection: 'rtl', color: sawaaColors.ink[900] },
                 ]}
               />
             </View>
@@ -107,7 +103,7 @@ export default function TherapistsListScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.chipsRow, { flexDirection: dir.row }]}
+            contentContainerStyle={[styles.chipsRow, { flexDirection: 'row' }]}
           >
             {CHIPS.map((c) => {
               const isActive = c.key === activeChip;
@@ -125,7 +121,7 @@ export default function TherapistsListScreen() {
                       styles.chipText,
                       { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[700] },
                     ]}>
-                      {dir.isRTL ? c.ar : c.en}
+                      {c.ar}
                     </Text>
                   </Glass>
                 </Pressable>
@@ -136,16 +132,16 @@ export default function TherapistsListScreen() {
 
         {loading ? (
           <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
-            {dir.isRTL ? 'جاري التحميل…' : 'Loading…'}
+            {'جاري التحميل…'}
           </Text>
         ) : filtered.length === 0 ? (
           <Text style={[styles.subtitle, { fontFamily: f400, paddingHorizontal: 4 }]}>
-            {dir.isRTL ? 'لا يوجد معالجون بعد' : 'No therapists yet'}
+            {'لا يوجد معالجون بعد'}
           </Text>
         ) : (
           filtered.map((t, i) => {
-            const name = (dir.isRTL ? t.nameAr : t.nameEn) ?? t.nameEn ?? t.nameAr ?? '—';
-            const spec = (dir.isRTL ? t.specialtyAr : t.specialty) ?? t.specialty ?? t.specialtyAr ?? '';
+            const name = t.nameAr ?? t.nameEn ?? '—';
+            const spec = t.specialtyAr ?? t.specialty ?? '';
             const gradient = gradientFor(t.id);
             const initial = name.charAt(0);
             const navKey = t.slug ?? t.id;
@@ -157,7 +153,7 @@ export default function TherapistsListScreen() {
                 <Glass variant="strong" radius={sawaaRadius.xl} style={styles.therapistCard}>
                   <Pressable
                     onPress={() => router.push(`/(client)/employee/${navKey}`)}
-                    style={[styles.therapistRow, { flexDirection: dir.row }]}
+                    style={[styles.therapistRow, { flexDirection: 'row' }]}
                   >
                     <LinearGradient
                       colors={gradient}
@@ -168,16 +164,16 @@ export default function TherapistsListScreen() {
                       <Text style={[styles.avatarText, { fontFamily: f700 }]}>{initial}</Text>
                     </LinearGradient>
                     <View style={styles.therapistBody}>
-                      <View style={[styles.therapistTop, { flexDirection: dir.row }]}>
-                        <Text style={[styles.therapistName, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
+                      <View style={[styles.therapistTop, { flexDirection: 'row' }]}>
+                        <Text style={[styles.therapistName, { fontFamily: f700, textAlign: 'right', flex: 1 }]}>
                           {name}
                         </Text>
                       </View>
-                      <Text style={[styles.therapistSpec, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                      <Text style={[styles.therapistSpec, { fontFamily: f400, textAlign: 'right' }]}>
                         {spec}
                       </Text>
                       {t.title ? (
-                        <View style={[styles.therapistMeta, { flexDirection: dir.row }]}>
+                        <View style={[styles.therapistMeta, { flexDirection: 'row' }]}>
                           <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
                           <Text style={[styles.therapistExp, { fontFamily: f500 }]}>
                             {t.title}
@@ -215,7 +211,7 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontSize: 36, color: 'rgba(255,255,255,0.95)' },
   onlineDot: {
-    position: 'absolute', top: 8, right: 8,
+    position: 'absolute', top: 8, end: 8,
     width: 9, height: 9, borderRadius: 5,
     backgroundColor: '#4bd67a', borderWidth: 1.5, borderColor: '#fff',
   },
@@ -233,7 +229,7 @@ const styles = StyleSheet.create({
   dot: { fontSize: 11, color: sawaaColors.ink[400] },
   therapistExp: { fontSize: 11, color: sawaaColors.ink[500] },
   availableChip: {
-    marginLeft: 'auto',
+    marginStart: 'auto',
     paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
     backgroundColor: 'rgba(75,214,122,0.18)',
   },

@@ -14,14 +14,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   CalendarCheck,
   ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Video,
 } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import {
   clientBookingsService,
@@ -59,12 +57,11 @@ function formatTime(iso: string, isRTL: boolean) {
 
 export default function RecordsScreen() {
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const router = useRouter();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const Chevron = ChevronLeft;
 
   const [items, setItems] = useState<ClientBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,10 +79,10 @@ export default function RecordsScreen() {
       });
       setItems(res.items);
     } catch {
-      setError(dir.isRTL ? 'تعذّر تحميل السجلات' : 'Failed to load records');
+      setError('تعذّر تحميل السجلات');
       setItems([]);
     }
-  }, [dir.isRTL]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,11 +118,11 @@ export default function RecordsScreen() {
         }
       >
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'السجلات' : 'Records'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'السجلات'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'جلساتك السابقة وملاحظاتها' : 'Your past sessions and notes'}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {'جلساتك السابقة وملاحظاتها'}
           </Text>
         </Animated.View>
 
@@ -146,7 +143,7 @@ export default function RecordsScreen() {
             <Text style={[styles.emptyText, { fontFamily: f600 }]}>{error}</Text>
             <Pressable onPress={onRefresh} style={styles.retryBtn}>
               <Text style={[styles.retryText, { fontFamily: f600 }]}>
-                {dir.isRTL ? 'إعادة المحاولة' : 'Retry'}
+                {'إعادة المحاولة'}
               </Text>
             </Pressable>
           </Animated.View>
@@ -154,23 +151,17 @@ export default function RecordsScreen() {
           <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.empty}>
             <CalendarCheck size={40} color={sawaaColors.ink[400]} strokeWidth={1.5} />
             <Text style={[styles.emptyText, { fontFamily: f600 }]}>
-              {dir.isRTL ? 'لا توجد جلسات سابقة بعد' : 'No past sessions yet'}
+              {'لا توجد جلسات سابقة بعد'}
             </Text>
             <Text style={[styles.emptyHint, { fontFamily: f400 }]}>
-              {dir.isRTL
-                ? 'ستظهر هنا الجلسات المكتملة'
-                : 'Completed sessions will appear here'}
+              {'ستظهر هنا الجلسات المكتملة'}
             </Text>
           </Animated.View>
         ) : (
           items.map((b, i) => {
             const gradient = hashGradient(b.id);
-            const therapistName = (dir.isRTL
-              ? b.employee?.nameAr ?? b.employee?.nameEn
-              : b.employee?.nameEn ?? b.employee?.nameAr) ?? '—';
-            const serviceName = (dir.isRTL
-              ? b.service?.nameAr ?? b.service?.nameEn
-              : b.service?.nameEn ?? b.service?.nameAr) ?? '';
+            const therapistName = (b.employee?.nameAr ?? b.employee?.nameEn) ?? '—';
+            const serviceName = (b.service?.nameAr ?? b.service?.nameEn) ?? '';
             const initial = therapistName.charAt(0);
             const isVideo = b.bookingType === 'online';
 
@@ -186,7 +177,7 @@ export default function RecordsScreen() {
                     onPress={() => router.push(`/(client)/appointment/${b.id}`)}
                     style={styles.cardInner}
                   >
-                    <View style={[styles.cardTop, { flexDirection: dir.row }]}>
+                    <View style={[styles.cardTop, { flexDirection: 'row' }]}>
                       <LinearGradient
                         colors={gradient}
                         start={{ x: 0, y: 0 }}
@@ -201,7 +192,7 @@ export default function RecordsScreen() {
                         <Text
                           style={[
                             styles.therapist,
-                            { fontFamily: f700, textAlign: dir.textAlign },
+                            { fontFamily: f700, textAlign: 'right' },
                           ]}
                         >
                           {therapistName}
@@ -210,7 +201,7 @@ export default function RecordsScreen() {
                           <Text
                             style={[
                               styles.service,
-                              { fontFamily: f400, textAlign: dir.textAlign },
+                              { fontFamily: f400, textAlign: 'right' },
                             ]}
                             numberOfLines={1}
                           >
@@ -223,31 +214,31 @@ export default function RecordsScreen() {
 
                     <View style={styles.divider} />
 
-                    <View style={[styles.cardBottom, { flexDirection: dir.row }]}>
+                    <View style={[styles.cardBottom, { flexDirection: 'row' }]}>
                       <View
                         style={[
                           styles.dateCol,
-                          { alignItems: dir.isRTL ? 'flex-end' : 'flex-start' },
+                          { alignItems: 'flex-end' },
                         ]}
                       >
                         <Text style={[styles.dateLabel, { fontFamily: f400 }]}>
-                          {dir.isRTL ? 'التاريخ' : 'Date'}
+                          {'التاريخ'}
                         </Text>
                         <Text style={[styles.dateValue, { fontFamily: f600 }]}>
-                          {formatDate(b.scheduledAt, dir.isRTL)}
+                          {formatDate(b.scheduledAt, true)}
                         </Text>
                       </View>
                       <View
                         style={[
                           styles.dateCol,
-                          { alignItems: dir.isRTL ? 'flex-end' : 'flex-start' },
+                          { alignItems: 'flex-end' },
                         ]}
                       >
                         <Text style={[styles.dateLabel, { fontFamily: f400 }]}>
-                          {dir.isRTL ? 'الوقت' : 'Time'}
+                          {'الوقت'}
                         </Text>
                         <Text style={[styles.dateValue, { fontFamily: f600 }]}>
-                          {formatTime(b.scheduledAt, dir.isRTL)}
+                          {formatTime(b.scheduledAt, true)}
                         </Text>
                       </View>
                       {isVideo ? (
@@ -268,7 +259,7 @@ export default function RecordsScreen() {
                               { fontFamily: f600, color: sawaaColors.teal[700] },
                             ]}
                           >
-                            {dir.isRTL ? 'فيديو' : 'Video'}
+                            {'فيديو'}
                           </Text>
                         </View>
                       ) : null}

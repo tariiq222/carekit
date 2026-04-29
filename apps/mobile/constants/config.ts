@@ -7,7 +7,7 @@ export const API_URL =
  * header on every API call by services/api.ts.
  */
 export const TENANT_ID =
-  process.env.EXPO_PUBLIC_TENANT_ID ?? '00000000-0000-0000-0000-000000000001';
+  process.env.EXPO_PUBLIC_TENANT_ID ?? 'ac6c56f2-073b-4704-b2d2-3d21e238d616';
 
 /**
  * Vertical slug for the locked tenant. Drives `useTerminology()` so that

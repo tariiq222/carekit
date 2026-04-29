@@ -11,7 +11,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronRight,
-  ChevronLeft,
   Phone,
   Mail,
   Calendar,
@@ -31,9 +30,9 @@ export default function DoctorClientRecordScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const BackIcon = ChevronRight;
 
   const [client, setClient] = useState<ClientRecord | null>(null);
   const [visits, setVisits] = useState<Booking[]>([]);

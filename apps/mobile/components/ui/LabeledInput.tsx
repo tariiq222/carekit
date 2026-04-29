@@ -4,7 +4,6 @@ import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { C, RADII } from '@/theme/glass';
-import type { DirState } from '@/hooks/useDir';
 
 interface LabeledInputProps {
   label: string;
@@ -18,7 +17,6 @@ interface LabeledInputProps {
   showVisibilityToggle?: boolean;
   isVisible?: boolean;
   onToggleVisibility?: () => void;
-  dir: DirState;
 }
 
 export function LabeledInput({
@@ -33,13 +31,12 @@ export function LabeledInput({
   showVisibilityToggle,
   isVisible,
   onToggleVisibility,
-  dir,
 }: LabeledInputProps) {
   return (
     <View style={styles.field}>
-      <Text style={[styles.label, { textAlign: dir.textAlign }]}>{label}</Text>
+      <Text style={[styles.label, { textAlign: 'right' }]}>{label}</Text>
       <Glass variant="clear" radius={RADII.image} style={styles.input}>
-        <View style={[styles.inputRow, { flexDirection: dir.row }]}>
+        <View style={[styles.inputRow, { flexDirection: 'row' }]}>
           <TextInput
             value={value}
             onChangeText={onChangeText}
@@ -48,7 +45,7 @@ export function LabeledInput({
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
             secureTextEntry={secureTextEntry && !isVisible}
-            style={[styles.inputText, { textAlign: dir.textAlign }]}
+            style={[styles.inputText, { textAlign: 'right' }]}
           />
           {showVisibilityToggle ? (
             <Pressable onPress={onToggleVisibility} style={styles.eyeBtn} hitSlop={8}>

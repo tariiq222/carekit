@@ -4,11 +4,10 @@ import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { publicEmployeesService } from '@/services/client/employees';
 import { branchesService } from '@/services/branches';
@@ -36,12 +35,11 @@ export default function BookingScheduleScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
 
   const days = useMemo(() => {
     const out: Date[] = [];
@@ -72,15 +70,15 @@ export default function BookingScheduleScreen() {
         const list = await branchesService.getAll();
         if (cancelled) return;
         if (list.length > 0) setBranchId(list[0].id);
-        else setError(dir.isRTL ? 'لا توجد فروع متاحة' : 'No branches available');
+        else setError('لا توجد فروع متاحة');
       } catch {
-        if (!cancelled) setError(dir.isRTL ? 'تعذّر تحميل الفرع' : 'Failed to load branch');
+        if (!cancelled) setError('تعذّر تحميل الفرع');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [branchId, dir.isRTL]);
+  }, [branchId]);
 
   // Fetch slots whenever the day, employee, or branch changes.
   useEffect(() => {
@@ -103,7 +101,7 @@ export default function BookingScheduleScreen() {
         if (cancelled) return;
         setSlots(data ?? []);
       } catch {
-        if (!cancelled) setError(dir.isRTL ? 'تعذّر تحميل الأوقات' : 'Failed to load times');
+        if (!cancelled) setError('تعذّر تحميل الأوقات');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -119,7 +117,6 @@ export default function BookingScheduleScreen() {
     params.serviceId,
     params.durationOptionId,
     params.durationMins,
-    dir.isRTL,
   ]);
 
   const selectedSlot = slotIdx != null ? slots[slotIdx] : null;
@@ -151,12 +148,12 @@ export default function BookingScheduleScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(500)}>
-          <View style={[styles.topRow, { flexDirection: dir.row }]}>
+          <View style={[styles.topRow, { flexDirection: 'row' }]}>
             <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
               <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
             </Glass>
             <Text style={[styles.step, { fontFamily: f600 }]}>
-              {dir.isRTL ? 'الخطوة ٢ من ٣' : 'Step 2 of 3'}
+              {'الخطوة ٢ من ٣'}
             </Text>
           </View>
           <View style={styles.progressTrack}>
@@ -165,13 +162,11 @@ export default function BookingScheduleScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'اختاري موعداً' : 'Pick a time'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'اختاري موعداً'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL
-              ? 'الأوقات المتاحة بحسب جدول المختصة'
-              : "Available times based on the therapist's schedule"}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {'الأوقات المتاحة بحسب جدول المختصة'}
           </Text>
         </Animated.View>
 
@@ -180,7 +175,6 @@ export default function BookingScheduleScreen() {
             days={days}
             dayIdx={dayIdx}
             onSelect={setDayIdx}
-            dir={dir}
             f500={f500}
             f700={f700}
           />
@@ -188,13 +182,13 @@ export default function BookingScheduleScreen() {
 
         <Animated.View
           entering={FadeInDown.delay(240).duration(600).easing(Easing.out(Easing.cubic))}
-          style={[styles.slotsHead, { flexDirection: dir.row }]}
+          style={[styles.slotsHead, { flexDirection: 'row' }]}
         >
           <Text style={[styles.slotsTitle, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'الأوقات المتاحة' : 'Available times'}
+            {'الأوقات المتاحة'}
           </Text>
           <Text style={[styles.tz, { fontFamily: f400 }]}>
-            {dir.isRTL ? 'بتوقيت الرياض' : 'Riyadh time'}
+            {'بتوقيت الرياض'}
           </Text>
         </Animated.View>
 
@@ -204,7 +198,6 @@ export default function BookingScheduleScreen() {
           slots={slots}
           selectedIdx={slotIdx}
           onSelect={setSlotIdx}
-          dir={dir}
           f500={f500}
           f600={f600}
         />
@@ -215,7 +208,6 @@ export default function BookingScheduleScreen() {
         selectedSlot={selectedSlot}
         onConfirm={handleConfirm}
         bottomInset={insets.bottom}
-        dir={dir}
         f400={f400}
         f700={f700}
       />

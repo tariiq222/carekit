@@ -7,7 +7,6 @@ import { Bell, Calendar, Check, CheckCheck, FileText, MessageCircle, Star, Video
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useNotifications } from '@/hooks/use-notifications';
 import { resolveNotificationHref } from '@/utils/notification-deeplink';
@@ -74,11 +73,10 @@ type FilterKey = typeof FILTERS[number]['key'];
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const router = useRouter();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const [active, setActive] = useState<FilterKey>('all');
 
   const {
@@ -120,25 +118,23 @@ export default function NotificationsScreen() {
       >
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
-          <View style={[styles.headerRow, { flexDirection: dir.row }]}>
+          <View style={[styles.headerRow, { flexDirection: 'row' }]}>
             <View style={styles.headerText}>
-              <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? 'الإشعارات' : 'Notifications'}
+              <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+                {'الإشعارات'}
               </Text>
-              <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                {dir.isRTL
-                  ? unreadCount === 0
-                    ? 'لا إشعارات جديدة'
-                    : `لديكِ ${unreadCount === 1 ? 'إشعار جديد' : `${unreadCount} إشعارات جديدة`}`
-                  : `${unreadCount} new ${unreadCount === 1 ? 'notification' : 'notifications'}`}
+              <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+                {unreadCount === 0
+                  ? 'لا إشعارات جديدة'
+                  : `لديكِ ${unreadCount === 1 ? 'إشعار جديد' : `${unreadCount} إشعارات جديدة`}`}
               </Text>
             </View>
             {unreadCount > 0 ? (
               <Glass variant="regular" radius={20} onPress={markAllAsRead} interactive style={styles.markAllBtn}>
-                <View style={[styles.markAllInner, { flexDirection: dir.row }]}>
+                <View style={[styles.markAllInner, { flexDirection: 'row' }]}>
                   <CheckCheck size={14} color={sawaaColors.teal[700]} strokeWidth={2} />
                   <Text style={[styles.markAllText, { fontFamily: f600 }]}>
-                    {dir.isRTL ? 'تعليم الكل' : 'Mark all'}
+                    {'تعليم الكل'}
                   </Text>
                 </View>
               </Glass>
@@ -151,7 +147,7 @@ export default function NotificationsScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.filterRow, { flexDirection: dir.row }]}
+            contentContainerStyle={[styles.filterRow, { flexDirection: 'row' }]}
           >
             {FILTERS.map((f) => {
               const isActive = f.key === active;
@@ -165,12 +161,12 @@ export default function NotificationsScreen() {
                   interactive
                   style={styles.chip}
                 >
-                  <View style={[styles.chipInner, { flexDirection: dir.row }]}>
+                  <View style={[styles.chipInner, { flexDirection: 'row' }]}>
                     <Text style={[
                       styles.chipLabel,
                       { fontFamily: f600, color: isActive ? sawaaColors.teal[700] : sawaaColors.ink[700] },
                     ]}>
-                      {dir.isRTL ? f.ar : f.en}
+                      {f.ar}
                     </Text>
                     <View style={[
                       styles.chipBadge,
@@ -196,16 +192,16 @@ export default function NotificationsScreen() {
             <Glass variant="regular" radius={sawaaRadius.xl} style={styles.empty}>
               <Bell size={20} color={sawaaColors.ink[400]} strokeWidth={1.75} />
               <Text style={[styles.emptyText, { fontFamily: f400 }]}>
-                {dir.isRTL ? 'لا توجد إشعارات لعرضها' : 'No notifications yet'}
+                {'لا توجد إشعارات لعرضها'}
               </Text>
             </Glass>
           </Animated.View>
         ) : (
           visible.map((n, i) => {
             const { Icon, color } = iconForType(n.type);
-            const title = dir.isRTL ? n.titleAr : n.titleEn;
-            const body = dir.isRTL ? n.bodyAr : n.bodyEn;
-            const when = relativeWhen(n.createdAt, dir.isRTL);
+            const title = n.titleAr;
+            const body = n.bodyAr;
+            const when = relativeWhen(n.createdAt, true);
             const unread = !n.isRead;
             return (
               <Animated.View
@@ -214,7 +210,7 @@ export default function NotificationsScreen() {
               >
                 <Pressable onPress={() => handlePress(n)}>
                   <Glass variant={unread ? 'strong' : 'regular'} radius={sawaaRadius.xl} style={styles.card}>
-                    <View style={[styles.row, { flexDirection: dir.row }]}>
+                    <View style={[styles.row, { flexDirection: 'row' }]}>
                       <View style={[
                         styles.iconBox,
                         { backgroundColor: `${color}22`, borderColor: `${color}33` },
@@ -222,13 +218,13 @@ export default function NotificationsScreen() {
                         <Icon size={18} color={color} strokeWidth={1.75} />
                       </View>
                       <View style={styles.body}>
-                        <View style={[styles.bodyHead, { flexDirection: dir.row }]}>
-                          <Text style={[styles.itemTitle, { fontFamily: f700, textAlign: dir.textAlign, flex: 1 }]}>
+                        <View style={[styles.bodyHead, { flexDirection: 'row' }]}>
+                          <Text style={[styles.itemTitle, { fontFamily: f700, textAlign: 'right', flex: 1 }]}>
                             {title}
                           </Text>
                           <Text style={[styles.when, { fontFamily: f400 }]}>{when}</Text>
                         </View>
-                        <Text style={[styles.itemBody, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                        <Text style={[styles.itemBody, { fontFamily: f400, textAlign: 'right' }]}>
                           {body}
                         </Text>
                       </View>

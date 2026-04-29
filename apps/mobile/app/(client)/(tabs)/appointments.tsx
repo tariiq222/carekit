@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckCircle2,
   ChevronLeft,
-  ChevronRight,
   Clock,
   MapPin,
   Video,
@@ -18,7 +17,6 @@ import {
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useClientBookings, clientBookingsKeys } from '@/hooks/queries';
 import { type ClientBookingStatus } from '@/services/client';
@@ -68,17 +66,16 @@ function formatTime(iso: string, isRTL: boolean) {
 
 export default function AppointmentsScreen() {
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const router = useRouter();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const [tab, setTab] = useState<TabKey>('upcoming');
   const queryClient = useQueryClient();
   const { data, isLoading, isRefetching, refetch } = useClientBookings({ limit: 50 });
   const bookings = data?.items ?? [];
-  const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
+  const Chevron = ChevronLeft;
 
   const items = useMemo(
     () => bookings.filter((b) => tabOf(b.status) === tab),
@@ -110,17 +107,17 @@ export default function AppointmentsScreen() {
         }
       >
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'مواعيدي' : 'Appointments'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'مواعيدي'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f500, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'جلساتك الحالية والسابقة' : 'Your upcoming and past sessions'}
+          <Text style={[styles.subtitle, { fontFamily: f500, textAlign: 'right' }]}>
+            {'جلساتك الحالية والسابقة'}
           </Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(100).duration(600).easing(Easing.out(Easing.cubic))}>
           <Glass variant="regular" radius={sawaaRadius.pill} style={styles.tabsWrap}>
-            <View style={[styles.tabsRow, { flexDirection: dir.row }]}>
+            <View style={[styles.tabsRow, { flexDirection: 'row' }]}>
               {TABS.map((t) => {
                 const isActive = t.key === tab;
                 return (
@@ -141,7 +138,7 @@ export default function AppointmentsScreen() {
                       styles.tabBtnText,
                       { fontFamily: f600, color: isActive ? '#fff' : sawaaColors.ink[700] },
                     ]}>
-                      {dir.isRTL ? t.ar : t.en}
+                      {t.ar}
                     </Text>
                   </Pressable>
                 );
@@ -153,28 +150,26 @@ export default function AppointmentsScreen() {
         {isLoading ? (
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.empty}>
             <Text style={[styles.emptyText, { fontFamily: f400 }]}>
-              {dir.isRTL ? 'جاري التحميل…' : 'Loading…'}
+              {'جاري التحميل…'}
             </Text>
           </Animated.View>
         ) : items.length === 0 ? (
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.empty}>
             <Calendar size={40} color={sawaaColors.ink[400]} strokeWidth={1.5} />
             <Text style={[styles.emptyText, { fontFamily: f600 }]}>
-              {dir.isRTL ? 'لا توجد مواعيد' : 'No appointments'}
+              {'لا توجد مواعيد'}
             </Text>
           </Animated.View>
         ) : (
           items.map((b, i) => {
             const status: TabKey = tabOf(b.status);
             const gradient = hashGradient(b.id);
-            const therapistName = (dir.isRTL
-              ? b.employee?.nameAr ?? b.employee?.nameEn
-              : b.employee?.nameEn ?? b.employee?.nameAr) ?? '—';
+            const therapistName = (b.employee?.nameAr ?? b.employee?.nameEn) ?? '—';
             const initial = therapistName.charAt(0);
             const isVideo = b.bookingType === 'online';
             const location = isVideo
-              ? (dir.isRTL ? 'جلسة فيديو' : 'Video call')
-              : (dir.isRTL ? b.branch?.nameAr ?? b.branch?.nameEn ?? '' : b.branch?.nameEn ?? b.branch?.nameAr ?? '');
+              ? 'جلسة فيديو'
+              : (b.branch?.nameAr ?? b.branch?.nameEn ?? '');
             return (
               <Animated.View
                 key={b.id}
@@ -185,7 +180,7 @@ export default function AppointmentsScreen() {
                     onPress={() => router.push(`/(client)/appointment/${b.id}`)}
                     style={styles.cardInner}
                   >
-                    <View style={[styles.cardTop, { flexDirection: dir.row }]}>
+                    <View style={[styles.cardTop, { flexDirection: 'row' }]}>
                       <LinearGradient
                         colors={gradient}
                         start={{ x: 0, y: 0 }}
@@ -195,10 +190,10 @@ export default function AppointmentsScreen() {
                         <Text style={[styles.avatarText, { fontFamily: f700 }]}>{initial}</Text>
                       </LinearGradient>
                       <View style={styles.cardMid}>
-                        <Text style={[styles.therapist, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                        <Text style={[styles.therapist, { fontFamily: f700, textAlign: 'right' }]}>
                           {therapistName}
                         </Text>
-                        <View style={[styles.metaRow, { flexDirection: dir.row }]}>
+                        <View style={[styles.metaRow, { flexDirection: 'row' }]}>
                           {isVideo ? (
                             <Video size={12} color={sawaaColors.teal[600]} strokeWidth={2} />
                           ) : (
@@ -212,21 +207,21 @@ export default function AppointmentsScreen() {
 
                     <View style={styles.divider} />
 
-                    <View style={[styles.cardBottom, { flexDirection: dir.row }]}>
-                      <View style={[styles.dateCol, { alignItems: dir.isRTL ? 'flex-end' : 'flex-start' }]}>
+                    <View style={[styles.cardBottom, { flexDirection: 'row' }]}>
+                      <View style={[styles.dateCol, { alignItems: 'flex-end' }]}>
                         <Text style={[styles.dateLabel, { fontFamily: f400 }]}>
-                          {dir.isRTL ? 'التاريخ' : 'Date'}
+                          {'التاريخ'}
                         </Text>
                         <Text style={[styles.dateValue, { fontFamily: f600 }]}>
-                          {formatDate(b.scheduledAt, dir.isRTL)}
+                          {formatDate(b.scheduledAt, true)}
                         </Text>
                       </View>
-                      <View style={[styles.dateCol, { alignItems: dir.isRTL ? 'flex-end' : 'flex-start' }]}>
+                      <View style={[styles.dateCol, { alignItems: 'flex-end' }]}>
                         <Text style={[styles.dateLabel, { fontFamily: f400 }]}>
-                          {dir.isRTL ? 'الوقت' : 'Time'}
+                          {'الوقت'}
                         </Text>
                         <Text style={[styles.dateValue, { fontFamily: f600 }]}>
-                          {formatTime(b.scheduledAt, dir.isRTL)}
+                          {formatTime(b.scheduledAt, true)}
                         </Text>
                       </View>
                       <View style={[styles.statusChip, { backgroundColor: `${statusConfig[status].color}1e` }]}>
@@ -235,7 +230,7 @@ export default function AppointmentsScreen() {
                           styles.statusChipText,
                           { fontFamily: f600, color: statusConfig[status].color },
                         ]}>
-                          {dir.isRTL ? TABS.find((t) => t.key === status)!.ar : TABS.find((t) => t.key === status)!.en}
+                          {TABS.find((t) => t.key === status)!.ar}
                         </Text>
                       </View>
                     </View>

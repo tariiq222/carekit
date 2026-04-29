@@ -8,7 +8,6 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Glass } from '@/theme';
 import { C, RADII, SHADOW_RAISED } from '@/theme/glass';
 import { sawaaColors } from '@/theme/sawaa';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
 type IconMap = Record<string, LucideIcon>;
@@ -19,7 +18,6 @@ type GlassTabBarProps = BottomTabBarProps & {
 };
 
 export function GlassTabBar({ state, descriptors, navigation, icons, badges }: GlassTabBarProps) {
-  const dir = useDir();
   const insets = useSafeAreaInsets();
 
   return (
@@ -29,10 +27,10 @@ export function GlassTabBar({ state, descriptors, navigation, icons, badges }: G
       style={[
         styles.tabBar,
         SHADOW_RAISED,
-        { bottom: insets.bottom + 14, left: 14, right: 14 },
+        { bottom: insets.bottom + 14, start: 14, end: 14 },
       ]}
     >
-      <View style={[styles.tabBarInner, { flexDirection: dir.row }]}>
+      <View style={[styles.tabBarInner, { flexDirection: 'row' }]}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label =
@@ -83,9 +81,8 @@ function TabItem({
   onPress: () => void;
   badge?: number;
 }) {
-  const dir = useDir();
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const color = focused ? sawaaColors.teal[700] : sawaaColors.ink[700];
   const hasBadge = !!badge && badge > 0;
 
@@ -107,7 +104,7 @@ function TabItem({
           style={[
             styles.label,
             { fontFamily: focused ? f700 : f600, color },
-            { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+            { textAlign: 'right', writingDirection: 'rtl' },
           ]}
           numberOfLines={1}
         >
@@ -143,8 +140,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     bottom: -4,
-    left: -10,
-    right: -10,
+    start: -10,
+    end: -10,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.55)',
     borderWidth: 0.5,
@@ -160,7 +157,7 @@ const styles = StyleSheet.create({
   badgeDot: {
     position: 'absolute',
     top: 0,
-    right: 4,
+    end: 4,
     width: 8,
     height: 8,
     borderRadius: 4,

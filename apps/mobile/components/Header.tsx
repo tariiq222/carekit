@@ -13,7 +13,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { C, RADII } from "@/theme/glass";
 import { Glass } from "@/theme";
-import { useDir } from "@/hooks/useDir";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -37,7 +36,6 @@ export const Header = ({
   onNotificationPress,
   hasUnreadNotifications,
 }: HeaderProps) => {
-  const dir = useDir();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const inputRef = useRef<TextInput>(null);
@@ -56,11 +54,11 @@ export const Header = ({
       ? { transition: `all ${DURATION}ms ${EASE}` }
       : null;
 
-  const placeholder = dir.isRTL ? "ابحث عن معالج أو عيادة..." : "Search therapist or clinic…";
+  const placeholder = "ابحث عن معالج أو عيادة...";
 
   return (
     <View style={s.wrap}>
-      <View style={[s.topRow, { flexDirection: dir.row }]}>
+      <View style={[s.topRow, { flexDirection: 'row' }]}>
         <Glass variant="strong" radius={24} style={s.avatarBubble}>
           <View style={s.avatarImageWrap}>
             {avatarUrl ? (
@@ -76,7 +74,7 @@ export const Header = ({
           </View>
         </Glass>
 
-        <View style={[s.actions, { flexDirection: dir.row }]}>
+        <View style={[s.actions, { flexDirection: 'row' }]}>
           <View
             style={[
               s.bellWrap,
@@ -117,7 +115,7 @@ export const Header = ({
                   s.pillRow,
                   StyleSheet.absoluteFillObject,
                   {
-                    flexDirection: dir.row,
+                    flexDirection: 'row',
                     justifyContent: open ? "flex-start" : "center",
                   },
                 ]}
@@ -137,8 +135,8 @@ export const Header = ({
                     s.input,
                     open ? { flex: 1, opacity: 1 } : { flex: 0, width: 0, minWidth: 0, opacity: 0 },
                     {
-                      textAlign: dir.textAlign,
-                      writingDirection: dir.writingDirection,
+                      textAlign: 'right',
+                      writingDirection: 'rtl',
                     },
                     Platform.OS === "web"
                       ? ({
@@ -177,13 +175,13 @@ export const Header = ({
         </View>
       </View>
 
-      <View style={[s.greetingBlock, { alignItems: dir.alignStart }]}>
-        <View style={[s.greetingRow, { flexDirection: dir.row }]}>
+      <View style={[s.greetingBlock, { alignItems: 'flex-start' }]}>
+        <View style={[s.greetingRow, { flexDirection: 'row' }]}>
           <Ionicons name="leaf" size={22} color={C.deepTeal} />
           <Text
             style={[
               s.greeting,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+              { textAlign: 'right', writingDirection: 'rtl' },
             ]}
           >
             {greeting}
@@ -192,7 +190,7 @@ export const Header = ({
         <Text
           style={[
             s.greetingSub,
-            { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+            { textAlign: 'right', writingDirection: 'rtl' },
           ]}
         >
           {subtitle}
@@ -227,8 +225,8 @@ const s = StyleSheet.create({
   avatarShine: {
     position: "absolute",
     top: 0,
-    left: 0,
-    right: 0,
+    start: 0,
+    end: 0,
     bottom: 0,
     backgroundColor: "rgba(255,255,255,0.24)",
   },
@@ -280,7 +278,7 @@ const s = StyleSheet.create({
   bellDot: {
     position: "absolute",
     top: 10,
-    right: 10,
+    end: 10,
     width: 8,
     height: 8,
     borderRadius: 4,

@@ -5,42 +5,33 @@ import * as Haptics from 'expo-haptics';
 
 import { sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import type { DirState } from '@/hooks/useDir';
 
 const DAYS_AR_SHORT = ['أحد', 'إث', 'ثل', 'أر', 'خم', 'جم', 'سب'];
-const DAYS_EN_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS_AR = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
-];
-const MONTHS_EN = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
 interface DaySelectorProps {
   days: Date[];
   dayIdx: number;
   onSelect: (idx: number) => void;
-  dir: DirState;
   f500: string;
   f700: string;
 }
 
-export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySelectorProps) {
+export function DaySelector({ days, dayIdx, onSelect, f500, f700 }: DaySelectorProps) {
   const selectedDay = days[dayIdx];
-  const monthLabel = dir.isRTL
-    ? `${MONTHS_AR[selectedDay.getMonth()]} ${selectedDay.getFullYear()}`
-    : `${MONTHS_EN[selectedDay.getMonth()]} ${selectedDay.getFullYear()}`;
+  const monthLabel = `${MONTHS_AR[selectedDay.getMonth()]} ${selectedDay.getFullYear()}`;
 
   return (
     <Glass variant="strong" radius={sawaaRadius.xl} style={styles.monthCard}>
-      <View style={[styles.monthHead, { flexDirection: dir.row }]}>
+      <View style={[styles.monthHead, { flexDirection: 'row' }]}>
         <View />
         <Text style={[styles.monthTitle, { fontFamily: f700 }]}>{monthLabel}</Text>
         <View />
       </View>
-      <View style={[styles.daysRow, { flexDirection: dir.row }]}>
+      <View style={[styles.daysRow, { flexDirection: 'row' }]}>
         {days.map((d, i) => {
           const isActive = i === dayIdx;
           const dow = d.getDay();
@@ -67,7 +58,7 @@ export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySele
                   { fontFamily: f500, color: isActive ? 'rgba(255,255,255,0.9)' : sawaaColors.ink[700] },
                 ]}
               >
-                {dir.isRTL ? DAYS_AR_SHORT[dow] : DAYS_EN_SHORT[dow]}
+                {DAYS_AR_SHORT[dow]}
               </Text>
               <Text
                 style={[
@@ -75,7 +66,7 @@ export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySele
                   { fontFamily: f700, color: isActive ? '#fff' : sawaaColors.ink[900] },
                 ]}
               >
-                {dir.isRTL ? d.getDate().toLocaleString('ar-SA') : d.getDate()}
+                {d.getDate().toLocaleString('ar-SA')}
               </Text>
             </Pressable>
           );

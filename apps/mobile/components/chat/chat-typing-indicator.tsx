@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 16,
     alignSelf: 'flex-start',
-    marginLeft: 12,
+    marginStart: 12,
     marginBottom: 8,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },

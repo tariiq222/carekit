@@ -5,11 +5,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react-native';
+import { ChevronRight, Star } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useRateBooking } from '@/hooks/queries';
 
@@ -25,11 +24,10 @@ export default function RateScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
   const [rating, setRating] = useState(0);
   const [tags, setTags] = useState<Set<number>>(new Set());
   const [note, setNote] = useState('');
@@ -47,7 +45,7 @@ export default function RateScreen() {
   const submit = () => {
     if (rating === 0 || !bookingId || submitting) return;
     const tagLabels = [...tags]
-      .map((i) => (dir.isRTL ? QUICK_TAGS[i].ar : QUICK_TAGS[i].en))
+      .map((i) => QUICK_TAGS[i].ar)
       .join(', ');
     const comment = [tagLabels, note.trim()].filter(Boolean).join(' — ');
     rateMutation.mutate(
@@ -65,7 +63,7 @@ export default function RateScreen() {
         onError: (error) => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           Alert.alert(
-            dir.isRTL ? 'تعذّر إرسال التقييم' : 'Could not submit rating',
+            'تعذّر إرسال التقييم',
             error instanceof Error ? error.message : String(error),
           );
         },
@@ -86,18 +84,18 @@ export default function RateScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'كيف كانت الجلسة؟' : 'How was your session?'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'كيف كانت الجلسة؟'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'تقييمك يساعد المعالج والآخرين' : 'Your rating helps your therapist and others'}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {'تقييمك يساعد المعالج والآخرين'}
           </Text>
         </Animated.View>
 
         {/* Therapist */}
         <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.therapistCard}>
-            <View style={[styles.therapistRow, { flexDirection: dir.row }]}>
+            <View style={[styles.therapistRow, { flexDirection: 'row' }]}>
               <LinearGradient
                 colors={['#f7cbb7', '#e88f6c']}
                 start={{ x: 0, y: 0 }}
@@ -107,11 +105,11 @@ export default function RateScreen() {
                 <Text style={[styles.avatarText, { fontFamily: f700 }]}>ف</Text>
               </LinearGradient>
               <View style={styles.therapistMid}>
-                <Text style={[styles.therapistName, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'د. فاطمة العمران' : 'Dr. Fatima Al-Omran'}
+                <Text style={[styles.therapistName, { fontFamily: f700, textAlign: 'right' }]}>
+                  {'د. فاطمة العمران'}
                 </Text>
-                <Text style={[styles.therapistMeta, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'جلسة اليوم · ٤:٠٠ م' : "Today's session · 4:00 PM"}
+                <Text style={[styles.therapistMeta, { fontFamily: f400, textAlign: 'right' }]}>
+                  {'جلسة اليوم · ٤:٠٠ م'}
                 </Text>
               </View>
             </View>
@@ -145,10 +143,10 @@ export default function RateScreen() {
 
         {/* Tags */}
         <Animated.View entering={FadeInDown.delay(320).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'ما الذي أعجبكِ؟' : 'What did you like?'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'ما الذي أعجبكِ؟'}
           </Text>
-          <View style={[styles.tagRow, { flexDirection: dir.row }]}>
+          <View style={[styles.tagRow, { flexDirection: 'row' }]}>
             {QUICK_TAGS.map((t, i) => {
               const isActive = tags.has(i);
               return (
@@ -165,7 +163,7 @@ export default function RateScreen() {
                       styles.tagText,
                       { fontFamily: f600, color: isActive ? sawaaColors.teal[700] : sawaaColors.ink[700] },
                     ]}>
-                      {dir.isRTL ? t.ar : t.en}
+                      {t.ar}
                     </Text>
                   </Glass>
                 </Pressable>
@@ -176,20 +174,20 @@ export default function RateScreen() {
 
         {/* Comment */}
         <Animated.View entering={FadeInDown.delay(400).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'ملاحظة (اختياري)' : 'Comment (optional)'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'ملاحظة (اختياري)'}
           </Text>
           <Glass variant="regular" radius={sawaaRadius.xl} style={styles.noteCard}>
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder={dir.isRTL ? 'شاركي تجربتكِ باختصار…' : 'Share briefly…'}
+              placeholder={'شاركي تجربتكِ باختصار…'}
               placeholderTextColor={sawaaColors.ink[400]}
               multiline
               numberOfLines={4}
               style={[
                 styles.noteInput,
-                { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
+                { fontFamily: f400, textAlign: 'right', writingDirection: 'rtl', color: sawaaColors.ink[900] },
               ]}
             />
           </Glass>
@@ -209,8 +207,8 @@ export default function RateScreen() {
           >
             <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
               {submitting
-                ? (dir.isRTL ? 'جاري الإرسال…' : 'Submitting…')
-                : (dir.isRTL ? 'إرسال التقييم' : 'Submit rating')}
+                ? 'جاري الإرسال…'
+                : 'إرسال التقييم'}
             </Text>
           </LinearGradient>
         </Pressable>

@@ -46,7 +46,7 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalInterceptors(new AuditInterceptor(app.get(PrismaService), app.get(TenantContextService)));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(app.get(TenantContextService)));
 
   // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────
   const swaggerConfig = new DocumentBuilder()

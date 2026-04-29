@@ -24,10 +24,10 @@ export function EmployeeCard({
   compact,
 }: EmployeeCardProps) {
   const { t } = useTranslation();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
 
   const name = `${employee.user.firstName} ${employee.user.lastName}`;
-  const specialtyName = isRTL ? employee.specialtyAr : employee.specialty;
+  const specialtyName = employee.specialtyAr;
 
   if (compact) {
     return (

@@ -8,7 +8,6 @@ import { Building2, ChevronLeft, ChevronRight, Heart, Star } from 'lucide-react-
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
 const SPECIALTIES = [
@@ -25,13 +24,12 @@ export default function ClinicDetailScreen() {
   const { id: _id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
+  const GoIcon = ChevronLeft;
 
   const [aboutExpanded, setAboutExpanded] = useState(false);
 
@@ -41,9 +39,7 @@ export default function ClinicDetailScreen() {
     { nAr: '٢٤/٧', nEn: '24/7', ar: 'دعم', en: 'Support' },
   ];
 
-  const aboutFull = dir.isRTL
-    ? 'عيادة متخصصة في العلاج النفسي والمعرفي السلوكي، تضم نخبة من أمهر المعالجين في المملكة. نقدّم جلسات فردية وجماعية بسرّية تامة، ودعم على مدار الساعة لمتابعتك بين الجلسات.'
-    : 'Specialized clinic in psychotherapy and CBT, home to top therapists in the kingdom. Confidential individual and group sessions, with around-the-clock support between visits.';
+  const aboutFull = 'عيادة متخصصة في العلاج النفسي والمعرفي السلوكي، تضم نخبة من أمهر المعالجين في المملكة. نقدّم جلسات فردية وجماعية بسرّية تامة، ودعم على مدار الساعة لمتابعتك بين الجلسات.';
   const aboutPreview = aboutFull.length > 110 ? aboutFull.slice(0, 110) + '…' : aboutFull;
 
   return (
@@ -77,21 +73,21 @@ export default function ClinicDetailScreen() {
         {/* Info card overlay (name + city + rating) — sits at the bottom of the hero */}
         <Animated.View entering={FadeInDown.delay(100).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.infoCard}>
-            <View style={[styles.infoTop, { flexDirection: dir.row }]}>
+            <View style={[styles.infoTop, { flexDirection: 'row' }]}>
               <View style={styles.infoName}>
-                <Text style={[styles.clinicName, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'عيادة سواء النفسية' : 'Sawaa Wellness Clinic'}
+                <Text style={[styles.clinicName, { fontFamily: f700, textAlign: 'right' }]}>
+                  {'عيادة سواء النفسية'}
                 </Text>
-                <Text style={[styles.clinicMeta, { fontFamily: f500, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'الرياض · حي العليا · ٢.٤ كم' : 'Riyadh · Al-Olaya · 2.4 km'}
+                <Text style={[styles.clinicMeta, { fontFamily: f500, textAlign: 'right' }]}>
+                  {'الرياض · حي العليا · ٢.٤ كم'}
                 </Text>
               </View>
               <Glass variant="regular" radius={14} style={styles.ratingChip}>
-                <View style={[styles.ratingRow, { flexDirection: dir.row }]}>
+                <View style={[styles.ratingRow, { flexDirection: 'row' }]}>
                   <Star size={12} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
                   <Text style={[styles.ratingText, { fontFamily: f700 }]}>4.7</Text>
                   <Text style={[styles.ratingCount, { fontFamily: f400 }]}>
-                    {dir.isRTL ? '(٢٨٤)' : '(284)'}
+                    {'(٢٨٤)'}
                   </Text>
                 </View>
               </Glass>
@@ -101,14 +97,14 @@ export default function ClinicDetailScreen() {
 
         {/* 3 stats row */}
         <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
-          <View style={[styles.statsRow, { flexDirection: dir.row }]}>
+          <View style={[styles.statsRow, { flexDirection: 'row' }]}>
             {stats.map((s, i) => (
               <Glass key={i} variant="regular" radius={16} style={styles.statBox}>
                 <Text style={[styles.statN, { fontFamily: f700 }]}>
-                  {dir.isRTL ? s.nAr : s.nEn}
+                  {s.nAr}
                 </Text>
                 <Text style={[styles.statL, { fontFamily: f500 }]}>
-                  {dir.isRTL ? s.ar : s.en}
+                  {s.ar}
                 </Text>
               </Glass>
             ))}
@@ -117,18 +113,16 @@ export default function ClinicDetailScreen() {
 
         {/* About with read-more toggle */}
         <Animated.View entering={FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'عن العيادة' : 'About'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'عن العيادة'}
           </Text>
-          <Text style={[styles.aboutText, { fontFamily: f400, textAlign: dir.textAlign }]}>
+          <Text style={[styles.aboutText, { fontFamily: f400, textAlign: 'right' }]}>
             {aboutExpanded ? aboutFull : aboutPreview}
           </Text>
           {aboutFull.length > aboutPreview.length && (
             <Pressable onPress={() => setAboutExpanded((v) => !v)}>
-              <Text style={[styles.readMore, { fontFamily: f600, textAlign: dir.textAlign }]}>
-                {aboutExpanded
-                  ? dir.isRTL ? 'عرض أقل' : 'Show less'
-                  : dir.isRTL ? 'اقرأ المزيد' : 'Read more'}
+              <Text style={[styles.readMore, { fontFamily: f600, textAlign: 'right' }]}>
+                {aboutExpanded ? 'عرض أقل' : 'اقرأ المزيد'}
               </Text>
             </Pressable>
           )}
@@ -136,10 +130,10 @@ export default function ClinicDetailScreen() {
 
         {/* Specialties tags */}
         <Animated.View entering={FadeInDown.delay(280).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'التخصصات' : 'Specialties'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'التخصصات'}
           </Text>
-          <View style={[styles.tagRow, { flexDirection: dir.row }]}>
+          <View style={[styles.tagRow, { flexDirection: 'row' }]}>
             {SPECIALTIES.map((s, i) => (
               <View
                 key={i}
@@ -149,7 +143,7 @@ export default function ClinicDetailScreen() {
                 ]}
               >
                 <Text style={[styles.tagText, { fontFamily: f600, color: s.color }]}>
-                  {dir.isRTL ? s.ar : s.en}
+                  {s.ar}
                 </Text>
               </View>
             ))}
@@ -163,8 +157,8 @@ export default function ClinicDetailScreen() {
         style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
       >
         <Glass variant="strong" radius={sawaaRadius.pill} style={styles.ctaPill}>
-          <View style={[styles.ctaRow, { flexDirection: dir.row }]}>
-            <Pressable style={styles.favBtn} accessibilityRole="button" accessibilityLabel={dir.isRTL ? 'إضافة للمفضلة' : 'Favorite'}>
+          <View style={[styles.ctaRow, { flexDirection: 'row' }]}>
+            <Pressable style={styles.favBtn} accessibilityRole="button" accessibilityLabel={'إضافة للمفضلة'}>
               <Heart size={18} color={sawaaColors.teal[700]} strokeWidth={1.75} />
             </Pressable>
             <Pressable
@@ -179,7 +173,7 @@ export default function ClinicDetailScreen() {
                 style={styles.ctaBtn}
               >
                 <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
-                  {dir.isRTL ? 'اختاري معالجاً' : 'Choose therapist'}
+                  {'اختاري معالجاً'}
                 </Text>
                 <GoIcon size={14} color="#fff" strokeWidth={2} />
               </LinearGradient>

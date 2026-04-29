@@ -54,6 +54,36 @@ api.interceptors.request.use(
   },
 );
 
+// Single in-flight refresh — concurrent 401s share one refresh round-trip
+// instead of each consuming the rotated refresh token, which would race and
+// make all but the first fail (causing a spurious logout right after login).
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const refreshToken = await getSecureItem('refreshToken');
+      if (!refreshToken) return null;
+      const { data } = await axios.post<
+        ApiResponse<{ accessToken: string; refreshToken: string }>
+      >(`${API_URL}/auth/refresh`, { refreshToken });
+      // Backend returns tokens directly: {accessToken, refreshToken}.
+      // Tolerate legacy {success, data} envelope.
+      const payload = (data as any)?.data ?? data;
+      if (payload?.accessToken && payload?.refreshToken) {
+        await setSecureItem('accessToken', payload.accessToken);
+        await setSecureItem('refreshToken', payload.refreshToken);
+        return payload.accessToken;
+      }
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
 // Response interceptor: handle token refresh and errors
 api.interceptors.response.use(
   (response) => response,
@@ -75,39 +105,34 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle 401 — attempt token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Client-portal endpoints use a SEPARATE auth system (ClientSessionGuard +
+    // httpOnly cookie). They reject the admin JWT we hold post-OTP — but that
+    // is NOT a sign of token expiry, so we MUST NOT trigger refresh + logout.
+    // Just propagate the 401 so the calling query can show empty state.
+    const isClientPortal401 =
+      error.response?.status === 401 &&
+      typeof error.config?.url === 'string' &&
+      error.config.url.includes('/mobile/client/');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isClientPortal401) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await getSecureItem('refreshToken');
-        if (!refreshToken) {
-          return Promise.reject(error);
-        }
-
-        // Backend exposes POST /auth/refresh — older mobile versions hit
-        // /auth/refresh-token by mistake, so refreshes silently failed and
-        // users got logged out at every 15-minute access-token expiry.
-        const { data } = await axios.post<
-          ApiResponse<{ accessToken: string; refreshToken: string }>
-        >(`${API_URL}/auth/refresh`, { refreshToken });
-
-        if (data.success && data.data) {
-          await setSecureItem('accessToken', data.data.accessToken);
-          await setSecureItem('refreshToken', data.data.refreshToken);
-
+        const newAccessToken = await refreshAccessToken();
+        if (newAccessToken) {
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           }
           return api(originalRequest);
         }
       } catch {
-        // Refresh failed — clear tokens + Redux state
-        await deleteSecureItem('accessToken');
-        await deleteSecureItem('refreshToken');
-        await clearCurrentOrgId();
-        store.dispatch(logout());
+        // fall through to logout
       }
+
+      await deleteSecureItem('accessToken');
+      await deleteSecureItem('refreshToken');
+      await clearCurrentOrgId();
+      store.dispatch(logout());
     }
 
     return Promise.reject(error);

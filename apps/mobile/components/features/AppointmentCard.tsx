@@ -30,7 +30,7 @@ interface AppointmentCardProps {
 
 export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
   const { t } = useTranslation();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
   const Icon = TYPE_ICON[booking.type];
   const color = TYPE_COLOR[booking.type];
 
@@ -44,7 +44,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
 
   const practName = `${booking.employee.user.firstName} ${booking.employee.user.lastName}`;
   const date = new Date(booking.date);
-  const formattedDate = date.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+  const formattedDate = date.toLocaleDateString('ar-SA', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -72,7 +72,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
             {practName}
           </ThemedText>
           <ThemedText variant="bodySm" numberOfLines={1}>
-            {isRTL ? booking.employee.specialtyAr : booking.employee.specialty}
+            {booking.employee.specialtyAr}
           </ThemedText>
         </View>
         <StatusPill

@@ -16,7 +16,7 @@ import { useEmployeeDayBookings } from '@/hooks/queries/useEmployeeDayBookings';
 export default function CalendarScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0],
@@ -47,9 +47,9 @@ export default function CalendarScreen() {
           theme={{
             todayTextColor: theme.colors.primary,
             arrowColor: theme.colors.primary,
-            textDayFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',
-            textMonthFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',
-            textDayHeaderFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',
+            textDayFontFamily: 'IBM Plex Sans Arabic',
+            textMonthFontFamily: 'IBM Plex Sans Arabic',
+            textDayHeaderFontFamily: 'IBM Plex Sans Arabic',
             textDayFontSize: 14,
             textMonthFontSize: 16,
             textMonthFontWeight: '600',
@@ -58,7 +58,7 @@ export default function CalendarScreen() {
       </ThemedCard>
 
       <ThemedText variant="subheading" style={styles.dayTitle}>
-        {new Date(selectedDate).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+        {new Date(selectedDate).toLocaleDateString('ar-SA', {
           weekday: 'long',
           month: 'long',
           day: 'numeric',

@@ -67,5 +67,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
-  label: { color: '#fff', fontSize: 15, letterSpacing: 0.2 },
+  label: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 24,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
 });
