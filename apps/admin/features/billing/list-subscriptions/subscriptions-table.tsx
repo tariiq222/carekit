@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
@@ -34,9 +35,9 @@ interface Props {
   isLoading: boolean;
 }
 
-function fmtDate(iso: string | null) {
+function fmtDate(iso: string | null, locale: string) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', {
+  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -44,17 +45,22 @@ function fmtDate(iso: string | null) {
 }
 
 export function SubscriptionsTable({ items, isLoading }: Props) {
+  const locale = useLocale();
+  const t = useTranslations('billing.tables');
+  const statusT = useTranslations('billing.subscriptionStatus');
+  const orgStatusT = useTranslations('organizations.status');
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Organization</TableHead>
-          <TableHead>Plan</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Cycle</TableHead>
-          <TableHead>Period ends</TableHead>
-          <TableHead>Last payment</TableHead>
-          <TableHead className="text-end">Actions</TableHead>
+          <TableHead>{t('organization')}</TableHead>
+          <TableHead>{t('plan')}</TableHead>
+          <TableHead>{t('status')}</TableHead>
+          <TableHead>{t('cycle')}</TableHead>
+          <TableHead>{t('periodEnds')}</TableHead>
+          <TableHead>{t('lastPayment')}</TableHead>
+          <TableHead className="text-end">{t('actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -69,29 +75,33 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
           : items?.map((s) => (
               <TableRow key={s.id}>
                 <TableCell>
-                  <OrganizationCell organization={s.organization} fallbackId={s.organizationId} />
+                  <OrganizationCell
+                    organization={s.organization}
+                    fallbackId={s.organizationId}
+                    statusLabel={s.organization ? orgStatusT(s.organization.status) : undefined}
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{s.plan.nameEn}</div>
                   <div className="text-xs text-muted-foreground">
-                    {Number(s.plan.priceMonthly).toFixed(2)} SAR/mo
+                    {t('priceMonthly', { amount: Number(s.plan.priceMonthly).toFixed(2) })}
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={STATUS_TONE[s.status]}>
-                    {s.status.replace('_', ' ')}
+                    {statusT(s.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.billingCycle}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {fmtDate(s.currentPeriodEnd)}
+                  {fmtDate(s.currentPeriodEnd, locale)}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {fmtDate(s.lastPaymentAt)}
+                  {fmtDate(s.lastPaymentAt, locale)}
                 </TableCell>
                 <TableCell className="text-end">
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/billing/${s.organizationId}`}>Open</Link>
+                    <Link href={`/billing/${s.organizationId}`}>{t('open')}</Link>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -99,7 +109,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
         {!isLoading && items?.length === 0 ? (
           <TableRow>
             <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-              No subscriptions match the current filters.
+              {t('emptySubscriptions')}
             </TableCell>
           </TableRow>
         ) : null}
@@ -111,9 +121,11 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
 function OrganizationCell({
   organization,
   fallbackId,
+  statusLabel,
 }: {
   organization?: OrganizationBillingIdentity;
   fallbackId: string;
+  statusLabel?: string;
 }) {
   if (!organization) {
     return <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}...</span>;
@@ -129,7 +141,7 @@ function OrganizationCell({
           variant="outline"
           className={ORG_STATUS_TONE[organization.status] ?? 'border-border bg-muted/10'}
         >
-          {organization.status}
+          {statusLabel ?? organization.status}
         </Badge>
       </div>
       <div className="font-mono text-xs text-muted-foreground">{organization.id}</div>

@@ -136,6 +136,40 @@
       "loadFailed": "Failed to load: {message}"
     }
   },
+  "billing": {
+    "tables": {
+      "invoice": "Invoice",
+      "organization": "Organization",
+      "plan": "Plan",
+      "status": "Status",
+      "cycle": "Cycle",
+      "periodEnds": "Period ends",
+      "lastPayment": "Last payment",
+      "actions": "Actions",
+      "amountSar": "Amount (SAR)",
+      "refunded": "Refunded",
+      "period": "Period",
+      "due": "Due",
+      "open": "Open",
+      "emptySubscriptions": "No subscriptions match the current filters.",
+      "emptyInvoices": "No invoices match the current filters.",
+      "priceMonthly": "{amount} SAR/mo"
+    },
+    "subscriptionStatus": {
+      "TRIALING": "Trialing",
+      "ACTIVE": "Active",
+      "PAST_DUE": "Past due",
+      "SUSPENDED": "Suspended",
+      "CANCELED": "Canceled"
+    },
+    "invoiceStatus": {
+      "DRAFT": "Draft",
+      "DUE": "Due",
+      "PAID": "Paid",
+      "FAILED": "Failed",
+      "VOID": "Void"
+    }
+  },
   "login": {
     "title": "CareKit Super-admin",
     "description": "Platform staff only. Sign in with your CareKit account.",

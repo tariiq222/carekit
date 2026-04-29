@@ -136,6 +136,40 @@
       "loadFailed": "فشل التحميل: {message}"
     }
   },
+  "billing": {
+    "tables": {
+      "invoice": "الفاتورة",
+      "organization": "المنظمة",
+      "plan": "الخطة",
+      "status": "الحالة",
+      "cycle": "الدورة",
+      "periodEnds": "نهاية الفترة",
+      "lastPayment": "آخر دفعة",
+      "actions": "الإجراءات",
+      "amountSar": "المبلغ (SAR)",
+      "refunded": "المسترد",
+      "period": "الفترة",
+      "due": "الاستحقاق",
+      "open": "فتح",
+      "emptySubscriptions": "لا توجد اشتراكات تطابق الفلاتر الحالية.",
+      "emptyInvoices": "لا توجد فواتير تطابق الفلاتر الحالية.",
+      "priceMonthly": "{amount} SAR/شهرياً"
+    },
+    "subscriptionStatus": {
+      "TRIALING": "تجربة",
+      "ACTIVE": "نشط",
+      "PAST_DUE": "متأخر الدفع",
+      "SUSPENDED": "معلّق",
+      "CANCELED": "ملغي"
+    },
+    "invoiceStatus": {
+      "DRAFT": "مسودة",
+      "DUE": "مستحقة",
+      "PAID": "مدفوعة",
+      "FAILED": "فشلت",
+      "VOID": "ملغاة"
+    }
+  },
   "login": {
     "title": "CareKit - لوحة التحكم",
     "description": "للموظفين فقط. سجّل الدخول بحساب CareKit الخاص بك.",

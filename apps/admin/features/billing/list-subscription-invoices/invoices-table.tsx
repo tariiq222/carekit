@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
@@ -38,9 +39,9 @@ interface Props {
   isLoading: boolean;
 }
 
-function fmt(iso: string | null) {
+function fmt(iso: string | null, locale: string) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', {
+  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -48,18 +49,23 @@ function fmt(iso: string | null) {
 }
 
 export function InvoicesTable({ items, isLoading }: Props) {
+  const locale = useLocale();
+  const t = useTranslations('billing.tables');
+  const statusT = useTranslations('billing.invoiceStatus');
+  const orgStatusT = useTranslations('organizations.status');
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Invoice</TableHead>
-          <TableHead>Organization</TableHead>
-          <TableHead>Amount (SAR)</TableHead>
-          <TableHead>Refunded</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Period</TableHead>
-          <TableHead>Due</TableHead>
-          <TableHead className="text-end">Org</TableHead>
+          <TableHead>{t('invoice')}</TableHead>
+          <TableHead>{t('organization')}</TableHead>
+          <TableHead>{t('amountSar')}</TableHead>
+          <TableHead>{t('refunded')}</TableHead>
+          <TableHead>{t('status')}</TableHead>
+          <TableHead>{t('period')}</TableHead>
+          <TableHead>{t('due')}</TableHead>
+          <TableHead className="text-end">{t('actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -75,7 +81,11 @@ export function InvoicesTable({ items, isLoading }: Props) {
               <TableRow key={inv.id}>
                 <TableCell className="font-mono text-xs">{inv.id.slice(0, 8)}…</TableCell>
                 <TableCell>
-                  <OrganizationCell organization={inv.organization} fallbackId={inv.organizationId} />
+                  <OrganizationCell
+                    organization={inv.organization}
+                    fallbackId={inv.organizationId}
+                    statusLabel={inv.organization ? orgStatusT(inv.organization.status) : undefined}
+                  />
                 </TableCell>
                 <TableCell className="font-medium">
                   {Number(inv.amount).toFixed(2)}
@@ -85,16 +95,18 @@ export function InvoicesTable({ items, isLoading }: Props) {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={STATUS_TONE[inv.status]}>
-                    {inv.status}
+                    {statusT(inv.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {fmt(inv.periodStart)} → {fmt(inv.periodEnd)}
+                  {fmt(inv.periodStart, locale)} → {fmt(inv.periodEnd, locale)}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{fmt(inv.dueDate)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {fmt(inv.dueDate, locale)}
+                </TableCell>
                 <TableCell className="text-end">
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/billing/${inv.organizationId}`}>Open</Link>
+                    <Link href={`/billing/${inv.organizationId}`}>{t('open')}</Link>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -102,7 +114,7 @@ export function InvoicesTable({ items, isLoading }: Props) {
         {!isLoading && items?.length === 0 ? (
           <TableRow>
             <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-              No invoices match the current filters.
+              {t('emptyInvoices')}
             </TableCell>
           </TableRow>
         ) : null}
@@ -114,9 +126,11 @@ export function InvoicesTable({ items, isLoading }: Props) {
 function OrganizationCell({
   organization,
   fallbackId,
+  statusLabel,
 }: {
   organization?: OrganizationBillingIdentity;
   fallbackId: string;
+  statusLabel?: string;
 }) {
   if (!organization) {
     return <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}...</span>;
@@ -132,7 +146,7 @@ function OrganizationCell({
           variant="outline"
           className={ORG_STATUS_TONE[organization.status] ?? 'border-border bg-muted/10'}
         >
-          {organization.status}
+          {statusLabel ?? organization.status}
         </Badge>
       </div>
       <div className="font-mono text-xs text-muted-foreground">{organization.id}</div>
