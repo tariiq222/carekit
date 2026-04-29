@@ -59,6 +59,9 @@ export async function createTestApp(
   process.env.ZOOM_PROVIDER_ENCRYPTION_KEY =
     process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ??
     Buffer.alloc(32, 2).toString('base64');
+  process.env.MOYASAR_TENANT_ENCRYPTION_KEY =
+    process.env.MOYASAR_TENANT_ENCRYPTION_KEY ??
+    Buffer.alloc(32, 3).toString('base64');
 
   await ensureTestUsers();
 
@@ -100,6 +103,7 @@ export async function createTestApp(
           MINIO_BUCKET: 'carekit',
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
+          MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
           TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
@@ -133,6 +137,7 @@ export async function createTestApp(
           MINIO_BUCKET: 'carekit',
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
+          MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
           TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',

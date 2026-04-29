@@ -3,6 +3,7 @@ import { DashboardFinanceController } from '../../api/dashboard/finance.controll
 import { RefundsController } from '../../api/dashboard/refunds.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
+import { PaymentsInfraModule } from '../../infrastructure/payments/payments.module';
 import { StorageModule } from '../../infrastructure/storage';
 import { TenantModule } from '../../common/tenant';
 import { BillingModule } from '../platform/billing/billing.module';
@@ -38,6 +39,9 @@ import { RequestRefundHandler } from './refund-payment/request-refund.handler';
 import { ApproveRefundHandler } from './refund-payment/approve-refund.handler';
 import { DenyRefundHandler } from './refund-payment/deny-refund.handler';
 import { ListRefundsHandler } from './refund-payment/list-refunds.handler';
+import { GetMoyasarConfigHandler } from './moyasar-config/get-moyasar-config.handler';
+import { UpsertMoyasarConfigHandler } from './moyasar-config/upsert-moyasar-config.handler';
+import { TestMoyasarConfigHandler } from './moyasar-config/test-moyasar-config.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -68,10 +72,13 @@ const handlers = [
   ApproveRefundHandler,
   DenyRefundHandler,
   ListRefundsHandler,
+  GetMoyasarConfigHandler,
+  UpsertMoyasarConfigHandler,
+  TestMoyasarConfigHandler,
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, StorageModule, TenantModule, BillingModule],
+  imports: [DatabaseModule, MessagingModule, PaymentsInfraModule, StorageModule, TenantModule, BillingModule],
   controllers: [DashboardFinanceController, RefundsController],
   providers: [
     ...handlers,

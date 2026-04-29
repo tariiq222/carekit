@@ -81,7 +81,7 @@ describe('InitClientPaymentHandler', () => {
       },
       select: { id: true },
     });
-    expect(moyasar.createPayment).toHaveBeenCalledWith({
+    expect(moyasar.createPayment).toHaveBeenCalledWith(organizationId, {
       amountHalalas: 23000,
       currency: 'SAR',
       description: `Invoice payment - ${invoiceId}`,
@@ -177,7 +177,7 @@ describe('InitClientPaymentHandler', () => {
       },
       select: { id: true },
     });
-    expect(moyasar.createPayment).toHaveBeenCalledWith({
+    expect(moyasar.createPayment).toHaveBeenCalledWith(organizationId, {
       amountHalalas: 23000,
       currency: 'SAR',
       description: `Invoice payment - ${invoiceId}`,

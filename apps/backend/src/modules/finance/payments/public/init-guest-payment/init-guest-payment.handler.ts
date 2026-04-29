@@ -73,7 +73,7 @@ export class InitGuestPaymentHandler {
 
     const callbackUrl = this.buildCallbackUrl(dto.bookingId);
 
-    const moyasarPayment = await this.moyasar.createPayment({
+    const moyasarPayment = await this.moyasar.createPayment(organizationId, {
       amountHalalas,
       currency: invoice.currency,
       description: `Booking payment - ${dto.bookingId}`,

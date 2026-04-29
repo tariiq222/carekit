@@ -21,6 +21,9 @@ function buildController() {
   const refundPayment = fn({ id: 'pay-1' });
   const verifyPayment = fn({ id: 'pay-1' });
   const bankTransferUpload = fn({ id: 'pay-1' });
+  const getMoyasarConfig = fn({ publishableKey: 'pk_test_x' });
+  const upsertMoyasarConfig = fn({ organizationId: 'org-1' });
+  const testMoyasarConfig = fn({ ok: true, status: 'OK' });
   const controller = new DashboardFinanceController(
     createInvoice as never, getInvoice as never, processPayment as never,
     listPayments as never, applyCoupon as never, zatcaSubmit as never,
@@ -28,12 +31,14 @@ function buildController() {
     updateCoupon as never, deleteCoupon as never, getZatcaConfig as never,
     upsertZatcaConfig as never, onboardZatca as never, getPaymentStats as never,
     refundPayment as never, verifyPayment as never, bankTransferUpload as never,
+    getMoyasarConfig as never, upsertMoyasarConfig as never, testMoyasarConfig as never,
   );
   return {
     controller, createInvoice, getInvoice, processPayment, listPayments,
     applyCoupon, zatcaSubmit, listCoupons, getCoupon, createCoupon,
     updateCoupon, deleteCoupon, getZatcaConfig, upsertZatcaConfig,
     onboardZatca, getPaymentStats, refundPayment, verifyPayment, bankTransferUpload,
+    getMoyasarConfig, upsertMoyasarConfig, testMoyasarConfig,
   };
 }
 

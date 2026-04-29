@@ -200,6 +200,25 @@
         ],
         "type": "object"
       },
+      "AttachMembershipDto": {
+        "properties": {
+          "identifier": {
+            "description": "Phone number or email address of the existing user",
+            "example": "+966501234567",
+            "type": "string"
+          },
+          "role": {
+            "description": "MembershipRole to assign",
+            "example": "RECEPTIONIST",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier",
+          "role"
+        ],
+        "type": "object"
+      },
       "AvailabilityException": {
         "properties": {
           "endDate": {
@@ -4250,6 +4269,35 @@
         "required": [
           "provider",
           "config"
+        ],
+        "type": "object"
+      },
+      "UpsertMoyasarConfigDto": {
+        "properties": {
+          "isLive": {
+            "default": false,
+            "description": "true if these are live (production) keys, false for test mode.",
+            "type": "boolean"
+          },
+          "publishableKey": {
+            "description": "Tenant Moyasar publishable key (pk_test_… or pk_live_…)",
+            "example": "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "type": "string"
+          },
+          "secretKey": {
+            "description": "Tenant Moyasar secret key (sk_test_… or sk_live_…). Stored AES-256-GCM encrypted.",
+            "example": "sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "type": "string"
+          },
+          "webhookSecret": {
+            "description": "Optional Moyasar webhook signing secret. Stored AES-256-GCM encrypted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "publishableKey",
+          "secretKey",
+          "isLive"
         ],
         "type": "object"
       },
@@ -11461,6 +11509,194 @@
         ]
       }
     },
+    "/api/v1/dashboard/finance/moyasar/config": {
+      "get": {
+        "operationId": "DashboardFinanceController_getMoyasarConfigEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Moyasar configuration or null if unconfigured"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the per-tenant Moyasar configuration (secret key masked)",
+        "tags": [
+          "Dashboard / Finance"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardFinanceController_upsertMoyasarConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMoyasarConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Moyasar configuration saved (secrets encrypted at rest)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update the per-tenant Moyasar configuration",
+        "tags": [
+          "Dashboard / Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/moyasar/config/test": {
+      "post": {
+        "operationId": "DashboardFinanceController_testMoyasarConfigEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Connectivity test result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Probe Moyasar with the stored credentials and persist verification status",
+        "tags": [
+          "Dashboard / Finance"
+        ]
+      }
+    },
     "/api/v1/dashboard/finance/payments": {
       "get": {
         "operationId": "DashboardFinanceController_listPaymentsEndpoint",
@@ -18017,6 +18253,76 @@
           }
         ],
         "summary": "Create an employee",
+        "tags": [
+          "Dashboard / People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/attach-membership": {
+      "post": {
+        "operationId": "DashboardPeopleController_attachMembershipEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachMembershipDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Membership created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Attach an existing user as an employee to the organization",
         "tags": [
           "Dashboard / People"
         ]

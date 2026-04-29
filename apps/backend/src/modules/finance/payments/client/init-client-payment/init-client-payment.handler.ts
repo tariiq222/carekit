@@ -99,7 +99,7 @@ export class InitClientPaymentHandler {
 
     let moyasarPayment: Awaited<ReturnType<MoyasarApiClient['createPayment']>>;
     try {
-      moyasarPayment = await this.moyasar.createPayment({
+      moyasarPayment = await this.moyasar.createPayment(organizationId, {
         amountHalalas,
         currency: invoice.currency,
         description: `Invoice payment - ${invoice.id}`,

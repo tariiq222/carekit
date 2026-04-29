@@ -1,6 +1,7 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PrismaService } from '../../../infrastructure/database';
+import { MoyasarCredentialsService } from '../../../infrastructure/payments/moyasar-credentials.service';
 
 export const MOYASAR_API_CLIENT = Symbol('MOYASAR_API_CLIENT');
 
@@ -56,32 +57,50 @@ interface MoyasarErrorResponse {
 export class MoyasarApiClient {
   private readonly baseUrl = 'https://api.moyasar.com/v1';
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly creds: MoyasarCredentialsService,
+  ) {}
 
-  private getApiKey(): string {
-    const key = this.config.get<string>('MOYASAR_API_KEY');
-    if (!key) {
-      throw new InternalServerErrorException('MOYASAR_API_KEY is not configured');
+  /**
+   * Resolves the tenant's Moyasar secret key from `OrganizationPaymentConfig`.
+   * Throws BadRequest (not InternalServerError) — missing config is a tenant
+   * configuration problem, not a platform bug; the dashboard surfaces it.
+   */
+  private async getApiKeyForOrg(organizationId: string): Promise<string> {
+    const cfg = await this.prisma.organizationPaymentConfig.findUnique({
+      where: { organizationId },
+    });
+    if (!cfg) {
+      throw new BadRequestException(
+        `Moyasar is not configured for organization ${organizationId}. ` +
+          `Configure tenant credentials in Dashboard → Settings → Payments.`,
+      );
     }
-    return key;
+    const decrypted = this.creds.decrypt<{ secretKey: string }>(
+      cfg.secretKeyEnc,
+      organizationId,
+    );
+    return decrypted.secretKey;
   }
 
-  private authHeader(): string {
-    return `Bearer ${this.getApiKey()}`;
-  }
-
-  private async request<T>(path: string, options: RequestInit): Promise<T> {
+  private async request<T>(
+    organizationId: string,
+    path: string,
+    options: RequestInit,
+  ): Promise<T> {
+    const apiKey = await this.getApiKeyForOrg(organizationId);
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...options,
       headers: {
-        'Authorization': this.authHeader(),
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText })) as MoyasarErrorResponse;
+      const error = (await response.json().catch(() => ({ message: response.statusText }))) as MoyasarErrorResponse;
       throw new InternalServerErrorException(
         `Moyasar API error: ${error.message} (status: ${response.status})`,
       );
@@ -90,19 +109,20 @@ export class MoyasarApiClient {
     return response.json() as Promise<T>;
   }
 
-  async createPayment(params: MoyasarCreatePaymentParams): Promise<MoyasarPayment> {
+  async createPayment(
+    organizationId: string,
+    params: MoyasarCreatePaymentParams,
+  ): Promise<MoyasarPayment> {
     const body = {
       amount: params.amountHalalas,
       currency: params.currency,
       description: params.description,
       callback_url: params.callbackUrl,
       metadata: params.metadata,
-      source: {
-        type: 'card',
-      },
+      source: { type: 'card' },
     };
 
-    const data = await this.request<MoyasarApiResponse>('/payments', {
+    const data = await this.request<MoyasarApiResponse>(organizationId, '/payments', {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -138,7 +158,10 @@ export class MoyasarApiClient {
     return PaymentMethod.ONLINE_CARD;
   }
 
-  async createRefund(params: { paymentId: string; amount: number }): Promise<MoyasarRefund> {
+  async createRefund(
+    organizationId: string,
+    params: { paymentId: string; amount: number },
+  ): Promise<MoyasarRefund> {
     const body = {
       payment_id: params.paymentId,
       amount: params.amount,
@@ -151,7 +174,7 @@ export class MoyasarApiClient {
       status: string;
       payment_id: string;
       created_at: string;
-    }>('/refunds', {
+    }>(organizationId, '/refunds', {
       method: 'POST',
       body: JSON.stringify(body),
     });

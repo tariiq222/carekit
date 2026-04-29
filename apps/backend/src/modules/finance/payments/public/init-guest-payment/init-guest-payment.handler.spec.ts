@@ -105,13 +105,16 @@ describe('InitGuestPaymentHandler', () => {
           idempotencyKey: 'guest:booking-1',
         },
       });
-      expect(moyasar.createPayment).toHaveBeenCalledWith({
-        amountHalalas: 11500,
-        currency: 'SAR',
-        description: 'Booking payment - booking-1',
-        callbackUrl: 'https://clinic.example.com/booking/payment-callback?bookingId=booking-1',
-        metadata: { invoiceId: 'inv-1', bookingId: 'booking-1' },
-      });
+      expect(moyasar.createPayment).toHaveBeenCalledWith(
+        '00000000-0000-0000-0000-000000000001',
+        {
+          amountHalalas: 11500,
+          currency: 'SAR',
+          description: 'Booking payment - booking-1',
+          callbackUrl: 'https://clinic.example.com/booking/payment-callback?bookingId=booking-1',
+          metadata: { invoiceId: 'inv-1', bookingId: 'booking-1' },
+        },
+      );
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 'pay-1' },
         data: { gatewayRef: 'moyasar-pay-1' },
@@ -184,6 +187,7 @@ describe('InitGuestPaymentHandler', () => {
       await handler.execute({ bookingId: 'booking-1' });
 
       expect(moyasar.createPayment).toHaveBeenCalledWith(
+        '00000000-0000-0000-0000-000000000001',
         expect.objectContaining({
           callbackUrl: 'http://localhost:3000/booking/payment-callback?bookingId=booking-1',
         }),

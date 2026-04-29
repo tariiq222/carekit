@@ -16,6 +16,7 @@ describe('envValidationSchema', () => {
     JWT_CLIENT_ACCESS_SECRET: 'dev-client-access-secret-change-me',
     SMS_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
     ZOOM_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
+    MOYASAR_TENANT_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
   };
 
   it('passes minimal dev env', () => {
@@ -56,6 +57,7 @@ describe('envValidationSchema', () => {
       JWT_OTP_SECRET: 'a-real-otp-secret-32-bytes-or-more',
       SMS_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
       ZOOM_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
+      MOYASAR_TENANT_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
       CORS_ORIGINS: 'https://app.example.com',
       ADMIN_HOSTS: 'admin.example.com',
       AUTHENTICA_API_KEY: 'real-authentica-key-1234567890',
