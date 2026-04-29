@@ -34,6 +34,7 @@ const makeConfig = (slug = 'BASIC', trialDays = 14) => ({
 const makeTenant = () => ({ set: jest.fn(), requireOrganizationId: jest.fn().mockReturnValue('org-1') });
 const makeCache = () => ({ invalidate: jest.fn() });
 const makeStartSub = () => ({ execute: jest.fn().mockResolvedValue({ id: 'sub-1' }) });
+const makeMailer = () => ({ sendTenantWelcome: jest.fn().mockResolvedValue(undefined) });
 
 describe('RegisterTenantHandler', () => {
   let handler: RegisterTenantHandler;
@@ -41,6 +42,7 @@ describe('RegisterTenantHandler', () => {
   let tokens: ReturnType<typeof makeTokens>;
   let startSub: ReturnType<typeof makeStartSub>;
   let tenant: ReturnType<typeof makeTenant>;
+  let mailer: ReturnType<typeof makeMailer>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -48,6 +50,7 @@ describe('RegisterTenantHandler', () => {
     tokens = makeTokens();
     startSub = makeStartSub();
     tenant = makeTenant();
+    mailer = makeMailer();
     handler = new RegisterTenantHandler(
       prisma as never,
       makePassword() as never,
@@ -56,6 +59,7 @@ describe('RegisterTenantHandler', () => {
       tenant as never,
       makeCache() as never,
       startSub as never,
+      mailer as never,
     );
   });
 
@@ -93,5 +97,24 @@ describe('RegisterTenantHandler', () => {
   it('returns accessToken, refreshToken, and userId', async () => {
     const result = await handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' });
     expect(result).toMatchObject({ accessToken: 'at', refreshToken: 'rt', userId: 'user-1' });
+  });
+
+  it('sends a welcome email to the tenant owner on success', async () => {
+    await handler.execute({
+      name: 'Tariq',
+      email: 'owner@example.com',
+      phone: '0500000000',
+      password: 'StrongPwd1!',
+      businessNameAr: 'سوا',
+    });
+
+    expect(mailer.sendTenantWelcome).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        ownerName: 'Tariq',
+        orgName: 'سوا',
+        dashboardUrl: expect.stringMatching(/^https?:\/\//),
+      }),
+    );
   });
 });

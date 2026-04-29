@@ -7,6 +7,7 @@ import { TokenService } from '../../identity/shared/token.service';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../billing/subscription-cache.service';
 import { StartSubscriptionHandler } from '../billing/start-subscription/start-subscription.handler';
+import { PlatformMailerService } from '../../../infrastructure/mail';
 import type { RegisterTenantDto } from './register-tenant.dto';
 
 function slugify(text: string): string {
@@ -37,6 +38,7 @@ export class RegisterTenantHandler {
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
     private readonly startSubscription: StartSubscriptionHandler,
+    private readonly mailer: PlatformMailerService,
   ) {}
 
   async execute(dto: RegisterTenantDto) {
@@ -148,6 +150,16 @@ export class RegisterTenantHandler {
       organizationId: result.orgId,
       membershipId: result.membershipId,
       isSuperAdmin: false,
+    });
+
+    const dashboardUrl = this.config.get<string>(
+      'PLATFORM_DASHBOARD_URL',
+      'https://app.webvue.pro/dashboard',
+    );
+    await this.mailer.sendTenantWelcome(dto.email, {
+      ownerName: dto.name,
+      orgName: dto.businessNameAr,
+      dashboardUrl,
     });
 
     return { ...tokenPair, userId: result.userId };
