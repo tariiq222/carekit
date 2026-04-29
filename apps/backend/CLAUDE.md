@@ -127,6 +127,15 @@ npm run prisma:studio                # GUI
 - Hybrid model: flat plan fee + usage overage. SMS is **not** metered by the platform (per-tenant providers — see SaaS-02g-sms).
 - Super-admin oversight (waive, grant, change-plan, refund) lives under `modules/platform/admin/` and is exposed only to the `apps/admin` control plane (separate Next.js app on its own port).
 
+## Platform transactional emails (`infrastructure/mail/PlatformMailerService`)
+
+- **Resend SDK** sends all platform↔tenant-owner lifecycle emails (welcome, trial ending/expired, payment success/failure, plan changed, account suspended/reinstated).
+- Configured via `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_REPLY_TO`, `PLATFORM_DASHBOARD_URL` in `.env`. Missing key in dev = warn + skip; in production throws on startup.
+- Templates live under `infrastructure/mail/templates/` — one file per email type, each exporting a typed `Vars` interface and a builder function returning `{ subjectAr, subjectEn, html }`.
+- All templates are bilingual AR+EN via `bilingualLayout()` in `templates/shared.ts`. Use `escapeHtml()` for any user-supplied string interpolated into HTML — it is the single XSS guard.
+- Owner lookup pattern used in every billing/admin handler: `prisma.$allTenants.membership.findFirst({ where: { organizationId, role: 'OWNER', isActive: true }, include: { user, organization } })`. The `$allTenants` bypass is required because billing/cron handlers run outside CLS tenant context.
+- `sendAccountStatusChanged` accepts `status: 'SUSPENDED' | 'REINSTATED'` and renders the correct copy branch.
+
 ## Integrations cluster (`modules/integrations/`)
 
 - **Zoom** (`integrations/zoom/`) owns the encrypted-credentials lifecycle: get/upsert/test of `accountId`, `clientId`, `clientSecret` per tenant. Credentials are AES-256-GCM encrypted with `organizationId` as AAD — the `Get*` handler never returns ciphertext.
