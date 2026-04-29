@@ -7,11 +7,12 @@ Branch: `feat/admin-tenant-management-remediation`
 | Gate | Result | Notes |
 | --- | --- | --- |
 | `npm run prisma:validate --workspace=backend` | PASS | Prisma schema valid after lifecycle and feature-flag enum migrations. |
-| `npm run prisma:migrate:deploy --workspace=backend` | BLOCKED | `DATABASE_URL` is not available to Prisma config in this shell. |
+| `npm run prisma:migrate:deploy --workspace=backend` | PASS | Ran with the local Docker Postgres `DATABASE_URL`; applied `20260429000100_add_tenant_lifecycle_audit_actions` and `20260429000200_add_feature_flag_update_action`, then executed vector index hooks. |
 | `npm run test --workspace=backend -- src/api/admin src/modules/platform/admin src/common/tenant src/common/guards` | PASS | 50 suites, 230 tests. |
 | Admin strict tenant E2E specs | PASS | 2 suites, 36 tests using direct Jest e2e config. |
-| `npm run typecheck --workspace=backend` | BASELINE FAIL | Existing stale specs: people controller ctor args, public auth controller ctor args, OTP session missing `organizationId`. |
-| `npm run lint --workspace=backend` | BASELINE FAIL | Existing `prisma.service.spec.ts` `$allTenants` restricted-syntax error plus legacy warnings. |
+| `npm run typecheck --workspace=backend` | PASS | Stale spec contracts refreshed for people controller, public auth controller, and OTP session payload. |
+| `npm run lint --workspace=backend` | PASS | Restricted-syntax blocker removed from `prisma.service.spec.ts`; command exits 0 with 57 pre-existing warnings. |
+| `npm run test --workspace=backend -- src/api/dashboard/people.controller.spec.ts src/api/public/auth.controller.spec.ts src/modules/identity/otp/otp-session.service.spec.ts src/infrastructure/database/prisma.service.spec.ts` | PASS | 4 suites, 35 tests for the baseline fixes. |
 | Dashboard auth/org-switch tests | PASS | 3 files, 20 tests. |
 | `npm run typecheck --workspace=dashboard` | PASS | Dashboard TypeScript clean. |
 | `npm run i18n:verify --workspace=dashboard` | PASS | Translation parity OK. |
@@ -37,6 +38,5 @@ Reason: no authenticated super-admin browser session and no confirmed test owner
 
 ## Residual Risks
 
-- `prisma:migrate:deploy` must be rerun with a valid `DATABASE_URL`.
-- Backend global typecheck/lint remain blocked by pre-existing baseline issues unrelated to this remediation branch.
+- Backend lint still reports 57 legacy warnings, but no lint errors remain and the command exits successfully.
 - Browser QA and Kiwi manual sync should not be marked passed until executed against a seeded local or staging environment.
