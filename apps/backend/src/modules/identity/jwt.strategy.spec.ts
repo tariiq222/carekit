@@ -57,6 +57,25 @@ describe('JwtStrategy', () => {
     expect(result.isSuperAdmin).toBe(false);
   });
 
+  it('propagates impersonation session id for shadow tokens', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+      organizationId: 'org-1',
+      membershipId: 'mem-1',
+      scope: 'impersonation',
+      impersonationSessionId: 'imp-1',
+    });
+
+    expect(result.scope).toBe('impersonation');
+    expect(result.impersonationSessionId).toBe('imp-1');
+  });
+
   it('treats missing tenant claims as undefined (backward compat)', async () => {
     prisma.user.findUnique.mockResolvedValue({
       id: 'u1', email: 'a@b.com', role: 'ADMIN',

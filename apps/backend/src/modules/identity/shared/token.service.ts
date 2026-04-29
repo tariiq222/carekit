@@ -19,6 +19,7 @@ export interface TenantClaims {
   membershipId?: string;
   isSuperAdmin?: boolean;
   scope?: string;
+  impersonationSessionId?: string;
 }
 
 export interface JwtPayload {
@@ -35,6 +36,7 @@ export interface JwtPayload {
   membershipId?: string;
   isSuperAdmin?: boolean;
   scope?: string;
+  impersonationSessionId?: string;
 }
 
 @Injectable()
