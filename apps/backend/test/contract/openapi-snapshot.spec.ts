@@ -14,7 +14,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const SNAPSHOT_PATH = resolve(__dirname, '../openapi.json');
+const SNAPSHOT_PATH = resolve(__dirname, '../../openapi.json');
 const API_BASE = process.env.API_URL ?? 'http://localhost:5100';
 const SPEC_URL = `${API_BASE}/api/docs-json`;
 const FORCE = process.env.OPENAPI_SNAPSHOT_TEST === '1';

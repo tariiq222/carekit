@@ -16,7 +16,7 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
   let orgBId: string;
 
   beforeAll(async () => {
-    ({ request: req } = await createTestApp());
+    ({ request: req } = await createTestApp({ tenantEnforcement: 'strict' }));
 
     const stamp = Date.now();
     const orgA = await testPrisma.organization.upsert({
@@ -49,27 +49,27 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
 
   it('public route: X-Org-Id resolves to that tenant (returns 200)', async () => {
     const res = await req
-      .get('/public/services/departments')
+      .get('/public/services')
       .set('X-Org-Id', orgAId)
       .expect(200);
-    // Body shape is a bare array of PublicDepartment.
+    // Body shape is an object with a departments array.
     // No departments are seeded for fresh test orgs, so length may be 0.
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.departments)).toBe(true);
   });
 
   it('public route: different X-Org-Id values do not bleed across tenants', async () => {
     const aRes = await req
-      .get('/public/services/departments')
+      .get('/public/services')
       .set('X-Org-Id', orgAId)
       .expect(200);
 
     const bRes = await req
-      .get('/public/services/departments')
+      .get('/public/services')
       .set('X-Org-Id', orgBId)
       .expect(200);
 
-    const aIds = (aRes.body as Array<{ id: string }>).map((d) => d.id);
-    const bIds = (bRes.body as Array<{ id: string }>).map((d) => d.id);
+    const aIds = (aRes.body.departments as Array<{ id: string }>).map((d) => d.id);
+    const bIds = (bRes.body.departments as Array<{ id: string }>).map((d) => d.id);
     // Whatever each tenant returns, they MUST NOT share ids — this is the
     // isolation contract. Both being empty is also a valid pass (each tenant
     // has its own empty catalog), since createOrg does not seed departments.
@@ -82,7 +82,7 @@ describe('Mobile public tenant header (X-Org-Id)', () => {
     // org → middleware throws TenantResolutionError (400). In permissive
     // dev mode the same request would fall through to DEFAULT_ORGANIZATION_ID.
     const res = await req
-      .get('/public/services/departments')
+      .get('/public/services')
       .set('X-Org-Id', 'not-a-uuid');
     expect(res.status).toBe(400);
     expect(res.body).toMatchObject({ code: 'TENANT_RESOLUTION_FAILED' });

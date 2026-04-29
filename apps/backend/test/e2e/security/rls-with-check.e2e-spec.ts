@@ -34,6 +34,21 @@ describe('Tenant RLS Hardening — WITH CHECK blocks cross-tenant writes', () =>
 
   type RawTx = { $executeRawUnsafe: (sql: string) => Promise<unknown> };
 
+  const executeRoleDdl = async (sql: string): Promise<void> => {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        await h.prisma.$executeRawUnsafe(sql);
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!message.includes('tuple concurrently updated') || attempt === 3) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt * 50));
+      }
+    }
+  };
+
   const runUnderProbeRole = async <T>(
     orgId: string,
     tables: ReadonlyArray<string>,
@@ -41,10 +56,10 @@ describe('Tenant RLS Hardening — WITH CHECK blocks cross-tenant writes', () =>
   ): Promise<T> => {
     const tmpRole = `rls_probe_wc_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
     try {
-      await h.prisma.$executeRawUnsafe(`CREATE ROLE ${tmpRole}`);
-      await h.prisma.$executeRawUnsafe(`GRANT USAGE ON SCHEMA public TO ${tmpRole}`);
+      await executeRoleDdl(`CREATE ROLE ${tmpRole}`);
+      await executeRoleDdl(`GRANT USAGE ON SCHEMA public TO ${tmpRole}`);
       for (const table of tables) {
-        await h.prisma.$executeRawUnsafe(
+        await executeRoleDdl(
           `GRANT SELECT, INSERT, UPDATE, DELETE ON public."${table}" TO ${tmpRole}`,
         );
       }

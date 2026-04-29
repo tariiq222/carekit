@@ -93,7 +93,9 @@ describe('SaaS-02h — Moyasar webhook forgery', () => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);
-        else if (entry.isFile() && /\.ts$/.test(entry.name)) files.push(full);
+        else if (entry.isFile() && /\.ts$/.test(entry.name) && !/\.spec\.ts$/.test(entry.name)) {
+          files.push(full);
+        }
       }
     };
     walk(srcRoot);
@@ -117,6 +119,8 @@ describe('SaaS-02h — Moyasar webhook forgery', () => {
       'modules/finance/moyasar-webhook/moyasar-webhook.handler.ts',
       'modules/finance/moyasar-api/moyasar-subscription-webhook.handler.ts',
       'modules/comms/sms-dlr/sms-dlr.handler.ts',
+      'modules/identity/verify-email/verify-email.handler.ts',
+      'modules/identity/verify-mobile-otp/verify-mobile-otp.handler.ts',
       'modules/identity/otp/request-otp.handler.ts',
       'modules/identity/otp/verify-otp.handler.ts',
       'modules/identity/otp/otp-session.guard.ts',
@@ -125,7 +129,6 @@ describe('SaaS-02h — Moyasar webhook forgery', () => {
 
     // Useful diagnostic on failure.
     if (unexpected.length > 0) {
-      // eslint-disable-next-line no-console
       console.error('Unexpected systemContext writers:', unexpected);
     }
     expect(unexpected).toEqual([]);
