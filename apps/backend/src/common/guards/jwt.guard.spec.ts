@@ -2,10 +2,13 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtGuard } from './jwt.guard';
 
-const makeCtx = (handler: object, cls: object) =>
+const makeCtx = (handler: object, cls: object, req: object = {}) =>
   ({
     getHandler: () => handler,
     getClass: () => cls,
+    switchToHttp: () => ({
+      getRequest: () => req,
+    }),
   }) as unknown as ExecutionContext;
 
 describe('JwtGuard', () => {
@@ -23,13 +26,19 @@ describe('JwtGuard', () => {
   const redis = {
     getClient: jest.fn(() => redisClient),
   };
+  const tenantContext = {
+    set: jest.fn(),
+  };
 
   beforeEach(() => {
     reflector = new Reflector();
-    guard = new JwtGuard(reflector, prisma as never, redis as never);
+    guard = new JwtGuard(reflector, prisma as never, redis as never, tenantContext as never);
     prisma.organization.findUnique.mockReset();
+    redis.getClient.mockReset();
+    redis.getClient.mockImplementation(() => redisClient);
     redisClient.get.mockReset();
     redisClient.set.mockReset();
+    tenantContext.set.mockReset();
   });
 
   it('returns true for public routes', async () => {
@@ -52,6 +61,39 @@ describe('JwtGuard', () => {
     expect(() =>
       guard.handleRequest(new Error('fail'), null as never, null, {} as ExecutionContext),
     ).toThrow(UnauthorizedException);
+  });
+
+  it('stamps TenantContext after JWT validation', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+    const passportCanActivate = jest
+      .spyOn(Object.getPrototypeOf(JwtGuard.prototype), 'canActivate')
+      .mockResolvedValue(true);
+    redisClient.get.mockResolvedValue('active');
+
+    const ctx = makeCtx(
+      {},
+      {},
+      {
+        user: {
+          id: 'user-1',
+          organizationId: 'org-1',
+          membershipId: 'member-1',
+          role: 'ADMIN',
+          isSuperAdmin: false,
+        },
+      },
+    );
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(tenantContext.set).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      membershipId: 'member-1',
+      id: 'user-1',
+      role: 'ADMIN',
+      isSuperAdmin: false,
+    });
+
+    passportCanActivate.mockRestore();
   });
 
   it('skips suspension lookup when no organizationId is present', async () => {

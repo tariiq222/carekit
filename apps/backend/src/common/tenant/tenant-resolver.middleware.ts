@@ -65,31 +65,38 @@ export class TenantResolverMiddleware implements NestMiddleware {
       return next();
     }
 
-    // Priority:
-    //   1. JWT claim (authenticated users)
-    //   2. X-Org-Id header (super-admins only — never trusted from regular users)
-    //   3. X-Org-Id header on UNAUTHENTICATED public routes (mobile tenant-lock)
-    //   4. Subdomain resolver (added in Plan 09)
-    //   5. DEFAULT_ORGANIZATION_ID (permissive mode only)
-    const fromJwt = req.user?.organizationId;
+    const path = req.originalUrl ?? req.url ?? req.path ?? '';
+    const isPublicRoute = this.isPublicRoute(path);
     const fromSuperAdminHeader =
       req.user?.isSuperAdmin === true
         ? this.parseUuidHeader(req.headers['x-org-id'])
         : undefined;
-    // Note: req.originalUrl (not req.path) is used because NestJS middleware
-    // mounted via forRoutes('*') runs after Express path-stripping — req.path
-    // is '/' and the full path lives on req.originalUrl.
+
+    if (!isPublicRoute && !req.user) {
+      if (mode === 'permissive') {
+        this.ctx.set({
+          organizationId: this.config.get<string>(
+            'DEFAULT_ORGANIZATION_ID',
+            DEFAULT_ORGANIZATION_ID,
+          ),
+          membershipId: '',
+          id: '',
+          role: '',
+          isSuperAdmin: false,
+        });
+      }
+      return next();
+    }
+
+    const fromJwt = req.user?.organizationId;
     const fromPublicHeader =
-      !req.user && this.isPublicRoute(req.originalUrl ?? '')
-        ? this.parseUuidHeader(req.headers['x-org-id'])
-        : undefined;
+      !req.user && isPublicRoute ? this.parseUuidHeader(req.headers['x-org-id']) : undefined;
     const fromDefault =
       mode === 'permissive'
         ? this.config.get<string>('DEFAULT_ORGANIZATION_ID', DEFAULT_ORGANIZATION_ID)
         : undefined;
 
-    const organizationId =
-      fromJwt ?? fromSuperAdminHeader ?? fromPublicHeader ?? fromDefault;
+    const organizationId = fromSuperAdminHeader ?? fromJwt ?? fromPublicHeader ?? fromDefault;
 
     if (!organizationId) {
       throw new TenantResolutionError(

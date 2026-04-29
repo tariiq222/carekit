@@ -87,11 +87,16 @@ describe('TenantResolverMiddleware', () => {
     });
   });
 
-  it('strict mode: throws when no source resolves an org', async () => {
+  it('strict mode: private authenticated routes defer tenant resolution to JwtGuard', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-    expect(() => cls.run(() => mw.use(req(), {} as never, () => undefined))).toThrow(
-      TenantResolutionError,
-    );
+    await new Promise<void>((done) => {
+      cls.run(() =>
+        mw.use(req({ originalUrl: '/api/v1/dashboard/bookings' }), {} as never, () => {
+          expect(ctx.get()).toBeUndefined();
+          done();
+        }),
+      );
+    });
   });
 
   it('strict mode: accepts explicit header when super-admin', async () => {
@@ -175,15 +180,31 @@ describe('TenantResolverMiddleware', () => {
       });
     });
 
-    it('strict mode: ignores X-Org-Id on private route when unauthenticated (throws)', async () => {
+    it('strict mode: ignores X-Org-Id on private route when unauthenticated and defers to JwtGuard', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
+      await new Promise<void>((done) => {
         cls.run(() =>
           mw.use(
             req({
               originalUrl: '/api/v1/dashboard/bookings',
               headers: { 'x-org-id': VALID },
             }),
+            {} as never,
+            () => {
+              expect(ctx.get()).toBeUndefined();
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('strict mode: public routes without a valid X-Org-Id still fail closed', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/api/v1/public/services/departments' }),
             {} as never,
             () => undefined,
           ),
@@ -207,9 +228,9 @@ describe('TenantResolverMiddleware', () => {
       ).toThrow(TenantResolutionError);
     });
 
-    it('strict mode: ignores X-Org-Id on /webhooks/ public route', async () => {
+    it('strict mode: ignores X-Org-Id on /webhooks/ public route and defers to webhook guards', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
+      await new Promise<void>((done) => {
         cls.run(() =>
           mw.use(
             req({
@@ -217,10 +238,13 @@ describe('TenantResolverMiddleware', () => {
               headers: { 'x-org-id': VALID },
             }),
             {} as never,
-            () => undefined,
+            () => {
+              expect(ctx.get()).toBeUndefined();
+              done();
+            },
           ),
-        ),
-      ).toThrow(TenantResolutionError);
+        );
+      });
     });
   });
 

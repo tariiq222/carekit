@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/cache';
+import { TenantContextService } from '../tenant/tenant-context.service';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 const ORG_SUSPENSION_CACHE_TTL_SECONDS = 30;
@@ -26,6 +27,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly tenantContext: TenantContextService,
   ) {
     super();
   }
@@ -41,11 +43,17 @@ export class JwtGuard extends AuthGuard('jwt') {
     const activated = await Promise.resolve(super.canActivate(ctx));
     const req = ctx.switchToHttp().getRequest<{
       user?: {
+        id?: string;
+        sub?: string;
         organizationId?: string;
+        membershipId?: string;
+        role?: string;
+        isSuperAdmin?: boolean;
         scope?: string;
         impersonationSessionId?: string;
       };
     }>();
+    this.stampTenantContext(req.user);
     await this.assertOrganizationIsActive(req.user?.organizationId);
     await this.assertImpersonationSessionIsLive(req.user);
     return activated as boolean;
@@ -121,5 +129,24 @@ export class JwtGuard extends AuthGuard('jwt') {
 
   private buildOrgSuspensionCacheKey(organizationId: string): string {
     return `org-suspension:${organizationId}`;
+  }
+
+  private stampTenantContext(user?: {
+    id?: string;
+    sub?: string;
+    organizationId?: string;
+    membershipId?: string;
+    role?: string;
+    isSuperAdmin?: boolean;
+  }): void {
+    if (!user?.organizationId) return;
+
+    this.tenantContext.set({
+      organizationId: user.organizationId,
+      membershipId: user.membershipId ?? '',
+      id: user.id ?? user.sub ?? '',
+      role: user.role ?? '',
+      isSuperAdmin: user.isSuperAdmin === true,
+    });
   }
 }
