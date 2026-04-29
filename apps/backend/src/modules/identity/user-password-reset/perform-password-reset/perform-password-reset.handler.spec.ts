@@ -9,11 +9,11 @@ describe('PerformPasswordResetHandler', () => {
   let handler: PerformPasswordResetHandler;
   let prisma: {
     passwordResetToken: { findFirst: jest.Mock; update: jest.Mock };
-    user: { update: jest.Mock };
+    user: { update: jest.Mock; findUnique: jest.Mock };
     refreshToken: { updateMany: jest.Mock };
     $transaction: jest.Mock;
   };
-  let passwords: { hash: jest.Mock };
+  let passwords: { hash: jest.Mock; verify: jest.Mock };
 
   const rawToken = 'a'.repeat(64);
   const tokenHash = createHash('sha256').update(rawToken).digest('hex');
@@ -21,11 +21,11 @@ describe('PerformPasswordResetHandler', () => {
   beforeEach(async () => {
     prisma = {
       passwordResetToken: { findFirst: jest.fn(), update: jest.fn().mockResolvedValue({}) },
-      user: { update: jest.fn().mockResolvedValue({}) },
+      user: { update: jest.fn().mockResolvedValue({}), findUnique: jest.fn().mockResolvedValue({ passwordHash: 'old' }) },
       refreshToken: { updateMany: jest.fn().mockResolvedValue({}) },
       $transaction: jest.fn().mockImplementation(async (fn) => fn(prisma)),
     };
-    passwords = { hash: jest.fn().mockResolvedValue('hashed-pw') };
+    passwords = { hash: jest.fn().mockResolvedValue('hashed-pw'), verify: jest.fn().mockResolvedValue(false) };
     const moduleRef = await Test.createTestingModule({
       providers: [
         PerformPasswordResetHandler,

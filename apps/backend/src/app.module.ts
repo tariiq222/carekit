@@ -47,7 +47,8 @@ import { PublicModule } from "./api/public/public.module";
       middleware: { mount: true },
     }),
     TenantModule,
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1_000_000 }]),
+    // TODO(M5): switch to ThrottlerStorageRedisService (@nestjs-throttler/storage-redis) for multi-pod rate limit sharing
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     DatabaseModule,
     MessagingModule,
     AiInfraModule,

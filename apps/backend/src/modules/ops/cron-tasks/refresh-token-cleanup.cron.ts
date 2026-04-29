@@ -22,5 +22,15 @@ export class RefreshTokenCleanupCron {
       },
     });
     this.logger.log(`deleted ${result.count} stale tokens`);
+
+    const deletedResetTokens = await this.prisma.passwordResetToken.deleteMany({
+      where: {
+        OR: [
+          { expiresAt: { lte: cutoff } },
+          { consumedAt: { not: null } },
+        ],
+      },
+    });
+    this.logger.log(`Cleaned up ${deletedResetTokens.count} expired/consumed PasswordResetTokens`);
   }
 }

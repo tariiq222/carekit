@@ -30,7 +30,7 @@ import { RequestPasswordResetDto } from '../../modules/identity/user-password-re
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { PerformPasswordResetDto } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.dto';
 import { Public } from '../../common/guards/jwt.guard';
-import { IsString, MinLength } from 'class-validator';
+import { IsString, MinLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
@@ -42,7 +42,11 @@ class ChangePasswordDto {
   @IsString() currentPassword!: string;
 
   @ApiProperty({ description: 'New password (min 8 characters)', example: 'NewP@ss456', format: 'password' })
-  @IsString() @MinLength(8) newPassword!: string;
+  @IsString()
+  @MinLength(8)
+  @Matches(/[A-Z]/, { message: 'newPassword must contain at least one uppercase letter' })
+  @Matches(/[0-9]/, { message: 'newPassword must contain at least one digit' })
+  newPassword!: string;
 }
 
 @ApiTags('Public / Auth')
@@ -304,6 +308,9 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Request a password reset email for a staff (User) account' })
   async requestPasswordResetEndpoint(@Body() dto: RequestPasswordResetDto): Promise<void> {
+    if (!(await this.captcha.verify(dto.hCaptchaToken))) {
+      throw new BadRequestException('CAPTCHA_FAILED');
+    }
     await this.requestPasswordReset.execute(dto);
   }
 
@@ -323,7 +330,7 @@ export class AuthController {
     res.cookie('ck_refresh', token, {
       httpOnly: true,
       secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
       maxAge: ttlMs,
     });
