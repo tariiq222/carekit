@@ -14,6 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { OrganizationStatus } from '@prisma/client';
 import type { Request } from 'express';
 import {
   AdminHostGuard,
@@ -69,6 +70,9 @@ export class AdminOrganizationsController {
     @Query('perPage') perPage?: string,
     @Query('search') search?: string,
     @Query('suspended') suspended?: string,
+    @Query('status') status?: string,
+    @Query('verticalId') verticalId?: string,
+    @Query('planId') planId?: string,
   ) {
     const parsedSuspended =
       suspended === 'true' ? true : suspended === 'false' ? false : undefined;
@@ -77,6 +81,9 @@ export class AdminOrganizationsController {
       perPage: Math.min(Math.max(1, Number(perPage ?? 20)), 100),
       search: search?.trim() ? search.trim() : undefined,
       suspended: parsedSuspended,
+      status: parseOrganizationStatus(status),
+      verticalId: verticalId?.trim() ? verticalId.trim() : undefined,
+      planId: planId?.trim() ? planId.trim() : undefined,
     });
   }
 
@@ -171,4 +178,10 @@ export class AdminOrganizationsController {
       userAgent: req.headers['user-agent'] ?? '',
     });
   }
+}
+
+function parseOrganizationStatus(value?: string): OrganizationStatus | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim().toUpperCase();
+  return Object.values(OrganizationStatus).find((status) => status === normalized);
 }

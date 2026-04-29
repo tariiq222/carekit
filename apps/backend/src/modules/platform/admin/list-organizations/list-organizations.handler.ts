@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OrganizationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 
 export interface ListOrganizationsQuery {
@@ -6,6 +7,9 @@ export interface ListOrganizationsQuery {
   perPage: number;
   search?: string;
   suspended?: boolean;
+  status?: OrganizationStatus;
+  verticalId?: string;
+  planId?: string;
 }
 
 @Injectable()
@@ -13,7 +17,7 @@ export class ListOrganizationsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(q: ListOrganizationsQuery) {
-    const where: Record<string, unknown> = {};
+    const where: Prisma.OrganizationWhereInput = {};
 
     if (q.search) {
       where.OR = [
@@ -24,6 +28,9 @@ export class ListOrganizationsHandler {
     }
     if (q.suspended === true) where.suspendedAt = { not: null };
     if (q.suspended === false) where.suspendedAt = null;
+    if (q.status) where.status = q.status;
+    if (q.verticalId) where.verticalId = q.verticalId;
+    if (q.planId) where.subscription = { is: { planId: q.planId } };
 
     const [items, total] = await Promise.all([
       this.prisma.$allTenants.organization.findMany({

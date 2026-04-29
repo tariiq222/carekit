@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { OrganizationStatus } from '@prisma/client';
 import { ListOrganizationsHandler } from './list-organizations.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 
@@ -70,6 +71,29 @@ describe('ListOrganizationsHandler', () => {
 
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { suspendedAt: null } }),
+    );
+  });
+
+  it('filters by status, vertical, and plan', async () => {
+    findMany.mockResolvedValue([]);
+    count.mockResolvedValue(0);
+
+    await handler.execute({
+      page: 1,
+      perPage: 20,
+      status: OrganizationStatus.TRIALING,
+      verticalId: 'vertical-1',
+      planId: 'plan-1',
+    });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: OrganizationStatus.TRIALING,
+          verticalId: 'vertical-1',
+          subscription: { is: { planId: 'plan-1' } },
+        },
+      }),
     );
   });
 

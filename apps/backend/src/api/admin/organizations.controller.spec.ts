@@ -46,24 +46,33 @@ describe('AdminOrganizationsController', () => {
       perPage: 20,
       search: undefined,
       suspended: undefined,
+      status: undefined,
+      verticalId: undefined,
+      planId: undefined,
     });
 
     // Custom values
-    await controller.list('2', '50', ' ACME ', 'true');
+    await controller.list('2', '50', ' ACME ', 'true', 'trialing', ' vertical-1 ', ' plan-1 ');
     expect(listHandler.execute).toHaveBeenCalledWith({
       page: 2,
       perPage: 50,
       search: 'ACME',
       suspended: true,
+      status: 'TRIALING',
+      verticalId: 'vertical-1',
+      planId: 'plan-1',
     });
 
     // Clamping and false boolean
-    await controller.list('0', '200', ' ', 'false');
+    await controller.list('0', '200', ' ', 'false', 'invalid', ' ', ' ');
     expect(listHandler.execute).toHaveBeenCalledWith(expect.objectContaining({
       page: 1,
       perPage: 100,
       search: undefined,
       suspended: false,
+      status: undefined,
+      verticalId: undefined,
+      planId: undefined,
     }));
   });
 
