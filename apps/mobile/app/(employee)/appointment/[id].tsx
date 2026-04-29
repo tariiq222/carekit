@@ -29,6 +29,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
+import { getStatusLabel } from '@/lib/status-helpers';
 import type { Booking } from '@/types/models';
 import { JoinVideoCallButton } from '@/components/features/JoinVideoCallButton';
 
@@ -71,15 +72,6 @@ export default function DoctorAppointmentDetailScreen() {
 
   const meta = TYPE_META[booking.type] ?? TYPE_META.in_person;
   const TypeIcon = meta.icon;
-  const statusLabels: Record<string, string> = {
-    pending:              t('appointments.pending'),
-    confirmed:            t('appointments.confirmed'),
-    completed:            t('appointments.completed'),
-    cancelled:            t('appointments.cancelledStatus'),
-    no_show:              t('appointments.noShow'),
-    expired:              t('appointments.expired'),
-    cancel_requested:     t('appointments.pendingCancellation'),
-  };
 
   const handleMarkComplete = () => {
     Alert.alert(t('doctor.markCompleted'), '', [
@@ -159,7 +151,7 @@ export default function DoctorAppointmentDetailScreen() {
 
         <View style={styles.headerRow}>
           <ThemedText variant="heading">{t('appointments.details')}</ThemedText>
-          <StatusPill status={booking.status} label={statusLabels[booking.status] ?? booking.status} />
+          <StatusPill status={booking.status} label={t(getStatusLabel(booking.status))} />
         </View>
 
         {/* Booking Info */}

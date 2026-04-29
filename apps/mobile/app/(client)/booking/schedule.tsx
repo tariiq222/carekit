@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
@@ -15,10 +16,9 @@ import { branchesService } from '@/services/branches';
 import { DaySelector } from '@/components/features/booking/DaySelector';
 import { TimeSlotsGrid, type Slot } from '@/components/features/booking/TimeSlotsGrid';
 import { BookingCta } from '@/components/features/booking/BookingCta';
+import { useReduceMotion } from '@/hooks/useA11y';
 
 function toLocalDateOnly(d: Date): string {
-  // YYYY-MM-DD in the device's local timezone — the backend treats `date` as
-  // a calendar day in the branch timezone, not a UTC instant.
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
@@ -37,6 +37,8 @@ export default function BookingScheduleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t } = useTranslation();
+  const reduceMotion = useReduceMotion();
   const f400 = getFontName(dir.locale, '400');
   const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
@@ -47,7 +49,7 @@ export default function BookingScheduleScreen() {
     const out: Date[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 7; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       out.push(d);
@@ -62,8 +64,9 @@ export default function BookingScheduleScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Resolve a branch if the previous screen didn't pass one — use the first
-  // visible public branch as the default.
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzLabel = dir.isRTL ? 'بتوقيتك المحلي' : `Your local time`;
+
   useEffect(() => {
     if (branchId) return;
     let cancelled = false;
@@ -82,7 +85,6 @@ export default function BookingScheduleScreen() {
     };
   }, [branchId, dir.isRTL]);
 
-  // Fetch slots whenever the day, employee, or branch changes.
   useEffect(() => {
     const employeeId = params.employeeId;
     if (!employeeId || !branchId) return;
@@ -150,9 +152,9 @@ export default function BookingScheduleScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.duration(500)}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(500)}>
           <View style={[styles.topRow, { flexDirection: dir.row }]}>
-            <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
+            <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('a11y.buttonBack')}>
               <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
             </Glass>
             <Text style={[styles.step, { fontFamily: f600 }]}>
@@ -164,7 +166,7 @@ export default function BookingScheduleScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
           <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'اختاري موعداً' : 'Pick a time'}
           </Text>
@@ -175,7 +177,7 @@ export default function BookingScheduleScreen() {
           </Text>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
           <DaySelector
             days={days}
             dayIdx={dayIdx}
@@ -187,14 +189,14 @@ export default function BookingScheduleScreen() {
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(240).duration(600).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInDown.delay(240).duration(600).easing(Easing.out(Easing.cubic))}
           style={[styles.slotsHead, { flexDirection: dir.row }]}
         >
           <Text style={[styles.slotsTitle, { fontFamily: f700 }]}>
             {dir.isRTL ? 'الأوقات المتاحة' : 'Available times'}
           </Text>
           <Text style={[styles.tz, { fontFamily: f400 }]}>
-            {dir.isRTL ? 'بتوقيت الرياض' : 'Riyadh time'}
+            {tzLabel}
           </Text>
         </Animated.View>
 
@@ -207,6 +209,7 @@ export default function BookingScheduleScreen() {
           dir={dir}
           f500={f500}
           f600={f600}
+          reduceMotion={reduceMotion}
         />
       </ScrollView>
 

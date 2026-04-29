@@ -6,8 +6,7 @@ import * as Haptics from 'expo-haptics';
 import type { LucideIcon } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW_RAISED } from '@/theme/glass';
-import { sawaaColors } from '@/theme/sawaa';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
@@ -25,10 +24,9 @@ export function GlassTabBar({ state, descriptors, navigation, icons, badges }: G
   return (
     <Glass
       variant="strong"
-      radius={RADII.pill}
+      radius={sawaaTokens.radius.pill}
       style={[
         styles.tabBar,
-        SHADOW_RAISED,
         { bottom: insets.bottom + 14, left: 14, right: 14 },
       ]}
     >
@@ -164,7 +162,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: C.notifDot,
+    backgroundColor: sawaaColors.accent.coral,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.9)',
   },

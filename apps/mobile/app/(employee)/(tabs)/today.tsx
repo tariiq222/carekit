@@ -25,6 +25,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { useAppSelector } from '@/hooks/use-redux';
 import { employeeBookingsService as bookingsService } from '@/services/employee/bookings';
+import { getStatusLabel } from '@/lib/status-helpers';
 import type { Booking } from '@/types/models';
 
 const TYPE_ICON = {
@@ -157,7 +158,7 @@ export default function TodayScreen() {
                   </View>
                   <StatusPill
                     status={item.status}
-                    label={item.status === 'confirmed' ? t('appointments.confirmed') : t('appointments.completed')}
+                    label={t(getStatusLabel(item.status))}
                   />
                 </View>
               </ThemedCard>

@@ -56,6 +56,7 @@
     "createAccountSub": "Create your account to start booking appointments",
     "otpTitle": "Verification Code",
     "otpSub": "Enter the code sent to your email",
+    "otpBoxLabel": "OTP digit {{index}} of {{total}}",
     "otpSentTo": "Code sent to",
     "resendOtp": "Resend Code",
     "resendIn": "Resend in",
@@ -114,6 +115,10 @@
   },
   "home": {
     "greeting": "Hello",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Good night",
     "upcomingAppointment": "Your Next Appointment",
     "noUpcoming": "No upcoming appointments",
     "bookNow": "Book your first appointment",
@@ -390,7 +395,8 @@
     "errorSending": "Failed to send message. Please try again.",
     "maxMessages": "You have reached the maximum number of messages for this session.",
     "bookingConfirmed": "Appointment booked successfully!",
-    "cancellationSubmitted": "Cancellation request submitted for admin review."
+    "cancellationSubmitted": "Cancellation request submitted for admin review.",
+    "swipeHint": "Swipe to go back ←"
   },
   "availability": {
     "title": "Manage Availability",
@@ -406,5 +412,27 @@
     "4": "Thursday",
     "5": "Friday",
     "6": "Saturday"
+  },
+  "a11y": {
+    "buttonBack": "Back button",
+    "tabUpcoming": "Upcoming appointments",
+    "tabCompleted": "Completed appointments",
+    "tabCancelled": "Cancelled appointments",
+    "tabNotifications": "Notifications",
+    "tabProfile": "Profile",
+    "tabChat": "Chat",
+    "cardOpenAppointment": "Open appointment details",
+    "refreshAppointments": "Refresh appointments",
+    "messageInput": "Message input field",
+    "sendMessage": "Send message button",
+    "searchTherapists": "Search therapists by name",
+    "selectTimeSlot": "Select appointment time",
+    "confirmBooking": "Confirm booking",
+    "selectPaymentMethod": "Select payment method",
+    "checkoutTitle": "Checkout",
+    "profileSettings": "Settings",
+    "profileLogout": "Logout button",
+    "filterOpen": "Open filters",
+    "sortOpen": "Open sort options"
   }
 }

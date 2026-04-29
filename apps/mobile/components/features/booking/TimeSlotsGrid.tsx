@@ -32,6 +32,7 @@ interface TimeSlotsGridProps {
   dir: DirState;
   f500: string;
   f600: string;
+  reduceMotion?: boolean;
 }
 
 export function TimeSlotsGrid({
@@ -43,6 +44,7 @@ export function TimeSlotsGrid({
   dir,
   f500,
   f600,
+  reduceMotion = false,
 }: TimeSlotsGridProps) {
   if (loading) {
     return (
@@ -72,7 +74,7 @@ export function TimeSlotsGrid({
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(80).duration(500).easing(Easing.out(Easing.cubic))}
+      entering={reduceMotion ? undefined : FadeInDown.delay(80).duration(500).easing(Easing.out(Easing.cubic))}
       style={[styles.slotsGrid, { flexDirection: dir.row }]}
     >
       {slots.map((s, i) => {
@@ -85,6 +87,9 @@ export function TimeSlotsGrid({
               onSelect(i);
             }}
             style={styles.slotWrap}
+            accessibilityRole="button"
+            accessibilityLabel={`${dir.isRTL ? 'وقت' : 'Time'} ${formatTime(s.startTime, dir.isRTL)}`}
+            accessibilityState={{ selected: isSelected }}
           >
             <Glass variant={isSelected ? 'strong' : 'regular'} radius={16} style={styles.slot}>
               {isSelected ? (

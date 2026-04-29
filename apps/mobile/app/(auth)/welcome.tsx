@@ -21,6 +21,7 @@ import Animated, {
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { getFontName } from '@/theme/fonts';
+import { useDir } from '@/hooks/useDir';
 
 function LeafIcon({ size = 14, color = sawaaColors.teal[700] }: { size?: number; color?: string }) {
   return (
@@ -144,9 +145,10 @@ function Orbs({ brandText, brandFont }: { brandText: string; brandFont: string }
 
 export default function WelcomeScreen() {
   const { t } = useTranslation();
-  const f700 = getFontName('ar', '700');
-  const f600 = getFontName('ar', '600');
-  const f500 = getFontName('ar', '500');
+  const dir = useDir();
+  const f700 = getFontName(dir.locale, '700');
+  const f600 = getFontName(dir.locale, '600');
+  const f500 = getFontName(dir.locale, '500');
 
   return (
     <AquaBackground>

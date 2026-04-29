@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View, type KeyboardTypeOptions 
 import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII } from '@/theme/glass';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import type { DirState } from '@/hooks/useDir';
 
 interface LabeledInputProps {
@@ -38,13 +38,13 @@ export function LabeledInput({
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { textAlign: dir.textAlign }]}>{label}</Text>
-      <Glass variant="clear" radius={RADII.image} style={styles.input}>
+      <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
         <View style={[styles.inputRow, { flexDirection: dir.row }]}>
           <TextInput
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor={C.subtle}
+            placeholderTextColor={sawaaColors.ink[500]}
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
             secureTextEntry={secureTextEntry && !isVisible}
@@ -53,9 +53,9 @@ export function LabeledInput({
           {showVisibilityToggle ? (
             <Pressable onPress={onToggleVisibility} style={styles.eyeBtn} hitSlop={8}>
               {isVisible ? (
-                <Eye size={20} color={C.subtle} strokeWidth={1.75} />
+                <Eye size={20} color={sawaaColors.ink[500]} strokeWidth={1.75} />
               ) : (
-                <EyeOff size={20} color={C.subtle} strokeWidth={1.75} />
+                <EyeOff size={20} color={sawaaColors.ink[500]} strokeWidth={1.75} />
               )}
             </Pressable>
           ) : null}
@@ -68,10 +68,10 @@ export function LabeledInput({
 
 const styles = StyleSheet.create({
   field: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
+  label: { fontSize: 14, fontWeight: '700', color: sawaaColors.teal[700] },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
   inputRow: { alignItems: 'center', alignSelf: 'stretch', width: '100%' },
-  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
+  inputText: { flex: 1, fontSize: 14, color: sawaaColors.teal[700] },
   eyeBtn: { padding: 4 },
-  error: { fontSize: 12, color: '#E74C3C' },
+  error: { fontSize: 12, color: sawaaColors.accent.coral },
 });

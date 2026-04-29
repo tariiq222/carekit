@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { C, RADII, SHADOW_RAISED } from "@/theme/glass";
+import { sawaaTokens, sawaaColors } from "@/theme/sawaa/tokens";
 import { Glass } from "@/theme";
 import { useDir } from "@/hooks/useDir";
 
@@ -20,13 +20,13 @@ export const QuickActions = ({ actions }: QuickActionsProps) => {
   const dir = useDir();
   return (
     <View style={s.outer}>
-      <Glass variant="strong" radius={RADII.floating} style={[s.panel, SHADOW_RAISED]}>
+      <Glass variant="strong" radius={sawaaTokens.radius.xl} style={s.panel}>
         <View style={[s.tilesRow, { flexDirection: dir.row }]}>
           {actions.map((a, i) => (
             <React.Fragment key={a.id}>
               <Pressable style={s.tile} onPress={a.onPress}>
                 <View style={s.iconBubble}>
-                  <Ionicons name={a.icon} size={22} color={C.deepTeal} />
+                  <Ionicons name={a.icon} size={22} color={sawaaColors.teal[700]} />
                 </View>
                 <Text style={s.label}>{a.label[dir.locale]}</Text>
               </Pressable>
@@ -40,7 +40,7 @@ export const QuickActions = ({ actions }: QuickActionsProps) => {
 };
 
 const s = StyleSheet.create({
-  outer: { marginHorizontal: 18, borderRadius: RADII.floating },
+  outer: { marginHorizontal: 18, borderRadius: sawaaTokens.radius.xl },
   panel: { paddingVertical: 18, paddingHorizontal: 10 },
   tilesRow: {
     alignItems: "center",
@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: "600",
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     textAlign: "center",
   },
   divider: {

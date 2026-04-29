@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text } from 'react-n
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { AquaBackground, sawaaColors } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
@@ -16,11 +17,14 @@ import { UpNextCard } from '@/components/features/home/UpNextCard';
 import { FeaturedClinics } from '@/components/features/home/FeaturedClinics';
 import { SupportSessions } from '@/components/features/home/SupportSessions';
 import { TherapistsRow } from '@/components/features/home/TherapistsRow';
+import { useReduceMotion } from '@/hooks/useA11y';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t } = useTranslation();
   const { t: termT } = useTerminology(VERTICAL_SLUG);
+  const reduceMotion = useReduceMotion();
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
   const f400 = getFontName(dir.locale, '400');
@@ -32,6 +36,14 @@ export default function HomeScreen() {
     day: 'numeric',
     month: 'long',
   });
+
+  const getGreeting = (hour: number) => {
+    if (hour >= 5 && hour < 12) return t('home.greetingMorning');
+    if (hour >= 12 && hour < 17) return t('home.greetingAfternoon');
+    if (hour >= 17 && hour <= 23) return t('home.greetingEvening');
+    return t('home.greetingNight');
+  };
+  const greeting = getGreeting(new Date().getHours());
 
   const homeQuery = useHome();
   const therapistsQuery = useTherapists();
@@ -67,21 +79,21 @@ export default function HomeScreen() {
         <HomeTopBar f600={f600} />
 
         <Animated.View
-          entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}
           style={styles.greetingBlock}
         >
           <Text style={[styles.dateLabel, { fontFamily: f600, textAlign: dir.textAlign }]}>
             {today}
           </Text>
           <Text style={[styles.greeting, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? `صباح الخير، ${firstName}` : `Good morning, ${firstName}`}
+            {`${greeting}، ${firstName}`}
           </Text>
         </Animated.View>
 
         {(loading || nextBooking) ? (
           <>
             <Animated.View
-              entering={FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}
+              entering={reduceMotion ? undefined : FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}
               style={[styles.sectionHead, { flexDirection: dir.row }]}
             >
               <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
@@ -98,45 +110,45 @@ export default function HomeScreen() {
               ) : null}
             </Animated.View>
 
-            <Animated.View entering={FadeInDown.delay(300).duration(700).easing(Easing.out(Easing.cubic))}>
+            <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(300).duration(700).easing(Easing.out(Easing.cubic))}>
               <UpNextCard loading={loading} booking={nextBooking} dir={dir} f600={f600} f700={f700} />
             </Animated.View>
           </>
         ) : null}
 
         <Animated.View
-          entering={FadeInDown.delay(380).duration(700).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInDown.delay(380).duration(700).easing(Easing.out(Easing.cubic))}
           style={[styles.sectionHead, { flexDirection: dir.row }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
             {dir.isRTL ? 'العيادات المميزة' : 'Featured Clinics'}
           </Text>
         </Animated.View>
-        <Animated.View entering={FadeInDown.delay(440).duration(700).easing(Easing.out(Easing.cubic))}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(440).duration(700).easing(Easing.out(Easing.cubic))}>
           <FeaturedClinics dir={dir} f600={f600} f700={f700} />
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(520).duration(700).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInDown.delay(520).duration(700).easing(Easing.out(Easing.cubic))}
           style={[styles.sectionHead, { flexDirection: dir.row }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
             {dir.isRTL ? 'جلسات الدعم' : 'Support sessions'}
           </Text>
         </Animated.View>
-        <Animated.View entering={FadeInDown.delay(580).duration(700).easing(Easing.out(Easing.cubic))}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(580).duration(700).easing(Easing.out(Easing.cubic))}>
           <SupportSessions dir={dir} f400={f400} f700={f700} />
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(640).duration(700).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInDown.delay(640).duration(700).easing(Easing.out(Easing.cubic))}
           style={[styles.sectionHead, { flexDirection: dir.row }]}
         >
           <Text style={[styles.sectionTitle, { fontFamily: f700 }]}>
             {termT('employee.plural', dir.isRTL ? 'المعالجون' : 'Therapists')}
           </Text>
         </Animated.View>
-        <Animated.View entering={FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.delay(700).duration(800).easing(Easing.out(Easing.cubic))}>
           <TherapistsRow therapists={therapists} dir={dir} f400={f400} f600={f600} f700={f700} />
         </Animated.View>
       </ScrollView>

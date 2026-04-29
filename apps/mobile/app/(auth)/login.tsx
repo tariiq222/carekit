@@ -18,8 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW } from '@/theme/glass';
-import { AquaBackground, PrimaryButton, sawaaColors } from '@/theme/sawaa';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
+import { AquaBackground, PrimaryButton } from '@/theme/sawaa';
 import { useDir } from '@/hooks/useDir';
 import { useRequestLoginOtp } from '@/hooks/queries';
 import { getFontName } from '@/theme/fonts';
@@ -80,7 +80,7 @@ export default function LoginScreen() {
             entering={FadeIn.duration(700).easing(Easing.out(Easing.cubic))}
             style={styles.logoContainer}
           >
-            <Glass variant="strong" radius={RADII.floating} style={[styles.logo, SHADOW]}>
+            <Glass variant="strong" radius={sawaaTokens.radius.xl} style={styles.logo}>
               <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M12 2C7 6 4 10 4 14a8 8 0 0 0 16 0c0-4-3-8-8-12Z"
@@ -120,8 +120,8 @@ export default function LoginScreen() {
           <Animated.View entering={FadeInUp.delay(400).duration(800).easing(Easing.out(Easing.cubic))}>
           <Glass
             variant="regular"
-            radius={RADII.card}
-            style={[styles.form, SHADOW, { marginTop: 32 }]}
+            radius={sawaaTokens.radius.lg}
+            style={[styles.form, { marginTop: 32 }]}
           >
             <View style={styles.formInner}>
               <View style={styles.field}>
@@ -133,7 +133,7 @@ export default function LoginScreen() {
                 >
                   {t('auth.login.identifier')}
                 </Text>
-                <Glass variant="clear" radius={RADII.image} style={styles.input}>
+                <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
                   <TextInput
                     value={identifier}
                     onChangeText={(text) => {
@@ -141,7 +141,7 @@ export default function LoginScreen() {
                       if (error) setError(undefined);
                     }}
                     placeholder={t('auth.login.identifier')}
-                    placeholderTextColor={C.subtle}
+                    placeholderTextColor={sawaaColors.ink[500]}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -198,17 +198,17 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 24 },
   logoContainer: { alignItems: 'center', marginBottom: 24 },
   logo: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 32, color: C.deepTeal, lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
-  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
+  title: { fontSize: 32, color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
+  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, color: C.deepTeal },
+  label: { fontSize: 14, color: sawaaColors.teal[700] },
   input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
   inputRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', width: '100%' },
-  inputText: { flex: 1, fontSize: 14, color: C.deepTeal },
-  error: { fontSize: 12, color: '#E74C3C' },
+  inputText: { flex: 1, fontSize: 14, color: sawaaColors.teal[700] },
+  error: { fontSize: 12, color: sawaaColors.accent.coral },
   registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
-  registerText: { fontSize: 14, color: C.subtle },
-  registerLink: { fontSize: 14, color: C.deepTeal },
+  registerText: { fontSize: 14, color: sawaaColors.ink[500] },
+  registerLink: { fontSize: 14, color: sawaaColors.teal[700] },
 });

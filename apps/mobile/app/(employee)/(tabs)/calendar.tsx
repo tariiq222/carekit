@@ -12,6 +12,7 @@ import { ThemedCard } from '@/theme/components/ThemedCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
 import { useEmployeeDayBookings } from '@/hooks/queries/useEmployeeDayBookings';
+import { getStatusLabel } from '@/lib/status-helpers';
 
 export default function CalendarScreen() {
   const { t } = useTranslation();
@@ -83,7 +84,7 @@ export default function CalendarScreen() {
                   {item.client ? `${item.client.firstName} ${item.client.lastName}` : t('doctor.clientRecord')}
                 </ThemedText>
               </View>
-              <StatusPill status={item.status} label={t('appointments.confirmed')} />
+              <StatusPill status={item.status} label={t(getStatusLabel(item.status))} />
             </View>
           </ThemedCard>
         )}

@@ -1,10 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import {
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +14,7 @@ import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft, ChevronRight, Send } from 'lucide-react-native';
 
@@ -21,6 +22,7 @@ import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
+import { useReduceMotion } from '@/hooks/useA11y';
 
 type Msg = { id: string; me: boolean; text: { ar: string; en: string } };
 const INITIAL_MSGS: Msg[] = [
@@ -33,6 +35,8 @@ export default function ChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dir = useDir();
+  const { t } = useTranslation();
+  const reduceMotion = useReduceMotion();
   const f400 = getFontName(dir.locale, '400');
   const f500 = getFontName(dir.locale, '500');
   const f600 = getFontName(dir.locale, '600');
@@ -40,7 +44,7 @@ export default function ChatScreen() {
   const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
   const [msgs, setMsgs] = useState<Msg[]>(INITIAL_MSGS);
   const [text, setText] = useState('');
-  const scrollRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   const send = () => {
     if (!text.trim()) return;
@@ -48,8 +52,58 @@ export default function ChatScreen() {
     const next: Msg = { id: String(Date.now()), me: true, text: { ar: text, en: text } };
     setMsgs((m) => [...m, next]);
     setText('');
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
+
+  const renderItem = useCallback(({ item: m, index: i }: { item: Msg; index: number }) => (
+    <Animated.View
+      entering={reduceMotion ? undefined : FadeInDown.delay(i < INITIAL_MSGS.length ? i * 80 : 0).duration(400).easing(Easing.out(Easing.cubic))}
+      style={[styles.bubbleRow, m.me ? styles.rowMe : styles.rowThem]}
+    >
+      {m.me ? (
+        <LinearGradient
+          colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bubble, styles.bubbleMe]}
+        >
+          <Text style={[styles.bubbleMeText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
+            {dir.isRTL ? m.text.ar : m.text.en}
+          </Text>
+        </LinearGradient>
+      ) : (
+        <Glass variant="strong" radius={sawaaRadius.xl} style={[styles.bubble, styles.bubbleThem]}>
+          <Text style={[styles.bubbleThemText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
+            {dir.isRTL ? m.text.ar : m.text.en}
+          </Text>
+        </Glass>
+      )}
+    </Animated.View>
+  ), [dir, f500, reduceMotion]);
+
+  const ListHeader = useMemo(() => (
+    <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
+      <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('a11y.buttonBack')}>
+        <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
+      </Glass>
+      <View style={styles.headerMid}>
+        <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
+          <Image
+            source={require('@/assets/sawa/icon.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
+            {dir.isRTL ? 'سَواء' : 'Sawaa'}
+          </Text>
+        </View>
+        <Text style={[styles.headerSub, { fontFamily: f400 }]}>
+          {dir.isRTL ? 'يعتمد على الذكاء الاصطناعي' : 'AI-powered'}
+        </Text>
+      </View>
+      <View style={styles.headerPlaceholder} />
+    </View>
+  ), [BackIcon, dir, f400, f700, insets.top, router, t]);
 
   return (
     <AquaBackground>
@@ -58,62 +112,16 @@ export default function ChatScreen() {
         style={styles.flex}
         keyboardVerticalOffset={0}
       >
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
-          <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
-            <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
-          </Glass>
-          <View style={styles.headerMid}>
-            <View style={[styles.headerTitleRow, { flexDirection: dir.row }]}>
-              <Image
-                source={require('@/assets/sawa/icon.png')}
-                style={styles.headerLogo}
-                resizeMode="contain"
-              />
-              <Text style={[styles.headerTitle, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'سَواء' : 'Sawaa'}
-              </Text>
-            </View>
-            <Text style={[styles.headerSub, { fontFamily: f400 }]}>
-              {dir.isRTL ? 'يعتمد على الذكاء الاصطناعي' : 'AI-powered'}
-            </Text>
-          </View>
-          <View style={styles.headerPlaceholder} />
-        </View>
-
-        {/* Messages */}
-        <ScrollView
-          ref={scrollRef}
+        <FlatList
+          ref={flatListRef}
+          data={msgs}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={ListHeader}
           contentContainerStyle={[styles.messages, { paddingBottom: 20 }]}
           showsVerticalScrollIndicator={false}
-        >
-          {msgs.map((m, i) => (
-            <Animated.View
-              key={m.id}
-              entering={FadeInDown.delay(i < INITIAL_MSGS.length ? i * 80 : 0).duration(400).easing(Easing.out(Easing.cubic))}
-              style={[styles.bubbleRow, m.me ? styles.rowMe : styles.rowThem]}
-            >
-              {m.me ? (
-                <LinearGradient
-                  colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.bubble, styles.bubbleMe]}
-                >
-                  <Text style={[styles.bubbleMeText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
-                    {dir.isRTL ? m.text.ar : m.text.en}
-                  </Text>
-                </LinearGradient>
-              ) : (
-                <Glass variant="strong" radius={sawaaRadius.xl} style={[styles.bubble, styles.bubbleThem]}>
-                  <Text style={[styles.bubbleThemText, { fontFamily: f500, textAlign: dir.textAlign, writingDirection: dir.writingDirection }]}>
-                    {dir.isRTL ? m.text.ar : m.text.en}
-                  </Text>
-                </Glass>
-              )}
-            </Animated.View>
-          ))}
-        </ScrollView>
+          scrollEventThrottle={16}
+        />
 
         {/* Input bar */}
         <View style={[styles.inputWrap, { paddingBottom: insets.bottom + 12 }]}>
@@ -124,6 +132,8 @@ export default function ChatScreen() {
                 onChangeText={setText}
                 placeholder={dir.isRTL ? 'اكتبي رسالتكِ…' : 'Type a message…'}
                 placeholderTextColor={sawaaColors.ink[400]}
+                accessibilityLabel={t('a11y.messageInput')}
+                testID="chat-input"
                 style={[
                   styles.input,
                   { fontFamily: f400, textAlign: dir.textAlign, writingDirection: dir.writingDirection, color: sawaaColors.ink[900] },
@@ -131,7 +141,14 @@ export default function ChatScreen() {
                 onSubmitEditing={send}
                 returnKeyType="send"
               />
-              <Pressable onPress={send} disabled={!text.trim()} style={styles.sendBtnPress}>
+              <Pressable
+                onPress={send}
+                disabled={!text.trim()}
+                style={styles.sendBtnPress}
+                accessibilityRole="button"
+                accessibilityLabel={t('a11y.sendMessage')}
+                testID="send-btn"
+              >
                 <LinearGradient
                   colors={[sawaaColors.teal[500], sawaaColors.teal[700]]}
                   start={{ x: 0, y: 0 }}
@@ -163,7 +180,7 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 11, color: sawaaColors.ink[500], marginTop: 2 },
   headerPlaceholder: { width: 40 },
   messages: { paddingHorizontal: 16, gap: 8 },
-  bubbleRow: { maxWidth: '85%' },
+  bubbleRow: { maxWidth: '85%', marginBottom: 8 },
   rowMe: { alignSelf: 'flex-end' },
   rowThem: { alignSelf: 'flex-start' },
   bubble: { paddingHorizontal: 14, paddingVertical: 10 },

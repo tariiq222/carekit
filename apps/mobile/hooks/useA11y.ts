@@ -2,6 +2,43 @@ import { useEffect, useState } from "react";
 import { AccessibilityInfo, Platform } from "react-native";
 
 /**
+ * `prefers-reduced-motion` (web) / `isReduceMotionEnabled` (iOS/Android).
+ * When true, animations should be disabled or significantly simplified.
+ */
+export function useReduceMotion() {
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      if (typeof window === "undefined" || !window.matchMedia) return;
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      setOn(mq.matches);
+      const handler = (e: MediaQueryListEvent) => setOn(e.matches);
+      mq.addEventListener?.("change", handler);
+      return () => mq.removeEventListener?.("change", handler);
+    }
+
+    // Native: iOS/Android
+    const a11y = AccessibilityInfo as unknown as {
+      isReduceMotionEnabled?: () => Promise<boolean>;
+      addEventListener: (
+        event: string,
+        handler: (value: boolean) => void,
+      ) => { remove?: () => void };
+    };
+
+    a11y.isReduceMotionEnabled?.()
+      .then((v) => setOn(!!v))
+      .catch(() => {});
+
+    const sub = a11y.addEventListener("reduceMotionChanged", (v) => setOn(!!v));
+    return () => sub?.remove?.();
+  }, []);
+
+  return on;
+}
+
+/**
  * `prefers-reduced-transparency` (web) / `isReduceTransparencyEnabled` (iOS).
  * When true, Liquid Glass surfaces should collapse toward opaque so content
  * behind them doesn't bleed through.

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 
-import { C } from '@/theme/glass';
+import { sawaaColors } from '@/theme/sawaa/tokens';
 import { useDir } from '@/hooks/useDir';
 
 type SectionHeaderProps = {
@@ -66,31 +66,31 @@ const styles = StyleSheet.create({
     width: 3,
     height: 26,
     borderRadius: 2,
-    backgroundColor: C.deepTeal,
+    backgroundColor: sawaaColors.teal[700],
     opacity: 0.35,
   },
   accentSection: {
     width: 3,
     height: 22,
     borderRadius: 2,
-    backgroundColor: C.deepTeal,
+    backgroundColor: sawaaColors.teal[700],
     opacity: 0.35,
   },
   titleScreen: {
     fontSize: 26,
     fontWeight: '800',
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     lineHeight: 32,
   },
   titleSection: {
     fontSize: 20,
     fontWeight: '800',
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     lineHeight: 26,
   },
   action: {
     fontSize: 13,
     fontWeight: '700',
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
   },
 });

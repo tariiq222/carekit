@@ -24,7 +24,7 @@ import * as Haptics from 'expo-haptics';
 import { Leaf, ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { C, RADII, SHADOW, SHADOW_RAISED } from '@/theme/glass';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
@@ -176,8 +176,8 @@ export function SplashWelcome({ onContinue }: Props) {
           <View style={styles.logoWrap}>
             <Animated.View style={[styles.halo, breatheHaloStyle]} pointerEvents="none" />
             <Animated.View style={breatheStyle}>
-              <Glass variant="strong" radius={RADII.pill} style={[styles.logo, SHADOW_RAISED]}>
-                <Leaf size={42} color={C.deepTeal} strokeWidth={1.6} />
+              <Glass variant="strong" radius={sawaaTokens.radius.pill} style={styles.logo}>
+                <Leaf size={42} color={sawaaColors.teal[700]} strokeWidth={1.6} />
               </Glass>
             </Animated.View>
           </View>
@@ -214,7 +214,7 @@ export function SplashWelcome({ onContinue }: Props) {
             accessibilityLabel={t('splash.cta')}
             style={({ pressed }) => [styles.ctaWrap, pressed && { transform: [{ scale: 0.98 }] }]}
           >
-            <Glass variant="strong" radius={RADII.pill} style={[styles.cta, SHADOW, { flexDirection: dir.row }]}>
+            <Glass variant="strong" radius={sawaaTokens.radius.pill} style={[styles.cta, { flexDirection: dir.row }]}>
               <Text
                 style={[
                   styles.ctaText,
@@ -224,13 +224,13 @@ export function SplashWelcome({ onContinue }: Props) {
                 {t('splash.cta')}
               </Text>
               <View style={styles.ctaIcon}>
-                <ArrowIcon size={20} color={C.deepTeal} strokeWidth={2.2} />
+                <ArrowIcon size={20} color={sawaaColors.teal[700]} strokeWidth={2.2} />
               </View>
             </Glass>
           </Pressable>
 
           <View style={[styles.privacy, { flexDirection: dir.row }]}>
-            <ShieldCheck size={14} color={C.subtle} strokeWidth={2} />
+            <ShieldCheck size={14} color={sawaaColors.ink[500]} strokeWidth={2} />
             <Text
               style={[
                 styles.privacyText,
@@ -247,7 +247,7 @@ export function SplashWelcome({ onContinue }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bgBot },
+  container: { flex: 1, backgroundColor: '#F2F9F9' },
   content: {
     flex: 1,
     paddingHorizontal: 28,
@@ -275,14 +275,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    color: C.deepTeal,
+    color: sawaaColors.teal[700],
     textAlign: 'center',
     letterSpacing: 0.2,
     paddingHorizontal: 16,
   },
   subtitle: {
     fontSize: 15,
-    color: C.subtle,
+    color: sawaaColors.ink[500],
     textAlign: 'center',
     marginTop: 2,
   },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   progress: { alignItems: 'center', gap: 8, marginBottom: 4 },
   dot: { height: 4, borderRadius: 999 },
   dotInactive: { width: 18, backgroundColor: 'rgba(21,79,87,0.2)' },
-  dotActive: { width: 44, backgroundColor: C.deepTeal },
+  dotActive: { width: 44, backgroundColor: sawaaColors.teal[700] },
   ctaWrap: { width: '100%', alignItems: 'center' },
   cta: {
     paddingHorizontal: 28,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  ctaText: { color: C.deepTeal, fontSize: 16, letterSpacing: 0.3 },
+  ctaText: { color: sawaaColors.teal[700], fontSize: 16, letterSpacing: 0.3 },
   ctaIcon: {
     width: 28,
     height: 28,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   privacy: { alignItems: 'center', gap: 6, opacity: 0.85 },
-  privacyText: { fontSize: 12, color: C.subtle, letterSpacing: 0.2 },
+  privacyText: { fontSize: 12, color: sawaaColors.ink[500], letterSpacing: 0.2 },
   blob: {
     position: 'absolute',
     width: 320,

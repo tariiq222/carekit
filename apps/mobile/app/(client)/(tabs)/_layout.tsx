@@ -8,8 +8,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Calendar, FileText, Home, MessageCircle } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { RADII, SHADOW_RAISED } from '@/theme/glass';
-import { sawaaColors } from '@/theme/sawaa';
+import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
 import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 
@@ -38,22 +37,19 @@ export default function ClientTabsLayout() {
 
 type TabBarProps = BottomTabBarProps;
 
-const HIDDEN_ON = new Set(['chat']);
-
 function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
   const dir = useDir();
   const insets = useSafeAreaInsets();
-
-  if (HIDDEN_ON.has(state.routes[state.index]?.name ?? '')) return null;
+  const isChat = state.routes[state.index]?.name === 'chat';
 
   return (
     <Glass
       variant="strong"
-      radius={RADII.pill}
+      radius={sawaaTokens.radius.pill}
       style={[
         styles.tabBar,
-        SHADOW_RAISED,
         { bottom: insets.bottom + 14, left: 14, right: 14 },
+        isChat && { opacity: 0.7 },
       ]}
     >
       <View style={[styles.tabBarInner, { flexDirection: dir.row }]}>

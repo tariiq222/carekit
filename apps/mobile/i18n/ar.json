@@ -56,6 +56,7 @@
     "createAccountSub": "أنشئ حسابك للبدء بحجز مواعيدك",
     "otpTitle": "رمز التحقق",
     "otpSub": "أدخل الرمز المرسل إلى بريدك الإلكتروني",
+    "otpBoxLabel": "خانة الرمز {{index}} من {{total}}",
     "otpSentTo": "تم إرسال الرمز إلى",
     "resendOtp": "إعادة إرسال الرمز",
     "resendIn": "إعادة الإرسال خلال",
@@ -113,7 +114,11 @@
     "records": "سجلاتي"
   },
   "home": {
-    "greeting": "أهلاً",
+    "greeting": "مرحباً",
+    "greetingMorning": "صباح الخير",
+    "greetingAfternoon": "مساء الخير",
+    "greetingEvening": "مساء الخير",
+    "greetingNight": "تصبح على خير",
     "upcomingAppointment": "موعدك القادم",
     "noUpcoming": "لا توجد مواعيد قادمة",
     "bookNow": "احجز موعدك الأول",
@@ -390,7 +395,8 @@
     "errorSending": "فشل إرسال الرسالة. حاول مرة أخرى.",
     "maxMessages": "وصلت الحد الأقصى لعدد الرسائل في هذه الجلسة.",
     "bookingConfirmed": "تم حجز الموعد بنجاح!",
-    "cancellationSubmitted": "تم إرسال طلب الإلغاء لمراجعة الإدارة."
+    "cancellationSubmitted": "تم إرسال طلب الإلغاء لمراجعة الإدارة.",
+    "swipeHint": "اسحبي للرجوع →"
   },
   "availability": {
     "title": "إدارة التوفر",
@@ -406,5 +412,27 @@
     "4": "الخميس",
     "5": "الجمعة",
     "6": "السبت"
+  },
+  "a11y": {
+    "buttonBack": "زر العودة",
+    "tabUpcoming": "المواعيد القادمة",
+    "tabCompleted": "المواعيد المنتهية",
+    "tabCancelled": "المواعيد الملغاة",
+    "tabNotifications": "الإشعارات",
+    "tabProfile": "الملف الشخصي",
+    "tabChat": "الدردشة",
+    "cardOpenAppointment": "فتح تفاصيل الموعد",
+    "refreshAppointments": "تحديث المواعيد",
+    "messageInput": "حقل إدخال الرسالة",
+    "sendMessage": "زر إرسال الرسالة",
+    "searchTherapists": "البحث عن المعالجين",
+    "selectTimeSlot": "اختر وقت الموعد",
+    "confirmBooking": "تأكيد الحجز",
+    "selectPaymentMethod": "اختر طريقة الدفع",
+    "checkoutTitle": "الدفع",
+    "profileSettings": "الإعدادات",
+    "profileLogout": "زر تسجيل الخروج",
+    "filterOpen": "فتح المرشحات",
+    "sortOpen": "فتح خيارات الفرز"
   }
 }

@@ -10,18 +10,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { useReducedTransparency, useIncreasedContrast } from "../../hooks/useA11y";
-import { GLASS_CFG } from "../glass";
-
-type Variant = "regular" | "strong" | "clear";
-
-type Cfg = {
-  mainBlur: number;
-  mainTintAlpha: number;
-  baseTintAlpha: number;
-  bloomAlpha: number;
-  borderAlpha: number;
-  nativeBlur: number;
-};
+import { GLASS_CFG, type GlassCfg as Cfg, type GlassVariant as Variant } from "../sawaa/tokens";
 
 function applyA11y(cfg: Cfg, reduceT: boolean, increaseC: boolean): Cfg {
   let out = { ...cfg };
