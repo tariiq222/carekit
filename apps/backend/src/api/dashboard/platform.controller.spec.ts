@@ -10,7 +10,6 @@ function buildController() {
   const listIntegrations = fn([]);
   const listFeatureFlags = fn([]);
   const getFeatureFlagMap = fn({});
-  const updateFeatureFlag = fn({ key: 'multi_branch', enabled: false });
   const controller = new DashboardPlatformController(
     createProblemReport as never,
     listProblemReports as never,
@@ -19,7 +18,6 @@ function buildController() {
     listIntegrations as never,
     listFeatureFlags as never,
     getFeatureFlagMap as never,
-    updateFeatureFlag as never,
   );
   return {
     controller,
@@ -30,7 +28,6 @@ function buildController() {
     listIntegrations,
     listFeatureFlags,
     getFeatureFlagMap,
-    updateFeatureFlag,
   };
 }
 
@@ -79,9 +76,8 @@ describe('DashboardPlatformController', () => {
     expect(getFeatureFlagMap.execute).toHaveBeenCalledWith();
   });
 
-  it('updateFeatureFlagEndpoint — passes key and enabled', async () => {
-    const { controller, updateFeatureFlag } = buildController();
-    await controller.updateFeatureFlagEndpoint('multi_branch', { enabled: false } as never);
-    expect(updateFeatureFlag.execute).toHaveBeenCalledWith({ key: 'multi_branch', enabled: false });
+  it('does not expose tenant-side feature flag mutation', () => {
+    const { controller } = buildController();
+    expect('updateFeatureFlagEndpoint' in controller).toBe(false);
   });
 });

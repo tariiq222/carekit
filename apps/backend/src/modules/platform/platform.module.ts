@@ -10,6 +10,7 @@ import { AdminVerticalsController } from '../../api/admin/verticals.controller';
 import { AdminMetricsController } from '../../api/admin/metrics.controller';
 import { AdminAuditLogController } from '../../api/admin/audit-log.controller';
 import { AdminImpersonationController } from '../../api/admin/impersonation.controller';
+import { AdminFeatureFlagsController } from '../../api/admin/feature-flags.controller';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { AdminHostGuard, SuperAdminGuard } from '../../common/guards';
 import { DatabaseModule } from '../../infrastructure/database';
@@ -56,6 +57,8 @@ import { AdminWaiveInvoiceHandler } from './admin/admin-waive-invoice/admin-waiv
 import { AdminGrantCreditHandler } from './admin/admin-grant-credit/admin-grant-credit.handler';
 import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
 import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
+import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/list-feature-flags-admin.handler';
+import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 import { FinanceModule } from '../finance/finance.module';
 
@@ -91,6 +94,8 @@ const ADMIN_HANDLERS = [
   AdminGrantCreditHandler,
   AdminChangePlanForOrgHandler,
   AdminRefundInvoiceHandler,
+  ListFeatureFlagsAdminHandler,
+  UpdateFeatureFlagAdminHandler,
 ];
 
 @Module({
@@ -118,6 +123,7 @@ const ADMIN_HANDLERS = [
     AdminAuditLogController,
     AdminImpersonationController,
     AdminBillingController,
+    AdminFeatureFlagsController,
   ],
   providers: [
     SuperAdminContextInterceptor,

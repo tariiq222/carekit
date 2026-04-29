@@ -20,8 +20,6 @@ import { UpsertIntegrationDto } from '../../modules/platform/integrations/upsert
 import { ListIntegrationsHandler } from '../../modules/platform/integrations/list-integrations.handler';
 import { ListFeatureFlagsHandler } from '../../modules/platform/feature-flags/list-feature-flags.handler';
 import { GetFeatureFlagMapHandler } from '../../modules/platform/feature-flags/get-feature-flag-map.handler';
-import { UpdateFeatureFlagHandler } from '../../modules/platform/feature-flags/update-feature-flag.handler';
-import { UpdateFeatureFlagDto } from '../../modules/platform/feature-flags/update-feature-flag.dto';
 
 @ApiTags('Dashboard / Platform')
 @ApiBearerAuth()
@@ -37,7 +35,6 @@ export class DashboardPlatformController {
     private readonly listIntegrations: ListIntegrationsHandler,
     private readonly listFeatureFlags: ListFeatureFlagsHandler,
     private readonly getFeatureFlagMap: GetFeatureFlagMapHandler,
-    private readonly updateFeatureFlag: UpdateFeatureFlagHandler,
   ) {}
 
   // ── Problem Reports ──────────────────────────────────────────────────────────
@@ -102,15 +99,4 @@ export class DashboardPlatformController {
     return this.getFeatureFlagMap.execute();
   }
 
-  @Patch('feature-flags/:key')
-  @ApiOperation({ summary: 'Enable or disable a feature flag by key' })
-  @ApiParam({ name: 'key', description: 'Feature flag identifier key', example: 'CHATBOT_ENABLED' })
-  @ApiOkResponse({ description: 'Feature flag updated' })
-  @ApiNotFoundResponse({ description: 'Feature flag not found' })
-  async updateFeatureFlagEndpoint(
-    @Param('key') key: string,
-    @Body() body: UpdateFeatureFlagDto,
-  ) {
-    return this.updateFeatureFlag.execute({ key, enabled: body.enabled });
-  }
 }
