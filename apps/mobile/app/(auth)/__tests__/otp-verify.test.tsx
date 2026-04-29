@@ -1,8 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import OtpVerifyScreen from '../otp-verify';
-
-// --- Mocks ---
 
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
@@ -11,14 +8,18 @@ jest.mock('expo-router', () => ({
     replace: mockReplace,
     back: mockBack,
   }),
-  useLocalSearchParams: () => ({ email: 'test@example.com' }),
+  useLocalSearchParams: () => ({
+    identifier: 'test@example.com',
+    maskedIdentifier: 't***@example.com',
+    purpose: 'login',
+  }),
 }));
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: any) => {
+    t: (key: string, options?: { index?: number; total?: number }) => {
       if (key === 'auth.otpBoxLabel') {
-        return `OTP digit ${options.index} of ${options.total}`;
+        return `OTP digit ${options?.index} of ${options?.total}`;
       }
       return key;
     },
@@ -31,31 +32,31 @@ jest.mock('@/hooks/use-redux', () => ({
   useAppSelector: jest.fn(),
 }));
 
+const mockSetAuthSession = jest.fn((payload: unknown) => ({ type: 'auth/setAuthSession', payload }));
+const mockSetUser = jest.fn((payload: unknown) => ({ type: 'auth/setUser', payload }));
 jest.mock('@/stores/slices/auth-slice', () => ({
-  setCredentials: jest.fn(),
-  setLoading: jest.fn(),
+  setAuthSession: (payload: unknown) => mockSetAuthSession(payload),
+  setUser: (payload: unknown) => mockSetUser(payload),
 }));
 
-jest.mock('@/services/auth', () => ({
-  authService: {
-    sendOtp: jest.fn().mockResolvedValue({ success: true }),
-    verifyOtp: jest.fn().mockResolvedValue({
-      success: true,
-      data: {
-        accessToken: 'access-token',
-        refreshToken: 'refresh-token',
-        user: { role: 'CLIENT' },
-      },
-    }),
-  },
+const mockVerifyOtp = jest.fn().mockResolvedValue({
+  tokens: { accessToken: 'access-token', refreshToken: 'refresh-token' },
+  activeMembership: null,
+});
+const mockRequestLoginOtp = jest.fn().mockResolvedValue({ maskedIdentifier: 't***@example.com' });
+const mockRefetchMe = jest.fn().mockResolvedValue({ data: { data: { id: 'u1', role: 'CLIENT' } } });
+jest.mock('@/hooks/queries', () => ({
+  useVerifyOtp: () => ({ mutateAsync: mockVerifyOtp }),
+  useRequestLoginOtp: () => ({ mutateAsync: mockRequestLoginOtp }),
+  useMe: () => ({ refetch: mockRefetchMe }),
 }));
 
-jest.mock('@/types/auth', () => ({
-  getPrimaryRole: jest.fn().mockReturnValue('client'),
+jest.mock('@/services/push', () => ({
+  registerForPushAsync: jest.fn(),
 }));
 
-jest.mock('@/lib/onboarding', () => ({
-  hasSeenOnboarding: jest.fn().mockResolvedValue(true),
+jest.mock('@/services/tenant', () => ({
+  setCurrentOrgId: jest.fn(),
 }));
 
 jest.mock('expo-haptics', () => ({
@@ -66,7 +67,7 @@ jest.mock('expo-haptics', () => ({
 }));
 
 jest.mock('expo-linear-gradient', () => ({
-  LinearGradient: ({ children }: any) => <>{children}</>,
+  LinearGradient: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -83,65 +84,73 @@ jest.mock('@/theme/useTheme', () => ({
         textSecondary: '#666',
         textMuted: '#999',
       },
+      typography: {
+        fontFamily: {
+          arabic: 'System',
+          english: 'System',
+        },
+      },
     },
     isRTL: false,
+    language: 'en',
   }),
 }));
 
-import { authService } from '@/services/auth';
+import OtpVerifyScreen from '../otp-verify';
 
 describe('OtpVerifyScreen Autofill & Auto-submit', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders 6 OTP input boxes with correct autofill attributes', () => {
-    const { getAllByPlaceholderText, queryAllByDisplayValue, getByLabelText } = render(<OtpVerifyScreen />);
+  it('renders 4 OTP input boxes with SMS autofill attributes', () => {
+    const { getByLabelText } = render(<OtpVerifyScreen />);
 
-    // We have 6 boxes
-    for (let i = 1; i <= 6; i++) {
-      const input = getByLabelText(`OTP digit ${i} of 6`);
+    for (let i = 1; i <= 4; i += 1) {
+      const input = getByLabelText(`OTP digit ${i} of 4`);
       expect(input.props.textContentType).toBe('oneTimeCode');
       expect(input.props.autoComplete).toBe('sms-otp');
       expect(input.props.keyboardType).toBe('number-pad');
     }
   });
 
-  it('auto-submits when all 6 digits are filled', async () => {
+  it('auto-submits when all 4 digits are filled', async () => {
     const { getByLabelText } = render(<OtpVerifyScreen />);
 
-    // Fill first 5 digits
-    for (let i = 1; i <= 5; i++) {
-      fireEvent.changeText(getByLabelText(`OTP digit ${i} of 6`), i.toString());
+    for (let i = 1; i <= 3; i += 1) {
+      fireEvent.changeText(getByLabelText(`OTP digit ${i} of 4`), i.toString());
     }
 
-    // verifyOtp should not have been called yet
-    expect(authService.verifyOtp).not.toHaveBeenCalled();
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
 
-    // Fill the last digit
-    fireEvent.changeText(getByLabelText('OTP digit 6 of 6'), '6');
+    fireEvent.changeText(getByLabelText('OTP digit 4 of 4'), '4');
 
-    // Wait for auto-submit
     await waitFor(() => {
-      expect(authService.verifyOtp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        code: '123456',
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        identifier: 'test@example.com',
+        code: '1234',
+        purpose: 'login',
       });
+    });
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/(client)/(tabs)/home');
     });
   });
 
   it('handles paste and auto-submits', async () => {
     const { getByLabelText } = render(<OtpVerifyScreen />);
 
-    // Paste 6 digits into the first box
-    fireEvent.changeText(getByLabelText('OTP digit 1 of 6'), '654321');
+    fireEvent.changeText(getByLabelText('OTP digit 1 of 4'), '6543');
 
-    // Wait for auto-submit
     await waitFor(() => {
-      expect(authService.verifyOtp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        code: '654321',
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        identifier: 'test@example.com',
+        code: '6543',
+        purpose: 'login',
       });
+    });
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/(client)/(tabs)/home');
     });
   });
 });

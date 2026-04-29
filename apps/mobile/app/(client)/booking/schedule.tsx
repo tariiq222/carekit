@@ -154,7 +154,7 @@ export default function BookingScheduleScreen() {
       >
         <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(500)}>
           <View style={[styles.topRow, { flexDirection: dir.row }]}>
-            <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('a11y.buttonBack')}>
+            <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityLabel={t('a11y.buttonBack')}>
               <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
             </Glass>
             <Text style={[styles.step, { fontFamily: f600 }]}>

@@ -83,7 +83,7 @@ export default function ChatScreen() {
 
   const ListHeader = useMemo(() => (
     <View style={[styles.header, { paddingTop: insets.top + 10, flexDirection: dir.row }]}>
-      <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('a11y.buttonBack')}>
+      <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn} accessibilityLabel={t('a11y.buttonBack')}>
         <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
       </Glass>
       <View style={styles.headerMid}>

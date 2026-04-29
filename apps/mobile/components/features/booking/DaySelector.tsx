@@ -44,7 +44,6 @@ export function DaySelector({ days, dayIdx, onSelect, dir, f500, f700 }: DaySele
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.daysRow, { flexDirection: dir.row }]}
-        inverted={dir.isRTL}
       >
         {days.map((d, i) => {
           const isActive = i === dayIdx;
