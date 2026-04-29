@@ -10,6 +10,11 @@ const buildPrisma = () => ({
   plan: {
     findFirst: jest.fn(),
   },
+  $allTenants: {
+    membership: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
+  },
 });
 
 const buildTenant = (organizationId = 'org-A') => ({
@@ -20,19 +25,37 @@ const buildCache = () => ({
   invalidate: jest.fn(),
 });
 
-const basicPlan = { id: 'plan-1', slug: 'basic', priceMonthly: 299, isActive: true };
-const proPlan = { id: 'plan-2', slug: 'pro', priceMonthly: 799 };
+const buildMailer = () => ({
+  sendPlanChanged: jest.fn().mockResolvedValue(undefined),
+});
+
+const buildConfig = () => ({
+  get: jest.fn().mockImplementation((_key: string, def: unknown) => def),
+});
+
+const buildHandler = (
+  prisma: ReturnType<typeof buildPrisma>,
+  tenant = buildTenant(),
+  cache = buildCache(),
+  mailer = buildMailer(),
+) =>
+  new DowngradePlanHandler(
+    prisma as never,
+    tenant as never,
+    cache as never,
+    new SubscriptionStateMachine(),
+    mailer as never,
+    buildConfig() as never,
+  );
+
+const basicPlan = { id: 'plan-1', slug: 'basic', nameAr: 'أساسي', priceMonthly: 299, isActive: true };
+const proPlan = { id: 'plan-2', slug: 'pro', nameAr: 'احترافي', priceMonthly: 799 };
 
 describe('DowngradePlanHandler', () => {
   it('throws NotFoundException when no subscription exists', async () => {
     const prisma = buildPrisma();
     prisma.subscription.findFirst.mockResolvedValue(null);
-    const handler = new DowngradePlanHandler(
-      prisma as never,
-      buildTenant() as never,
-      buildCache() as never,
-      new SubscriptionStateMachine(),
-    );
+    const handler = buildHandler(prisma);
 
     await expect(
       handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' }),
@@ -46,12 +69,7 @@ describe('DowngradePlanHandler', () => {
       status: 'CANCELED',
       plan: proPlan,
     });
-    const handler = new DowngradePlanHandler(
-      prisma as never,
-      buildTenant() as never,
-      buildCache() as never,
-      new SubscriptionStateMachine(),
-    );
+    const handler = buildHandler(prisma);
 
     await expect(
       handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' }),
@@ -65,12 +83,7 @@ describe('DowngradePlanHandler', () => {
       status: 'SUSPENDED',
       plan: proPlan,
     });
-    const handler = new DowngradePlanHandler(
-      prisma as never,
-      buildTenant() as never,
-      buildCache() as never,
-      new SubscriptionStateMachine(),
-    );
+    const handler = buildHandler(prisma);
 
     await expect(
       handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' }),
@@ -85,12 +98,7 @@ describe('DowngradePlanHandler', () => {
       plan: basicPlan,
     });
     prisma.plan.findFirst.mockResolvedValue(proPlan);
-    const handler = new DowngradePlanHandler(
-      prisma as never,
-      buildTenant() as never,
-      buildCache() as never,
-      new SubscriptionStateMachine(),
-    );
+    const handler = buildHandler(prisma);
 
     await expect(
       handler.execute({ planId: 'plan-2', billingCycle: 'MONTHLY' }),
@@ -109,12 +117,7 @@ describe('DowngradePlanHandler', () => {
     prisma.plan.findFirst.mockResolvedValue(basicPlan);
     const updatedSub = { id: 'sub-1', planId: 'plan-1' };
     prisma.subscription.update.mockResolvedValue(updatedSub);
-    const handler = new DowngradePlanHandler(
-      prisma as never,
-      tenant as never,
-      cache as never,
-      new SubscriptionStateMachine(),
-    );
+    const handler = buildHandler(prisma, tenant, cache);
 
     const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
 
@@ -126,5 +129,33 @@ describe('DowngradePlanHandler', () => {
     );
     expect(cache.invalidate).toHaveBeenCalledWith('org-A');
     expect(result).toEqual(updatedSub);
+  });
+
+  it('sends a plan-changed email to the org owner after downgrade', async () => {
+    const prisma = buildPrisma();
+    const mailer = buildMailer();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: proPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
+    prisma.$allTenants.membership.findFirst.mockResolvedValue({
+      user: { email: 'owner@example.com', name: 'Owner' },
+      organization: { nameAr: 'Org AR' },
+    });
+    const handler = buildHandler(prisma, buildTenant('org-A'), buildCache(), mailer);
+
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    expect(mailer.sendPlanChanged).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        fromPlanName: 'احترافي',
+        toPlanName: 'أساسي',
+        effectiveDate: expect.any(String),
+      }),
+    );
   });
 });
