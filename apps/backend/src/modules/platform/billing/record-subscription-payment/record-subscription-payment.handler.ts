@@ -64,7 +64,7 @@ export class RecordSubscriptionPaymentHandler {
       await this.mailer.sendSubscriptionPaymentSucceeded(owner.user.email, {
         ownerName: owner.user.name ?? '',
         orgName: owner.organization.nameAr,
-        amountSar: Number(invoice.amountTotal).toFixed(2),
+        amountSar: Number(invoice.amount).toFixed(2),
         invoiceId: invoice.id,
         receiptUrl: `${baseUrl}/billing/${invoice.id}`,
       });

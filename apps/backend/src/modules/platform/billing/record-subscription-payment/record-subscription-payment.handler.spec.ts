@@ -61,7 +61,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: { id: 'sub-1', status: 'TRIALING', organizationId: 'org-A' },
     });
     const handler = new RecordSubscriptionPaymentHandler(
@@ -86,7 +86,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: { id: 'sub-1', status: 'PAST_DUE', organizationId: 'org-A' },
     });
     const handler = new RecordSubscriptionPaymentHandler(
@@ -116,7 +116,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
 
     // ACTIVE → chargeSuccess is not a valid transition — use PAST_DUE
     const sub = { id: 'sub-1', status: 'PAST_DUE', organizationId: 'org-A' };
-    prisma.subscriptionInvoice.findFirst.mockResolvedValue({ id: 'inv-1', amountTotal: 299, subscription: sub });
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({ id: 'inv-1', amount: 299, subscription: sub });
 
     const handler = new RecordSubscriptionPaymentHandler(
       prisma as never,
@@ -140,7 +140,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: { id: 'sub-1', status: 'PAST_DUE', organizationId: 'org-A' },
     });
     const handler = new RecordSubscriptionPaymentHandler(
@@ -166,7 +166,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
     const cache = buildCache();
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: { id: 'sub-1', status: 'TRIALING', organizationId: 'org-A' },
     });
     const handler = new RecordSubscriptionPaymentHandler(
@@ -187,7 +187,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: { id: 'sub-1', status: 'TRIALING', organizationId: 'org-A' },
     });
     const mailer = buildMailer();

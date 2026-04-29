@@ -65,7 +65,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -95,7 +95,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -123,7 +123,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const existingPastDue = new Date('2026-04-20T00:00:00Z');
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -150,7 +150,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -185,7 +185,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const cache = buildCache();
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -211,7 +211,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
-      amountTotal: 299,
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
