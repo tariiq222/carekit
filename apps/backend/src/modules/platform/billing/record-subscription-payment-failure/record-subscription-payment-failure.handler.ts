@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
 
 export interface RecordSubscriptionPaymentFailureCommand {
   invoiceId: string;
@@ -15,6 +17,8 @@ export class RecordSubscriptionPaymentFailureHandler {
     private readonly prisma: PrismaService,
     private readonly cache: SubscriptionCacheService,
     private readonly stateMachine: SubscriptionStateMachine,
+    private readonly mailer: PlatformMailerService,
+    private readonly config: ConfigService,
   ) {}
 
   async execute(cmd: RecordSubscriptionPaymentFailureCommand) {
@@ -51,6 +55,28 @@ export class RecordSubscriptionPaymentFailureHandler {
     });
 
     this.cache.invalidate(sub.organizationId);
+
+    const owner = await this.prisma.$allTenants.membership.findFirst({
+      where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
+      include: {
+        user: { select: { email: true, name: true } },
+        organization: { select: { nameAr: true } },
+      },
+    });
+    if (owner?.user) {
+      const baseUrl = this.config.get<string>(
+        'PLATFORM_DASHBOARD_URL',
+        'https://app.webvue.pro/dashboard',
+      );
+      await this.mailer.sendSubscriptionPaymentFailed(owner.user.email, {
+        ownerName: owner.user.name ?? '',
+        orgName: owner.organization.nameAr,
+        amountSar: Number(invoice.amountTotal).toFixed(2),
+        reason: cmd.reason,
+        billingUrl: `${baseUrl}/billing`,
+      });
+    }
+
     return { ok: true };
   }
 }
