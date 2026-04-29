@@ -33,13 +33,13 @@ export type VerifyOtpResponse = {
 };
 
 export const registerUser = (body: RegisterPayload) =>
-  api.post<RegisterResponse>('/api/v1/mobile/auth/register', body).then(r => r.data);
+  api.post<RegisterResponse>('/mobile/auth/register', body).then(r => r.data);
 
 export const requestLoginOtp = (body: RequestLoginOtpPayload) =>
-  api.post<RequestLoginOtpResponse>('/api/v1/mobile/auth/request-login-otp', body).then(r => r.data);
+  api.post<RequestLoginOtpResponse>('/mobile/auth/request-login-otp', body).then(r => r.data);
 
 export const verifyMobileOtp = async (body: VerifyOtpPayload): Promise<VerifyOtpResponse> => {
-  const response = await api.post<VerifyOtpResponse>('/api/v1/mobile/auth/verify-otp', body);
+  const response = await api.post<VerifyOtpResponse>('/mobile/auth/verify-otp', body);
   const data = response.data;
   await setSecureItem('accessToken', data.tokens.accessToken);
   await setSecureItem('refreshToken', data.tokens.refreshToken);
@@ -50,7 +50,7 @@ export const verifyMobileOtp = async (body: VerifyOtpPayload): Promise<VerifyOtp
 };
 
 export const requestEmailVerification = () =>
-  api.post<{ success: true }>('/api/v1/mobile/auth/request-email-verification').then(r => r.data);
+  api.post<{ success: true }>('/mobile/auth/request-email-verification').then(r => r.data);
 
 interface RegisterRequest {
   firstName: string;
@@ -152,9 +152,9 @@ export const authService = {
     return response.data;
   },
 
-  /** POST /auth/email/verify/send */
+  /** POST /mobile/auth/request-email-verification — sends a verification link to the authenticated user's email. */
   async sendVerificationEmail(): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>('/auth/email/verify/send');
+    const response = await api.post<ApiResponse>('/mobile/auth/request-email-verification');
     return response.data;
   },
 
