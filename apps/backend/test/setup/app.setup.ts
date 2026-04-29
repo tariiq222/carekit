@@ -17,12 +17,18 @@ const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
 
-let cachedApp: INestApplication | null = null;
+type TestTenantEnforcement = 'permissive' | 'strict';
 
-export async function createTestApp(): Promise<{
+const appCache = new Map<string, INestApplication>();
+
+export async function createTestApp(
+  options: { tenantEnforcement?: TestTenantEnforcement; globalPrefix?: boolean } = {},
+): Promise<{
   app: INestApplication;
   request: SuperTest.Agent;
 }> {
+  const tenantEnforcement = options.tenantEnforcement ?? 'permissive';
+  const globalPrefix = options.globalPrefix === true;
   process.env.DATABASE_URL = TEST_DATABASE_URL;
   process.env.REDIS_HOST = 'localhost';
   process.env.REDIS_PORT = '5380';
@@ -46,6 +52,7 @@ export async function createTestApp(): Promise<{
   process.env.JWT_CLIENT_REFRESH_SECRET = 'test-client-refresh-secret-32chars';
   process.env.JWT_CLIENT_ACCESS_TTL = '15m';
   process.env.JWT_CLIENT_REFRESH_TTL = '30d';
+  process.env.TENANT_ENFORCEMENT = tenantEnforcement;
   process.env.SMS_PROVIDER_ENCRYPTION_KEY =
     process.env.SMS_PROVIDER_ENCRYPTION_KEY ??
     Buffer.alloc(32, 1).toString('base64');
@@ -55,6 +62,8 @@ export async function createTestApp(): Promise<{
 
   await ensureTestUsers();
 
+  const cacheKey = `tenant=${tenantEnforcement};prefix=${globalPrefix ? 'api/v1' : 'none'}`;
+  const cachedApp = appCache.get(cacheKey);
   if (cachedApp) {
     return { app: cachedApp, request: SuperTest(cachedApp.getHttpServer()) };
   }
@@ -92,7 +101,7 @@ export async function createTestApp(): Promise<{
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
-          TENANT_ENFORCEMENT: 'permissive',
+          TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
         };
         return map[key];
@@ -125,7 +134,7 @@ export async function createTestApp(): Promise<{
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
-          TENANT_ENFORCEMENT: 'permissive',
+          TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
         };
         const val = map[key];
@@ -166,18 +175,21 @@ export async function createTestApp(): Promise<{
     .compile();
 
   const app = moduleRef.createNestApplication();
+  if (globalPrefix) {
+    app.setGlobalPrefix('api/v1');
+  }
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
   await app.init();
-  cachedApp = app;
+  appCache.set(cacheKey, app);
 
   return { app, request: SuperTest(app.getHttpServer()) };
 }
 
 export async function closeTestApp(): Promise<void> {
-  if (cachedApp) {
-    await cachedApp.close();
-    cachedApp = null;
+  for (const app of appCache.values()) {
+    await app.close();
   }
+  appCache.clear();
 }

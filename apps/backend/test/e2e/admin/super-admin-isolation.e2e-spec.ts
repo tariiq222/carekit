@@ -13,6 +13,7 @@ const ACCESS_SECRET = 'test-access-secret-32chars-min';
 describe('Super-admin isolation (e2e)', () => {
   let req: SuperTest.Agent;
   const ADMIN_HOST = 'admin.test';
+  const LIVE_IMPERSONATION_SESSION_ID = 'admin-isolation-live-shadow-session';
 
   const ADMIN_ENDPOINTS: Array<{ method: 'get' | 'post'; path: string }> = [
     { method: 'get', path: '/api/v1/admin/organizations' },
@@ -29,7 +30,7 @@ describe('Super-admin isolation (e2e)', () => {
 
   beforeAll(async () => {
     process.env.ADMIN_HOSTS = ADMIN_HOST;
-    ({ request: req } = await createTestApp());
+    ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['SuperAdminActionLog', 'ImpersonationSession', 'RefreshToken', 'Membership', 'User']);
 
     const passwordHash = await bcrypt.hash('Test@1234', 10);
@@ -57,6 +58,19 @@ describe('Super-admin isolation (e2e)', () => {
       },
     });
     superAdminUserId = superAdmin.id;
+
+    await testPrisma.impersonationSession.create({
+      data: {
+        id: LIVE_IMPERSONATION_SESSION_ID,
+        superAdminUserId,
+        targetUserId: regularUserId,
+        organizationId: 'some-org',
+        reason: 'e2e live shadow token replay guard',
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        ipAddress: '127.0.0.1',
+        userAgent: 'super-admin-isolation-e2e',
+      },
+    });
   });
 
   afterAll(async () => {
@@ -116,7 +130,11 @@ describe('Super-admin isolation (e2e)', () => {
       async ({ method, path }) => {
         const token = tokenFor(
           { id: superAdminUserId, email: 'super@e2e.test' },
-          { scope: 'impersonation', impersonationSessionId: 'fake', organizationId: 'some-org' },
+          {
+            scope: 'impersonation',
+            impersonationSessionId: LIVE_IMPERSONATION_SESSION_ID,
+            organizationId: 'some-org',
+          },
         );
         const res = await req[method](path)
           .set('Authorization', `Bearer ${token}`)
