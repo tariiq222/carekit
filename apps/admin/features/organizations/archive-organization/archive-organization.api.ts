@@ -1,0 +1,13 @@
+import { adminRequest } from '@/lib/api-client';
+
+export interface ArchiveOrganizationCommand {
+  organizationId: string;
+  reason: string;
+}
+
+export function archiveOrganization(cmd: ArchiveOrganizationCommand): Promise<void> {
+  return adminRequest<void>(`/organizations/${cmd.organizationId}/archive`, {
+    method: 'POST',
+    body: JSON.stringify({ reason: cmd.reason }),
+  });
+}

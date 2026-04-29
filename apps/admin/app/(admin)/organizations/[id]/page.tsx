@@ -1,8 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@carekit/ui/primitives/badge';
+import { Button } from '@carekit/ui/primitives/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
 import { useGetOrganization } from '@/features/organizations/get-organization/use-get-organization';
@@ -11,6 +13,8 @@ import { SuspendDialog } from '@/features/organizations/suspend-organization/sus
 import { ReinstateDialog } from '@/features/organizations/reinstate-organization/reinstate-dialog';
 import { ImpersonateDialog } from '@/features/impersonation/start-impersonation/impersonate-dialog';
 import { ChangePlanDialog } from '@/features/organizations/change-plan/change-plan-dialog';
+import { ArchiveDialog } from '@/features/organizations/archive-organization/archive-dialog';
+import { UpdateOrganizationDialog } from '@/features/organizations/update-organization/update-organization-dialog';
 
 export default function OrganizationDetailPage({
   params,
@@ -18,6 +22,13 @@ export default function OrganizationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const t = useTranslations('organizations.detail');
+  const statusT = useTranslations('organizations.status');
+  const errorT = useTranslations('organizations.error');
+  const locale = useLocale();
+  const dateLocale = locale === 'ar' ? 'ar-SA' : 'en-GB';
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const { data, isLoading, error } = useGetOrganization(id);
   const { data: billing } = useGetOrgBilling(id);
 
@@ -25,12 +36,14 @@ export default function OrganizationDetailPage({
   if (error) {
     return (
       <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-        Failed to load: {(error as Error).message}
+        {errorT('loadFailed', { message: (error as Error).message })}
       </div>
     );
   }
 
-  const suspended = Boolean(data.suspendedAt);
+  const archived = data.status === 'ARCHIVED';
+  const suspended = data.status === 'SUSPENDED';
+  const hasSuspensionDetail = Boolean(data.suspendedAt);
   const sub = billing?.subscription ?? null;
 
   return (
@@ -38,103 +51,120 @@ export default function OrganizationDetailPage({
       <div className="flex items-start justify-between">
         <div>
           <Link href="/organizations" className="text-xs text-muted-foreground hover:underline">
-            ← All organizations
+            {t('back')}
           </Link>
           <h2 className="mt-1 text-2xl font-semibold">{data.nameAr}</h2>
           {data.nameEn ? <p className="text-sm text-muted-foreground">{data.nameEn}</p> : null}
           <div className="mt-2 flex items-center gap-2">
             <span className="font-mono text-xs text-muted-foreground">{data.slug}</span>
-            {suspended ? (
-              <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning">
-                Suspended
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="border-success/40 bg-success/10 text-success">
-                Active
-              </Badge>
-            )}
+            <OrgStatusBadge status={data.status} label={statusT(data.status)} />
           </div>
         </div>
         <div className="flex gap-2">
-          {!suspended ? (
+          <Button variant="outline" size="sm" onClick={() => setUpdateOpen(true)}>
+            {t('edit')}
+          </Button>
+          {!archived && !hasSuspensionDetail ? (
             <ImpersonateDialog organizationId={id} organizationName={data.nameAr} />
           ) : null}
-          {suspended ? (
+          {!archived && suspended ? (
             <ReinstateDialog organizationId={id} />
-          ) : (
+          ) : !archived ? (
             <SuspendDialog organizationId={id} />
-          )}
+          ) : null}
+          {!archived ? (
+            <Button variant="destructive" size="sm" onClick={() => setArchiveOpen(true)}>
+              {t('archive')}
+            </Button>
+          ) : null}
         </div>
       </div>
 
-      {suspended ? (
+      {hasSuspensionDetail ? (
         <Card className="border-warning/40 bg-warning/5">
           <CardContent className="p-4 text-sm">
-            <strong>Suspended</strong> since{' '}
-            {new Date(data.suspendedAt!).toLocaleString()}.{' '}
-            {data.suspendedReason ? (
-              <>
-                Reason: <em>{data.suspendedReason}</em>
-              </>
-            ) : null}
+            <strong>{statusT(data.status)}</strong>{' '}
+            {t('suspendedSince', {
+              date: new Date(data.suspendedAt!).toLocaleString(dateLocale),
+            })}{' '}
+            {data.suspendedReason ? <em>{t('reason', { reason: data.suspendedReason })}</em> : null}
           </CardContent>
         </Card>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard label="Members" value={data.stats.memberCount} />
-        <StatCard label="Bookings (30d)" value={data.stats.bookingCount30d} />
+        <StatCard label={t('members')} value={data.stats.memberCount} />
+        <StatCard label={t('bookings30d')} value={data.stats.bookingCount30d} />
         <StatCard
-          label="Total revenue (SAR)"
+          label={t('totalRevenue')}
           value={Number(data.stats.totalRevenue).toLocaleString()}
         />
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base">Subscription</CardTitle>
-          {sub ? (
+          <CardTitle className="text-base">{t('subscription')}</CardTitle>
+          {sub && !archived ? (
             <ChangePlanDialog orgId={id} currentPlanId={sub.planId} />
           ) : null}
         </CardHeader>
         <CardContent>
           {!sub ? (
-            <p className="text-sm text-muted-foreground">No subscription found.</p>
+            <p className="text-sm text-muted-foreground">{t('noSubscription')}</p>
           ) : (
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm md:grid-cols-3">
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Plan</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">{t('plan')}</dt>
                 <dd className="mt-0.5 font-medium">
                   {sub.plan.slug}
-                  <span className="ml-1 text-xs text-muted-foreground">({sub.plan.nameEn})</span>
+                  <span className="ms-1 text-xs text-muted-foreground">({sub.plan.nameEn})</span>
                 </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Status</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">{t('status')}</dt>
                 <dd className="mt-0.5">
                   <SubStatusBadge status={sub.status} />
                 </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Cycle</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">{t('cycle')}</dt>
                 <dd className="mt-0.5">{sub.billingCycle}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Period start</dt>
-                <dd className="mt-0.5">{new Date(sub.currentPeriodStart).toLocaleDateString()}</dd>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t('periodStart')}
+                </dt>
+                <dd className="mt-0.5">
+                  {new Date(sub.currentPeriodStart).toLocaleDateString(dateLocale)}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Period end</dt>
-                <dd className="mt-0.5">{new Date(sub.currentPeriodEnd).toLocaleDateString()}</dd>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t('periodEnd')}
+                </dt>
+                <dd className="mt-0.5">
+                  {new Date(sub.currentPeriodEnd).toLocaleDateString(dateLocale)}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Monthly price</dt>
-                <dd className="mt-0.5">{Number(sub.plan.priceMonthly).toLocaleString()} SAR</dd>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t('monthlyPrice')}
+                </dt>
+                <dd className="mt-0.5">
+                  {t('priceSar', { amount: Number(sub.plan.priceMonthly).toLocaleString() })}
+                </dd>
               </div>
             </dl>
           )}
         </CardContent>
       </Card>
+      <UpdateOrganizationDialog open={updateOpen} onOpenChange={setUpdateOpen} organization={data} />
+      <ArchiveDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        organizationId={id}
+        organizationName={data.nameAr}
+      />
     </div>
   );
 }
@@ -151,6 +181,21 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
         <span className="text-2xl font-semibold">{value}</span>
       </CardContent>
     </Card>
+  );
+}
+
+function OrgStatusBadge({ status, label }: { status: string; label: string }) {
+  const map: Record<string, string> = {
+    TRIALING: 'border-primary/40 bg-primary/10 text-primary',
+    ACTIVE: 'border-success/40 bg-success/10 text-success',
+    PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
+    SUSPENDED: 'border-warning/40 bg-warning/10 text-warning',
+    ARCHIVED: 'border-muted/40 bg-muted/10 text-muted-foreground',
+  };
+  return (
+    <Badge variant="outline" className={map[status] ?? 'border-border bg-muted/10'}>
+      {label}
+    </Badge>
   );
 }
 
