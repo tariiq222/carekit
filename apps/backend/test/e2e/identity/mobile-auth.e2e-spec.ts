@@ -10,7 +10,7 @@ describe('Mobile auth E2E', () => {
   const email = `mobile-e2e-${Date.now()}@example.com`;
 
   beforeAll(async () => {
-    ({ request: req } = await createTestApp());
+    ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['OtpCode', 'RefreshToken', 'EmailVerificationToken', 'User']);
   });
 
@@ -85,5 +85,32 @@ describe('Mobile auth E2E', () => {
       where: { identifier: email, purpose: OtpPurpose.MOBILE_LOGIN, consumedAt: null },
     });
     expect(count).toBe(0);
+  });
+
+  // Regression: prior to fix/route-double-prefix, the mobile auth controller
+  // declared @Controller('api/v1/mobile/auth') on top of the global 'api/v1'
+  // prefix, exposing routes only at /api/v1/api/v1/mobile/auth/*. The mobile
+  // client also double-prefixed its baseURL — two wrongs cancelling. Lock the
+  // canonical path in and fail loudly if the doubled path ever resurfaces.
+  it('serves mobile auth at /api/v1/mobile/auth (not /api/v1/api/v1/...)', async () => {
+    await req
+      .post('/api/v1/mobile/auth/request-login-otp')
+      .send({ identifier: '+966500000001' })
+      .expect(200);
+
+    await req
+      .post('/api/v1/api/v1/mobile/auth/request-login-otp')
+      .send({ identifier: '+966500000001' })
+      .expect(404);
+  });
+
+  it('serves /api/v1/public/verify-email (not /api/v1/api/v1/public/verify-email)', async () => {
+    // Token is invalid — we only care that the route is reachable (not 404).
+    const ok = await req.get('/api/v1/public/verify-email?token=does-not-exist');
+    expect(ok.status).not.toBe(404);
+
+    await req
+      .get('/api/v1/api/v1/public/verify-email?token=does-not-exist')
+      .expect(404);
   });
 });

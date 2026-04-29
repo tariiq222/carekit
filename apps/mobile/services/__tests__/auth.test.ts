@@ -201,7 +201,7 @@ describe('authService.getProfile / sendVerificationEmail / getStoredTokens', () 
   it('sendVerificationEmail posts to the correct endpoint', async () => {
     mockedApi.post.mockResolvedValueOnce({ data: { success: true } });
     await authService.sendVerificationEmail();
-    expect(mockedApi.post).toHaveBeenCalledWith('/auth/email/verify/send');
+    expect(mockedApi.post).toHaveBeenCalledWith('/mobile/auth/request-email-verification');
   });
 
   it('getStoredTokens reads both tokens from secure storage', async () => {

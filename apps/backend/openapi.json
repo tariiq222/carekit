@@ -153,6 +153,19 @@
         "properties": {},
         "type": "object"
       },
+      "ArchiveOrganizationDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "AssignEmployeeToBranchDto": {
         "properties": {
           "employeeId": {
@@ -1768,6 +1781,61 @@
         ],
         "type": "object"
       },
+      "CreateTenantDto": {
+        "properties": {
+          "billingCycle": {
+            "default": "MONTHLY",
+            "enum": [
+              "MONTHLY",
+              "ANNUAL"
+            ],
+            "type": "string"
+          },
+          "nameAr": {
+            "maxLength": 120,
+            "minLength": 2,
+            "type": "string"
+          },
+          "nameEn": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "ownerUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "planId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Lowercase kebab-case tenant slug",
+            "example": "riyadh-clinic",
+            "type": "string"
+          },
+          "trialDays": {
+            "maximum": 90,
+            "minimum": 0,
+            "type": "number"
+          },
+          "verticalSlug": {
+            "description": "Active vertical slug to seed into the tenant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "nameAr",
+          "ownerUserId",
+          "reason"
+        ],
+        "type": "object"
+      },
       "CreateUserDto": {
         "properties": {
           "customRoleId": {
@@ -2903,6 +2971,48 @@
         ],
         "type": "object"
       },
+      "RegisterTenantDto": {
+        "properties": {
+          "businessNameAr": {
+            "description": "Business name in Arabic",
+            "example": "عيادة الرعاية",
+            "type": "string"
+          },
+          "businessNameEn": {
+            "description": "Business name in English",
+            "example": "CareKit Clinic",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email address (used as login)",
+            "example": "ali@clinic.com",
+            "type": "string"
+          },
+          "name": {
+            "description": "Full name of the owner",
+            "example": "علي محمد",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password — min 8 chars, ≥1 uppercase, ≥1 digit",
+            "example": "Pass@1234",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Mobile phone number",
+            "example": "0501234567",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "phone",
+          "password",
+          "businessNameAr"
+        ],
+        "type": "object"
+      },
       "ReinstateOrganizationDto": {
         "properties": {
           "reason": {
@@ -2978,6 +3088,9 @@
             "description": "Staff email address",
             "example": "admin@clinic.com",
             "type": "string"
+          },
+          "hCaptchaToken": {
+            "type": "string"
           }
         },
         "required": [
@@ -3036,6 +3149,19 @@
         },
         "required": [
           "reason"
+        ],
+        "type": "object"
+      },
+      "SeedVerticalDto": {
+        "properties": {
+          "verticalSlug": {
+            "description": "Vertical slug to seed (e.g. clinic, salon)",
+            "example": "clinic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verticalSlug"
         ],
         "type": "object"
       },
@@ -3839,16 +3965,57 @@
         },
         "type": "object"
       },
-      "UpdateFeatureFlagDto": {
+      "UpdateFeatureFlagAdminDto": {
         "properties": {
           "enabled": {
-            "description": "Set to true to enable the flag, false to disable it",
-            "example": true,
             "type": "boolean"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
           }
         },
         "required": [
-          "enabled"
+          "organizationId",
+          "enabled",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "UpdateOrganizationDto": {
+        "properties": {
+          "nameAr": {
+            "maxLength": 120,
+            "minLength": 2,
+            "type": "string"
+          },
+          "nameEn": {
+            "maxLength": 120,
+            "nullable": true,
+            "type": "object"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          },
+          "trialEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "object"
+          },
+          "verticalSlug": {
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "reason"
         ],
         "type": "object"
       },
@@ -5254,6 +5421,74 @@
         ]
       }
     },
+    "/api/v1/admin/feature-flags": {
+      "get": {
+        "operationId": "AdminFeatureFlagsController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List feature flags and organization overrides",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/feature-flags/{key}": {
+      "patch": {
+        "operationId": "AdminFeatureFlagsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeatureFlagAdminDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update a feature flag override for an organization",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/impersonation": {
       "post": {
         "operationId": "AdminImpersonationController_start",
@@ -5429,6 +5664,30 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "verticalId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "planId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5442,6 +5701,34 @@
           }
         ],
         "summary": "List all organizations (cross-tenant)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminOrganizationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenantDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create tenant organization and owner membership",
         "tags": [
           "admin"
         ]
@@ -5471,6 +5758,82 @@
           }
         ],
         "summary": "Get organization detail with stats",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminOrganizationsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update organization tenant metadata",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{id}/archive": {
+      "post": {
+        "operationId": "AdminOrganizationsController_archive",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an organization without deleting tenant data",
         "tags": [
           "admin"
         ]
@@ -5891,305 +6254,6 @@
         "summary": "Update a vertical (audited)",
         "tags": [
           "admin"
-        ]
-      }
-    },
-    "/api/v1/api/v1/mobile/auth/register": {
-      "post": {
-        "operationId": "MobileClientAuthController_registerUser",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterMobileUserDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "summary": "Register a new mobile user (creates user + sends SMS OTP)",
-        "tags": [
-          "Mobile Client / Identity"
-        ]
-      }
-    },
-    "/api/v1/api/v1/mobile/auth/request-email-verification": {
-      "post": {
-        "operationId": "MobileClientAuthController_requestEmail",
-        "parameters": [],
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "summary": "Send email verification link to the authenticated user",
-        "tags": [
-          "Mobile Client / Identity"
-        ]
-      }
-    },
-    "/api/v1/api/v1/mobile/auth/request-login-otp": {
-      "post": {
-        "operationId": "MobileClientAuthController_requestLoginOtp",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestMobileLoginOtpDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "summary": "Request a login OTP via phone or verified email",
-        "tags": [
-          "Mobile Client / Identity"
-        ]
-      }
-    },
-    "/api/v1/api/v1/mobile/auth/verify-otp": {
-      "post": {
-        "operationId": "MobileClientAuthController_verifyMobileOtp",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyMobileOtpDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "summary": "Verify register/login OTP and issue tokens",
-        "tags": [
-          "Mobile Client / Identity"
-        ]
-      }
-    },
-    "/api/v1/api/v1/public/verify-email": {
-      "get": {
-        "operationId": "PublicVerifyEmailController_verify",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "summary": "Verify an email-verification token",
-        "tags": [
-          "Public / Identity"
         ]
       }
     },
@@ -16635,6 +16699,66 @@
         ]
       }
     },
+    "/api/v1/dashboard/organization/mark-onboarded": {
+      "patch": {
+        "operationId": "DashboardOrganizationSettingsController_markOnboardedEndpoint",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Onboarding marked complete"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark the organization onboarding wizard as completed",
+        "tags": [
+          "Dashboard / Org Experience"
+        ]
+      }
+    },
     "/api/v1/dashboard/organization/ratings": {
       "get": {
         "operationId": "DashboardOrganizationSettingsController_listRatingsEndpoint",
@@ -16781,6 +16905,77 @@
           }
         ],
         "summary": "Submit a rating for a booking",
+        "tags": [
+          "Dashboard / Org Experience"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/seed-vertical": {
+      "post": {
+        "description": "Idempotent: skips when departments already exist. Also stamps Organization.verticalId so useTerminology() resolves the right pack on /auth/me.",
+        "operationId": "DashboardOrganizationSettingsController_seedVerticalEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedVerticalDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Seed result (skipped if already seeded)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Seed organization with departments + service categories from a vertical",
         "tags": [
           "Dashboard / Org Experience"
         ]
@@ -20163,90 +20358,6 @@
         ]
       }
     },
-    "/api/v1/dashboard/platform/feature-flags/{key}": {
-      "patch": {
-        "operationId": "DashboardPlatformController_updateFeatureFlagEndpoint",
-        "parameters": [
-          {
-            "description": "Feature flag identifier key",
-            "in": "path",
-            "name": "key",
-            "required": true,
-            "schema": {
-              "example": "CHATBOT_ENABLED",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFeatureFlagDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Feature flag updated"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "404": {
-            "description": "Feature flag not found"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Enable or disable a feature flag by key",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
     "/api/v1/dashboard/platform/integrations": {
       "get": {
         "operationId": "DashboardPlatformController_listIntegrationsEndpoint",
@@ -21104,6 +21215,244 @@
         "summary": "Upsert a terminology override for a vertical",
         "tags": [
           "Dashboard / Platform"
+        ]
+      }
+    },
+    "/api/v1/mobile/auth/register": {
+      "post": {
+        "operationId": "MobileClientAuthController_registerUser",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterMobileUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Register a new mobile user (creates user + sends SMS OTP)",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/mobile/auth/request-email-verification": {
+      "post": {
+        "operationId": "MobileClientAuthController_requestEmail",
+        "parameters": [],
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Send email verification link to the authenticated user",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/mobile/auth/request-login-otp": {
+      "post": {
+        "operationId": "MobileClientAuthController_requestLoginOtp",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestMobileLoginOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Request a login OTP via phone or verified email",
+        "tags": [
+          "Mobile Client / Identity"
+        ]
+      }
+    },
+    "/api/v1/mobile/auth/verify-otp": {
+      "post": {
+        "operationId": "MobileClientAuthController_verifyMobileOtp",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMobileOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify register/login OTP and issue tokens",
+        "tags": [
+          "Mobile Client / Identity"
         ]
       }
     },
@@ -25657,6 +26006,67 @@
         ]
       }
     },
+    "/api/v1/public/verify-email": {
+      "get": {
+        "operationId": "PublicVerifyEmailController_verify",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify an email-verification token",
+        "tags": [
+          "Public / Identity"
+        ]
+      }
+    },
     "/api/v1/public/verticals": {
       "get": {
         "operationId": "PublicVerticalsController_list",
@@ -25904,6 +26314,61 @@
         "summary": "Deny a refund request",
         "tags": [
           "Dashboard / Refunds"
+        ]
+      }
+    },
+    "/api/v1/tenants/register": {
+      "post": {
+        "operationId": "PublicTenantsController_registerEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterTenantDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Organization created; returns access + refresh tokens with user payload"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Email already registered"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Register a new tenant organization with a 14-day free trial",
+        "tags": [
+          "Public / Tenants"
         ]
       }
     }
