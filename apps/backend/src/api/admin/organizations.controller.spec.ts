@@ -6,15 +6,30 @@ const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolved
 function buildController() {
   const listHandler = fn();
   const getHandler = fn();
+  const createTenantHandler = fn();
+  const updateOrganizationHandler = fn();
+  const archiveOrganizationHandler = fn();
   const suspendHandler = fn();
   const reinstateHandler = fn();
   const controller = new AdminOrganizationsController(
     listHandler as never,
     getHandler as never,
+    createTenantHandler as never,
+    updateOrganizationHandler as never,
+    archiveOrganizationHandler as never,
     suspendHandler as never,
     reinstateHandler as never,
   );
-  return { controller, listHandler, getHandler, suspendHandler, reinstateHandler };
+  return {
+    controller,
+    listHandler,
+    getHandler,
+    createTenantHandler,
+    updateOrganizationHandler,
+    archiveOrganizationHandler,
+    suspendHandler,
+    reinstateHandler,
+  };
 }
 
 describe('AdminOrganizationsController', () => {
@@ -56,6 +71,59 @@ describe('AdminOrganizationsController', () => {
     const { controller, getHandler } = buildController();
     await controller.show('org-1');
     expect(getHandler.execute).toHaveBeenCalledWith({ id: 'org-1' });
+  });
+
+  it('create — passes body and request context', async () => {
+    const { controller, createTenantHandler } = buildController();
+    const body = {
+      slug: 'riyadh-clinic',
+      nameAr: 'عيادة الرياض',
+      ownerUserId: 'owner-1',
+      reason: 'Create tenant for onboarding',
+    };
+
+    await controller.create(body, user, req);
+
+    expect(createTenantHandler.execute).toHaveBeenCalledWith({
+      ...body,
+      superAdminUserId: user.sub,
+      ipAddress: '1.1.1.1',
+      userAgent: 'jest',
+    });
+  });
+
+  it('update — passes id, body, and request context', async () => {
+    const { controller, updateOrganizationHandler } = buildController();
+    const body = {
+      nameAr: 'اسم محدث',
+      nameEn: null,
+      verticalSlug: null,
+      reason: 'Update tenant metadata',
+    };
+
+    await controller.update('org-1', body, user, req);
+
+    expect(updateOrganizationHandler.execute).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      ...body,
+      superAdminUserId: user.sub,
+      ipAddress: '1.1.1.1',
+      userAgent: 'jest',
+    });
+  });
+
+  it('archive — passes id, reason, and request context', async () => {
+    const { controller, archiveOrganizationHandler } = buildController();
+
+    await controller.archive('org-1', { reason: 'Archive inactive tenant' }, user, req);
+
+    expect(archiveOrganizationHandler.execute).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      superAdminUserId: user.sub,
+      reason: 'Archive inactive tenant',
+      ipAddress: '1.1.1.1',
+      userAgent: 'jest',
+    });
   });
 
   it('suspend — passes context and reason', async () => {

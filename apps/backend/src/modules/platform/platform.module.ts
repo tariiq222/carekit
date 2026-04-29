@@ -27,6 +27,9 @@ import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.h
 import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
 import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from './admin/get-organization/get-organization.handler';
+import { CreateTenantHandler } from './admin/create-tenant/create-tenant.handler';
+import { UpdateOrganizationHandler } from './admin/update-organization/update-organization.handler';
+import { ArchiveOrganizationHandler } from './admin/archive-organization/archive-organization.handler';
 import { SuspendOrganizationHandler } from './admin/suspend-organization/suspend-organization.handler';
 import { ReinstateOrganizationHandler } from './admin/reinstate-organization/reinstate-organization.handler';
 import { SearchUsersHandler } from './admin/search-users/search-users.handler';
@@ -59,6 +62,9 @@ import { FinanceModule } from '../finance/finance.module';
 const ADMIN_HANDLERS = [
   ListOrganizationsHandler,
   GetOrganizationHandler,
+  CreateTenantHandler,
+  UpdateOrganizationHandler,
+  ArchiveOrganizationHandler,
   SuspendOrganizationHandler,
   ReinstateOrganizationHandler,
   SearchUsersHandler,

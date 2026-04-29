@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -23,8 +24,16 @@ import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { ListOrganizationsHandler } from '../../modules/platform/admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from '../../modules/platform/admin/get-organization/get-organization.handler';
+import { CreateTenantHandler } from '../../modules/platform/admin/create-tenant/create-tenant.handler';
+import { UpdateOrganizationHandler } from '../../modules/platform/admin/update-organization/update-organization.handler';
+import { ArchiveOrganizationHandler } from '../../modules/platform/admin/archive-organization/archive-organization.handler';
 import { SuspendOrganizationHandler } from '../../modules/platform/admin/suspend-organization/suspend-organization.handler';
 import { ReinstateOrganizationHandler } from '../../modules/platform/admin/reinstate-organization/reinstate-organization.handler';
+import {
+  ArchiveOrganizationDto,
+  CreateTenantDto,
+  UpdateOrganizationDto,
+} from './dto/tenant-lifecycle.dto';
 import {
   ReinstateOrganizationDto,
   SuspendOrganizationDto,
@@ -46,6 +55,9 @@ export class AdminOrganizationsController {
   constructor(
     private readonly listHandler: ListOrganizationsHandler,
     private readonly getHandler: GetOrganizationHandler,
+    private readonly createTenantHandler: CreateTenantHandler,
+    private readonly updateOrganizationHandler: UpdateOrganizationHandler,
+    private readonly archiveOrganizationHandler: ArchiveOrganizationHandler,
     private readonly suspendHandler: SuspendOrganizationHandler,
     private readonly reinstateHandler: ReinstateOrganizationHandler,
   ) {}
@@ -74,18 +86,68 @@ export class AdminOrganizationsController {
     return this.getHandler.execute({ id });
   }
 
+  @Post()
+  @ApiOperation({ summary: 'Create tenant organization and owner membership' })
+  create(
+    @Body() dto: CreateTenantDto,
+    @CurrentUser() user: { sub?: string; id?: string },
+    @Req() req: Request,
+  ) {
+    return this.createTenantHandler.execute({
+      ...dto,
+      superAdminUserId: user.sub ?? user.id ?? '',
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update organization tenant metadata' })
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateOrganizationDto,
+    @CurrentUser() user: { sub?: string; id?: string },
+    @Req() req: Request,
+  ) {
+    return this.updateOrganizationHandler.execute({
+      organizationId: id,
+      ...dto,
+      superAdminUserId: user.sub ?? user.id ?? '',
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
+  @Post(':id/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Archive an organization without deleting tenant data' })
+  async archive(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: ArchiveOrganizationDto,
+    @CurrentUser() user: { sub?: string; id?: string },
+    @Req() req: Request,
+  ): Promise<void> {
+    await this.archiveOrganizationHandler.execute({
+      organizationId: id,
+      superAdminUserId: user.sub ?? user.id ?? '',
+      reason: dto.reason,
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
   @Post(':id/suspend')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Suspend an organization (logs audit entry)' })
   async suspend(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: SuspendOrganizationDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub?: string; id?: string },
     @Req() req: Request,
   ): Promise<void> {
     await this.suspendHandler.execute({
       organizationId: id,
-      superAdminUserId: user.sub,
+      superAdminUserId: user.sub ?? user.id ?? '',
       reason: dto.reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',
@@ -98,12 +160,12 @@ export class AdminOrganizationsController {
   async reinstate(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: ReinstateOrganizationDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub?: string; id?: string },
     @Req() req: Request,
   ): Promise<void> {
     await this.reinstateHandler.execute({
       organizationId: id,
-      superAdminUserId: user.sub,
+      superAdminUserId: user.sub ?? user.id ?? '',
       reason: dto.reason,
       ipAddress: req.ip ?? '',
       userAgent: req.headers['user-agent'] ?? '',
