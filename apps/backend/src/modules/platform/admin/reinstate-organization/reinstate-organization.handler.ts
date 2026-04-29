@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { SuperAdminActionType } from '@prisma/client';
+import { OrganizationStatus, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/cache';
 
@@ -22,9 +22,12 @@ export class ReinstateOrganizationHandler {
     await this.prisma.$allTenants.$transaction(async (tx) => {
       const org = await tx.organization.findUnique({
         where: { id: cmd.organizationId },
-        select: { id: true, suspendedAt: true },
+        select: { id: true, status: true, suspendedAt: true },
       });
       if (!org) throw new NotFoundException('organization_not_found');
+      if (org.status === OrganizationStatus.ARCHIVED) {
+        throw new ConflictException('organization_archived');
+      }
       if (!org.suspendedAt) throw new ConflictException('organization_not_suspended');
 
       await tx.organization.update({

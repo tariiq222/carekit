@@ -52,7 +52,7 @@ describe('ReinstateOrganizationHandler', () => {
   };
 
   it('reinstates a suspended org and writes audit log', async () => {
-    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: new Date() });
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'SUSPENDED', suspendedAt: new Date() });
     orgUpdate.mockResolvedValue({});
     logCreate.mockResolvedValue({});
 
@@ -72,7 +72,7 @@ describe('ReinstateOrganizationHandler', () => {
   });
 
   it('invalidates suspension cache after commit', async () => {
-    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: new Date() });
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'SUSPENDED', suspendedAt: new Date() });
 
     await handler.execute(cmd);
 
@@ -86,7 +86,7 @@ describe('ReinstateOrganizationHandler', () => {
   });
 
   it('throws ConflictException when org is not suspended', async () => {
-    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: null });
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'ACTIVE', suspendedAt: null });
 
     await expect(handler.execute(cmd)).rejects.toBeInstanceOf(ConflictException);
     expect(orgUpdate).not.toHaveBeenCalled();
@@ -94,12 +94,20 @@ describe('ReinstateOrganizationHandler', () => {
   });
 
   it('uses default reason when caller omits it', async () => {
-    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: new Date() });
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'SUSPENDED', suspendedAt: new Date() });
 
     await handler.execute({ ...cmd, reason: undefined });
 
     expect(logCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({ reason: 'Reinstated by super-admin' }),
     });
+  });
+
+  it('throws ConflictException when org is archived', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'ARCHIVED', suspendedAt: new Date() });
+
+    await expect(handler.execute(cmd)).rejects.toBeInstanceOf(ConflictException);
+    expect(orgUpdate).not.toHaveBeenCalled();
+    expect(redisDel).not.toHaveBeenCalled();
   });
 });
