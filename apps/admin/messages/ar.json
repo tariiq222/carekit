@@ -114,6 +114,24 @@
       "success": "تمت أرشفة المنظمة.",
       "errorFallback": "فشل أرشفة المنظمة"
     },
+    "entitlements": {
+      "title": "الصلاحيات",
+      "description": "الوصول المستنتج من الخطة وتجاوزات المنظمة.",
+      "reason": "سبب التدقيق",
+      "reasonPlaceholder": "سبب تغيير الصلاحيات",
+      "plan": "الخطة",
+      "override": "التجاوز",
+      "final": "النهائي",
+      "enabled": "مفعّل",
+      "disabled": "معطّل",
+      "none": "لا يوجد",
+      "source": "المصدر",
+      "updated": "تم التحديث {date}",
+      "toggleLabel": "تبديل {key}",
+      "empty": "لا توجد صلاحيات.",
+      "success": "تم تحديث الصلاحية.",
+      "errorFallback": "فشل تحديث الصلاحية"
+    },
     "error": {
       "loadFailed": "فشل التحميل: {message}"
     }
