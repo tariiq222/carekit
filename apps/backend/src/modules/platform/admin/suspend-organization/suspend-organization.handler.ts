@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { SuperAdminActionType } from '@prisma/client';
+import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/cache';
 
@@ -27,13 +27,23 @@ export class SuspendOrganizationHandler {
       if (!org) throw new NotFoundException('organization_not_found');
       if (org.suspendedAt) throw new ConflictException('organization_already_suspended');
 
+      const now = new Date();
       await tx.organization.update({
         where: { id: cmd.organizationId },
         data: {
-          suspendedAt: new Date(),
+          suspendedAt: now,
           suspendedReason: cmd.reason,
           status: 'SUSPENDED',
         },
+      });
+
+      const refreshTokens = await tx.refreshToken.updateMany({
+        where: { organizationId: cmd.organizationId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      const impersonationSessions = await tx.impersonationSession.updateMany({
+        where: { organizationId: cmd.organizationId, endedAt: null },
+        data: { endedAt: now, endedReason: 'organization_suspended' },
       });
 
       await tx.superAdminActionLog.create({
@@ -42,7 +52,10 @@ export class SuspendOrganizationHandler {
           actionType: SuperAdminActionType.SUSPEND_ORG,
           organizationId: cmd.organizationId,
           reason: cmd.reason,
-          metadata: {},
+          metadata: {
+            refreshTokensRevoked: refreshTokens.count,
+            impersonationSessionsEnded: impersonationSessions.count,
+          } satisfies Prisma.InputJsonValue,
           ipAddress: cmd.ipAddress,
           userAgent: cmd.userAgent,
         },

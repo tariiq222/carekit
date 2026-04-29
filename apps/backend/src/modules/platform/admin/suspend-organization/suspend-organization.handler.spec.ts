@@ -8,17 +8,23 @@ describe('SuspendOrganizationHandler', () => {
   let handler: SuspendOrganizationHandler;
   let orgFindUnique: jest.Mock;
   let orgUpdate: jest.Mock;
+  let refreshTokenUpdateMany: jest.Mock;
+  let impersonationSessionUpdateMany: jest.Mock;
   let logCreate: jest.Mock;
   let redisDel: jest.Mock;
 
   beforeEach(async () => {
     orgFindUnique = jest.fn();
     orgUpdate = jest.fn();
+    refreshTokenUpdateMany = jest.fn().mockResolvedValue({ count: 2 });
+    impersonationSessionUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
     logCreate = jest.fn();
     redisDel = jest.fn().mockResolvedValue(1);
 
     const tx = {
       organization: { findUnique: orgFindUnique, update: orgUpdate },
+      refreshToken: { updateMany: refreshTokenUpdateMany },
+      impersonationSession: { updateMany: impersonationSessionUpdateMany },
       superAdminActionLog: { create: logCreate },
     };
 
@@ -73,7 +79,26 @@ describe('SuspendOrganizationHandler', () => {
         superAdminUserId: 'sa1',
         reason: cmd.reason,
         ipAddress: '1.2.3.4',
+        metadata: {
+          refreshTokensRevoked: 2,
+          impersonationSessionsEnded: 1,
+        },
       }),
+    });
+  });
+
+  it('revokes active refresh tokens and ends active impersonation sessions', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: null });
+
+    await handler.execute(cmd);
+
+    expect(refreshTokenUpdateMany).toHaveBeenCalledWith({
+      where: { organizationId: 'o1', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+    expect(impersonationSessionUpdateMany).toHaveBeenCalledWith({
+      where: { organizationId: 'o1', endedAt: null },
+      data: { endedAt: expect.any(Date), endedReason: 'organization_suspended' },
     });
   });
 
