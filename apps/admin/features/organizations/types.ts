@@ -1,12 +1,14 @@
 // Shared types for the organizations feature cluster. Each slice imports
 // only what it needs.
 
+export type OrganizationStatus = 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'ARCHIVED';
+
 export interface OrganizationRow {
   id: string;
   slug: string;
   nameAr: string;
   nameEn: string | null;
-  status: string;
+  status: OrganizationStatus;
   verticalId: string | null;
   trialEndsAt: string | null;
   suspendedAt: string | null;

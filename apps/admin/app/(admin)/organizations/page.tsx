@@ -1,33 +1,45 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@carekit/ui/primitives/button';
+import { CreateTenantDialog } from '@/features/organizations/create-tenant/create-tenant-dialog';
 import { useListOrganizations } from '@/features/organizations/list-organizations/use-list-organizations';
 import {
+  type LifecycleStatusFilter,
   OrganizationsFilterBar,
   type SuspendedFilter,
 } from '@/features/organizations/list-organizations/organizations-filter-bar';
 import { OrganizationsTable } from '@/features/organizations/list-organizations/organizations-table';
 
 export default function OrganizationsListPage() {
+  const t = useTranslations('organizations');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [suspended, setSuspended] = useState<SuspendedFilter>('all');
+  const [status, setStatus] = useState<LifecycleStatusFilter>('all');
+  const [verticalId, setVerticalId] = useState('');
+  const [planId, setPlanId] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading, error } = useListOrganizations({
     page,
     perPage: 20,
     search: search.trim() || undefined,
     suspended: suspended === 'all' ? undefined : suspended,
+    status: status === 'all' ? undefined : status,
+    verticalId: verticalId.trim() || undefined,
+    planId: planId.trim() || undefined,
   });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Organizations</h2>
-        <p className="text-sm text-muted-foreground">
-          Every tenant on the platform. Suspend to freeze access, reinstate to restore.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold">{t('title')}</h2>
+          <p className="max-w-3xl text-sm text-muted-foreground">{t('description')}</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>{t('create.button')}</Button>
       </div>
 
       <OrganizationsFilterBar
@@ -41,16 +53,34 @@ export default function OrganizationsListPage() {
           setSuspended(v);
           setPage(1);
         }}
+        status={status}
+        onStatusChange={(v) => {
+          setStatus(v);
+          setPage(1);
+        }}
+        verticalId={verticalId}
+        onVerticalIdChange={(v) => {
+          setVerticalId(v);
+          setPage(1);
+        }}
+        planId={planId}
+        onPlanIdChange={(v) => {
+          setPlanId(v);
+          setPage(1);
+        }}
         onReset={() => {
           setSearch('');
           setSuspended('all');
+          setStatus('all');
+          setVerticalId('');
+          setPlanId('');
           setPage(1);
         }}
       />
 
       {error ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-          Failed to load: {(error as Error).message}
+          {t('error.loadFailed', { message: (error as Error).message })}
         </div>
       ) : null}
 
@@ -59,7 +89,11 @@ export default function OrganizationsListPage() {
       {data && data.meta.totalPages > 1 ? (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Page {data.meta.page} of {data.meta.totalPages} · {data.meta.total} total
+            {t('pagination.summary', {
+              page: data.meta.page,
+              totalPages: data.meta.totalPages,
+              total: data.meta.total,
+            })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -68,7 +102,7 @@ export default function OrganizationsListPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Previous
+              {t('pagination.previous')}
             </Button>
             <Button
               variant="outline"
@@ -76,11 +110,12 @@ export default function OrganizationsListPage() {
               disabled={page >= data.meta.totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
-              Next
+              {t('pagination.next')}
             </Button>
           </div>
         </div>
       ) : null}
+      <CreateTenantDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

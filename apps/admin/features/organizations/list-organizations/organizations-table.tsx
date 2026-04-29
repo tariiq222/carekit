@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@carekit/ui/primitives/badge';
 import { Button } from '@carekit/ui/primitives/button';
 import { Skeleton } from '@carekit/ui/primitives/skeleton';
@@ -20,16 +21,21 @@ interface Props {
 }
 
 export function OrganizationsTable({ items, isLoading }: Props) {
+  const locale = useLocale();
+  const t = useTranslations('organizations.table');
+  const statusT = useTranslations('organizations.status');
+  const dateLocale = locale === 'ar' ? 'ar-SA' : 'en-GB';
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Slug</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Plan</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t('slug')}</TableHead>
+          <TableHead>{t('name')}</TableHead>
+          <TableHead>{t('plan')}</TableHead>
+          <TableHead>{t('status')}</TableHead>
+          <TableHead>{t('created')}</TableHead>
+          <TableHead className="text-end">{t('actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -54,30 +60,22 @@ export function OrganizationsTable({ items, isLoading }: Props) {
                   {org.subscription ? (
                     <span className="font-mono text-xs">{org.subscription.plan.slug}</span>
                   ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">{t('noPlan')}</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  {org.suspendedAt ? (
-                    <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning">
-                      Suspended
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="border-success/40 bg-success/10 text-success">
-                      Active
-                    </Badge>
-                  )}
+                  <OrgStatusBadge status={org.status} label={statusT(org.status)} />
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {new Date(org.createdAt).toLocaleDateString('en-GB', {
+                  {new Date(org.createdAt).toLocaleDateString(dateLocale, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',
                   })}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-end">
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/organizations/${org.id}`}>Open</Link>
+                    <Link href={`/organizations/${org.id}`}>{t('open')}</Link>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -85,11 +83,26 @@ export function OrganizationsTable({ items, isLoading }: Props) {
         {!isLoading && items?.length === 0 ? (
           <TableRow>
             <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-              No organizations match the current filters.
+              {t('empty')}
             </TableCell>
           </TableRow>
         ) : null}
       </TableBody>
     </Table>
+  );
+}
+
+function OrgStatusBadge({ status, label }: { status: string; label: string }) {
+  const map: Record<string, string> = {
+    TRIALING: 'border-primary/40 bg-primary/10 text-primary',
+    ACTIVE: 'border-success/40 bg-success/10 text-success',
+    PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
+    SUSPENDED: 'border-warning/40 bg-warning/10 text-warning',
+    ARCHIVED: 'border-muted/40 bg-muted/10 text-muted-foreground',
+  };
+  return (
+    <Badge variant="outline" className={map[status] ?? 'border-border bg-muted/10'}>
+      {label}
+    </Badge>
   );
 }
