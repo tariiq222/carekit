@@ -4,7 +4,7 @@ import { ApiStandardResponses } from '../../common/swagger';
 import { VerifyEmailHandler } from '../../modules/identity/verify-email/verify-email.handler';
 
 @ApiTags('Public / Identity')
-@Controller('api/v1/public/verify-email')
+@Controller('public/verify-email')
 export class PublicVerifyEmailController {
   constructor(private readonly verifyEmail: VerifyEmailHandler) {}
 

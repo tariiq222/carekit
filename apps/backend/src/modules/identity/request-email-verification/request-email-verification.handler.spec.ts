@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { ClsService } from 'nestjs-cls';
 import { NotFoundException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { RequestEmailVerificationHandler } from './request-email-verification.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { SendEmailHandler } from '../../comms/send-email/send-email.handler';
+import { TenantContextService } from '../../../common/tenant';
 
 describe('RequestEmailVerificationHandler', () => {
   let handler: RequestEmailVerificationHandler;
@@ -15,7 +15,7 @@ describe('RequestEmailVerificationHandler', () => {
   };
   let sendEmail: { execute: jest.Mock };
   let config: { get: jest.Mock };
-  let cls: { run: jest.Mock; set: jest.Mock };
+  let tenant: { requireOrganizationId: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -27,17 +27,14 @@ describe('RequestEmailVerificationHandler', () => {
     };
     sendEmail = { execute: jest.fn().mockResolvedValue(undefined) };
     config = { get: jest.fn().mockReturnValue('https://app.carekit.test') };
-    cls = {
-      run: jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn()),
-      set: jest.fn(),
-    };
+    tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-current') };
     const moduleRef = await Test.createTestingModule({
       providers: [
         RequestEmailVerificationHandler,
         { provide: PrismaService, useValue: prisma },
         { provide: SendEmailHandler, useValue: sendEmail },
         { provide: ConfigService, useValue: config },
-        { provide: ClsService, useValue: cls },
+        { provide: TenantContextService, useValue: tenant },
       ],
     }).compile();
     handler = moduleRef.get(RequestEmailVerificationHandler);
@@ -85,9 +82,28 @@ describe('RequestEmailVerificationHandler', () => {
     await handler.execute({ userId: 'u1' });
 
     expect(prisma.emailVerificationToken.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'u1' },
+      where: { userId: 'u1', organizationId: 'org-current' },
     });
     expect(order).toEqual(['delete', 'create']);
+  });
+
+  it('uses the current tenant when organizationId is omitted', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      email: 'a@b.com',
+      name: 'Alice',
+      emailVerifiedAt: null,
+    });
+
+    await handler.execute({ userId: 'u1' });
+
+    expect(tenant.requireOrganizationId).toHaveBeenCalledTimes(1);
+    expect(prisma.emailVerificationToken.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        organizationId: 'org-current',
+      }),
+    });
   });
 
   it('inserts token with sha256 hash, 8-char selector, expiry ~30min ahead', async () => {
@@ -102,6 +118,7 @@ describe('RequestEmailVerificationHandler', () => {
     await handler.execute({ userId: 'u1', organizationId: 'org-1' });
     const after = Date.now();
 
+    expect(tenant.requireOrganizationId).not.toHaveBeenCalled();
     expect(prisma.emailVerificationToken.create).toHaveBeenCalledTimes(1);
     const createArgs = prisma.emailVerificationToken.create.mock.calls[0][0];
     const data = createArgs.data;

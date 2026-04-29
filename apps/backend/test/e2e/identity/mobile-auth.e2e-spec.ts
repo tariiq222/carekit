@@ -10,7 +10,7 @@ describe('Mobile auth E2E', () => {
   const email = `mobile-e2e-${Date.now()}@example.com`;
 
   beforeAll(async () => {
-    ({ request: req } = await createTestApp());
+    ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['OtpCode', 'RefreshToken', 'EmailVerificationToken', 'User']);
   });
 

@@ -1,9 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClsService } from 'nestjs-cls';
 import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../../../infrastructure/database';
-import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
+import { TenantContextService } from '../../../common/tenant';
 import { SendEmailHandler } from '../../comms/send-email/send-email.handler';
 
 const TOKEN_TTL_MS = 30 * 60 * 1000;
@@ -26,7 +25,7 @@ export class RequestEmailVerificationHandler {
     private readonly prisma: PrismaService,
     private readonly sendEmail: SendEmailHandler,
     private readonly config: ConfigService,
-    private readonly cls: ClsService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(cmd: RequestEmailVerificationCommand): Promise<RequestEmailVerificationResult> {
@@ -48,24 +47,20 @@ export class RequestEmailVerificationHandler {
     const tokenSelector = rawToken.slice(0, 8);
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
-    const organizationId = cmd.organizationId ?? null;
+    const organizationId = cmd.organizationId ?? this.tenant.requireOrganizationId();
 
-    await this.cls.run(async () => {
-      this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+    await this.prisma.emailVerificationToken.deleteMany({
+      where: { userId: user.id, organizationId },
+    });
 
-      await this.prisma.emailVerificationToken.deleteMany({
-        where: { userId: user.id },
-      });
-
-      await this.prisma.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          tokenHash,
-          tokenSelector,
-          expiresAt,
-          organizationId,
-        },
-      });
+    await this.prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        tokenSelector,
+        expiresAt,
+        organizationId,
+      },
     });
 
     const baseUrl =
