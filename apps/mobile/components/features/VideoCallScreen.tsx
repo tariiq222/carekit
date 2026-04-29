@@ -2,13 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Calendar, User as UserIcon, Briefcase } from 'lucide-react-native';
+import { ChevronRight, Calendar, User as UserIcon, Briefcase } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
-import { useDir } from '@/hooks/useDir';
 import { JoinVideoCallButton } from '@/components/features/JoinVideoCallButton';
 import { clientBookingsService, type ClientBookingRow } from '@/services/client/bookings';
 import { employeeBookingsService } from '@/services/employee/bookings';
@@ -84,8 +83,7 @@ export function VideoCallScreen({ role }: VideoCallScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const dir = useDir();
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const BackIcon = ChevronRight;
 
   const [view, setView] = useState<BookingView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,14 +100,14 @@ export function VideoCallScreen({ role }: VideoCallScreenProps) {
     try {
       if (role === 'client') {
         const row = await clientBookingsService.getById(bookingId);
-        setView(adaptClient(row, dir.isRTL));
+        setView(adaptClient(row, true));
       } else {
         const res = await employeeBookingsService.getById(bookingId);
         const b = unwrapEmployeeBooking(res);
         if (!b) {
           setNotFound(true);
         } else {
-          setView(adaptEmployee(b, dir.isRTL));
+          setView(adaptEmployee(b, true));
         }
       }
     } catch {
@@ -117,14 +115,14 @@ export function VideoCallScreen({ role }: VideoCallScreenProps) {
     } finally {
       setLoading(false);
     }
-  }, [bookingId, dir.isRTL, role]);
+  }, [bookingId, role]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   const formattedTime = view
-    ? new Date(view.scheduledAt).toLocaleString(dir.isRTL ? 'ar-SA' : 'en-US', {
+    ? new Date(view.scheduledAt).toLocaleString('ar-SA', {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -189,7 +187,7 @@ export function VideoCallScreen({ role }: VideoCallScreenProps) {
                 scheduledAt={view.scheduledAt}
                 durationMins={view.durationMins}
                 status={view.meetingStatus}
-                isRTL={dir.isRTL}
+                isRTL={true}
                 variant={role === 'employee' ? 'start' : 'join'}
               />
             </View>

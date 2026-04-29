@@ -8,7 +8,6 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { useTherapist } from '@/hooks/queries';
 
@@ -33,25 +32,24 @@ export default function EmployeeProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
+  const GoIcon = ChevronLeft;
   const { data: employee } = useTherapist(id);
 
   const employeeName = employee
-    ? (dir.isRTL ? employee.nameAr : employee.nameEn) ?? employee.nameEn ?? employee.nameAr ?? '—'
+    ? employee.nameAr ?? employee.nameEn ?? '—'
     : '—';
   const employeeSpec = employee
     ? [
-        (dir.isRTL ? employee.specialtyAr : employee.specialty) ?? employee.specialty ?? employee.specialtyAr ?? '',
+        employee.specialtyAr ?? employee.specialty ?? '',
         employee.title ?? '',
       ].filter(Boolean).join(' · ')
     : '';
   const employeeBio = employee
-    ? (dir.isRTL ? employee.publicBioAr : employee.publicBioEn) ?? employee.publicBioEn ?? employee.publicBioAr ?? ''
+    ? employee.publicBioAr ?? employee.publicBioEn ?? ''
     : '';
 
   const stats = [
@@ -80,7 +78,7 @@ export default function EmployeeProfileScreen() {
 
         <Animated.View entering={FadeInDown.delay(80).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.heroCard}>
-            <View style={[styles.heroRow, { flexDirection: dir.row }]}>
+            <View style={[styles.heroRow, { flexDirection: 'row' }]}>
               <LinearGradient
                 colors={['#f7cbb7', '#e88f6c']}
                 start={{ x: 0, y: 0 }}
@@ -91,30 +89,30 @@ export default function EmployeeProfileScreen() {
                 <View style={styles.onlineDot} />
               </LinearGradient>
               <View style={styles.heroMid}>
-                <Text style={[styles.heroName, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                <Text style={[styles.heroName, { fontFamily: f700, textAlign: 'right' }]}>
                   {employeeName}
                 </Text>
-                <Text style={[styles.heroSpec, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                <Text style={[styles.heroSpec, { fontFamily: f400, textAlign: 'right' }]}>
                   {employeeSpec}
                 </Text>
-                <View style={[styles.rating, { flexDirection: dir.row }]}>
+                <View style={[styles.rating, { flexDirection: 'row' }]}>
                   <Star size={11} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
                   <Text style={[styles.ratingVal, { fontFamily: f700 }]}>4.9</Text>
                   <Text style={[styles.ratingCount, { fontFamily: f400 }]}>
-                    {dir.isRTL ? '(٤١٢ تقييم)' : '(412 reviews)'}
+                    {'(٤١٢ تقييم)'}
                   </Text>
                 </View>
               </View>
             </View>
 
-            <View style={[styles.statsRow, { flexDirection: dir.row }]}>
+            <View style={[styles.statsRow, { flexDirection: 'row' }]}>
               {stats.map((s, i) => (
                 <View key={i} style={styles.statBox}>
                   <Text style={[styles.statN, { fontFamily: f700 }]}>
-                    {dir.isRTL ? s.nAr : s.nEn}
+                    {s.nAr}
                   </Text>
                   <Text style={[styles.statL, { fontFamily: f400 }]}>
-                    {dir.isRTL ? s.ar : s.en}
+                    {s.ar}
                   </Text>
                 </View>
               ))}
@@ -123,19 +121,19 @@ export default function EmployeeProfileScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(180).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'نبذة' : 'About'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'نبذة'}
           </Text>
-          <Text style={[styles.aboutText, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {employeeBio || (dir.isRTL ? '—' : '—')}
+          <Text style={[styles.aboutText, { fontFamily: f400, textAlign: 'right' }]}>
+            {employeeBio || '—'}
           </Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(260).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'التخصصات' : 'Expertise'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'التخصصات'}
           </Text>
-          <View style={[styles.tagRow, { flexDirection: dir.row }]}>
+          <View style={[styles.tagRow, { flexDirection: 'row' }]}>
             {SPECIALTIES.map((s, i) => (
               <View
                 key={i}
@@ -145,7 +143,7 @@ export default function EmployeeProfileScreen() {
                 ]}
               >
                 <Text style={[styles.tagText, { fontFamily: f600, color: s.color }]}>
-                  {dir.isRTL ? s.ar : s.en}
+                  {s.ar}
                 </Text>
               </View>
             ))}
@@ -153,23 +151,23 @@ export default function EmployeeProfileScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(340).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'آراء العملاء' : 'Reviews'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'آراء العملاء'}
           </Text>
           {REVIEWS.map((r, i) => (
             <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.reviewCard}>
-              <View style={[styles.reviewHead, { flexDirection: dir.row }]}>
-                <View style={[styles.stars, { flexDirection: dir.row }]}>
+              <View style={[styles.reviewHead, { flexDirection: 'row' }]}>
+                <View style={[styles.stars, { flexDirection: 'row' }]}>
                   {[0, 1, 2, 3, 4].map((k) => (
                     <Star key={k} size={12} color={sawaaColors.accent.amber} strokeWidth={2} fill={sawaaColors.accent.amber} />
                   ))}
                 </View>
                 <Text style={[styles.reviewBy, { fontFamily: f700 }]}>
-                  {dir.isRTL ? `${r.byAr} · ${r.whenAr}` : `${r.byEn} · ${r.whenEn}`}
+                  {`${r.byAr} · ${r.whenAr}`}
                 </Text>
               </View>
-              <Text style={[styles.reviewText, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? r.textAr : r.textEn}
+              <Text style={[styles.reviewText, { fontFamily: f400, textAlign: 'right' }]}>
+                {r.textAr}
               </Text>
             </Glass>
           ))}
@@ -181,13 +179,13 @@ export default function EmployeeProfileScreen() {
         style={[styles.ctaWrap, { bottom: insets.bottom + 20 }]}
       >
         <Glass variant="strong" radius={sawaaRadius.pill} style={styles.ctaPill}>
-          <View style={[styles.ctaRow, { flexDirection: dir.row }]}>
+          <View style={[styles.ctaRow, { flexDirection: 'row' }]}>
             <View style={styles.ctaPrice}>
               <Text style={[styles.ctaPriceLabel, { fontFamily: f400 }]}>
-                {dir.isRTL ? 'السعر لكل جلسة' : 'Per session'}
+                {'السعر لكل جلسة'}
               </Text>
               <Text style={[styles.ctaPriceVal, { fontFamily: f700 }]}>
-                {dir.isRTL ? '٢٥٠ ر.س' : 'SAR 250'}
+                {'٢٥٠ ر.س'}
               </Text>
             </View>
             <Pressable
@@ -201,7 +199,7 @@ export default function EmployeeProfileScreen() {
                 style={styles.ctaBtn}
               >
                 <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
-                  {dir.isRTL ? 'احجز جلسة' : 'Book now'}
+                  {'احجز جلسة'}
                 </Text>
                 <GoIcon size={14} color="#fff" strokeWidth={2} />
               </LinearGradient>

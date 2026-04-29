@@ -26,12 +26,14 @@ export default function IndexScreen() {
       if (stored.accessToken) {
         try {
           const profileRes = await authService.getProfile();
-          if (profileRes.success && profileRes.data) {
+          // /auth/me returns User directly; tolerate legacy {data} envelope.
+          const profile = (profileRes as any)?.data ?? profileRes;
+          if (profile?.id) {
             dispatch(
               setCredentials({
                 accessToken: stored.accessToken,
                 refreshToken: stored.refreshToken ?? '',
-                user: profileRes.data,
+                user: profile,
               }),
             );
           }

@@ -14,20 +14,19 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
-import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
+import { C, RADII, SHADOW } from '@/theme/glass';
 import { PrimaryButton } from '@/theme/sawaa';
-import { useDir } from '@/hooks/useDir';
 import { useRegister } from '@/hooks/queries';
 import { LabeledInput } from '@/components/ui/LabeledInput';
+import { toAsciiDigits } from '@/utils/digits';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -103,19 +102,15 @@ export default function RegisterScreen() {
               router.back();
             }}
             interactive
-            style={styles.backBtn}
+            style={[styles.backBtn, { alignSelf: 'flex-start' }]}
           >
-            {dir.isRTL ? (
-              <ChevronRight size={22} color={sawaaColors.teal[700]} strokeWidth={1.75} />
-            ) : (
-              <ChevronLeft size={22} color={sawaaColors.teal[700]} strokeWidth={1.75} />
-            )}
+            <ChevronRight size={22} color={C.deepTeal} strokeWidth={1.75} />
           </Glass>
 
           <Text
             style={[
               styles.title,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+              { textAlign: 'right', writingDirection: 'rtl' },
             ]}
           >
             {t('auth.register.title')}
@@ -123,15 +118,15 @@ export default function RegisterScreen() {
           <Text
             style={[
               styles.subtitle,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection },
+              { textAlign: 'right', writingDirection: 'rtl' },
             ]}
           >
             {t('auth.createAccountSub')}
           </Text>
 
-          <Glass variant="regular" radius={sawaaTokens.radius.lg} style={[styles.form, { marginTop: 24 }]}>
+          <Glass variant="regular" radius={RADII.card} style={[styles.form, SHADOW, { marginTop: 24 }]}>
             <View style={styles.formInner}>
-              <View style={[styles.row, { flexDirection: dir.row }]}>
+              <View style={[styles.row, { flexDirection: 'row' }]}>
                 <View style={styles.half}>
                   <LabeledInput
                     label={t('auth.register.firstName')}
@@ -142,7 +137,6 @@ export default function RegisterScreen() {
                     }}
                     placeholder={t('auth.firstNamePlaceholder')}
                     error={errors.firstName}
-                    dir={dir}
                   />
                 </View>
                 <View style={styles.half}>
@@ -155,7 +149,6 @@ export default function RegisterScreen() {
                     }}
                     placeholder={t('auth.lastNamePlaceholder')}
                     error={errors.lastName}
-                    dir={dir}
                   />
                 </View>
               </View>
@@ -164,13 +157,12 @@ export default function RegisterScreen() {
                 label={t('auth.register.phone')}
                 value={phone}
                 onChangeText={(v) => {
-                  setPhone(v);
+                  setPhone(toAsciiDigits(v));
                   clearError('phone');
                 }}
                 placeholder={t('auth.phonePlaceholder')}
                 error={errors.phone}
                 keyboardType="phone-pad"
-                dir={dir}
               />
 
               <LabeledInput
@@ -184,7 +176,6 @@ export default function RegisterScreen() {
                 error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                dir={dir}
               />
 
               <PrimaryButton
@@ -194,7 +185,7 @@ export default function RegisterScreen() {
                 style={{ marginTop: 8 }}
               />
 
-              <View style={[styles.loginRow, { flexDirection: dir.row }]}>
+              <View style={[styles.loginRow, { flexDirection: 'row' }]}>
                 <Text style={styles.loginText}>{t('auth.hasAccount')} </Text>
                 <Pressable
                   onPress={() => {
@@ -223,15 +214,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    alignSelf: 'flex-start',
   },
-  title: { fontSize: 32, fontWeight: '800', color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20 },
+  title: { fontSize: 32, fontWeight: '800', color: C.deepTeal, lineHeight: 42, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: C.subtle, lineHeight: 20 },
   form: { padding: 24 },
   formInner: { gap: 16 },
   row: { gap: 12 },
   half: { flex: 1 },
   loginRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
-  loginText: { fontSize: 14, color: sawaaColors.ink[500] },
-  loginLink: { fontSize: 14, fontWeight: '700', color: sawaaColors.teal[700] },
+  loginText: { fontSize: 14, color: C.subtle },
+  loginLink: { fontSize: 14, fontWeight: '700', color: C.deepTeal },
 });

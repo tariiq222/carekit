@@ -12,7 +12,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronRight,
-  ChevronLeft,
   Building2,
   Video,
   Calendar,
@@ -45,7 +44,7 @@ export default function DoctorAppointmentDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +57,7 @@ export default function DoctorAppointmentDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const BackIcon = ChevronRight;
 
   if (loading) {
     return (
@@ -171,7 +170,7 @@ export default function DoctorAppointmentDetailScreen() {
               <Calendar size={16} strokeWidth={1.5} color="#1D4ED8" />
             </View>
             <ThemedText variant="body">
-              {new Date(booking.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'long', day: 'numeric' })}
+              {new Date(booking.date).toLocaleDateString('ar-SA', { month: 'long', day: 'numeric' })}
             </ThemedText>
           </View>
           <View style={styles.infoRow}>
@@ -222,7 +221,7 @@ export default function DoctorAppointmentDetailScreen() {
               scheduledAt={booking.scheduledAt}
               durationMins={booking.durationMins}
               status={booking.zoomMeetingStatus}
-              isRTL={isRTL}
+              isRTL={true}
               variant="start"
             />
           ) : booking.type === 'online' && booking.zoomLink ? (

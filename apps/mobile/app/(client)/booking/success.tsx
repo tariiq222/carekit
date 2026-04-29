@@ -8,7 +8,6 @@ import { Check } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { clientBookingsService, type ClientBookingRow } from '@/services/client/bookings';
 import { clientPaymentsService, type ClientInvoice } from '@/services/client/payments';
@@ -39,15 +38,14 @@ function shortBookingRef(id: string): string {
 export default function BookingSuccessScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const { bookingId, invoiceId, paymentId } = useLocalSearchParams<{
     bookingId?: string;
     invoiceId?: string;
     paymentId?: string;
   }>();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
 
   const [booking, setBooking] = useState<ClientBookingRow | null>(null);
   const [loading, setLoading] = useState(!!bookingId);
@@ -93,20 +91,18 @@ export default function BookingSuccessScreen() {
   }, [invoiceId]);
 
   const therapistName = booking?.employee
-    ? (dir.isRTL ? booking.employee.nameAr : booking.employee.nameEn) ?? booking.employee.nameAr ?? booking.employee.nameEn
+    ? booking.employee.nameAr ?? booking.employee.nameEn
     : null;
-  const fallbackPaymentCopy = dir.isRTL
-    ? 'سنتواصل معكِ قريباً لترتيب الدفع وإرسال تفاصيل الجلسة'
-    : 'We\'ll reach out shortly to arrange payment and send session details';
+  const fallbackPaymentCopy = 'سنتواصل معكِ قريباً لترتيب الدفع وإرسال تفاصيل الجلسة';
   const hasPendingPayment = invoice?.payments?.some((payment) =>
     payment.status === 'PENDING' || payment.status === 'PENDING_VERIFICATION',
   ) ?? false;
   const paymentStatusCopy = invoiceLoading
-    ? (dir.isRTL ? 'جاري تحديث حالة الدفع...' : 'Checking payment status...')
+    ? 'جاري تحديث حالة الدفع...'
     : invoice?.status === 'PAID'
-      ? (dir.isRTL ? 'تم استلام الدفع' : 'Payment received')
+      ? 'تم استلام الدفع'
       : invoice?.status === 'PENDING' || hasPendingPayment
-        ? (dir.isRTL ? 'بانتظار التحقق من الدفع' : 'Awaiting payment verification')
+        ? 'بانتظار التحقق من الدفع'
         : fallbackPaymentCopy;
 
   return (
@@ -125,7 +121,7 @@ export default function BookingSuccessScreen() {
 
         <Animated.View entering={FadeInDown.delay(200).duration(700).easing(Easing.out(Easing.cubic))} style={styles.textBlock}>
           <Text style={[styles.title, { fontFamily: f700 }]}>
-            {dir.isRTL ? 'تم تأكيد حجزك' : 'Booking confirmed'}
+            {'تم تأكيد حجزك'}
           </Text>
           <Text style={[styles.subtitle, { fontFamily: f400 }]}>
             {paymentStatusCopy}
@@ -147,7 +143,7 @@ export default function BookingSuccessScreen() {
                   <>
                     <View style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
-                        {dir.isRTL ? 'المعالج' : 'Therapist'}
+                        {'المعالج'}
                       </Text>
                       <Text style={[styles.summaryValue, { fontFamily: f700 }]}>{therapistName}</Text>
                     </View>
@@ -158,10 +154,10 @@ export default function BookingSuccessScreen() {
                   <>
                     <View style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
-                        {dir.isRTL ? 'التاريخ والوقت' : 'Date & time'}
+                        {'التاريخ والوقت'}
                       </Text>
                       <Text style={[styles.summaryValue, { fontFamily: f700 }]}>
-                        {formatWhen(booking.scheduledAt, dir.isRTL)}
+                        {formatWhen(booking.scheduledAt, true)}
                       </Text>
                     </View>
                     <View style={styles.divider} />
@@ -169,7 +165,7 @@ export default function BookingSuccessScreen() {
                 ) : null}
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
-                    {dir.isRTL ? 'رقم الحجز' : 'Booking #'}
+                    {'رقم الحجز'}
                   </Text>
                   <Text style={[styles.summaryValue, { fontFamily: f700, color: sawaaColors.teal[700] }]}>
                     {bookingId ? shortBookingRef(bookingId) : '—'}
@@ -180,7 +176,7 @@ export default function BookingSuccessScreen() {
                     <View style={styles.divider} />
                     <View style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, { fontFamily: f400 }]}>
-                        {dir.isRTL ? 'رقم الدفع' : 'Payment #'}
+                        {'رقم الدفع'}
                       </Text>
                       <Text style={[styles.summaryValue, { fontFamily: f700 }]}>
                         {shortBookingRef(paymentId)}
@@ -202,7 +198,7 @@ export default function BookingSuccessScreen() {
               style={styles.primaryBtn}
             >
               <Text style={[styles.primaryBtnText, { fontFamily: f700 }]}>
-                {dir.isRTL ? 'عرض مواعيدي' : 'View my appointments'}
+                {'عرض مواعيدي'}
               </Text>
             </LinearGradient>
           </Pressable>
@@ -211,7 +207,7 @@ export default function BookingSuccessScreen() {
             style={styles.secondaryBtn}
           >
             <Text style={[styles.secondaryBtnText, { fontFamily: f600 }]}>
-              {dir.isRTL ? 'العودة إلى الرئيسية' : 'Back to home'}
+              {'العودة إلى الرئيسية'}
             </Text>
           </Pressable>
         </Animated.View>

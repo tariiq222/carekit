@@ -28,13 +28,13 @@ interface ClientItem {
 export default function ClientsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
+  const fontFamily = 'IBM Plex Sans Arabic';
 
   const { data, isLoading, isFetching } = useEmployeeClients({ search: debouncedSearch });
 
@@ -74,7 +74,7 @@ export default function ClientsScreen() {
           onChangeText={handleSearch}
           placeholder={t('doctor.searchClients')}
           placeholderTextColor={theme.colors.textMuted}
-          textAlign={isRTL ? 'right' : 'left'}
+          textAlign="right"
           style={[styles.searchInput, { color: theme.colors.textPrimary, fontFamily }]}
         />
         {isFetching && !isLoading ? (
@@ -105,7 +105,7 @@ export default function ClientsScreen() {
                     <ThemedText variant="caption" color={theme.colors.textSecondary}>
                       {t('doctor.lastVisit')}:{' '}
                       {new Date(item.lastVisit).toLocaleDateString(
-                        isRTL ? 'ar-SA' : 'en-US',
+                        'ar-SA',
                         { month: 'short', day: 'numeric' },
                       )}
                     </ThemedText>

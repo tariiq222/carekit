@@ -18,41 +18,41 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { Glass } from '@/theme';
-import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
-import { AquaBackground, PrimaryButton } from '@/theme/sawaa';
-import { useDir } from '@/hooks/useDir';
+import { C, RADII, SHADOW } from '@/theme/glass';
+import { AquaBackground, PrimaryButton, sawaaColors } from '@/theme/sawaa';
 import { useRequestLoginOtp } from '@/hooks/queries';
 import { getFontName } from '@/theme/fonts';
+import { toAsciiDigits } from '@/utils/digits';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f700 = getFontName('ar', '700');
 
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState<string | undefined>();
+  const [focused, setFocused] = useState(false);
 
   const requestOtp = useRequestLoginOtp();
 
   const handleLogin = useCallback(async () => {
-    if (!identifier.trim()) {
+    const trimmedIdentifier = identifier.trim();
+    if (!trimmedIdentifier) {
       setError(t('auth.login.identifierError'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     try {
-      const result = await requestOtp.mutateAsync({ identifier: identifier.trim() });
+      const result = await requestOtp.mutateAsync({ identifier: trimmedIdentifier });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push({
         pathname: '/(auth)/otp-verify',
         params: {
           purpose: 'login',
-          identifier: identifier.trim(),
+          identifier: trimmedIdentifier,
           maskedIdentifier: result.maskedIdentifier,
         },
       });
@@ -61,6 +61,8 @@ export default function LoginScreen() {
       Alert.alert(t('common.error'), t('error.generic'));
     }
   }, [identifier, requestOtp, router, t]);
+
+  const isSubmitting = requestOtp.isPending;
 
   return (
     <AquaBackground>
@@ -80,7 +82,7 @@ export default function LoginScreen() {
             entering={FadeIn.duration(700).easing(Easing.out(Easing.cubic))}
             style={styles.logoContainer}
           >
-            <Glass variant="strong" radius={sawaaTokens.radius.xl} style={styles.logo}>
+            <Glass variant="strong" radius={RADII.floating} style={[styles.logo, SHADOW]}>
               <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M12 2C7 6 4 10 4 14a8 8 0 0 0 16 0c0-4-3-8-8-12Z"
@@ -100,19 +102,13 @@ export default function LoginScreen() {
 
           <Animated.Text
             entering={FadeInDown.delay(150).duration(700).easing(Easing.out(Easing.cubic))}
-            style={[
-              styles.title,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f700 }
-            ]}
+            style={[styles.title, { fontFamily: f700 }]}
           >
             {t('auth.login.title')}
           </Animated.Text>
           <Animated.Text
             entering={FadeInDown.delay(250).duration(700).easing(Easing.out(Easing.cubic))}
-            style={[
-              styles.subtitle,
-              { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
-            ]}
+            style={[styles.subtitle, { fontFamily: f400 }]}
           >
             {t('auth.welcomeBackSub')}
           </Animated.Text>
@@ -120,35 +116,33 @@ export default function LoginScreen() {
           <Animated.View entering={FadeInUp.delay(400).duration(800).easing(Easing.out(Easing.cubic))}>
           <Glass
             variant="regular"
-            radius={sawaaTokens.radius.lg}
-            style={[styles.form, { marginTop: 32 }]}
+            radius={RADII.card}
+            style={[styles.form, SHADOW, { marginTop: 32 }]}
           >
             <View style={styles.formInner}>
               <View style={styles.field}>
-                <Text
-                  style={[
-                    styles.label,
-                    { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f600 }
-                  ]}
-                >
-                  {t('auth.login.identifier')}
-                </Text>
-                <Glass variant="clear" radius={sawaaTokens.radius.md} style={styles.input}>
+                <Glass variant="clear" radius={RADII.image} style={styles.input}>
                   <TextInput
                     value={identifier}
                     onChangeText={(text) => {
-                      setIdentifier(text.trim());
+                      setIdentifier(toAsciiDigits(text).trim());
                       if (error) setError(undefined);
                     }}
-                    placeholder={t('auth.login.identifier')}
-                    placeholderTextColor={sawaaColors.ink[500]}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    placeholder={focused ? '' : t('auth.login.identifier')}
+                    placeholderTextColor={C.subtle}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
                     textContentType="emailAddress"
                     style={[
                       styles.inputText,
-                      { textAlign: 'left', writingDirection: 'ltr', fontFamily: f400 }
+                      {
+                        textAlign: identifier || focused ? 'left' : 'right',
+                        writingDirection: identifier || focused ? 'ltr' : 'rtl',
+                        fontFamily: f400,
+                      },
                     ]}
                   />
                 </Glass>
@@ -156,7 +150,7 @@ export default function LoginScreen() {
                   <Text
                     style={[
                       styles.error,
-                      { textAlign: dir.textAlign, writingDirection: dir.writingDirection, fontFamily: f400 }
+                      { textAlign: 'right', writingDirection: 'rtl', fontFamily: f400 }
                     ]}
                   >
                     {error}
@@ -165,24 +159,32 @@ export default function LoginScreen() {
               </View>
 
               <PrimaryButton
-                label={requestOtp.isPending ? t('auth.login.submitting') : t('auth.login.submit')}
+                label={isSubmitting ? t('auth.login.submitting') : t('auth.login.submit')}
                 onPress={handleLogin}
                 fontFamily={f700}
-                disabled={requestOtp.isPending}
+                disabled={isSubmitting}
                 style={{ marginTop: 8 }}
               />
 
-              <View style={[styles.registerRow, { flexDirection: dir.row }]}>
-                <Text style={[styles.registerText, { fontFamily: f400 }]}>{t('auth.noAccount')} </Text>
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push('/(auth)/register');
-                  }}
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/(auth)/register');
+                }}
+                style={styles.registerRow}
+              >
+                <Text
+                  style={[
+                    styles.registerText,
+                    { fontFamily: f400, textAlign: 'center', writingDirection: 'rtl' },
+                  ]}
                 >
-                  <Text style={[styles.registerLink, { fontFamily: f700 }]}>{t('auth.createAccount')}</Text>
-                </Pressable>
-              </View>
+                  {t('auth.noAccount')}{' '}
+                  <Text style={[styles.registerLink, { fontFamily: f700 }]}>
+                    {t('auth.createAccount')}
+                  </Text>
+                </Text>
+              </Pressable>
             </View>
           </Glass>
           </Animated.View>
@@ -198,17 +200,33 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 24 },
   logoContainer: { alignItems: 'center', marginBottom: 24 },
   logo: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 32, color: sawaaColors.teal[700], lineHeight: 42, marginBottom: 8, alignSelf: 'stretch' },
-  subtitle: { fontSize: 14, color: sawaaColors.ink[500], lineHeight: 20, marginBottom: 32, alignSelf: 'stretch' },
+  title: {
+    fontSize: 32,
+    color: C.deepTeal,
+    lineHeight: 42,
+    marginBottom: 8,
+    alignSelf: 'stretch',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: C.subtle,
+    lineHeight: 20,
+    marginBottom: 32,
+    alignSelf: 'stretch',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   form: { padding: 24 },
   formInner: { gap: 20 },
   field: { gap: 8 },
-  label: { fontSize: 14, color: sawaaColors.teal[700] },
-  input: { padding: 14, flexDirection: 'row', alignItems: 'center' },
+  label: { fontSize: 14, color: C.deepTeal, textAlign: 'center', writingDirection: 'rtl' },
+  input: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
   inputRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', width: '100%' },
-  inputText: { flex: 1, fontSize: 14, color: sawaaColors.teal[700] },
-  error: { fontSize: 12, color: sawaaColors.accent.coral },
+  inputText: { flex: 1, fontSize: 16, color: C.deepTeal, paddingVertical: 0 },
+  error: { fontSize: 12, color: '#E74C3C' },
   registerRow: { alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8 },
-  registerText: { fontSize: 14, color: sawaaColors.ink[500] },
-  registerLink: { fontSize: 14, color: sawaaColors.teal[700] },
+  registerText: { fontSize: 14, color: C.subtle },
+  registerLink: { fontSize: 14, color: C.deepTeal },
 });

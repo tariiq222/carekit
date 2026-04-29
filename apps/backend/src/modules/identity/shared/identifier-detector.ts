@@ -9,5 +9,8 @@ export function detectChannel(value: string): AuthChannel {
 
 export function normalizeIdentifier(value: string, channel: AuthChannel): string {
   if (channel === 'EMAIL') return value.trim().toLowerCase();
-  return value.replace(/\s+/g, '');
+  const stripped = value.replace(/\s+/g, '').replace(/^00/, '+');
+  if (stripped.startsWith('+966')) return '0' + stripped.slice(4);
+  if (stripped.startsWith('966') && stripped.length === 12) return '0' + stripped.slice(3);
+  return stripped;
 }

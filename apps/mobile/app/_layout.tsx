@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { I18nManager } from 'react-native';
 import { Slot, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +10,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { store, persistor } from '@/stores/store';
 import { queryClient } from '@/services/query-client';
 import { ThemeProvider } from '@/theme/ThemeProvider';
-import { DirContext, buildDirState } from '@/hooks/useDir';
 import { loadCurrentOrgId } from '@/services/tenant';
 import { useAppSelector } from '@/hooks/use-redux';
 import { registerForPushAsync } from '@/services/push';
@@ -28,32 +27,34 @@ function PushBootstrap() {
 function AuthRouter() {
   const router = useRouter();
   const token = useAppSelector((s) => s.auth.token);
-  const activeMembership = useAppSelector((s) => s.auth.activeMembership);
+  // Skip the very first effect run — that's the moment right after
+  // rehydration where token may flip null→value as redux-persist replays
+  // saved state. Without this, an initial transient null kicks an already-
+  // logged-in user back to /(auth)/login on app cold-start.
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
     if (!token) {
       router.replace('/(auth)/login');
-      return;
     }
-    if (activeMembership) {
-      router.replace('/(employee)/(tabs)/today');
-      return;
-    }
-    router.replace('/(client)/(tabs)/home');
-  }, [token, activeMembership, router]);
+  }, [token, router]);
 
   return null;
 }
 
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+}
+
 export default function RootLayout() {
   useEffect(() => {
-    if (!I18nManager.isRTL) {
-      I18nManager.allowRTL(true);
-    }
     void loadCurrentOrgId();
   }, []);
-
-  const dirState = buildDirState('ar');
 
   return (
     <ReduxProvider store={store}>
@@ -61,14 +62,12 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <PushBootstrap />
           <AuthRouter />
-          <DirContext.Provider value={dirState}>
-            <ThemeProvider language="ar">
-              <SafeAreaProvider>
-                <Slot />
-                <StatusBar style="dark" />
-              </SafeAreaProvider>
-            </ThemeProvider>
-          </DirContext.Provider>
+          <ThemeProvider language="ar">
+            <SafeAreaProvider>
+              <Slot />
+              <StatusBar style="dark" />
+            </SafeAreaProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </PersistGate>
     </ReduxProvider>

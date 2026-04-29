@@ -44,7 +44,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export function SettingsProfileSection() {
   const { t } = useTranslation();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const [saving, setSaving] = useState(false);
@@ -134,7 +134,7 @@ export function SettingsProfileSection() {
                 {
                   color: theme.colors.textPrimary,
                   borderColor: theme.colors.border,
-                  textAlign: isRTL ? 'right' : 'left',
+                  textAlign: 'right',
                 },
               ]}
             />
@@ -159,7 +159,7 @@ export function SettingsProfileSection() {
                 {
                   color: theme.colors.textPrimary,
                   borderColor: theme.colors.border,
-                  textAlign: isRTL ? 'right' : 'left',
+                  textAlign: 'right',
                 },
               ]}
             />
@@ -185,7 +185,7 @@ export function SettingsProfileSection() {
                 {
                   color: theme.colors.textPrimary,
                   borderColor: theme.colors.border,
-                  textAlign: isRTL ? 'right' : 'left',
+                  textAlign: 'right',
                 },
               ]}
             />

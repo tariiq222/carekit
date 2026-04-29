@@ -48,6 +48,10 @@ import { PublicModule } from "./api/public/public.module";
     }),
     TenantModule,
     // TODO(M5): switch to ThrottlerStorageRedisService (@nestjs-throttler/storage-redis) for multi-pod rate limit sharing
+    // Global default: 300 requests / 60s per client. Burst cap that protects
+    // the API from abusive clients while still comfortably covering busy
+    // receptionist sessions. Sensitive routes (login, OTP, public endpoints)
+    // tighten further with per-route @Throttle overrides.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     DatabaseModule,
     MessagingModule,

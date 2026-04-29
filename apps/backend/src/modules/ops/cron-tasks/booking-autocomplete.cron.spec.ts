@@ -5,7 +5,12 @@ import { RefreshTokenCleanupCron } from './refresh-token-cleanup.cron';
 import { AppointmentRemindersCron } from './appointment-reminders.cron';
 import { BookingStatus } from '@prisma/client';
 
-const buildPrisma = () => ({
+const buildPrisma = (orgIds: string[] = ['org-1']) => ({
+  organization: {
+    findMany: jest
+      .fn()
+      .mockResolvedValue(orgIds.map((id) => ({ id }))),
+  },
   booking: {
     findMany: jest.fn().mockResolvedValue([{}]),
     updateMany: jest.fn().mockResolvedValue({ count: 0 }),
@@ -28,23 +33,57 @@ const buildSettingsHandler = () => ({
   }),
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => unknown) => fn()),
+  set: jest.fn(),
+});
+
 describe('BookingAutocompleteCron', () => {
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new BookingAutocompleteCron(prisma as never, buildSettingsHandler() as never);
+    const cron = new BookingAutocompleteCron(
+      prisma as never,
+      buildSettingsHandler() as never,
+      buildCls() as never,
+    );
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
-  it('calls updateMany with CONFIRMED status and cutoff', async () => {
-    const prisma = buildPrisma();
-    const cron = new BookingAutocompleteCron(prisma as never, buildSettingsHandler() as never);
+  it('calls updateMany with CONFIRMED status and cutoff for each active org', async () => {
+    const prisma = buildPrisma(['org-1', 'org-2']);
+    const cron = new BookingAutocompleteCron(
+      prisma as never,
+      buildSettingsHandler() as never,
+      buildCls() as never,
+    );
     await cron.execute();
+    expect(prisma.organization.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { suspendedAt: null } }),
+    );
+    expect(prisma.booking.updateMany).toHaveBeenCalledTimes(2);
     expect(prisma.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
         data: expect.objectContaining({ status: BookingStatus.COMPLETED }),
       }),
     );
+  });
+
+  it('continues iterating when one org fails', async () => {
+    const prisma = buildPrisma(['org-1', 'org-2', 'org-3']);
+    let calls = 0;
+    prisma.booking.updateMany = jest.fn().mockImplementation(() => {
+      calls += 1;
+      if (calls === 2) throw new Error('boom');
+      return { count: 0 };
+    });
+    const cron = new BookingAutocompleteCron(
+      prisma as never,
+      buildSettingsHandler() as never,
+      buildCls() as never,
+    );
+    await expect(cron.execute()).resolves.not.toThrow();
+    expect(prisma.booking.updateMany).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -123,20 +162,37 @@ describe('RefreshTokenCleanupCron', () => {
 describe('AppointmentRemindersCron', () => {
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new AppointmentRemindersCron(prisma as never);
+    const cron = new AppointmentRemindersCron(prisma as never, buildCls() as never);
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
-  it('checks waitlist entries', async () => {
-    const prisma = buildPrisma();
+  it('lists active orgs and checks waitlist per org', async () => {
+    const prisma = buildPrisma(['org-1', 'org-2']);
     prisma.waitlistEntry.findMany = jest.fn().mockResolvedValue([{ id: 'w-1' }, { id: 'w-2' }]);
-    const cron = new AppointmentRemindersCron(prisma as never);
+    const cron = new AppointmentRemindersCron(prisma as never, buildCls() as never);
     await cron.execute();
+    expect(prisma.organization.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { suspendedAt: null } }),
+    );
+    expect(prisma.waitlistEntry.findMany).toHaveBeenCalledTimes(2);
     expect(prisma.waitlistEntry.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: 'WAITING' }),
         take: 50,
       }),
     );
+  });
+
+  it('continues iterating when one org fails', async () => {
+    const prisma = buildPrisma(['org-1', 'org-2', 'org-3']);
+    let calls = 0;
+    prisma.waitlistEntry.findMany = jest.fn().mockImplementation(() => {
+      calls += 1;
+      if (calls === 2) throw new Error('boom');
+      return [];
+    });
+    const cron = new AppointmentRemindersCron(prisma as never, buildCls() as never);
+    await expect(cron.execute()).resolves.not.toThrow();
+    expect(prisma.waitlistEntry.findMany).toHaveBeenCalledTimes(3);
   });
 });

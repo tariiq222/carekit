@@ -12,5 +12,11 @@ export { useEmployeeDayBookings, employeeDayBookingsKeys } from './useEmployeeDa
 export { useBranding, brandingKeys } from './useBranding';
 export { useHome, useSummary, useUpcoming, portalKeys } from './usePortal';
 export { useMemberships, useSwitchOrganization, membershipsKeys } from './useMemberships';
-export { useRegister, useRequestLoginOtp, useVerifyOtp, useRequestEmailVerification } from './useMobileAuth';
+export {
+  useRegister,
+  useRequestLoginOtp,
+  useVerifyOtp,
+  useRequestEmailVerification,
+} from './useMobileAuth';
 export { useMe } from './useMe';
+export { useDepartments, departmentKeys } from './useDepartments';

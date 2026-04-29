@@ -9,7 +9,6 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, Video } from 'lucide-react-
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import {
   publicCatalogService,
@@ -47,13 +46,12 @@ export default function BookingConfirmScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
+  const GoIcon = ChevronLeft;
 
   const [service, setService] = useState<PublicService | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,15 +71,15 @@ export default function BookingConfirmScreen() {
           .flatMap((d) => d.services)
           .find((s) => s.id === serviceId);
         setService(found ?? null);
-        if (!found) setError(dir.isRTL ? 'الخدمة غير متوفرة' : 'Service unavailable');
+        if (!found) setError('الخدمة غير متوفرة');
       } catch {
-        if (!cancelled) setError(dir.isRTL ? 'تعذّر تحميل الخدمة' : 'Failed to load service');
+        if (!cancelled) setError('تعذّر تحميل الخدمة');
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [serviceId, dir.isRTL]);
+  }, [serviceId]);
 
   const scheduledDate = useMemo(
     () => (scheduledAt ? new Date(scheduledAt) : null),
@@ -98,7 +96,7 @@ export default function BookingConfirmScreen() {
   const currency = service?.currency ?? 'SAR';
 
   const formatMoney = (n: number) =>
-    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
+    `${n.toLocaleString('ar-SA')} ر.س`;
 
   const rows = [
     {
@@ -154,12 +152,12 @@ export default function BookingConfirmScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(500)}>
-          <View style={[styles.topRow, { flexDirection: dir.row }]}>
+          <View style={[styles.topRow, { flexDirection: 'row' }]}>
             <Glass variant="strong" radius={22} onPress={() => router.back()} interactive style={styles.backBtn}>
               <BackIcon size={22} color={sawaaColors.ink[700]} strokeWidth={1.75} />
             </Glass>
             <Text style={[styles.step, { fontFamily: f600 }]}>
-              {dir.isRTL ? 'الخطوة ٣ من ٣' : 'Step 3 of 3'}
+              {'الخطوة ٣ من ٣'}
             </Text>
           </View>
           <View style={styles.progressTrack}>
@@ -168,11 +166,11 @@ export default function BookingConfirmScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'تأكيد الحجز' : 'Confirm booking'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'تأكيد الحجز'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'راجعي التفاصيل قبل التأكيد' : 'Review your details before confirming'}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {'راجعي التفاصيل قبل التأكيد'}
           </Text>
         </Animated.View>
 
@@ -183,17 +181,17 @@ export default function BookingConfirmScreen() {
                 key={i}
                 style={[
                   styles.row,
-                  { flexDirection: dir.row },
+                  { flexDirection: 'row' },
                   i < rows.length - 1 && styles.rowDivider,
                 ]}
               >
                 <View style={[styles.rowIcon, { backgroundColor: `${r.color}1e` }]}>{r.icon}</View>
                 <View style={styles.rowMid}>
-                  <Text style={[styles.rowLabel, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                    {dir.isRTL ? r.labelAr : r.labelEn}
+                  <Text style={[styles.rowLabel, { fontFamily: f400, textAlign: 'right' }]}>
+                    {r.labelAr}
                   </Text>
-                  <Text style={[styles.rowValue, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                    {dir.isRTL ? r.valueAr : r.valueEn}
+                  <Text style={[styles.rowValue, { fontFamily: f700, textAlign: 'right' }]}>
+                    {r.valueAr}
                   </Text>
                 </View>
               </View>
@@ -213,22 +211,22 @@ export default function BookingConfirmScreen() {
               </View>
             ) : service ? (
               <>
-                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                <View style={[styles.priceRow, { flexDirection: 'row' }]}>
                   <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
-                    {dir.isRTL ? service.nameAr : (service.nameEn ?? service.nameAr)}
+                    {service.nameAr}
                   </Text>
                   <Text style={[styles.priceValue, { fontFamily: f600 }]}>{formatMoney(subtotal)}</Text>
                 </View>
-                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                <View style={[styles.priceRow, { flexDirection: 'row' }]}>
                   <Text style={[styles.priceLabel, { fontFamily: f500 }]}>
-                    {dir.isRTL ? 'ضريبة القيمة المضافة (١٥٪)' : 'VAT (15%)'}
+                    {'ضريبة القيمة المضافة (١٥٪)'}
                   </Text>
                   <Text style={[styles.priceValue, { fontFamily: f600 }]}>{formatMoney(vat)}</Text>
                 </View>
                 <View style={styles.priceDivider} />
-                <View style={[styles.priceRow, { flexDirection: dir.row }]}>
+                <View style={[styles.priceRow, { flexDirection: 'row' }]}>
                   <Text style={[styles.priceLabelBold, { fontFamily: f700 }]}>
-                    {dir.isRTL ? 'الإجمالي' : 'Total'}
+                    {'الإجمالي'}
                   </Text>
                   <Text style={[styles.priceTotal, { fontFamily: f700 }]}>{formatMoney(total)}</Text>
                 </View>
@@ -250,7 +248,7 @@ export default function BookingConfirmScreen() {
             style={[styles.ctaBtn, !canContinue && { opacity: 0.5 }]}
           >
             <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
-              {dir.isRTL ? 'متابعة الدفع' : 'Continue to payment'}
+              {'متابعة الدفع'}
             </Text>
             <GoIcon size={16} color="#fff" strokeWidth={2} />
           </LinearGradient>

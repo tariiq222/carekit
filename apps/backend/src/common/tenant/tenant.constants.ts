@@ -2,8 +2,8 @@
  * Well-known tenant identifiers and error codes.
  * Values must match prisma/migrations/*_saas01_organization_membership seed.
  */
-export const DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001';
-export const DEFAULT_ORGANIZATION_SLUG = 'default';
+export const DEFAULT_ORGANIZATION_ID = 'ac6c56f2-073b-4704-b2d2-3d21e238d616';
+export const DEFAULT_ORGANIZATION_SLUG = 'sawaa';
 
 export const TENANT_CLS_KEY = 'tenant' as const;
 export const SYSTEM_CONTEXT_CLS_KEY = 'systemContext' as const;

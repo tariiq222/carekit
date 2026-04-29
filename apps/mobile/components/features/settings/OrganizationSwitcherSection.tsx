@@ -7,7 +7,6 @@ import { Building2, Check } from 'lucide-react-native';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
-import { useDir } from '@/hooks/useDir';
 import { useAppSelector } from '@/hooks/use-redux';
 import { useMemberships, useSwitchOrganization } from '@/hooks/queries/useMemberships';
 import { applyTenantSwitch } from '@/services/tenant-switch';
@@ -15,9 +14,8 @@ import type { MembershipSummary } from '@/services/memberships';
 // (tenant-locked builds: no `EXPO_PUBLIC_TENANT_LOCKED` flag exists today;
 // the `<= 1 memberships` guard below is sufficient — see fix-round-2 spec.)
 
-function pickOrgName(org: MembershipSummary['organization'], isRTL: boolean): string {
-  if (isRTL) return org.nameAr || org.nameEn || org.slug;
-  return org.nameEn || org.nameAr || org.slug;
+function pickOrgName(org: MembershipSummary['organization']): string {
+  return org.nameAr || org.nameEn || org.slug;
 }
 
 function roleLabel(role: string, t: (k: string, opts?: { defaultValue: string }) => string): string {
@@ -29,7 +27,6 @@ function roleLabel(role: string, t: (k: string, opts?: { defaultValue: string })
 export function OrganizationSwitcherSection() {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const { isRTL } = useDir();
   const router = useRouter();
   const activeOrgId = useAppSelector((s) => s.auth.organizationId);
 
@@ -39,7 +36,7 @@ export function OrganizationSwitcherSection() {
   const onSelect = useCallback(
     (m: MembershipSummary) => {
       if (m.organizationId === activeOrgId) return;
-      const orgName = pickOrgName(m.organization, isRTL);
+      const orgName = pickOrgName(m.organization);
       Alert.alert(
         t('settings.tenant.confirmTitle'),
         t('settings.tenant.confirmBody', { org: orgName }),
@@ -67,7 +64,7 @@ export function OrganizationSwitcherSection() {
         ],
       );
     },
-    [activeOrgId, isRTL, router, switchMutation, t],
+    [activeOrgId, router, switchMutation, t],
   );
 
   if (isLoading) {
@@ -109,7 +106,7 @@ export function OrganizationSwitcherSection() {
             ]}
           >
             <View style={styles.rowMain}>
-              <ThemedText variant="body">{pickOrgName(m.organization, isRTL)}</ThemedText>
+              <ThemedText variant="body">{pickOrgName(m.organization)}</ThemedText>
               <ThemedText variant="caption" color={theme.colors.textSecondary}>
                 {roleLabel(m.role, t)}
               </ThemedText>

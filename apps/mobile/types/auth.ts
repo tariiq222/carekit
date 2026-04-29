@@ -19,6 +19,7 @@ import type { UserPayload, AuthResponse as CanonicalAuthResponse } from '@careki
 // EmailVerificationBanner stays hidden, the employee availability page
 // needs its own membership/employee lookup).
 export type User = UserPayload & {
+  onboardingCompletedAt?: string | null;
   emailVerified?: boolean;
   emailVerifiedAt?: string | null;
   employeeId?: string | null;

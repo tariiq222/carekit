@@ -15,16 +15,11 @@ jest.mock('@/services/client/terminology', () => ({
   },
 }));
 
-jest.mock('@/hooks/useDir', () => ({
-  useDir: jest.fn(),
-}));
-
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { terminologyService } from '@/services/client/terminology';
-import { useDir } from '@/hooks/useDir';
 import { useTerminology } from '../useTerminology';
 import type {
   TerminologyKey,
@@ -32,7 +27,6 @@ import type {
 } from '@carekit/shared/terminology';
 
 const mockedGetPack = terminologyService.getPack as jest.Mock;
-const mockedUseDir = useDir as jest.Mock;
 
 function makeWrapper() {
   const qc = new QueryClient({
@@ -51,7 +45,6 @@ const samplePack = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockedUseDir.mockReturnValue({ locale: 'ar' });
 });
 
 describe('useTerminology', () => {
@@ -67,8 +60,7 @@ describe('useTerminology', () => {
     expect(result.current.t('unknown' as TerminologyKey, 'fb')).toBe('fb');
   });
 
-  it('returns Arabic value when locale is ar', async () => {
-    mockedUseDir.mockReturnValue({ locale: 'ar' });
+  it('returns the Arabic value (mobile build is Arabic-locked)', async () => {
     mockedGetPack.mockResolvedValueOnce(samplePack);
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useTerminology('family-consulting'), {
@@ -77,18 +69,6 @@ describe('useTerminology', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.t('employee.plural')).toBe('المستشارون');
-  });
-
-  it('returns English value when locale is en', async () => {
-    mockedUseDir.mockReturnValue({ locale: 'en' });
-    mockedGetPack.mockResolvedValueOnce(samplePack);
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useTerminology('family-consulting'), {
-      wrapper: Wrapper,
-    });
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.t('employee.plural')).toBe('Consultants');
   });
 
   it('does not fire a query when verticalSlug is undefined', () => {

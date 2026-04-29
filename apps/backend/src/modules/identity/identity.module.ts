@@ -113,6 +113,7 @@ const handlers = [
     OtpSessionGuard,
   ],
   exports: [
+    JwtModule,
     CaslAbilityFactory,
     TokenService,
     ClientTokenService,

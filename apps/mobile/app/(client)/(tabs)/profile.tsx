@@ -7,7 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   Bell,
   ChevronLeft,
-  ChevronRight,
   Heart,
   Leaf,
   Lock,
@@ -18,7 +17,6 @@ import {
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { useAppSelector, useAppDispatch } from '@/hooks/use-redux';
 import { logout } from '@/stores/slices/auth-slice';
 import { unregisterPushAsync } from '@/services/push';
@@ -39,18 +37,17 @@ function formatLastVisit(iso: string | null, isRTL: boolean): string {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const [darkMode, setDarkMode] = useState(false);
   const summaryQuery = useSummary();
   const summary = summaryQuery.data ?? null;
   const [refreshing, setRefreshing] = useState(false);
-  const Chevron = dir.isRTL ? ChevronLeft : ChevronRight;
+  const Chevron = ChevronLeft;
 
   const displayName = user
     ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email
@@ -70,21 +67,19 @@ export default function ProfileScreen() {
   const stats: Array<{ value: string; ar: string; en: string }> = [
     {
       value: summary
-        ? (dir.isRTL ? summary.totalBookings.toLocaleString('ar-SA') : String(summary.totalBookings))
+        ? summary.totalBookings.toLocaleString('ar-SA')
         : '—',
       ar: 'جلسة',
       en: 'Sessions',
     },
     {
-      value: summary ? formatLastVisit(summary.lastVisit, dir.isRTL) : '—',
+      value: summary ? formatLastVisit(summary.lastVisit, true) : '—',
       ar: 'آخر زيارة',
       en: 'Last visit',
     },
     {
       value: summary
-        ? (dir.isRTL
-            ? `${summary.outstandingBalance.toLocaleString('ar-SA')} ر.س`
-            : `${summary.outstandingBalance.toLocaleString('en-US')} SAR`)
+        ? `${summary.outstandingBalance.toLocaleString('ar-SA')} ر.س`
         : '—',
       ar: 'مبلغ مستحق',
       en: 'Outstanding',
@@ -117,14 +112,14 @@ export default function ProfileScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={sawaaColors.teal[600]} />}
       >
         <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.pageTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'حسابي' : 'My Account'}
+          <Text style={[styles.pageTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'حسابي'}
           </Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(100).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.profileCard}>
-            <View style={[styles.profileRow, { flexDirection: dir.row }]}>
+            <View style={[styles.profileRow, { flexDirection: 'row' }]}>
               <LinearGradient
                 colors={[sawaaColors.teal[400], sawaaColors.teal[700]]}
                 start={{ x: 0, y: 0 }}
@@ -134,38 +129,36 @@ export default function ProfileScreen() {
                 <Text style={[styles.avatarText, { fontFamily: f700 }]}>{initial}</Text>
               </LinearGradient>
               <View style={styles.profileMid}>
-                <Text style={[styles.profileName, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                <Text style={[styles.profileName, { fontFamily: f700, textAlign: 'right' }]}>
                   {displayName}
                 </Text>
-                <Text style={[styles.profileEmail, { fontFamily: f400, textAlign: dir.textAlign }]}>
+                <Text style={[styles.profileEmail, { fontFamily: f400, textAlign: 'right' }]}>
                   {email}
                 </Text>
                 {summary && summary.totalBookings > 0 ? (
-                  <View style={[styles.membership, { flexDirection: dir.row }]}>
+                  <View style={[styles.membership, { flexDirection: 'row' }]}>
                     <Leaf size={11} color={sawaaColors.teal[700]} strokeWidth={2} />
                     <Text style={[styles.membershipText, { fontFamily: f600 }]}>
-                      {dir.isRTL
-                        ? `${summary.totalBookings.toLocaleString('ar-SA')} جلسة سابقة`
-                        : `${summary.totalBookings} past session${summary.totalBookings === 1 ? '' : 's'}`}
+                      {`${summary.totalBookings.toLocaleString('ar-SA')} جلسة سابقة`}
                     </Text>
                   </View>
                 ) : null}
               </View>
               <Glass variant="regular" radius={14} onPress={() => router.push('/(client)/settings')} interactive style={styles.editBtn}>
                 <Text style={[styles.editText, { fontFamily: f600 }]}>
-                  {dir.isRTL ? 'تعديل' : 'Edit'}
+                  {'تعديل'}
                 </Text>
               </Glass>
             </View>
 
-            <View style={[styles.statsRow, { flexDirection: dir.row }]}>
+            <View style={[styles.statsRow, { flexDirection: 'row' }]}>
               {stats.map((s, i) => (
                 <View key={i} style={styles.statBox}>
                   <Text style={[styles.statN, { fontFamily: f700 }]} numberOfLines={1}>
                     {s.value}
                   </Text>
                   <Text style={[styles.statL, { fontFamily: f400 }]}>
-                    {dir.isRTL ? s.ar : s.en}
+                    {s.ar}
                   </Text>
                 </View>
               ))}
@@ -181,19 +174,19 @@ export default function ProfileScreen() {
                 onPress={it.onToggle ?? it.onPress}
                 style={[
                   styles.settingRow,
-                  { flexDirection: dir.row },
+                  { flexDirection: 'row' },
                   i < settingsItems.length - 1 && styles.settingDivider,
                 ]}
               >
                 <View style={[styles.settingIcon, { backgroundColor: `${it.color}1e` }]}>
                   {it.icon}
                 </View>
-                <Text style={[styles.settingLabel, { fontFamily: f600, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? it.label.ar : it.label.en}
+                <Text style={[styles.settingLabel, { fontFamily: f600, textAlign: 'right' }]}>
+                  {it.label.ar}
                 </Text>
                 {it.meta && (
                   <Text style={[styles.settingMeta, { fontFamily: f400 }]}>
-                    {dir.isRTL ? it.meta.ar : it.meta.en}
+                    {it.meta.ar}
                   </Text>
                 )}
                 {it.toggle !== undefined ? (
@@ -216,16 +209,16 @@ export default function ProfileScreen() {
 
         <Animated.View entering={FadeInDown.delay(340).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.sosCard}>
-            <View style={[styles.sosRow, { flexDirection: dir.row }]}>
+            <View style={[styles.sosRow, { flexDirection: 'row' }]}>
               <View style={styles.sosIcon}>
                 <PhoneIcon size={16} color="#fff" strokeWidth={2} />
               </View>
               <View style={styles.sosMid}>
-                <Text style={[styles.sosTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'دعم الأزمات · ٢٤/٧' : 'Crisis support · 24/7'}
+                <Text style={[styles.sosTitle, { fontFamily: f700, textAlign: 'right' }]}>
+                  {'دعم الأزمات · ٢٤/٧'}
                 </Text>
-                <Text style={[styles.sosSub, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                  {dir.isRTL ? 'اتصال فوري بمختص' : 'Instant expert call'}
+                <Text style={[styles.sosSub, { fontFamily: f400, textAlign: 'right' }]}>
+                  {'اتصال فوري بمختص'}
                 </Text>
               </View>
               <Text style={[styles.sosPhone, { fontFamily: f700 }]}>920 00 00</Text>
@@ -239,7 +232,7 @@ export default function ProfileScreen() {
             dispatch(logout());
           }} interactive style={styles.logoutBtn}>
             <Text style={[styles.logoutText, { fontFamily: f700 }]}>
-              {dir.isRTL ? 'تسجيل الخروج' : 'Sign out'}
+              {'تسجيل الخروج'}
             </Text>
           </Glass>
         </Animated.View>

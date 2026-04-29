@@ -18,7 +18,6 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { terminologyService } from '@/services/client/terminology';
-import { useDir } from '@/hooks/useDir';
 import type {
   TerminologyKey,
   TerminologyPack,
@@ -41,7 +40,7 @@ export interface UseTerminologyResult {
 export function useTerminology(
   verticalSlug: string | undefined,
 ): UseTerminologyResult {
-  const { locale } = useDir();
+  const locale = 'ar' as const;
 
   const query = useQuery<TerminologyPack>({
     queryKey: terminologyQueryKey(verticalSlug),

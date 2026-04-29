@@ -45,7 +45,7 @@ const TYPE_COLOR = {
 export default function TodayScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { theme, isRTL } = useTheme();
+  const { theme } = useTheme();
   const user = useAppSelector((s) => s.auth.user);
   const router = useRouter();
 

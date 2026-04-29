@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 
 import { Glass } from '@/theme';
 import { sawaaTokens, sawaaColors } from '@/theme/sawaa/tokens';
-import type { DirState } from '@/hooks/useDir';
+import { buildDirState, type DirState } from '@/hooks/useDir';
 
 interface LabeledInputProps {
   label: string;
@@ -18,7 +18,7 @@ interface LabeledInputProps {
   showVisibilityToggle?: boolean;
   isVisible?: boolean;
   onToggleVisibility?: () => void;
-  dir: DirState;
+  dir?: DirState;
 }
 
 export function LabeledInput({
@@ -33,7 +33,7 @@ export function LabeledInput({
   showVisibilityToggle,
   isVisible,
   onToggleVisibility,
-  dir,
+  dir = buildDirState('ar'),
 }: LabeledInputProps) {
   return (
     <View style={styles.field}>

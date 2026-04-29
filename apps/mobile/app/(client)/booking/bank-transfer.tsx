@@ -6,41 +6,37 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
-import { Banknote, ChevronLeft, ChevronRight, Copy, Upload } from 'lucide-react-native';
+import { Banknote, ChevronRight, Copy, Upload } from 'lucide-react-native';
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { clientPaymentsService } from '@/services/client';
 
 export default function BankTransferScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
   const { invoiceId, amount, bookingId } = useLocalSearchParams<{
     invoiceId?: string;
     amount?: string;
     bookingId?: string;
   }>();
-  const f400 = getFontName(dir.locale, '400');
-  const f500 = getFontName(dir.locale, '500');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
+  const f400 = getFontName('ar', '400');
+  const f500 = getFontName('ar', '500');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
+  const BackIcon = ChevronRight;
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const uploaded = !!receiptUri;
   const numericAmount = amount ? Number(amount) : 0;
-  const amountLabel = dir.isRTL
-    ? `${numericAmount.toLocaleString('ar-SA')} ر.س`
-    : `SAR ${numericAmount.toLocaleString('en-US')}`;
+  const amountLabel = `${numericAmount.toLocaleString('ar-SA')} ر.س`;
 
   const pickReceipt = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(dir.isRTL ? 'يلزم إذن المعرض' : 'Photo library permission required');
+      Alert.alert('يلزم إذن المعرض');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -55,7 +51,7 @@ export default function BankTransferScreen() {
   const submitReceipt = async () => {
     if (!receiptUri || !invoiceId || submitting) return;
     if (!numericAmount || numericAmount <= 0) {
-      Alert.alert(dir.isRTL ? 'مبلغ غير صالح' : 'Invalid amount');
+      Alert.alert('مبلغ غير صالح');
       return;
     }
     setSubmitting(true);
@@ -72,7 +68,7 @@ export default function BankTransferScreen() {
     } catch (error) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
-        dir.isRTL ? 'تعذّر رفع الإيصال' : 'Could not upload receipt',
+        'تعذّر رفع الإيصال',
         error instanceof Error ? error.message : String(error),
       );
     } finally {
@@ -81,8 +77,8 @@ export default function BankTransferScreen() {
   };
 
   const details = [
-    { labelAr: 'البنك', labelEn: 'Bank', value: dir.isRTL ? 'البنك الأهلي السعودي' : 'Al-Ahli Bank' },
-    { labelAr: 'اسم المستفيد', labelEn: 'Beneficiary', value: dir.isRTL ? 'سَواء للرعاية النفسية' : 'Sawaa Mental Care' },
+    { labelAr: 'البنك', labelEn: 'Bank', value: 'البنك الأهلي السعودي' },
+    { labelAr: 'اسم المستفيد', labelEn: 'Beneficiary', value: 'سَواء للرعاية النفسية' },
     { labelAr: 'IBAN', labelEn: 'IBAN', value: 'SA03 8000 0000 6080 1016 7519' },
     { labelAr: 'المبلغ', labelEn: 'Amount', value: amountLabel },
   ];
@@ -100,16 +96,16 @@ export default function BankTransferScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <View style={[styles.titleRow, { flexDirection: dir.row }]}>
+          <View style={[styles.titleRow, { flexDirection: 'row' }]}>
             <View style={styles.titleIcon}>
               <Banknote size={22} color={sawaaColors.accent.amber} strokeWidth={1.75} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? 'التحويل البنكي' : 'Bank transfer'}
+              <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+                {'التحويل البنكي'}
               </Text>
-              <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                {dir.isRTL ? 'حوّل المبلغ ثم ارفع الإيصال' : 'Transfer and upload receipt'}
+              <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+                {'حوّل المبلغ ثم ارفع الإيصال'}
               </Text>
             </View>
           </View>
@@ -123,15 +119,15 @@ export default function BankTransferScreen() {
                 key={i}
                 style={[
                   styles.row,
-                  { flexDirection: dir.row },
+                  { flexDirection: 'row' },
                   i < details.length - 1 && styles.rowDivider,
                 ]}
               >
                 <View style={styles.rowMid}>
-                  <Text style={[styles.rowLabel, { fontFamily: f500, textAlign: dir.textAlign }]}>
-                    {dir.isRTL ? d.labelAr : d.labelEn}
+                  <Text style={[styles.rowLabel, { fontFamily: f500, textAlign: 'right' }]}>
+                    {d.labelAr}
                   </Text>
-                  <Text style={[styles.rowValue, { fontFamily: f700, textAlign: dir.textAlign }]}>
+                  <Text style={[styles.rowValue, { fontFamily: f700, textAlign: 'right' }]}>
                     {d.value}
                   </Text>
                 </View>
@@ -149,8 +145,8 @@ export default function BankTransferScreen() {
 
         {/* Upload receipt */}
         <Animated.View entering={FadeInDown.delay(240).duration(700).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'إيصال التحويل' : 'Transfer receipt'}
+          <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: 'right' }]}>
+            {'إيصال التحويل'}
           </Text>
           <Glass
             variant={uploaded ? 'strong' : 'regular'}
@@ -168,11 +164,11 @@ export default function BankTransferScreen() {
               </View>
               <Text style={[styles.uploadTitle, { fontFamily: f700 }]}>
                 {uploaded
-                  ? (dir.isRTL ? 'تم رفع الإيصال' : 'Receipt uploaded')
-                  : (dir.isRTL ? 'انقر لرفع صورة الإيصال' : 'Tap to upload receipt image')}
+                  ? 'تم رفع الإيصال'
+                  : 'انقر لرفع صورة الإيصال'}
               </Text>
               <Text style={[styles.uploadSub, { fontFamily: f400 }]}>
-                {dir.isRTL ? 'PNG, JPG, PDF · حتى ٥ ميجا' : 'PNG, JPG, PDF · max 5 MB'}
+                {'PNG, JPG, PDF · حتى ٥ ميجا'}
               </Text>
             </View>
           </Glass>
@@ -192,8 +188,8 @@ export default function BankTransferScreen() {
           >
             <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
               {submitting
-                ? (dir.isRTL ? 'جاري الإرسال…' : 'Sending…')
-                : (dir.isRTL ? 'إرسال للمراجعة' : 'Send for review')}
+                ? 'جاري الإرسال…'
+                : 'إرسال للمراجعة'}
             </Text>
           </LinearGradient>
         </Pressable>

@@ -59,6 +59,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-12">
       {/* Group 1: Overview — greeting + stats + alerts */}
       <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-muted" />}>
+
         <section className="flex flex-col gap-6">
           <GreetingHeader
             userName={userName}
@@ -91,34 +92,36 @@ export default function DashboardPage() {
           variant="accent"
         />
 
-        <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-          {bookingsLoading ? (
-            <Skeleton className="h-[400px] rounded-xl" />
-          ) : bookingsError ? (
-            <ErrorBanner
-              message={t("dashboard.error.schedule")}
-              onRetry={() => refetchBookings()}
-            />
-          ) : (
-            <TodayTimeline bookings={todayBookings?.items ?? []} />
-          )}
 
-          {notifLoading ? (
-            <Skeleton className="h-[400px] rounded-xl" />
-          ) : notifError ? (
-            <ErrorBanner
-              message={t("dashboard.error.activity")}
-              onRetry={() => refetchNotifs()}
-            />
-          ) : (
-            <ActivityFeed notifications={notifData?.items ?? []} />
-          )}
-        </div>
+          <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
+            {bookingsLoading ? (
+              <Skeleton className="h-[400px] rounded-xl" />
+            ) : bookingsError ? (
+              <ErrorBanner
+                message={t("dashboard.error.schedule")}
+                onRetry={() => refetchBookings()}
+              />
+            ) : (
+              <TodayTimeline bookings={todayBookings?.items ?? []} />
+            )}
+
+            {notifLoading ? (
+              <Skeleton className="h-[400px] rounded-xl" />
+            ) : notifError ? (
+              <ErrorBanner
+                message={t("dashboard.error.activity")}
+                onRetry={() => refetchNotifs()}
+              />
+            ) : (
+              <ActivityFeed notifications={notifData?.items ?? []} />
+            )}
+          </div>
 
         <div className="grid gap-5 lg:grid-cols-2">
           <RevenueChart />
           <RecentPayments />
         </div>
+
         </section>
       </Suspense>
     </div>

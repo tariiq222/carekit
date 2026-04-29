@@ -10,7 +10,6 @@ import { Apple, Banknote, Check, ChevronLeft, ChevronRight, CreditCard } from 'l
 
 import { AquaBackground, sawaaColors, sawaaRadius } from '@/theme/sawaa';
 import { Glass } from '@/theme/components/Glass';
-import { useDir } from '@/hooks/useDir';
 import { getFontName } from '@/theme/fonts';
 import { APP_SCHEME } from '@/constants/config';
 import { clientBookingsService } from '@/services/client/bookings';
@@ -31,19 +30,17 @@ export default function BookingPaymentScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dir = useDir();
-  const f400 = getFontName(dir.locale, '400');
-  const f600 = getFontName(dir.locale, '600');
-  const f700 = getFontName(dir.locale, '700');
+  const f400 = getFontName('ar', '400');
+  const f600 = getFontName('ar', '600');
+  const f700 = getFontName('ar', '700');
   const [method, setMethod] = useState<Method>('card');
   const [submitting, setSubmitting] = useState(false);
-  const BackIcon = dir.isRTL ? ChevronRight : ChevronLeft;
-  const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
+  const BackIcon = ChevronRight;
+  const GoIcon = ChevronLeft;
 
   const total = params.amount ? Number(params.amount) : 0;
-  const currency = params.currency ?? 'SAR';
   const formatMoney = (n: number) =>
-    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
+    `${n.toLocaleString('ar-SA')} ر.س`;
 
   const methods: Array<{ key: Method; icon: React.ReactNode; labelAr: string; labelEn: string; subAr: string; subEn: string; color: string }> = [
     { key: 'card', icon: <CreditCard size={20} color={sawaaColors.teal[600]} strokeWidth={1.75} />, labelAr: 'بطاقة ائتمانية', labelEn: 'Credit card', subAr: 'Visa · Mada · Mastercard', subEn: 'Visa · Mada · Mastercard', color: sawaaColors.teal[600] },
@@ -119,8 +116,8 @@ export default function BookingPaymentScreen() {
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        (dir.isRTL ? 'تعذّر إكمال الدفع. حاولي مرة أخرى.' : 'Could not continue payment. Try again.');
-      Alert.alert(dir.isRTL ? 'خطأ' : 'Error', message);
+        'تعذّر إكمال الدفع. حاولي مرة أخرى.';
+      Alert.alert('خطأ', message);
     } finally {
       setSubmitting(false);
     }
@@ -139,11 +136,11 @@ export default function BookingPaymentScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(600).easing(Easing.out(Easing.cubic))}>
-          <Text style={[styles.title, { fontFamily: f700, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? 'اختر طريقة الدفع' : 'Choose payment'}
+          <Text style={[styles.title, { fontFamily: f700, textAlign: 'right' }]}>
+            {'اختر طريقة الدفع'}
           </Text>
-          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: dir.textAlign }]}>
-            {dir.isRTL ? `المبلغ الإجمالي ${formatMoney(total)}` : `Total ${formatMoney(total)}`}
+          <Text style={[styles.subtitle, { fontFamily: f400, textAlign: 'right' }]}>
+            {`المبلغ الإجمالي ${formatMoney(total)}`}
           </Text>
         </Animated.View>
 
@@ -167,14 +164,14 @@ export default function BookingPaymentScreen() {
                   isSelected && { borderWidth: 2, borderColor: m.color },
                 ]}
               >
-                <View style={[styles.methodRow, { flexDirection: dir.row }]}>
+                <View style={[styles.methodRow, { flexDirection: 'row' }]}>
                   <View style={[styles.methodIcon, { backgroundColor: `${m.color}1e` }]}>{m.icon}</View>
                   <View style={styles.methodMid}>
-                    <Text style={[styles.methodLabel, { fontFamily: f700, textAlign: dir.textAlign }]}>
-                      {dir.isRTL ? m.labelAr : m.labelEn}
+                    <Text style={[styles.methodLabel, { fontFamily: f700, textAlign: 'right' }]}>
+                      {m.labelAr}
                     </Text>
-                    <Text style={[styles.methodSub, { fontFamily: f400, textAlign: dir.textAlign }]}>
-                      {dir.isRTL ? m.subAr : m.subEn}
+                    <Text style={[styles.methodSub, { fontFamily: f400, textAlign: 'right' }]}>
+                      {m.subAr}
                     </Text>
                   </View>
                   {isSelected && (
@@ -205,7 +202,7 @@ export default function BookingPaymentScreen() {
             ) : (
               <>
                 <Text style={[styles.ctaBtnText, { fontFamily: f700 }]}>
-                  {dir.isRTL ? `ادفع ${formatMoney(total)}` : `Pay ${formatMoney(total)}`}
+                  {`ادفع ${formatMoney(total)}`}
                 </Text>
                 <GoIcon size={16} color="#fff" strokeWidth={2} />
               </>

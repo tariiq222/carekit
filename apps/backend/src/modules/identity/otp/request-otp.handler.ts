@@ -44,7 +44,7 @@ export class RequestOtpHandler {
     return this.cls.run(async () => {
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
-      // Fix C — per-identifier rate limit: max 5 requests per hour
+      // Fix C — per-identifier rate limit: max 5 requests per hour.
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const recentCount = await this.prisma.otpCode.count({
         where: {
