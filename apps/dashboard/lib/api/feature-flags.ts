@@ -14,14 +14,3 @@ export async function fetchFeatureFlags(): Promise<FeatureFlag[]> {
 export async function fetchFeatureFlagMap(): Promise<FeatureFlagMap> {
   return api.get<FeatureFlagMap>("/dashboard/platform/feature-flags/map")
 }
-
-/** Toggle a feature flag */
-export async function updateFeatureFlag(
-  key: string,
-  enabled: boolean,
-): Promise<FeatureFlag> {
-  return api.patch<FeatureFlag>(
-    `/dashboard/platform/feature-flags/${key}`,
-    { enabled },
-  )
-}

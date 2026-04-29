@@ -4,27 +4,15 @@ import { Card, CardContent } from "@carekit/ui"
 import { Switch } from "@carekit/ui"
 import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
-import { useFeatureFlags, useFeatureFlagMutation } from "@/hooks/use-feature-flags"
+import { useFeatureFlags } from "@/hooks/use-feature-flags"
 import type { FeatureFlag } from "@/lib/types/feature-flag"
 import { useLocale } from "@/components/locale-provider"
-import { toast } from "sonner"
 import { useState } from "react"
 
 export function FeaturesTab() {
   const { t, locale } = useLocale()
   const { flags, isLoading } = useFeatureFlags()
-  const { toggleMut } = useFeatureFlagMutation()
   const [activeFlag, setActiveFlag] = useState<string | null>(null)
-
-  const handleToggle = (key: string, enabled: boolean) => {
-    toggleMut.mutate(
-      { key, enabled },
-      {
-        onSuccess: () => toast.success(t("settings.saved")),
-        onError: () => toast.error(t("settings.error")),
-      },
-    )
-  }
 
   if (isLoading) {
     return (
@@ -74,8 +62,7 @@ export function FeaturesTab() {
                   <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} className="shrink-0">
                     <Switch
                       checked={flag.enabled}
-                      onCheckedChange={(checked) => handleToggle(flag.key, checked)}
-                      disabled={toggleMut.isPending}
+                      disabled
                     />
                   </div>
                 </div>
@@ -100,8 +87,7 @@ export function FeaturesTab() {
                     </div>
                     <Switch
                       checked={selectedFlag.enabled}
-                      onCheckedChange={(checked) => handleToggle(selectedFlag.key, checked)}
-                      disabled={toggleMut.isPending}
+                      disabled
                     />
                   </div>
                 </CardContent>

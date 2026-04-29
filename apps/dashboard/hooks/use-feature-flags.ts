@@ -1,11 +1,9 @@
 "use client"
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
 import {
   fetchFeatureFlags,
   fetchFeatureFlagMap,
-  updateFeatureFlag,
 } from "@/lib/api/feature-flags"
 import type { FeatureFlag, FeatureFlagMap } from "@/lib/types/feature-flag"
 import { queryKeys } from "@/lib/query-keys"
@@ -45,27 +43,4 @@ export function useFeatureFlagMap() {
   }
 
   return { map, isEnabled }
-}
-
-/* ─── Toggle Mutation ─── */
-
-export function useFeatureFlagMutation() {
-  const queryClient = useQueryClient()
-
-  const toggleMut = useMutation({
-    mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
-      updateFeatureFlag(key, enabled),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_KEY })
-      queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags.map() })
-    },
-    onError: (error: unknown) => {
-      const status = (error as { response?: { status?: number } })?.response?.status
-      if (status === 403) {
-        toast.error("هذه الميزة غير متاحة في باقتك الحالية")
-      }
-    },
-  })
-
-  return { toggleMut }
 }

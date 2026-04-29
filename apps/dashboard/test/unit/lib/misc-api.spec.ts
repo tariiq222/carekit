@@ -31,7 +31,6 @@ import {
 import {
   fetchFeatureFlags,
   fetchFeatureFlagMap,
-  updateFeatureFlag,
 } from "@/lib/api/feature-flags"
 
 describe("zatca api", () => {
@@ -104,9 +103,4 @@ describe("feature-flags api", () => {
     expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/map")
   })
 
-  it("updateFeatureFlag patches /feature-flags/:key", async () => {
-    patchMock.mockResolvedValueOnce({})
-    await updateFeatureFlag("waitlist", true)
-    expect(patchMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/waitlist", { enabled: true })
-  })
 })

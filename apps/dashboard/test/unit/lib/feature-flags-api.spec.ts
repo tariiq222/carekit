@@ -1,18 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, patchMock } = vi.hoisted(() => ({
+const { getMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
-  patchMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, patch: patchMock },
+  api: { get: getMock },
 }))
 
 import {
   fetchFeatureFlags,
   fetchFeatureFlagMap,
-  updateFeatureFlag,
 } from "@/lib/api/feature-flags"
 
 describe("feature-flags api", () => {
@@ -32,9 +30,4 @@ describe("feature-flags api", () => {
     expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/map")
   })
 
-  it("updateFeatureFlag patches /feature-flags/:key", async () => {
-    patchMock.mockResolvedValueOnce({ key: "chatbot", enabled: false })
-    await updateFeatureFlag("chatbot", false)
-    expect(patchMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/chatbot", { enabled: false })
-  })
 })

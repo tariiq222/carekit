@@ -3,27 +3,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { describe, expect, it, vi, beforeEach } from "vitest"
 import type { ReactNode } from "react"
 
-const { fetchFeatureFlags, fetchFeatureFlagMap, updateFeatureFlag, toastError } = vi.hoisted(() => ({
+const { fetchFeatureFlags, fetchFeatureFlagMap } = vi.hoisted(() => ({
   fetchFeatureFlags: vi.fn(),
   fetchFeatureFlagMap: vi.fn(),
-  updateFeatureFlag: vi.fn(),
-  toastError: vi.fn(),
 }))
 
 vi.mock("@/lib/api/feature-flags", () => ({
   fetchFeatureFlags,
   fetchFeatureFlagMap,
-  updateFeatureFlag,
-}))
-
-vi.mock("sonner", () => ({
-  toast: { error: toastError, success: vi.fn() },
 }))
 
 import {
   useFeatureFlags,
   useFeatureFlagMap,
-  useFeatureFlagMutation,
 } from "@/hooks/use-feature-flags"
 
 function makeWrapper() {
@@ -39,8 +31,6 @@ describe("useFeatureFlags", () => {
   beforeEach(() => {
     fetchFeatureFlags.mockReset()
     fetchFeatureFlagMap.mockReset()
-    updateFeatureFlag.mockReset()
-    toastError.mockReset()
   })
 
   it("returns the raw flags list", async () => {
@@ -65,7 +55,6 @@ describe("useFeatureFlagMap", () => {
   beforeEach(() => {
     fetchFeatureFlags.mockReset()
     fetchFeatureFlagMap.mockReset()
-    updateFeatureFlag.mockReset()
   })
 
   it("isEnabled returns true only for keys set to true in the map", async () => {
@@ -84,46 +73,5 @@ describe("useFeatureFlagMap", () => {
     const { result } = renderHook(() => useFeatureFlagMap(), { wrapper: Wrapper })
     expect(result.current.map).toEqual({})
     expect(result.current.isEnabled("anything")).toBe(false)
-  })
-})
-
-describe("useFeatureFlagMutation", () => {
-  beforeEach(() => {
-    updateFeatureFlag.mockReset()
-    toastError.mockReset()
-  })
-
-  it("calls updateFeatureFlag with key and enabled", async () => {
-    updateFeatureFlag.mockResolvedValue(undefined)
-    const { Wrapper } = makeWrapper()
-    const { result } = renderHook(() => useFeatureFlagMutation(), { wrapper: Wrapper })
-    await result.current.toggleMut.mutateAsync({ key: "chatbot", enabled: true })
-    expect(updateFeatureFlag).toHaveBeenCalledWith("chatbot", true)
-  })
-
-  it("invalidates both the flags list and the flag map on success", async () => {
-    updateFeatureFlag.mockResolvedValue(undefined)
-    const { Wrapper, qc } = makeWrapper()
-    const spy = vi.spyOn(qc, "invalidateQueries")
-    const { result } = renderHook(() => useFeatureFlagMutation(), { wrapper: Wrapper })
-    await result.current.toggleMut.mutateAsync({ key: "chatbot", enabled: true })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ["feature-flags"] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ["feature-flag-map"] })
-  })
-
-  it("toasts a plan-restriction message when the API returns 403", async () => {
-    updateFeatureFlag.mockRejectedValue({ response: { status: 403 } })
-    const { Wrapper } = makeWrapper()
-    const { result } = renderHook(() => useFeatureFlagMutation(), { wrapper: Wrapper })
-    await expect(result.current.toggleMut.mutateAsync({ key: "chatbot", enabled: true })).rejects.toBeTruthy()
-    expect(toastError).toHaveBeenCalledWith("هذه الميزة غير متاحة في باقتك الحالية")
-  })
-
-  it("does not toast the plan message for non-403 errors", async () => {
-    updateFeatureFlag.mockRejectedValue({ response: { status: 500 } })
-    const { Wrapper } = makeWrapper()
-    const { result } = renderHook(() => useFeatureFlagMutation(), { wrapper: Wrapper })
-    await expect(result.current.toggleMut.mutateAsync({ key: "chatbot", enabled: true })).rejects.toBeTruthy()
-    expect(toastError).not.toHaveBeenCalled()
   })
 })
