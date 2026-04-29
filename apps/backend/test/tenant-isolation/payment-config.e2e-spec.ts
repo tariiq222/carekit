@@ -87,8 +87,9 @@ describe('Phase A — OrganizationPaymentConfig isolation', () => {
     const tmpRole = `rls_probe_pc_${Date.now()}`;
     try {
       await h.prisma.$executeRawUnsafe(`CREATE ROLE ${tmpRole}`);
+      await h.prisma.$executeRawUnsafe(`GRANT USAGE ON SCHEMA public TO ${tmpRole}`);
       await h.prisma.$executeRawUnsafe(
-        `GRANT SELECT ON "OrganizationPaymentConfig" TO ${tmpRole}`,
+        `GRANT SELECT ON public."OrganizationPaymentConfig" TO ${tmpRole}`,
       );
 
       const rows = await h.prisma.$transaction(async (tx) => {
@@ -96,7 +97,7 @@ describe('Phase A — OrganizationPaymentConfig isolation', () => {
         await tx.$executeRawUnsafe(`SET LOCAL ROLE ${tmpRole}`);
         return tx.$queryRaw<Array<{ cnt: bigint }>>`
           SELECT COUNT(*)::bigint AS cnt
-          FROM "OrganizationPaymentConfig"
+          FROM public."OrganizationPaymentConfig"
           WHERE "organizationId" = ${a.id}
         `;
       });
@@ -104,7 +105,10 @@ describe('Phase A — OrganizationPaymentConfig isolation', () => {
       expect(Number(rows[0].cnt)).toBe(0);
     } finally {
       await h.prisma
-        .$executeRawUnsafe(`REVOKE ALL ON "OrganizationPaymentConfig" FROM ${tmpRole}`)
+        .$executeRawUnsafe(`REVOKE ALL ON public."OrganizationPaymentConfig" FROM ${tmpRole}`)
+        .catch(() => {});
+      await h.prisma
+        .$executeRawUnsafe(`REVOKE USAGE ON SCHEMA public FROM ${tmpRole}`)
         .catch(() => {});
       await h.prisma.$executeRawUnsafe(`DROP ROLE IF EXISTS ${tmpRole}`).catch(() => {});
     }

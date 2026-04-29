@@ -38,7 +38,7 @@ export class PerformPasswordResetHandler {
       where: { id: record.userId },
       select: { passwordHash: true },
     });
-    if (user && await this.passwords.verify(dto.newPassword, user.passwordHash)) {
+    if (user?.passwordHash && await this.passwords.verify(dto.newPassword, user.passwordHash)) {
       throw new BadRequestException('PASSWORD_REUSED');
     }
 
