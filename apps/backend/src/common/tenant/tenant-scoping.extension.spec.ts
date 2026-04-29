@@ -103,7 +103,7 @@ describe('tenant-scoping extension', () => {
     });
   });
 
-  it('does not scope when tenant context is missing (system jobs)', async () => {
+  it('does not scope when tenant context is missing under permissive mode (system jobs)', async () => {
     await buildCtx('permissive');
     const ext = buildTenantScopingExtension(ctx, 'permissive', new Set(['User']));
     const hook = ext.query!.$allModels.$allOperations!;
@@ -111,6 +111,40 @@ describe('tenant-scoping extension', () => {
     await new Promise<void>((done) => {
       cls.run(async () => {
         // intentionally no ctx.set()
+        const query = jest.fn().mockResolvedValue([]);
+        await hook({ model: 'User', operation: 'findMany', args: { where: {} }, query } as never);
+        expect(query).toHaveBeenCalledWith({ where: {} });
+        done();
+      });
+    });
+  });
+
+  it('throws under strict mode when tenant context is missing on a scoped model (P0: fail-closed)', async () => {
+    await buildCtx('strict');
+    const ext = buildTenantScopingExtension(ctx, 'strict', new Set(['User']));
+    const hook = ext.query!.$allModels.$allOperations!;
+
+    await new Promise<void>((done) => {
+      cls.run(async () => {
+        // intentionally no ctx.set() and not isSystemContext
+        const query = jest.fn().mockResolvedValue([]);
+        await expect(
+          hook({ model: 'User', operation: 'findMany', args: { where: {} }, query } as never),
+        ).rejects.toThrow(/tenant/i);
+        expect(query).not.toHaveBeenCalled();
+        done();
+      });
+    });
+  });
+
+  it('still bypasses for system context in strict mode (webhooks/cron)', async () => {
+    await buildCtx('strict');
+    const ext = buildTenantScopingExtension(ctx, 'strict', new Set(['User']));
+    const hook = ext.query!.$allModels.$allOperations!;
+
+    await new Promise<void>((done) => {
+      cls.run(async () => {
+        cls.set('systemContext', true);
         const query = jest.fn().mockResolvedValue([]);
         await hook({ model: 'User', operation: 'findMany', args: { where: {} }, query } as never);
         expect(query).toHaveBeenCalledWith({ where: {} });

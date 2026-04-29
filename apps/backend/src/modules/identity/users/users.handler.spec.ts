@@ -56,7 +56,8 @@ describe('DeactivateUserHandler', () => {
 describe('ListUsersHandler', () => {
   it('returns paginated users', async () => {
     const prisma = buildUsersPrisma();
-    const handler = new ListUsersHandler(prisma as never);
+    const tenantCtx = { requireOrganizationId: jest.fn().mockReturnValue('org-1') };
+    const handler = new ListUsersHandler(prisma as never, tenantCtx as never);
     const result = await handler.execute({ page: 1, limit: 10 });
     expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
@@ -84,7 +85,8 @@ describe('UpdateUserHandler', () => {
 describe('ListUsersHandler — filters', () => {
   it('applies search filter to name and email', async () => {
     const prisma = buildUsersPrisma();
-    const handler = new ListUsersHandler(prisma as never);
+    const tenantCtx = { requireOrganizationId: jest.fn().mockReturnValue('org-1') };
+    const handler = new ListUsersHandler(prisma as never, tenantCtx as never);
     await handler.execute({ page: 1, limit: 10, search: 'ahmad' });
     expect(prisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -95,8 +97,44 @@ describe('ListUsersHandler — filters', () => {
 
   it('returns paginated meta', async () => {
     const prisma = buildUsersPrisma();
-    const handler = new ListUsersHandler(prisma as never);
+    const tenantCtx = { requireOrganizationId: jest.fn().mockReturnValue('org-1') };
+    const handler = new ListUsersHandler(prisma as never, tenantCtx as never);
     const result = await handler.execute({ page: 1, limit: 10 });
     expect(result.meta).toMatchObject({ total: 1, page: 1, perPage: 10, totalPages: 1 });
+  });
+});
+
+describe('ListUsersHandler — tenant scoping (P0)', () => {
+  it('filters users by current tenant via Membership relation', async () => {
+    const prisma = buildUsersPrisma();
+    const tenantCtx = { requireOrganizationId: jest.fn().mockReturnValue('org-A') };
+    const handler = new ListUsersHandler(prisma as never, tenantCtx as never);
+    await handler.execute({ page: 1, limit: 10 });
+    expect(tenantCtx.requireOrganizationId).toHaveBeenCalled();
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          memberships: { some: { organizationId: 'org-A', isActive: true } },
+        }),
+      }),
+    );
+    expect(prisma.user.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          memberships: { some: { organizationId: 'org-A', isActive: true } },
+        }),
+      }),
+    );
+  });
+
+  it('throws when no tenant context (strict mode)', async () => {
+    const prisma = buildUsersPrisma();
+    const tenantCtx = {
+      requireOrganizationId: jest.fn().mockImplementation(() => {
+        throw new Error('UnauthorizedTenantAccess');
+      }),
+    };
+    const handler = new ListUsersHandler(prisma as never, tenantCtx as never);
+    await expect(handler.execute({ page: 1, limit: 10 })).rejects.toThrow('UnauthorizedTenantAccess');
   });
 });

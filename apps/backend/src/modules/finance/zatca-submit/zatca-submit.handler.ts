@@ -137,8 +137,11 @@ export class ZatcaSubmitHandler {
     const apiKey = this.config.get<string>('ZATCA_API_KEY');
 
     if (!apiUrl || !apiKey) {
-      this.logger.warn('ZATCA_API_URL or ZATCA_API_KEY not configured — skipping real submission');
-      return { uuid: `mock-${Date.now()}`, status: 'SUBMITTED' };
+      // Fail-closed: ZATCA_ENABLED=true with missing API config used to return
+      // a fake `mock-${Date.now()}` UUID with status SUBMITTED — persisting a
+      // compliance lie. Refuse to forge a submission.
+      this.logger.error('ZATCA_ENABLED=true but ZATCA_API_URL/ZATCA_API_KEY are missing — refusing to forge a submission');
+      throw new ServiceUnavailableException('ZATCA API credentials are not configured');
     }
 
     const response = await fetch(apiUrl, {

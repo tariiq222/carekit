@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { toListResponse } from '../../../common/dto';
 
 export interface ListUsersQuery {
@@ -11,10 +12,16 @@ export interface ListUsersQuery {
 
 @Injectable()
 export class ListUsersHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenantCtx: TenantContextService,
+  ) {}
 
   async execute(query: ListUsersQuery) {
+    const organizationId = this.tenantCtx.requireOrganizationId();
+
     const where = {
+      memberships: { some: { organizationId, isActive: true } },
       isActive: query.isActive,
       ...(query.search
         ? { OR: [{ name: { contains: query.search, mode: 'insensitive' as const } }, { email: { contains: query.search, mode: 'insensitive' as const } }] }

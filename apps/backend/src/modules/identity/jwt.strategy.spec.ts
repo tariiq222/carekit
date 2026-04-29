@@ -91,6 +91,24 @@ describe('JwtStrategy', () => {
     expect(result.isSuperAdmin).toBe(false);
   });
 
+  it('exposes both `id` and `sub` (P0: 36 controller usages of user.sub depend on this)', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u-7', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u-7', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+    });
+
+    expect(result.id).toBe('u-7');
+    // Without `sub`, controllers reading `user.sub` (admin/organizations,
+    // admin/impersonation, mobile/employee/*) write `superAdminUserId: undefined`
+    // into audit rows — making the audit log unreliable.
+    expect((result as { sub?: string }).sub).toBe('u-7');
+  });
+
   it('marks isSuperAdmin true when the DB user has role SUPER_ADMIN', async () => {
     prisma.user.findUnique.mockResolvedValue({
       id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN',

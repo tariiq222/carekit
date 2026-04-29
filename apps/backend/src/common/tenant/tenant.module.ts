@@ -19,10 +19,13 @@ export class TenantModule implements OnApplicationBootstrap {
     const env = process.env.NODE_ENV ?? 'development';
 
     if (mode !== 'strict' && env === 'production') {
-      this.logger.error(
-        `TENANT_ENFORCEMENT=${mode} is set in production — this is a security risk. Set to 'strict'.`,
-      );
-      return;
+      // Fail-fast: refuse to boot a multi-tenant SaaS in production with
+      // tenant scoping bypassed. Logging without throwing previously left a
+      // `permissive`/`off` boot fully functional, which silently disables
+      // the whole tenant-isolation contract.
+      const message = `TENANT_ENFORCEMENT=${mode} is forbidden in production — refusing to boot. Set TENANT_ENFORCEMENT=strict.`;
+      this.logger.error(message);
+      throw new Error(message);
     }
     if (mode !== 'strict' && env !== 'development' && env !== 'test') {
       this.logger.warn(

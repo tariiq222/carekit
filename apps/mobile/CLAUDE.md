@@ -51,11 +51,26 @@ Subdirectories: `services/client/` (client-only endpoints), `services/employee/`
 
 `useBooking`, `useBookingMutations`, `useBranding`, `useChat`, `useClientBookings`, `useEmployeeClients`, `useEmployeeDayBookings`, `useNotifications`, `usePortal`, `useSlots`, `useTherapist`, `useTherapists`, `useUpcomingBookings` — re-exported via `hooks/queries/index.ts`.
 
-## Multi-Tenancy & Tenant Lock
+## Tenant Strategy — One App per Tenant
 
-- `services/tenant.ts` resolves and persists the active organization id; all API calls send the tenant context header.
-- Some deployments are **tenant-locked** (e.g. "سواء للإرشاد الأسري" / Sawaa) — the org is pinned at build/config time and the tenant switcher is hidden.
-- Branding, terminology, and feature flags are fetched per active tenant; switching tenant invalidates all TanStack Query caches.
+`apps/mobile/` is **single-tenant by design**. The `dashboard` and `admin` apps are multi-tenant; mobile is not. Every published build is locked to exactly one organization.
+
+- **Current build:** `سواء للإرشاد الأسري` (Sawa) — bundle `sa.sawa.app`, vertical `family-consulting`. See `app.config.ts`.
+- **Tenant lock mechanism:** `X-Org-Id` header is sent on every request via the Axios interceptor in `services/api.ts`; the org id comes from a hard-coded `TENANT_ID` constant in `constants/config.ts`. Backend `TenantResolverMiddleware` honors this header on public routes only — JWT still wins on authenticated routes (see plan `2026-04-25-mobile-tenant-lock-sawa`).
+- **No runtime tenant switching.** Do not add a tenant switcher, multi-org membership UI, or dynamic vertical hot-swap to mobile. `services/tenant.ts` exists for the header plumbing only.
+- **Branding & terminology** are still fetched at runtime via `PublicBranding` + `useTerminology()` — but for the locked tenant only. Switching tenant is not a user-facing operation.
+
+### Adding a new tenant app
+
+A second tenant means a **new build**, not a runtime mode:
+
+1. Fork `apps/mobile/` (or branch + variant config).
+2. Replace `app.config.ts` (`name`, `slug`, `scheme`, `bundleIdentifier`, `package`, `icon`).
+3. Drop new assets under `assets/<slug>/`.
+4. Update `TENANT_ID` in `constants/config.ts`.
+5. Publish under the new bundle ID on App Store / Play Store.
+
+Backend, dashboard, and admin do not change.
 
 ## Branding (Per-Tenant Theme)
 

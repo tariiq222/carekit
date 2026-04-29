@@ -22,14 +22,23 @@ const buildPrisma = () => ({
   },
 });
 
+// Default config: a fully-configured ZATCA. Tests that exercise the
+// fail-closed path override URL/KEY to undefined explicitly.
 const buildConfig = (overrides: Record<string, string | undefined> = {}) => ({
   get: jest.fn((key: string) => ({
-    ZATCA_API_URL: undefined,
-    ZATCA_API_KEY: undefined,
+    ZATCA_API_URL: 'https://zatca.example/api',
+    ZATCA_API_KEY: 'test-key',
     ZATCA_ENABLED: 'true',
     ...overrides,
   }[key])),
 });
+
+const mockFetchSubmitted = () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ uuid: 'zatca-uuid-1', status: 'SUBMITTED', qrCode: 'qr-code' }),
+  } as never) as never;
+};
 
 const buildTenant = (organizationId = DEFAULT_ORG) =>
   ({
@@ -51,7 +60,30 @@ describe('ZatcaSubmitHandler', () => {
     expect(prisma.invoice.findFirst).not.toHaveBeenCalled();
   });
 
+  it('throws ServiceUnavailableException when ZATCA is enabled but URL/key are missing (P0: no mock submissions)', async () => {
+    const prisma = buildPrisma();
+    const handler = new ZatcaSubmitHandler(
+      prisma as never,
+      // ZATCA_ENABLED=true but URL and KEY are undefined — the previous mock
+      // path returned a fake `SUBMITTED` response and persisted it as if
+      // ZATCA had accepted the invoice. That is a compliance lie.
+      buildConfig({ ZATCA_ENABLED: 'true', ZATCA_API_URL: undefined, ZATCA_API_KEY: undefined }) as never,
+      buildTenant(),
+    );
+    await expect(handler.execute(cmd)).rejects.toThrow(ServiceUnavailableException);
+    // The submission record may have been created in PENDING state before the
+    // API call attempt — what matters is that `update` did NOT promote it to
+    // SUBMITTED/ACCEPTED with a forged UUID.
+    const updateCalls = prisma.zatcaSubmission.update.mock.calls;
+    const promoted = updateCalls.some((call: unknown[]) => {
+      const data = (call[0] as { data?: { status?: string } })?.data;
+      return data?.status === 'SUBMITTED' || data?.status === 'ACCEPTED';
+    });
+    expect(promoted).toBe(false);
+  });
+
   it('creates submission and returns updated record', async () => {
+    mockFetchSubmitted();
     const prisma = buildPrisma();
     const handler = new ZatcaSubmitHandler(prisma as never, buildConfig() as never, buildTenant());
 
@@ -98,6 +130,7 @@ describe('ZatcaSubmitHandler', () => {
   });
 
   it('re-submits REJECTED submission', async () => {
+    mockFetchSubmitted();
     const prisma = buildPrisma();
     prisma.zatcaSubmission.findFirst = jest.fn().mockResolvedValue({
       ...mockSubmission, status: ZatcaSubmissionStatus.REJECTED,

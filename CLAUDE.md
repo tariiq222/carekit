@@ -17,7 +17,7 @@ For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 - **Per-tenant Dashboard**: Next.js 15 (App Router) + React 19, TanStack Query, Tailwind 4, next-intl (AR/EN)
 - **Super-admin (`apps/admin`)**: Next.js 15 — SaaS control plane (tenants, plans, verticals, billing oversight, impersonation, metrics)
 - **Public Website (`apps/website`)**: Next.js 15 — marketing/info site
-- **Mobile**: React Native 0.83, Expo SDK 55, Expo Router, Redux Toolkit (auth slice only) + TanStack Query
+- **Mobile**: React Native 0.83, Expo SDK 55, Expo Router, Redux Toolkit (auth slice only) + TanStack Query — **single-tenant per build** (see "Mobile Tenant Strategy" below)
 - **Shared packages**:
   - `@carekit/api-client` — typed fetch client
   - `@carekit/shared` — types, enums, i18n tokens, vertical seeds
@@ -32,6 +32,15 @@ For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 - **Singleton-per-org models**: `BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `ZatcaConfig`, `OrganizationSmsConfig`.
 - **Multi-org users**: `Membership` + `switch-organization` + `list-memberships` slices (`apps/backend/src/modules/identity/`).
 - **Verticals**: each org is seeded from a `Vertical` (`apps/backend/src/modules/platform/verticals/`) with terminology packs consumed via `useTerminology()` (dashboard + mobile).
+
+## Mobile Tenant Strategy — One App per Tenant
+
+`apps/mobile/` is **single-tenant by design**. Backend, dashboard, and admin are multi-tenant; mobile is not. Every published mobile build is locked to exactly one organization at build time.
+
+- **Current build:** `سواء للإرشاد الأسري` (Sawa) — bundle `sa.sawa.app`, vertical `family-consulting`. Config in `apps/mobile/app.config.ts`.
+- **Lock mechanism:** mobile sends an `X-Org-Id` header (sourced from a hard-coded `TENANT_ID` constant) on every request via the Axios interceptor in `apps/mobile/services/api.ts`. The backend `TenantResolverMiddleware` honors this header on public routes only — JWT still wins on authenticated routes (see plan `docs/superpowers/plans/2026-04-25-mobile-tenant-lock-sawa.md`).
+- **No runtime tenant switching on mobile.** Do not add tenant switchers, multi-org membership UI, or dynamic vertical hot-swap to `apps/mobile/`.
+- **Adding a new tenant = a new build**, not a runtime mode: fork `apps/mobile/` → swap `app.config.ts` (name, slug, scheme, bundleIdentifier, package, icon) → drop new `assets/<slug>/` → update `TENANT_ID` → publish under a new bundle ID. Backend, dashboard, and admin do not change.
 
 ## Golden Rules
 
