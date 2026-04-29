@@ -61,8 +61,12 @@ import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/l
 import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 import { FinanceModule } from '../finance/finance.module';
+import { RegisterTenantHandler } from './tenant-registration/register-tenant.handler';
+import { IdentityModule } from '../identity/identity.module';
+import { BillingModule } from './billing/billing.module';
 
 const ADMIN_HANDLERS = [
+  RegisterTenantHandler,
   ListOrganizationsHandler,
   GetOrganizationHandler,
   CreateTenantHandler,
@@ -104,6 +108,8 @@ const ADMIN_HANDLERS = [
     TenantModule,
     VerticalsModule,
     FinanceModule,
+    IdentityModule,
+    BillingModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -112,6 +118,7 @@ const ADMIN_HANDLERS = [
       }),
     }),
   ],
+
   controllers: [
     DashboardPlatformController,
     DashboardVerticalsController,

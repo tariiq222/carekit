@@ -44,6 +44,19 @@ export class TenantResolverMiddleware implements NestMiddleware {
   }
 
   /**
+   * Tenant-bootstrap routes that legitimately have no tenant yet — they
+   * CREATE the tenant. Skip resolution entirely so strict mode doesn't
+   * reject the request before the controller runs. These handlers must
+   * call `tenant.set()` themselves once the org exists.
+   */
+  private isTenantBootstrapRoute(path: string): boolean {
+    return (
+      path.endsWith('/public/tenants/register') ||
+      path.endsWith('/api/v1/public/tenants/register')
+    );
+  }
+
+  /**
    * Validates a header value as a well-formed UUID (RFC 4122, any version
    * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
    * Returns the trimmed value when valid, undefined otherwise.
@@ -66,7 +79,18 @@ export class TenantResolverMiddleware implements NestMiddleware {
     }
 
     const path = req.originalUrl ?? req.url ?? req.path ?? '';
+    if (this.isTenantBootstrapRoute(path)) {
+      return next();
+    }
+
     const isPublicRoute = this.isPublicRoute(path);
+
+    // Priority:
+    //   1. JWT claim (authenticated users)
+    //   2. X-Org-Id header (super-admins only — never trusted from regular users)
+    //   3. X-Org-Id header on UNAUTHENTICATED public routes (mobile tenant-lock)
+    //   4. Subdomain resolver (added in Plan 09)
+    //   5. DEFAULT_ORGANIZATION_ID (permissive mode only)
     const fromSuperAdminHeader =
       req.user?.isSuperAdmin === true
         ? this.parseUuidHeader(req.headers['x-org-id'])

@@ -26,6 +26,31 @@ export async function login(
   return data
 }
 
+export interface RegisterTenantPayload {
+  name: string
+  email: string
+  phone: string
+  password: string
+  businessNameAr: string
+  businessNameEn?: string
+}
+
+export async function registerTenant(payload: RegisterTenantPayload): Promise<AuthResponse> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/tenants/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { message?: string }).message ?? 'Registration failed')
+  }
+  const data = (await res.json()) as AuthResponse
+  persistAuth(data)
+  return data
+}
+
 export async function fetchMe(): Promise<AuthUser> {
   const data = await authApi.getMe()
   localStorage.setItem(USER_KEY, JSON.stringify(data))

@@ -23,6 +23,7 @@ import { arContent } from "./ar.content"
 import { arSms } from "./ar.sms"
 import { arOps } from "./ar.ops"
 import { arZoom } from "./ar.zoom"
+import { arRegister } from "./ar.register"
 
 export const ar: Record<string, string> = {
   ...arNav,
@@ -43,4 +44,5 @@ export const ar: Record<string, string> = {
   ...arSms,
   ...arOps,
   ...arZoom,
+  ...arRegister,
 }

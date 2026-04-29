@@ -18,9 +18,9 @@ const buildBullMq = () => {
   };
 };
 
-type CronDeps = [never, never, never, never, never, never, never, never, never, never, never];
+type CronDeps = [never, never, never, never, never, never, never, never, never, never, never, never];
 
-/** Build 11 cron mocks (all injected crons except BullMqService itself). */
+/** Build 12 cron mocks (all crons except BullMqService itself). */
 const buildAllMocks = () => [
   buildCronMock(), // bookingAutocomplete
   buildCronMock(), // bookingExpiry
@@ -33,19 +33,20 @@ const buildAllMocks = () => [
   buildCronMock(), // computeOverage
   buildCronMock(), // enforceGracePeriod
   buildCronMock(), // expireImpersonationSessions (SaaS-05b)
+  buildCronMock(), // expireTrials
 ] as const;
 
 const buildService = (bullMq: ReturnType<typeof buildBullMq>, mocks: ReturnType<typeof buildAllMocks>) =>
   new CronTasksService(bullMq as never, ...(mocks.map((m) => m as never) as CronDeps));
 
 describe('CronTasksService', () => {
-  it('schedules all 10 cron jobs on module init', () => {
+  it('schedules all 11 cron jobs on module init', () => {
     const bullMq = buildBullMq();
     const mocks = buildAllMocks();
     const service = buildService(bullMq, mocks);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(10);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(11);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -72,6 +73,7 @@ describe('CronTasksService', () => {
     [CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS, 7],
     [CRON_JOBS.ENFORCE_GRACE_PERIOD, 9],
     [CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, 10],
+    [CRON_JOBS.EXPIRE_TRIALS, 11],
   ];
 
   it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {

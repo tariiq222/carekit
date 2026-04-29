@@ -43,16 +43,16 @@ function buildController() {
   const changePassword = fn();
   const listMemberships = fn([]);
   const switchOrganization = fn(TOKEN_PAIR);
+  const config = { get: jest.fn().mockReturnValue('15m'), getOrThrow: jest.fn().mockReturnValue('15m') } as never;
   const requestPasswordReset = fn({ ok: true });
   const performPasswordReset = fn({ ok: true });
-  const config = { get: jest.fn().mockReturnValue('15m'), getOrThrow: jest.fn().mockReturnValue('15m') } as never;
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
     listMemberships as never, switchOrganization as never, config,
     captcha as never, requestPasswordReset as never, performPasswordReset as never,
   );
-  return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha };
+  return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset };
 }
 
 describe('AuthController', () => {

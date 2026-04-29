@@ -22,6 +22,7 @@ import { ChargeDueSubscriptionsCron } from '../platform/billing/charge-due-subsc
 import { ComputeOverageCron } from '../platform/billing/compute-overage/compute-overage.cron';
 import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period/enforce-grace-period.cron';
 import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+import { ExpireTrialsCron } from '../platform/billing/expire-trials/expire-trials.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 
 const handlers = [
@@ -43,6 +44,7 @@ const cronHandlers = [
   ChargeDueSubscriptionsCron,
   ComputeOverageCron,
   EnforceGracePeriodCron,
+  ExpireTrialsCron,
   // Admin crons
   ExpireImpersonationSessionsCron,
 ];

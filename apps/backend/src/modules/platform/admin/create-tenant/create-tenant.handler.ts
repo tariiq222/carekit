@@ -81,6 +81,7 @@ export class CreateTenantHandler {
           status: plan ? 'TRIALING' : 'ACTIVE',
           verticalId: vertical?.id,
           trialEndsAt,
+          onboardingCompletedAt: now,
         },
         select: {
           id: true,
@@ -90,6 +91,7 @@ export class CreateTenantHandler {
           status: true,
           verticalId: true,
           trialEndsAt: true,
+          onboardingCompletedAt: true,
         },
       });
 

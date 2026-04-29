@@ -25,25 +25,26 @@ export class GetCurrentUserHandler {
         id: true,
         organizationId: true,
         role: true,
-        organization: { select: { vertical: { select: { slug: true } } } },
+        organization: {
+          select: {
+            onboardingCompletedAt: true,
+            vertical: { select: { slug: true } },
+          },
+        },
       },
     });
 
+    const [fallbackFirstName = '', ...fallbackRest] = (user.name ?? '').trim().split(/\s+/);
+    const firstName = user.firstName ?? fallbackFirstName;
+    const lastName = user.lastName ?? fallbackRest.join(' ');
+
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName ?? '',
-        lastName: user.lastName ?? '',
-        phoneVerifiedAt: user.phoneVerifiedAt,
-        emailVerifiedAt: user.emailVerifiedAt,
-        isActive: user.isActive,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-        gender: user.gender,
-        customRole: user.customRole,
-        permissions: user.customRole?.permissions ?? [],
-      },
+      ...user,
+      firstName,
+      lastName,
+      organizationId: membership?.organizationId ?? null,
+      verticalSlug: membership?.organization?.vertical?.slug ?? null,
+      onboardingCompletedAt: membership?.organization?.onboardingCompletedAt ?? null,
       activeMembership: membership
         ? {
             id: membership.id,

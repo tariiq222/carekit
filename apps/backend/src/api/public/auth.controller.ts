@@ -222,9 +222,8 @@ export class AuthController {
   @ApiOkResponse({ description: 'Current user profile with role and permissions' })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   async meEndpoint(@UserId() userId: string) {
-    const result = await this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
-    const { user, activeMembership } = result;
-    return { ...user, activeMembership, permissions: flattenPermissions(user) };
+    const user = await this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
+    return { ...user, permissions: flattenPermissions(user) };
   }
 
   @Get('memberships')

@@ -28,8 +28,8 @@ describe('GetCurrentUserHandler', () => {
   it('returns user when found', async () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null });
     const result = await handler.execute({ userId: 'u1' });
-    expect(result.user.id).toBe('u1');
-    expect(result.user.email).toBe('a@b.com');
+    expect(result.id).toBe('u1');
+    expect(result.email).toBe('a@b.com');
   });
 
   it('throws NotFoundException when user not found', async () => {
@@ -40,16 +40,16 @@ describe('GetCurrentUserHandler', () => {
   it('returns firstName/lastName from user fields', async () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'Tariq', lastName: 'Al Walidi', customRole: null });
     const result = await handler.execute({ userId: 'u1' });
-    expect(result.user.firstName).toBe('Tariq');
-    expect(result.user.lastName).toBe('Al Walidi');
+    expect(result.firstName).toBe('Tariq');
+    expect(result.lastName).toBe('Al Walidi');
   });
 
   it('returns phoneVerifiedAt and emailVerifiedAt in user payload', async () => {
     const now = new Date();
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', phoneVerifiedAt: now, emailVerifiedAt: null, customRole: null });
     const result = await handler.execute({ userId: 'u1' });
-    expect(result.user.phoneVerifiedAt).toBe(now);
-    expect(result.user.emailVerifiedAt).toBeNull();
+    expect(result.phoneVerifiedAt).toBe(now);
+    expect(result.emailVerifiedAt).toBeNull();
   });
 
   it('returns activeMembership when user has one', async () => {
@@ -58,9 +58,12 @@ describe('GetCurrentUserHandler', () => {
       id: 'm1',
       organizationId: 'org_42',
       role: 'RECEPTIONIST',
-      organization: { vertical: { slug: 'clinic' } },
+      organization: { onboardingCompletedAt: null, vertical: { slug: 'clinic' } },
     });
     const result = await handler.execute({ userId: 'u1' });
+    expect(result.organizationId).toBe('org_42');
+    expect(result.verticalSlug).toBe('clinic');
+    expect(result.onboardingCompletedAt).toBeNull();
     expect(result.activeMembership).toEqual({
       id: 'm1',
       organizationId: 'org_42',
@@ -73,6 +76,9 @@ describe('GetCurrentUserHandler', () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null });
     prisma.membership.findFirst.mockResolvedValue(null);
     const result = await handler.execute({ userId: 'u1' });
+    expect(result.organizationId).toBeNull();
+    expect(result.verticalSlug).toBeNull();
+    expect(result.onboardingCompletedAt).toBeNull();
     expect(result.activeMembership).toBeNull();
   });
 
@@ -82,9 +88,10 @@ describe('GetCurrentUserHandler', () => {
       id: 'm1',
       organizationId: 'org_42',
       role: 'ADMIN',
-      organization: { vertical: { slug: 'salon' } },
+      organization: { onboardingCompletedAt: new Date('2026-04-29T00:00:00.000Z'), vertical: { slug: 'salon' } },
     });
     const result = await handler.execute({ userId: 'u1' });
+    expect(result.verticalSlug).toBe('salon');
     expect(result.activeMembership?.verticalSlug).toBe('salon');
   });
 });

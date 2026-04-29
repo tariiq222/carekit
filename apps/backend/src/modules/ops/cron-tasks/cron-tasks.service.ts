@@ -12,6 +12,7 @@ import { ChargeDueSubscriptionsCron } from '../../platform/billing/charge-due-su
 import { ComputeOverageCron } from '../../platform/billing/compute-overage/compute-overage.cron';
 import { EnforceGracePeriodCron } from '../../platform/billing/enforce-grace-period/enforce-grace-period.cron';
 import { ExpireImpersonationSessionsCron } from '../../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+import { ExpireTrialsCron } from '../../platform/billing/expire-trials/expire-trials.cron';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -26,6 +27,7 @@ export const CRON_JOBS = {
   CHARGE_DUE_SUBSCRIPTIONS: 'charge-due-subscriptions',
   ENFORCE_GRACE_PERIOD: 'enforce-grace-period',
   EXPIRE_IMPERSONATION_SESSIONS: 'expire-impersonation-sessions',
+  EXPIRE_TRIALS: 'expire-trials',
 } as const;
 
 @Injectable()
@@ -45,6 +47,7 @@ export class CronTasksService implements OnModuleInit {
     private readonly computeOverage: ComputeOverageCron,
     private readonly enforceGracePeriod: EnforceGracePeriodCron,
     private readonly expireImpersonationSessions: ExpireImpersonationSessionsCron,
+    private readonly expireTrials: ExpireTrialsCron,
   ) {}
 
   onModuleInit(): void {
@@ -66,6 +69,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.CHARGE_DUE_SUBSCRIPTIONS, cron: '0 * * * *' }, // hourly
       { name: CRON_JOBS.ENFORCE_GRACE_PERIOD, cron: '0 * * * *' },   // hourly
       { name: CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, cron: '* * * * *' }, // every minute
+      { name: CRON_JOBS.EXPIRE_TRIALS, cron: '0 * * * *' }, // hourly
     ];
 
     for (const { name, cron } of jobs) {
@@ -124,6 +128,9 @@ export class CronTasksService implements OnModuleInit {
             break;
           case CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS:
             await this.expireImpersonationSessions.execute();
+            break;
+          case CRON_JOBS.EXPIRE_TRIALS:
+            await this.expireTrials.execute();
             break;
           default:
             this.logger.warn(`Unknown cron job: ${job.name}`);

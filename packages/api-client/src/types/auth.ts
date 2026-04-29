@@ -25,6 +25,10 @@ export interface UserPayload {
   // 'salon'). Powers useTerminology() in dashboard/mobile without a second
   // round-trip. Null when the org has no vertical assigned yet.
   verticalSlug: string | null
+  // ISO timestamp when the org's owner finished the onboarding wizard.
+  // Null until completed; the dashboard layout uses it to redirect new
+  // tenants to /onboarding.
+  onboardingCompletedAt: string | null
   createdAt?: string
   updatedAt?: string
 }
