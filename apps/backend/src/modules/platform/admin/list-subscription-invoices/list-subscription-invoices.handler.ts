@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SubscriptionInvoiceStatus } from '@prisma/client';
+import { Prisma, SubscriptionInvoiceStatus } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 
 export interface ListSubscriptionInvoicesQuery {
@@ -17,7 +17,7 @@ export class ListSubscriptionInvoicesHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(q: ListSubscriptionInvoicesQuery) {
-    const where: Record<string, unknown> = {};
+    const where: Prisma.SubscriptionInvoiceWhereInput = {};
     if (q.status) where.status = q.status;
     else if (!q.includeDrafts) where.status = { not: SubscriptionInvoiceStatus.DRAFT };
     if (q.organizationId) where.organizationId = q.organizationId;
@@ -28,7 +28,7 @@ export class ListSubscriptionInvoicesHandler {
       };
     }
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       this.prisma.$allTenants.subscriptionInvoice.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -53,10 +53,29 @@ export class ListSubscriptionInvoicesHandler {
           refundedAt: true,
           voidedReason: true,
           createdAt: true,
+          subscription: {
+            select: {
+              organization: {
+                select: {
+                  id: true,
+                  slug: true,
+                  nameAr: true,
+                  nameEn: true,
+                  status: true,
+                  suspendedAt: true,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.$allTenants.subscriptionInvoice.count({ where }),
     ]);
+
+    const items = rawItems.map(({ subscription, ...invoice }) => ({
+      ...invoice,
+      organization: subscription.organization,
+    }));
 
     return {
       items,

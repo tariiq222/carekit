@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@carekit/ui/primitives/table';
-import type { SubscriptionRow, SubscriptionStatus } from '../types';
+import type { OrganizationBillingIdentity, SubscriptionRow, SubscriptionStatus } from '../types';
 
 const STATUS_TONE: Record<SubscriptionStatus, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
@@ -20,6 +20,13 @@ const STATUS_TONE: Record<SubscriptionStatus, string> = {
   PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
   SUSPENDED: 'border-destructive/40 bg-destructive/10 text-destructive',
   CANCELED: 'border-destructive/40 bg-destructive/10 text-destructive',
+};
+const ORG_STATUS_TONE: Record<string, string> = {
+  ACTIVE: 'border-success/40 bg-success/10 text-success',
+  TRIALING: 'border-primary/40 bg-primary/10 text-primary',
+  PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
+  SUSPENDED: 'border-warning/40 bg-warning/10 text-warning',
+  ARCHIVED: 'border-muted/40 bg-muted/10 text-muted-foreground',
 };
 
 interface Props {
@@ -47,7 +54,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
           <TableHead>Cycle</TableHead>
           <TableHead>Period ends</TableHead>
           <TableHead>Last payment</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead className="text-end">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -61,7 +68,9 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
             ))
           : items?.map((s) => (
               <TableRow key={s.id}>
-                <TableCell className="font-mono text-xs">{s.organizationId.slice(0, 8)}…</TableCell>
+                <TableCell>
+                  <OrganizationCell organization={s.organization} fallbackId={s.organizationId} />
+                </TableCell>
                 <TableCell>
                   <div className="font-medium">{s.plan.nameEn}</div>
                   <div className="text-xs text-muted-foreground">
@@ -80,7 +89,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
                 <TableCell className="text-sm text-muted-foreground">
                   {fmtDate(s.lastPaymentAt)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-end">
                   <Button asChild variant="ghost" size="sm">
                     <Link href={`/billing/${s.organizationId}`}>Open</Link>
                   </Button>
@@ -96,5 +105,34 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
         ) : null}
       </TableBody>
     </Table>
+  );
+}
+
+function OrganizationCell({
+  organization,
+  fallbackId,
+}: {
+  organization?: OrganizationBillingIdentity;
+  fallbackId: string;
+}) {
+  if (!organization) {
+    return <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}...</span>;
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="font-medium">{organization.nameAr}</div>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        {organization.nameEn ? <span>{organization.nameEn}</span> : null}
+        <span className="font-mono">{organization.slug}</span>
+        <Badge
+          variant="outline"
+          className={ORG_STATUS_TONE[organization.status] ?? 'border-border bg-muted/10'}
+        >
+          {organization.status}
+        </Badge>
+      </div>
+      <div className="font-mono text-xs text-muted-foreground">{organization.id}</div>
+    </div>
   );
 }

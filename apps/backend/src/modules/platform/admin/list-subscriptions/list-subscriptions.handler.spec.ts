@@ -38,6 +38,30 @@ describe('ListSubscriptionsHandler', () => {
     );
   });
 
+  it('selects organization identity for admin billing context', async () => {
+    findMany.mockResolvedValue([]);
+    count.mockResolvedValue(0);
+
+    await handler.execute({ page: 1, perPage: 20 });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          organization: {
+            select: {
+              id: true,
+              slug: true,
+              nameAr: true,
+              nameEn: true,
+              status: true,
+              suspendedAt: true,
+            },
+          },
+        }),
+      }),
+    );
+  });
+
   it('filters by status', async () => {
     findMany.mockResolvedValue([]);
     count.mockResolvedValue(0);

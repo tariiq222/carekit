@@ -38,6 +38,56 @@ describe('ListSubscriptionInvoicesHandler', () => {
     );
   });
 
+  it('selects and flattens organization identity through subscription', async () => {
+    const organization = {
+      id: 'org-1',
+      slug: 'riyadh-clinic',
+      nameAr: 'عيادة الرياض',
+      nameEn: 'Riyadh Clinic',
+      status: 'ACTIVE',
+      suspendedAt: null,
+    };
+    findMany.mockResolvedValue([
+      {
+        id: 'inv-1',
+        subscriptionId: 'sub-1',
+        organizationId: organization.id,
+        subscription: { organization },
+      },
+    ]);
+    count.mockResolvedValue(1);
+
+    const result = await handler.execute({ page: 1, perPage: 20 });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          subscription: {
+            select: {
+              organization: {
+                select: {
+                  id: true,
+                  slug: true,
+                  nameAr: true,
+                  nameEn: true,
+                  status: true,
+                  suspendedAt: true,
+                },
+              },
+            },
+          },
+        }),
+      }),
+    );
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        id: 'inv-1',
+        organization,
+      }),
+    );
+    expect(result.items[0]).not.toHaveProperty('subscription');
+  });
+
   it('includes drafts when includeDrafts=true', async () => {
     findMany.mockResolvedValue([]);
     count.mockResolvedValue(0);

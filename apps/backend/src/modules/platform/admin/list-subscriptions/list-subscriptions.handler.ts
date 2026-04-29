@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SubscriptionStatus } from '@prisma/client';
+import { Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 
 export interface ListSubscriptionsQuery {
@@ -14,7 +14,7 @@ export class ListSubscriptionsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(q: ListSubscriptionsQuery) {
-    const where: Record<string, unknown> = {};
+    const where: Prisma.SubscriptionWhereInput = {};
     if (q.status) where.status = q.status;
     if (q.planId) where.planId = q.planId;
 
@@ -39,6 +39,16 @@ export class ListSubscriptionsHandler {
           lastFailureReason: true,
           createdAt: true,
           plan: { select: { slug: true, nameEn: true, priceMonthly: true } },
+          organization: {
+            select: {
+              id: true,
+              slug: true,
+              nameAr: true,
+              nameEn: true,
+              status: true,
+              suspendedAt: true,
+            },
+          },
         },
       }),
       this.prisma.$allTenants.subscription.count({ where }),

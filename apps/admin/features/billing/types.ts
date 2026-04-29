@@ -14,9 +14,19 @@ export type SubscriptionInvoiceStatus =
 
 export type BillingCycle = 'MONTHLY' | 'ANNUAL';
 
+export interface OrganizationBillingIdentity {
+  id: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string | null;
+  status: string;
+  suspendedAt: string | null;
+}
+
 export interface SubscriptionRow {
   id: string;
   organizationId: string;
+  organization: OrganizationBillingIdentity;
   planId: string;
   status: SubscriptionStatus;
   billingCycle: BillingCycle;
@@ -35,6 +45,7 @@ export interface SubscriptionInvoiceRow {
   id: string;
   subscriptionId: string;
   organizationId: string;
+  organization: OrganizationBillingIdentity;
   amount: string | number;
   flatAmount: string | number;
   overageAmount: string | number;
