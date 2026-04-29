@@ -10,6 +10,14 @@ const buildPrisma = () => ({
   plan: {
     findFirst: jest.fn(),
   },
+  $allTenants: {
+    membership: {
+      findFirst: jest.fn().mockResolvedValue({
+        user: { email: 'owner@example.com', name: 'Owner' },
+        organization: { nameAr: 'Org AR' },
+      }),
+    },
+  },
 });
 
 const buildTenant = (organizationId = 'org-A') => ({
@@ -20,8 +28,16 @@ const buildCache = () => ({
   invalidate: jest.fn(),
 });
 
-const basicPlan = { id: 'plan-1', slug: 'basic', priceMonthly: 299 };
-const proPlan = { id: 'plan-2', slug: 'pro', priceMonthly: 799, isActive: true };
+const buildMailer = () => ({
+  sendPlanChanged: jest.fn().mockResolvedValue(undefined),
+});
+
+const buildConfig = () => ({
+  get: jest.fn().mockImplementation((_key: string, def: unknown) => def),
+});
+
+const basicPlan = { id: 'plan-1', slug: 'basic', nameAr: 'أساسي', priceMonthly: 299 };
+const proPlan = { id: 'plan-2', slug: 'pro', nameAr: 'احترافي', priceMonthly: 799, isActive: true };
 
 describe('UpgradePlanHandler', () => {
   it('throws NotFoundException when no subscription exists', async () => {
@@ -33,6 +49,8 @@ describe('UpgradePlanHandler', () => {
       tenant as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await expect(
@@ -53,6 +71,8 @@ describe('UpgradePlanHandler', () => {
       tenant as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await expect(
@@ -73,6 +93,8 @@ describe('UpgradePlanHandler', () => {
       tenant as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await expect(
@@ -94,6 +116,8 @@ describe('UpgradePlanHandler', () => {
       tenant as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await expect(
@@ -118,6 +142,8 @@ describe('UpgradePlanHandler', () => {
       tenant as never,
       cache as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     const result = await handler.execute({ planId: 'plan-2', billingCycle: 'MONTHLY' });
@@ -130,5 +156,37 @@ describe('UpgradePlanHandler', () => {
     );
     expect(cache.invalidate).toHaveBeenCalledWith('org-A');
     expect(result).toEqual(updatedSub);
+  });
+
+  it('sends a plan-changed email to the org owner after upgrade', async () => {
+    const prisma = buildPrisma();
+    const tenant = buildTenant('org-A');
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: basicPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(proPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-2' });
+    const mailer = buildMailer();
+    const handler = new UpgradePlanHandler(
+      prisma as never,
+      tenant as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      mailer as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute({ planId: 'plan-2', billingCycle: 'MONTHLY' });
+
+    expect(mailer.sendPlanChanged).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        fromPlanName: 'أساسي',
+        toPlanName: 'احترافي',
+        effectiveDate: expect.any(String),
+      }),
+    );
   });
 });

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { MailModule } from '../../infrastructure/mail';
 import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DashboardVerticalsController } from '../../api/dashboard/verticals.controller';
 import { AdminOrganizationsController } from '../../api/admin/organizations.controller';
@@ -110,6 +111,7 @@ const ADMIN_HANDLERS = [
     FinanceModule,
     IdentityModule,
     BillingModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

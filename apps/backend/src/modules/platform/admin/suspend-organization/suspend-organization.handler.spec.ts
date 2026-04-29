@@ -3,6 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SuspendOrganizationHandler } from './suspend-organization.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/cache';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
 
 describe('SuspendOrganizationHandler', () => {
   let handler: SuspendOrganizationHandler;
@@ -12,6 +13,8 @@ describe('SuspendOrganizationHandler', () => {
   let impersonationSessionUpdateMany: jest.Mock;
   let logCreate: jest.Mock;
   let redisDel: jest.Mock;
+  let membershipFindFirst: jest.Mock;
+  let sendAccountStatusChanged: jest.Mock;
 
   beforeEach(async () => {
     orgFindUnique = jest.fn();
@@ -20,6 +23,11 @@ describe('SuspendOrganizationHandler', () => {
     impersonationSessionUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
     logCreate = jest.fn();
     redisDel = jest.fn().mockResolvedValue(1);
+    membershipFindFirst = jest.fn().mockResolvedValue({
+      user: { email: 'owner@example.com', name: 'Owner' },
+      organization: { nameAr: 'Org AR' },
+    });
+    sendAccountStatusChanged = jest.fn().mockResolvedValue(undefined);
 
     const tx = {
       organization: { findUnique: orgFindUnique, update: orgUpdate },
@@ -31,6 +39,7 @@ describe('SuspendOrganizationHandler', () => {
     const prismaMock = {
       $allTenants: {
         $transaction: jest.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
+        membership: { findFirst: membershipFindFirst },
       },
     } as unknown as PrismaService;
 
@@ -38,11 +47,16 @@ describe('SuspendOrganizationHandler', () => {
       getClient: () => ({ del: redisDel }),
     } as unknown as RedisService;
 
+    const mailerMock = {
+      sendAccountStatusChanged,
+    } as unknown as PlatformMailerService;
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         SuspendOrganizationHandler,
         { provide: PrismaService, useValue: prismaMock },
         { provide: RedisService, useValue: redisMock },
+        { provide: PlatformMailerService, useValue: mailerMock },
       ],
     }).compile();
 
@@ -126,5 +140,21 @@ describe('SuspendOrganizationHandler', () => {
     await expect(handler.execute(cmd)).rejects.toBeInstanceOf(ConflictException);
     expect(orgUpdate).not.toHaveBeenCalled();
     expect(redisDel).not.toHaveBeenCalled();
+  });
+
+  it('sends a SUSPENDED account-status-changed email to the org owner', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', suspendedAt: null });
+    orgUpdate.mockResolvedValue({});
+    logCreate.mockResolvedValue({});
+
+    await handler.execute(cmd);
+
+    expect(sendAccountStatusChanged).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        status: 'SUSPENDED',
+        reason: cmd.reason,
+      }),
+    );
   });
 });

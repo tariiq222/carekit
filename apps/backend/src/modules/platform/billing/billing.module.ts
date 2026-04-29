@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "../../../infrastructure/database/database.module";
+import { MailModule } from "../../../infrastructure/mail";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SUBSCRIPTION_CACHE_TOKEN } from "../../../common/tenant/tenant-context.service";
 import { BillingController } from "../../../api/dashboard/billing.controller";
@@ -37,7 +38,7 @@ const HANDLERS = [
 ];
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, MailModule],
   controllers: [BillingController],
   providers: [
     SubscriptionStateMachine,

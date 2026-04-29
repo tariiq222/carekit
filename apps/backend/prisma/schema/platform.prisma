@@ -383,6 +383,7 @@ model Subscription {
   moyasarSubscriptionRef String? // reserved for future native recurring
   lastPaymentAt          DateTime?
   lastFailureReason      String?
+  notifiedTrialEndingAt  DateTime? // resend platform emails: dedupe trial-ending notifications
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 

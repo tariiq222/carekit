@@ -17,10 +17,26 @@ const buildPrisma = (txPrisma = buildTxPrisma()) => ({
   },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(txPrisma)),
   _txPrisma: txPrisma,
+  $allTenants: {
+    membership: {
+      findFirst: jest.fn().mockResolvedValue({
+        user: { email: 'owner@example.com', name: 'Owner' },
+        organization: { nameAr: 'Org AR' },
+      }),
+    },
+  },
 });
 
 const buildCache = () => ({
   invalidate: jest.fn(),
+});
+
+const buildMailer = () => ({
+  sendSubscriptionPaymentFailed: jest.fn().mockResolvedValue(undefined),
+});
+
+const buildConfig = () => ({
+  get: jest.fn().mockImplementation((_key: string, def: unknown) => def),
 });
 
 const baseCmd = {
@@ -37,6 +53,8 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await expect(handler.execute(baseCmd)).rejects.toThrow(NotFoundException);
@@ -47,6 +65,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -58,6 +77,8 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await handler.execute(baseCmd);
@@ -74,6 +95,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -85,6 +107,8 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await handler.execute(baseCmd);
@@ -97,10 +121,9 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const txPrisma = buildTxPrisma();
     const prisma = buildPrisma(txPrisma);
     const existingPastDue = new Date('2026-04-20T00:00:00Z');
-    // Use ACTIVE status which can transition to PAST_DUE; simulate that pastDueSince
-    // was already set from a prior cycle (e.g. already past due from before ACTIVE restore)
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -112,6 +135,8 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await handler.execute(baseCmd);
@@ -125,6 +150,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const prisma = buildPrisma(txPrisma);
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -136,6 +162,8 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await handler.execute(baseCmd);
@@ -157,6 +185,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     const cache = buildCache();
     prisma.subscriptionInvoice.findFirst.mockResolvedValue({
       id: 'inv-1',
+      amount: 299,
       subscription: {
         id: 'sub-1',
         status: 'ACTIVE',
@@ -168,10 +197,46 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       prisma as never,
       cache as never,
       new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
     );
 
     await handler.execute(baseCmd);
 
     expect(cache.invalidate).toHaveBeenCalledWith('org-A');
+  });
+
+  it('sends a payment-failed email to the org owner', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: {
+        id: 'sub-1',
+        status: 'ACTIVE',
+        organizationId: 'org-A',
+        pastDueSince: null,
+      },
+    });
+    const mailer = buildMailer();
+    const handler = new RecordSubscriptionPaymentFailureHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      mailer as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-fail-1', reason: 'Card declined' });
+
+    expect(mailer.sendSubscriptionPaymentFailed).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        amountSar: '299.00',
+        reason: 'Card declined',
+        billingUrl: expect.stringContaining('billing'),
+      }),
+    );
   });
 });
