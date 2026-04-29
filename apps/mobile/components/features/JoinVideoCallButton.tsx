@@ -28,8 +28,7 @@ export function JoinVideoCallButton({
   isRTL,
   variant,
 }: Props) {
-  if (!FEATURE_FLAGS.videoCalls) return null;
-
+  // Hooks must run unconditionally — feature-flag gating happens after.
   const f600 = getFontName(isRTL ? 'ar' : 'en', '600');
   const f700 = getFontName(isRTL ? 'ar' : 'en', '700');
 
@@ -61,6 +60,8 @@ export function JoinVideoCallButton({
         : (isRTL ? 'انضمام للجلسة' : 'Join session'),
     };
   }, [status, url, scheduledAt, durationMins, isRTL, variant]);
+
+  if (!FEATURE_FLAGS.videoCalls) return null;
 
   const onPress = () => {
     if (!withinWindow || !url) return;

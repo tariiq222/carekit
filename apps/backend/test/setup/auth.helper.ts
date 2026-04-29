@@ -43,7 +43,31 @@ export const receptionistUser: TestUser = {
   permissions: [],
 };
 
+/**
+ * The default Organization referenced by `DEFAULT_ORGANIZATION_ID` is seeded
+ * by migration `20260421112047_saas01_organization_membership`. Some test
+ * suites TRUNCATE Organization (directly or via CASCADE) and don't restore
+ * it, leaving the next test run with a missing FK target. This upsert is
+ * idempotent and called from `createTestApp()` so every test app boot
+ * starts from a known good state.
+ */
+export async function ensureDefaultOrganization(): Promise<void> {
+  await testPrisma.organization.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      slug: 'default',
+      nameAr: 'Default',
+      nameEn: 'Default',
+      status: 'ACTIVE',
+    },
+  });
+}
+
 export async function ensureTestUsers(): Promise<void> {
+  await ensureDefaultOrganization();
+
   const passwordHash = await bcrypt.hash('Test@1234', 10);
 
   await testPrisma.user.upsert({
