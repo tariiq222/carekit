@@ -36,4 +36,105 @@ export class PlatformMailerService implements OnModuleInit {
   isAvailable(): boolean {
     return this.client !== null;
   }
+
+  // ── Public send API ────────────────────────────────────────────────────────
+
+  async sendTenantWelcome(
+    to: string,
+    vars: import('./templates/tenant-welcome.template').TenantWelcomeVars,
+  ): Promise<void> {
+    const { tenantWelcomeTemplate } = await import('./templates/tenant-welcome.template');
+    const t = tenantWelcomeTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendOtpLogin(
+    to: string,
+    vars: import('./templates/otp-login.template').OtpLoginVars,
+  ): Promise<void> {
+    const { otpLoginTemplate } = await import('./templates/otp-login.template');
+    const t = otpLoginTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendTrialEnding(
+    to: string,
+    vars: import('./templates/trial-ending.template').TrialEndingVars,
+  ): Promise<void> {
+    const { trialEndingTemplate } = await import('./templates/trial-ending.template');
+    const t = trialEndingTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendTrialExpired(
+    to: string,
+    vars: import('./templates/trial-expired.template').TrialExpiredVars,
+  ): Promise<void> {
+    const { trialExpiredTemplate } = await import('./templates/trial-expired.template');
+    const t = trialExpiredTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendSubscriptionPaymentSucceeded(
+    to: string,
+    vars: import('./templates/subscription-payment-succeeded.template').SubscriptionPaymentSucceededVars,
+  ): Promise<void> {
+    const { subscriptionPaymentSucceededTemplate } = await import('./templates/subscription-payment-succeeded.template');
+    const t = subscriptionPaymentSucceededTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendSubscriptionPaymentFailed(
+    to: string,
+    vars: import('./templates/subscription-payment-failed.template').SubscriptionPaymentFailedVars,
+  ): Promise<void> {
+    const { subscriptionPaymentFailedTemplate } = await import('./templates/subscription-payment-failed.template');
+    const t = subscriptionPaymentFailedTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendPlanChanged(
+    to: string,
+    vars: import('./templates/plan-changed.template').PlanChangedVars,
+  ): Promise<void> {
+    const { planChangedTemplate } = await import('./templates/plan-changed.template');
+    const t = planChangedTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendAccountStatusChanged(
+    to: string,
+    vars: import('./templates/account-status-changed.template').AccountStatusChangedVars,
+  ): Promise<void> {
+    const { accountStatusChangedTemplate } = await import('./templates/account-status-changed.template');
+    const t = accountStatusChangedTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  // ── Internals ──────────────────────────────────────────────────────────────
+
+  private bilingualSubject(ar: string, en: string): string {
+    return `${ar} · ${en}`;
+  }
+
+  private async dispatch(to: string, subject: string, html: string): Promise<void> {
+    if (!this.client) {
+      this.logger.warn(`PlatformMailer unavailable — skipping email to ${to}`);
+      return;
+    }
+    try {
+      const res = await this.client.emails.send({
+        from: this.from,
+        replyTo: this.replyTo,
+        to: [to],
+        subject,
+        html,
+      });
+      if (res.error) {
+        this.logger.error(`Resend send error for ${to}: ${res.error.message}`);
+      }
+    } catch (err) {
+      this.logger.error(`Resend dispatch threw for ${to}`, err as Error);
+    }
+  }
 }
