@@ -11,6 +11,113 @@
     "auditLog": "Audit log",
     "impersonation": "Impersonation sessions"
   },
+  "organizations": {
+    "title": "Organizations",
+    "description": "Every tenant on the platform. Create, filter, suspend, archive, and inspect lifecycle state without leaving the admin control plane.",
+    "create": {
+      "button": "Create tenant",
+      "title": "Create tenant",
+      "description": "Create an organization, owner membership, tenant defaults, and audit entry.",
+      "slug": "Slug",
+      "slugPlaceholder": "riyadh-clinic",
+      "nameAr": "Arabic name",
+      "nameEn": "English name",
+      "ownerUserId": "Owner user ID",
+      "verticalSlug": "Vertical slug",
+      "planId": "Plan ID",
+      "billingCycle": "Billing cycle",
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "trialDays": "Trial days",
+      "reason": "Audit reason",
+      "cancel": "Cancel",
+      "submit": "Create tenant",
+      "submitting": "Creating...",
+      "success": "Tenant created.",
+      "errorFallback": "Failed to create tenant"
+    },
+    "filters": {
+      "search": "Search by slug, Arabic or English name",
+      "suspended": "Suspension",
+      "suspendedAll": "All suspension states",
+      "activeOnly": "Not suspended",
+      "suspendedOnly": "Suspended only",
+      "status": "Lifecycle",
+      "statusAll": "All lifecycle states",
+      "verticalId": "Vertical ID",
+      "planId": "Plan ID",
+      "reset": "Reset"
+    },
+    "table": {
+      "slug": "Slug",
+      "name": "Name",
+      "plan": "Plan",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions",
+      "open": "Open",
+      "empty": "No organizations match the current filters.",
+      "noPlan": "No plan"
+    },
+    "pagination": {
+      "summary": "Page {page} of {totalPages} · {total} total",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "status": {
+      "TRIALING": "Trialing",
+      "ACTIVE": "Active",
+      "PAST_DUE": "Past due",
+      "SUSPENDED": "Suspended",
+      "ARCHIVED": "Archived"
+    },
+    "detail": {
+      "back": "All organizations",
+      "edit": "Edit metadata",
+      "archive": "Archive",
+      "suspendedSince": "Suspended since {date}.",
+      "reason": "Reason: {reason}",
+      "members": "Members",
+      "bookings30d": "Bookings (30d)",
+      "totalRevenue": "Total revenue (SAR)",
+      "subscription": "Subscription",
+      "noSubscription": "No subscription found.",
+      "plan": "Plan",
+      "status": "Status",
+      "cycle": "Cycle",
+      "periodStart": "Period start",
+      "periodEnd": "Period end",
+      "monthlyPrice": "Monthly price",
+      "priceSar": "{amount} SAR"
+    },
+    "update": {
+      "title": "Edit organization metadata",
+      "description": "Update tenant names, vertical, or trial date. Every change requires an audit reason.",
+      "nameAr": "Arabic name",
+      "nameEn": "English name",
+      "verticalSlug": "New vertical slug",
+      "trialEndsAt": "Trial ends at",
+      "reason": "Audit reason",
+      "cancel": "Cancel",
+      "submit": "Save changes",
+      "submitting": "Saving...",
+      "success": "Organization updated.",
+      "errorFallback": "Failed to update organization"
+    },
+    "archive": {
+      "title": "Archive organization",
+      "description": "Archive {name} without deleting tenant data. Access tokens and impersonation sessions will be revoked.",
+      "reason": "Archive reason",
+      "cancel": "Cancel",
+      "submit": "Archive",
+      "submitting": "Archiving...",
+      "success": "Organization archived.",
+      "errorFallback": "Failed to archive organization"
+    },
+    "error": {
+      "loadFailed": "Failed to load: {message}"
+    }
+  },
   "login": {
     "title": "CareKit Super-admin",
     "description": "Platform staff only. Sign in with your CareKit account.",

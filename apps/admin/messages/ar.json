@@ -11,6 +11,113 @@
     "auditLog": "سجل التدقيق",
     "impersonation": "جلسات الانتحال"
   },
+  "organizations": {
+    "title": "المنظمات",
+    "description": "كل تاننت على المنصة. أنشئ، صفّ، علّق، أرشف، وراجع حالة دورة الحياة من لوحة الإدارة.",
+    "create": {
+      "button": "إنشاء تاننت",
+      "title": "إنشاء تاننت",
+      "description": "ينشئ منظمة، عضوية مالك، إعدادات التاننت الافتراضية، وسجل تدقيق.",
+      "slug": "المعرّف",
+      "slugPlaceholder": "riyadh-clinic",
+      "nameAr": "الاسم العربي",
+      "nameEn": "الاسم الإنجليزي",
+      "ownerUserId": "معرّف المستخدم المالك",
+      "verticalSlug": "معرّف القطاع",
+      "planId": "معرّف الخطة",
+      "billingCycle": "دورة الفوترة",
+      "monthly": "شهري",
+      "annual": "سنوي",
+      "trialDays": "أيام التجربة",
+      "reason": "سبب التدقيق",
+      "cancel": "إلغاء",
+      "submit": "إنشاء تاننت",
+      "submitting": "جارٍ الإنشاء...",
+      "success": "تم إنشاء التاننت.",
+      "errorFallback": "فشل إنشاء التاننت"
+    },
+    "filters": {
+      "search": "ابحث بالمعرّف أو الاسم العربي أو الإنجليزي",
+      "suspended": "التعليق",
+      "suspendedAll": "كل حالات التعليق",
+      "activeOnly": "غير معلّق",
+      "suspendedOnly": "معلّق فقط",
+      "status": "دورة الحياة",
+      "statusAll": "كل حالات دورة الحياة",
+      "verticalId": "معرّف القطاع",
+      "planId": "معرّف الخطة",
+      "reset": "إعادة ضبط"
+    },
+    "table": {
+      "slug": "المعرّف",
+      "name": "الاسم",
+      "plan": "الخطة",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "actions": "الإجراءات",
+      "open": "فتح",
+      "empty": "لا توجد منظمات تطابق الفلاتر الحالية.",
+      "noPlan": "لا توجد خطة"
+    },
+    "pagination": {
+      "summary": "الصفحة {page} من {totalPages} · الإجمالي {total}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "status": {
+      "TRIALING": "تجربة",
+      "ACTIVE": "نشط",
+      "PAST_DUE": "متأخر الدفع",
+      "SUSPENDED": "معلّق",
+      "ARCHIVED": "مؤرشف"
+    },
+    "detail": {
+      "back": "كل المنظمات",
+      "edit": "تعديل البيانات",
+      "archive": "أرشفة",
+      "suspendedSince": "معلّق منذ {date}.",
+      "reason": "السبب: {reason}",
+      "members": "الأعضاء",
+      "bookings30d": "الحجوزات (30 يوم)",
+      "totalRevenue": "إجمالي الإيراد (SAR)",
+      "subscription": "الاشتراك",
+      "noSubscription": "لا يوجد اشتراك.",
+      "plan": "الخطة",
+      "status": "الحالة",
+      "cycle": "الدورة",
+      "periodStart": "بداية الفترة",
+      "periodEnd": "نهاية الفترة",
+      "monthlyPrice": "السعر الشهري",
+      "priceSar": "{amount} SAR"
+    },
+    "update": {
+      "title": "تعديل بيانات المنظمة",
+      "description": "حدّث أسماء التاننت أو القطاع أو تاريخ التجربة. كل تغيير يحتاج سبب تدقيق.",
+      "nameAr": "الاسم العربي",
+      "nameEn": "الاسم الإنجليزي",
+      "verticalSlug": "معرّف القطاع الجديد",
+      "trialEndsAt": "تنتهي التجربة في",
+      "reason": "سبب التدقيق",
+      "cancel": "إلغاء",
+      "submit": "حفظ التغييرات",
+      "submitting": "جارٍ الحفظ...",
+      "success": "تم تحديث المنظمة.",
+      "errorFallback": "فشل تحديث المنظمة"
+    },
+    "archive": {
+      "title": "أرشفة المنظمة",
+      "description": "أرشف {name} بدون حذف بيانات التاننت. سيتم إلغاء رموز الوصول وجلسات الانتحال.",
+      "reason": "سبب الأرشفة",
+      "cancel": "إلغاء",
+      "submit": "أرشفة",
+      "submitting": "جارٍ الأرشفة...",
+      "success": "تمت أرشفة المنظمة.",
+      "errorFallback": "فشل أرشفة المنظمة"
+    },
+    "error": {
+      "loadFailed": "فشل التحميل: {message}"
+    }
+  },
   "login": {
     "title": "CareKit - لوحة التحكم",
     "description": "للموظفين فقط. سجّل الدخول بحساب CareKit الخاص بك.",
