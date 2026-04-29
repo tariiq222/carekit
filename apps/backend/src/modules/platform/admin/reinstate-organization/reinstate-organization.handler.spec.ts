@@ -3,6 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ReinstateOrganizationHandler } from './reinstate-organization.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/cache';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
 
 describe('ReinstateOrganizationHandler', () => {
   let handler: ReinstateOrganizationHandler;
@@ -10,12 +11,19 @@ describe('ReinstateOrganizationHandler', () => {
   let orgUpdate: jest.Mock;
   let logCreate: jest.Mock;
   let redisDel: jest.Mock;
+  let membershipFindFirst: jest.Mock;
+  let sendAccountStatusChanged: jest.Mock;
 
   beforeEach(async () => {
     orgFindUnique = jest.fn();
     orgUpdate = jest.fn();
     logCreate = jest.fn();
     redisDel = jest.fn().mockResolvedValue(1);
+    membershipFindFirst = jest.fn().mockResolvedValue({
+      user: { email: 'owner@example.com', name: 'Owner' },
+      organization: { nameAr: 'Org AR' },
+    });
+    sendAccountStatusChanged = jest.fn().mockResolvedValue(undefined);
 
     const tx = {
       organization: { findUnique: orgFindUnique, update: orgUpdate },
@@ -25,6 +33,7 @@ describe('ReinstateOrganizationHandler', () => {
     const prismaMock = {
       $allTenants: {
         $transaction: jest.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
+        membership: { findFirst: membershipFindFirst },
       },
     } as unknown as PrismaService;
 
@@ -32,11 +41,16 @@ describe('ReinstateOrganizationHandler', () => {
       getClient: () => ({ del: redisDel }),
     } as unknown as RedisService;
 
+    const mailerMock = {
+      sendAccountStatusChanged,
+    } as unknown as PlatformMailerService;
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         ReinstateOrganizationHandler,
         { provide: PrismaService, useValue: prismaMock },
         { provide: RedisService, useValue: redisMock },
+        { provide: PlatformMailerService, useValue: mailerMock },
       ],
     }).compile();
 
@@ -109,5 +123,18 @@ describe('ReinstateOrganizationHandler', () => {
     await expect(handler.execute(cmd)).rejects.toBeInstanceOf(ConflictException);
     expect(orgUpdate).not.toHaveBeenCalled();
     expect(redisDel).not.toHaveBeenCalled();
+  });
+
+  it('sends a REINSTATED account-status-changed email to the org owner', async () => {
+    orgFindUnique.mockResolvedValue({ id: 'o1', status: 'SUSPENDED', suspendedAt: new Date() });
+    orgUpdate.mockResolvedValue({});
+    logCreate.mockResolvedValue({});
+
+    await handler.execute(cmd);
+
+    expect(sendAccountStatusChanged).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({ status: 'REINSTATED' }),
+    );
   });
 });

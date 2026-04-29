@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { OrganizationStatus, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/cache';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
 
 export interface ReinstateOrganizationCommand {
   organizationId: string;
@@ -16,6 +17,7 @@ export class ReinstateOrganizationHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly mailer: PlatformMailerService,
   ) {}
 
   async execute(cmd: ReinstateOrganizationCommand) {
@@ -53,5 +55,20 @@ export class ReinstateOrganizationHandler {
     });
 
     await this.redis.getClient().del(`org-suspension:${cmd.organizationId}`);
+
+    const owner = await this.prisma.$allTenants.membership.findFirst({
+      where: { organizationId: cmd.organizationId, role: 'OWNER', isActive: true },
+      include: {
+        user: { select: { email: true, name: true } },
+        organization: { select: { nameAr: true } },
+      },
+    });
+    if (owner?.user) {
+      await this.mailer.sendAccountStatusChanged(owner.user.email, {
+        ownerName: owner.user.name ?? '',
+        orgName: owner.organization.nameAr,
+        status: 'REINSTATED',
+      });
+    }
   }
 }
