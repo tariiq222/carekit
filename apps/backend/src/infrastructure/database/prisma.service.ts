@@ -96,6 +96,12 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // and NOT scoped — they describe CareKit's catalog / receivables respectively).
   'Subscription',
   'UsageRecord',
+  // Platform models with organizationId (admin-level, but scoped for defense-in-depth)
+  'PasswordResetToken',
+  'BillingCredit',
+  'Invitation',
+  // ImpersonationSession deliberately NOT scoped — list-impersonation-sessions handler
+  // must read across all organizations via $allTenants bypass.
 ]);
 
 /**
