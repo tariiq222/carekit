@@ -4,6 +4,7 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { PrismaService } from '../../infrastructure/database';
+import { TenantContextService } from '../../common/tenant';
 
 export interface ClientJwtPayload {
   sub: string;
@@ -18,6 +19,7 @@ export class ClientJwtStrategy extends PassportStrategy(Strategy, 'client-jwt') 
   constructor(
     config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly tenantContext: TenantContextService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -39,6 +41,17 @@ export class ClientJwtStrategy extends PassportStrategy(Strategy, 'client-jwt') 
     if (payload.namespace !== 'client') {
       throw new UnauthorizedException('Invalid token namespace');
     }
+    if (!payload.organizationId) {
+      throw new UnauthorizedException('Client token missing tenant claim');
+    }
+
+    this.tenantContext.set({
+      organizationId: payload.organizationId,
+      membershipId: '',
+      id: payload.sub,
+      role: 'CLIENT',
+      isSuperAdmin: false,
+    });
 
     const client = await this.prisma.client.findUnique({
       where: { id: payload.sub },
@@ -52,7 +65,7 @@ export class ClientJwtStrategy extends PassportStrategy(Strategy, 'client-jwt') 
       id: client.id,
       email: client.email,
       phone: client.phone,
-      organizationId: payload.organizationId ?? client.organizationId ?? null,
+      organizationId: payload.organizationId,
     };
   }
 }

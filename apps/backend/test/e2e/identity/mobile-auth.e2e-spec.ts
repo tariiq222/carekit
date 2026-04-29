@@ -86,7 +86,6 @@ describe('Mobile auth E2E', () => {
     });
     expect(count).toBe(0);
   });
-
   // Regression: prior to fix/route-double-prefix, the mobile auth controller
   // declared @Controller('api/v1/mobile/auth') on top of the global 'api/v1'
   // prefix, exposing routes only at /api/v1/api/v1/mobile/auth/*. The mobile

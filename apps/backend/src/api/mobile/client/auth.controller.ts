@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../../common/swagger';
-import { ClientSessionGuard } from '../../../common/guards/client-session.guard';
+import { JwtGuard } from '../../../common/guards/jwt.guard';
 import { UserId } from '../../../common/auth/user-id.decorator';
 import { RegisterMobileUserDto } from '../../../modules/identity/register-mobile-user/register-mobile-user.dto';
 import { RegisterMobileUserHandler } from '../../../modules/identity/register-mobile-user/register-mobile-user.handler';
@@ -47,7 +47,7 @@ export class MobileClientAuthController {
 
   @Post('request-email-verification')
   @HttpCode(200)
-  @UseGuards(ClientSessionGuard)
+  @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Send email verification link to the authenticated user' })
   @ApiStandardResponses()
   async requestEmail(@UserId() userId: string) {

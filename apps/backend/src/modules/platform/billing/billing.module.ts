@@ -17,6 +17,7 @@ import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscrip
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
 import { RecordSubscriptionPaymentFailureHandler } from "./record-subscription-payment-failure/record-subscription-payment-failure.handler";
+import { MoyasarSubscriptionClient } from "../../finance/moyasar-api/moyasar-subscription.client";
 import { PlanLimitsGuard } from "./enforce-limits.guard";
 import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
@@ -32,6 +33,7 @@ const HANDLERS = [
   ResumeSubscriptionHandler,
   RecordSubscriptionPaymentHandler,
   RecordSubscriptionPaymentFailureHandler,
+  MoyasarSubscriptionClient,
 ];
 
 @Module({

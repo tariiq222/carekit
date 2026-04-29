@@ -1,7 +1,11 @@
 import { ChargeDueSubscriptionsCron } from './charge-due-subscriptions.cron';
 
 const buildConfig = (enabled: boolean) => ({
-  get: jest.fn().mockReturnValue(enabled),
+  get: jest.fn((key: string, defaultValue?: unknown) => {
+    if (key === 'BILLING_CRON_ENABLED') return enabled;
+    if (key === 'BACKEND_URL') return 'https://api.carekit.test';
+    return defaultValue;
+  }),
 });
 
 const makeMonthlyPlan = () => ({ priceMonthly: 199, priceAnnual: 1990 });
@@ -16,22 +20,47 @@ const buildPrisma = (subs: unknown[] = []) => ({
   },
 });
 
-const PAST_DATE = new Date(Date.now() - 1000); // already past
-const FUTURE_DATE = new Date(Date.now() + 86_400_000); // 1 day from now
+const buildDeps = () => ({
+  moyasar: {
+    chargeWithToken: jest.fn().mockResolvedValue({ id: 'pay-1', status: 'paid' }),
+  },
+  recordPayment: {
+    execute: jest.fn().mockResolvedValue({ ok: true }),
+  },
+  recordFailure: {
+    execute: jest.fn().mockResolvedValue({ ok: true }),
+  },
+});
+
+const buildCron = (
+  prisma: ReturnType<typeof buildPrisma>,
+  config: ReturnType<typeof buildConfig>,
+  deps = buildDeps(),
+) =>
+  new ChargeDueSubscriptionsCron(
+    prisma as never,
+    config as never,
+    deps.moyasar as never,
+    deps.recordPayment as never,
+    deps.recordFailure as never,
+  );
+
+const PAST_DATE = new Date(Date.now() - 1000);
 
 describe('ChargeDueSubscriptionsCron', () => {
   it('does nothing when BILLING_CRON_ENABLED=false', async () => {
     const prisma = buildPrisma();
-    const cron = new ChargeDueSubscriptionsCron(prisma as never, buildConfig(false) as never);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(false), deps);
     await cron.execute();
     expect(prisma.subscription.findMany).not.toHaveBeenCalled();
     expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(deps.moyasar.chargeWithToken).not.toHaveBeenCalled();
   });
 
   it('skips subscriptions not yet due (currentPeriodEnd > now)', async () => {
-    // findMany is called but returns empty — the WHERE clause filters by currentPeriodEnd lte now
     const prisma = buildPrisma([]);
-    const cron = new ChargeDueSubscriptionsCron(prisma as never, buildConfig(true) as never);
+    const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
     expect(prisma.subscription.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -51,10 +80,12 @@ describe('ChargeDueSubscriptionsCron', () => {
       billingCycle: 'MONTHLY',
       currentPeriodStart: new Date('2026-03-01'),
       currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: null,
       plan: makeMonthlyPlan(),
     };
     const prisma = buildPrisma([sub]);
-    const cron = new ChargeDueSubscriptionsCron(prisma as never, buildConfig(true) as never);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps);
     await cron.execute();
 
     expect(prisma.subscriptionInvoice.create).toHaveBeenCalledTimes(1);
@@ -71,6 +102,7 @@ describe('ChargeDueSubscriptionsCron', () => {
         }),
       }),
     );
+    expect(deps.moyasar.chargeWithToken).not.toHaveBeenCalled();
   });
 
   it('uses priceAnnual for ANNUAL billing cycle', async () => {
@@ -80,10 +112,11 @@ describe('ChargeDueSubscriptionsCron', () => {
       billingCycle: 'ANNUAL',
       currentPeriodStart: new Date('2025-04-01'),
       currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: null,
       plan: makeAnnualPlan(),
     };
     const prisma = buildPrisma([sub]);
-    const cron = new ChargeDueSubscriptionsCron(prisma as never, buildConfig(true) as never);
+    const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
 
     expect(prisma.subscriptionInvoice.create).toHaveBeenCalledWith(
@@ -104,10 +137,11 @@ describe('ChargeDueSubscriptionsCron', () => {
       billingCycle: 'MONTHLY',
       currentPeriodStart: new Date('2026-03-01'),
       currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: null,
       plan: makeMonthlyPlan(),
     };
     const prisma = buildPrisma([sub]);
-    const cron = new ChargeDueSubscriptionsCron(prisma as never, buildConfig(true) as never);
+    const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
 
     expect(prisma.subscriptionInvoice.create).toHaveBeenCalledWith(
@@ -118,5 +152,86 @@ describe('ChargeDueSubscriptionsCron', () => {
         }),
       }),
     );
+  });
+
+  it('charges saved Moyasar card token and records paid invoices', async () => {
+    const sub = {
+      id: 'sub-paid',
+      organizationId: 'org-paid',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: 'tok_saved',
+      plan: makeMonthlyPlan(),
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps);
+
+    await cron.execute();
+
+    expect(deps.moyasar.chargeWithToken).toHaveBeenCalledWith({
+      token: 'tok_saved',
+      amount: 19_900,
+      currency: 'SAR',
+      idempotencyKey: 'subscription-invoice:inv-1',
+      description: 'CareKit subscription invoice inv-1',
+      callbackUrl: 'https://api.carekit.test/api/v1/public/billing/webhooks/moyasar',
+    });
+    expect(deps.recordPayment.execute).toHaveBeenCalledWith({
+      invoiceId: 'inv-1',
+      moyasarPaymentId: 'pay-1',
+    });
+    expect(deps.recordFailure.execute).not.toHaveBeenCalled();
+  });
+
+  it('records failed Moyasar statuses without marking the invoice paid', async () => {
+    const sub = {
+      id: 'sub-failed',
+      organizationId: 'org-failed',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: 'tok_saved',
+      plan: makeMonthlyPlan(),
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    deps.moyasar.chargeWithToken.mockResolvedValue({ id: 'pay-2', status: 'failed' });
+    const cron = buildCron(prisma, buildConfig(true), deps);
+
+    await cron.execute();
+
+    expect(deps.recordPayment.execute).not.toHaveBeenCalled();
+    expect(deps.recordFailure.execute).toHaveBeenCalledWith({
+      invoiceId: 'inv-1',
+      moyasarPaymentId: 'pay-2',
+      reason: 'Moyasar returned status failed',
+    });
+  });
+
+  it('records charge exceptions as payment failures', async () => {
+    const sub = {
+      id: 'sub-error',
+      organizationId: 'org-error',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: 'tok_saved',
+      plan: makeMonthlyPlan(),
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    deps.moyasar.chargeWithToken.mockRejectedValue(new Error('network timeout'));
+    const cron = buildCron(prisma, buildConfig(true), deps);
+
+    await cron.execute();
+
+    expect(deps.recordPayment.execute).not.toHaveBeenCalled();
+    expect(deps.recordFailure.execute).toHaveBeenCalledWith({
+      invoiceId: 'inv-1',
+      moyasarPaymentId: 'unavailable',
+      reason: 'network timeout',
+    });
   });
 });
