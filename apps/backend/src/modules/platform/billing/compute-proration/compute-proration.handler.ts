@@ -44,12 +44,31 @@ export class ComputeProrationHandler {
     });
     if (!targetPlan) throw new NotFoundException('Target plan not found');
 
+    const now = new Date(Date.now());
+
+    if (subscription.status === 'TRIALING') {
+      return {
+        action: 'UPGRADE_NOW' as PreviewAction,
+        targetPlanId: targetPlan.id,
+        billingCycle: dto.billingCycle,
+        effectiveAt: now,
+        clearsScheduledCancellation: false,
+        amountSar: '0.00',
+        amountHalalas: 0,
+        remainingRatio: 0,
+        periodStart: subscription.currentPeriodStart,
+        periodEnd: subscription.currentPeriodEnd,
+        isUpgrade: false,
+        trialChange: true,
+      };
+    }
+
     const proration = computeProrationAmountSar({
       currentPriceSar: priceForCycle(subscription.plan, subscription.billingCycle),
       targetPriceSar: priceForCycle(targetPlan, dto.billingCycle),
       periodStart: subscription.currentPeriodStart,
       periodEnd: subscription.currentPeriodEnd,
-      now: new Date(Date.now()),
+      now,
     });
     const action: PreviewAction = proration.isUpgrade ? 'UPGRADE_NOW' : 'SCHEDULE_DOWNGRADE';
 
@@ -57,7 +76,7 @@ export class ComputeProrationHandler {
       action,
       targetPlanId: targetPlan.id,
       billingCycle: dto.billingCycle,
-      effectiveAt: proration.isUpgrade ? new Date(Date.now()) : subscription.currentPeriodEnd,
+      effectiveAt: proration.isUpgrade ? now : subscription.currentPeriodEnd,
       clearsScheduledCancellation: proration.isUpgrade && subscription.cancelAtPeriodEnd,
       ...proration,
     };

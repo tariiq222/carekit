@@ -65,6 +65,7 @@ export const enBilling: Record<string, string> = {
   "billing.plans.description": "Compare plans and choose the right subscription.",
   "billing.plans.payNow": "Pay {amount} SAR now",
   "billing.plans.scheduledFor": "Scheduled for {date}",
+  "billing.plans.trialChange": "Applies immediately during trial. No charge now.",
   "billing.plans.cancelScheduled": "Cancel scheduled downgrade",
   "billing.plans.features": "Feature comparison",
   "billing.plans.employees": "Employees",

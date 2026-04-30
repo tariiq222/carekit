@@ -70,6 +70,42 @@ export class UpgradePlanHandler {
     });
     if (!targetPlan) throw new NotFoundException('Target plan not found');
 
+    if (sub.status === 'TRIALING') {
+      const updated = await this.prisma.subscription.update({
+        where: { id: sub.id },
+        data: {
+          planId: targetPlan.id,
+          billingCycle: dto.billingCycle,
+          cancelAtPeriodEnd: false,
+          scheduledCancellationDate: null,
+          scheduledPlanId: null,
+          scheduledBillingCycle: null,
+          scheduledPlanChangeAt: null,
+          updatedAt: new Date(Date.now()),
+        },
+      });
+      this.cache.invalidate(organizationId);
+
+      const owner = await this.prisma.$allTenants.membership.findFirst({
+        where: { organizationId, role: 'OWNER', isActive: true },
+        include: {
+          user: { select: { email: true, name: true } },
+          organization: { select: { nameAr: true } },
+        },
+      });
+      if (owner?.user) {
+        await this.mailer.sendPlanChanged(owner.user.email, {
+          ownerName: owner.user.name ?? '',
+          orgName: owner.organization.nameAr,
+          fromPlanName: sub.plan.nameAr,
+          toPlanName: targetPlan.nameAr,
+          effectiveDate: new Date().toISOString(),
+        });
+      }
+
+      return updated;
+    }
+
     const proration = computeProrationAmountSar({
       currentPriceSar: priceForCycle(sub.plan, sub.billingCycle),
       targetPriceSar: priceForCycle(targetPlan, dto.billingCycle),

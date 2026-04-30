@@ -58,6 +58,7 @@ export interface ProrationPreview {
   effectiveAt: string
   isUpgrade: boolean
   clearsScheduledCancellation?: boolean
+  trialChange?: boolean
 }
 
 export interface SavedCard {

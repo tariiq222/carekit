@@ -100,6 +100,7 @@ describe("BillingPlansPage", () => {
           "billing.plan.recommended": "Recommended",
           "billing.plans.payNow": "Pay {amount} SAR now",
           "billing.plans.scheduledFor": "Scheduled for {date}",
+          "billing.plans.trialChange": "Applies immediately during trial. No charge now.",
           "billing.plans.cancelScheduled": "Cancel scheduled downgrade",
           "billing.actions.upgrade": "Upgrade plan",
           "billing.actions.downgrade": "Schedule downgrade",
@@ -156,6 +157,28 @@ describe("BillingPlansPage", () => {
     render(<BillingPlansPage />)
 
     expect(screen.getByText("Scheduled for May 1, 2026")).toBeInTheDocument()
+  })
+
+  it("shows no-charge trial plan change copy", () => {
+    useBilling.mockReturnValue({
+      subscription: { ...subscription("basic"), status: "TRIALING" },
+      isLoading: false,
+    })
+    useProrationPreview.mockReturnValue({
+      data: {
+        action: "UPGRADE_NOW",
+        trialChange: true,
+        amountSar: "0.00",
+        effectiveAt: "2026-04-16T00:00:00.000Z",
+      },
+      isLoading: false,
+    })
+
+    render(<BillingPlansPage />)
+
+    expect(
+      screen.getByText("Applies immediately during trial. No charge now."),
+    ).toBeInTheDocument()
   })
 
   it("offers cancel scheduled downgrade when one already exists", async () => {

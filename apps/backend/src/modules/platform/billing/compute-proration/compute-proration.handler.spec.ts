@@ -122,6 +122,31 @@ describe('ComputeProrationHandler', () => {
     });
   });
 
+  it('returns an immediate zero-charge plan change during trial', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'TRIALING',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: false,
+      plan: proPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    const handler = buildHandler(prisma);
+
+    const result = await handler.execute({ planId: 'plan-basic', billingCycle: 'MONTHLY' });
+
+    expect(result).toMatchObject({
+      action: 'UPGRADE_NOW',
+      trialChange: true,
+      amountSar: '0.00',
+      amountHalalas: 0,
+      effectiveAt: new Date('2026-04-16T00:00:00.000Z'),
+    });
+  });
+
   it.each(['CANCELED', 'SUSPENDED'])('rejects %s subscriptions', async (status) => {
     const prisma = buildPrisma();
     prisma.subscription.findFirst.mockResolvedValue({

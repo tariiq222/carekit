@@ -122,11 +122,12 @@ export default function BillingPlansPage() {
                 <p className="text-sm font-medium text-foreground">
                   {previewText({
                     action: preview?.action,
-                    amountSar: preview?.amountSar,
-                    effectiveAt: preview?.effectiveAt,
-                    locale,
-                    t,
-                  })}
+                  amountSar: preview?.amountSar,
+                  effectiveAt: preview?.effectiveAt,
+                  trialChange: preview?.trialChange,
+                  locale,
+                  t,
+                })}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {selectedPlan ? selectedPlan.currency : "SAR"}
@@ -155,9 +156,14 @@ function previewText(args: {
   action?: "UPGRADE_NOW" | "SCHEDULE_DOWNGRADE"
   amountSar?: string
   effectiveAt?: string
+  trialChange?: boolean
   locale: "ar" | "en"
   t: (key: string) => string
 }) {
+  if (args.trialChange) {
+    return args.t("billing.plans.trialChange")
+  }
+
   if (args.action === "SCHEDULE_DOWNGRADE" && args.effectiveAt) {
     return interpolate(args.t("billing.plans.scheduledFor"), {
       date: formatBillingDate(args.effectiveAt, args.locale),

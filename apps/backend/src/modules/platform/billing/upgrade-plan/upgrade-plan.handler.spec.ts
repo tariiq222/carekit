@@ -270,4 +270,45 @@ describe('UpgradePlanHandler', () => {
     );
     expect(result).toEqual({ id: 'sub-1', planId: 'plan-2' });
   });
+
+  it('changes trial plans immediately without charging or requiring a card', async () => {
+    const prisma = buildPrisma();
+    const cache = buildCache();
+    const mailer = buildMailer();
+    const moyasar = buildMoyasar();
+    prisma.subscription.findFirst.mockResolvedValue(
+      activeSubscription({
+        status: 'TRIALING',
+        plan: proPlan,
+        moyasarCardTokenRef: null,
+        defaultSavedCard: null,
+      }),
+    );
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
+    const handler = buildHandler(prisma, cache, mailer, moyasar);
+
+    const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(moyasar.chargeWithToken).not.toHaveBeenCalled();
+    expect(prisma.subscription.update).toHaveBeenCalledWith({
+      where: { id: 'sub-1' },
+      data: expect.objectContaining({
+        planId: 'plan-1',
+        billingCycle: 'MONTHLY',
+        cancelAtPeriodEnd: false,
+        scheduledCancellationDate: null,
+        scheduledPlanId: null,
+        scheduledBillingCycle: null,
+        scheduledPlanChangeAt: null,
+      }),
+    });
+    expect(cache.invalidate).toHaveBeenCalledWith('org-A');
+    expect(mailer.sendPlanChanged).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({ fromPlanName: 'احترافي', toPlanName: 'أساسي' }),
+    );
+    expect(result).toEqual({ id: 'sub-1', planId: 'plan-1' });
+  });
 });

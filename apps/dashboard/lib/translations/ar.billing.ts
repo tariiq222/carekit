@@ -65,6 +65,7 @@ export const arBilling: Record<string, string> = {
   "billing.plans.description": "قارن الخطط واختر الاشتراك الأنسب.",
   "billing.plans.payNow": "ادفع {amount} ر.س الآن",
   "billing.plans.scheduledFor": "مجدولة في {date}",
+  "billing.plans.trialChange": "يطبق فوراً أثناء الفترة التجريبية بدون رسوم الآن.",
   "billing.plans.cancelScheduled": "إلغاء الخفض المجدول",
   "billing.plans.features": "مقارنة المزايا",
   "billing.plans.employees": "الموظفون",
