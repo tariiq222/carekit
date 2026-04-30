@@ -265,7 +265,7 @@ html = f"""<!doctype html>
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="utf-8">
-<title>تقرير اختبارات CareKit</title>
+<title>تقرير اختبارات Deqah</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {{
@@ -412,7 +412,7 @@ html = f"""<!doctype html>
 
   <header>
     <div>
-      <h1>تقرير اختبارات CareKit</h1>
+      <h1>تقرير اختبارات Deqah</h1>
       <div class="meta">
         آخر تشغيل: <strong>{exec_date}</strong>
         <span class="badge-meta">مصدر: نتائج الاختبارات مباشرة</span>

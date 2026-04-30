@@ -1,5 +1,5 @@
 #!/bin/sh
-# CareKit MinIO Backup Script
+# Deqah MinIO Backup Script
 # Mirrors the MinIO bucket, compresses and encrypts with AES-256-CBC, rotates old backups
 # Runs in the minio/mc container
 # Requires: BACKUP_ENCRYPTION_KEY env var
@@ -9,8 +9,8 @@ set -euo pipefail
 BACKUP_DIR="/backups/minio"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
-ALIAS_NAME="carekit"
-BUCKET_NAME="carekit"
+ALIAS_NAME="deqah"
+BUCKET_NAME="deqah"
 MIRROR_DIR="$BACKUP_DIR/${BUCKET_NAME}_${TIMESTAMP}_tmp"
 ARCHIVE="$BACKUP_DIR/${BUCKET_NAME}_${TIMESTAMP}.tar.gz.enc"
 

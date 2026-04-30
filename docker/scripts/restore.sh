@@ -1,5 +1,5 @@
 #!/bin/bash
-# CareKit Database Restore Script
+# Deqah Database Restore Script
 # Usage: ./restore.sh <backup_file.dump.enc>
 # Requires: BACKUP_ENCRYPTION_KEY env var (same key used during backup)
 
@@ -31,8 +31,8 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
   | PGPASSWORD="$POSTGRES_PASSWORD" pg_restore \
     -h "${POSTGRES_HOST:-postgres}" \
     -p "${POSTGRES_PORT:-5432}" \
-    -U "${POSTGRES_USER:-carekit}" \
-    -d "${POSTGRES_DB:-carekit}" \
+    -U "${POSTGRES_USER:-deqah}" \
+    -d "${POSTGRES_DB:-deqah}" \
     --clean \
     --if-exists \
     --no-owner \
