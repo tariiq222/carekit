@@ -33,6 +33,8 @@ import { ListSavedCardsHandler } from "../../modules/platform/billing/saved-card
 import { RemoveSavedCardHandler } from "../../modules/platform/billing/saved-cards/remove-saved-card.handler";
 import { SetDefaultSavedCardHandler } from "../../modules/platform/billing/saved-cards/set-default-saved-card.handler";
 import { ComputeProrationHandler } from "../../modules/platform/billing/compute-proration/compute-proration.handler";
+import { ScheduleDowngradeHandler } from "../../modules/platform/billing/schedule-downgrade/schedule-downgrade.handler";
+import { CancelScheduledDowngradeHandler } from "../../modules/platform/billing/cancel-scheduled-downgrade/cancel-scheduled-downgrade.handler";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -55,6 +57,8 @@ export class BillingController {
     private readonly removeSavedCard: RemoveSavedCardHandler,
     private readonly reactivate: ReactivateSubscriptionHandler,
     private readonly proration: ComputeProrationHandler,
+    private readonly scheduleDowngrade: ScheduleDowngradeHandler,
+    private readonly cancelScheduledDowngrade: CancelScheduledDowngradeHandler,
   ) {}
 
   @Get("plans")
@@ -96,7 +100,20 @@ export class BillingController {
   @Post("subscription/downgrade")
   @ApiOperation({ summary: "Downgrade subscription plan" })
   downgradePlan(@Body() dto: ChangePlanDto) {
-    return this.downgrade.execute(dto);
+    return this.scheduleDowngrade.execute(dto);
+  }
+
+  @Post("subscription/schedule-downgrade")
+  @ApiOperation({ summary: "Schedule subscription downgrade at period end" })
+  scheduleDowngradePlan(@Body() dto: ChangePlanDto) {
+    return this.scheduleDowngrade.execute(dto);
+  }
+
+  @Post("subscription/cancel-scheduled-downgrade")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Cancel a scheduled subscription downgrade" })
+  cancelScheduledDowngradePlan() {
+    return this.cancelScheduledDowngrade.execute();
   }
 
   @Post("subscription/cancel")

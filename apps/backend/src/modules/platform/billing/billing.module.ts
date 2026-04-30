@@ -15,6 +15,8 @@ import { StartSubscriptionHandler } from "./start-subscription/start-subscriptio
 import { UpgradePlanHandler } from "./upgrade-plan/upgrade-plan.handler";
 import { DowngradePlanHandler } from "./downgrade-plan/downgrade-plan.handler";
 import { ComputeProrationHandler } from "./compute-proration/compute-proration.handler";
+import { ScheduleDowngradeHandler } from "./schedule-downgrade/schedule-downgrade.handler";
+import { CancelScheduledDowngradeHandler } from "./cancel-scheduled-downgrade/cancel-scheduled-downgrade.handler";
 import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscription.handler";
 import { ProcessScheduledCancellationsCron } from "./process-scheduled-cancellations/process-scheduled-cancellations.cron";
 import { SendLimitWarningCron } from "./send-limit-warning/send-limit-warning.cron";
@@ -39,6 +41,8 @@ const HANDLERS = [
   ComputeProrationHandler,
   UpgradePlanHandler,
   DowngradePlanHandler,
+  ScheduleDowngradeHandler,
+  CancelScheduledDowngradeHandler,
   CancelSubscriptionHandler,
   ProcessScheduledCancellationsCron,
   SendLimitWarningCron,

@@ -25,6 +25,8 @@ describe('BillingController saved-card routes', () => {
       removeSavedCard as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -65,6 +67,8 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       reactivate as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });
@@ -93,6 +97,8 @@ describe('BillingController proration routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       proration as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(
@@ -102,5 +108,39 @@ describe('BillingController proration routes', () => {
       planId: 'plan-pro',
       billingCycle: 'MONTHLY',
     });
+  });
+});
+
+describe('BillingController scheduled downgrade routes', () => {
+  it('delegates new and legacy downgrade routes to schedule downgrade handler', async () => {
+    const scheduleDowngrade = buildHandler({ scheduledPlanId: 'plan-basic' });
+    const cancelScheduledDowngrade = buildHandler({ scheduledPlanId: null });
+    const controller = new BillingController(
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      scheduleDowngrade as never,
+      cancelScheduledDowngrade as never,
+    );
+    const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' };
+
+    await controller.scheduleDowngradePlan(dto);
+    await controller.downgradePlan(dto);
+    await controller.cancelScheduledDowngradePlan();
+
+    expect(scheduleDowngrade.execute).toHaveBeenCalledTimes(2);
+    expect(scheduleDowngrade.execute).toHaveBeenCalledWith(dto);
+    expect(cancelScheduledDowngrade.execute).toHaveBeenCalledWith();
   });
 });
