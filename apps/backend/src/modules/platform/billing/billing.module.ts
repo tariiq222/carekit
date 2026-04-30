@@ -14,6 +14,7 @@ import { GetMyFeaturesHandler } from "./get-my-features/get-my-features.handler"
 import { StartSubscriptionHandler } from "./start-subscription/start-subscription.handler";
 import { UpgradePlanHandler } from "./upgrade-plan/upgrade-plan.handler";
 import { DowngradePlanHandler } from "./downgrade-plan/downgrade-plan.handler";
+import { ComputeProrationHandler } from "./compute-proration/compute-proration.handler";
 import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscription.handler";
 import { ProcessScheduledCancellationsCron } from "./process-scheduled-cancellations/process-scheduled-cancellations.cron";
 import { SendLimitWarningCron } from "./send-limit-warning/send-limit-warning.cron";
@@ -35,6 +36,7 @@ const HANDLERS = [
   GetCurrentSubscriptionHandler,
   GetMyFeaturesHandler,
   StartSubscriptionHandler,
+  ComputeProrationHandler,
   UpgradePlanHandler,
   DowngradePlanHandler,
   CancelSubscriptionHandler,

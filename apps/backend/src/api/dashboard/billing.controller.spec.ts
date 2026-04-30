@@ -24,6 +24,7 @@ describe('BillingController saved-card routes', () => {
       setDefaultSavedCard as never,
       removeSavedCard as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -63,6 +64,7 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       reactivate as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });
@@ -70,5 +72,35 @@ describe('BillingController cancellation routes', () => {
 
     await controller.reactivateSub();
     expect(reactivate.execute).toHaveBeenCalledWith();
+  });
+});
+
+describe('BillingController proration routes', () => {
+  it('delegates proration preview to the handler', async () => {
+    const proration = buildHandler({ action: 'UPGRADE_NOW', amountHalalas: 30000 });
+    const controller = new BillingController(
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      proration as never,
+    );
+
+    await expect(
+      controller.prorationPreview({ planId: 'plan-pro', billingCycle: 'MONTHLY' }),
+    ).resolves.toEqual({ action: 'UPGRADE_NOW', amountHalalas: 30000 });
+    expect(proration.execute).toHaveBeenCalledWith({
+      planId: 'plan-pro',
+      billingCycle: 'MONTHLY',
+    });
   });
 });

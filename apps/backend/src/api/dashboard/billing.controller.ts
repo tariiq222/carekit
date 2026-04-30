@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags, ApiBearerAuth } from "@nestjs/swagger";
@@ -22,12 +23,16 @@ import { CancelSubscriptionHandler } from "../../modules/platform/billing/cancel
 import { ReactivateSubscriptionHandler } from "../../modules/platform/billing/reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "../../modules/platform/billing/resume-subscription/resume-subscription.handler";
 import { StartSubscriptionDto } from "../../modules/platform/billing/dto/start-subscription.dto";
-import { ChangePlanDto } from "../../modules/platform/billing/dto/change-plan.dto";
+import {
+  ChangePlanDto,
+  ProrationPreviewDto,
+} from "../../modules/platform/billing/dto/change-plan.dto";
 import { AddSavedCardDto } from "../../modules/platform/billing/dto/saved-card.dto";
 import { AddSavedCardHandler } from "../../modules/platform/billing/saved-cards/add-saved-card.handler";
 import { ListSavedCardsHandler } from "../../modules/platform/billing/saved-cards/list-saved-cards.handler";
 import { RemoveSavedCardHandler } from "../../modules/platform/billing/saved-cards/remove-saved-card.handler";
 import { SetDefaultSavedCardHandler } from "../../modules/platform/billing/saved-cards/set-default-saved-card.handler";
+import { ComputeProrationHandler } from "../../modules/platform/billing/compute-proration/compute-proration.handler";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -49,6 +54,7 @@ export class BillingController {
     private readonly setDefaultSavedCard: SetDefaultSavedCardHandler,
     private readonly removeSavedCard: RemoveSavedCardHandler,
     private readonly reactivate: ReactivateSubscriptionHandler,
+    private readonly proration: ComputeProrationHandler,
   ) {}
 
   @Get("plans")
@@ -79,6 +85,12 @@ export class BillingController {
   @ApiOperation({ summary: "Upgrade subscription plan" })
   upgradePlan(@Body() dto: ChangePlanDto) {
     return this.upgrade.execute(dto);
+  }
+
+  @Get("subscription/proration-preview")
+  @ApiOperation({ summary: "Preview prorated plan change" })
+  prorationPreview(@Query() query: ProrationPreviewDto) {
+    return this.proration.execute(query);
   }
 
   @Post("subscription/downgrade")

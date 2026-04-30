@@ -5,3 +5,5 @@ export class ChangePlanDto {
   @IsUUID() planId!: string;
   @IsEnum(BillingCycle) billingCycle!: BillingCycle;
 }
+
+export class ProrationPreviewDto extends ChangePlanDto {}
