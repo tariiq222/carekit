@@ -8,3 +8,5 @@ export { FEATURE_FLAG_KEYS, type FeatureFlagKey } from "./feature-flags";
 
 // New tiered feature-gating enum — use FeatureKey for all new code.
 export { FeatureKey } from "./feature-keys";
+
+export { PLATFORM_BRAND, LEGACY_BRAND_STRINGS } from "./brand";
