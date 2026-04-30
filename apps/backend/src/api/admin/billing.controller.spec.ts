@@ -12,6 +12,8 @@ function buildController() {
   const grantCredit = fn();
   const changePlanForOrg = fn();
   const refundInvoice = fn();
+  const forceCharge = fn();
+  const cancelScheduled = fn();
   const controller = new AdminBillingController(
     listSubs as never,
     getOrgBilling as never,
@@ -21,10 +23,13 @@ function buildController() {
     grantCredit as never,
     changePlanForOrg as never,
     refundInvoice as never,
+    forceCharge as never,
+    cancelScheduled as never,
   );
   return {
     controller, listSubs, getOrgBilling, listInvoices, getMetrics,
     waiveInvoice, grantCredit, changePlanForOrg, refundInvoice,
+    forceCharge, cancelScheduled,
   };
 }
 
@@ -116,6 +121,28 @@ describe('AdminBillingController', () => {
       newPlanId: 'plan-2',
       superAdminUserId: user.id,
       reason: 'upsell',
+      ipAddress: '1.1.1.1',
+      userAgent: 'jest',
+    });
+  });
+
+  it('forceCharge — passes orgId and admin context', async () => {
+    const { controller, forceCharge } = buildController();
+    await controller.forceChargeOrg('org-1', user, req);
+    expect(forceCharge.execute).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      superAdminUserId: user.id,
+      ipAddress: '1.1.1.1',
+      userAgent: 'jest',
+    });
+  });
+
+  it('cancelScheduled — passes orgId and admin context', async () => {
+    const { controller, cancelScheduled } = buildController();
+    await controller.cancelScheduledCancellation('org-1', user, req);
+    expect(cancelScheduled.execute).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      superAdminUserId: user.id,
       ipAddress: '1.1.1.1',
       userAgent: 'jest',
     });

@@ -58,6 +58,8 @@ import { AdminWaiveInvoiceHandler } from './admin/admin-waive-invoice/admin-waiv
 import { AdminGrantCreditHandler } from './admin/admin-grant-credit/admin-grant-credit.handler';
 import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
 import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
+import { AdminForceChargeHandler } from './admin/admin-force-charge/admin-force-charge.handler';
+import { AdminCancelScheduledHandler } from './admin/admin-cancel-scheduled/admin-cancel-scheduled.handler';
 import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/list-feature-flags-admin.handler';
 import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
@@ -99,6 +101,8 @@ const ADMIN_HANDLERS = [
   AdminGrantCreditHandler,
   AdminChangePlanForOrgHandler,
   AdminRefundInvoiceHandler,
+  AdminForceChargeHandler,
+  AdminCancelScheduledHandler,
   ListFeatureFlagsAdminHandler,
   UpdateFeatureFlagAdminHandler,
 ];

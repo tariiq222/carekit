@@ -8,6 +8,7 @@ export class ListPlansAdminHandler {
   async execute() {
     return this.prisma.$allTenants.plan.findMany({
       orderBy: [{ isActive: 'desc' }, { sortOrder: 'asc' }],
+      include: { _count: { select: { subscriptions: true } } },
     });
   }
 }

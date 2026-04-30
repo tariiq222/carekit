@@ -10,4 +10,5 @@ export interface PlanRow {
   sortOrder: number;
   limits: Record<string, unknown>;
   createdAt: string;
+  _count: { subscriptions: number };
 }

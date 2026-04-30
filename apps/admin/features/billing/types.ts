@@ -34,11 +34,22 @@ export interface SubscriptionRow {
   currentPeriodEnd: string;
   trialEndsAt: string | null;
   canceledAt: string | null;
+  cancelAtPeriodEnd: boolean;
   pastDueSince: string | null;
   lastPaymentAt: string | null;
   lastFailureReason: string | null;
   createdAt: string;
   plan: { slug: string; nameEn: string; priceMonthly: string | number };
+}
+
+export interface DunningLogRow {
+  id: string;
+  subscriptionId: string;
+  attemptNumber: number;
+  status: string;
+  scheduledFor: string;
+  executedAt: string;
+  failureReason: string | null;
 }
 
 export interface SubscriptionInvoiceRow {
@@ -104,4 +115,5 @@ export interface OrgBillingDetail {
   invoices: SubscriptionInvoiceRow[];
   usage: UsageRow[];
   credits: CreditRow[];
+  dunningLogs: DunningLogRow[];
 }

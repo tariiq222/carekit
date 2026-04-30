@@ -73,6 +73,23 @@ export class GetOrgBillingHandler {
       },
     });
 
-    return { org, subscription, invoices, usage, credits };
+    const dunningLogs = subscription
+      ? await this.prisma.$allTenants.dunningLog.findMany({
+          where: { subscriptionId: subscription.id },
+          orderBy: { executedAt: 'desc' },
+          take: 20,
+          select: {
+            id: true,
+            subscriptionId: true,
+            attemptNumber: true,
+            status: true,
+            scheduledFor: true,
+            executedAt: true,
+            failureReason: true,
+          },
+        })
+      : [];
+
+    return { org, subscription, invoices, usage, credits, dunningLogs };
   }
 }

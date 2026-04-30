@@ -23,6 +23,8 @@ import { AdminWaiveInvoiceHandler } from '../../modules/platform/admin/admin-wai
 import { AdminGrantCreditHandler } from '../../modules/platform/admin/admin-grant-credit/admin-grant-credit.handler';
 import { AdminChangePlanForOrgHandler } from '../../modules/platform/admin/admin-change-plan-for-org/admin-change-plan-for-org.handler';
 import { AdminRefundInvoiceHandler } from '../../modules/platform/admin/admin-refund-invoice/admin-refund-invoice.handler';
+import { AdminForceChargeHandler } from '../../modules/platform/admin/admin-force-charge/admin-force-charge.handler';
+import { AdminCancelScheduledHandler } from '../../modules/platform/admin/admin-cancel-scheduled/admin-cancel-scheduled.handler';
 import {
   ChangePlanForOrgDto,
   GrantCreditDto,
@@ -47,6 +49,8 @@ export class AdminBillingController {
     private readonly grantCredit: AdminGrantCreditHandler,
     private readonly changePlanForOrg: AdminChangePlanForOrgHandler,
     private readonly refundInvoice: AdminRefundInvoiceHandler,
+    private readonly forceCharge: AdminForceChargeHandler,
+    private readonly cancelScheduled: AdminCancelScheduledHandler,
   ) {}
 
   @Get('subscriptions')
@@ -141,8 +145,38 @@ export class AdminBillingController {
     });
   }
 
+  @Post('subscriptions/:orgId/force-charge')
+  @ApiOperation({ summary: 'Force an immediate payment retry for a PAST_DUE subscription (audited)' })
+  forceChargeOrg(
+    @Param('orgId') orgId: string,
+    @CurrentUser() user: { id: string },
+    @Req() req: Request,
+  ) {
+    return this.forceCharge.execute({
+      organizationId: orgId,
+      superAdminUserId: user.id,
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
+  @Post('subscriptions/:orgId/cancel-scheduled')
+  @ApiOperation({ summary: 'Cancel a scheduled end-of-period cancellation (audited)' })
+  cancelScheduledCancellation(
+    @Param('orgId') orgId: string,
+    @CurrentUser() user: { id: string },
+    @Req() req: Request,
+  ) {
+    return this.cancelScheduled.execute({
+      organizationId: orgId,
+      superAdminUserId: user.id,
+      ipAddress: req.ip ?? '',
+      userAgent: req.headers['user-agent'] ?? '',
+    });
+  }
+
   @Patch('subscriptions/:orgId/plan')
-  @ApiOperation({ summary: 'Change an organization’s plan immediately (no proration; audited)' })
+  @ApiOperation({ summary: "Change an organization plan immediately (no proration; audited)" })
   changePlan(
     @Param('orgId') orgId: string,
     @Body() dto: ChangePlanForOrgDto,

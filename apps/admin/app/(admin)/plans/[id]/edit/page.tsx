@@ -174,6 +174,13 @@ function PlanEditForm({ plan }: { plan: Plan }) {
         </p>
       </div>
 
+      {plan._count.subscriptions > 0 ? (
+        <div className="rounded-lg border border-warning/40 bg-warning/5 p-4 text-sm text-warning">
+          <strong>⚠ {plan._count.subscriptions} active subscriber(s).</strong>{' '}
+          Price changes won&apos;t apply to existing subscriptions.
+        </div>
+      ) : null}
+
       <div className="rounded-lg border border-border bg-card p-6">
         <PlanFormTabs
           idPrefix="up"

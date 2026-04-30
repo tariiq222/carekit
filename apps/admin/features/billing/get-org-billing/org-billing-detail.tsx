@@ -15,6 +15,7 @@ import {
 } from '@deqah/ui/primitives/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@deqah/ui/primitives/tabs';
 import type {
+  DunningLogRow,
   SubscriptionInvoiceRow,
   SubscriptionInvoiceStatus,
   SubscriptionStatus,
@@ -23,6 +24,7 @@ import { ChangePlanDialog } from '../change-plan-for-org/change-plan-dialog';
 import { GrantCreditDialog } from '../grant-credit/grant-credit-dialog';
 import { RefundInvoiceDialog } from '../refund-invoice/refund-invoice-dialog';
 import { WaiveInvoiceDialog } from '../waive-invoice/waive-invoice-dialog';
+import { BillingHealthCard } from '../billing-health-card/billing-health-card';
 import { useGetOrgBilling } from './use-get-org-billing';
 
 const WAIVABLE: SubscriptionInvoiceStatus[] = ['DUE', 'FAILED'];
@@ -80,6 +82,8 @@ export function OrgBillingDetail({ orgId }: Props) {
 
   if (isLoading || !data) return <Skeleton className="h-[400px]" />;
 
+  const dunningLogs: DunningLogRow[] = data.dunningLogs ?? [];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -98,12 +102,21 @@ export function OrgBillingDetail({ orgId }: Props) {
         </CardHeader>
       </Card>
 
+      {data.subscription ? (
+        <BillingHealthCard
+          orgId={orgId}
+          subscription={data.subscription}
+          dunningLogs={dunningLogs}
+        />
+      ) : null}
+
       <Tabs defaultValue="subscription">
         <TabsList>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="invoices">Invoices ({data.invoices.length})</TabsTrigger>
           <TabsTrigger value="usage">Usage ({data.usage.length})</TabsTrigger>
           <TabsTrigger value="credits">Credits ({data.credits.length})</TabsTrigger>
+          <TabsTrigger value="dunning">Dunning ({dunningLogs.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="subscription" className="mt-4">
@@ -278,6 +291,58 @@ export function OrgBillingDetail({ orgId }: Props) {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {c.consumedAt ? fmt(c.consumedAt) : 'unused'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dunning" className="mt-4">
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Attempt #</TableHead>
+                  <TableHead>Executed</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Failure reason</TableHead>
+                  <TableHead>Scheduled for</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dunningLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      No dunning attempts recorded.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  dunningLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-sm">{log.attemptNumber}</TableCell>
+                      <TableCell className="text-sm">{fmt(log.executedAt)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            log.status === 'succeeded'
+                              ? 'border-success/40 bg-success/10 text-success'
+                              : log.status === 'failed'
+                                ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                                : 'border-muted bg-muted text-muted-foreground'
+                          }
+                        >
+                          {log.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {log.failureReason ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {fmt(log.scheduledFor)}
                       </TableCell>
                     </TableRow>
                   ))
