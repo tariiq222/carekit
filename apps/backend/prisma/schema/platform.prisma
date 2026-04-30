@@ -390,6 +390,8 @@ model Subscription {
   pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
   retryCount             Int                @default(0) // analytics only; not used for state decisions
   maxRetries             Int                @default(3) // charging attempts within grace window
+  dunningRetryCount      Int                @default(0)
+  nextRetryAt            DateTime?
   moyasarCustomerRef     String? // Moyasar customer id
   moyasarCardTokenRef    String? // tokenized saved card
   moyasarSubscriptionRef String? // reserved for future native recurring
@@ -403,12 +405,14 @@ model Subscription {
 
   invoices     SubscriptionInvoice[]
   usageRecords UsageRecord[]
+  dunningLogs  DunningLog[]
 
   @@index([planId])
   @@index([status])
   @@index([currentPeriodEnd])
   @@index([cancelAtPeriodEnd, scheduledCancellationDate])
   @@index([scheduledPlanChangeAt])
+  @@index([nextRetryAt])
 }
 
 model SavedCard {
@@ -467,10 +471,32 @@ model SubscriptionInvoice {
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
+  dunningLogs DunningLog[]
+
   @@index([subscriptionId])
   @@index([organizationId])
   @@index([status])
   @@index([dueDate])
+}
+
+model DunningLog {
+  id               String              @id @default(uuid())
+  organizationId   String
+  subscriptionId   String
+  subscription     Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  invoiceId        String
+  invoice          SubscriptionInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  attemptNumber    Int
+  status           String
+  moyasarPaymentId String?
+  failureReason    String?
+  scheduledFor     DateTime
+  executedAt       DateTime            @default(now())
+
+  @@index([organizationId])
+  @@index([subscriptionId])
+  @@index([invoiceId])
+  @@unique([invoiceId, attemptNumber])
 }
 
 // SaaS-05c — credit granted by super-admin, applied against next invoice.

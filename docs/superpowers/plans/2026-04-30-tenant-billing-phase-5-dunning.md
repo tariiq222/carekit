@@ -50,7 +50,7 @@ Do not touch the unrelated branding sanitizer files currently dirty in the main 
   - `ALTER TABLE "Subscription" ADD COLUMN "dunningRetryCount" INTEGER NOT NULL DEFAULT 0;`
   - `ALTER TABLE "Subscription" ADD COLUMN "nextRetryAt" TIMESTAMP(3);`
   - `CREATE TABLE "DunningLog"` with `id`, `organizationId`, `subscriptionId`, `invoiceId`, `attemptNumber`, `status`, `moyasarPaymentId`, `failureReason`, `scheduledFor`, `executedAt`.
-  - Add indexes on `organizationId`, `subscriptionId`, `invoiceId`, and `(subscriptionId, attemptNumber)`.
+  - Add indexes on `organizationId`, `subscriptionId`, `invoiceId`, and unique `(invoiceId, attemptNumber)`.
   - Enable and force RLS with `tenant_isolation_dunning_log`.
 - [ ] Mirror the model in Prisma:
   - Add scalar fields on `Subscription`.

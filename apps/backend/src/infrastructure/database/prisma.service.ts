@@ -97,6 +97,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'Subscription',
   'UsageRecord',
   'SavedCard',
+  'DunningLog',
   // Platform models with organizationId (admin-level, but scoped for defense-in-depth)
   'PasswordResetToken',
   'BillingCredit',
