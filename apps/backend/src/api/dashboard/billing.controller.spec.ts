@@ -28,6 +28,9 @@ describe('BillingController saved-card routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -71,6 +74,8 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });
@@ -99,6 +104,9 @@ describe('BillingController proration routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       proration as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
@@ -136,6 +144,9 @@ describe('BillingController scheduled downgrade routes', () => {
       scheduleDowngrade as never,
       cancelScheduledDowngrade as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
     const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' as const };
 
@@ -170,10 +181,55 @@ describe('BillingController dunning routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       retryFailedPayment as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.retryPayment()).resolves.toEqual({ ok: true, status: 'PAID' });
 
     expect(retryFailedPayment.execute).toHaveBeenCalledWith();
+  });
+});
+
+describe('BillingController invoice routes', () => {
+  it('delegates list/get/download invoice routes to handlers', async () => {
+    const listInvoices = buildHandler({ items: [], nextCursor: null });
+    const getInvoice = buildHandler({ id: 'inv-1' });
+    const downloadInvoice = buildHandler({ url: 'https://signed.example/p' });
+    const controller = new BillingController(
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      listInvoices as never,
+      getInvoice as never,
+      downloadInvoice as never,
+    );
+
+    await expect(controller.listInvoices({ limit: 10 })).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    expect(listInvoices.execute).toHaveBeenCalledWith({ limit: 10 });
+
+    await controller.getInvoice('inv-1');
+    expect(getInvoice.execute).toHaveBeenCalledWith('inv-1');
+
+    await controller.downloadInvoice('inv-1');
+    expect(downloadInvoice.execute).toHaveBeenCalledWith('inv-1');
   });
 });

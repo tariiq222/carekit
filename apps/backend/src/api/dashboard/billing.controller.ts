@@ -36,6 +36,10 @@ import { ComputeProrationHandler } from "../../modules/platform/billing/compute-
 import { ScheduleDowngradeHandler } from "../../modules/platform/billing/schedule-downgrade/schedule-downgrade.handler";
 import { CancelScheduledDowngradeHandler } from "../../modules/platform/billing/cancel-scheduled-downgrade/cancel-scheduled-downgrade.handler";
 import { RetryFailedPaymentHandler } from "../../modules/platform/billing/retry-failed-payment/retry-failed-payment.handler";
+import { ListInvoicesHandler } from "../../modules/platform/billing/list-invoices/list-invoices.handler";
+import { GetInvoiceHandler } from "../../modules/platform/billing/get-invoice/get-invoice.handler";
+import { DownloadInvoiceHandler } from "../../modules/platform/billing/generate-invoice-pdf/download-invoice.handler";
+import { ListInvoicesQueryDto } from "../../modules/platform/billing/dto/invoice.dto";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -61,6 +65,9 @@ export class BillingController {
     private readonly scheduleDowngrade: ScheduleDowngradeHandler,
     private readonly cancelScheduledDowngrade: CancelScheduledDowngradeHandler,
     private readonly retryFailedPayment: RetryFailedPaymentHandler,
+    private readonly listInvoicesHandler: ListInvoicesHandler,
+    private readonly getInvoiceHandler: GetInvoiceHandler,
+    private readonly downloadInvoiceHandler: DownloadInvoiceHandler,
   ) {}
 
   @Get("plans")
@@ -175,5 +182,23 @@ export class BillingController {
   @ApiOperation({ summary: "Remove a saved billing card" })
   removeCard(@Param("id") id: string) {
     return this.removeSavedCard.execute(id);
+  }
+
+  @Get("invoices")
+  @ApiOperation({ summary: "List billing invoices for current organization" })
+  listInvoices(@Query() query: ListInvoicesQueryDto) {
+    return this.listInvoicesHandler.execute(query);
+  }
+
+  @Get("invoices/:id")
+  @ApiOperation({ summary: "Get a single billing invoice" })
+  getInvoice(@Param("id") id: string) {
+    return this.getInvoiceHandler.execute(id);
+  }
+
+  @Get("invoices/:id/download")
+  @ApiOperation({ summary: "Get a presigned URL to download the invoice PDF" })
+  downloadInvoice(@Param("id") id: string) {
+    return this.downloadInvoiceHandler.execute(id);
   }
 }

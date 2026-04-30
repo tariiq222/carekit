@@ -32,6 +32,8 @@ import { InvoiceNumberingService } from "./issue-invoice/invoice-numbering.servi
 import { GenerateInvoicePdfHandler } from "./generate-invoice-pdf/generate-invoice-pdf.handler";
 import { DownloadInvoiceHandler } from "./generate-invoice-pdf/download-invoice.handler";
 import { PdfRendererService } from "./generate-invoice-pdf/pdf-renderer.service";
+import { ListInvoicesHandler } from "./list-invoices/list-invoices.handler";
+import { GetInvoiceHandler } from "./get-invoice/get-invoice.handler";
 import { RecordSubscriptionPaymentFailureHandler } from "./record-subscription-payment-failure/record-subscription-payment-failure.handler";
 import { AddSavedCardHandler } from "./saved-cards/add-saved-card.handler";
 import { ListSavedCardsHandler } from "./saved-cards/list-saved-cards.handler";
@@ -73,6 +75,8 @@ const HANDLERS = [
   GenerateInvoicePdfHandler,
   DownloadInvoiceHandler,
   PdfRendererService,
+  ListInvoicesHandler,
+  GetInvoiceHandler,
 ];
 
 @Module({

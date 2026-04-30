@@ -4,9 +4,8 @@ ALTER TABLE "SubscriptionInvoice"
   ADD COLUMN "previousHash" TEXT,
   ADD COLUMN "pdfStorageKey" TEXT;
 
-CREATE UNIQUE INDEX "SubscriptionInvoice_invoiceNumber_key" ON "SubscriptionInvoice"("invoiceNumber");
 CREATE INDEX "SubscriptionInvoice_organizationId_issuedAt_idx" ON "SubscriptionInvoice"("organizationId", "issuedAt");
-CREATE INDEX "SubscriptionInvoice_organizationId_invoiceNumber_idx" ON "SubscriptionInvoice"("organizationId", "invoiceNumber");
+CREATE UNIQUE INDEX "SubscriptionInvoice_org_number_uq" ON "SubscriptionInvoice"("organizationId", "invoiceNumber");
 
 CREATE TABLE "OrganizationInvoiceCounter" (
   "organizationId" TEXT NOT NULL,

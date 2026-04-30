@@ -469,8 +469,10 @@ model SubscriptionInvoice {
   refundedAmount   Decimal?                  @db.Decimal(12, 2)
   refundedAt       DateTime?
   voidedReason     String?
-  // Phase 7 — tenant invoice numbering, hash chain, and PDF storage
-  invoiceNumber    String?                   @unique
+  // Phase 7 — tenant invoice numbering, hash chain, and PDF storage.
+  // invoiceNumber is unique per (organizationId, invoiceNumber) — sequences
+  // reset annually per org so two orgs both have INV-{year}-000001.
+  invoiceNumber    String?
   invoiceHash      String?
   previousHash     String?
   pdfStorageKey    String?
@@ -484,7 +486,7 @@ model SubscriptionInvoice {
   @@index([status])
   @@index([dueDate])
   @@index([organizationId, issuedAt])
-  @@index([organizationId, invoiceNumber])
+  @@unique([organizationId, invoiceNumber], name: "SubscriptionInvoice_org_number_uq")
 }
 
 // Phase 7 — per-organization invoice number sequence (yearly reset).
