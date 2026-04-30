@@ -25,6 +25,7 @@ import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impers
 import { ExpireTrialsCron } from '../platform/billing/expire-trials/expire-trials.cron';
 import { SendLimitWarningCron } from '../platform/billing/send-limit-warning/send-limit-warning.cron';
 import { ProcessScheduledPlanChangesCron } from '../platform/billing/process-scheduled-plan-changes/process-scheduled-plan-changes.cron';
+import { DunningRetryCron } from '../platform/billing/dunning-retry/dunning-retry.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 
 const handlers = [
@@ -49,6 +50,7 @@ const cronHandlers = [
   ExpireTrialsCron,
   SendLimitWarningCron,
   ProcessScheduledPlanChangesCron,
+  DunningRetryCron,
   // Admin crons
   ExpireImpersonationSessionsCron,
 ];

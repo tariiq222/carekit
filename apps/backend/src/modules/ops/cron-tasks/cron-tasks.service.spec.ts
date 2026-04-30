@@ -33,6 +33,7 @@ type CronDeps = [
   never,
   never,
   never,
+  never,
 ];
 
 /** Build cron mocks (all crons except BullMqService itself). */
@@ -51,19 +52,20 @@ const buildAllMocks = () => [
   buildCronMock(), // expireTrials
   buildCronMock(), // usageWarnings
   buildCronMock(), // processScheduledPlanChanges
+  buildCronMock(), // dunningRetry
 ] as const;
 
 const buildService = (bullMq: ReturnType<typeof buildBullMq>, mocks: ReturnType<typeof buildAllMocks>) =>
   new CronTasksService(bullMq as never, ...(mocks.map((m) => m as never) as CronDeps));
 
 describe('CronTasksService', () => {
-  it('schedules all 13 cron jobs on module init', () => {
+  it('schedules all 14 cron jobs on module init', () => {
     const bullMq = buildBullMq();
     const mocks = buildAllMocks();
     const service = buildService(bullMq, mocks);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(13);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(14);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -76,6 +78,11 @@ describe('CronTasksService', () => {
       CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES,
       {},
       expect.objectContaining({ repeat: { pattern: '0 2 * * *' } }),
+    );
+    expect(bullMq.queue.add).toHaveBeenCalledWith(
+      CRON_JOBS.DUNNING_RETRY,
+      {},
+      expect.objectContaining({ repeat: { pattern: '0 * * * *' } }),
     );
   });
 
@@ -103,6 +110,7 @@ describe('CronTasksService', () => {
     [CRON_JOBS.EXPIRE_TRIALS, 11],
     [CRON_JOBS.USAGE_WARNINGS, 12],
     [CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES, 13],
+    [CRON_JOBS.DUNNING_RETRY, 14],
   ];
 
   it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {

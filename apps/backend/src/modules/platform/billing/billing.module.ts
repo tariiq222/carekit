@@ -21,6 +21,8 @@ import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscrip
 import { ProcessScheduledCancellationsCron } from "./process-scheduled-cancellations/process-scheduled-cancellations.cron";
 import { SendLimitWarningCron } from "./send-limit-warning/send-limit-warning.cron";
 import { ProcessScheduledPlanChangesCron } from "./process-scheduled-plan-changes/process-scheduled-plan-changes.cron";
+import { DunningRetryCron } from "./dunning-retry/dunning-retry.cron";
+import { DunningRetryService } from "./dunning-retry/dunning-retry.service";
 import { ReactivateSubscriptionHandler } from "./reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
@@ -48,6 +50,8 @@ const HANDLERS = [
   ProcessScheduledCancellationsCron,
   SendLimitWarningCron,
   ProcessScheduledPlanChangesCron,
+  DunningRetryService,
+  DunningRetryCron,
   ReactivateSubscriptionHandler,
   ResumeSubscriptionHandler,
   ListSavedCardsHandler,
