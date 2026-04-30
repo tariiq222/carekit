@@ -1,3 +1,5 @@
+import { PLATFORM_BRAND } from '../constants/brand';
+
 /**
  * BrandingConfig — the canonical shape returned by GET /public/branding.
  * All apps (dashboard, mobile) consume this type.
@@ -30,17 +32,17 @@ export interface DerivedTokens {
 }
 
 export const DEFAULT_BRANDING: BrandingConfig = {
-  systemName:        'Deqah',
-  systemNameAr:      'كيركيت',
-  productTagline:    'إدارة العيادة',
+  systemName:        PLATFORM_BRAND.nameEn,
+  systemNameAr:      PLATFORM_BRAND.nameAr,
+  productTagline:    PLATFORM_BRAND.taglineAr,
   logoUrl:           null,
   faviconUrl:        null,
-  colorPrimary:      '#354FD8',
-  colorPrimaryLight: '#5B72E8',
-  colorPrimaryDark:  '#2438B0',
-  colorAccent:       '#82CC17',
-  colorAccentDark:   '#5A9010',
-  colorBackground:   '#EEF1F8',
+  colorPrimary:      PLATFORM_BRAND.colors.primary,
+  colorPrimaryLight: PLATFORM_BRAND.colors.primaryLight,
+  colorPrimaryDark:  PLATFORM_BRAND.colors.primaryDark,
+  colorAccent:       PLATFORM_BRAND.colors.accent,
+  colorAccentDark:   PLATFORM_BRAND.colors.accentDark,
+  colorBackground:   PLATFORM_BRAND.colors.background,
   fontFamily:        'IBM Plex Sans Arabic',
   fontUrl:           'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap',
 };

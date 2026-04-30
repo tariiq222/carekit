@@ -97,7 +97,7 @@ export const arBilling: Record<string, string> = {
   "billing.invoices.status.draft": "مسودة",
   "billing.invoices.status.void": "ملغاة",
   "billing.paymentMethods.title": "طرق الدفع",
-  "billing.paymentMethods.description": "إدارة البطاقات المستخدمة لفوترة اشتراك Deqah.",
+  "billing.paymentMethods.description": "إدارة البطاقات المستخدمة لفوترة اشتراك دِقة.",
   "billing.paymentMethods.add": "إضافة بطاقة",
   "billing.paymentMethods.default": "افتراضية",
   "billing.paymentMethods.setDefault": "تعيين كافتراضية",
@@ -118,7 +118,7 @@ export const arBilling: Record<string, string> = {
   "featureGate.locked.upgrade": "ترقية الخطة",
   // Phase 7 — invoice history page.
   "billing.invoices.page.title": "الفواتير",
-  "billing.invoices.page.description": "حمّل الفواتير الضريبية لاشتراكك في كير كِت.",
+  "billing.invoices.page.description": "حمّل الفواتير الضريبية لاشتراكك في دِقة.",
   "billing.invoices.breadcrumb.settings": "الإعدادات",
   "billing.invoices.breadcrumb.billing": "الفوترة",
   "billing.invoices.breadcrumb.invoices": "الفواتير",
