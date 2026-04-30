@@ -20,6 +20,7 @@ describe('ListPlansAdminHandler', () => {
     expect(result).toHaveLength(2);
     expect(findMany).toHaveBeenCalledWith({
       orderBy: [{ isActive: 'desc' }, { sortOrder: 'asc' }],
+      include: { _count: { select: { subscriptions: true } } },
     });
   });
 });

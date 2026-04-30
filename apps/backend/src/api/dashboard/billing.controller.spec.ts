@@ -76,6 +76,7 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });

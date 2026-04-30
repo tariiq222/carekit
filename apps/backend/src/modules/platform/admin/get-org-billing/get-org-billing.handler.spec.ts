@@ -23,6 +23,7 @@ describe('GetOrgBillingHandler', () => {
         subscription: { findUnique: subFind },
         subscriptionInvoice: { findMany: invFindMany },
         usageRecord: { findMany: usageFindMany },
+        dunningLog: { findMany: jest.fn().mockResolvedValue([]) },
       },
       billingCredit: { findMany: creditFindMany },
     } as unknown as PrismaService;
