@@ -16,3 +16,9 @@ process.env.JWT_CLIENT_ACCESS_SECRET ??= 'test-client-access-secret-32chars';
 process.env.SMS_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 1).toString('base64');
 process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 2).toString('base64');
 process.env.MOYASAR_TENANT_ENCRYPTION_KEY ??= Buffer.alloc(32, 3).toString('base64');
+// Phase 7 — invoice PDF renderer reads platform identity at module init.
+process.env.PLATFORM_VAT_NUMBER ??= '300000000000003';
+process.env.PLATFORM_COMPANY_NAME_AR ??= 'منصة كير كِت';
+process.env.PLATFORM_COMPANY_NAME_EN ??= 'CareKit Platform';
+process.env.PLATFORM_COMPANY_ADDRESS ??= 'Riyadh, Saudi Arabia';
+process.env.MINIO_INVOICE_BUCKET ??= 'carekit-invoices';
