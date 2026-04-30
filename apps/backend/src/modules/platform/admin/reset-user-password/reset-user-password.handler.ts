@@ -55,7 +55,7 @@ export class ResetUserPasswordHandler {
     if (this.smtp.isAvailable()) {
       await this.smtp.sendMail(
         user.email,
-        'CareKit — Temporary password issued',
+        'Deqah — Temporary password issued',
         this.buildEmailHtml(user.name, tempPassword),
       );
     } else {
@@ -70,7 +70,7 @@ export class ResetUserPasswordHandler {
   private buildEmailHtml(name: string, tempPassword: string): string {
     return `
       <p>Hello ${this.escape(name)},</p>
-      <p>A CareKit administrator issued you a temporary password:</p>
+      <p>A Deqah administrator issued you a temporary password:</p>
       <p style="font-family:monospace;font-size:18px"><strong>${this.escape(tempPassword)}</strong></p>
       <p>Please sign in and change it immediately. If you did not expect this email, contact support.</p>
     `;

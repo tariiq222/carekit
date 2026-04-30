@@ -1,5 +1,5 @@
 /**
- * Branch Types — CareKit Dashboard
+ * Branch Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery } from "./common"

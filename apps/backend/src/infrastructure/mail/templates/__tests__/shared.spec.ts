@@ -13,7 +13,7 @@ describe('escapeHtml', () => {
 });
 
 describe('BRAND', () => {
-  it('exposes the CareKit primary color and font', () => {
+  it('exposes the Deqah primary color and font', () => {
     expect(BRAND.primary).toBe('#354FD8');
     expect(BRAND.fontFamily).toMatch(/IBM Plex Sans Arabic/);
   });

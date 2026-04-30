@@ -6,8 +6,8 @@ import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CareKit Super-admin',
-  description: 'Platform control plane for CareKit staff',
+  title: 'Deqah Super-admin',
+  description: 'Platform control plane for Deqah staff',
   robots: { index: false, follow: false },
 };
 

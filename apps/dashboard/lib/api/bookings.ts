@@ -1,5 +1,5 @@
 /**
- * Bookings API — CareKit Dashboard
+ * Bookings API — Deqah Dashboard
  * Controller: dashboard/bookings
  */
 

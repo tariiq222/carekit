@@ -1,5 +1,5 @@
 /**
- * Branding API — CareKit Dashboard
+ * Branding API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

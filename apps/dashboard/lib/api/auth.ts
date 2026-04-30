@@ -1,5 +1,5 @@
 /**
- * Auth API — CareKit Dashboard
+ * Auth API — Deqah Dashboard
  *
  * Thin wrapper over @deqah/api-client/authApi. The shared package owns
  * request shape, envelope unwrapping, and 401 retry logic; this file only
@@ -13,8 +13,8 @@ import { setAccessToken, getAccessToken } from "@/lib/api"
 export type AuthUser = UserPayload
 export type { AuthResponse }
 
-const USER_KEY = "carekit_user"
-const IMPERSONATION_KEY = "carekit_impersonation"
+const USER_KEY = "deqah_user"
+const IMPERSONATION_KEY = "deqah_impersonation"
 
 export async function login(
   email: string,

@@ -22,7 +22,7 @@ export const TEST_JWT_CLIENT_REFRESH_TTL = '14d';
 const TEST_SMS_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
 
 /**
  * In-memory store for OTP codes captured by the stub email adapter.
@@ -67,7 +67,7 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
   process.env.MINIO_PORT = '9000';
   process.env.MINIO_ACCESS_KEY = 'minioadmin';
   process.env.MINIO_SECRET_KEY = 'minioadmin123';
-  process.env.MINIO_BUCKET = 'carekit';
+  process.env.MINIO_BUCKET = 'deqah';
   process.env.JWT_ACCESS_SECRET = TEST_JWT_ACCESS_SECRET;
   process.env.JWT_REFRESH_SECRET = TEST_JWT_REFRESH_SECRET;
   process.env.JWT_ACCESS_TTL = '15m';
@@ -97,7 +97,7 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     MINIO_PORT: 9000,
     MINIO_ACCESS_KEY: 'minioadmin',
     MINIO_SECRET_KEY: 'minioadmin123',
-    MINIO_BUCKET: 'carekit',
+    MINIO_BUCKET: 'deqah',
     SMS_PROVIDER_ENCRYPTION_KEY: TEST_SMS_PROVIDER_ENCRYPTION_KEY,
   };
 
@@ -151,9 +151,9 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     })
     .overrideProvider(MinioService)
     .useValue({
-      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key'),
+      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key'),
       deleteFile: jest.fn().mockResolvedValue(undefined),
-      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key?sig=x'),
+      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key?sig=x'),
       fileExists: jest.fn().mockResolvedValue(true),
     })
     .overrideProvider(MoyasarApiClient)

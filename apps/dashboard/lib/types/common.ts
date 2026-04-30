@@ -1,5 +1,5 @@
 /**
- * Common Types — CareKit Dashboard
+ * Common Types — Deqah Dashboard
  *
  * Shared types used across all modules.
  */

@@ -123,7 +123,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>{t("branding.organizationNameEn")}</Label>
-            <Input value={organizationNameEn} onChange={(e) => setOrganizationNameEn(e.target.value)} dir="ltr" placeholder="CareKit Clinic" />
+            <Input value={organizationNameEn} onChange={(e) => setOrganizationNameEn(e.target.value)} dir="ltr" placeholder="Deqah Clinic" />
           </div>
           <div className="space-y-2">
             <Label>{t("branding.organizationNameAr")}</Label>

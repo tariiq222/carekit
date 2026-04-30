@@ -97,7 +97,7 @@ export const enBilling: Record<string, string> = {
   "billing.invoices.status.draft": "Draft",
   "billing.invoices.status.void": "Void",
   "billing.paymentMethods.title": "Payment methods",
-  "billing.paymentMethods.description": "Manage cards used for CareKit subscription billing.",
+  "billing.paymentMethods.description": "Manage cards used for Deqah subscription billing.",
   "billing.paymentMethods.add": "Add card",
   "billing.paymentMethods.default": "Default",
   "billing.paymentMethods.setDefault": "Set default",

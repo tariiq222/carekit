@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 
 const TEST_DB_URL =
   process.env.TEST_DATABASE_URL ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
 
 const pool = new Pool({ connectionString: TEST_DB_URL });
 

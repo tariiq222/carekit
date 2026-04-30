@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Middleware — CareKit Dashboard
+ * Middleware — Deqah Dashboard
  *
  * Auth protection is handled entirely client-side by AuthGate (fetchMe + refresh).
  * The middleware only passes requests through without blocking navigation.

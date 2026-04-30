@@ -1,5 +1,5 @@
 /**
- * Booking Settings API — CareKit Dashboard
+ * Booking Settings API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

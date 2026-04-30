@@ -1,5 +1,5 @@
 /**
- * Organization Integrations Types — CareKit Dashboard
+ * Organization Integrations Types — Deqah Dashboard
  */
 
 export interface OrganizationIntegrations {

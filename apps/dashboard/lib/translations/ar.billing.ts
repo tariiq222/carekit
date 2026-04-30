@@ -97,7 +97,7 @@ export const arBilling: Record<string, string> = {
   "billing.invoices.status.draft": "مسودة",
   "billing.invoices.status.void": "ملغاة",
   "billing.paymentMethods.title": "طرق الدفع",
-  "billing.paymentMethods.description": "إدارة البطاقات المستخدمة لفوترة اشتراك CareKit.",
+  "billing.paymentMethods.description": "إدارة البطاقات المستخدمة لفوترة اشتراك Deqah.",
   "billing.paymentMethods.add": "إضافة بطاقة",
   "billing.paymentMethods.default": "افتراضية",
   "billing.paymentMethods.setDefault": "تعيين كافتراضية",

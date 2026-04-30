@@ -1,5 +1,5 @@
 /**
- * Email Templates API — CareKit Dashboard
+ * Email Templates API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

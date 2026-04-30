@@ -35,8 +35,8 @@ export function trialExpiredTemplate(vars: TrialExpiredVars): {
   `;
 
   return {
-    subjectAr: 'انتهت تجربة CareKit',
-    subjectEn: 'Your CareKit trial has ended',
+    subjectAr: 'انتهت تجربة Deqah',
+    subjectEn: 'Your Deqah trial has ended',
     html: bilingualLayout({ ar, en }),
   };
 }

@@ -24,10 +24,10 @@ export function LoginForm() {
   const captchaRef = useRef<HCaptcha>(null)
 
   useEffect(() => {
-    const reason = sessionStorage.getItem("carekit_auth_reason")
+    const reason = sessionStorage.getItem("deqah_auth_reason")
     if (reason === "ORG_SUSPENDED") {
       setNotice(t("login.orgSuspended"))
-      sessionStorage.removeItem("carekit_auth_reason")
+      sessionStorage.removeItem("deqah_auth_reason")
     }
   }, [t])
 

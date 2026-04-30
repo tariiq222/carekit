@@ -20,7 +20,7 @@ describe('TaqnyatAdapter', () => {
   it('POSTs to /v1/messages and returns provider message id', async () => {
     mockFetchOnce({ statusCode: 200, messageId: 'tqn-456' });
     const adapter = new TaqnyatAdapter({ apiToken: 'tok' });
-    const res = await adapter.send('+966500000000', 'hi', 'CareKit');
+    const res = await adapter.send('+966500000000', 'hi', 'Deqah');
     expect(res).toEqual({ providerMessageId: 'tqn-456', status: 'SENT' });
     expect(global.fetch).toHaveBeenCalledWith(
       'https://api.taqnyat.sa/v1/messages',

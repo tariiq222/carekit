@@ -1,5 +1,5 @@
 /**
- * Invoice Types — CareKit Dashboard
+ * Invoice Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery, ZatcaStatus } from "./common"

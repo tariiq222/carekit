@@ -51,7 +51,7 @@ describe('PlatformMailerService — send', () => {
     const svc = new PlatformMailerService(
       configWith({
         RESEND_API_KEY: 're_test',
-        RESEND_FROM: 'CareKit <noreply@webvue.pro>',
+        RESEND_FROM: 'Deqah <noreply@webvue.pro>',
         RESEND_REPLY_TO: 'support@webvue.pro',
       }),
     );
@@ -71,10 +71,10 @@ describe('PlatformMailerService — send', () => {
 
     expect(mockSend).toHaveBeenCalledTimes(1);
     const arg = mockSend.mock.calls[0][0];
-    expect(arg.from).toBe('CareKit <noreply@webvue.pro>');
+    expect(arg.from).toBe('Deqah <noreply@webvue.pro>');
     expect(arg.replyTo).toBe('support@webvue.pro');
     expect(arg.to).toEqual(['owner@example.com']);
-    expect(arg.subject).toContain('CareKit');
+    expect(arg.subject).toContain('Deqah');
     expect(arg.html).toContain('Tariq');
     expect(arg.html).toContain('Sawa');
   });

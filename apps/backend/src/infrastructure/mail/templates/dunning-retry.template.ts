@@ -51,8 +51,8 @@ export function dunningRetryTemplate(
   `;
 
   return {
-    subjectAr: 'فشلت محاولة دفع اشتراك CareKit',
-    subjectEn: 'CareKit payment retry failed',
+    subjectAr: 'فشلت محاولة دفع اشتراك Deqah',
+    subjectEn: 'Deqah payment retry failed',
     html: bilingualLayout({ ar, en }),
   };
 }

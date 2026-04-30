@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 
-const DEFAULT_FROM = 'CareKit <noreply@webvue.pro>';
+const DEFAULT_FROM = 'Deqah <noreply@webvue.pro>';
 const DEFAULT_REPLY_TO = 'support@webvue.pro';
 
 @Injectable()

@@ -111,7 +111,7 @@ export function SmsSettingsForm() {
                   id="sms-sender"
                   value={senderId}
                   onChange={(e) => setSenderId(e.target.value)}
-                  placeholder="CareKit"
+                  placeholder="Deqah"
                 />
               </div>
             )}

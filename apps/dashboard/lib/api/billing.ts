@@ -1,5 +1,5 @@
 /**
- * Billing API — CareKit Dashboard
+ * Billing API — Deqah Dashboard
  * SaaS Plan 04 — billing skeleton
  */
 

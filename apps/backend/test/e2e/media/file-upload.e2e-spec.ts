@@ -8,7 +8,7 @@ const FIXTURES = path.resolve(__dirname, '../fixtures');
 const LOGO_PNG = path.join(FIXTURES, 'sample-logo.png');
 const SAMPLE_PDF = path.join(FIXTURES, 'sample-document.pdf');
 
-const MOCKED_URL = 'http://localhost:9000/carekit/mocked-key';
+const MOCKED_URL = 'http://localhost:9000/deqah/mocked-key';
 
 describe('File Upload API (e2e)', () => {
   let req: SuperTest.Agent;

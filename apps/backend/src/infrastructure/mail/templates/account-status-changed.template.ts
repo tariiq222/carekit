@@ -40,8 +40,8 @@ export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
       </p>
     `;
     return {
-      subjectAr: 'تم تعليق حساب CareKit',
-      subjectEn: 'Your CareKit account was suspended',
+      subjectAr: 'تم تعليق حساب Deqah',
+      subjectEn: 'Your Deqah account was suspended',
       html: bilingualLayout({ ar, en }),
     };
   }
@@ -66,8 +66,8 @@ export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
     </p>
   `;
   return {
-    subjectAr: 'تم إعادة تفعيل حساب CareKit',
-    subjectEn: 'Your CareKit account was reinstated',
+    subjectAr: 'تم إعادة تفعيل حساب Deqah',
+    subjectEn: 'Your Deqah account was reinstated',
     html: bilingualLayout({ ar, en }),
   };
 }

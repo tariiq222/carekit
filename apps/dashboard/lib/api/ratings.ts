@@ -1,5 +1,5 @@
 /**
- * Ratings API — CareKit Dashboard
+ * Ratings API — Deqah Dashboard
  * Controller: dashboard/organization-settings/ratings
  */
 

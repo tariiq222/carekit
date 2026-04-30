@@ -37,7 +37,7 @@ export const enNav: Record<string, string> = {
   "nav.create": "Create",
   "nav.edit": "Edit",
   "notifications.viewAll": "View All Notifications",
-  "app.name": "CareKit",
+  "app.name": "Deqah",
   "app.tagline": "Clinic Management",
   "header.search": "Search clients, bookings...",
   "header.role": "Clinic Manager",

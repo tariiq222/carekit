@@ -1,5 +1,5 @@
 /**
- * Payment Types — CareKit Dashboard
+ * Payment Types — Deqah Dashboard
  */
 
 import type {

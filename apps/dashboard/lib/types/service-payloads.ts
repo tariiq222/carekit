@@ -1,5 +1,5 @@
 /**
- * Service Payload Types (DTOs) — CareKit Dashboard
+ * Service Payload Types (DTOs) — Deqah Dashboard
  */
 
 /* ─── Category DTOs ─── */

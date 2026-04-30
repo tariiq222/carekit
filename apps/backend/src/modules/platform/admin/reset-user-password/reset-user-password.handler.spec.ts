@@ -74,7 +74,7 @@ describe('ResetUserPasswordHandler', () => {
     });
     expect(sendMail).toHaveBeenCalledWith(
       'u@x.com',
-      'CareKit — Temporary password issued',
+      'Deqah — Temporary password issued',
       expect.stringContaining('temporary password'),
     );
   });

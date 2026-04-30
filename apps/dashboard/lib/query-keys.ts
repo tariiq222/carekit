@@ -1,5 +1,5 @@
 /**
- * Query Keys — CareKit Dashboard
+ * Query Keys — Deqah Dashboard
  *
  * Centralized query key factory for TanStack Query.
  * Ensures consistent keys for cache invalidation.

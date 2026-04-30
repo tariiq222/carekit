@@ -12,7 +12,7 @@ import { TenantContextService } from '../../../common/tenant';
 
 const mockFile = {
   id: 'f1',
-  bucket: 'carekit',
+  bucket: 'deqah',
   storageKey: 'abc.png',
   filename: 'photo.png',
   mimetype: 'image/png',
@@ -56,14 +56,14 @@ describe('Media files handlers', () => {
         {
           provide: MinioService,
           useValue: {
-            uploadFile: jest.fn().mockResolvedValue('http://minio/carekit/key'),
+            uploadFile: jest.fn().mockResolvedValue('http://minio/deqah/key'),
             deleteFile: jest.fn().mockResolvedValue(undefined),
             getSignedUrl: jest.fn().mockResolvedValue('http://minio/signed?token=xyz'),
           },
         },
         {
           provide: ConfigService,
-          useValue: { getOrThrow: jest.fn().mockReturnValue('carekit') },
+          useValue: { getOrThrow: jest.fn().mockReturnValue('deqah') },
         },
         {
           provide: TenantContextService,
@@ -94,7 +94,7 @@ describe('Media files handlers', () => {
       expect(storage.uploadFile).toHaveBeenCalledTimes(1);
       expect(prisma.file.create).toHaveBeenCalledTimes(1);
       const createArg = prisma.file.create.mock.calls[0][0].data;
-      expect(createArg.bucket).toBe('carekit');
+      expect(createArg.bucket).toBe('deqah');
       expect(createArg.storageKey).toMatch(/^[0-9a-f-]+\.png$/);
       expect(result).toEqual(mockFile);
     });
@@ -156,7 +156,7 @@ describe('Media files handlers', () => {
   describe('delete-file', () => {
     it('removes object from storage and soft-deletes row', async () => {
       const result = await deleteHandler.execute('f1');
-      expect(storage.deleteFile).toHaveBeenCalledWith('carekit', 'abc.png');
+      expect(storage.deleteFile).toHaveBeenCalledWith('deqah', 'abc.png');
       expect(prisma.file.update).toHaveBeenCalledWith({
         where: { id: 'f1' },
         data: { isDeleted: true },
@@ -174,14 +174,14 @@ describe('Media files handlers', () => {
   describe('generate-presigned-url', () => {
     it('returns signed url with default expiry', async () => {
       const result = await presignHandler.execute({ fileId: 'f1' });
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'abc.png', 3600);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('deqah', 'abc.png', 3600);
       expect(result.url).toBe('http://minio/signed?token=xyz');
       expect(result.expiresInSeconds).toBe(3600);
     });
 
     it('honors custom expiry', async () => {
       await presignHandler.execute({ fileId: 'f1', expirySeconds: 600 });
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'abc.png', 600);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('deqah', 'abc.png', 600);
     });
 
     it('throws NotFound when file missing', async () => {

@@ -114,7 +114,7 @@ export class ZatcaSubmitHandler {
   }
 
   // TODO(zatca-xml): Replace stub with full UBL 2.1 / ZATCA Phase-2 XML builder.
-  // Tracked in: https://github.com/carekit-hq/carekit/issues/ZATCA-XML
+  // Tracked in: https://github.com/deqah-hq/deqah/issues/ZATCA-XML
   // Owner: @tariq — do NOT modify XML structure without compliance review.
   private buildInvoiceXml(invoice: { id: string; total: unknown; vatAmt: unknown; issuedAt: Date | null }): string {
     const id = this.escapeXml(invoice.id);

@@ -30,7 +30,7 @@ export class CreateVerticalDto {
   @IsString()
   descriptionEn?: string;
 
-  @ApiPropertyOptional({ description: 'URL for the vertical icon image', example: 'https://cdn.carekit.app/icons/medical.svg' })
+  @ApiPropertyOptional({ description: 'URL for the vertical icon image', example: 'https://cdn.deqah.app/icons/medical.svg' })
   @IsOptional()
   @IsUrl()
   iconUrl?: string;

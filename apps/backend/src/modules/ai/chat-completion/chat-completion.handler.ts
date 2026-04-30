@@ -8,7 +8,7 @@ import { ChatCompletionDto, ChatCompletionResult } from './chat-completion.dto';
 export type ChatCompletionCommand = ChatCompletionDto;
 
 const SYSTEM_PROMPT_TEMPLATE = (context: string) => `
-You are a helpful assistant for a medical clinic using CareKit.
+You are a helpful assistant for a medical clinic using Deqah.
 Answer the user's question based ONLY on the following context.
 If the context doesn't contain the answer, say you don't have that information.
 

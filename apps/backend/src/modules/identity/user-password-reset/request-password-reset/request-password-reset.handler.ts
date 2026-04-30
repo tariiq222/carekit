@@ -58,7 +58,7 @@ export class RequestPasswordResetHandler {
       vars: {
         userName: user.name,
         resetUrl,
-        subject: 'Reset your CareKit password',
+        subject: 'Reset your Deqah password',
       },
     });
 

@@ -7,7 +7,7 @@ const buildTenant = (organizationId = 'org-A') => ({
 const mockChunk = {
   id: 'chunk-1',
   documentId: 'doc-1',
-  content: 'CareKit helps clinics manage bookings',
+  content: 'Deqah helps clinics manage bookings',
   chunkIndex: 0,
   similarity: 0.92,
 };
@@ -31,7 +31,7 @@ describe('SemanticSearchHandler', () => {
     const result = await handler.execute(dto);
     expect(result).toHaveLength(1);
     expect(result[0].similarity).toBe(0.92);
-    expect(result[0].content).toBe('CareKit helps clinics manage bookings');
+    expect(result[0].content).toBe('Deqah helps clinics manage bookings');
   });
 
   it('embeds the query before searching', async () => {

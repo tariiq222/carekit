@@ -75,7 +75,7 @@ export class RequestEmailVerificationHandler {
       vars: {
         userName: user.name,
         verifyUrl,
-        subject: 'Verify your CareKit email',
+        subject: 'Verify your Deqah email',
       },
     });
 

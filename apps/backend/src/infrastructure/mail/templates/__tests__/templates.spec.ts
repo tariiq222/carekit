@@ -16,8 +16,8 @@ describe('platform email templates', () => {
       orgName: 'Sawa',
       dashboardUrl: 'https://app.example/dashboard',
     });
-    expect(out.subjectAr).toContain('CareKit');
-    expect(out.subjectEn).toContain('CareKit');
+    expect(out.subjectAr).toContain('Deqah');
+    expect(out.subjectEn).toContain('Deqah');
     expect(out.html).toContain('Sawa');
     expect(out.html).toContain('https://app.example/dashboard');
     expect(out.html).not.toContain('<script>alert(1)</script>');

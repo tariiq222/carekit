@@ -1,5 +1,5 @@
 /**
- * Waitlist Types — CareKit Dashboard
+ * Waitlist Types — Deqah Dashboard
  */
 
 export type WaitlistStatus =

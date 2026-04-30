@@ -203,7 +203,7 @@ export class ExpireTrialsCron {
         amount: Math.round(flatAmount * 100),
         currency: 'SAR',
         idempotencyKey: `trial-conversion:${invoice.id}`,
-        description: `CareKit trial conversion invoice ${invoice.id}`,
+        description: `Deqah trial conversion invoice ${invoice.id}`,
         callbackUrl: this.billingCallbackUrl(),
       });
 

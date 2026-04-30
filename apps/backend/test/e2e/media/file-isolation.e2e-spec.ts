@@ -27,7 +27,7 @@ describe('SaaS-02g — file isolation', () => {
       h.prisma.file.create({
         data: {
           organizationId: a.id,
-          bucket: 'carekit',
+          bucket: 'deqah',
           storageKey,
           filename: 'a.pdf',
           mimetype: 'application/pdf',
@@ -39,7 +39,7 @@ describe('SaaS-02g — file isolation', () => {
       h.prisma.file.create({
         data: {
           organizationId: b.id,
-          bucket: 'carekit',
+          bucket: 'deqah',
           storageKey, // same storageKey as A — must not collide
           filename: 'b.pdf',
           mimetype: 'application/pdf',
@@ -63,7 +63,7 @@ describe('SaaS-02g — file isolation', () => {
       h.prisma.file.create({
         data: {
           organizationId: a.id,
-          bucket: 'carekit',
+          bucket: 'deqah',
           storageKey: `a-only-${ts}`,
           filename: 'secret.pdf',
           mimetype: 'application/pdf',

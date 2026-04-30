@@ -1,5 +1,5 @@
 /**
- * Clinic Settings API — CareKit Dashboard
+ * Clinic Settings API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

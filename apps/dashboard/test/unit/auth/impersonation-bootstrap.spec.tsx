@@ -21,7 +21,7 @@ vi.mock("@/lib/api", () => ({
 
 const mockUser = {
   id: "user-1",
-  email: "impersonated@carekit.test",
+  email: "impersonated@deqah.test",
   name: "Impersonated User",
   permissions: ["bookings:read"],
   organizationId: "org-1",
@@ -70,7 +70,7 @@ describe("dashboard impersonation bootstrap", () => {
     expect(mockRefreshToken).not.toHaveBeenCalled()
     expect(mockGetMe).toHaveBeenCalledOnce()
     expect(screen.getByTestId("user").textContent).toBe(mockUser.email)
-    expect(sessionStorage.getItem("carekit_impersonation")).toBe("1")
+    expect(sessionStorage.getItem("deqah_impersonation")).toBe("1")
     expect(replaceState).toHaveBeenCalled()
     expect(window.location.search).toBe("?tab=today")
   })

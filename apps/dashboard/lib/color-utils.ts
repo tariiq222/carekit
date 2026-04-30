@@ -1,5 +1,5 @@
 /**
- * Color Derivation Utility — CareKit White Label
+ * Color Derivation Utility — Deqah White Label
  *
  * From 2 hex colors (primary + accent), derives all CSS variables
  * needed by the Design System: light shades, ultra-light, foreground,

@@ -67,7 +67,7 @@ function renderAuthGate(children: React.ReactNode) {
 
 const mockUser = {
   id: 'u1',
-  email: 'admin@carekit-test.com',
+  email: 'admin@deqah-test.com',
   firstName: 'Admin',
   lastName: 'Test',
   phone: null,
@@ -136,7 +136,7 @@ describe('AuthGate', () => {
 
     renderAuthGate(<div>Protected</div>)
 
-    await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'admin@carekit-test.com')
+    await userEvent.type(screen.getByLabelText(/البريد الإلكتروني/), 'admin@deqah-test.com')
     await userEvent.type(screen.getByPlaceholderText('••••••••'), 'Admin@Pass123')
     const btn = screen.getByRole('button', { name: /تسجيل الدخول/ })
     await waitFor(() => expect(btn).not.toBeDisabled())
@@ -146,7 +146,7 @@ describe('AuthGate', () => {
       // CaptchaField emits "dev-bypass" when no hCaptcha site key is wired in
       // the test environment (per components/features/shared/captcha-field.tsx).
       // The @hcaptcha/react-hcaptcha mock above is unused in this path.
-      expect(mockLogin).toHaveBeenCalledWith('admin@carekit-test.com', 'Admin@Pass123', 'dev-bypass')
+      expect(mockLogin).toHaveBeenCalledWith('admin@deqah-test.com', 'Admin@Pass123', 'dev-bypass')
     })
   })
 

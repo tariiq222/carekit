@@ -30,7 +30,7 @@ export interface DerivedTokens {
 }
 
 export const DEFAULT_BRANDING: BrandingConfig = {
-  systemName:        'CareKit',
+  systemName:        'Deqah',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',
   logoUrl:           null,

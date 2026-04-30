@@ -1,5 +1,5 @@
 /**
- * Activity Log API — CareKit Dashboard
+ * Activity Log API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

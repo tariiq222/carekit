@@ -157,7 +157,7 @@ export class UpgradePlanHandler {
       currency: 'SAR',
       idempotencyKey,
       givenId: idempotencyKey,
-      description: `CareKit subscription proration invoice ${invoice.id}`,
+      description: `Deqah subscription proration invoice ${invoice.id}`,
       callbackUrl: this.billingCallbackUrl(),
     });
     if (payment.status.toLowerCase() !== 'paid') {

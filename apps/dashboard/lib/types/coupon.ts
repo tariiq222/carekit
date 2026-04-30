@@ -1,5 +1,5 @@
 /**
- * Coupon Types — CareKit Dashboard
+ * Coupon Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery } from "./common"

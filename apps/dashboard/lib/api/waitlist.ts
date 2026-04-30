@@ -1,5 +1,5 @@
 /**
- * Waitlist API — CareKit Dashboard
+ * Waitlist API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

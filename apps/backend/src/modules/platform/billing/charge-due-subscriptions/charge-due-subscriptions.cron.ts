@@ -86,7 +86,7 @@ export class ChargeDueSubscriptionsCron {
         amount: Math.round(flatAmount * 100),
         currency: 'SAR',
         idempotencyKey: `subscription-invoice:${invoice.id}`,
-        description: `CareKit subscription invoice ${invoice.id}`,
+        description: `Deqah subscription invoice ${invoice.id}`,
         callbackUrl: this.billingCallbackUrl(),
       });
 

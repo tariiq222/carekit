@@ -43,8 +43,8 @@ export const useBranding = () => useContext(BrandingContext)
 
 /* ─── CSS var injection ─── */
 
-const DARK_STYLE_ID = "carekit-dark-theme"
-const FONT_STYLE_ID = "carekit-font"
+const DARK_STYLE_ID = "deqah-dark-theme"
+const FONT_STYLE_ID = "deqah-font"
 
 function injectLightVars(vars: CSSVarMap) {
   const root = document.documentElement

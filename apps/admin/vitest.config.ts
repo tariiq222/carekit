@@ -13,7 +13,7 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: /^@carekit\/ui\/(.*)$/,
+        find: /^@deqah\/ui\/(.*)$/,
         replacement: path.resolve(__dirname, '../../packages/ui/src/$1'),
       },
       {

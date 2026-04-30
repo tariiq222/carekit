@@ -4,7 +4,7 @@
  * Wraps the existing isolation-harness with adversarial helpers:
  *   - `rlsProbeUrl()` — DSN for the non-superuser role that the Postgres RLS
  *     backstop tests use. The superuser bypasses RLS even with FORCE;
- *     `carekit_rls_probe` was created in migration 20260422180000.
+ *     `deqah_rls_probe` was created in migration 20260422180000.
  *   - `withCls(orgId, fn)` — sugar over `runAs` with just an org id.
  *   - `seedTwoOrgs()` — standard Org A / Org B pair used by every suite.
  *
@@ -23,13 +23,13 @@ export interface SecurityHarness extends IsolationHarness {
 // Probe DSN derives from whichever DB the app is actually using. Resolved
 // lazily inside `rlsProbeUrl()` because at module-load time `dotenv` may not
 // yet have populated `DATABASE_URL`. Without this fallback the previous
-// hardcoded default (`carekit_test`) connected to a DB that does not exist
-// in dev (where DATABASE_URL points at carekit_rls_hardening), and every
+// hardcoded default (`deqah_test`) connected to a DB that does not exist
+// in dev (where DATABASE_URL points at deqah_rls_hardening), and every
 // rls-backstop test failed with "relation does not exist".
 const resolveProbeDb = (): string =>
   process.env.TEST_DATABASE_URL ??
   process.env.DATABASE_URL ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
 
 /**
  * The probe role was created in migration 20260422180000 with this password.
@@ -40,7 +40,7 @@ const RLS_PROBE_PASSWORD = 'rls_probe_test_only_2026';
 export async function bootSecurityHarness(): Promise<SecurityHarness> {
   // Force the app to connect to the test DB (not dev). The isolation-harness
   // boots AppModule which reads process.env.DATABASE_URL; without this swap
-  // tests would land in carekit_dev where the 02h migrations (probe role,
+  // tests would land in deqah_dev where the 02h migrations (probe role,
   // bookings RLS) are not applied.
   if (process.env.TEST_DATABASE_URL) {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
@@ -65,7 +65,7 @@ export async function bootSecurityHarness(): Promise<SecurityHarness> {
     // Swap username/password into whichever DB the app is using.
     // Parse scheme://user:pass@host:port/db?query
     const url = new URL(resolveProbeDb());
-    url.username = 'carekit_rls_probe';
+    url.username = 'deqah_rls_probe';
     url.password = RLS_PROBE_PASSWORD;
     return url.toString();
   };

@@ -112,7 +112,7 @@ export const sawaaTokens = {
 
   // Branding tokens (override via tenant config)
   primary: {
-    light: '#1D4ED8',   // CareKit default blue
+    light: '#1D4ED8',   // Deqah default blue
     dark: '#0037B0',    // Dark variant
   },
   secondary: {
@@ -120,7 +120,7 @@ export const sawaaTokens = {
     dark: '#5B21B6',
   },
   accent: {
-    light: '#82CC17',   // CareKit lime green
+    light: '#82CC17',   // Deqah lime green
     dark: '#65A30D',
   },
 

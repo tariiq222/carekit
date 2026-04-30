@@ -61,7 +61,7 @@ const buildMailer = () => ({
 
 const buildConfig = () => ({
   get: jest.fn().mockImplementation((key: string, def: unknown) => {
-    if (key === 'BACKEND_URL') return 'https://api.carekit.test';
+    if (key === 'BACKEND_URL') return 'https://api.deqah.test';
     return def;
   }),
 });
@@ -199,8 +199,8 @@ describe('UpgradePlanHandler', () => {
       currency: 'SAR',
       idempotencyKey: 'subscription-proration:inv-1',
       givenId: 'subscription-proration:inv-1',
-      description: 'CareKit subscription proration invoice inv-1',
-      callbackUrl: 'https://api.carekit.test/api/v1/public/billing/webhooks/moyasar',
+      description: 'Deqah subscription proration invoice inv-1',
+      callbackUrl: 'https://api.deqah.test/api/v1/public/billing/webhooks/moyasar',
     });
   });
 

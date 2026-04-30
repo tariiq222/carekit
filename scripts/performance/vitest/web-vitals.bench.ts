@@ -1,5 +1,5 @@
 /**
- * Web Vitals Benchmarks — CareKit Dashboard
+ * Web Vitals Benchmarks — Deqah Dashboard
  *
  * Measures render performance of critical UI components.
  * Budget: 50ms per render (JSDOM overhead included — real browser would be ~16ms).

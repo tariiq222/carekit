@@ -1,5 +1,5 @@
 /**
- * Branding Types — CareKit Dashboard
+ * Branding Types — Deqah Dashboard
  */
 
 export type WebsiteTheme = "SAWAA" | "PREMIUM"

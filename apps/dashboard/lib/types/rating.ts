@@ -1,5 +1,5 @@
 /**
- * Rating Types — CareKit Dashboard
+ * Rating Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery } from "./common"

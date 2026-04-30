@@ -37,8 +37,8 @@ export function subscriptionPaymentSucceededTemplate(
   `;
 
   return {
-    subjectAr: 'تم استلام دفع اشتراك CareKit',
-    subjectEn: 'CareKit subscription payment received',
+    subjectAr: 'تم استلام دفع اشتراك Deqah',
+    subjectEn: 'Deqah subscription payment received',
     html: bilingualLayout({ ar, en }),
   };
 }

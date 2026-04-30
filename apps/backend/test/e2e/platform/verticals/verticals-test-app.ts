@@ -28,7 +28,7 @@ export const TEST_JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
 const TEST_JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min';
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
 
 const CONFIG_MAP: Record<string, string | number> = {
   DATABASE_URL: TEST_DATABASE_URL,
@@ -54,7 +54,7 @@ const CONFIG_MAP: Record<string, string | number> = {
   MINIO_PORT: 9000,
   MINIO_ACCESS_KEY: 'minioadmin',
   MINIO_SECRET_KEY: 'minioadmin123',
-  MINIO_BUCKET: 'carekit',
+  MINIO_BUCKET: 'deqah',
   // Tenant middleware: 'off' so TenantResolverMiddleware fast-paths for all routes.
   TENANT_ENFORCEMENT: 'off',
   DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
@@ -90,7 +90,7 @@ export async function createVerticalsTestApp(): Promise<VerticalsTestApp> {
   process.env.MINIO_PORT = '9000';
   process.env.MINIO_ACCESS_KEY = 'minioadmin';
   process.env.MINIO_SECRET_KEY = 'minioadmin123';
-  process.env.MINIO_BUCKET = 'carekit';
+  process.env.MINIO_BUCKET = 'deqah';
   process.env.TENANT_ENFORCEMENT = 'off';
   process.env.DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001';
   process.env.LICENSE_SERVER_URL = 'http://localhost:9999';
@@ -162,9 +162,9 @@ export async function createVerticalsTestApp(): Promise<VerticalsTestApp> {
     })
     .overrideProvider(MinioService)
     .useValue({
-      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key'),
+      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key'),
       deleteFile: jest.fn().mockResolvedValue(undefined),
-      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key?sig=x'),
+      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key?sig=x'),
       fileExists: jest.fn().mockResolvedValue(true),
     })
     .overrideProvider(MoyasarApiClient)

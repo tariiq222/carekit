@@ -1,5 +1,5 @@
 /**
- * API Client — CareKit Dashboard
+ * API Client — Deqah Dashboard
  *
  * Thin wrapper that wires `@deqah/api-client` for the dashboard:
  *   - in-memory access token + setter/getter
@@ -43,7 +43,7 @@ export function getAccessToken(): string | null {
 function clearAuthState() {
   accessToken = null
   if (typeof window !== "undefined") {
-    localStorage.removeItem("carekit_user")
+    localStorage.removeItem("deqah_user")
   }
 }
 
@@ -61,7 +61,7 @@ if (typeof window !== "undefined") {
     },
     onOrgSuspended: () => {
       clearAuthState()
-      sessionStorage.setItem("carekit_auth_reason", ORG_SUSPENDED_CODE)
+      sessionStorage.setItem("deqah_auth_reason", ORG_SUSPENDED_CODE)
       // Full reload → AuthGate re-evaluates → LoginForm shows the reason banner.
       window.location.href = "/"
     },

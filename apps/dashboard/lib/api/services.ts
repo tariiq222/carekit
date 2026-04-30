@@ -1,5 +1,5 @@
 /**
- * Services API — CareKit Dashboard
+ * Services API — Deqah Dashboard
  */
 
 import { api, getAccessToken } from "@/lib/api"

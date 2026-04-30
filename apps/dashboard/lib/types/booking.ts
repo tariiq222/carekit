@@ -1,5 +1,5 @@
 /**
- * Booking Types — CareKit Dashboard
+ * Booking Types — Deqah Dashboard
  *
  * Matches the backend Prisma schema + API response shapes.
  */

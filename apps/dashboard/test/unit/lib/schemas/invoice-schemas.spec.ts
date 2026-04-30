@@ -9,7 +9,7 @@ describe("zatcaOnboardSchema", () => {
     expect(
       zatcaOnboardSchema.safeParse({
         vatRegistrationNumber: "300000000000003",
-        sellerName: "CareKit Clinic",
+        sellerName: "Deqah Clinic",
       }).success,
     ).toBe(true)
   })

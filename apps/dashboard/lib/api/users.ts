@@ -1,5 +1,5 @@
 /**
- * Users & Roles API — CareKit Dashboard
+ * Users & Roles API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

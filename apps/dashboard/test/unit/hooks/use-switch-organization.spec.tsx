@@ -70,7 +70,7 @@ describe("useSwitchOrganization", () => {
       organizationId: "org-target",
     })
     expect(mockSetAccessToken).toHaveBeenCalledWith("new-acc")
-    expect(localStorage.getItem("carekit_refresh_token")).toBe("new-ref")
+    expect(localStorage.getItem("deqah_refresh_token")).toBe("new-ref")
     expect(clearSpy).toHaveBeenCalled()
     expect(mockRouterRefresh).toHaveBeenCalled()
   })
@@ -91,7 +91,7 @@ describe("useSwitchOrganization", () => {
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toBe(boom)
     expect(mockSetAccessToken).not.toHaveBeenCalled()
-    expect(localStorage.getItem("carekit_refresh_token")).toBeNull()
+    expect(localStorage.getItem("deqah_refresh_token")).toBeNull()
     expect(clearSpy).not.toHaveBeenCalled()
     expect(mockRouterRefresh).not.toHaveBeenCalled()
   })

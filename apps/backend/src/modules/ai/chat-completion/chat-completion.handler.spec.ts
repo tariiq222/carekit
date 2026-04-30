@@ -1,7 +1,7 @@
 import { ChatCompletionHandler } from './chat-completion.handler';
 
 const mockSearchResult = {
-  chunkId: 'c1', documentId: 'd1', content: 'CareKit supports online booking.', chunkIndex: 0, similarity: 0.9,
+  chunkId: 'c1', documentId: 'd1', content: 'Deqah supports online booking.', chunkIndex: 0, similarity: 0.9,
 };
 
 const mockPrisma = () => ({
@@ -23,7 +23,7 @@ const mockSearch = () => ({
 
 const mockChat = () => ({
   isAvailable: jest.fn().mockReturnValue(true),
-  complete: jest.fn().mockResolvedValue('You can book online through CareKit.'),
+  complete: jest.fn().mockResolvedValue('You can book online through Deqah.'),
 });
 
 const dto = {
@@ -48,7 +48,7 @@ describe('ChatCompletionHandler', () => {
   it('returns assistant reply and sessionId', async () => {
     const { handler } = build();
     const result = await handler.execute(dto);
-    expect(result.reply).toBe('You can book online through CareKit.');
+    expect(result.reply).toBe('You can book online through Deqah.');
     expect(result.sessionId).toBe('session-1');
   });
 

@@ -1,5 +1,5 @@
 /**
- * Report Types — CareKit Dashboard
+ * Report Types — Deqah Dashboard
  */
 
 /* ─── Query ─── */

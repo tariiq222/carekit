@@ -1,5 +1,5 @@
 /**
- * Chatbot Types — CareKit Dashboard
+ * Chatbot Types — Deqah Dashboard
  *
  * Matches the backend Prisma schema + API response shapes
  * for sessions, messages, knowledge base, config, and analytics.

@@ -1,5 +1,5 @@
 /**
- * Invoices API — CareKit Dashboard
+ * Invoices API — Deqah Dashboard
  * Controller: dashboard/finance/invoices
  */
 

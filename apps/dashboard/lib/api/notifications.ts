@@ -1,5 +1,5 @@
 /**
- * Notifications API — CareKit Dashboard
+ * Notifications API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

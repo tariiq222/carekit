@@ -1,5 +1,5 @@
 /**
- * Organization Settings Types — CareKit Dashboard
+ * Organization Settings Types — Deqah Dashboard
  */
 
 export interface OrganizationSettings {

@@ -20,7 +20,7 @@ const configMap: Record<string, string | number> = {
   MINIO_PORT: 9000,
   MINIO_ACCESS_KEY: 'access',
   MINIO_SECRET_KEY: 'secret',
-  MINIO_BUCKET: 'carekit',
+  MINIO_BUCKET: 'deqah',
   MINIO_USE_SSL: 'false',
 };
 
@@ -29,7 +29,7 @@ const configMapSSL: Record<string, string | number> = {
   MINIO_PORT: 9000,
   MINIO_ACCESS_KEY: 'access',
   MINIO_SECRET_KEY: 'secret',
-  MINIO_BUCKET: 'carekit',
+  MINIO_BUCKET: 'deqah',
   MINIO_USE_SSL: 'true',
 };
 
@@ -60,8 +60,8 @@ describe('MinioService', () => {
 
       await service.onModuleInit();
 
-      expect(mockClient.bucketExists).toHaveBeenCalledWith('carekit');
-      expect(mockClient.makeBucket).toHaveBeenCalledWith('carekit');
+      expect(mockClient.bucketExists).toHaveBeenCalledWith('deqah');
+      expect(mockClient.makeBucket).toHaveBeenCalledWith('deqah');
     });
 
     it('skips bucket creation if bucket already exists', async () => {
@@ -78,12 +78,12 @@ describe('MinioService', () => {
       mockClient.putObject.mockResolvedValue({ etag: 'abc' });
       const buf = Buffer.from('data');
 
-      const url = await service.uploadFile('carekit', 'test.jpg', buf, 'image/jpeg');
+      const url = await service.uploadFile('deqah', 'test.jpg', buf, 'image/jpeg');
 
       expect(mockClient.putObject).toHaveBeenCalledWith(
-        'carekit', 'test.jpg', buf, buf.length, { 'Content-Type': 'image/jpeg' }
+        'deqah', 'test.jpg', buf, buf.length, { 'Content-Type': 'image/jpeg' }
       );
-      expect(url).toBe('http://localhost:9000/carekit/test.jpg');
+      expect(url).toBe('http://localhost:9000/deqah/test.jpg');
     });
   });
 
@@ -91,9 +91,9 @@ describe('MinioService', () => {
     it('calls removeObject', async () => {
       mockClient.removeObject.mockResolvedValue(undefined);
 
-      await service.deleteFile('carekit', 'test.jpg');
+      await service.deleteFile('deqah', 'test.jpg');
 
-      expect(mockClient.removeObject).toHaveBeenCalledWith('carekit', 'test.jpg');
+      expect(mockClient.removeObject).toHaveBeenCalledWith('deqah', 'test.jpg');
     });
   });
 
@@ -101,18 +101,18 @@ describe('MinioService', () => {
     it('returns presigned URL with default expiry', async () => {
       mockClient.presignedGetObject.mockResolvedValue('https://signed-url');
 
-      const url = await service.getSignedUrl('carekit', 'test.jpg');
+      const url = await service.getSignedUrl('deqah', 'test.jpg');
 
-      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('carekit', 'test.jpg', 3600);
+      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('deqah', 'test.jpg', 3600);
       expect(url).toBe('https://signed-url');
     });
 
     it('uses custom expiry when provided', async () => {
       mockClient.presignedGetObject.mockResolvedValue('https://signed-url-2');
 
-      await service.getSignedUrl('carekit', 'test.jpg', 7200);
+      await service.getSignedUrl('deqah', 'test.jpg', 7200);
 
-      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('carekit', 'test.jpg', 7200);
+      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('deqah', 'test.jpg', 7200);
     });
   });
 
@@ -120,7 +120,7 @@ describe('MinioService', () => {
     it('returns true when object exists', async () => {
       mockClient.statObject.mockResolvedValue({ size: 100 });
 
-      const result = await service.fileExists('carekit', 'test.jpg');
+      const result = await service.fileExists('deqah', 'test.jpg');
 
       expect(result).toBe(true);
     });
@@ -128,7 +128,7 @@ describe('MinioService', () => {
     it('returns false when object does not exist', async () => {
       mockClient.statObject.mockRejectedValue(new Error('Not Found'));
 
-      const result = await service.fileExists('carekit', 'test.jpg');
+      const result = await service.fileExists('deqah', 'test.jpg');
 
       expect(result).toBe(false);
     });

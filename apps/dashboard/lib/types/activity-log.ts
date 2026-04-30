@@ -1,5 +1,5 @@
 /**
- * Activity Log Types — CareKit Dashboard
+ * Activity Log Types — Deqah Dashboard
  */
 
 import type { SearchableQuery } from "./common"

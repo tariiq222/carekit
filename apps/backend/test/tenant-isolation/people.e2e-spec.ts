@@ -197,7 +197,7 @@ describe('SaaS-02b — people cluster isolation', () => {
 
     // Open a transaction, set GUC to org B, then switch to a non-superuser role
     // so that PostgreSQL RLS policies actually fire.
-    // NOTE: The app connects as `carekit` which is a PostgreSQL superuser.
+    // NOTE: The app connects as `deqah` which is a PostgreSQL superuser.
     // PostgreSQL superusers bypass all RLS policies even with FORCE ROW LEVEL
     // SECURITY (documented PostgreSQL behaviour). We create a throwaway
     // non-superuser role, probe the table under that role, then clean up.

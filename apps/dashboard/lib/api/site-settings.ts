@@ -1,5 +1,5 @@
 /**
- * Site Settings API — CareKit Dashboard
+ * Site Settings API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

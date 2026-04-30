@@ -50,11 +50,11 @@ async function bootstrap(): Promise<void> {
 
   // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('CareKit API')
-    .setDescription('CareKit clinic management platform — dashboard & mobile API')
+    .setTitle('Deqah API')
+    .setDescription('Deqah clinic management platform — dashboard & mobile API')
     .setVersion('2.0')
-    .setContact('CareKit Engineering', 'https://carekit.dev', 'dev@carekit.dev')
-    .setLicense('Proprietary', 'https://carekit.dev/license')
+    .setContact('Deqah Engineering', 'https://deqah.dev', 'dev@deqah.dev')
+    .setLicense('Proprietary', 'https://deqah.dev/license')
     .addBearerAuth()
     .addServer('http://localhost:5100', 'Local dev')
     .build();
@@ -96,7 +96,7 @@ async function bootstrap(): Promise<void> {
 
   const port = Number(process.env.PORT ?? 5100);
   await app.listen(port);
-  Logger.log(`CareKit Backend v2 listening on http://localhost:${port}`, 'Bootstrap');
+  Logger.log(`Deqah Backend v2 listening on http://localhost:${port}`, 'Bootstrap');
 }
 
 void bootstrap();

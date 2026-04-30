@@ -21,7 +21,7 @@ export class EmailChannelAdapter implements NotificationChannel {
         identifier,
         'رمز التحقق / Verification Code',
         `<div dir="rtl" style="font-family: 'IBM Plex Sans Arabic', Arial, sans-serif; text-align: center; padding: 40px 20px;">
-          <h2 style="color: #354FD8; margin-bottom: 24px;">رمز التحقق من CareKit</h2>
+          <h2 style="color: #354FD8; margin-bottom: 24px;">رمز التحقق من Deqah</h2>
           <p style="font-size: 18px; color: #333;">استخدم الرمز التالي:</p>
           <div style="background: #F5F7FA; border-radius: 12px; padding: 24px; margin: 24px 0;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #354FD8;">${message}</span>
@@ -29,7 +29,7 @@ export class EmailChannelAdapter implements NotificationChannel {
           <p style="font-size: 14px; color: #888;">سينتهي هذا الرمز خلال 10 دقائق</p>
         </div>
         <div dir="ltr" style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border-top: 1px solid #eee; margin-top: 20px;">
-          <h2 style="color: #354FD8; margin-bottom: 24px;">Your CareKit Verification Code</h2>
+          <h2 style="color: #354FD8; margin-bottom: 24px;">Your Deqah Verification Code</h2>
           <p style="font-size: 18px; color: #333;">Use the following code:</p>
           <div style="background: #F5F7FA; border-radius: 12px; padding: 24px; margin: 24px 0;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #354FD8;">${message}</span>

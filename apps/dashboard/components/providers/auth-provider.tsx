@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearImpersonationMarker()
           setUser(null)
           setPermissions([])
-          localStorage.removeItem("carekit_user")
+          localStorage.removeItem("deqah_user")
         })
         .finally(() => setLoading(false))
 
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         setUser(null)
         setPermissions([])
-        localStorage.removeItem("carekit_user")
+        localStorage.removeItem("deqah_user")
       })
       .finally(() => setLoading(false))
 

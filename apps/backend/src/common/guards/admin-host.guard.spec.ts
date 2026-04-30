@@ -23,29 +23,29 @@ describe('AdminHostGuard', () => {
 
   it('allows any host from a comma-separated allow-list', () => {
     const configService = {
-      get: jest.fn().mockReturnValue('admin.carekit.app, admin.localhost:5104'),
+      get: jest.fn().mockReturnValue('admin.deqah.app, admin.localhost:5104'),
     };
 
     const guard = new AdminHostGuard(configService as never);
 
-    expect(guard.canActivate(makeContext('admin.carekit.app'))).toBe(true);
+    expect(guard.canActivate(makeContext('admin.deqah.app'))).toBe(true);
     expect(guard.canActivate(makeContext('admin.localhost:5104'))).toBe(true);
   });
 
-  it('rejects clinic.carekit.app', () => {
+  it('rejects clinic.deqah.app', () => {
     const configService = {
-      get: jest.fn().mockReturnValue('admin.carekit.app'),
+      get: jest.fn().mockReturnValue('admin.deqah.app'),
     };
 
     const guard = new AdminHostGuard(configService as never);
 
-    expect(() => guard.canActivate(makeContext('clinic.carekit.app'))).toThrow(ForbiddenException);
-    expect(() => guard.canActivate(makeContext('clinic.carekit.app'))).toThrow('admin_host_required');
+    expect(() => guard.canActivate(makeContext('clinic.deqah.app'))).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(makeContext('clinic.deqah.app'))).toThrow('admin_host_required');
   });
 
   it('rejects when the host header is missing', () => {
     const configService = {
-      get: jest.fn().mockReturnValue('admin.carekit.app'),
+      get: jest.fn().mockReturnValue('admin.deqah.app'),
     };
 
     const guard = new AdminHostGuard(configService as never);

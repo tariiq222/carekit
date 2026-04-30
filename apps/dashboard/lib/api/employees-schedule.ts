@@ -1,5 +1,5 @@
 /**
- * Employees Schedule API — CareKit Dashboard
+ * Employees Schedule API — Deqah Dashboard
  * (availability, breaks, slots, vacations, services, ratings)
  */
 

@@ -1,5 +1,5 @@
 /**
- * Translation dictionaries — CareKit Dashboard
+ * Translation dictionaries — Deqah Dashboard
  */
 
 import { en } from "./translations/en"

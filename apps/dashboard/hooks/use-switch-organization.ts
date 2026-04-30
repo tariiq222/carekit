@@ -19,7 +19,7 @@ interface SwitchOrgResponse {
   expiresIn: number
 }
 
-const REFRESH_KEY = "carekit_refresh_token"
+const REFRESH_KEY = "deqah_refresh_token"
 
 export function useSwitchOrganization() {
   const queryClient = useQueryClient()

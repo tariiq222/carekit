@@ -6,7 +6,7 @@ import { seedBranch, seedClient, seedEmployee, seedEmployeeService, seedService 
 
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
 
 function configureE2eEnv(): void {
   process.env.TENANT_ENFORCEMENT ??= 'permissive';
@@ -27,7 +27,7 @@ function configureE2eEnv(): void {
   process.env.MINIO_PORT = '9000';
   process.env.MINIO_ACCESS_KEY = 'minioadmin';
   process.env.MINIO_SECRET_KEY = 'minioadmin123';
-  process.env.MINIO_BUCKET = 'carekit';
+  process.env.MINIO_BUCKET = 'deqah';
   process.env.JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min';
   process.env.JWT_ACCESS_TTL = '15m';

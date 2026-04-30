@@ -1,5 +1,5 @@
 /**
- * User & Role Types — CareKit Dashboard
+ * User & Role Types — Deqah Dashboard
  */
 
 import type { SearchableQuery, UserGender } from "./common"

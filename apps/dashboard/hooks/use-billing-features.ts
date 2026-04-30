@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * useBillingFeatures — CareKit Dashboard
+ * useBillingFeatures — Deqah Dashboard
  *
  * Fetches the authenticated organization's billing features from
  * `GET /dashboard/billing/my-features`.

@@ -37,7 +37,7 @@ export class AddSavedCardHandler {
       currency: 'SAR',
       idempotencyKey,
       givenId: idempotencyKey,
-      description: 'CareKit saved card verification',
+      description: 'Deqah saved card verification',
       callbackUrl: this.billingCallbackUrl(),
     });
 

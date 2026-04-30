@@ -1,5 +1,5 @@
 /**
- * Email Template Types — CareKit Dashboard
+ * Email Template Types — Deqah Dashboard
  */
 
 export interface EmailTemplate {

@@ -9,7 +9,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-const ADMIN_EMAIL    = process.env.SEED_EMAIL    ?? 'admin@carekit-test.com';
+const ADMIN_EMAIL    = process.env.SEED_EMAIL    ?? 'admin@deqah-test.com';
 const ADMIN_PASSWORD = process.env.SEED_PASSWORD ?? 'Admin@1234';
 const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL;
 const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
@@ -155,12 +155,12 @@ async function main() {
       slug: 'user_password_reset',
       nameAr: 'إعادة تعيين كلمة المرور',
       nameEn: 'Password Reset',
-      subjectAr: 'إعادة تعيين كلمة المرور — CareKit',
-      subjectEn: 'Reset your CareKit password',
+      subjectAr: 'إعادة تعيين كلمة المرور — Deqah',
+      subjectEn: 'Reset your Deqah password',
       htmlBody: `<div style="font-family: 'IBM Plex Sans Arabic', system-ui; padding: 24px; max-width: 560px;">
-  <h2 style="color: #354FD8;">Reset your CareKit password</h2>
+  <h2 style="color: #354FD8;">Reset your Deqah password</h2>
   <p>Hi {{userName}},</p>
-  <p>We received a request to reset your CareKit password. Click the button below to set a new one. This link expires in 30 minutes.</p>
+  <p>We received a request to reset your Deqah password. Click the button below to set a new one. This link expires in 30 minutes.</p>
   <p style="margin: 24px 0;">
     <a href="{{resetUrl}}" style="background:#354FD8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">
       Reset password

@@ -15,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: 'CareKit',
-      description: 'CareKit website',
+      title: 'Deqah',
+      description: 'Deqah website',
     };
   }
 }

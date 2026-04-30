@@ -26,7 +26,7 @@ describe('RequestEmailVerificationHandler', () => {
       },
     };
     sendEmail = { execute: jest.fn().mockResolvedValue(undefined) };
-    config = { get: jest.fn().mockReturnValue('https://app.carekit.test') };
+    config = { get: jest.fn().mockReturnValue('https://app.deqah.test') };
     tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-current') };
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -152,7 +152,7 @@ describe('RequestEmailVerificationHandler', () => {
     expect(sendArgs.templateSlug).toBe('user_email_verification');
 
     const verifyUrl: string = sendArgs.vars.verifyUrl;
-    expect(verifyUrl).toContain('https://app.carekit.test/verify-email?token=');
+    expect(verifyUrl).toContain('https://app.deqah.test/verify-email?token=');
     const rawTokenFromLink = verifyUrl.split('token=')[1];
     expect(rawTokenFromLink).toHaveLength(64);
 

@@ -1,5 +1,5 @@
 /**
- * Payments API — CareKit Dashboard
+ * Payments API — Deqah Dashboard
  * Controller: dashboard/finance/payments
  */
 

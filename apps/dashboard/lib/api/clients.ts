@@ -1,5 +1,5 @@
 /**
- * Clients API — CareKit Dashboard
+ * Clients API — Deqah Dashboard
  * Controller: dashboard/people/clients
  */
 

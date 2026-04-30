@@ -3,7 +3,7 @@ import { ChargeDueSubscriptionsCron } from './charge-due-subscriptions.cron';
 const buildConfig = (enabled: boolean) => ({
   get: jest.fn((key: string, defaultValue?: unknown) => {
     if (key === 'BILLING_CRON_ENABLED') return enabled;
-    if (key === 'BACKEND_URL') return 'https://api.carekit.test';
+    if (key === 'BACKEND_URL') return 'https://api.deqah.test';
     return defaultValue;
   }),
 });
@@ -175,8 +175,8 @@ describe('ChargeDueSubscriptionsCron', () => {
       amount: 19_900,
       currency: 'SAR',
       idempotencyKey: 'subscription-invoice:inv-1',
-      description: 'CareKit subscription invoice inv-1',
-      callbackUrl: 'https://api.carekit.test/api/v1/public/billing/webhooks/moyasar',
+      description: 'Deqah subscription invoice inv-1',
+      callbackUrl: 'https://api.deqah.test/api/v1/public/billing/webhooks/moyasar',
     });
     expect(deps.recordPayment.execute).toHaveBeenCalledWith({
       invoiceId: 'inv-1',

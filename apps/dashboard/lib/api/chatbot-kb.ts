@@ -1,5 +1,5 @@
 /**
- * Chatbot Knowledge Base API — CareKit Dashboard
+ * Chatbot Knowledge Base API — Deqah Dashboard
  */
 
 import { api, getAccessToken } from "@/lib/api"

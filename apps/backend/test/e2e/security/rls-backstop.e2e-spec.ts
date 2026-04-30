@@ -20,7 +20,7 @@
 import { Client } from 'pg';
 import { bootSecurityHarness, SecurityHarness } from './harness';
 
-describe('SaaS-02h — Postgres RLS backstop under carekit_rls_probe role', () => {
+describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => {
   let h: SecurityHarness;
 
   beforeAll(async () => {

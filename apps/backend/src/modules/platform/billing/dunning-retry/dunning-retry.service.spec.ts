@@ -40,8 +40,8 @@ const buildCache = () => ({
 
 const buildConfig = () => ({
   get: jest.fn((key: string, fallback?: unknown) => {
-    if (key === 'BACKEND_URL') return 'https://api.carekit.test';
-    if (key === 'PLATFORM_DASHBOARD_URL') return 'https://app.carekit.test';
+    if (key === 'BACKEND_URL') return 'https://api.deqah.test';
+    if (key === 'PLATFORM_DASHBOARD_URL') return 'https://app.deqah.test';
     return fallback;
   }),
 });
@@ -103,8 +103,8 @@ describe('DunningRetryService', () => {
       currency: 'SAR',
       idempotencyKey: 'dunning:inv-1:1',
       givenId: 'dunning:inv-1:1',
-      description: 'CareKit dunning retry 1 for invoice inv-1',
-      callbackUrl: 'https://api.carekit.test/api/v1/public/billing/webhooks/moyasar',
+      description: 'Deqah dunning retry 1 for invoice inv-1',
+      callbackUrl: 'https://api.deqah.test/api/v1/public/billing/webhooks/moyasar',
     });
   });
 
@@ -198,7 +198,7 @@ describe('DunningRetryService', () => {
         attemptNumber: 1,
         maxAttempts: 4,
         reason: 'Moyasar returned status failed',
-        billingUrl: 'https://app.carekit.test/settings/billing',
+        billingUrl: 'https://app.deqah.test/settings/billing',
       }),
     );
   });

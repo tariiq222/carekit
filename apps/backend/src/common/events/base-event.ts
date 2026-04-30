@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { RequestContextStorage } from '../http/request-context';
 
 /**
- * Base class for all domain events in CareKit.
+ * Base class for all domain events in Deqah.
  *
  * Every Bounded Context extends this to define its own events.
  * The constructor auto-populates eventId, occurredAt, and pulls

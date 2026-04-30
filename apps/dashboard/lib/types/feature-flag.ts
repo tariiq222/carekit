@@ -1,5 +1,5 @@
 /**
- * Feature Flag Types — CareKit Dashboard
+ * Feature Flag Types — Deqah Dashboard
  */
 
 export interface FeatureFlag {

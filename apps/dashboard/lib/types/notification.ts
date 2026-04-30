@@ -1,5 +1,5 @@
 /**
- * Notification Types — CareKit Dashboard
+ * Notification Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery } from "./common"

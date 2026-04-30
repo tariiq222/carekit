@@ -25,7 +25,7 @@ describe('GetOrgSmsConfigHandler', () => {
           id: 'row-1',
           organizationId: 'org-A',
           provider: 'UNIFONIC',
-          senderId: 'CareKit',
+          senderId: 'Deqah',
           credentialsCiphertext: 'cipher-blob',
           webhookSecret: 'secret-blob',
           lastTestAt: null,
@@ -104,7 +104,7 @@ describe('UpsertOrgSmsConfigHandler', () => {
     );
     const res = await handler.execute({
       provider: 'UNIFONIC',
-      senderId: 'CareKit',
+      senderId: 'Deqah',
       unifonic: { appSid: 'SID', apiKey: 'KEY' },
     });
     expect(res.credentialsConfigured).toBe(true);
@@ -231,7 +231,7 @@ describe('TestSmsConfigHandler', () => {
         findFirst: jest.fn().mockResolvedValue({
           provider: 'UNIFONIC',
           credentialsCiphertext: 'cipher',
-          senderId: 'CareKit',
+          senderId: 'Deqah',
         }),
         update: jest.fn(),
       },

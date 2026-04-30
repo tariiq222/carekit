@@ -18,7 +18,7 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   const ar = `
     <h1 style="color:${BRAND.primary};font-size:22px;margin:0 0 16px;">أهلاً ${name} 👋</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      شكرًا لانضمامك إلى CareKit. حسابك "${org}" جاهز، ومدّة التجربة المجانية ١٤ يومًا.
+      شكرًا لانضمامك إلى Deqah. حسابك "${org}" جاهز، ومدّة التجربة المجانية ١٤ يومًا.
     </p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${url}" style="display:inline-block;background:${BRAND.primary};color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;">افتح لوحة التحكم</a>
@@ -28,7 +28,7 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   const en = `
     <h1 style="color:${BRAND.primary};font-size:22px;margin:0 0 16px;">Welcome, ${name} 👋</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      Thanks for joining CareKit. Your "${org}" workspace is ready and your 14-day free trial has started.
+      Thanks for joining Deqah. Your "${org}" workspace is ready and your 14-day free trial has started.
     </p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${url}" style="display:inline-block;background:${BRAND.primary};color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;">Open Dashboard</a>
@@ -36,8 +36,8 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   `;
 
   return {
-    subjectAr: 'مرحبًا بك في CareKit',
-    subjectEn: 'Welcome to CareKit',
+    subjectAr: 'مرحبًا بك في Deqah',
+    subjectEn: 'Welcome to Deqah',
     html: bilingualLayout({ ar, en }),
   };
 }

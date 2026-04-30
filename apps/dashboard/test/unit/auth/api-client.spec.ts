@@ -138,11 +138,11 @@ describe('API Client (lib/api.ts)', () => {
   it('should unwrap { success, data } envelope from backend', async () => {
     const { api } = await import('@/lib/api')
 
-    fetchMock.mockResolvedValueOnce(makeOkResponse({ name: 'CareKit' }))
+    fetchMock.mockResolvedValueOnce(makeOkResponse({ name: 'Deqah' }))
 
     const result = await api.get<{ name: string }>('/health')
 
-    expect(result).toEqual({ name: 'CareKit' })
+    expect(result).toEqual({ name: 'Deqah' })
   })
 
   // =========================================================================
@@ -198,7 +198,7 @@ describe('API Client (lib/api.ts)', () => {
   it('should retry request with new token after successful 401 refresh', async () => {
     const { api, setAccessToken } = await import('@/lib/api')
     setAccessToken('old-token')
-    localStorage.setItem('carekit_refresh_token', 'stored-rt')
+    localStorage.setItem('deqah_refresh_token', 'stored-rt')
 
     // First call returns 401
     const response401 = {
@@ -226,7 +226,7 @@ describe('API Client (lib/api.ts)', () => {
   it('should clear token + localStorage and throw when refresh also fails', async () => {
     const { api, setAccessToken, getAccessToken } = await import('@/lib/api')
     setAccessToken('stale-token')
-    localStorage.setItem('carekit_user', JSON.stringify({ id: 'u1' }))
+    localStorage.setItem('deqah_user', JSON.stringify({ id: 'u1' }))
 
     // Original request → 401
     const response401_1 = {
@@ -247,7 +247,7 @@ describe('API Client (lib/api.ts)', () => {
 
     await expect(api.get('/clients')).rejects.toThrow()
     expect(getAccessToken()).toBeNull()
-    expect(localStorage.getItem('carekit_user')).toBeNull()
+    expect(localStorage.getItem('deqah_user')).toBeNull()
   })
 
   // =========================================================================
@@ -263,7 +263,7 @@ describe('API Client (lib/api.ts)', () => {
 
     const { api, setAccessToken, getAccessToken } = await import('@/lib/api')
     setAccessToken('suspended-tok')
-    localStorage.setItem('carekit_user', JSON.stringify({ id: 'u1' }))
+    localStorage.setItem('deqah_user', JSON.stringify({ id: 'u1' }))
 
     const suspendedRes = {
       ok: false,
@@ -283,8 +283,8 @@ describe('API Client (lib/api.ts)', () => {
     // No refresh attempt (would be a 2nd fetch call)
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(getAccessToken()).toBeNull()
-    expect(localStorage.getItem('carekit_user')).toBeNull()
-    expect(sessionStorage.getItem('carekit_auth_reason')).toBe('ORG_SUSPENDED')
+    expect(localStorage.getItem('deqah_user')).toBeNull()
+    expect(sessionStorage.getItem('deqah_auth_reason')).toBe('ORG_SUSPENDED')
     expect(locationHref.value).toBe('/')
   })
 
@@ -295,7 +295,7 @@ describe('API Client (lib/api.ts)', () => {
   it('should only call refresh once for concurrent 401 responses', async () => {
     const { api, setAccessToken } = await import('@/lib/api')
     setAccessToken('expired-token')
-    localStorage.setItem('carekit_refresh_token', 'stored-rt')
+    localStorage.setItem('deqah_refresh_token', 'stored-rt')
 
     // Both requests fail with 401
     const response401_a = {

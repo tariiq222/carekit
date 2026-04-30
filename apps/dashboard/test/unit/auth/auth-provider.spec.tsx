@@ -43,7 +43,7 @@ vi.mock('@/lib/api', () => ({
 
 const mockUser = {
   id: 'user-1',
-  email: 'admin@carekit-test.com',
+  email: 'admin@deqah-test.com',
   firstName: 'Admin',
   lastName: 'User',
   phone: null,
@@ -139,8 +139,8 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId('authenticated').textContent).toBe('no')
     })
 
-    it('should remove carekit_user from localStorage on failed restore', async () => {
-      localStorage.setItem('carekit_user', JSON.stringify(mockUser))
+    it('should remove deqah_user from localStorage on failed restore', async () => {
+      localStorage.setItem('deqah_user', JSON.stringify(mockUser))
       mockRefreshToken.mockRejectedValue(new Error('expired'))
 
       renderWithProvider()
@@ -149,7 +149,7 @@ describe('AuthProvider', () => {
         expect(screen.getByTestId('loading').textContent).toBe('ready'),
       )
 
-      expect(localStorage.getItem('carekit_user')).toBeNull()
+      expect(localStorage.getItem('deqah_user')).toBeNull()
     })
   })
 

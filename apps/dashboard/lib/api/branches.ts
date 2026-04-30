@@ -1,5 +1,5 @@
 /**
- * Branches API — CareKit Dashboard
+ * Branches API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

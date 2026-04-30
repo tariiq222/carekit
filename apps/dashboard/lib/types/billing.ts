@@ -1,5 +1,5 @@
 /**
- * Billing Types — CareKit Dashboard
+ * Billing Types — Deqah Dashboard
  * SaaS Plan 04 — billing skeleton
  */
 

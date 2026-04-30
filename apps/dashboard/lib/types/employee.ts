@@ -1,5 +1,5 @@
 /**
- * Employee Types — CareKit Dashboard
+ * Employee Types — Deqah Dashboard
  */
 
 import type { SearchableQuery } from "./common"

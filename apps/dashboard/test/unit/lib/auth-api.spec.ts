@@ -79,7 +79,7 @@ describe("auth api", () => {
 
     expect(loginMock).toHaveBeenCalledWith({ email: "a@b.com", password: "pass", hCaptchaToken: "tok" })
     expect(setAccessTokenMock).toHaveBeenCalledWith("token123")
-    expect(localStorage.getItem("carekit_user")).toContain("a@b.com")
+    expect(localStorage.getItem("deqah_user")).toContain("a@b.com")
     expect(result.accessToken).toBe("token123")
   })
 
@@ -89,7 +89,7 @@ describe("auth api", () => {
     const result = await fetchMe()
 
     expect(getMeMock).toHaveBeenCalledOnce()
-    expect(localStorage.getItem("carekit_user")).toContain("a@b.com")
+    expect(localStorage.getItem("deqah_user")).toContain("a@b.com")
     expect(result.email).toBe("a@b.com")
   })
 
@@ -118,29 +118,29 @@ describe("auth api", () => {
 
   it("logoutApi delegates to authApi.logout and clears state", async () => {
     logoutMock.mockResolvedValueOnce(undefined)
-    localStorage.setItem("carekit_user", "{}")
+    localStorage.setItem("deqah_user", "{}")
 
     await logoutApi()
 
     expect(logoutMock).toHaveBeenCalledOnce()
-    expect(localStorage.getItem("carekit_user")).toBeNull()
+    expect(localStorage.getItem("deqah_user")).toBeNull()
     expect(setAccessTokenMock).toHaveBeenCalledWith(null)
   })
 
   it("logoutApi still clears state when API call fails", async () => {
     logoutMock.mockRejectedValueOnce(new Error("fail"))
-    localStorage.setItem("carekit_user", "{}")
+    localStorage.setItem("deqah_user", "{}")
 
     await logoutApi()
 
-    expect(localStorage.getItem("carekit_user")).toBeNull()
+    expect(localStorage.getItem("deqah_user")).toBeNull()
     expect(setAccessTokenMock).toHaveBeenCalledWith(null)
   })
 
   it("logout clears state without API call", () => {
-    localStorage.setItem("carekit_user", "{}")
+    localStorage.setItem("deqah_user", "{}")
     logout()
-    expect(localStorage.getItem("carekit_user")).toBeNull()
+    expect(localStorage.getItem("deqah_user")).toBeNull()
     expect(setAccessTokenMock).toHaveBeenCalledWith(null)
     expect(logoutMock).not.toHaveBeenCalled()
   })
@@ -159,12 +159,12 @@ describe("auth api", () => {
   })
 
   it("getStoredUser returns parsed user when stored", () => {
-    localStorage.setItem("carekit_user", JSON.stringify(fakeUser))
+    localStorage.setItem("deqah_user", JSON.stringify(fakeUser))
     expect(getStoredUser()).toEqual(fakeUser)
   })
 
   it("getStoredUser returns null for invalid JSON", () => {
-    localStorage.setItem("carekit_user", "not-json")
+    localStorage.setItem("deqah_user", "not-json")
     expect(getStoredUser()).toBeNull()
   })
 })

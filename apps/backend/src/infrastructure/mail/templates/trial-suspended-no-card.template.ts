@@ -35,8 +35,8 @@ export function trialSuspendedNoCardTemplate(vars: TrialSuspendedNoCardVars): {
   `;
 
   return {
-    subjectAr: 'تجربة CareKit موقوفة بانتظار بطاقة دفع',
-    subjectEn: 'Your CareKit trial is suspended until a card is added',
+    subjectAr: 'تجربة Deqah موقوفة بانتظار بطاقة دفع',
+    subjectEn: 'Your Deqah trial is suspended until a card is added',
     html: bilingualLayout({ ar, en }),
   };
 }

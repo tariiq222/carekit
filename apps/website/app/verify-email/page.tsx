@@ -25,7 +25,7 @@ export default function VerifyEmailPage() {
       .then(() => {
         setResult({ status: "ok" })
         setTimeout(() => {
-          window.location.href = "carekit://settings?verified=1"
+          window.location.href = "deqah://settings?verified=1"
         }, 800)
       })
       .catch((e: Error) => {

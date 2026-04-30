@@ -20,7 +20,7 @@ describe('UnifonicAdapter', () => {
   it('POSTs to /rest/SMS/messages and returns provider message id', async () => {
     mockFetchOnce({ success: true, data: { MessageID: 'unif-123' } });
     const adapter = new UnifonicAdapter({ appSid: 'sid', apiKey: 'key' });
-    const res = await adapter.send('+966500000000', 'hi', 'CareKit');
+    const res = await adapter.send('+966500000000', 'hi', 'Deqah');
     expect(res).toEqual({ providerMessageId: 'unif-123', status: 'SENT' });
     expect(global.fetch).toHaveBeenCalledWith(
       'https://api.unifonic.com/rest/SMS/messages',

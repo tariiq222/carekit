@@ -39,7 +39,7 @@ export class TestSmsConfigHandler {
     try {
       const result = await adapter.send(
         cmd.toPhone,
-        'CareKit test message — رسالة اختبار',
+        'Deqah test message — رسالة اختبار',
         cfg.senderId ?? null,
       );
       await this.prisma.organizationSmsConfig.update({

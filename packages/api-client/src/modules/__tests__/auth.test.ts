@@ -8,7 +8,7 @@ const fakeRefresh = 'refresh.jwt'
 
 const fakeUser: UserPayload = {
   id: 'usr_1',
-  email: 'admin@carekit.app',
+  email: 'admin@deqah.app',
   name: 'Admin Owner',
   firstName: 'Admin',
   lastName: 'Owner',
@@ -71,7 +71,7 @@ describe('authApi.login', () => {
     )
 
     const result = await authApi.login({
-      email: 'admin@carekit.app',
+      email: 'admin@deqah.app',
       password: 'pw',
       hCaptchaToken: 'tok',
     })
@@ -82,7 +82,7 @@ describe('authApi.login', () => {
     expect(url).toBe('http://api.test/auth/login')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(init?.body as string)).toEqual({
-      email: 'admin@carekit.app',
+      email: 'admin@deqah.app',
       password: 'pw',
       hCaptchaToken: 'tok',
     })

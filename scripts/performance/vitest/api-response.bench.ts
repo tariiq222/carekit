@@ -1,5 +1,5 @@
 /**
- * API Response Benchmarks — CareKit Dashboard
+ * API Response Benchmarks — Deqah Dashboard
  *
  * Measures how fast the dashboard's api client parses and transforms
  * realistic backend response payloads.

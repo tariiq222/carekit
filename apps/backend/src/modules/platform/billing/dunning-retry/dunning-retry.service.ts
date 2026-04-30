@@ -80,7 +80,7 @@ export class DunningRetryService {
         currency: 'SAR',
         idempotencyKey,
         givenId: idempotencyKey,
-        description: `CareKit dunning retry ${attemptNumber} for invoice ${cmd.invoice.id}`,
+        description: `Deqah dunning retry ${attemptNumber} for invoice ${cmd.invoice.id}`,
         callbackUrl: this.billingCallbackUrl(),
       });
 

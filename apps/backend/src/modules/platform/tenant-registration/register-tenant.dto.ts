@@ -20,6 +20,6 @@ export class RegisterTenantDto {
   @ApiProperty({ description: 'Business name in Arabic', example: 'عيادة الرعاية' })
   @IsString() @IsNotEmpty() businessNameAr!: string;
 
-  @ApiPropertyOptional({ description: 'Business name in English', example: 'CareKit Clinic' })
+  @ApiPropertyOptional({ description: 'Business name in English', example: 'Deqah Clinic' })
   @IsOptional() @IsString() businessNameEn?: string;
 }

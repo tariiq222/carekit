@@ -1,5 +1,5 @@
 /**
- * Client Types — CareKit Dashboard
+ * Client Types — Deqah Dashboard
  */
 
 import type { PaginatedQuery, UserGender } from "./common"

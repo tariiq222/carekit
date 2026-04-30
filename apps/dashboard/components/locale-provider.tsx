@@ -20,7 +20,7 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
 
-const STORAGE_KEY = "carekit-locale"
+const STORAGE_KEY = "deqah-locale"
 
 function getInitialLocale(): Locale {
   if (typeof window === "undefined") return "ar"

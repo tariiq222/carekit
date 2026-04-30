@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Billing hooks — CareKit Dashboard
+ * Billing hooks — Deqah Dashboard
  * SaaS Plan 04 — billing skeleton
  */
 

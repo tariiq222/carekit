@@ -1,5 +1,5 @@
 /**
- * Employees API — CareKit Dashboard
+ * Employees API — Deqah Dashboard
  */
 
 export * from "./employees-schedule"

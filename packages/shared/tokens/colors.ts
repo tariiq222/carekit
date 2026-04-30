@@ -1,6 +1,6 @@
 /**
- * CareKit Design System — Color Tokens
- * Source of truth: CareKit-DesignSystem.jsx
+ * Deqah Design System — Color Tokens
+ * Source of truth: Deqah-DesignSystem.jsx
  *
  * Primary: Royal Blue   #1D4ED8 (dark: #0037B0)
  * Secondary: Apple Green #84CC16 (dark: #65A30D)

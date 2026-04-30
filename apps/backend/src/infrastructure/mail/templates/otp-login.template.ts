@@ -33,8 +33,8 @@ export function otpLoginTemplate(vars: OtpLoginVars): {
   `;
 
   return {
-    subjectAr: 'رمز تسجيل الدخول إلى CareKit',
-    subjectEn: 'Your CareKit login code',
+    subjectAr: 'رمز تسجيل الدخول إلى Deqah',
+    subjectEn: 'Your Deqah login code',
     html: bilingualLayout({ ar, en }),
   };
 }

@@ -1,5 +1,5 @@
 /**
- * ZATCA API — CareKit Dashboard
+ * ZATCA API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

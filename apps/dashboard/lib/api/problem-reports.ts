@@ -1,5 +1,5 @@
 /**
- * Problem Reports API — CareKit Dashboard
+ * Problem Reports API — Deqah Dashboard
  * Controller: dashboard/platform/problem-reports
  */
 

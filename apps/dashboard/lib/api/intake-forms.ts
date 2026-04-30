@@ -1,5 +1,5 @@
 /**
- * Intake Forms API — CareKit Dashboard
+ * Intake Forms API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

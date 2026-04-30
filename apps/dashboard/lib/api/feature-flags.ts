@@ -1,5 +1,5 @@
 /**
- * Feature Flags API — CareKit Dashboard
+ * Feature Flags API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"

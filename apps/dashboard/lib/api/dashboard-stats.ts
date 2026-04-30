@@ -1,5 +1,5 @@
 /**
- * Dashboard Stats API — CareKit Dashboard
+ * Dashboard Stats API — Deqah Dashboard
  * Endpoint: GET /dashboard/stats
  */
 

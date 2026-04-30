@@ -1,5 +1,5 @@
 /**
- * Clinic API — CareKit Dashboard
+ * Clinic API — Deqah Dashboard
  *
  * Working hours and holidays management.
  */

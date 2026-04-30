@@ -27,7 +27,7 @@ describe('PlatformModule', () => {
               MINIO_USE_SSL: 'false',
               MINIO_ACCESS_KEY: 'test',
               MINIO_SECRET_KEY: 'test',
-              MINIO_BUCKET: 'carekit-test',
+              MINIO_BUCKET: 'deqah-test',
               MOYASAR_PLATFORM_SECRET_KEY: 'sk_test_placeholder',
               MOYASAR_PLATFORM_WEBHOOK_SECRET: 'whsec_test_placeholder',
               // SMTP_HOST intentionally absent — SmtpService logs a warning

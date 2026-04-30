@@ -25,7 +25,7 @@ export interface StartImpersonationResult {
 // Issues a short-lived "shadow" JWT for impersonation. The shadow JWT
 // deliberately OMITS isSuperAdmin (Plan 05b invariant 4) so the same
 // token cannot be replayed against admin endpoints if a super-admin
-// re-navigates to admin.carekit.app in the same session.
+// re-navigates to admin.deqah.app in the same session.
 @Injectable()
 export class StartImpersonationHandler {
   constructor(
@@ -119,7 +119,7 @@ export class StartImpersonationHandler {
     );
 
     const dashboardOrigin =
-      this.config.get<string>('DASHBOARD_PUBLIC_URL') ?? 'https://app.carekit.app';
+      this.config.get<string>('DASHBOARD_PUBLIC_URL') ?? 'https://app.deqah.app';
 
     return {
       sessionId: session.id,

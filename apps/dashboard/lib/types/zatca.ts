@@ -1,5 +1,5 @@
 /**
- * ZATCA Types — CareKit Dashboard
+ * ZATCA Types — Deqah Dashboard
  */
 
 export interface ZatcaConfig {

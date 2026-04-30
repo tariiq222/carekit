@@ -193,7 +193,7 @@ export default function SettingsScreen() {
           <SectionHeader icon={Info} label={t('settings.about')} />
 
           <ThemedText variant="heading" style={{ marginBottom: 8 }}>
-            CareKit
+            Deqah
           </ThemedText>
 
           <AboutRow label={t('settings.version')} value={version} />

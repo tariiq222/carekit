@@ -7,7 +7,7 @@ export class AdminHostGuard implements CanActivate {
   private readonly allowedHosts: string[];
 
   constructor(private readonly configService: ConfigService) {
-    const raw = this.configService.get<string>('ADMIN_HOSTS', 'admin.carekit.app');
+    const raw = this.configService.get<string>('ADMIN_HOSTS', 'admin.deqah.app');
     this.allowedHosts = raw.split(',').map((host) => host.trim().toLowerCase());
   }
 

@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 export type Locale = 'ar' | 'en';
 
-const COOKIE_KEY = 'carekit-locale';
+const COOKIE_KEY = 'deqah-locale';
 
 export async function getLocale(): Promise<Locale> {
   const store = await cookies();

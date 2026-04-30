@@ -1,5 +1,5 @@
 /**
- * Media API — CareKit Dashboard
+ * Media API — Deqah Dashboard
  * Controller: dashboard/media
  */
 

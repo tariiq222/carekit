@@ -1,5 +1,5 @@
 /**
- * Feature Keys — tiered feature flags for CareKit SaaS.
+ * Feature Keys — tiered feature flags for Deqah SaaS.
  *
  * PRO+ flags are on/off boolean gates.
  * ENTERPRISE-only flags are also on/off.

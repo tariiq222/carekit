@@ -1,5 +1,5 @@
 /**
- * Chatbot API — CareKit Dashboard
+ * Chatbot API — Deqah Dashboard
  * Controller: dashboard/comms/chat
  */
 
