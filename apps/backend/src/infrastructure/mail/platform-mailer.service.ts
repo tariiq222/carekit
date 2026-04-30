@@ -66,12 +66,42 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  async sendTrialDay7Reminder(
+    to: string,
+    vars: import('./templates/trial-ending.template').TrialEndingVars,
+  ): Promise<void> {
+    await this.sendTrialEnding(to, vars);
+  }
+
+  async sendTrialDay3Warning(
+    to: string,
+    vars: import('./templates/trial-ending.template').TrialEndingVars,
+  ): Promise<void> {
+    await this.sendTrialEnding(to, vars);
+  }
+
+  async sendTrialDay1Final(
+    to: string,
+    vars: import('./templates/trial-ending.template').TrialEndingVars,
+  ): Promise<void> {
+    await this.sendTrialEnding(to, vars);
+  }
+
   async sendTrialExpired(
     to: string,
     vars: import('./templates/trial-expired.template').TrialExpiredVars,
   ): Promise<void> {
     const { trialExpiredTemplate } = await import('./templates/trial-expired.template');
     const t = trialExpiredTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendTrialSuspendedNoCard(
+    to: string,
+    vars: import('./templates/trial-suspended-no-card.template').TrialSuspendedNoCardVars,
+  ): Promise<void> {
+    const { trialSuspendedNoCardTemplate } = await import('./templates/trial-suspended-no-card.template');
+    const t = trialSuspendedNoCardTemplate(vars);
     await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 

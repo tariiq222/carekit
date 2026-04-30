@@ -110,12 +110,16 @@ describe('PlatformMailerService — send', () => {
     expect(arg.subject.toLowerCase()).toMatch(/code|رمز/);
   });
 
-  it('sendTrialEnding / sendTrialExpired / sendSubscriptionPaymentSucceeded / sendSubscriptionPaymentFailed / sendPlanChanged / sendAccountStatusChanged all dispatch via Resend', async () => {
+  it('trial, payment, plan, and account-status methods all dispatch via Resend', async () => {
     mockSend.mockResolvedValue({ data: { id: 'msg' }, error: null });
     const svc = build();
 
     await svc.sendTrialEnding('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 3, upgradeUrl: 'https://u' });
+    await svc.sendTrialDay7Reminder('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 7, upgradeUrl: 'https://u' });
+    await svc.sendTrialDay3Warning('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 3, upgradeUrl: 'https://u' });
+    await svc.sendTrialDay1Final('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 1, upgradeUrl: 'https://u' });
     await svc.sendTrialExpired('a@x', { ownerName: 'A', orgName: 'O', upgradeUrl: 'https://u' });
+    await svc.sendTrialSuspendedNoCard('a@x', { ownerName: 'A', orgName: 'O', billingUrl: 'https://b' });
     await svc.sendSubscriptionPaymentSucceeded('a@x', {
       ownerName: 'A', orgName: 'O', amountSar: '299.00', invoiceId: 'inv_1', receiptUrl: 'https://r',
     });
@@ -129,6 +133,6 @@ describe('PlatformMailerService — send', () => {
       ownerName: 'A', orgName: 'O', status: 'SUSPENDED', reason: 'overdue', contactUrl: 'https://c',
     });
 
-    expect(mockSend).toHaveBeenCalledTimes(6);
+    expect(mockSend).toHaveBeenCalledTimes(10);
   });
 });

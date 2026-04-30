@@ -2,6 +2,7 @@ import { tenantWelcomeTemplate } from '../tenant-welcome.template';
 import { otpLoginTemplate } from '../otp-login.template';
 import { trialEndingTemplate } from '../trial-ending.template';
 import { trialExpiredTemplate } from '../trial-expired.template';
+import { trialSuspendedNoCardTemplate } from '../trial-suspended-no-card.template';
 import { subscriptionPaymentSucceededTemplate } from '../subscription-payment-succeeded.template';
 import { subscriptionPaymentFailedTemplate } from '../subscription-payment-failed.template';
 import { planChangedTemplate } from '../plan-changed.template';
@@ -49,6 +50,17 @@ describe('platform email templates', () => {
       upgradeUrl: 'https://app.example/billing',
     });
     expect(out.html).toContain('https://app.example/billing');
+  });
+
+  it('trialSuspendedNoCard explains the missing card and links billing', () => {
+    const out = trialSuspendedNoCardTemplate({
+      ownerName: 'Tariq',
+      orgName: 'Sawa',
+      billingUrl: 'https://app.example/settings/billing',
+    });
+    expect(out.subjectEn.toLowerCase()).toContain('suspended');
+    expect(out.html).toContain('Sawa');
+    expect(out.html).toContain('https://app.example/settings/billing');
   });
 
   it('paymentSucceeded includes amount + currency + invoiceId', () => {
