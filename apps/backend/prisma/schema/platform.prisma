@@ -380,6 +380,8 @@ model Subscription {
   trialExtendedAt        DateTime?
   canceledAt             DateTime?
   cancelReason           String?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  scheduledCancellationDate DateTime?
   pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
   retryCount             Int                @default(0) // analytics only; not used for state decisions
   maxRetries             Int                @default(3) // charging attempts within grace window
@@ -400,6 +402,7 @@ model Subscription {
   @@index([planId])
   @@index([status])
   @@index([currentPeriodEnd])
+  @@index([cancelAtPeriodEnd, scheduledCancellationDate])
 }
 
 model SavedCard {
