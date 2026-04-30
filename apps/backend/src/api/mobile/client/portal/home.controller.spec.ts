@@ -24,9 +24,14 @@ function buildController() {
 describe('MobileClientHomeController', () => {
   it('home — fetches all data in parallel', async () => {
     const { controller, listBookings, listNotifications, listPayments, getClient } = buildController();
-    const now = new Date();
+    const now = new Date('2026-04-30T01:00:00.000Z');
+    jest.useFakeTimers().setSystemTime(now);
 
-    await controller.home(USER);
+    try {
+      await controller.home(USER);
+    } finally {
+      jest.useRealTimers();
+    }
 
     expect(listBookings.execute).toHaveBeenCalledWith(
       expect.objectContaining({ clientId: USER.id, fromDate: now, page: 1, limit: 5 }),
