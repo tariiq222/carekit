@@ -35,6 +35,7 @@ import { SetDefaultSavedCardHandler } from "../../modules/platform/billing/saved
 import { ComputeProrationHandler } from "../../modules/platform/billing/compute-proration/compute-proration.handler";
 import { ScheduleDowngradeHandler } from "../../modules/platform/billing/schedule-downgrade/schedule-downgrade.handler";
 import { CancelScheduledDowngradeHandler } from "../../modules/platform/billing/cancel-scheduled-downgrade/cancel-scheduled-downgrade.handler";
+import { RetryFailedPaymentHandler } from "../../modules/platform/billing/retry-failed-payment/retry-failed-payment.handler";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -59,6 +60,7 @@ export class BillingController {
     private readonly proration: ComputeProrationHandler,
     private readonly scheduleDowngrade: ScheduleDowngradeHandler,
     private readonly cancelScheduledDowngrade: CancelScheduledDowngradeHandler,
+    private readonly retryFailedPayment: RetryFailedPaymentHandler,
   ) {}
 
   @Get("plans")
@@ -140,6 +142,13 @@ export class BillingController {
   @ApiOperation({ summary: "Reactivate a scheduled cancellation" })
   reactivateSub() {
     return this.reactivate.execute();
+  }
+
+  @Post("subscription/retry-payment")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Retry failed subscription payment" })
+  retryPayment() {
+    return this.retryFailedPayment.execute();
   }
 
   @Get("saved-cards")

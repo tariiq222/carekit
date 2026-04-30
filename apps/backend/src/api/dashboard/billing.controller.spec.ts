@@ -27,6 +27,7 @@ describe('BillingController saved-card routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -69,6 +70,7 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });
@@ -97,6 +99,7 @@ describe('BillingController proration routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       proration as never,
+      buildHandler(null) as never,
       buildHandler(null) as never,
       buildHandler(null) as never,
     );
@@ -132,6 +135,7 @@ describe('BillingController scheduled downgrade routes', () => {
       buildHandler(null) as never,
       scheduleDowngrade as never,
       cancelScheduledDowngrade as never,
+      buildHandler(null) as never,
     );
     const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' as const };
 
@@ -142,5 +146,34 @@ describe('BillingController scheduled downgrade routes', () => {
     expect(scheduleDowngrade.execute).toHaveBeenCalledTimes(2);
     expect(scheduleDowngrade.execute).toHaveBeenCalledWith(dto);
     expect(cancelScheduledDowngrade.execute).toHaveBeenCalledWith();
+  });
+});
+
+describe('BillingController dunning routes', () => {
+  it('delegates manual payment retry to the handler', async () => {
+    const retryFailedPayment = buildHandler({ ok: true, status: 'PAID' });
+    const controller = new BillingController(
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      retryFailedPayment as never,
+    );
+
+    await expect(controller.retryPayment()).resolves.toEqual({ ok: true, status: 'PAID' });
+
+    expect(retryFailedPayment.execute).toHaveBeenCalledWith();
   });
 });
