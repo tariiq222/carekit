@@ -50,7 +50,7 @@ export class PlanLimitsGuard implements CanActivate {
       case 'BRANCHES':
         return this.prisma.branch.count({ where: { organizationId, isActive: true } });
       case 'EMPLOYEES':
-        return this.prisma.employee.count({ where: { organizationId } });
+        return this.prisma.employee.count({ where: { organizationId, isActive: true } });
     }
   }
 }

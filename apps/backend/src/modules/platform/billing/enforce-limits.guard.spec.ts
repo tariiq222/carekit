@@ -68,12 +68,14 @@ describe('PlanLimitsGuard', () => {
     await expect(guard.canActivate(mockCtx)).rejects.toThrow('Plan limit reached for BRANCHES: 3/3');
   });
 
-  it('EMPLOYEES uses employee.count not branch.count', async () => {
+  it('EMPLOYEES counts only active employees', async () => {
     mockReflector.get.mockReturnValue('EMPLOYEES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxEmployees: 10 } });
     mockPrisma.employee.count.mockResolvedValue(5);
     await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
-    expect(mockPrisma.employee.count).toHaveBeenCalledWith({ where: { organizationId: 'org-1' } });
+    expect(mockPrisma.employee.count).toHaveBeenCalledWith({
+      where: { organizationId: 'org-1', isActive: true },
+    });
     expect(mockPrisma.branch.count).not.toHaveBeenCalled();
   });
 });
