@@ -17,8 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@carekit/ui": ["../../packages/ui/src/index.ts"],
-      "@carekit/ui/*": ["../../packages/ui/src/*"]
+      "@deqah/ui": ["../../packages/ui/src/index.ts"],
+      "@deqah/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": [
