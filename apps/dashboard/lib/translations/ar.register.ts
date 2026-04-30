@@ -47,6 +47,7 @@ export const arRegister: Record<string, string> = {
   "onboarding.error.generic": "تعذّر إكمال الخطوة، حاول مرة أخرى",
 
   "trialBanner.trialing": "باقي {days} يوم في فترتك التجريبية",
+  "trialBanner.trialingWarning": "باقي {days} أيام — أضف بطاقة قبل نهاية التجربة",
   "trialBanner.trialingLastDay": "آخر يوم في فترتك التجريبية",
   "trialBanner.pastDue": "انتهت فترتك التجريبية — فعّل اشتراكك للاستمرار",
   "trialBanner.suspended": "تم إيقاف حسابك مؤقتاً",

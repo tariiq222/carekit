@@ -47,6 +47,7 @@ export const enRegister: Record<string, string> = {
   "onboarding.error.generic": "Could not complete the step, please try again",
 
   "trialBanner.trialing": "{days} days left in your free trial",
+  "trialBanner.trialingWarning": "{days} days left — add a card before the trial ends",
   "trialBanner.trialingLastDay": "Last day of your free trial",
   "trialBanner.pastDue": "Your trial has ended — activate your subscription to continue",
   "trialBanner.suspended": "Your account has been suspended",
