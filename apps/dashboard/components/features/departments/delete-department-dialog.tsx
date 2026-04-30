@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useDepartmentMutations } from "@/hooks/use-departments"
 import type { Department } from "@/lib/types/department"

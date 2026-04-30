@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@carekit/ui/primitives/button';
-import { Input } from '@carekit/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@carekit/ui/primitives/select';
+import { Button } from '@deqah/ui/primitives/button';
+import { Input } from '@deqah/ui/primitives/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@deqah/ui/primitives/select';
 
 const ACTION_TYPES = [
   'SUSPEND_ORG',

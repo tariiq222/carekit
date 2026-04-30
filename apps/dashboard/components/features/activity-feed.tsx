@@ -1,7 +1,7 @@
 "use client"
 
 import { useLocale } from "@/components/locale-provider"
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 
 export interface ActivityItem {

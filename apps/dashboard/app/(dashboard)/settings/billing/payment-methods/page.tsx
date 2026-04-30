@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Add01Icon, CreditCardIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Badge, Button, Card, CardContent, Skeleton } from "@carekit/ui"
+import { Badge, Button, Card, CardContent, Skeleton } from "@deqah/ui"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"

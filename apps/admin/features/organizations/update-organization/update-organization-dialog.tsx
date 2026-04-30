@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import {
   Dialog,
   DialogBody,
@@ -11,10 +11,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@carekit/ui/primitives/dialog';
-import { Input } from '@carekit/ui/primitives/input';
-import { Label } from '@carekit/ui/primitives/label';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+} from '@deqah/ui/primitives/dialog';
+import { Input } from '@deqah/ui/primitives/input';
+import { Label } from '@deqah/ui/primitives/label';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import type { OrganizationDetail } from '../types';
 import { useUpdateOrganization } from './use-update-organization';
 

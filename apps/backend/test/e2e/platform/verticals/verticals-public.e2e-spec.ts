@@ -1,6 +1,6 @@
 import SuperTest from 'supertest';
 import { createVerticalsTestApp, closeVerticalsTestApp } from './verticals-test-app';
-import { TERMINOLOGY_KEYS } from '@carekit/shared/terminology';
+import { TERMINOLOGY_KEYS } from '@deqah/shared/terminology';
 
 // Seeded slugs from migration 20260422080855 — stable UUIDs in test DB
 const DENTAL_SLUG = 'dental';

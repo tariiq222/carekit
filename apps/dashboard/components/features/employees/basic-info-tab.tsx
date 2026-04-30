@@ -10,12 +10,12 @@ import {
   Certificate01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Card, CardContent } from "@carekit/ui"
-import { AvatarUpload } from "@carekit/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { AvatarUpload } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { SectionHeader } from "@/components/features/section-header"
 import { EmployeeStatusDialog } from "@/components/features/employees/employee-status-dialog"

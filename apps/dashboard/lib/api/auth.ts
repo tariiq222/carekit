@@ -1,13 +1,13 @@
 /**
  * Auth API — CareKit Dashboard
  *
- * Thin wrapper over @carekit/api-client/authApi. The shared package owns
+ * Thin wrapper over @deqah/api-client/authApi. The shared package owns
  * request shape, envelope unwrapping, and 401 retry logic; this file only
  * adds persist/clear localStorage helpers and dashboard-specific aliases.
  */
 
-import { authApi } from "@carekit/api-client"
-import type { AuthResponse, UserPayload } from "@carekit/api-client"
+import { authApi } from "@deqah/api-client"
+import type { AuthResponse, UserPayload } from "@deqah/api-client"
 import { setAccessToken, getAccessToken } from "@/lib/api"
 
 export type AuthUser = UserPayload

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useListVerticals } from '@/features/verticals/list-verticals/use-list-verticals';
 import { VerticalsTable } from '@/features/verticals/list-verticals/verticals-table';
 import { CreateVerticalDialog } from '@/features/verticals/create-vertical/create-vertical-dialog';

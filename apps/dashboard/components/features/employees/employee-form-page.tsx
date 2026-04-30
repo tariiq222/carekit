@@ -9,9 +9,9 @@ import { z } from "zod"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
-import { Button } from "@carekit/ui"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { BasicInfoTab } from "@/components/features/employees/basic-info-tab"
 import {
   ScheduleTab,

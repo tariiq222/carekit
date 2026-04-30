@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useListAuditLog } from '@/features/audit-log/list-audit-log/use-list-audit-log';
 import { AuditLogFilterBar } from '@/features/audit-log/list-audit-log/audit-log-filter-bar';
 import { AuditLogTable } from '@/features/audit-log/list-audit-log/audit-log-table';

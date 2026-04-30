@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, Card } from "@carekit/ui"
+import { Button, Card } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBillingMutations } from "@/hooks/use-current-subscription"
 import { useBilling } from "@/lib/billing/billing-context"

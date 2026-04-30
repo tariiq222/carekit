@@ -1,9 +1,9 @@
 "use client"
 
-import { Checkbox } from "@carekit/ui"
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Checkbox } from "@deqah/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { useRoleMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"

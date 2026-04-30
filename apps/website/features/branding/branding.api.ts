@@ -1,4 +1,4 @@
-import type { PublicBranding } from '@carekit/shared';
+import type { PublicBranding } from '@deqah/shared';
 
 import { getApiBase } from '@/lib/api-base';
 

@@ -7,16 +7,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@carekit/ui/primitives/button";
+import { Button } from "@deqah/ui/primitives/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@carekit/ui/primitives/card";
-import { Input } from "@carekit/ui/primitives/input";
-import { Label } from "@carekit/ui/primitives/label";
+} from "@deqah/ui/primitives/card";
+import { Input } from "@deqah/ui/primitives/input";
+import { Label } from "@deqah/ui/primitives/label";
 import { login } from "./login.api";
 
 export function LoginForm() {

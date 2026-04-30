@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useListSubscriptionInvoices } from '@/features/billing/list-subscription-invoices/use-list-subscription-invoices';
 import {
   InvoicesFilterBar,

@@ -3,7 +3,7 @@
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
-import { Skeleton } from "@carekit/ui"
+import { Skeleton } from "@deqah/ui"
 import { PrivacyPolicyForm } from "@/components/features/content/privacy-policy-form"
 import { useLocale } from "@/components/locale-provider"
 import { useSiteSettings } from "@/hooks/use-site-settings"

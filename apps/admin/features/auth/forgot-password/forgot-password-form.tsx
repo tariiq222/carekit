@@ -3,16 +3,16 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Button } from "@carekit/ui/primitives/button";
+import { Button } from "@deqah/ui/primitives/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@carekit/ui/primitives/card";
-import { Input } from "@carekit/ui/primitives/input";
-import { Label } from "@carekit/ui/primitives/label";
+} from "@deqah/ui/primitives/card";
+import { Input } from "@deqah/ui/primitives/input";
+import { Label } from "@deqah/ui/primitives/label";
 import { requestPasswordReset } from "./forgot-password.api";
 
 export function ForgotPasswordForm() {

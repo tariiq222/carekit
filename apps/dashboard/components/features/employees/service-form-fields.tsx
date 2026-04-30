@@ -3,10 +3,10 @@
 import type { UseFormReturn } from "react-hook-form"
 import { Controller } from "react-hook-form"
 
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 
 /* ─── Constants ─── */
 

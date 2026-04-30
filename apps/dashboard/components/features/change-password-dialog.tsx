@@ -13,10 +13,10 @@ import {
   DialogDescription,
   DialogBody,
   DialogFooter,
-} from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Button } from "@carekit/ui"
+} from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import { changePassword } from "@/lib/api/auth"
 import { useLocale } from "@/components/locale-provider"
 import { useState } from "react"

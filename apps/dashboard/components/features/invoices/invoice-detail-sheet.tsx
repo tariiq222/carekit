@@ -11,10 +11,10 @@ import {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-} from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+} from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { fetchInvoice } from "@/lib/api/invoices"
 import { queryKeys } from "@/lib/query-keys"

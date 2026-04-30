@@ -13,7 +13,7 @@ import {
   CheckmarkCircle01Icon,
   EyeIcon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useBookingMutations } from "@/hooks/use-bookings"
 import type { Booking, RefundType } from "@/lib/types/booking"
 import { ApproveCancelDialog, RejectCancelDialog, AdminCancelDialog } from "./cancel-dialogs"

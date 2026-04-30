@@ -7,8 +7,8 @@ import {
   Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
+import { Badge } from "@deqah/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import type { ServiceCategory } from "@/lib/types/service"
 

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { Skeleton } from "@carekit/ui"
+import { Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { fetchBookingStatusLog } from "@/lib/api/bookings"
 import { format } from "date-fns"

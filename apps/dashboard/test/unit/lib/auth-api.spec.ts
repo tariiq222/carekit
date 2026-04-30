@@ -16,7 +16,7 @@ const {
   setAccessTokenMock: vi.fn(),
 }))
 
-vi.mock("@carekit/api-client", () => ({
+vi.mock("@deqah/api-client", () => ({
   authApi: {
     login: loginMock,
     refreshToken: refreshTokenMock,
@@ -66,7 +66,7 @@ describe("auth api", () => {
   })
 
   it("login delegates to authApi.login and persists access token + user", async () => {
-    // Refresh tokens are managed as HttpOnly cookies by @carekit/api-client; the
+    // Refresh tokens are managed as HttpOnly cookies by @deqah/api-client; the
     // dashboard wrapper only persists the access token + user payload locally.
     loginMock.mockResolvedValueOnce({
       accessToken: "token123",

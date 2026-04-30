@@ -4,16 +4,16 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@carekit/ui/primitives/button";
+import { Button } from "@deqah/ui/primitives/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@carekit/ui/primitives/card";
-import { Input } from "@carekit/ui/primitives/input";
-import { Label } from "@carekit/ui/primitives/label";
+} from "@deqah/ui/primitives/card";
+import { Input } from "@deqah/ui/primitives/input";
+import { Label } from "@deqah/ui/primitives/label";
 import { resetPassword } from "./reset-password.api";
 
 export function ResetPasswordForm() {

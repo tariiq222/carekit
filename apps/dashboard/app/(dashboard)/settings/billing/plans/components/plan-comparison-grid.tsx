@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge, Button, Card } from "@carekit/ui"
+import { Badge, Button, Card } from "@deqah/ui"
 import { getLocalizedPlanName } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
 import type { BillingCycle, Plan } from "@/lib/types/billing"

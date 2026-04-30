@@ -1,5 +1,5 @@
 /**
- * Billing Features Types — @carekit/shared
+ * Billing Features Types — @deqah/shared
  *
  * Shared types for the billing features endpoint
  * `GET /dashboard/billing/my-features`.

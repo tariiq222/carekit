@@ -7,7 +7,7 @@ import { clientRegisterApi } from './auth.api';
 import { setTokens, setClient } from './auth-store';
 import { getMeApi } from './auth.api';
 import { requestOtp, verifyOtp } from '@/features/otp/otp.api';
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
 
 type Step = 'credentials' | 'otp' | 'password';
 

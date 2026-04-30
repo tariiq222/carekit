@@ -2,7 +2,7 @@ import type {
   ClientLoginPayload,
   ClientRegisterPayload,
   ClientAuthResponse,
-} from '@carekit/shared';
+} from '@deqah/shared';
 
 let clientBaseUrl = '';
 let getRefreshToken: (() => string | null) | null = null;

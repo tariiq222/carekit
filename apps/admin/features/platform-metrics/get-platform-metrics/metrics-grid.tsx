@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetPlatformMetrics } from './use-get-platform-metrics';
 
 export function MetricsGrid() {

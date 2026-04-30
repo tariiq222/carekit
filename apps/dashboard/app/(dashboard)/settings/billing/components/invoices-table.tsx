@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge, Card, Skeleton } from "@carekit/ui"
+import { Badge, Card, Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import { formatBillingDate } from "@/lib/billing/utils"

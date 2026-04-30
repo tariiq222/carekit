@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from "@carekit/ui"
+} from "@deqah/ui"
 
 import { useLocale } from "@/components/locale-provider"
 import type { Invoice } from "@/lib/types/invoice"

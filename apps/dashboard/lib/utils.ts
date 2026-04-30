@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react"
 
-// cn() moved to @carekit/ui/lib/cn as of SaaS-05a.
+// cn() moved to @deqah/ui/lib/cn as of SaaS-05a.
 // Re-exported here for backward compatibility across the dashboard workspace;
-// new code should import { cn } from "@carekit/ui" directly.
-export { cn } from "@carekit/ui/lib/cn"
+// new code should import { cn } from "@deqah/ui" directly.
+export { cn } from "@deqah/ui/lib/cn"
 
 /**
  * Returns the numeric value only (no symbol).

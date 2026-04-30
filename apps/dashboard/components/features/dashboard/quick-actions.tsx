@@ -9,7 +9,7 @@ import {
   Clock01Icon,
   AnalyticsUpIcon,
 } from "@hugeicons/core-free-icons"
-import { Card } from "@carekit/ui"
+import { Card } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 const actions = [

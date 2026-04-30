@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { StatusBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

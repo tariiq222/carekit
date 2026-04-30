@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBillingMutations } from "@/hooks/use-current-subscription"
 

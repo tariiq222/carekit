@@ -2,17 +2,17 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Card, CardContent } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Input } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Input } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import type { BookingSettings } from "@/lib/api/booking-settings"
 
 /* ─── Shared sub-rows ─── */

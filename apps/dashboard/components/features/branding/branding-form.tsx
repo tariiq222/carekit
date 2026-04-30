@@ -1,18 +1,18 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useBranding } from "@/components/providers/branding-provider"
 import { isValidHex } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"

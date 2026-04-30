@@ -10,7 +10,7 @@ import {
 } from "@/components/sidebar-config"
 // Sidebar nav uses the tiered FeatureKey enum (single source of truth for
 // billing-gated features) rather than the legacy FEATURE_FLAG_KEYS list.
-import { FeatureKey } from "@carekit/shared/constants"
+import { FeatureKey } from "@deqah/shared/constants"
 
 const ALL_FEATURE_KEYS = Object.values(FeatureKey) as readonly string[]
 

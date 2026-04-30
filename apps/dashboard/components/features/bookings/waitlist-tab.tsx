@@ -8,8 +8,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
-import { Button } from "@carekit/ui"
+} from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import { Clock01Icon } from "@hugeicons/core-free-icons"
 import { useWaitlistMutations } from "@/hooks/use-waitlist"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"

@@ -14,12 +14,12 @@ import {
 
 import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
-import { Card, CardContent } from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -28,7 +28,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@carekit/ui"
+} from "@deqah/ui"
 
 import {
   useZatcaConfig,

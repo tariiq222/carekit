@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PublicBranding } from '@carekit/shared';
+import type { PublicBranding } from '@deqah/shared';
 
 import { publicBrandingService } from '@/services/client';
 import { getSecureItem, setSecureItem } from '@/stores/secure-storage';

@@ -2,7 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { GridIcon, Menu02Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 
 export type ViewMode = "grid" | "list"

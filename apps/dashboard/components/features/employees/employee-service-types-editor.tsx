@@ -3,8 +3,8 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import type { ServiceBookingType } from "@/lib/types/service"
 import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import { EmployeeTypeRow } from "./employee-type-row"

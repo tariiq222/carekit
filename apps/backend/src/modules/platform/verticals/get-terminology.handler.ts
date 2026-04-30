@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import { BASE_PACKS, mergeOverrides, TerminologyPack } from '@carekit/shared/terminology';
+import { BASE_PACKS, mergeOverrides, TerminologyPack } from '@deqah/shared/terminology';
 
 @Injectable()
 export class GetTerminologyHandler {

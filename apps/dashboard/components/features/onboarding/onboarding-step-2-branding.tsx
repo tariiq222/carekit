@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, Input, Label } from "@carekit/ui"
+import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 export interface Step2Data {

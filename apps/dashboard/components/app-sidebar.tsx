@@ -20,13 +20,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@carekit/ui"
-import { Separator } from "@carekit/ui"
+} from "@deqah/ui"
+import { Separator } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { BillingUsageWidget } from "@/components/billing-usage-widget"
 import { cn } from "@/lib/utils"

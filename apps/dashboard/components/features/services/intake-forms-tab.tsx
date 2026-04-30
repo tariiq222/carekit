@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon, File01Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { useIntakeForms } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 

@@ -1,7 +1,7 @@
 import { ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ExecutionContext } from "@nestjs/common";
-import { FeatureKey } from "@carekit/shared/constants/feature-keys";
+import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { FeatureGuard } from "./feature.guard";
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { TenantContextService } from "../../../common/tenant/tenant-context.service";

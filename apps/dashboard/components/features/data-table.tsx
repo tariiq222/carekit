@@ -19,8 +19,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@carekit/ui"
-import { Button } from "@carekit/ui"
+} from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import { EmptyState } from "@/components/features/empty-state"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

@@ -24,8 +24,8 @@ import {
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { useLocale } from "@/components/locale-provider"
-import { Skeleton } from "@carekit/ui"
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Skeleton } from "@deqah/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { sarToHalalas } from "@/lib/money"
 

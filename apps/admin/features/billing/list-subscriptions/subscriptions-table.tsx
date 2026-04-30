@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Button } from '@carekit/ui/primitives/button';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Button } from '@deqah/ui/primitives/button';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@carekit/ui/primitives/table';
+} from '@deqah/ui/primitives/table';
 import type { OrganizationBillingIdentity, SubscriptionRow, SubscriptionStatus } from '../types';
 
 const STATUS_TONE: Record<SubscriptionStatus, string> = {

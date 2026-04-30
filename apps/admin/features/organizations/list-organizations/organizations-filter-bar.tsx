@@ -1,9 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Button } from '@carekit/ui/primitives/button';
-import { Input } from '@carekit/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@carekit/ui/primitives/select';
+import { Button } from '@deqah/ui/primitives/button';
+import { Input } from '@deqah/ui/primitives/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@deqah/ui/primitives/select';
 import type { OrganizationStatus } from '../types';
 
 export type SuspendedFilter = 'all' | 'true' | 'false';

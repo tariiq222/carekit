@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { BookingStatus } from "@prisma/client";
-import { FeatureKey } from "@carekit/shared/constants/feature-keys";
+import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { SubscriptionCacheService } from "./subscription-cache.service";

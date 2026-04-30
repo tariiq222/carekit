@@ -13,10 +13,10 @@ import {
   DialogBody,
   DialogHeader,
   DialogTitle,
-} from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+} from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBranchEmployees, useBranchEmployeeMutations } from "@/hooks/use-branches"
 import { fetchEmployees } from "@/lib/api/employees"

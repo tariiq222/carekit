@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@carekit/ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@carekit/ui"
+} from "@deqah/ui"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@deqah/ui"
 
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"

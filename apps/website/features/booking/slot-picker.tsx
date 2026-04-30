@@ -1,6 +1,6 @@
 'use client';
 
-import type { AvailableSlot } from '@carekit/shared';
+import type { AvailableSlot } from '@deqah/shared';
 
 interface SlotPickerProps {
   slots: AvailableSlot[];

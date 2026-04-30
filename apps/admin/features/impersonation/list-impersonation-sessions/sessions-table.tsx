@@ -1,9 +1,9 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Button } from '@carekit/ui/primitives/button';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Button } from '@deqah/ui/primitives/button';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@carekit/ui/primitives/table';
+} from '@deqah/ui/primitives/table';
 import { useEndImpersonation } from '../end-impersonation/use-end-impersonation';
 import type { ImpersonationSession } from '../types';
 

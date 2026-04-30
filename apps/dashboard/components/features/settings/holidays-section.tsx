@@ -10,15 +10,15 @@ import {
   RepeatIcon,
 } from "@hugeicons/core-free-icons"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Switch } from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Switch } from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import type { OrganizationHoliday } from "@/lib/api/organization"
 import {
   useOrganizationHolidays,

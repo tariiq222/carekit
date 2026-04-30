@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Label, Textarea } from "@carekit/ui"
+import { Button, Label, Textarea } from "@deqah/ui"
 import {
   PRIVACY_POLICY_DEFAULTS,
   PRIVACY_POLICY_KEY_AR,

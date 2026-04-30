@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, Skeleton } from "@carekit/ui"
+import { Card, Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { Subscription } from "@/lib/types/billing"

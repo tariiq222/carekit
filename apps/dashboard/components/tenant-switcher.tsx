@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useMemberships, type Membership } from "@/hooks/use-memberships"
 import { useSwitchOrganization } from "@/hooks/use-switch-organization"

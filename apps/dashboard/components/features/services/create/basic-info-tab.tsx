@@ -1,24 +1,24 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useCategories } from "@/hooks/use-services"
 import { useDepartmentOptions } from "@/hooks/use-departments"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"

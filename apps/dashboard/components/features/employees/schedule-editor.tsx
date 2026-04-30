@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Sheet,
   SheetContent,
@@ -14,7 +14,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import {
   useEmployeeAvailability,
   useEmployeeBreaks,

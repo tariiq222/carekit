@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 
 export function LogoutButton() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Badge, Button, Card, Skeleton } from "@carekit/ui"
+import { Badge, Button, Card, Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBillingMutations } from "@/hooks/use-current-subscription"
 import {

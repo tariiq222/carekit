@@ -7,7 +7,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import { ServicesTabContent } from "@/components/features/services/services-tab-content"
 import { useLocale } from "@/components/locale-provider"
 

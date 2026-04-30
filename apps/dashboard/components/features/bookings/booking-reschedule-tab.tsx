@@ -4,8 +4,8 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { Button } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   Select,
@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 
 import type { Booking } from "@/lib/types/booking"
 import { useBookingMutations } from "@/hooks/use-bookings"

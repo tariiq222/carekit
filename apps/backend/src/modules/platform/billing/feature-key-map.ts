@@ -1,4 +1,4 @@
-import { FeatureKey } from '@carekit/shared/constants/feature-keys';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 /**
  * Maps each FeatureKey enum value to the corresponding key in Plan.limits JSON.

@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { AvailabilitySlot } from "@/lib/types/employee"
 import type { LocalBreak } from "./schedule-types"

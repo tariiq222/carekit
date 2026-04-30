@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Card, CardContent } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
 import { cn } from "@/lib/utils"
-import { Label } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Label } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-organization-settings"
 import type { BookingSettings } from "@/lib/api/booking-settings"
 import {

@@ -1,18 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { SidebarTrigger } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Avatar, AvatarFallback } from "@carekit/ui"
+import { SidebarTrigger } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Avatar, AvatarFallback } from "@deqah/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Moon02Icon,

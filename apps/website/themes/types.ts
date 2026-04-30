@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { WebsiteTheme } from '@carekit/shared';
+import type { WebsiteTheme } from '@deqah/shared';
 
 export interface ThemeLayoutProps {
   children: ReactNode;

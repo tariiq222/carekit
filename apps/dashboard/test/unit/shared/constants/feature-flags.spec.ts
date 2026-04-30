@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest"
-import { FEATURE_FLAG_KEYS, type FeatureFlagKey } from "@carekit/shared/constants"
+import { FEATURE_FLAG_KEYS, type FeatureFlagKey } from "@deqah/shared/constants"
 
 describe("FEATURE_FLAG_KEYS", () => {
   it("contains exactly 13 keys", () => {

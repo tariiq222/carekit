@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns"
 import { ar } from "date-fns/locale"
-import { Card, CardContent } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import type { Notification } from "@/lib/types/notification"

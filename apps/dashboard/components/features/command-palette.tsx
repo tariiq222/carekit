@@ -22,7 +22,7 @@ import {
   CommandShortcut,
   CommandEmpty,
   CommandSeparator,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 type CommandEntry = {

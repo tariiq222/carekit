@@ -1,5 +1,5 @@
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
-import type { OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse } from '@carekit/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
+import type { OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse } from '@deqah/shared';
 
 import { getApiBase } from '@/lib/api-base';
 

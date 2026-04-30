@@ -2,17 +2,17 @@
 
 import { Controller, useForm } from "react-hook-form"
 
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { EmployeeServiceTypesEditor } from "../employee-service-types-editor"
 import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import type { AddServiceFormData } from "./draft-service.types"

@@ -1,4 +1,4 @@
-import type { PublicBranding } from '@carekit/shared';
+import type { PublicBranding } from '@deqah/shared';
 
 const DEFAULTS: Record<string, string> = {
   '--primary': '#354FD8',

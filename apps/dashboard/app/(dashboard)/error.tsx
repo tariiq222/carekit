@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Alert02Icon,
   ArrowReloadHorizontalIcon,

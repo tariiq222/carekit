@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { CreateTenantDialog } from '@/features/organizations/create-tenant/create-tenant-dialog';
 import { useListOrganizations } from '@/features/organizations/list-organizations/use-list-organizations';
 import {

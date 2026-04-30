@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
-import { Label } from '@carekit/ui/primitives/label';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
-import { Switch } from '@carekit/ui/primitives/switch';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
+import { Label } from '@deqah/ui/primitives/label';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { Switch } from '@deqah/ui/primitives/switch';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import type { EntitlementRow } from './list-entitlements.api';
 import { useEntitlements, useUpdateEntitlement } from './use-entitlements';
 

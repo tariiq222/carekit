@@ -1,5 +1,5 @@
 /**
- * Website client-auth API — thin wrapper around @carekit/api-client modules.
+ * Website client-auth API — thin wrapper around @deqah/api-client modules.
  *
  * The shared package owns request shape, envelope unwrapping, and error
  * formatting. This file only re-exports under the historical *Api names so
@@ -19,14 +19,14 @@ import {
   getMyBookings,
   cancelMyBooking,
   rescheduleMyBooking,
-} from '@carekit/api-client'
+} from '@deqah/api-client'
 import type {
   ClientAuthResponse,
   ClientLoginPayload,
   ClientRegisterPayload,
   ClientProfile,
   ClientBookingListResponse,
-} from '@carekit/shared'
+} from '@deqah/shared'
 
 import { getApiBase } from '@/lib/api-base'
 

@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@carekit/ui/primitives/select';
+} from '@deqah/ui/primitives/select';
 import type { SubscriptionStatus } from '../types';
 
 export type StatusFilter = 'all' | SubscriptionStatus;

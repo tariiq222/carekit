@@ -1,6 +1,6 @@
 "use client"
 
-import { SidebarTrigger } from "@carekit/ui"
+import { SidebarTrigger } from "@deqah/ui"
 
 export function MobileSidebarTrigger() {
   return (

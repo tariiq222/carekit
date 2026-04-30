@@ -7,8 +7,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
-import { Button } from "@carekit/ui"
+} from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons"

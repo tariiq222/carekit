@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { GuestClientInfo } from '@carekit/shared';
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
+import type { GuestClientInfo } from '@deqah/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
 
 interface OtpVerifyFormProps {
   client: GuestClientInfo;

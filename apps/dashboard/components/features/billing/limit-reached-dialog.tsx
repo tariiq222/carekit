@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { getEmployeeUsageSummary } from "@/lib/billing/utils"
 import type { Subscription } from "@/lib/types/billing"

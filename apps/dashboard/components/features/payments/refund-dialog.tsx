@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
 
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Dialog,
   DialogContent,
@@ -15,10 +15,10 @@ import {
   DialogDescription,
   DialogBody,
   DialogFooter,
-} from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
+} from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { usePaymentMutations } from "@/hooks/use-payments"
 

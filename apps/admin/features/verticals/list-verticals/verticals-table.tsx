@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Button } from '@carekit/ui/primitives/button';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Button } from '@deqah/ui/primitives/button';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@carekit/ui/primitives/table';
+} from '@deqah/ui/primitives/table';
 import type { VerticalRow } from '../types';
 
 interface Props {

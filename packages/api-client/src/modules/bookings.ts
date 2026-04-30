@@ -9,7 +9,7 @@ import type {
   CreateBookingPayload,
   UpdateBookingPayload,
 } from '../types/booking'
-import type { GuestBookingPayload, GuestBookingResponse } from '@carekit/shared'
+import type { GuestBookingPayload, GuestBookingResponse } from '@deqah/shared'
 
 export async function list(query: BookingListQuery = {}): Promise<BookingListResponse> {
   return apiRequest<BookingListResponse>(

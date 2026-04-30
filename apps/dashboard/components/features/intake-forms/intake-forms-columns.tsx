@@ -8,9 +8,9 @@ import {
   Delete02Icon,
   EyeIcon,
 } from "@hugeicons/core-free-icons"
-import { Badge } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
+import { Badge } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@deqah/ui"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import type { IntakeForm, FormType } from "@/lib/types/intake-form"
 import { FORM_TYPE_LABELS, FORM_SCOPE_LABELS } from "@/lib/types/intake-form"

@@ -5,8 +5,8 @@ import { type ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
+import { Badge } from "@deqah/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@deqah/ui"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import type { KnowledgeBaseEntry } from "@/lib/types/chatbot"
 
 function DeleteEntryCell({

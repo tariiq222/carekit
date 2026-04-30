@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import type { PublicBranding } from '@carekit/shared';
+import type { PublicBranding } from '@deqah/shared';
 
 const BASE_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ?? 'https://example.com';
 

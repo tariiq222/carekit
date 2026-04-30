@@ -10,9 +10,9 @@ import {
 } from "@hugeicons/core-free-icons"
 import { formatName, getInitials, getAvatarGradientStyle } from "@/lib/utils"
 
-import { Avatar, AvatarFallback } from "@carekit/ui"
-import { Badge } from "@carekit/ui"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@carekit/ui"
+import { Avatar, AvatarFallback } from "@deqah/ui"
+import { Badge } from "@deqah/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import type { Employee } from "@/lib/types/employee"
 

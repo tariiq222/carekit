@@ -1,8 +1,8 @@
 "use client"
 
-import { Card, CardContent } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { useFeatureFlags } from "@/hooks/use-feature-flags"
 import type { FeatureFlag } from "@/lib/types/feature-flag"

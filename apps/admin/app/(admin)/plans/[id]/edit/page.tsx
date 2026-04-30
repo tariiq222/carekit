@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { use, useMemo, useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
-import { Input } from '@carekit/ui/primitives/input';
-import { Label } from '@carekit/ui/primitives/label';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+import { Button } from '@deqah/ui/primitives/button';
+import { Input } from '@deqah/ui/primitives/input';
+import { Label } from '@deqah/ui/primitives/label';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { useUpdatePlan } from '@/features/plans/update-plan/use-update-plan';
 import { PlanFormTabs } from '@/features/plans/plan-form-tabs';

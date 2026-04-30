@@ -1,13 +1,13 @@
-// Admin API client wired to @carekit/api-client.
+// Admin API client wired to @deqah/api-client.
 //
 // This module initialises the shared client once at module load using the admin's
 // localStorage keys (admin.accessToken / admin.refreshToken) and re-exports the
 // same adminRequest / publicRequest surface that feature slices already use so
 // no import changes are needed downstream.
 
-export { ApiError } from '@carekit/api-client';
+export { ApiError } from '@deqah/api-client';
 
-import { initClient, apiRequest, ApiError } from '@carekit/api-client';
+import { initClient, apiRequest, ApiError } from '@deqah/api-client';
 
 const ACCESS_KEY = 'admin.accessToken';
 

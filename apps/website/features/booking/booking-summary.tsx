@@ -1,6 +1,6 @@
 'use client';
 
-import type { GuestClientInfo, Service, EmployeeWithUser, AvailableSlot } from '@carekit/shared';
+import type { GuestClientInfo, Service, EmployeeWithUser, AvailableSlot } from '@deqah/shared';
 
 interface BookingSummaryProps {
   service: Service;

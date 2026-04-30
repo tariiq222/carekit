@@ -114,7 +114,7 @@ describe('API Client (lib/api.ts)', () => {
 
   it('should route every endpoint through the same-origin /api/proxy prefix', async () => {
     // The split direct/proxy routing was removed when lib/api delegated to
-    // @carekit/api-client. The Next rewrite (next.config.mjs) forwards
+    // @deqah/api-client. The Next rewrite (next.config.mjs) forwards
     // /api/proxy/:path* → backend, so a single base keeps cookie-bearing
     // and authenticated endpoints on the same origin.
     const { api } = await import('@/lib/api')

@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { OrgBillingDetail } from '@/features/billing/get-org-billing/org-billing-detail';
 
 export default function OrgBillingPage({

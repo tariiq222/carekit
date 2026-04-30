@@ -1,4 +1,4 @@
-import type { PublicBranding } from '@carekit/shared';
+import type { PublicBranding } from '@deqah/shared';
 import {
   colors,
   typography,
@@ -6,7 +6,7 @@ import {
   radius,
   rnShadows,
   animations,
-} from '@carekit/shared/tokens';
+} from '@deqah/shared/tokens';
 
 function isValidColor(value: string | null | undefined): value is string {
   return typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value);

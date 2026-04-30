@@ -17,7 +17,7 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../packages/ui/src/$1'),
       },
       {
-        find: '@carekit/ui',
+        find: '@deqah/ui',
         replacement: path.resolve(__dirname, '../../packages/ui/src/index.ts'),
       },
       { find: '@', replacement: path.resolve(__dirname, '.') },

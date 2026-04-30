@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Dialog,
   DialogBody,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { getLocalizedPlanName } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"

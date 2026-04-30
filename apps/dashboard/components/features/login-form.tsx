@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef } from "react"
 import type HCaptcha from "@hcaptcha/react-hcaptcha"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useLocale } from "@/components/locale-provider"
 import { CaptchaField } from "@/components/features/shared/captcha-field"

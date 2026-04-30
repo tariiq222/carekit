@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "../lib/cn"
-import { Skeleton } from "@carekit/ui"
+import { Skeleton } from "@deqah/ui"
 
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (

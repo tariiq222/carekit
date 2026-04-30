@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@carekit/ui/primitives/table';
+} from '@deqah/ui/primitives/table';
 import type { AuditLogEntry } from './list-audit-log.api';
 
 interface Props {

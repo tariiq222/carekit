@@ -3,10 +3,10 @@
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@carekit/ui"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { FeatureGate } from "@/components/feature-gate"
-import { FeatureKey } from "@carekit/shared/constants"
+import { FeatureKey } from "@deqah/shared/constants"
 
 import { SessionsTab } from "@/components/features/chatbot/sessions-tab"
 import { KnowledgeBaseTab } from "@/components/features/chatbot/knowledge-base-tab"

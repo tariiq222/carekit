@@ -1,7 +1,7 @@
 /**
  * API Client — CareKit Dashboard
  *
- * Thin wrapper that wires `@carekit/api-client` for the dashboard:
+ * Thin wrapper that wires `@deqah/api-client` for the dashboard:
  *   - in-memory access token + setter/getter
  *   - same-origin `/api/proxy` baseUrl (Next rewrite → backend)
  *   - ORG_SUSPENDED handler that clears local auth and full-reloads
@@ -17,7 +17,7 @@ import {
   apiRequest,
   initClient,
   ORG_SUSPENDED_CODE,
-} from "@carekit/api-client"
+} from "@deqah/api-client"
 import type { ApiResponse, PaginatedResponse } from "@/lib/types/common"
 
 export type { ApiResponse, PaginatedResponse }

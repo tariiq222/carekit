@@ -1,7 +1,7 @@
 "use client"
 
 import { useSyncExternalStore } from "react"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
 import { clearImpersonationMarker, isImpersonating } from "@/lib/api/auth"

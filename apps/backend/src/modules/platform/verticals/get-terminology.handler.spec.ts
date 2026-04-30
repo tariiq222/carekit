@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GetTerminologyHandler } from './get-terminology.handler';
 import { PrismaService } from '../../../infrastructure/database';
-import { BASE_PACKS } from '@carekit/shared/terminology';
+import { BASE_PACKS } from '@deqah/shared/terminology';
 
 const mockVerticalBase = {
   id: 'v1',

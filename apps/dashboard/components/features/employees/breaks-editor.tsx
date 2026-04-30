@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import {
   Sheet,
   SheetContent,
@@ -12,9 +12,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+} from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useEmployeeBreaks, useSetBreaks } from "@/hooks/use-employees"
 

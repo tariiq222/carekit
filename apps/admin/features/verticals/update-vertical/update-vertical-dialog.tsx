@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import {
   Dialog,
   DialogContent,
@@ -9,17 +9,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@carekit/ui/primitives/dialog';
-import { Input } from '@carekit/ui/primitives/input';
-import { Label } from '@carekit/ui/primitives/label';
+} from '@deqah/ui/primitives/dialog';
+import { Input } from '@deqah/ui/primitives/input';
+import { Label } from '@deqah/ui/primitives/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@carekit/ui/primitives/select';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+} from '@deqah/ui/primitives/select';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import type { VerticalRow } from '../types';
 import { useUpdateVertical } from './use-update-vertical';
 

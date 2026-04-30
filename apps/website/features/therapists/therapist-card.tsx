@@ -1,4 +1,4 @@
-import type { PublicEmployee } from '@carekit/api-client';
+import type { PublicEmployee } from '@deqah/api-client';
 
 interface Props {
   therapist: PublicEmployee;

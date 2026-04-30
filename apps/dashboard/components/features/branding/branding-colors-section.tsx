@@ -1,9 +1,9 @@
 "use client"
 
 import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { isValidHex, contrastRatio, pickForeground } from "@/lib/color-utils"
 

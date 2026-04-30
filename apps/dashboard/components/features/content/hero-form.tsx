@@ -3,10 +3,10 @@
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
 import { heroFormSchema, type HeroFormSchema } from "@/lib/schemas/hero.schema"
 import {
   HERO_DEFAULTS,

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
-import { Input } from '@carekit/ui/primitives/input';
-import { Label } from '@carekit/ui/primitives/label';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+import { Button } from '@deqah/ui/primitives/button';
+import { Input } from '@deqah/ui/primitives/input';
+import { Label } from '@deqah/ui/primitives/label';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreatePlan } from '@/features/plans/create-plan/use-create-plan';
 import { PlanFormTabs } from '@/features/plans/plan-form-tabs';
 import { DEFAULT_PLAN_LIMITS, type PlanLimits } from '@/features/plans/plan-limits';

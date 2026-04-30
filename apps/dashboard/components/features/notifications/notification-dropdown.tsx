@@ -9,11 +9,11 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@carekit/ui"
-import { ScrollArea } from "@carekit/ui"
-import { Separator } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+} from "@deqah/ui"
+import { ScrollArea } from "@deqah/ui"
+import { Separator } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import {

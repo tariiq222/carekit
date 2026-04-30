@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useEmployeeServiceMutations } from "@/hooks/use-employees"
 import type { EmployeeService } from "@/lib/types/employee"

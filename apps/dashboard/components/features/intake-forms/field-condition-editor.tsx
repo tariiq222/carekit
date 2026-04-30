@@ -2,17 +2,17 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
-import { Separator } from "@carekit/ui"
+} from "@deqah/ui"
+import { Separator } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { FormField, ConditionOperator } from "@/lib/types/intake-form"
 import { CONDITION_OPERATOR_LABELS } from "@/lib/types/intake-form"

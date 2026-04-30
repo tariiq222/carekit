@@ -1,6 +1,6 @@
 "use client"
 
-import type { FeatureKey } from "@carekit/shared/constants"
+import type { FeatureKey } from "@deqah/shared/constants"
 
 import { useBillingFeatures } from "./use-billing-features"
 

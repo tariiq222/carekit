@@ -19,7 +19,7 @@ vi.mock('./otp.api', () => ({
 }));
 
 import { OtpRequestForm } from './otp-request-form';
-import type { GuestClientInfo } from '@carekit/shared';
+import type { GuestClientInfo } from '@deqah/shared';
 
 const client: GuestClientInfo = { name: 'Ahmed', phone: '+966500000000', email: 'ahmed@test.com' };
 

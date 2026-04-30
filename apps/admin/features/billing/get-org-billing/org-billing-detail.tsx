@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Button } from '@carekit/ui/primitives/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Button } from '@deqah/ui/primitives/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
   TableBody,
@@ -12,8 +12,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@carekit/ui/primitives/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@carekit/ui/primitives/tabs';
+} from '@deqah/ui/primitives/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@deqah/ui/primitives/tabs';
 import type {
   SubscriptionInvoiceRow,
   SubscriptionInvoiceStatus,

@@ -1,4 +1,4 @@
-import type { ClientProfile, ClientBookingItem } from '@carekit/shared';
+import type { ClientProfile, ClientBookingItem } from '@deqah/shared';
 
 export type { ClientProfile, ClientBookingItem };
 

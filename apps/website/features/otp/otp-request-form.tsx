@@ -2,8 +2,8 @@
 
 import { useRef, useState } from 'react';
 import type HCaptcha from '@hcaptcha/react-hcaptcha';
-import type { GuestClientInfo } from '@carekit/shared';
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
+import type { GuestClientInfo } from '@deqah/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
 import { CaptchaField } from './captcha-field';
 
 interface OtpRequestFormProps {

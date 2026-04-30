@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useEmployeeMutations } from "@/hooks/use-employee-mutations"
-import { Card, CardContent } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
-import { Button } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { Employee, UpdateEmployeePayload } from "@/lib/types/employee"
 

@@ -19,7 +19,7 @@ import {
   TaxesIcon,
   Activity01Icon,
 } from "@hugeicons/core-free-icons"
-import { FeatureKey } from "@carekit/shared/constants"
+import { FeatureKey } from "@deqah/shared/constants"
 
 export interface NavItem {
   titleKey: string

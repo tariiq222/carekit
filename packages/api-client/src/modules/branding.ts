@@ -1,5 +1,5 @@
 import { apiRequest } from '../client'
-import type { BrandingConfig, PublicBranding } from '@carekit/shared/types'
+import type { BrandingConfig, PublicBranding } from '@deqah/shared/types'
 
 /**
  * Fetches public branding from the unified branding endpoint.

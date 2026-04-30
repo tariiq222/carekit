@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { GuestClientInfo, AvailableSlot } from '@carekit/shared';
+import type { GuestClientInfo, AvailableSlot } from '@deqah/shared';
 import { OtpRequestForm } from '@/features/otp/otp-request-form';
 import { OtpVerifyForm } from '@/features/otp/otp-verify-form';
 import { useOtpSession } from '@/features/otp/use-otp-session';

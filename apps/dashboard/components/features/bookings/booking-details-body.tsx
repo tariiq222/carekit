@@ -14,7 +14,7 @@ import {
   CreditCardIcon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge, Button } from "@carekit/ui"
+import { Badge, Button } from "@deqah/ui"
 import { DetailRow } from "@/components/features/detail-sheet-parts"
 import { cn } from "@/lib/utils"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"

@@ -8,8 +8,8 @@ import {
   Add01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 interface GreetingHeaderProps {

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
-import { Popover, PopoverContent, PopoverTrigger } from "@carekit/ui"
+import { Popover, PopoverContent, PopoverTrigger } from "@deqah/ui"
 import {
   Command,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { COUNTRIES } from "@/lib/countries-data"
 import { useLocale } from "@/components/locale-provider"

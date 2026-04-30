@@ -6,7 +6,7 @@ const mockGetMe = vi.fn()
 const mockRefreshToken = vi.fn()
 const mockSetAccessToken = vi.fn()
 
-vi.mock("@carekit/api-client", () => ({
+vi.mock("@deqah/api-client", () => ({
   authApi: {
     getMe: (...args: unknown[]) => mockGetMe(...args),
     refreshToken: (...args: unknown[]) => mockRefreshToken(...args),

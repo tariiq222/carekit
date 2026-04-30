@@ -1,6 +1,6 @@
 import { apiRequest } from '../client';
 import { buildQueryString } from '../types/api';
-import type { AvailableSlot } from '@carekit/shared';
+import type { AvailableSlot } from '@deqah/shared';
 
 export async function getPublicAvailability(
   employeeId: string,

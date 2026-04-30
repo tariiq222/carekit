@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 
 export default function NotFound() {
   return (

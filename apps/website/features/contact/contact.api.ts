@@ -1,4 +1,4 @@
-import type { CreateContactMessagePayload } from '@carekit/api-client';
+import type { CreateContactMessagePayload } from '@deqah/api-client';
 
 import { getApiBase } from '@/lib/api-base';
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Card } from "@carekit/ui"
+import { Card } from "@deqah/ui"
 import { getLocalizedPlanName } from "@/lib/billing/utils"
 import type { Plan } from "@/lib/types/billing"
 

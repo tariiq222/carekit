@@ -3,17 +3,17 @@
 import { useEffect } from "react"
 import { useForm, Controller, type Path } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
+import { Button } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
-import { Textarea } from "@carekit/ui"
+} from "@deqah/ui"
+import { Textarea } from "@deqah/ui"
 import {
   featureCardsSchema,
   type FeatureCardsSchema,

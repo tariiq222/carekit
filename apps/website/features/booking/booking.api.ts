@@ -1,5 +1,5 @@
-import type { AvailableSlot, GuestBookingPayload, GuestBookingResponse } from '@carekit/shared';
-import type { PublicEmployee } from '@carekit/api-client';
+import type { AvailableSlot, GuestBookingPayload, GuestBookingResponse } from '@deqah/shared';
+import type { PublicEmployee } from '@deqah/api-client';
 import { publicFetch } from '@/lib/public-fetch';
 
 export interface PublicBranch {

@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 
-import { Badge } from "@carekit/ui"
-import { Button } from "@carekit/ui"
+import { Badge } from "@deqah/ui"
+import { Button } from "@deqah/ui"
 import {
   useEmployeeAvailability,
   useEmployeeBreaks,

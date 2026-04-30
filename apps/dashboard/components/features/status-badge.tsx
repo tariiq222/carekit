@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge } from "@carekit/ui"
+import { Badge } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { bookingStatusStyles, bookingTypeStyles } from "@/lib/ds"
 import { cn } from "@/lib/utils"

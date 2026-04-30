@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@carekit/ui/primitives/dialog';
-import { Label } from '@carekit/ui/primitives/label';
-import { Textarea } from '@carekit/ui/primitives/textarea';
+} from '@deqah/ui/primitives/dialog';
+import { Label } from '@deqah/ui/primitives/label';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import type { SubscriptionInvoiceRow } from '../types';
 import { useWaiveInvoice } from './use-waive-invoice';
 

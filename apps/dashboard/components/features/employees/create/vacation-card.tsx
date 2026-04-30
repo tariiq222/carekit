@@ -1,15 +1,15 @@
 "use client"
 
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   Card,
   CardContent,
   CardTitle,
   CardDescription,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { LocalVacation } from "./schedule-types"
 

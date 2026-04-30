@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useSearchUsers } from '@/features/users/search-users/use-search-users';
 import { UsersFilterBar } from '@/features/users/search-users/users-filter-bar';
 import { UsersTable } from '@/features/users/search-users/users-table';

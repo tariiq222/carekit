@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Card, CardContent } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Input } from "@carekit/ui"
-import { Button } from "@carekit/ui"
-import { Skeleton } from "@carekit/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Input } from "@deqah/ui"
+import { Button } from "@deqah/ui"
+import { Skeleton } from "@deqah/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"

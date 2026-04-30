@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useListSubscriptions } from '@/features/billing/list-subscriptions/use-list-subscriptions';
 import {
   SubscriptionsFilterBar,

@@ -22,7 +22,7 @@ import { useDir } from '@/hooks/useDir';
 import type {
   TerminologyKey,
   TerminologyPack,
-} from '@carekit/shared/terminology';
+} from '@deqah/shared/terminology';
 
 export const terminologyQueryKey = (slug: string | undefined) =>
   ['terminology', slug] as const;

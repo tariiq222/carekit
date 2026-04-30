@@ -10,11 +10,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import {
   InputGroup,
   InputGroupAddon,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { SearchIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 

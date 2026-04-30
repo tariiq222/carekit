@@ -70,7 +70,7 @@ describe('ResetPasswordForm — OTP step', () => {
   });
 
   it('uses CLIENT_PASSWORD_RESET purpose when verifying OTP', async () => {
-    const { OtpPurpose } = await import('@carekit/shared');
+    const { OtpPurpose } = await import('@deqah/shared');
     expect(OtpPurpose.CLIENT_PASSWORD_RESET).toBe('CLIENT_PASSWORD_RESET');
   });
 });

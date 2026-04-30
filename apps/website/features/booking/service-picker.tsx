@@ -1,6 +1,6 @@
 'use client';
 
-import type { Service } from '@carekit/shared';
+import type { Service } from '@deqah/shared';
 
 interface ServicePickerProps {
   services: Service[];

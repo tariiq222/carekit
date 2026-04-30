@@ -1,8 +1,8 @@
 "use client"
 
-import { Input } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { Input } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 
 /* ─── Number Field with optional hint ─── */

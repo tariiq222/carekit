@@ -29,7 +29,7 @@ import { useTerminology } from '../useTerminology';
 import type {
   TerminologyKey,
   TerminologyPack,
-} from '@carekit/shared/terminology';
+} from '@deqah/shared/terminology';
 
 const mockedGetPack = terminologyService.getPack as jest.Mock;
 const mockedUseDir = useDir as jest.Mock;

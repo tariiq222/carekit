@@ -8,12 +8,12 @@ import {
   Alert02Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Input } from "@carekit/ui"
+import { Input } from "@deqah/ui"
 import { NationalitySelect } from "@/components/ui/nationality-select"
-import { PhoneInput } from "@carekit/ui"
-import { Label } from "@carekit/ui"
-import { Card, CardContent } from "@carekit/ui"
-import { Switch } from "@carekit/ui"
+import { PhoneInput } from "@deqah/ui"
+import { Label } from "@deqah/ui"
+import { Card, CardContent } from "@deqah/ui"
+import { Switch } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"

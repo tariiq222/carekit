@@ -1,6 +1,6 @@
 import '@/lib/api-client'; // ensure initClient runs before any authApi call
-import { authApi } from '@carekit/api-client';
-import type { AuthResponse, LoginPayload } from '@carekit/api-client';
+import { authApi } from '@deqah/api-client';
+import type { AuthResponse, LoginPayload } from '@deqah/api-client';
 
 export type LoginRequest = LoginPayload;
 export type LoginResponse = AuthResponse;

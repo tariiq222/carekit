@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { cn } from '@carekit/ui/lib/cn';
+import { cn } from '@deqah/ui/lib/cn';
 
 const ITEMS: Array<{ href: string; labelKey: string }> = [
   { href: '/', labelKey: 'nav.overview' },

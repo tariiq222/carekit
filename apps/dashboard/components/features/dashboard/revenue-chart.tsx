@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { Skeleton } from "@carekit/ui"
-import { Card } from "@carekit/ui"
+import { Skeleton } from "@deqah/ui"
+import { Card } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchRevenueReport } from "@/lib/api/reports"

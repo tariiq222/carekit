@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Button } from '@carekit/ui/primitives/button';
+import { Button } from '@deqah/ui/primitives/button';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { PlansTable } from '@/features/plans/list-plans/plans-table';
 import { DeletePlanDialog } from '@/features/plans/delete-plan/delete-plan-dialog';

@@ -1,9 +1,9 @@
 'use client';
 
-import { Input } from '@carekit/ui/primitives/input';
-import { Label } from '@carekit/ui/primitives/label';
-import { Switch } from '@carekit/ui/primitives/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@carekit/ui/primitives/tabs';
+import { Input } from '@deqah/ui/primitives/input';
+import { Label } from '@deqah/ui/primitives/label';
+import { Switch } from '@deqah/ui/primitives/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@deqah/ui/primitives/tabs';
 import type { PlanLimits } from './plan-limits';
 import { FEATURE_FIELDS, OVERAGE_FIELDS, QUOTA_FIELDS } from './plan-limits';
 

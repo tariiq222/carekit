@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { validatePassword } from './auth.schema';
 import { clientResetPasswordApi } from './auth.api';
 import { verifyOtp } from '@/features/otp/otp.api';
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
 
 type Step = 'otp' | 'password';
 

@@ -4,7 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail } from './auth.schema';
 import { requestOtp } from '@/features/otp/otp.api';
-import { OtpChannel, OtpPurpose } from '@carekit/shared';
+import { OtpChannel, OtpPurpose } from '@deqah/shared';
 
 interface ForgotPasswordFormProps {
   onSuccess?: (email: string) => void;

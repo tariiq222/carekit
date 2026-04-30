@@ -3,10 +3,10 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { Badge } from '@carekit/ui/primitives/badge';
-import { Button } from '@carekit/ui/primitives/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@carekit/ui/primitives/card';
-import { Skeleton } from '@carekit/ui/primitives/skeleton';
+import { Badge } from '@deqah/ui/primitives/badge';
+import { Button } from '@deqah/ui/primitives/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetOrganization } from '@/features/organizations/get-organization/use-get-organization';
 import { useGetOrgBilling } from '@/features/organizations/get-org-billing/use-get-org-billing';
 import { SuspendDialog } from '@/features/organizations/suspend-organization/suspend-dialog';
