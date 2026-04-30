@@ -23,6 +23,7 @@ describe('BillingController saved-card routes', () => {
       addSavedCard as never,
       setDefaultSavedCard as never,
       removeSavedCard as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -41,5 +42,33 @@ describe('BillingController saved-card routes', () => {
 
     await controller.removeCard('card-2');
     expect(removeSavedCard.execute).toHaveBeenCalledWith('card-2');
+  });
+});
+
+describe('BillingController cancellation routes', () => {
+  it('delegates schedule-cancel and reactivate routes to handlers', async () => {
+    const cancel = buildHandler({ id: 'sub-1', cancelAtPeriodEnd: true });
+    const reactivate = buildHandler({ id: 'sub-1', cancelAtPeriodEnd: false });
+    const controller = new BillingController(
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      cancel as never,
+      buildHandler(null) as never,
+      buildHandler([]) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      buildHandler(null) as never,
+      reactivate as never,
+    );
+
+    await controller.scheduleCancelSub({ reason: 'budget' });
+    expect(cancel.execute).toHaveBeenCalledWith({ reason: 'budget' });
+
+    await controller.reactivateSub();
+    expect(reactivate.execute).toHaveBeenCalledWith();
   });
 });

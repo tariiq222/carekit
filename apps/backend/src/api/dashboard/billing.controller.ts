@@ -19,6 +19,7 @@ import { StartSubscriptionHandler } from "../../modules/platform/billing/start-s
 import { UpgradePlanHandler } from "../../modules/platform/billing/upgrade-plan/upgrade-plan.handler";
 import { DowngradePlanHandler } from "../../modules/platform/billing/downgrade-plan/downgrade-plan.handler";
 import { CancelSubscriptionHandler } from "../../modules/platform/billing/cancel-subscription/cancel-subscription.handler";
+import { ReactivateSubscriptionHandler } from "../../modules/platform/billing/reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "../../modules/platform/billing/resume-subscription/resume-subscription.handler";
 import { StartSubscriptionDto } from "../../modules/platform/billing/dto/start-subscription.dto";
 import { ChangePlanDto } from "../../modules/platform/billing/dto/change-plan.dto";
@@ -47,6 +48,7 @@ export class BillingController {
     private readonly addSavedCard: AddSavedCardHandler,
     private readonly setDefaultSavedCard: SetDefaultSavedCardHandler,
     private readonly removeSavedCard: RemoveSavedCardHandler,
+    private readonly reactivate: ReactivateSubscriptionHandler,
   ) {}
 
   @Get("plans")
@@ -91,11 +93,24 @@ export class BillingController {
     return this.cancel.execute(body);
   }
 
+  @Post("subscription/schedule-cancel")
+  @ApiOperation({ summary: "Schedule subscription cancellation at period end" })
+  scheduleCancelSub(@Body() body: { reason?: string }) {
+    return this.cancel.execute(body);
+  }
+
   @Post("subscription/resume")
   @HttpCode(200)
   @ApiOperation({ summary: "Resume a suspended subscription" })
   resumeSub() {
     return this.resume.execute({});
+  }
+
+  @Post("subscription/reactivate")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Reactivate a scheduled cancellation" })
+  reactivateSub() {
+    return this.reactivate.execute();
   }
 
   @Get("saved-cards")
