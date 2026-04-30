@@ -11,6 +11,8 @@ export interface RecordSubscriptionPaymentFailureCommand {
   reason: string;
 }
 
+const FIRST_DUNNING_RETRY_DELAY_MS = 3 * 60 * 60 * 1000;
+
 @Injectable()
 export class RecordSubscriptionPaymentFailureHandler {
   constructor(
@@ -29,7 +31,12 @@ export class RecordSubscriptionPaymentFailureHandler {
     if (!invoice) throw new NotFoundException('Invoice not found');
 
     const sub = invoice.subscription;
-    const newStatus = this.stateMachine.transition(sub.status, { type: 'chargeFailure' });
+    const newStatus =
+      sub.status === 'PAST_DUE'
+        ? 'PAST_DUE'
+        : this.stateMachine.transition(sub.status, { type: 'chargeFailure' });
+    const now = new Date();
+    const firstRetryAt = new Date(now.getTime() + FIRST_DUNNING_RETRY_DELAY_MS);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.subscriptionInvoice.update({
@@ -47,9 +54,24 @@ export class RecordSubscriptionPaymentFailureHandler {
           organizationId: sub.organizationId, // explicit — Lesson 8
           status: newStatus,
           pastDueSince:
-            newStatus === 'PAST_DUE' && !sub.pastDueSince ? new Date() : sub.pastDueSince,
+            newStatus === 'PAST_DUE' && !sub.pastDueSince ? now : sub.pastDueSince,
           lastFailureReason: cmd.reason,
           retryCount: { increment: 1 },
+          dunningRetryCount: 0,
+          nextRetryAt: sub.nextRetryAt ?? firstRetryAt,
+        },
+      });
+      await tx.dunningLog.create({
+        data: {
+          organizationId: sub.organizationId,
+          subscriptionId: sub.id,
+          invoiceId: invoice.id,
+          attemptNumber: 0,
+          status: 'FAILED',
+          moyasarPaymentId: cmd.moyasarPaymentId,
+          failureReason: cmd.reason,
+          scheduledFor: now,
+          executedAt: now,
         },
       });
     });

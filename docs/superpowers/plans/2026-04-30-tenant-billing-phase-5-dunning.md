@@ -32,7 +32,7 @@ Do not touch the unrelated branding sanitizer files currently dirty in the main 
 
 - The failed charge that starts dunning logs `attemptNumber: 0` with status `FAILED`; paid retries use attempt numbers `1..4`.
 - `dunningRetryCount` counts executed dunning retry attempts, not the original failed charge.
-- `nextRetryAt` is scheduled after each failed retry using delays `[3h, 1d, 3d, 7d]` for attempts `1..4`; after the fourth failed retry the subscription becomes `SUSPENDED` and `nextRetryAt` is cleared.
+- `nextRetryAt` starts at `failedAt + 3h`, then failed retries schedule `[1d, 3d, 7d]` for attempts `1..3`; after the fourth failed retry the subscription becomes `SUSPENDED` and `nextRetryAt` is cleared.
 - Manual retry uses the same next attempt number as cron and increments the same `dunningRetryCount`; it can run before `nextRetryAt`, but it is not a free retry.
 - Every retry re-loads the current default saved card from `SavedCard` and does not trust stale `moyasarCardTokenRef`.
 - Idempotency keys use `dunning:${invoiceId}:${attemptNumber}` and are also sent as Moyasar `givenId`.
@@ -67,7 +67,7 @@ Do not touch the unrelated branding sanitizer files currently dirty in the main 
 - Modify: `apps/backend/src/modules/platform/billing/record-subscription-payment-failure/record-subscription-payment-failure.handler.spec.ts`
 
 - [ ] Write failing tests that:
-  - `ACTIVE -> PAST_DUE` sets `dunningRetryCount: 0` and `nextRetryAt` near `now`.
+  - `ACTIVE -> PAST_DUE` sets `dunningRetryCount: 0` and `nextRetryAt` to the first retry window.
   - Existing `PAST_DUE` keeps existing `pastDueSince` but re-arms `nextRetryAt` if it was null.
   - A `DunningLog` row is created with `attemptNumber: 0`, `status: "FAILED"`, `invoiceId`, `moyasarPaymentId`, `failureReason`, `scheduledFor`, and `executedAt`.
 - [ ] Implement minimal updates inside the existing transaction.

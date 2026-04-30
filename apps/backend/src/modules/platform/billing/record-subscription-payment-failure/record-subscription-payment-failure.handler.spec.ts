@@ -9,6 +9,9 @@ const buildTxPrisma = () => ({
   subscription: {
     update: jest.fn().mockResolvedValue({}),
   },
+  dunningLog: {
+    create: jest.fn().mockResolvedValue({}),
+  },
 });
 
 const buildPrisma = (txPrisma = buildTxPrisma()) => ({
@@ -86,6 +89,74 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
     expect(txPrisma.subscription.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'PAST_DUE' }),
+      }),
+    );
+  });
+
+  it('initializes dunning retry fields when entering PAST_DUE', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: {
+        id: 'sub-1',
+        status: 'ACTIVE',
+        organizationId: 'org-A',
+        pastDueSince: null,
+      },
+    });
+    const handler = new RecordSubscriptionPaymentFailureHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute(baseCmd);
+
+    expect(txPrisma.subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          dunningRetryCount: 0,
+          nextRetryAt: expect.any(Date),
+        }),
+      }),
+    );
+  });
+
+  it('re-arms nextRetryAt for an existing PAST_DUE subscription without resetting pastDueSince', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    const existingPastDue = new Date('2026-04-20T00:00:00Z');
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: {
+        id: 'sub-1',
+        status: 'PAST_DUE',
+        organizationId: 'org-A',
+        pastDueSince: existingPastDue,
+        nextRetryAt: null,
+      },
+    });
+    const handler = new RecordSubscriptionPaymentFailureHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute(baseCmd);
+
+    expect(txPrisma.subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          pastDueSince: existingPastDue,
+          nextRetryAt: expect.any(Date),
+        }),
       }),
     );
   });
@@ -177,6 +248,44 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
         }),
       }),
     );
+  });
+
+  it('creates a DunningLog row for the original failed charge', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: {
+        id: 'sub-1',
+        status: 'ACTIVE',
+        organizationId: 'org-A',
+        pastDueSince: null,
+      },
+    });
+    const handler = new RecordSubscriptionPaymentFailureHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute(baseCmd);
+
+    expect(txPrisma.dunningLog.create).toHaveBeenCalledWith({
+      data: {
+        organizationId: 'org-A',
+        subscriptionId: 'sub-1',
+        invoiceId: 'inv-1',
+        attemptNumber: 0,
+        status: 'FAILED',
+        moyasarPaymentId: 'pay-fail-1',
+        failureReason: 'Insufficient funds',
+        scheduledFor: expect.any(Date),
+        executedAt: expect.any(Date),
+      },
+    });
   });
 
   it('invalidates cache after recording failure', async () => {
