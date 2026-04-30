@@ -7,6 +7,10 @@ import { api } from "@/lib/api"
 import type {
   AddSavedCardInput,
   ChangePlanInput,
+  DownloadInvoiceResponse,
+  Invoice,
+  InvoiceListFilters,
+  InvoiceListResponse,
   Plan,
   ProrationPreview,
   RetryPaymentResponse,
@@ -68,4 +72,18 @@ export const billingApi = {
 
   removeSavedCard: (id: string) =>
     api.delete<{ ok: true }>(`/dashboard/billing/saved-cards/${id}`),
+
+  // Phase 7 — invoices
+  listInvoices: (filters: InvoiceListFilters = {}) =>
+    api.get<InvoiceListResponse>('/dashboard/billing/invoices', {
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.cursor ? { cursor: filters.cursor } : {}),
+      ...(filters.limit ? { limit: filters.limit } : {}),
+    }),
+
+  getInvoice: (id: string) =>
+    api.get<Invoice>(`/dashboard/billing/invoices/${id}`),
+
+  downloadInvoice: (id: string) =>
+    api.get<DownloadInvoiceResponse>(`/dashboard/billing/invoices/${id}/download`),
 }

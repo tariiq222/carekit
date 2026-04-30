@@ -107,3 +107,31 @@ export interface SubscriptionInvoice {
   paidAt?: string | null
   receiptUrl?: string | null
 }
+
+// Phase 7 — tenant invoice list, detail, and PDF download.
+export interface Invoice {
+  id: string
+  invoiceNumber: string | null
+  status: InvoiceStatus
+  amount: string
+  currency: string
+  periodStart: string
+  periodEnd: string
+  issuedAt: string | null
+  paidAt: string | null
+}
+
+export interface InvoiceListResponse {
+  items: Invoice[]
+  nextCursor: string | null
+}
+
+export interface InvoiceListFilters {
+  status?: InvoiceStatus
+  cursor?: string
+  limit?: number
+}
+
+export interface DownloadInvoiceResponse {
+  url: string
+}
