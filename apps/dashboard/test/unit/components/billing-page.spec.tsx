@@ -52,14 +52,18 @@ describe("BillingPage", () => {
   const upgradeMutateAsync = vi.fn()
   const downgradeMutateAsync = vi.fn()
   const cancelMutateAsync = vi.fn()
+  const scheduleCancelMutateAsync = vi.fn()
   const resumeMutate = vi.fn()
+  const reactivateMutate = vi.fn()
   const startMutateAsync = vi.fn()
 
   beforeEach(() => {
     upgradeMutateAsync.mockReset()
     downgradeMutateAsync.mockReset()
     cancelMutateAsync.mockReset()
+    scheduleCancelMutateAsync.mockReset()
     resumeMutate.mockReset()
+    reactivateMutate.mockReset()
     startMutateAsync.mockReset()
 
     useLocale.mockReturnValue({
@@ -72,20 +76,25 @@ describe("BillingPage", () => {
           "billing.banner.pastDue.description": "Please update your subscription to avoid service interruption.",
           "billing.banner.suspended.title": "Your subscription is suspended",
           "billing.banner.suspended.description": "Access is restricted until billing is resumed.",
+          "billing.banner.scheduledCancel.title": "Cancellation scheduled",
+          "billing.banner.scheduledCancel.description": "Your subscription stays active until the period ends.",
           "billing.summary.nextBilling": "Next billing date",
           "billing.summary.trialEnds": "Trial ends",
           "billing.summary.currentCycle": "Current cycle",
+          "billing.summary.endsOn": "Ends on",
           "billing.status.active": "Active",
           "billing.status.pastDue": "Past due",
           "billing.status.suspended": "Suspended",
           "billing.actions.changePlan": "Change plan",
           "billing.actions.resume": "Resume subscription",
+          "billing.actions.reactivate": "Reactivate",
           "billing.actions.cancel": "Cancel subscription",
           "billing.actions.confirm": "Confirm",
           "billing.actions.back": "Back",
           "billing.actions.submitting": "Updating...",
           "billing.actions.canceling": "Canceling...",
           "billing.actions.resuming": "Resuming...",
+          "billing.actions.reactivating": "Reactivating...",
           "billing.plan.dialogTitle": "Choose a plan",
           "billing.plan.dialogDescription": "Compare plans and apply the change to your current subscription.",
           "billing.plan.monthly": "Monthly",
@@ -97,6 +106,7 @@ describe("BillingPage", () => {
           "billing.cancel.reasonLabel": "Reason (optional)",
           "billing.cancel.reasonPlaceholder": "Tell us why you're canceling",
           "billing.cancel.confirm": "Confirm cancellation",
+          "billing.cancel.scheduleConfirm": "Schedule cancellation",
           "billing.cancel.keep": "Keep subscription",
           "billing.empty.subscription": "No active subscription.",
           "billing.usage.heading": "Usage limits",
@@ -120,7 +130,9 @@ describe("BillingPage", () => {
       upgradeMut: { isPending: false, mutateAsync: upgradeMutateAsync },
       downgradeMut: { isPending: false, mutateAsync: downgradeMutateAsync },
       cancelMut: { isPending: false, mutateAsync: cancelMutateAsync },
+      scheduleCancelMut: { isPending: false, mutateAsync: scheduleCancelMutateAsync },
       resumeMut: { isPending: false, mutate: resumeMutate },
+      reactivateMut: { isPending: false, mutate: reactivateMutate },
       startMut: { isPending: false, mutateAsync: startMutateAsync },
     })
 
@@ -218,16 +230,44 @@ describe("BillingPage", () => {
     sortOrder: 2,
   }
 
-  it("opens the cancel dialog and submits the cancellation", async () => {
+  it("shows scheduled cancellation banner and reactivate action", async () => {
+    const scheduledSub = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "ACTIVE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      cancelAtPeriodEnd: true,
+      scheduledCancellationDate: "2026-05-01T00:00:00.000Z",
+      plan: { ...proPlan, currency: "SAR" },
+      usage: { BOOKINGS_PER_MONTH: 25 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({
+      status: "ACTIVE",
+      subscription: scheduledSub,
+      isLoading: false,
+    })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: scheduledSub })
+
+    render(<BillingPage />)
+
+    expect(screen.getByText("Cancellation scheduled")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Reactivate" }))
+    expect(reactivateMutate).toHaveBeenCalledOnce()
+  })
+
+  it("schedules paid cancellation instead of immediate cancel", async () => {
     mockBillingFor("ACTIVE", proPlan)
 
     render(<BillingPage />)
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel subscription" }))
     await userEvent.type(screen.getByPlaceholderText("Tell us why you're canceling"), "Budget")
-    await userEvent.click(screen.getByRole("button", { name: "Confirm cancellation" }))
+    await userEvent.click(screen.getByRole("button", { name: "Schedule cancellation" }))
 
-    await waitFor(() => expect(cancelMutateAsync).toHaveBeenCalledWith("Budget"))
+    await waitFor(() => expect(scheduleCancelMutateAsync).toHaveBeenCalledWith("Budget"))
   })
 
   it("shows the resume action for suspended subscriptions", async () => {

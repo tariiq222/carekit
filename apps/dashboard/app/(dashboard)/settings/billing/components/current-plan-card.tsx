@@ -44,7 +44,15 @@ export function CurrentPlanCard({
   const { t, locale } = useLocale()
   const [planDialogOpen, setPlanDialogOpen] = useState(false)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
-  const { upgradeMut, downgradeMut, cancelMut, resumeMut, startMut } = useBillingMutations()
+  const {
+    upgradeMut,
+    downgradeMut,
+    cancelMut,
+    resumeMut,
+    startMut,
+    scheduleCancelMut,
+    reactivateMut,
+  } = useBillingMutations()
 
   const currentPlanId = subscription?.plan.id ?? ""
 
@@ -76,7 +84,9 @@ export function CurrentPlanCard({
     downgradeMut.isPending ||
     cancelMut.isPending ||
     resumeMut.isPending ||
-    startMut.isPending
+    startMut.isPending ||
+    scheduleCancelMut.isPending ||
+    reactivateMut.isPending
 
   const statusKey = statusKeyMap[currentSubscription.status]
   const planName = getLocalizedPlanName(currentSubscription.plan, locale)
@@ -102,7 +112,12 @@ export function CurrentPlanCard({
   }
 
   async function submitCancellation(reason?: string) {
-    await cancelMut.mutateAsync(reason)
+    if (currentSubscription.status === "TRIALING") {
+      await cancelMut.mutateAsync(reason)
+    } else {
+      await scheduleCancelMut.mutateAsync(reason)
+    }
+    setCancelDialogOpen(false)
   }
 
   return (
@@ -135,6 +150,15 @@ export function CurrentPlanCard({
                 <span className="font-medium text-foreground">{trialEndsAt}</span>
               </p>
             )}
+            {currentSubscription.cancelAtPeriodEnd &&
+              currentSubscription.scheduledCancellationDate && (
+                <p className="text-sm text-muted-foreground">
+                  {t("billing.summary.endsOn")}:{" "}
+                  <span className="font-medium text-foreground">
+                    {formatBillingDate(currentSubscription.scheduledCancellationDate, locale)}
+                  </span>
+                </p>
+              )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -157,7 +181,18 @@ export function CurrentPlanCard({
                   : t("billing.actions.resume")}
               </Button>
             )}
-            {currentSubscription.status !== "CANCELED" && currentSubscription.status !== "SUSPENDED" && (
+            {currentSubscription.cancelAtPeriodEnd ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={pending}
+                onClick={() => reactivateMut.mutate()}
+              >
+                {reactivateMut.isPending
+                  ? t("billing.actions.reactivating")
+                  : t("billing.actions.reactivate")}
+              </Button>
+            ) : currentSubscription.status !== "CANCELED" && currentSubscription.status !== "SUSPENDED" ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -165,11 +200,11 @@ export function CurrentPlanCard({
                 disabled={pending}
                 onClick={() => setCancelDialogOpen(true)}
               >
-                {cancelMut.isPending
+                {scheduleCancelMut.isPending || cancelMut.isPending
                   ? t("billing.actions.canceling")
                   : t("billing.actions.cancel")}
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </Card>
@@ -191,7 +226,12 @@ export function CurrentPlanCard({
         <CancelSubscriptionDialog
           open={cancelDialogOpen}
           onOpenChange={setCancelDialogOpen}
-          pending={cancelMut.isPending}
+          pending={cancelMut.isPending || scheduleCancelMut.isPending}
+          confirmLabel={
+            currentSubscription.status === "TRIALING"
+              ? t("billing.cancel.confirm")
+              : t("billing.cancel.scheduleConfirm")
+          }
           onConfirm={submitCancellation}
         />
       )}

@@ -18,11 +18,12 @@ interface CancelSubscriptionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   pending: boolean
+  confirmLabel?: string
   onConfirm: (reason?: string) => Promise<void>
 }
 
 export function CancelSubscriptionDialog(props: CancelSubscriptionDialogProps) {
-  const { open, onOpenChange, pending, onConfirm } = props
+  const { open, onOpenChange, pending, confirmLabel, onConfirm } = props
   const { t } = useLocale()
   const [reason, setReason] = useState("")
 
@@ -65,7 +66,7 @@ export function CancelSubscriptionDialog(props: CancelSubscriptionDialogProps) {
             disabled={pending}
             className="bg-error text-white hover:bg-error/90"
           >
-            {pending ? t("billing.actions.canceling") : t("billing.cancel.confirm")}
+            {pending ? t("billing.actions.canceling") : confirmLabel ?? t("billing.cancel.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

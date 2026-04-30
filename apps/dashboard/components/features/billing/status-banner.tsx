@@ -27,18 +27,27 @@ type BannerStatus = keyof typeof BANNER_VARIANTS
 
 export function BillingStatusBanner() {
   const { t } = useLocale()
-  const { status } = useBilling()
+  const { status, subscription } = useBilling()
 
-  if (status !== "PAST_DUE" && status !== "SUSPENDED" && status !== "CANCELED") {
-    return null
+  if (status === "PAST_DUE" || status === "SUSPENDED" || status === "CANCELED") {
+    const variant = BANNER_VARIANTS[status as BannerStatus]
+
+    return (
+      <Card className={cn("space-y-1 border p-4", variant.className)}>
+        <p className="font-semibold">{t(variant.titleKey)}</p>
+        <p className="text-sm opacity-90">{t(variant.descriptionKey)}</p>
+      </Card>
+    )
   }
 
-  const variant = BANNER_VARIANTS[status as BannerStatus]
+  if (subscription?.cancelAtPeriodEnd && status === "ACTIVE") {
+    return (
+      <Card className="space-y-1 border border-warning/30 bg-warning/10 p-4 text-warning">
+        <p className="font-semibold">{t("billing.banner.scheduledCancel.title")}</p>
+        <p className="text-sm opacity-90">{t("billing.banner.scheduledCancel.description")}</p>
+      </Card>
+    )
+  }
 
-  return (
-    <Card className={cn("space-y-1 border p-4", variant.className)}>
-      <p className="font-semibold">{t(variant.titleKey)}</p>
-      <p className="text-sm opacity-90">{t(variant.descriptionKey)}</p>
-    </Card>
-  )
+  return null
 }
