@@ -13,6 +13,7 @@ import { ComputeOverageCron } from '../../platform/billing/compute-overage/compu
 import { EnforceGracePeriodCron } from '../../platform/billing/enforce-grace-period/enforce-grace-period.cron';
 import { ExpireImpersonationSessionsCron } from '../../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 import { ExpireTrialsCron } from '../../platform/billing/expire-trials/expire-trials.cron';
+import { SendLimitWarningCron } from '../../platform/billing/send-limit-warning/send-limit-warning.cron';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -28,6 +29,7 @@ export const CRON_JOBS = {
   ENFORCE_GRACE_PERIOD: 'enforce-grace-period',
   EXPIRE_IMPERSONATION_SESSIONS: 'expire-impersonation-sessions',
   EXPIRE_TRIALS: 'expire-trials',
+  USAGE_WARNINGS: 'usage-warnings',
 } as const;
 
 @Injectable()
@@ -48,6 +50,7 @@ export class CronTasksService implements OnModuleInit {
     private readonly enforceGracePeriod: EnforceGracePeriodCron,
     private readonly expireImpersonationSessions: ExpireImpersonationSessionsCron,
     private readonly expireTrials: ExpireTrialsCron,
+    private readonly usageWarnings: SendLimitWarningCron,
   ) {}
 
   onModuleInit(): void {
@@ -70,6 +73,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.ENFORCE_GRACE_PERIOD, cron: '0 * * * *' },   // hourly
       { name: CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, cron: '* * * * *' }, // every minute
       { name: CRON_JOBS.EXPIRE_TRIALS, cron: '0 * * * *' }, // hourly
+      { name: CRON_JOBS.USAGE_WARNINGS, cron: '0 9 * * *' }, // daily at 09:00 AST
     ];
 
     for (const { name, cron } of jobs) {
@@ -131,6 +135,9 @@ export class CronTasksService implements OnModuleInit {
             break;
           case CRON_JOBS.EXPIRE_TRIALS:
             await this.expireTrials.execute();
+            break;
+          case CRON_JOBS.USAGE_WARNINGS:
+            await this.usageWarnings.execute();
             break;
           default:
             this.logger.warn(`Unknown cron job: ${job.name}`);

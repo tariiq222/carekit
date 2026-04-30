@@ -23,6 +23,7 @@ import { ComputeOverageCron } from '../platform/billing/compute-overage/compute-
 import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period/enforce-grace-period.cron';
 import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 import { ExpireTrialsCron } from '../platform/billing/expire-trials/expire-trials.cron';
+import { SendLimitWarningCron } from '../platform/billing/send-limit-warning/send-limit-warning.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 
 const handlers = [
@@ -45,6 +46,7 @@ const cronHandlers = [
   ComputeOverageCron,
   EnforceGracePeriodCron,
   ExpireTrialsCron,
+  SendLimitWarningCron,
   // Admin crons
   ExpireImpersonationSessionsCron,
 ];
