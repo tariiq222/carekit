@@ -115,6 +115,7 @@ model Organization {
   memberships  Membership[]
   invitations  Invitation[]
   subscription Subscription?
+  savedCards   SavedCard[]
 
   @@index([status])
   @@index([verticalId])
@@ -385,6 +386,8 @@ model Subscription {
   moyasarCustomerRef     String? // Moyasar customer id
   moyasarCardTokenRef    String? // tokenized saved card
   moyasarSubscriptionRef String? // reserved for future native recurring
+  defaultSavedCardId     String?
+  defaultSavedCard       SavedCard?         @relation("SubscriptionDefaultSavedCard", fields: [defaultSavedCardId], references: [id], onDelete: SetNull)
   lastPaymentAt          DateTime?
   lastFailureReason      String?
   notifiedTrialEndingAt  DateTime? // resend platform emails: dedupe trial-ending notifications
@@ -397,6 +400,27 @@ model Subscription {
   @@index([planId])
   @@index([status])
   @@index([currentPeriodEnd])
+}
+
+model SavedCard {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  moyasarTokenId String       @unique
+  last4          String
+  brand          String
+  expiryMonth    Int
+  expiryYear     Int
+  holderName     String?
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  defaultForSubscriptions Subscription[]        @relation("SubscriptionDefaultSavedCard")
+  invoices                SubscriptionInvoice[]
+
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
 }
 
 model SubscriptionInvoice {
@@ -421,6 +445,8 @@ model SubscriptionInvoice {
   issuedAt         DateTime?
   paidAt           DateTime?
   moyasarPaymentId String?                   @unique
+  savedCardId      String?
+  savedCard        SavedCard?                @relation(fields: [savedCardId], references: [id], onDelete: SetNull)
   failureReason    String?
   attemptCount     Int                       @default(0)
   receiptUrl       String?

@@ -96,6 +96,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // and NOT scoped — they describe CareKit's catalog / receivables respectively).
   'Subscription',
   'UsageRecord',
+  'SavedCard',
   // Platform models with organizationId (admin-level, but scoped for defense-in-depth)
   'PasswordResetToken',
   'BillingCredit',
