@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# CareKit Public Website — Next.js 15 standalone build
+# Deqah Public Website — Next.js 15 standalone build
 # Build context MUST be the monorepo root.
 
 FROM node:20-bookworm-slim AS deps
@@ -24,8 +24,8 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build --workspace=@carekit/shared --if-present
-RUN npm run build --workspace=@carekit/api-client --if-present
+RUN npm run build --workspace=@deqah/shared --if-present
+RUN npm run build --workspace=@deqah/api-client --if-present
 RUN npm run build --workspace=website
 
 FROM node:20-bookworm-slim AS runner

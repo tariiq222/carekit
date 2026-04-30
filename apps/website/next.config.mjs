@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
-  transpilePackages: ['@carekit/api-client', '@carekit/shared'],
+  transpilePackages: ['@deqah/api-client', '@deqah/shared'],
   typedRoutes: false,
 };
 

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# CareKit Super-Admin — Next.js 15 production build (App Router).
+# Deqah Super-Admin — Next.js 15 production build (App Router).
 # Build context MUST be the monorepo root.
 
 FROM node:20-bookworm-slim AS deps
@@ -27,9 +27,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build --workspace=@carekit/shared --if-present
-RUN npm run build --workspace=@carekit/api-client --if-present
-RUN npm run build --workspace=@carekit/ui --if-present
+RUN npm run build --workspace=@deqah/shared --if-present
+RUN npm run build --workspace=@deqah/api-client --if-present
+RUN npm run build --workspace=@deqah/ui --if-present
 RUN npm run build --workspace=admin
 
 FROM node:20-bookworm-slim AS runner

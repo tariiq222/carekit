@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validatePassword } from './auth.schema';
 
+type ResetPasswordMock = (payload: unknown) => Promise<void>;
+
 // Unit tests for reset-password validation logic
 describe('ResetPasswordForm — password validation', () => {
   it('rejects passwords shorter than 8 characters', () => {
@@ -22,10 +24,10 @@ describe('ResetPasswordForm — password validation', () => {
 
 // Unit tests for the reset-password API call
 describe('ResetPasswordForm — API layer', () => {
-  let resetPasswordMock: ReturnType<typeof vi.fn>;
+  let resetPasswordMock: ReturnType<typeof vi.fn<ResetPasswordMock>>;
 
   beforeEach(() => {
-    resetPasswordMock = vi.fn();
+    resetPasswordMock = vi.fn<ResetPasswordMock>();
   });
 
   it('calls clientResetPasswordApi with sessionToken and newPassword', async () => {

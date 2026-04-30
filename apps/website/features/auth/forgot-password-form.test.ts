@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validateEmail } from './auth.schema';
 
+type RequestOtpMock = (payload: unknown) => Promise<void>;
+
 // Unit tests for forgot-password validation logic (form-level, not rendering)
 describe('ForgotPasswordForm — validation', () => {
   describe('email validation via auth.schema', () => {
@@ -20,10 +22,10 @@ describe('ForgotPasswordForm — validation', () => {
 
 // Unit tests for the API layer
 describe('ForgotPasswordForm — API call', () => {
-  let requestOtpMock: ReturnType<typeof vi.fn>;
+  let requestOtpMock: ReturnType<typeof vi.fn<RequestOtpMock>>;
 
   beforeEach(() => {
-    requestOtpMock = vi.fn();
+    requestOtpMock = vi.fn<RequestOtpMock>();
     vi.resetModules();
   });
 
