@@ -32,7 +32,7 @@ export const options = {
 // ─── Setup ────────────────────────────────────────────────────────────────
 // Runs once before VUs start. Returns shared data for all VUs.
 export function setup() {
-  const email    = __ENV.K6_EMAIL    || 'admin@carekit.sa';
+  const email    = __ENV.K6_EMAIL    || 'admin@deqah.sa';
   const password = __ENV.K6_PASSWORD || 'Password123!';
 
   const token = loginAndGetToken(email, password);
@@ -46,7 +46,7 @@ export default function (data) {
   // ── Scenario 1: Login with valid credentials ───────────────────────────
   group('POST /auth/login', () => {
     const payload = JSON.stringify({
-      email:    __ENV.K6_EMAIL    || 'admin@carekit.sa',
+      email:    __ENV.K6_EMAIL    || 'admin@deqah.sa',
       password: __ENV.K6_PASSWORD || 'Password123!',
     });
 

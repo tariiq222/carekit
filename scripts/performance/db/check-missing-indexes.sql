@@ -1,5 +1,5 @@
 -- ============================================================
--- CareKit — Missing Index & Performance Health Check
+-- Deqah — Missing Index & Performance Health Check
 -- Run against staging or prod replica (read-only safe).
 -- Requires pg_stat_statements extension to be enabled.
 -- Usage: psql $DATABASE_URL -f check-missing-indexes.sql
@@ -76,7 +76,7 @@ SELECT
   rows,
   ROUND(stddev_exec_time::numeric, 2) AS stddev_ms
 FROM pg_stat_statements
-WHERE -- Filter to CareKit tables only
+WHERE -- Filter to Deqah tables only
   query ~* '(bookings|patients|practitioners|payments|users)'
   AND mean_exec_time > 50  -- > 50ms average is a concern
 ORDER BY mean_exec_time DESC

@@ -1,5 +1,5 @@
-// ─── CareKit k6 Shared Configuration ──────────────────────────────────────
-// Port 5000 is reserved exclusively for CareKit backend (see project_ports.md)
+// ─── Deqah k6 Shared Configuration ──────────────────────────────────────
+// Port 5000 is reserved exclusively for Deqah backend (see project_ports.md)
 
 export const BASE_URL = 'http://localhost:5100/api/v1';
 

@@ -25,7 +25,7 @@ export function loginAndGetToken(email, password) {
     'setup: has access token': (r) => {
       try {
         const body = JSON.parse(r.body);
-        // CareKit wraps responses: { success, data: { accessToken } }
+        // Deqah wraps responses: { success, data: { accessToken } }
         return !!(body.data && body.data.accessToken);
       } catch {
         return false;

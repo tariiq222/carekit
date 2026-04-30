@@ -1,5 +1,5 @@
 -- ============================================================
--- CareKit — Critical Query Analysis
+-- Deqah — Critical Query Analysis
 -- Run against a populated DB (staging or prod replica).
 -- Usage: psql $DATABASE_URL -f analyze-queries.sql
 -- ============================================================

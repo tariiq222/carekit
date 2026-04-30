@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# ─── CareKit k6 Load Test Runner ──────────────────────────────────────────
+# ─── Deqah k6 Load Test Runner ──────────────────────────────────────────
 # Runs all scenarios in sequence and stores JSON results in results/
 # Usage: ./run-all.sh [--smoke | --load | --stress | --spike]
 #
 # ENV vars (override defaults):
-#   K6_EMAIL          admin email (default: admin@carekit.sa)
+#   K6_EMAIL          admin email (default: admin@deqah.sa)
 #   K6_PASSWORD       admin password (default: Password123!)
 #   K6_PRACTITIONER_ID practitioner ID for slot tests (default: 1)
 #   K6_SERVICE_ID     service ID for booking creation (default: 1)
@@ -22,7 +22,7 @@ RUN_DIR="${RESULTS_DIR}/${TIMESTAMP}"
 mkdir -p "${RUN_DIR}"
 
 # ─── Defaults ──────────────────────────────────────────────────────────────
-export K6_EMAIL="${K6_EMAIL:-admin@carekit.sa}"
+export K6_EMAIL="${K6_EMAIL:-admin@deqah.sa}"
 export K6_PASSWORD="${K6_PASSWORD:-Password123!}"
 export K6_PRACTITIONER_ID="${K6_PRACTITIONER_ID:-1}"
 export K6_SERVICE_ID="${K6_SERVICE_ID:-1}"
