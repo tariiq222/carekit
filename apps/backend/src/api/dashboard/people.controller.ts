@@ -195,6 +195,7 @@ export class DashboardPeopleController {
 
   @Post('employees/onboarding')
   @HttpCode(HttpStatus.CREATED)
+  @EnforceLimit('EMPLOYEES')
   @ApiOperation({ summary: 'Onboard a new employee with full profile details' })
   @ApiCreatedResponse({ description: 'Employee onboarded' })
   onboardEmployeeEndpoint(@Body() body: OnboardEmployeeDto) {
@@ -203,6 +204,7 @@ export class DashboardPeopleController {
 
   @Post('employees/attach-membership')
   @HttpCode(HttpStatus.CREATED)
+  @EnforceLimit('EMPLOYEES')
   @ApiOperation({ summary: 'Attach an existing user as an employee to the organization' })
   @ApiCreatedResponse({ description: 'Membership created' })
   attachMembershipEndpoint(@Body() body: AttachMembershipDto) {

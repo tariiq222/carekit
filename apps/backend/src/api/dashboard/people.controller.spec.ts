@@ -1,4 +1,5 @@
 import { DashboardPeopleController } from './people.controller';
+import { ENFORCE_LIMIT_KEY } from '../../modules/platform/billing/plan-limits.decorator';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -78,6 +79,27 @@ describe('DashboardPeopleController', () => {
     const { controller, createEmployee } = buildController();
     await controller.createEmployeeEndpoint({ nameAr: 'سارة' } as never);
     expect(createEmployee.execute).toHaveBeenCalled();
+  });
+
+  it('employee create, onboarding create, and attach endpoints enforce employee plan limits', () => {
+    expect(
+      Reflect.getMetadata(
+        ENFORCE_LIMIT_KEY,
+        DashboardPeopleController.prototype.createEmployeeEndpoint,
+      ),
+    ).toBe('EMPLOYEES');
+    expect(
+      Reflect.getMetadata(
+        ENFORCE_LIMIT_KEY,
+        DashboardPeopleController.prototype.onboardEmployeeEndpoint,
+      ),
+    ).toBe('EMPLOYEES');
+    expect(
+      Reflect.getMetadata(
+        ENFORCE_LIMIT_KEY,
+        DashboardPeopleController.prototype.attachMembershipEndpoint,
+      ),
+    ).toBe('EMPLOYEES');
   });
 
   it('listEmployeesEndpoint — defaults pagination', async () => {
