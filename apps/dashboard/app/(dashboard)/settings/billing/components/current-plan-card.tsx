@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Badge, Button, Card, Skeleton } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBillingMutations } from "@/hooks/use-current-subscription"
@@ -34,14 +34,12 @@ interface CurrentPlanCardProps {
   subscription?: Subscription | null
   plans?: Plan[]
   isLoading: boolean
-  openPlanDialogSignal?: number
 }
 
 export function CurrentPlanCard({
   subscription,
   plans = [],
   isLoading,
-  openPlanDialogSignal = 0,
 }: CurrentPlanCardProps) {
   const { t, locale } = useLocale()
   const [planDialogOpen, setPlanDialogOpen] = useState(false)
@@ -57,10 +55,6 @@ export function CurrentPlanCard({
   } = useBillingMutations()
 
   const currentPlanId = subscription?.plan.id ?? ""
-
-  useEffect(() => {
-    if (openPlanDialogSignal > 0) setPlanDialogOpen(true)
-  }, [openPlanDialogSignal])
 
   if (isLoading) {
     return (

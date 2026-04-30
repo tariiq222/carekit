@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Button,
   Dialog,
@@ -25,10 +25,6 @@ export function LimitReachedDialog({ subscription, onUpgrade }: LimitReachedDial
   const usage = getEmployeeUsageSummary(subscription)
   const limitReached = usage.ratio >= 1
   const [open, setOpen] = useState(limitReached)
-
-  useEffect(() => {
-    if (limitReached) setOpen(true)
-  }, [limitReached, usage.current, usage.max])
 
   if (!limitReached) return null
 
