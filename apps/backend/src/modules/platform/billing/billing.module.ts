@@ -27,6 +27,8 @@ import { RetryFailedPaymentHandler } from "./retry-failed-payment/retry-failed-p
 import { ReactivateSubscriptionHandler } from "./reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
+import { IssueInvoiceHandler } from "./issue-invoice/issue-invoice.handler";
+import { InvoiceNumberingService } from "./issue-invoice/invoice-numbering.service";
 import { RecordSubscriptionPaymentFailureHandler } from "./record-subscription-payment-failure/record-subscription-payment-failure.handler";
 import { AddSavedCardHandler } from "./saved-cards/add-saved-card.handler";
 import { ListSavedCardsHandler } from "./saved-cards/list-saved-cards.handler";
@@ -63,6 +65,8 @@ const HANDLERS = [
   RecordSubscriptionPaymentHandler,
   RecordSubscriptionPaymentFailureHandler,
   MoyasarSubscriptionClient,
+  IssueInvoiceHandler,
+  InvoiceNumberingService,
 ];
 
 @Module({

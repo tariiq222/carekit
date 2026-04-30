@@ -4,6 +4,7 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
+import { IssueInvoiceHandler } from '../issue-invoice/issue-invoice.handler';
 
 export interface RecordSubscriptionPaymentCommand {
   invoiceId: string;
@@ -18,6 +19,7 @@ export class RecordSubscriptionPaymentHandler {
     private readonly stateMachine: SubscriptionStateMachine,
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
+    private readonly issueInvoice: IssueInvoiceHandler,
   ) {}
 
   async execute(cmd: RecordSubscriptionPaymentCommand) {
@@ -51,6 +53,14 @@ export class RecordSubscriptionPaymentHandler {
     });
 
     this.cache.invalidate(sub.organizationId);
+
+    // Phase 7 — auto-issue the invoice (number + hash chain) on first
+    // successful payment. Idempotent — re-running leaves the invoice
+    // unchanged. Status stays PAID; only issuedAt + invoiceNumber + hash
+    // become non-null.
+    if (!invoice.issuedAt || !invoice.invoiceNumber) {
+      await this.issueInvoice.execute(invoice.id);
+    }
 
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
