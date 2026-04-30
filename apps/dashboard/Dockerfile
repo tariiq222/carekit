@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# CareKit Dashboard — Next.js 15 production build (App Router).
+# Deqah Dashboard — Next.js 15 production build (App Router).
 # Build context MUST be the monorepo root.
 
 FROM node:20-bookworm-slim AS deps

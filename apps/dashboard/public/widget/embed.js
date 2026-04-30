@@ -1,5 +1,5 @@
 /**
- * CareKit Booking Widget — Embed Script
+ * Deqah Booking Widget — Embed Script
  *
  * Usage (auto locale detection):
  *   <script src="/widget/embed.js" data-auto-open></script>
@@ -8,12 +8,12 @@
  *   <script src="/widget/embed.js" data-locale="en" data-auto-open></script>
  *
  * Programmatically:
- *   CareKitWidget.open()
- *   CareKitWidget.open({ locale: 'en' })
+ *   DeqahWidget.open()
+ *   DeqahWidget.open({ locale: 'en' })
  *
  * Events:
- *   CareKitWidget.on('carekit:booking:complete', fn)
- *   CareKitWidget.on('carekit:widget:close', fn)
+ *   DeqahWidget.on('deqah:booking:complete', fn)
+ *   DeqahWidget.on('deqah:widget:close', fn)
  */
 
 ;(function () {
@@ -60,7 +60,7 @@
 
   function createFrame(opts) {
     var overlay = document.createElement('div')
-    overlay.id = 'carekit-widget-overlay'
+    overlay.id = 'deqah-widget-overlay'
     overlay.style.cssText = [
       'position:fixed', 'inset:0', 'z-index:99999',
       'display:flex', 'align-items:center', 'justify-content:center',
@@ -80,7 +80,7 @@
     frame.setAttribute('title', 'Booking Widget')
 
     overlay.onclick = function (e) {
-      if (e.target === overlay) CareKitWidget.close()
+      if (e.target === overlay) DeqahWidget.close()
     }
 
     overlay.appendChild(frame)
@@ -94,13 +94,13 @@
 
     var data = event.data
     if (!data || typeof data.type !== 'string') return
-    if (!data.type.startsWith('carekit:')) return
+    if (!data.type.startsWith('deqah:')) return
 
-    if (data.type === 'carekit:widget:close') {
-      CareKitWidget.close()
+    if (data.type === 'deqah:widget:close') {
+      DeqahWidget.close()
     }
 
-    if (data.type === 'carekit:widget:resize' && currentFrame && data.height) {
+    if (data.type === 'deqah:widget:resize' && currentFrame && data.height) {
       var maxH = window.innerHeight - 32
       currentFrame.style.height = Math.min(data.height, maxH) + 'px'
     }
@@ -114,7 +114,7 @@
 
   var listeners = {}
 
-  window.CareKitWidget = {
+  window.DeqahWidget = {
     open: function (opts) {
       opts = opts || {}
       var s = document.currentScript || document.querySelector('script[src*="embed.js"]')
@@ -128,12 +128,12 @@
         opts.flow = s.getAttribute('data-flow') || undefined
       }
 
-      if (document.getElementById('carekit-widget-overlay')) return
+      if (document.getElementById('deqah-widget-overlay')) return
       createFrame(opts)
     },
 
     close: function () {
-      var overlay = document.getElementById('carekit-widget-overlay')
+      var overlay = document.getElementById('deqah-widget-overlay')
       if (overlay) overlay.remove()
       currentFrame = null
     },
@@ -152,6 +152,6 @@
   /* Auto-open if data-auto-open attribute is set */
   document.addEventListener('DOMContentLoaded', function () {
     var s = document.querySelector('script[src*="embed.js"][data-auto-open]')
-    if (s) CareKitWidget.open()
+    if (s) DeqahWidget.open()
   })
 })()
