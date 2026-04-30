@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
+  Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
@@ -19,6 +22,11 @@ import { CancelSubscriptionHandler } from "../../modules/platform/billing/cancel
 import { ResumeSubscriptionHandler } from "../../modules/platform/billing/resume-subscription/resume-subscription.handler";
 import { StartSubscriptionDto } from "../../modules/platform/billing/dto/start-subscription.dto";
 import { ChangePlanDto } from "../../modules/platform/billing/dto/change-plan.dto";
+import { AddSavedCardDto } from "../../modules/platform/billing/dto/saved-card.dto";
+import { AddSavedCardHandler } from "../../modules/platform/billing/saved-cards/add-saved-card.handler";
+import { ListSavedCardsHandler } from "../../modules/platform/billing/saved-cards/list-saved-cards.handler";
+import { RemoveSavedCardHandler } from "../../modules/platform/billing/saved-cards/remove-saved-card.handler";
+import { SetDefaultSavedCardHandler } from "../../modules/platform/billing/saved-cards/set-default-saved-card.handler";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -35,6 +43,10 @@ export class BillingController {
     private readonly downgrade: DowngradePlanHandler,
     private readonly cancel: CancelSubscriptionHandler,
     private readonly resume: ResumeSubscriptionHandler,
+    private readonly listSavedCards: ListSavedCardsHandler,
+    private readonly addSavedCard: AddSavedCardHandler,
+    private readonly setDefaultSavedCard: SetDefaultSavedCardHandler,
+    private readonly removeSavedCard: RemoveSavedCardHandler,
   ) {}
 
   @Get("plans")
@@ -84,5 +96,31 @@ export class BillingController {
   @ApiOperation({ summary: "Resume a suspended subscription" })
   resumeSub() {
     return this.resume.execute({});
+  }
+
+  @Get("saved-cards")
+  @ApiOperation({ summary: "List saved billing cards" })
+  savedCards() {
+    return this.listSavedCards.execute();
+  }
+
+  @Post("saved-cards")
+  @ApiOperation({ summary: "Add a saved billing card" })
+  addCard(@Body() dto: AddSavedCardDto) {
+    return this.addSavedCard.execute(dto);
+  }
+
+  @Patch("saved-cards/:id/set-default")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Set saved billing card as default" })
+  setDefaultCard(@Param("id") id: string) {
+    return this.setDefaultSavedCard.execute(id);
+  }
+
+  @Delete("saved-cards/:id")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Remove a saved billing card" })
+  removeCard(@Param("id") id: string) {
+    return this.removeSavedCard.execute(id);
   }
 }

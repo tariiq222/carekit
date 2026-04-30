@@ -18,6 +18,10 @@ import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscrip
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
 import { RecordSubscriptionPaymentFailureHandler } from "./record-subscription-payment-failure/record-subscription-payment-failure.handler";
+import { AddSavedCardHandler } from "./saved-cards/add-saved-card.handler";
+import { ListSavedCardsHandler } from "./saved-cards/list-saved-cards.handler";
+import { RemoveSavedCardHandler } from "./saved-cards/remove-saved-card.handler";
+import { SetDefaultSavedCardHandler } from "./saved-cards/set-default-saved-card.handler";
 import { MoyasarSubscriptionClient } from "../../finance/moyasar-api/moyasar-subscription.client";
 import { PlanLimitsGuard } from "./enforce-limits.guard";
 import { FeatureGuard } from "./feature.guard";
@@ -32,6 +36,10 @@ const HANDLERS = [
   DowngradePlanHandler,
   CancelSubscriptionHandler,
   ResumeSubscriptionHandler,
+  ListSavedCardsHandler,
+  AddSavedCardHandler,
+  SetDefaultSavedCardHandler,
+  RemoveSavedCardHandler,
   RecordSubscriptionPaymentHandler,
   RecordSubscriptionPaymentFailureHandler,
   MoyasarSubscriptionClient,
