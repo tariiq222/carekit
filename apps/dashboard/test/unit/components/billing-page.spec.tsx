@@ -80,6 +80,10 @@ describe("BillingPage", () => {
           "billing.banner.scheduledCancel.description": "Your subscription stays active until the period ends.",
           "billing.banner.limitWarning.title": "Employee limit almost reached",
           "billing.banner.limitWarning.description": "Upgrade before adding more active employees.",
+          "billing.limitReached.title": "Employee limit reached",
+          "billing.limitReached.description": "Upgrade your plan to add another active employee.",
+          "billing.limitReached.upgrade": "Upgrade plan",
+          "billing.limitReached.close": "Close",
           "billing.summary.nextBilling": "Next billing date",
           "billing.summary.trialEnds": "Trial ends",
           "billing.summary.currentCycle": "Current cycle",
@@ -309,6 +313,35 @@ describe("BillingPage", () => {
 
     expect(screen.getByText("Cancellation scheduled")).toBeInTheDocument()
     expect(screen.queryByText("Employee limit almost reached")).not.toBeInTheDocument()
+  })
+
+  it("opens and closes the employee limit reached dialog at 100 percent usage", async () => {
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "ACTIVE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      plan: {
+        ...proPlan,
+        currency: "SAR",
+        limits: { maxEmployees: 10 },
+      },
+      usage: { EMPLOYEES: 10 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status: "ACTIVE", subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+
+    render(<BillingPage />)
+
+    expect(screen.getByRole("dialog", { name: "Employee limit reached" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Upgrade plan" })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Close" }))
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Employee limit reached" })).not.toBeInTheDocument(),
+    )
   })
 
   it("schedules paid cancellation instead of immediate cancel", async () => {
