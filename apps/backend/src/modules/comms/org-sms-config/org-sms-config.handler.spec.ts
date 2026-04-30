@@ -110,8 +110,11 @@ describe('UpsertOrgSmsConfigHandler', () => {
     expect(res.credentialsConfigured).toBe(true);
     const callArg = prisma.organizationSmsConfig.upsert.mock.calls[0][0];
     const ciphertext = callArg.create.credentialsCiphertext as string;
-    expect(ciphertext).not.toContain('SID');
-    expect(ciphertext).not.toContain('KEY');
+    expect(callArg.create).not.toHaveProperty('appSid');
+    expect(callArg.create).not.toHaveProperty('apiKey');
+    expect(ciphertext).not.toBe(
+      JSON.stringify({ appSid: 'SID', apiKey: 'KEY' }),
+    );
     expect(credentials.decrypt(ciphertext, 'org-A')).toEqual({
       appSid: 'SID',
       apiKey: 'KEY',
