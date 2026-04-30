@@ -15,6 +15,7 @@ import { StartSubscriptionHandler } from "./start-subscription/start-subscriptio
 import { UpgradePlanHandler } from "./upgrade-plan/upgrade-plan.handler";
 import { DowngradePlanHandler } from "./downgrade-plan/downgrade-plan.handler";
 import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscription.handler";
+import { ReactivateSubscriptionHandler } from "./reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
 import { RecordSubscriptionPaymentFailureHandler } from "./record-subscription-payment-failure/record-subscription-payment-failure.handler";
@@ -35,6 +36,7 @@ const HANDLERS = [
   UpgradePlanHandler,
   DowngradePlanHandler,
   CancelSubscriptionHandler,
+  ReactivateSubscriptionHandler,
   ResumeSubscriptionHandler,
   ListSavedCardsHandler,
   AddSavedCardHandler,
