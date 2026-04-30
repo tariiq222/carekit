@@ -51,10 +51,10 @@ async function bootstrap(): Promise<void> {
   // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Deqah API')
-    .setDescription('Deqah clinic management platform — dashboard & mobile API')
+    .setDescription('Deqah — نظام إدارة الحجوزات والمواعيد — dashboard & mobile API')
     .setVersion('2.0')
-    .setContact('Deqah Engineering', 'https://deqah.dev', 'dev@deqah.dev')
-    .setLicense('Proprietary', 'https://deqah.dev/license')
+    .setContact('Deqah Engineering', 'https://deqah.app', 'dev@deqah.app')
+    .setLicense('Proprietary', 'https://deqah.app/license')
     .addBearerAuth()
     .addServer('http://localhost:5100', 'Local dev')
     .build();
@@ -96,7 +96,7 @@ async function bootstrap(): Promise<void> {
 
   const port = Number(process.env.PORT ?? 5100);
   await app.listen(port);
-  Logger.log(`Deqah Backend v2 listening on http://localhost:${port}`, 'Bootstrap');
+  Logger.log(`Deqah Backend listening on http://localhost:${port}`, 'Bootstrap');
 }
 
 void bootstrap();
