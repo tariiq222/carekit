@@ -203,6 +203,28 @@ describe('DunningRetryService', () => {
     );
   });
 
+  it('keeps dunning state updates independent from owner email lookup failures', async () => {
+    const prisma = buildPrisma();
+    prisma.$allTenants.membership.findFirst.mockRejectedValue(new Error('mail lookup failed'));
+    const moyasar = buildMoyasar();
+    moyasar.chargeWithToken.mockResolvedValue({ id: 'pay-failed', status: 'failed' });
+    const service = buildService(prisma, moyasar);
+
+    await expect(
+      service.retryInvoice({ subscription, invoice, now: NOW, manual: false }),
+    ).resolves.toEqual({ ok: false, status: 'FAILED', attemptNumber: 1 });
+
+    expect(prisma.subscription.update).toHaveBeenCalledWith({
+      where: { id: 'sub-1' },
+      data: {
+        organizationId: 'org-1',
+        dunningRetryCount: 1,
+        nextRetryAt: new Date('2026-05-01T12:00:00.000Z'),
+        lastFailureReason: 'Moyasar returned status failed',
+      },
+    });
+  });
+
   it('logs no-card attempts and schedules the next retry', async () => {
     const prisma = buildPrisma();
     prisma.savedCard.findFirst.mockResolvedValue(null);

@@ -168,7 +168,7 @@ export class DunningRetryService {
         executedAt: params.now,
       },
     });
-    await this.sendFailureEmail(params);
+    await this.sendFailureEmail(params).catch(() => undefined);
 
     if (params.attemptNumber >= DUNNING_MAX_RETRIES) {
       await this.prisma.subscription.update({
