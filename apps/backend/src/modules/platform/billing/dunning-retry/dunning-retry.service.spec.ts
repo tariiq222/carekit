@@ -16,6 +16,14 @@ const buildPrisma = () => ({
   subscription: {
     update: jest.fn().mockResolvedValue({}),
   },
+  $allTenants: {
+    membership: {
+      findFirst: jest.fn().mockResolvedValue({
+        user: { email: 'owner@example.com', name: 'Owner' },
+        organization: { nameAr: 'Org AR' },
+      }),
+    },
+  },
 });
 
 const buildMoyasar = () => ({
@@ -33,8 +41,13 @@ const buildCache = () => ({
 const buildConfig = () => ({
   get: jest.fn((key: string, fallback?: unknown) => {
     if (key === 'BACKEND_URL') return 'https://api.carekit.test';
+    if (key === 'PLATFORM_DASHBOARD_URL') return 'https://app.carekit.test';
     return fallback;
   }),
+});
+
+const buildMailer = () => ({
+  sendDunningRetry: jest.fn().mockResolvedValue(undefined),
 });
 
 const buildService = (
@@ -43,6 +56,7 @@ const buildService = (
   recordPayment = buildRecordPayment(),
   cache = buildCache(),
   config = buildConfig(),
+  mailer = buildMailer(),
 ) =>
   new DunningRetryService(
     prisma as never,
@@ -50,6 +64,7 @@ const buildService = (
     recordPayment as never,
     cache as never,
     config as never,
+    mailer as never,
   );
 
 const subscription = {
@@ -163,6 +178,29 @@ describe('DunningRetryService', () => {
         failureReason: 'Moyasar returned status initiated',
       }),
     });
+  });
+
+  it('sends a dunning retry email after failed attempts', async () => {
+    const prisma = buildPrisma();
+    const moyasar = buildMoyasar();
+    moyasar.chargeWithToken.mockResolvedValue({ id: 'pay-failed', status: 'failed' });
+    const mailer = buildMailer();
+    const service = buildService(prisma, moyasar, buildRecordPayment(), buildCache(), buildConfig(), mailer);
+
+    await service.retryInvoice({ subscription, invoice, now: NOW, manual: false });
+
+    expect(mailer.sendDunningRetry).toHaveBeenCalledWith(
+      'owner@example.com',
+      expect.objectContaining({
+        ownerName: 'Owner',
+        orgName: 'Org AR',
+        amountSar: '299.00',
+        attemptNumber: 1,
+        maxAttempts: 4,
+        reason: 'Moyasar returned status failed',
+        billingUrl: 'https://app.carekit.test/settings/billing',
+      }),
+    );
   });
 
   it('logs no-card attempts and schedules the next retry', async () => {

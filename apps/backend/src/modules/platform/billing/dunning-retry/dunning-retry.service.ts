@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
 import { SubscriptionCacheService } from '../subscription-cache.service';
@@ -45,6 +46,7 @@ export class DunningRetryService {
     private readonly recordPayment: RecordSubscriptionPaymentHandler,
     private readonly cache: SubscriptionCacheService,
     private readonly config: ConfigService,
+    private readonly mailer: PlatformMailerService,
   ) {}
 
   async retryInvoice(cmd: RetryInvoiceCommand): Promise<RetryInvoiceResult> {
@@ -166,6 +168,7 @@ export class DunningRetryService {
         executedAt: params.now,
       },
     });
+    await this.sendFailureEmail(params);
 
     if (params.attemptNumber >= DUNNING_MAX_RETRIES) {
       await this.prisma.subscription.update({
@@ -201,6 +204,42 @@ export class DunningRetryService {
       this.config.get<string>('BACKEND_URL') ??
       this.config.get<string>('DASHBOARD_PUBLIC_URL', '');
     return `${base.replace(/\/+$/, '')}/api/v1/public/billing/webhooks/moyasar`;
+  }
+
+  private async sendFailureEmail(params: RetryInvoiceCommand & {
+    attemptNumber: number;
+    reason: string;
+  }): Promise<void> {
+    const owner = await this.prisma.$allTenants.membership.findFirst({
+      where: {
+        organizationId: params.subscription.organizationId,
+        role: 'OWNER',
+        isActive: true,
+      },
+      include: {
+        user: { select: { email: true, name: true } },
+        organization: { select: { nameAr: true } },
+      },
+    });
+    if (!owner?.user) return;
+
+    const baseUrl = this.config.get<string>(
+      'PLATFORM_DASHBOARD_URL',
+      'https://app.webvue.pro/dashboard',
+    );
+    try {
+      await this.mailer.sendDunningRetry(owner.user.email, {
+        ownerName: owner.user.name ?? '',
+        orgName: owner.organization.nameAr,
+        amountSar: Number(params.invoice.amount).toFixed(2),
+        attemptNumber: params.attemptNumber,
+        maxAttempts: DUNNING_MAX_RETRIES,
+        reason: params.reason,
+        billingUrl: `${baseUrl.replace(/\/+$/, '')}/settings/billing`,
+      });
+    } catch {
+      // Dunning state must not depend on best-effort email delivery.
+    }
   }
 
   private isUniqueViolation(error: unknown): boolean {

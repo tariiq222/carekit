@@ -123,6 +123,15 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  async sendDunningRetry(
+    to: string,
+    vars: import('./templates/dunning-retry.template').DunningRetryVars,
+  ): Promise<void> {
+    const { dunningRetryTemplate } = await import('./templates/dunning-retry.template');
+    const t = dunningRetryTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
   async sendPlanChanged(
     to: string,
     vars: import('./templates/plan-changed.template').PlanChangedVars,
