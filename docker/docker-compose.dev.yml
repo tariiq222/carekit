@@ -27,7 +27,7 @@ services:
       target: deps
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_DEV_EMAIL: admin@carekit-test.com
+      NEXT_PUBLIC_DEV_EMAIL: admin@deqah-test.com
       NEXT_PUBLIC_DEV_PASSWORD: Admin@1234
       # Browser → Next.js rewrites → backend. Public URL is what the host's
       # browser can reach; internal URL is how Next.js (inside the container)

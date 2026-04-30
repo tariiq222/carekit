@@ -2,7 +2,7 @@
   "domain": "Employees",
   "version": "main",
   "build": "employees-qa-all-fixes-2026-04-17",
-  "planName": "CareKit / Employees / Manual QA",
+  "planName": "Deqah / Employees / Manual QA",
   "planSummary": "Manual Chrome DevTools MCP QA gate for /employees, /employees/create, /employees/[id], /employees/[id]/edit. Final run after fixing all 16 originally-failing items.",
   "runSummary": "Employees QA verification — 2026-04-17 (all fixes)",
   "cases": [

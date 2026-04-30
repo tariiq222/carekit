@@ -12,7 +12,7 @@
   "testTimeout": 30000,
   "maxWorkers": 1,
   "moduleNameMapper": {
-    "^@carekit/shared$": "<rootDir>/../../packages/shared/src/index.ts"
+    "^@deqah/shared$": "<rootDir>/../../packages/shared/src/index.ts"
   },
   "collectCoverageFrom": [
     "src/**/*.{js,ts}",

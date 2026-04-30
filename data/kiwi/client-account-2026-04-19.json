@@ -2,7 +2,7 @@
   "domain": "Client Account",
   "version": "main",
   "build": "manual-qa-2026-04-19",
-  "planName": "CareKit / Client Account / Manual QA",
+  "planName": "Deqah / Client Account / Manual QA",
   "planSummary": "Manual QA gate for Phase 3 client accounts — register (OTP), login (password + lockout), /me, /me/bookings, cancel, reschedule, refresh rotation, logout, guest→account merge.",
   "runSummary": "Phase 3 client account manual QA — 2026-04-19",
   "cases": [

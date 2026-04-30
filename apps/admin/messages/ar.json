@@ -1,6 +1,6 @@
 {
   "nav": {
-    "title": "CareKit - لوحة التحكم",
+    "title": "Deqah - لوحة التحكم",
     "overview": "نظرة عامة",
     "organizations": "المنظمات",
     "users": "المستخدمين",
@@ -171,8 +171,8 @@
     }
   },
   "login": {
-    "title": "CareKit - لوحة التحكم",
-    "description": "للموظفين فقط. سجّل الدخول بحساب CareKit الخاص بك.",
+    "title": "Deqah - لوحة التحكم",
+    "description": "للموظفين فقط. سجّل الدخول بحساب Deqah الخاص بك.",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "submit": "تسجيل الدخول",
@@ -198,7 +198,7 @@
   },
   "resetPassword": {
     "title": "إعادة تعيين كلمة المرور",
-    "description": "اختر كلمة مرور جديدة لحساب الإدارة العليا في CareKit.",
+    "description": "اختر كلمة مرور جديدة لحساب الإدارة العليا في Deqah.",
     "newPassword": "كلمة المرور الجديدة",
     "confirmPassword": "تأكيد كلمة المرور",
     "submit": "إعادة تعيين",

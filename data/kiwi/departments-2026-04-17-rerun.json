@@ -2,7 +2,7 @@
   "domain": "Departments",
   "version": "main",
   "build": "manual-qa-2026-04-17-rerun",
-  "planName": "CareKit / Departments / Manual QA",
+  "planName": "Deqah / Departments / Manual QA",
   "planSummary": "Re-run after fixing departments search debounce.",
   "runSummary": "Verification after fixes landed 2026-04-17 — typecheck clean.",
   "cases": [

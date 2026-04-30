@@ -2,7 +2,7 @@
   "domain": "Bookings",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Bookings / Manual QA",
+  "planName": "Deqah / Bookings / Manual QA",
   "planSummary": "Manual Chrome DevTools MCP QA gate for /bookings. Covers 14 blockers identified and fixed in the 2026-04-17 session.",
   "runSummary": "Bookings QA verification — 2026-04-17",
   "cases": [

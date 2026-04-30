@@ -2,7 +2,7 @@
   "domain": "Intake Forms",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Intake Forms / Manual QA",
+  "planName": "Deqah / Intake Forms / Manual QA",
   "planSummary": "Manual QA of /intake-forms list + create/edit/delete pages.",
   "runSummary": "Chrome DevTools MCP session on localhost:5103 with empty seed.",
   "cases": [

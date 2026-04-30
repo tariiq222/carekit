@@ -1,6 +1,6 @@
 {
   "nav": {
-    "title": "CareKit Super-admin",
+    "title": "Deqah Super-admin",
     "overview": "Overview",
     "organizations": "Organizations",
     "users": "Users",
@@ -171,8 +171,8 @@
     }
   },
   "login": {
-    "title": "CareKit Super-admin",
-    "description": "Platform staff only. Sign in with your CareKit account.",
+    "title": "Deqah Super-admin",
+    "description": "Platform staff only. Sign in with your Deqah account.",
     "email": "Email",
     "password": "Password",
     "submit": "Sign in",
@@ -198,7 +198,7 @@
   },
   "resetPassword": {
     "title": "Reset Password",
-    "description": "Choose a new password for your CareKit super-admin account.",
+    "description": "Choose a new password for your Deqah super-admin account.",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "submit": "Reset Password",

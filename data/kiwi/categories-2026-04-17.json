@@ -2,7 +2,7 @@
   "domain": "Categories",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Categories / Manual QA",
+  "planName": "Deqah / Categories / Manual QA",
   "planSummary": "Manual QA of /categories list + create/edit/delete dialogs.",
   "runSummary": "Chrome DevTools MCP session on localhost:5103 with empty seed (category created during test).",
   "cases": [

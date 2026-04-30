@@ -2,7 +2,7 @@
   "domain": "Branches",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Branches / Manual QA",
+  "planName": "Deqah / Branches / Manual QA",
   "planSummary": "Manual QA walkthrough of /branches list, create, edit, delete, employees dialog, and set-primary action.",
   "runSummary": "Chrome DevTools MCP session on localhost:5103 with seeded 3-branch organization (Main Branch primary).",
   "cases": [

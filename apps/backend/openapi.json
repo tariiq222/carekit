@@ -2984,7 +2984,7 @@
           },
           "businessNameEn": {
             "description": "Business name in English",
-            "example": "CareKit Clinic",
+            "example": "Deqah Clinic",
             "type": "string"
           },
           "email": {
@@ -4360,7 +4360,7 @@
           },
           "organizationNameEn": {
             "description": "Organization name in English",
-            "example": "CareKit Clinic",
+            "example": "Deqah Clinic",
             "type": "string"
           },
           "productTagline": {
@@ -4517,7 +4517,7 @@
           },
           "companyNameEn": {
             "description": "Company name in English",
-            "example": "CareKit Clinic",
+            "example": "Deqah Clinic",
             "type": "string"
           },
           "contactEmail": {
@@ -4981,16 +4981,16 @@
   },
   "info": {
     "contact": {
-      "email": "dev@carekit.dev",
-      "name": "CareKit Engineering",
-      "url": "https://carekit.dev"
+      "email": "dev@deqah.dev",
+      "name": "Deqah Engineering",
+      "url": "https://deqah.dev"
     },
-    "description": "CareKit clinic management platform — dashboard & mobile API",
+    "description": "Deqah clinic management platform — dashboard & mobile API",
     "license": {
       "name": "Proprietary",
-      "url": "https://carekit.dev/license"
+      "url": "https://deqah.dev/license"
     },
-    "title": "CareKit API",
+    "title": "Deqah API",
     "version": "2.0"
   },
   "openapi": "3.0.0",

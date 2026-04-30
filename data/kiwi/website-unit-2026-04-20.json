@@ -4,7 +4,7 @@
   "build": "website-unit-2026-04-20",
   "planType": "Unit",
   "isAutomated": true,
-  "planName": "CareKit / Website / Unit",
+  "planName": "Deqah / Website / Unit",
   "planSummary": "Vitest unit tests for apps/website — components, API wrappers, i18n, forms.",
   "runSummary": "Website unit-test run — 2026-04-20",
   "cases": [

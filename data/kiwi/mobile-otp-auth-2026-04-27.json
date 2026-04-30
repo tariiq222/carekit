@@ -33,7 +33,7 @@
     },
     {
       "summary": "Unverified-email banner: tap → email arrives → tap link → returns to app verified",
-      "text": "Open settings (or employee profile), see banner 'بريدك الإلكتروني غير مؤكد'. Tap 'إرسال رابط التفعيل'. Open inbox, tap link. Browser shows verification success, deep-links carekit://settings?verified=1. Banner gone after refresh.",
+      "text": "Open settings (or employee profile), see banner 'بريدك الإلكتروني غير مؤكد'. Tap 'إرسال رابط التفعيل'. Open inbox, tap link. Browser shows verification success, deep-links deqah://settings?verified=1. Banner gone after refresh.",
       "result": "PASS"
     },
     {
@@ -73,7 +73,7 @@
     },
     {
       "summary": "Dashboard email+password login still works (regression check)",
-      "text": "Open dashboard at :5103, sign in as admin@carekit-test.com / Admin@1234. Confirm: dashboard loads as before; no behavioural change to dashboard auth.",
+      "text": "Open dashboard at :5103, sign in as admin@deqah-test.com / Admin@1234. Confirm: dashboard loads as before; no behavioural change to dashboard auth.",
       "result": "PASS"
     },
     {

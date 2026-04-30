@@ -5,7 +5,7 @@ services:
       dockerfile: apps/website/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:5100
-    container_name: carekit-website
+    container_name: deqah-website
     restart: unless-stopped
     ports:
       - "5104:5104"

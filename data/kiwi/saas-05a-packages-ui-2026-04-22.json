@@ -2,22 +2,22 @@
   "domain": "Dashboard",
   "version": "main",
   "build": "manual-qa-2026-04-22",
-  "planName": "CareKit / Packages UI / Manual QA",
-  "planSummary": "Manual QA gate for PR #20 (feat/saas-05a-packages-ui) — extracts 33 shadcn primitives from apps/dashboard/components/ui into packages/ui (@carekit/ui) workspace. Verifies dashboard boots, primitives resolve, call sites rewrite correctly, and both static and portal/interactive primitives render with full Tailwind styling after the @source scan change.",
+  "planName": "Deqah / Packages UI / Manual QA",
+  "planSummary": "Manual QA gate for PR #20 (feat/saas-05a-packages-ui) — extracts 33 shadcn primitives from apps/dashboard/components/ui into packages/ui (@deqah/ui) workspace. Verifies dashboard boots, primitives resolve, call sites rewrite correctly, and both static and portal/interactive primitives render with full Tailwind styling after the @source scan change.",
   "runSummary": "Executed 2026-04-22 (worktree .claude/worktrees/agent-af7d557c on :5113, fresh backend from main on :5101 with CORS allowing :5113). All 9 cases PASS. Auth-protected flows unblocked by running backend from main source (dist on :5100 was stale; worktree backend would not compile because PR #20 branch pre-dates saas-02e).",
   "cases": [
     {
       "summary": "Dashboard dev server boots from PR branch without compile errors",
-      "text": "1. cd worktree/apps/dashboard\n2. next dev --turbopack --port 5113\n3. Wait for Ready\nExpected: '✓ Ready' within 10s, no TS/module-resolution errors against @carekit/ui.",
+      "text": "1. cd worktree/apps/dashboard\n2. next dev --turbopack --port 5113\n3. Wait for Ready\nExpected: '✓ Ready' within 10s, no TS/module-resolution errors against @deqah/ui.",
       "result": "PASSED"
     },
     {
-      "summary": "@carekit/ui package structure matches PR description (33 primitives + 2 carve-outs)",
-      "text": "1. ls packages/ui/src/primitives/ → 33 files\n2. ls apps/dashboard/components/ui/ → 2 files (date-picker.tsx, nationality-select.tsx)\n3. grep -rE 'from \"@carekit/ui\"' apps/dashboard → 227 call sites\nExpected: exact counts match the PR.",
+      "summary": "@deqah/ui package structure matches PR description (33 primitives + 2 carve-outs)",
+      "text": "1. ls packages/ui/src/primitives/ → 33 files\n2. ls apps/dashboard/components/ui/ → 2 files (date-picker.tsx, nationality-select.tsx)\n3. grep -rE 'from \"@deqah/ui\"' apps/dashboard → 227 call sites\nExpected: exact counts match the PR.",
       "result": "PASSED"
     },
     {
-      "summary": "Login page renders Card/Button/Input/Label primitives from @carekit/ui with full Tailwind styling, RTL, IBM Plex Sans Arabic",
+      "summary": "Login page renders Card/Button/Input/Label primitives from @deqah/ui with full Tailwind styling, RTL, IBM Plex Sans Arabic",
       "text": "1. Open http://localhost:5113/\n2. Observe login form\nExpected: glass card, rounded button, Arabic labels, RTL layout, correct typography — no unstyled-HTML fallback.",
       "result": "PASSED"
     },
@@ -28,7 +28,7 @@
     },
     {
       "summary": "Login → Home: sidebar, DropdownMenu (Avatar), Tooltip icon buttons render end-to-end",
-      "text": "1. Submit admin@carekit-test.com / Admin@1234\n2. Redirect to /\nExpected: full sidebar (3 nav sections × 17 items), header icon-buttons (dark-mode/Settings/Notifications/Avatar dropdown), Command Palette. Observed all of these. Note: RecentPayments component separately throws a data-shape error (reads .ar on undefined) — unrelated to UI-primitive extraction, pre-existing in main.",
+      "text": "1. Submit admin@deqah-test.com / Admin@1234\n2. Redirect to /\nExpected: full sidebar (3 nav sections × 17 items), header icon-buttons (dark-mode/Settings/Notifications/Avatar dropdown), Command Palette. Observed all of these. Note: RecentPayments component separately throws a data-shape error (reads .ar on undefined) — unrelated to UI-primitive extraction, pre-existing in main.",
       "result": "PASSED"
     },
     {
@@ -38,12 +38,12 @@
     },
     {
       "summary": "/bookings — date-picker (carve-out) → Popover → Calendar portal renders full Arabic month view",
-      "text": "1. /bookings → click 'من' date filter\nExpected: Popover opens with Calendar (month header 'أبريل 2026', 35 day cells, prev/next buttons, Today focused).\nObserved: full Arabic calendar rendered, Today = الأربعاء 22 أبريل 2026 focused. Proves @carekit/ui Popover+Calendar work AND dashboard carve-out (date-picker.tsx) still composes with them correctly.",
+      "text": "1. /bookings → click 'من' date filter\nExpected: Popover opens with Calendar (month header 'أبريل 2026', 35 day cells, prev/next buttons, Today focused).\nObserved: full Arabic calendar rendered, Today = الأربعاء 22 أبريل 2026 focused. Proves @deqah/ui Popover+Calendar work AND dashboard carve-out (date-picker.tsx) still composes with them correctly.",
       "result": "PASSED"
     },
     {
       "summary": "/bookings — Tabs + Select comboboxes + icon-only row actions render",
-      "text": "Observed on /bookings snapshot: 2-tab Tablist (الحجوزات / قائمة الانتظار), 4 status filter buttons, 4 Select comboboxes (types/sources/practitioners/statuses), 2 date-range triggers, 3 icon-only row actions per row. All primitives from @carekit/ui resolve.",
+      "text": "Observed on /bookings snapshot: 2-tab Tablist (الحجوزات / قائمة الانتظار), 4 status filter buttons, 4 Select comboboxes (types/sources/practitioners/statuses), 2 date-range triggers, 3 icon-only row actions per row. All primitives from @deqah/ui resolve.",
       "result": "PASSED"
     },
     {

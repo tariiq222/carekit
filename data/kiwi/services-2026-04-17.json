@@ -2,7 +2,7 @@
   "domain": "Services",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Services / Manual QA",
+  "planName": "Deqah / Services / Manual QA",
   "planSummary": "Manual QA walkthrough for Services list/create/edit/delete per docs/superpowers/qa/services.md (2026-04-17).",
   "runSummary": "Chrome DevTools MCP session on localhost:5103 against backend localhost:5100. Seed: 3 services, 0 categories.",
   "cases": [

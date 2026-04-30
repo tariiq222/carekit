@@ -2,7 +2,7 @@
   "domain": "Coupons",
   "version": "main",
   "build": "manual-qa-2026-04-17-rerun",
-  "planName": "CareKit / Coupons / Manual QA",
+  "planName": "Deqah / Coupons / Manual QA",
   "planSummary": "Re-run after fixing coupon payload + form card headings.",
   "runSummary": "Direct API probe verified POST succeeds with the new API-boundary mapper.",
   "cases": [

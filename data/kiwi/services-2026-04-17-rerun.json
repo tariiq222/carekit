@@ -2,7 +2,7 @@
   "domain": "Services",
   "version": "main",
   "build": "manual-qa-2026-04-17-rerun",
-  "planName": "CareKit / Services / Manual QA",
+  "planName": "Deqah / Services / Manual QA",
   "planSummary": "Re-run after fixing the critical Services bugs (isActive filter, GET /services/:id, search debounce, controlled tabs, validation i18n, delete dialog name).",
   "runSummary": "Chrome DevTools MCP re-verification on localhost:5103 after code fixes on 2026-04-17.",
   "cases": [

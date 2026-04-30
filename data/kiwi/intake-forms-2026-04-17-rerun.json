@@ -2,7 +2,7 @@
   "domain": "Intake Forms",
   "version": "main",
   "build": "manual-qa-2026-04-17-rerun",
-  "planName": "CareKit / Intake Forms / Manual QA",
+  "planName": "Deqah / Intake Forms / Manual QA",
   "planSummary": "Re-run after fixing intake form create payload + adding breadcrumbs.",
   "runSummary": "Direct API probe verified POST succeeds after DTO accepts isActive and dashboard strips unsupported UI-only fields.",
   "cases": [

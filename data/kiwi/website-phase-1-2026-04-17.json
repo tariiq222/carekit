@@ -2,7 +2,7 @@
   "domain": "Website",
   "version": "main",
   "build": "website-phase-1-2026-04-17",
-  "planName": "CareKit / Website / Manual QA",
+  "planName": "Deqah / Website / Manual QA",
   "planSummary": "Phase 1 slim gate — centralized branding contract + themes",
   "runSummary": "Initial Phase 1 slim manual QA run",
   "cases": [

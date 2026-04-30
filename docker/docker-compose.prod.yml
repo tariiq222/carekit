@@ -1,4 +1,4 @@
-# Production overrides for CareKit
+# Production overrides for Deqah
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 # Requires: .env.prod populated from .env.prod.example with real secrets.
 #
@@ -11,7 +11,7 @@ services:
     build:
       context: ..
       dockerfile: apps/backend/Dockerfile
-    container_name: carekit-migrate
+    container_name: deqah-migrate
     command: ["sh", "-c", "npx prisma migrate deploy --schema=prisma/schema"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -41,7 +41,7 @@ services:
       MINIO_PORT: "9000"
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET:-carekit}
+      MINIO_BUCKET: ${MINIO_BUCKET:-deqah}
       MINIO_USE_SSL: "${MINIO_USE_SSL:-false}"
 
       # CORS — comma-separated, no trailing slash
@@ -152,7 +152,7 @@ services:
     build:
       context: ..
       dockerfile: apps/dashboard/Dockerfile
-    container_name: carekit-dashboard
+    container_name: deqah-dashboard
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -183,7 +183,7 @@ services:
     build:
       context: ..
       dockerfile: apps/admin/Dockerfile
-    container_name: carekit-admin
+    container_name: deqah-admin
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -216,7 +216,7 @@ services:
       dockerfile: apps/website/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    container_name: carekit-website
+    container_name: deqah-website
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -357,7 +357,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: carekit-nginx
+    container_name: deqah-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -394,7 +394,7 @@ services:
 
   minio-backup:
     image: minio/mc:latest
-    container_name: carekit-minio-backup
+    container_name: deqah-minio-backup
     depends_on:
       minio:
         condition: service_healthy

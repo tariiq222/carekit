@@ -2,7 +2,7 @@
   "domain": "Departments",
   "version": "main",
   "build": "manual-qa-2026-04-17",
-  "planName": "CareKit / Departments / Manual QA",
+  "planName": "Deqah / Departments / Manual QA",
   "planSummary": "Manual QA of /departments list + create/edit/delete dialogs.",
   "runSummary": "Chrome DevTools MCP session on localhost:5103 with empty seed (dept created during test).",
   "cases": [

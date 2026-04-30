@@ -2,7 +2,7 @@
   "domain": "P0 Alignment",
   "version": "main",
   "build": "p0-alignment-fixes-2026-04-17",
-  "planName": "CareKit / P0 Alignment / Manual QA",
+  "planName": "Deqah / P0 Alignment / Manual QA",
   "planSummary": "Post-fix verification of Branding, Coupons, Services-deposit, Notifications — four P0 clusters that were returning 400 on every save",
   "runSummary": "Backend unit tests: 794/797 pass (3 pre-existing failures in bookings+employees unrelated to this PR). Dashboard type-check passes on new types. All four broken forms now send payloads matching backend DTOs.",
   "cases": [
@@ -42,7 +42,7 @@
       "result": "PASS"
     },
     {
-      "summary": "Prisma migration applies cleanly to carekit_dev",
+      "summary": "Prisma migration applies cleanly to deqah_dev",
       "text": "Migration 20260417150000_branding_rename_and_expand applied: RENAME COLUMN x4, ADD COLUMN x6 on BrandingConfig. No data loss on existing rows.",
       "result": "PASS"
     }
