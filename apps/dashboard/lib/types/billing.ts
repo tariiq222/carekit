@@ -36,6 +36,8 @@ export interface Subscription {
   scheduledBillingCycle?: BillingCycle | null
   scheduledPlanChangeAt?: string | null
   pastDueSince?: string | null
+  dunningRetryCount?: number
+  nextRetryAt?: string | null
   plan: Plan
   invoices?: SubscriptionInvoice[]
   usage?: Partial<Record<string, number>>
@@ -76,6 +78,12 @@ export interface AddSavedCardInput {
   moyasarTokenId: string
   makeDefault?: boolean
   idempotencyKey?: string
+}
+
+export interface RetryPaymentResponse {
+  ok: boolean
+  status: 'PAID' | 'FAILED' | 'DUPLICATE_ATTEMPT'
+  attemptNumber?: number
 }
 
 export interface SubscriptionInvoice {

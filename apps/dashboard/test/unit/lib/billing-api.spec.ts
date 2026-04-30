@@ -66,6 +66,17 @@ describe("billingApi plan changes", () => {
     vi.clearAllMocks()
   })
 
+  it("requests a manual dunning retry", async () => {
+    apiMock.post.mockResolvedValueOnce({ ok: true, status: "PAID", attemptNumber: 1 })
+
+    await billingApi.retryPayment()
+
+    expect(apiMock.post).toHaveBeenCalledWith(
+      "/dashboard/billing/subscription/retry-payment",
+      {},
+    )
+  })
+
   it("requests a proration preview with plan and billing cycle query params", async () => {
     apiMock.get.mockResolvedValueOnce({ action: "UPGRADE_NOW", amountHalalas: 30000 })
 

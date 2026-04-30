@@ -1,17 +1,13 @@
 "use client"
 
-import { Card } from "@carekit/ui"
+import { Button, Card } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
+import { useBillingMutations } from "@/hooks/use-current-subscription"
 import { useBilling } from "@/lib/billing/billing-context"
-import { getEmployeeUsageSummary } from "@/lib/billing/utils"
+import { formatBillingDate, getEmployeeUsageSummary } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
 
 const BANNER_VARIANTS = {
-  PAST_DUE: {
-    titleKey: "billing.banner.pastDue.title",
-    descriptionKey: "billing.banner.pastDue.description",
-    className: "border-warning/30 bg-warning/10 text-warning",
-  },
   SUSPENDED: {
     titleKey: "billing.banner.suspended.title",
     descriptionKey: "billing.banner.suspended.description",
@@ -27,10 +23,45 @@ const BANNER_VARIANTS = {
 type BannerStatus = keyof typeof BANNER_VARIANTS
 
 export function BillingStatusBanner() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { status, subscription } = useBilling()
+  const { retryPaymentMut } = useBillingMutations()
 
-  if (status === "PAST_DUE" || status === "SUSPENDED" || status === "CANCELED") {
+  if (status === "PAST_DUE") {
+    const nextRetryAt = subscription?.nextRetryAt
+      ? formatBillingDate(subscription.nextRetryAt, locale)
+      : null
+
+    return (
+      <Card className="border border-warning/30 bg-warning/10 p-4 text-warning">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <p className="font-semibold">{t("billing.banner.dunning.title")}</p>
+            <p className="text-sm opacity-90">{t("billing.banner.dunning.description")}</p>
+            {nextRetryAt && (
+              <p className="text-xs opacity-80">
+                {t("billing.banner.dunning.nextRetry")}: {nextRetryAt}
+              </p>
+            )}
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="w-full border-warning/40 bg-background text-warning hover:bg-warning/10 hover:text-warning md:w-auto"
+            disabled={retryPaymentMut.isPending}
+            onClick={() => retryPaymentMut.mutate()}
+          >
+            {retryPaymentMut.isPending
+              ? t("billing.banner.dunning.retrying")
+              : t("billing.banner.dunning.retry")}
+          </Button>
+        </div>
+      </Card>
+    )
+  }
+
+  if (status === "SUSPENDED" || status === "CANCELED") {
     const variant = BANNER_VARIANTS[status as BannerStatus]
 
     return (

@@ -9,6 +9,7 @@ import type {
   ChangePlanInput,
   Plan,
   ProrationPreview,
+  RetryPaymentResponse,
   SavedCard,
   Subscription,
 } from "@/lib/types/billing"
@@ -52,6 +53,9 @@ export const billingApi = {
 
   reactivate: () =>
     api.post<Subscription>('/dashboard/billing/subscription/reactivate', {}),
+
+  retryPayment: () =>
+    api.post<RetryPaymentResponse>('/dashboard/billing/subscription/retry-payment', {}),
 
   listSavedCards: () =>
     api.get<SavedCard[]>('/dashboard/billing/saved-cards'),

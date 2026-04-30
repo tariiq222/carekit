@@ -56,6 +56,7 @@ describe("BillingPage", () => {
   const resumeMutate = vi.fn()
   const reactivateMutate = vi.fn()
   const startMutateAsync = vi.fn()
+  const retryPaymentMutate = vi.fn()
 
   beforeEach(() => {
     upgradeMutateAsync.mockReset()
@@ -65,6 +66,7 @@ describe("BillingPage", () => {
     resumeMutate.mockReset()
     reactivateMutate.mockReset()
     startMutateAsync.mockReset()
+    retryPaymentMutate.mockReset()
 
     useLocale.mockReturnValue({
       locale: "en",
@@ -74,6 +76,11 @@ describe("BillingPage", () => {
           "billing.description": "Manage your subscription plan, usage, and invoices.",
           "billing.banner.pastDue.title": "Your account is past due",
           "billing.banner.pastDue.description": "Please update your subscription to avoid service interruption.",
+          "billing.banner.dunning.title": "Payment retry required",
+          "billing.banner.dunning.description": "We will keep retrying the default card before access is suspended.",
+          "billing.banner.dunning.nextRetry": "Next automatic retry",
+          "billing.banner.dunning.retry": "Retry payment",
+          "billing.banner.dunning.retrying": "Retrying...",
           "billing.banner.suspended.title": "Your subscription is suspended",
           "billing.banner.suspended.description": "Access is restricted until billing is resumed.",
           "billing.banner.scheduledCancel.title": "Cancellation scheduled",
@@ -140,6 +147,7 @@ describe("BillingPage", () => {
       resumeMut: { isPending: false, mutate: resumeMutate },
       reactivateMut: { isPending: false, mutate: reactivateMutate },
       startMut: { isPending: false, mutateAsync: startMutateAsync },
+      retryPaymentMut: { isPending: false, mutate: retryPaymentMutate },
     })
 
     usePlans.mockReturnValue({
@@ -204,7 +212,41 @@ describe("BillingPage", () => {
 
     render(<BillingPage />)
 
-    expect(screen.getByText("Your account is past due")).toBeInTheDocument()
+    expect(screen.getByText("Payment retry required")).toBeInTheDocument()
+  })
+
+  it("allows a tenant to manually retry a failed payment from the dunning banner", async () => {
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "PAST_DUE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      dunningRetryCount: 1,
+      nextRetryAt: "2026-05-01T12:00:00.000Z",
+      plan: {
+        id: "basic",
+        slug: "BASIC",
+        nameEn: "Basic",
+        nameAr: "أساسي",
+        priceMonthly: "99",
+        priceAnnual: "999",
+        currency: "SAR",
+        limits: { maxBookingsPerMonth: 50 },
+        sortOrder: 1,
+      },
+      usage: { BOOKINGS_PER_MONTH: 25 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status: "PAST_DUE", subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+
+    render(<BillingPage />)
+
+    expect(screen.getByText("Next automatic retry: May 1, 2026")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Retry payment" }))
+    expect(retryPaymentMutate).toHaveBeenCalledOnce()
   })
 
   it("opens the plan dialog and submits an upgrade", async () => {

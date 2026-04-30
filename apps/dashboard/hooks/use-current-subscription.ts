@@ -101,6 +101,11 @@ export function useBillingMutations() {
     onSuccess: invalidate,
   })
 
+  const retryPaymentMut = useMutation({
+    mutationFn: () => billingApi.retryPayment(),
+    onSuccess: invalidate,
+  })
+
   const addSavedCardMut = useMutation({
     mutationFn: (dto: AddSavedCardInput) =>
       billingApi.addSavedCard({
@@ -130,6 +135,7 @@ export function useBillingMutations() {
     scheduleCancelMut,
     resumeMut,
     reactivateMut,
+    retryPaymentMut,
     addSavedCardMut,
     setDefaultSavedCardMut,
     removeSavedCardMut,
