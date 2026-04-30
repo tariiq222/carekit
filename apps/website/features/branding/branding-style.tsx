@@ -1,12 +1,13 @@
 import type { PublicBranding } from '@deqah/shared';
+import { PLATFORM_BRAND } from '@deqah/shared/constants';
 
 const DEFAULTS: Record<string, string> = {
-  '--primary': '#354FD8',
-  '--primary-light': '#5B72E8',
-  '--primary-dark': '#2438B0',
-  '--accent': '#82CC17',
-  '--accent-dark': '#5A9010',
-  '--bg': '#EEF1F8',
+  '--primary': PLATFORM_BRAND.colors.primary,
+  '--primary-light': PLATFORM_BRAND.colors.primaryLight,
+  '--primary-dark': PLATFORM_BRAND.colors.primaryDark,
+  '--accent': PLATFORM_BRAND.colors.accent,
+  '--accent-dark': PLATFORM_BRAND.colors.accentDark,
+  '--bg': PLATFORM_BRAND.colors.background,
   '--font-primary': "'IBM Plex Sans Arabic', system-ui, sans-serif",
 };
 

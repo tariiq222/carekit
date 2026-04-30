@@ -15,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: 'Deqah',
-      description: 'Deqah website',
+      title: 'دِقة',
+      description: 'Deqah appointment operations platform',
     };
   }
 }

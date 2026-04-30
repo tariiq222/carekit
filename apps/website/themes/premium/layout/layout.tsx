@@ -1,9 +1,12 @@
 import { getLocale, LanguageSwitcher } from '@/features/locale/public';
 import { t } from '@/features/locale/dictionary';
+import { getPublicBrandingForSsr } from '@/features/branding/public';
 import type { ThemeLayoutProps } from '../../types';
 
 export async function PremiumLayout({ children }: ThemeLayoutProps) {
   const locale = await getLocale();
+  const branding = await getPublicBrandingForSsr();
+  const brandName = branding.organizationNameAr || branding.organizationNameEn || 'دِقة';
   return (
     <div
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
@@ -27,7 +30,7 @@ export async function PremiumLayout({ children }: ThemeLayoutProps) {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
       >
-        <span style={{ letterSpacing: '0.2em', fontSize: '0.75rem' }}>CAREKIT</span>
+        <span style={{ letterSpacing: '0.12em', fontSize: '0.75rem' }}>{brandName}</span>
         <nav style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', alignItems: 'center' }}>
           <a href="/" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.home')}</a>
           <a href="/therapists" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.therapists')}</a>
@@ -46,7 +49,7 @@ export async function PremiumLayout({ children }: ThemeLayoutProps) {
           letterSpacing: '0.2em',
         }}
       >
-        PREMIUM · CAREKIT
+        PREMIUM · {brandName}
       </footer>
     </div>
   );
