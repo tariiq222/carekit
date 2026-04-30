@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@carekit/ui"
+} from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useDownloadBillingInvoice } from "@/hooks/use-billing-invoices"
 import type { Invoice, InvoiceStatus } from "@/lib/types/billing"
