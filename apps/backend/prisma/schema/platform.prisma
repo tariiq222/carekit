@@ -116,6 +116,7 @@ model Organization {
   invitations  Invitation[]
   subscription Subscription?
   savedCards   SavedCard[]
+  invoiceCounters OrganizationInvoiceCounter[]
 
   @@index([status])
   @@index([verticalId])
@@ -468,6 +469,11 @@ model SubscriptionInvoice {
   refundedAmount   Decimal?                  @db.Decimal(12, 2)
   refundedAt       DateTime?
   voidedReason     String?
+  // Phase 7 — tenant invoice numbering, hash chain, and PDF storage
+  invoiceNumber    String?                   @unique
+  invoiceHash      String?
+  previousHash     String?
+  pdfStorageKey    String?
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
@@ -477,6 +483,22 @@ model SubscriptionInvoice {
   @@index([organizationId])
   @@index([status])
   @@index([dueDate])
+  @@index([organizationId, issuedAt])
+  @@index([organizationId, invoiceNumber])
+}
+
+// Phase 7 — per-organization invoice number sequence (yearly reset).
+// Intentionally NOT in SCOPED_MODELS — write path is server-side only via
+// the issue-invoice handler.
+model OrganizationInvoiceCounter {
+  organizationId String
+  year           Int
+  lastSequence   Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, year])
+  @@index([organizationId])
 }
 
 model DunningLog {
