@@ -2,10 +2,10 @@ import js from "@eslint/js";
 import tsParser from "@typescript-eslint/parser";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 import { defineConfig, globalIgnores } from "eslint/config";
-import carekitPlugin from "./eslint-rules/carekit-plugin.mjs";
+import deqahPlugin from "./eslint-rules/deqah-plugin.mjs";
 
 /**
- * Backend ESLint — CareKit NestJS.
+ * Backend ESLint — Deqah NestJS.
  *
  * Keeps the rule set small and shared-parser (monorepo root installs the
  * @typescript-eslint packages). Additional domain-specific rules belong in
@@ -48,7 +48,7 @@ export default defineConfig([
     },
     plugins: {
       "@typescript-eslint": tsPlugin,
-      carekit: carekitPlugin,
+      deqah: deqahPlugin,
     },
     rules: {
       // Disable core JS rules that TS handles or that produce false positives on .ts syntax
@@ -57,7 +57,7 @@ export default defineConfig([
       "no-dupe-class-members": "off",
       "no-redeclare": "off",
 
-      // CareKit golden rule: no `any` in TypeScript
+      // Deqah golden rule: no `any` in TypeScript
       // Dropped to "warn" temporarily — 6 pre-existing occurrences surfaced when
       // the missing eslint.config.mjs was restored (bookings handlers). Track
       // and fix in a follow-up, then promote back to "error".
@@ -74,7 +74,7 @@ export default defineConfig([
       ],
 
       // Require @ApiOperation on every NestJS HTTP handler.
-      "carekit/require-api-operation": "error",
+      "deqah/require-api-operation": "error",
 
       // `$allTenantsUnsafe` is reserved for CLI/bootstrap code (seed/scripts).
       // Application code must go through the CLS-gated `$allTenants` escape hatch.
@@ -94,7 +94,7 @@ export default defineConfig([
     files: ["test/**/*.ts", "**/*.spec.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "carekit/require-api-operation": "off",
+      "deqah/require-api-operation": "off",
     },
   },
 ]);

@@ -1,4 +1,4 @@
-// CareKit Backend v2 — Prisma schema root
+// Deqah Backend v2 — Prisma schema root
 //
 // Split-schema strategy (Prisma 7 schema folder — GA):
 //   - This folder contains one .prisma file per Bounded Context.

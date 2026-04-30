@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# CareKit Backend — NestJS 11 + Prisma 7
+# Deqah Backend — NestJS 11 + Prisma 7
 # Build context MUST be the monorepo root.
 
 FROM node:20-bookworm-slim AS deps

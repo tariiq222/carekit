@@ -142,7 +142,7 @@ model OrganizationSmsConfig {
   id                    String      @id @default(uuid())
   organizationId        String      @unique // SaaS-02g-sms — singleton per org
   provider              SmsProvider @default(NONE)
-  senderId              String? // e.g. "CareKit" or per-tenant brand
+  senderId              String? // e.g. "Deqah" or per-tenant brand
   // Encrypted credential payload (AES-GCM). JSON-stringified provider-specific fields.
   credentialsCiphertext String? // base64(nonce || tag || ciphertext)
   webhookSecret         String? // HMAC secret for DLR signature
