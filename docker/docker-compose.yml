@@ -3,12 +3,12 @@ services:
     build:
       context: ..
       dockerfile: apps/backend/Dockerfile
-    container_name: carekit-backend
+    container_name: deqah-backend
     restart: unless-stopped
     ports:
       - "5100:5100"
     environment:
-      DATABASE_URL: postgresql://carekit:carekit_dev_password@postgres:5432/carekit_dev
+      DATABASE_URL: postgresql://deqah:deqah_dev_password@postgres:5432/deqah_dev
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: dev-jwt-access-secret-change-me-32c
       JWT_REFRESH_SECRET: dev-jwt-refresh-secret-change-me-32c
@@ -20,7 +20,7 @@ services:
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
-      MINIO_BUCKET: carekit
+      MINIO_BUCKET: deqah
       PORT: 5100
       NODE_ENV: development
       BACKEND_URL: http://localhost:5100
@@ -39,18 +39,18 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: carekit-postgres
+    container_name: deqah-postgres
     restart: unless-stopped
     ports:
       - "5999:5432"
     environment:
-      POSTGRES_USER: carekit
-      POSTGRES_PASSWORD: carekit_dev_password
-      POSTGRES_DB: carekit_dev
+      POSTGRES_USER: deqah
+      POSTGRES_PASSWORD: deqah_dev_password
+      POSTGRES_DB: deqah_dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U carekit -d carekit_dev"]
+      test: ["CMD-SHELL", "pg_isready -U deqah -d deqah_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +58,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: carekit-redis
+    container_name: deqah-redis
     restart: unless-stopped
     ports:
       - "5380:6379"
@@ -72,7 +72,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: carekit-minio
+    container_name: deqah-minio
     restart: unless-stopped
     ports:
       - "5200:9000"
