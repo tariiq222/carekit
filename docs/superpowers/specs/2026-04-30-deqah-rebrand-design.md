@@ -1,7 +1,11 @@
-# Rebrand: Deqah → Deqah
+# Rebrand: CareKit → Deqah
+
+> **Historical note:** this document originally tracked the migration from the old CareKit brand to the Deqah / دِقة platform brand. Do not run blind global replacement against this file again; it must preserve old/new context for auditability.
+>
+> Current brand architecture: `docs/brand/deqah-brand-architecture.md`
 
 **Date:** 2026-04-30  
-**Status:** Approved
+**Status:** Superseded by `docs/brand/deqah-brand-architecture.md`
 
 ## Summary
 

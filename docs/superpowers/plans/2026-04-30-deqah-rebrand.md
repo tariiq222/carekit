@@ -1,4 +1,8 @@
-# Rebrand Deqah → Deqah Implementation Plan
+# Rebrand CareKit → Deqah Implementation Plan
+
+> **Historical note:** this document originally tracked the migration from the old CareKit brand to the Deqah / دِقة platform brand. Do not run blind global replacement against this file again; it must preserve old/new context for auditability.
+>
+> Current brand architecture: `docs/brand/deqah-brand-architecture.md`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
