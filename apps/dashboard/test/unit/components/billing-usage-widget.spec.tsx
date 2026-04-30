@@ -26,6 +26,7 @@ describe("BillingUsageWidget", () => {
           "billing.usage.title": "Usage",
           "billing.plan.label": "Your plan",
           "billing.usage.bookings": "Bookings this month",
+          "billing.usage.employees": "Employees",
           "billing.usage.upgradeCta": "Upgrade plan",
         }[key] ?? key),
     })
@@ -44,20 +45,21 @@ describe("BillingUsageWidget", () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it("renders the plan, metric, and upgrade link near the threshold", () => {
+  it("renders employee usage and upgrade link near the threshold", () => {
     useBilling.mockReturnValue({
       isLoading: false,
       subscription: {
-        plan: { nameAr: "محترف", nameEn: "Pro", limits: { maxBookingsPerMonth: 100 } },
-        usage: { BOOKINGS_PER_MONTH: 85 },
+        plan: { nameAr: "محترف", nameEn: "Pro", limits: { maxEmployees: 10 } },
+        usage: { EMPLOYEES: 8 },
       },
     })
 
     render(<BillingUsageWidget />)
 
     expect(screen.getByText("Pro")).toBeInTheDocument()
-    expect(screen.getByText("Bookings this month")).toBeInTheDocument()
-    expect(screen.getByText("85 / 100")).toBeInTheDocument()
+    expect(screen.getByText("Employees")).toBeInTheDocument()
+    expect(screen.queryByText("Bookings this month")).not.toBeInTheDocument()
+    expect(screen.getByText("8 / 10")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
       "/settings/billing",

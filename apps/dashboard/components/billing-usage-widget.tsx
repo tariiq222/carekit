@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useLocale } from "@/components/locale-provider"
 import { useBilling } from "@/lib/billing/billing-context"
 import { cn } from "@/lib/utils"
-import { getBillingUsageSummary, getLocalizedPlanName } from "@/lib/billing/utils"
+import { getEmployeeUsageSummary, getLocalizedPlanName } from "@/lib/billing/utils"
 
 export function BillingUsageWidget() {
   const { t, locale } = useLocale()
@@ -12,7 +12,7 @@ export function BillingUsageWidget() {
 
   if (isLoading || !subscription) return null
 
-  const usage = getBillingUsageSummary(subscription)
+  const usage = getEmployeeUsageSummary(subscription)
   if (usage.current === null || usage.max === null) return null
 
   const progress = Math.min(Math.round(usage.ratio * 100), 100)
@@ -32,7 +32,7 @@ export function BillingUsageWidget() {
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted-foreground">{t("billing.usage.bookings")}</span>
+            <span className="text-muted-foreground">{t("billing.usage.employees")}</span>
             <span className="font-medium tabular-nums text-foreground">
               {usage.current} / {usage.max}
             </span>
