@@ -372,7 +372,11 @@ model Subscription {
   billingCycle           BillingCycle       @default(MONTHLY)
   currentPeriodStart     DateTime
   currentPeriodEnd       DateTime
+  trialStartedAt         DateTime?
   trialEndsAt            DateTime?
+  trialExtendedBy        Int                @default(0)
+  trialExtendedById      String?
+  trialExtendedAt        DateTime?
   canceledAt             DateTime?
   cancelReason           String?
   pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace

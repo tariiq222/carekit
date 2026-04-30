@@ -37,6 +37,7 @@ export class StartSubscriptionHandler {
         planId: plan.id,
         status: 'TRIALING',
         billingCycle: dto.billingCycle,
+        trialStartedAt: now,
         trialEndsAt,
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,

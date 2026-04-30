@@ -57,7 +57,7 @@ export const TRANSITIONS: TransitionMap = {
   TRIALING: {
     chargeSuccess: 'ACTIVE',
     chargeFailure: 'PAST_DUE',
-    trialExpired: 'PAST_DUE',
+    trialExpired: 'SUSPENDED',
     cancel: 'CANCELED',
   },
   ACTIVE: {

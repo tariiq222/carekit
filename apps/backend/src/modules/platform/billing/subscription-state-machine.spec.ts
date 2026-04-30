@@ -16,8 +16,8 @@ describe('SubscriptionStateMachine', () => {
       expect(sm.transition('TRIALING', { type: 'chargeFailure' })).toBe('PAST_DUE');
     });
 
-    it('transitions TRIALING → PAST_DUE on trialExpired (no card on file)', () => {
-      expect(sm.transition('TRIALING', { type: 'trialExpired' })).toBe('PAST_DUE');
+    it('transitions TRIALING → SUSPENDED on trialExpired (no card on file)', () => {
+      expect(sm.transition('TRIALING', { type: 'trialExpired' })).toBe('SUSPENDED');
     });
 
     it('transitions ACTIVE → PAST_DUE on chargeFailure', () => {

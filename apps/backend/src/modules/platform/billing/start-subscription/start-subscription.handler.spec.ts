@@ -113,6 +113,30 @@ describe('StartSubscriptionHandler', () => {
     expect(trialEndsAt.getTime()).toBeLessThanOrEqual(expectedMax);
   });
 
+  it('sets trialStartedAt when creating the trial subscription', async () => {
+    const prisma = buildPrisma();
+    const tenant = buildTenant('org-A');
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.create.mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+      Promise.resolve({ id: 'sub-1', ...data }),
+    );
+    const handler = new StartSubscriptionHandler(
+      prisma as never,
+      tenant as never,
+      buildCache() as never,
+      buildConfig() as never,
+    );
+
+    const before = Date.now();
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+    const after = Date.now();
+
+    const createCall = prisma.subscription.create.mock.calls[0][0];
+    const trialStartedAt: Date = createCall.data.trialStartedAt;
+    expect(trialStartedAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(trialStartedAt.getTime()).toBeLessThanOrEqual(after);
+  });
+
   it('invalidates cache after creating subscription', async () => {
     const prisma = buildPrisma();
     const tenant = buildTenant('org-A');

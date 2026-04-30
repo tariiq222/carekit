@@ -1,11 +1,34 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
+import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
+import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
+import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
 
-const TRIAL_ENDING_WINDOW_DAYS = 3;
+const TRIAL_REMINDER_WINDOW_DAYS = 7;
+const TRIAL_REMINDER_MILESTONES = [7, 3, 1] as const;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const TRIAL_EXPIRED_NO_CARD_REASON = 'Trial ended without a saved payment method';
+
+type TrialReminderMilestone = (typeof TRIAL_REMINDER_MILESTONES)[number];
+
+interface TrialSubscription {
+  id: string;
+  organizationId: string;
+  billingCycle: string;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  trialEndsAt: Date | null;
+  notifiedTrialEndingAt: Date | null;
+  moyasarCardTokenRef: string | null;
+  organization: { nameAr: string };
+  plan?: {
+    priceMonthly: unknown;
+    priceAnnual: unknown;
+  };
+}
 
 @Injectable()
 export class ExpireTrialsCron {
@@ -16,54 +39,52 @@ export class ExpireTrialsCron {
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
     private readonly mailer: PlatformMailerService,
+    @Optional() private readonly moyasar?: MoyasarSubscriptionClient,
+    @Optional() private readonly recordPayment?: RecordSubscriptionPaymentHandler,
+    @Optional() private readonly recordFailure?: RecordSubscriptionPaymentFailureHandler,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
     const now = new Date();
-    const upgradeUrl =
-      (this.config.get<string>('PLATFORM_DASHBOARD_URL', 'https://app.webvue.pro/dashboard')) +
-      '/billing';
+    const billingUrl = this.billingUrl();
 
-    await this.notifyTrialEnding(now, upgradeUrl);
-    await this.notifyTrialExpired(now, upgradeUrl);
+    await this.notifyTrialMilestones(now, billingUrl);
+    await this.processExpiredTrials(now, billingUrl);
   }
 
-  private async notifyTrialEnding(now: Date, upgradeUrl: string): Promise<void> {
-    const windowEnd = new Date(now.getTime() + TRIAL_ENDING_WINDOW_DAYS * MS_PER_DAY);
+  private async notifyTrialMilestones(now: Date, billingUrl: string): Promise<void> {
+    const windowEnd = new Date(now.getTime() + TRIAL_REMINDER_WINDOW_DAYS * MS_PER_DAY);
 
     const subs = await this.prisma.$allTenants.subscription.findMany({
       where: {
         status: 'TRIALING',
-        notifiedTrialEndingAt: null,
+        trialEndsAt: { gt: now, lte: windowEnd },
       },
       include: {
         organization: {
-          select: { trialEndsAt: true, nameAr: true },
+          select: { nameAr: true },
         },
       },
     });
 
-    for (const sub of subs) {
-      const trialEndsAt = sub.organization?.trialEndsAt;
-      if (!trialEndsAt) continue;
-      if (trialEndsAt <= now) continue;
-      if (trialEndsAt > windowEnd) continue;
+    for (const sub of subs as TrialSubscription[]) {
+      if (!sub.trialEndsAt) continue;
+
+      const daysLeft = this.daysUntil(sub.trialEndsAt, now);
+      const milestone = this.reminderMilestone(daysLeft);
+      if (!milestone) continue;
+      if (!this.shouldSendMilestone(sub, milestone)) continue;
 
       const owner = await this.lookupOwner(sub.organizationId);
       if (!owner) continue;
 
-      const daysLeft = Math.max(
-        1,
-        Math.ceil((trialEndsAt.getTime() - now.getTime()) / MS_PER_DAY),
-      );
-
-      await this.mailer.sendTrialEnding(owner.email, {
+      await this.sendMilestoneEmail(milestone, owner.email, {
         ownerName: owner.name,
         orgName: sub.organization.nameAr,
         daysLeft,
-        upgradeUrl,
+        upgradeUrl: billingUrl,
       });
 
       await this.prisma.$allTenants.subscription.update({
@@ -73,42 +94,189 @@ export class ExpireTrialsCron {
     }
   }
 
-  private async notifyTrialExpired(now: Date, upgradeUrl: string): Promise<void> {
-    const expiredOrgs = await this.prisma.organization.findMany({
+  private async processExpiredTrials(now: Date, billingUrl: string): Promise<void> {
+    const expired = await this.prisma.$allTenants.subscription.findMany({
       where: {
         status: 'TRIALING',
-        trialEndsAt: { lt: now },
+        trialEndsAt: { lte: now },
       },
-      select: { id: true, nameAr: true },
+      include: {
+        organization: {
+          select: { nameAr: true },
+        },
+        plan: true,
+      },
     });
 
-    if (expiredOrgs.length === 0) return;
-
-    const orgIds = expiredOrgs.map((o) => o.id);
-
-    await this.prisma.organization.updateMany({
-      where: { id: { in: orgIds } },
-      data: { status: 'PAST_DUE' },
-    });
-
-    await this.prisma.subscription.updateMany({
-      where: { organizationId: { in: orgIds }, status: 'TRIALING' },
-      data: { status: 'PAST_DUE', pastDueSince: now },
-    });
-
-    for (const org of expiredOrgs) {
-      this.cache.invalidate(org.id);
-      const owner = await this.lookupOwner(org.id);
-      if (owner) {
-        await this.mailer.sendTrialExpired(owner.email, {
-          ownerName: owner.name,
-          orgName: org.nameAr,
-          upgradeUrl,
-        });
+    for (const sub of expired as TrialSubscription[]) {
+      if (sub.moyasarCardTokenRef) {
+        await this.chargeExpiredTrial(sub, now);
+        continue;
       }
+
+      await this.suspendExpiredTrialWithoutCard(sub, now, billingUrl);
     }
 
-    this.logger.log(`Transitioned ${orgIds.length} expired trials to PAST_DUE`);
+    if (expired.length > 0) {
+      this.logger.log(`Processed ${expired.length} expired trial subscriptions`);
+    }
+  }
+
+  private shouldSendMilestone(
+    sub: Pick<TrialSubscription, 'trialEndsAt' | 'notifiedTrialEndingAt'>,
+    milestone: TrialReminderMilestone,
+  ): boolean {
+    if (!sub.trialEndsAt || !sub.notifiedTrialEndingAt) return true;
+
+    const previousDaysLeft = this.daysUntil(sub.trialEndsAt, sub.notifiedTrialEndingAt);
+    return previousDaysLeft > milestone;
+  }
+
+  private async suspendExpiredTrialWithoutCard(
+    sub: TrialSubscription,
+    now: Date,
+    billingUrl: string,
+  ): Promise<void> {
+    await this.prisma.$allTenants.$transaction(async (tx) => {
+      await tx.organization.update({
+        where: { id: sub.organizationId },
+        data: {
+          status: 'SUSPENDED',
+          suspendedAt: now,
+          suspendedReason: 'TRIAL_EXPIRED_NO_CARD',
+        },
+      });
+      await tx.subscription.update({
+        where: { id: sub.id },
+        data: {
+          status: 'SUSPENDED',
+          pastDueSince: null,
+          lastFailureReason: TRIAL_EXPIRED_NO_CARD_REASON,
+        },
+      });
+    });
+
+    this.cache.invalidate(sub.organizationId);
+
+    const owner = await this.lookupOwner(sub.organizationId);
+    if (owner) {
+      await this.mailer.sendTrialSuspendedNoCard(owner.email, {
+        ownerName: owner.name,
+        orgName: sub.organization.nameAr,
+        billingUrl,
+      });
+    }
+  }
+
+  private async chargeExpiredTrial(sub: TrialSubscription, now: Date): Promise<void> {
+    const cardToken = sub.moyasarCardTokenRef;
+    if (!cardToken || !this.moyasar || !this.recordPayment || !this.recordFailure || !sub.plan) {
+      this.logger.warn(
+        `Trial ${sub.id} has a saved card but billing charge services are unavailable`,
+      );
+      return;
+    }
+
+    const flatAmount =
+      sub.billingCycle === 'ANNUAL'
+        ? Number(sub.plan.priceAnnual)
+        : Number(sub.plan.priceMonthly);
+
+    const invoice = await this.prisma.$allTenants.subscriptionInvoice.create({
+      data: {
+        subscriptionId: sub.id,
+        organizationId: sub.organizationId,
+        amount: flatAmount,
+        flatAmount,
+        overageAmount: 0,
+        status: 'DUE',
+        billingCycle: sub.billingCycle as never,
+        periodStart: sub.currentPeriodStart,
+        periodEnd: sub.currentPeriodEnd,
+        dueDate: now,
+      },
+    });
+
+    try {
+      const payment = await this.moyasar.chargeWithToken({
+        token: cardToken,
+        amount: Math.round(flatAmount * 100),
+        currency: 'SAR',
+        idempotencyKey: `trial-conversion:${invoice.id}`,
+        description: `CareKit trial conversion invoice ${invoice.id}`,
+        callbackUrl: this.billingCallbackUrl(),
+      });
+
+      if (payment.status.toLowerCase() === 'paid') {
+        await this.recordPayment.execute({
+          invoiceId: invoice.id,
+          moyasarPaymentId: payment.id,
+        });
+        await this.markOrganizationStatus(sub.organizationId, 'ACTIVE');
+        return;
+      }
+
+      await this.recordFailure.execute({
+        invoiceId: invoice.id,
+        moyasarPaymentId: payment.id,
+        reason: `Moyasar returned status ${payment.status}`,
+      });
+      await this.markOrganizationStatus(sub.organizationId, 'PAST_DUE');
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Trial conversion charge failed for subscription ${sub.id}, invoice ${invoice.id}: ${reason}`,
+      );
+      await this.recordFailure.execute({
+        invoiceId: invoice.id,
+        moyasarPaymentId: 'unavailable',
+        reason,
+      });
+      await this.markOrganizationStatus(sub.organizationId, 'PAST_DUE');
+    }
+  }
+
+  private async markOrganizationStatus(
+    organizationId: string,
+    status: 'ACTIVE' | 'PAST_DUE',
+  ): Promise<void> {
+    await this.prisma.$allTenants.organization.update({
+      where: { id: organizationId },
+      data:
+        status === 'ACTIVE'
+          ? { status, suspendedAt: null, suspendedReason: null }
+          : { status },
+    });
+    this.cache.invalidate(organizationId);
+  }
+
+  private reminderMilestone(daysLeft: number): TrialReminderMilestone | null {
+    return TRIAL_REMINDER_MILESTONES.find((day) => day === daysLeft) ?? null;
+  }
+
+  private daysUntil(target: Date, now: Date): number {
+    return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / MS_PER_DAY));
+  }
+
+  private async sendMilestoneEmail(
+    milestone: TrialReminderMilestone,
+    to: string,
+    vars: {
+      ownerName: string;
+      orgName: string;
+      daysLeft: number;
+      upgradeUrl: string;
+    },
+  ): Promise<void> {
+    if (milestone === 7) {
+      await this.mailer.sendTrialDay7Reminder(to, vars);
+      return;
+    }
+    if (milestone === 3) {
+      await this.mailer.sendTrialDay3Warning(to, vars);
+      return;
+    }
+    await this.mailer.sendTrialDay1Final(to, vars);
   }
 
   private async lookupOwner(
@@ -120,5 +288,20 @@ export class ExpireTrialsCron {
     });
     if (!membership?.user) return null;
     return { email: membership.user.email, name: membership.user.name ?? '' };
+  }
+
+  private billingUrl(): string {
+    const base = this.config.get<string>(
+      'PLATFORM_DASHBOARD_URL',
+      'https://app.webvue.pro/dashboard',
+    );
+    return `${base.replace(/\/+$/, '')}/settings/billing`;
+  }
+
+  private billingCallbackUrl(): string {
+    const base =
+      this.config.get<string>('BACKEND_URL') ??
+      this.config.get<string>('DASHBOARD_PUBLIC_URL', '');
+    return `${base.replace(/\/+$/, '')}/api/v1/public/billing/webhooks/moyasar`;
   }
 }
