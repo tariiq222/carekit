@@ -1,7 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const here = __dirname;
+// __dirname points to dist/ in compiled mode; resolve fonts from src/ via
+// PROJECT_ROOT env (set by NestJS scripts) or fall back to CWD.
+const FONTS_SRC = join(
+  process.env['PROJECT_ROOT'] ?? process.cwd(),
+  'src/modules/platform/billing/generate-invoice-pdf/fonts',
+);
+const here = require('node:fs').existsSync(join(FONTS_SRC, 'IBMPlexSansArabic-Regular.ttf'))
+  ? FONTS_SRC
+  : __dirname;
 
 /**
  * Phase 7 — IBM Plex Sans Arabic font files (OFL) embedded as base64 in the
