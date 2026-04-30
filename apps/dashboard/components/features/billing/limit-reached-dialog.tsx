@@ -24,12 +24,22 @@ export function LimitReachedDialog({ subscription, onUpgrade }: LimitReachedDial
   const { t } = useLocale()
   const usage = getEmployeeUsageSummary(subscription)
   const limitReached = usage.ratio >= 1
-  const [open, setOpen] = useState(limitReached)
+  const limitKey = limitReached
+    ? `${subscription?.id ?? "subscription"}:${usage.current}:${usage.max}`
+    : null
+  const [dismissedLimitKey, setDismissedLimitKey] = useState<string | null>(null)
 
-  if (!limitReached) return null
+  if (!limitReached || !limitKey) return null
+
+  const open = dismissedLimitKey !== limitKey
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setDismissedLimitKey(limitKey)
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t("billing.limitReached.title")}</DialogTitle>
@@ -43,7 +53,11 @@ export function LimitReachedDialog({ subscription, onUpgrade }: LimitReachedDial
         </DialogBody>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setDismissedLimitKey(limitKey)}
+          >
             {t("billing.limitReached.close")}
           </Button>
           <Button type="button" onClick={onUpgrade}>

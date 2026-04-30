@@ -344,6 +344,36 @@ describe("BillingPage", () => {
     )
   })
 
+  it("opens the employee limit reached dialog when usage data arrives after loading", () => {
+    useBilling.mockReturnValue({ status: null, subscription: null, isLoading: true })
+    useCurrentSubscription.mockReturnValue({ isLoading: true, data: null })
+    const { rerender } = render(<BillingPage />)
+
+    expect(screen.queryByRole("dialog", { name: "Employee limit reached" })).not.toBeInTheDocument()
+
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "ACTIVE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      plan: {
+        ...proPlan,
+        currency: "SAR",
+        limits: { maxEmployees: 10 },
+      },
+      usage: { EMPLOYEES: 10 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status: "ACTIVE", subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+
+    rerender(<BillingPage />)
+
+    expect(screen.getByRole("dialog", { name: "Employee limit reached" })).toBeInTheDocument()
+  })
+
   it("schedules paid cancellation instead of immediate cancel", async () => {
     mockBillingFor("ACTIVE", proPlan)
 
