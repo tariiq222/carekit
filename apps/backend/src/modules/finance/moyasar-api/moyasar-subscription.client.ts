@@ -6,14 +6,60 @@ import { createHmac, timingSafeEqual } from 'crypto';
 export class MoyasarSubscriptionClient {
   constructor(private readonly config: ConfigService) {}
 
+  async getToken(tokenId: string): Promise<{
+    id: string;
+    status: string;
+    brand: string;
+    last4: string;
+    expiryMonth: number;
+    expiryYear: number;
+    holderName: string | null;
+  }> {
+    const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
+    const response = await fetch(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Moyasar token fetch failed: ${response.status} ${text}`);
+    }
+
+    const data = await response.json() as {
+      id: string;
+      status?: string;
+      brand?: string;
+      last_four?: string;
+      last4?: string;
+      month?: string | number;
+      expiry_month?: string | number;
+      year?: string | number;
+      expiry_year?: string | number;
+      name?: string | null;
+    };
+
+    return {
+      id: data.id,
+      status: data.status ?? 'unknown',
+      brand: data.brand ?? 'unknown',
+      last4: data.last_four ?? data.last4 ?? '',
+      expiryMonth: Number(data.month ?? data.expiry_month),
+      expiryYear: Number(data.year ?? data.expiry_year),
+      holderName: data.name ?? null,
+    };
+  }
+
   async chargeWithToken(params: {
     token: string;
     amount: number; // minor units (halalas)
     currency: string;
     idempotencyKey: string;
+    givenId?: string;
     description: string;
     callbackUrl: string;
-  }): Promise<{ id: string; status: string }> {
+  }): Promise<{ id: string; status: string; transactionUrl?: string | null }> {
     const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
     const response = await fetch('https://api.moyasar.com/v1/payments', {
       method: 'POST',
@@ -23,6 +69,7 @@ export class MoyasarSubscriptionClient {
         'Idempotency-Key': params.idempotencyKey,
       },
       body: JSON.stringify({
+        ...(params.givenId ? { given_id: params.givenId } : {}),
         amount: params.amount,
         currency: params.currency,
         description: params.description,
@@ -35,7 +82,16 @@ export class MoyasarSubscriptionClient {
       const text = await response.text();
       throw new Error(`Moyasar charge failed: ${response.status} ${text}`);
     }
-    return response.json() as Promise<{ id: string; status: string }>;
+    const data = await response.json() as {
+      id: string;
+      status: string;
+      source?: { transaction_url?: string | null };
+    };
+    return {
+      id: data.id,
+      status: data.status,
+      transactionUrl: data.source?.transaction_url ?? null,
+    };
   }
 
   /**
@@ -67,6 +123,21 @@ export class MoyasarSubscriptionClient {
       throw new Error(`Moyasar refund failed: ${response.status} ${text}`);
     }
     return response.json() as Promise<{ id: string; amount: number; status: string }>;
+  }
+
+  async deleteToken(tokenId: string): Promise<void> {
+    const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
+    const response = await fetch(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
+      },
+    });
+
+    if (!response.ok && response.status !== 204) {
+      const text = await response.text();
+      throw new Error(`Moyasar token delete failed: ${response.status} ${text}`);
+    }
   }
 
   /**
