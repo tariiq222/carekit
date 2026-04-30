@@ -1,5 +1,5 @@
 {
-  "name": "carekit",
+  "name": "deqah",
   "private": true,
   "packageManager": "npm@11.6.2",
   "workspaces": [
@@ -17,7 +17,7 @@
     "dev:dashboard": "turbo run dev --filter=dashboard",
     "dev:admin": "turbo run dev --filter=admin",
     "dev:website": "turbo run dev --filter=website",
-    "dev:mobile": "npm run dev --workspace=carekit-mobile",
+    "dev:mobile": "npm run dev --workspace=deqah-mobile",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",

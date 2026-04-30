@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@carekit/ui": "*",
+    "@deqah/ui": "*",
     "@hcaptcha/react-hcaptcha": "^1.17.4",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.95.2",

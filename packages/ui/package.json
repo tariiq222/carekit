@@ -1,5 +1,5 @@
 {
-  "name": "@carekit/ui",
+  "name": "@deqah/ui",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -28,6 +28,6 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"(no lint configured for @carekit/ui)\" && exit 0"
+    "lint": "echo \"(no lint configured for @deqah/ui)\" && exit 0"
   }
 }
