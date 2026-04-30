@@ -33,7 +33,14 @@ export class PlanLimitsGuard implements CanActivate {
 
     const current = await this.currentUsage(kind, organizationId);
     if (current >= limit) {
-      throw new ForbiddenException(`Plan limit reached for ${kind}: ${current}/${limit}`);
+      const message = `Plan limit reached for ${kind}: ${current}/${limit}`;
+      throw new ForbiddenException({
+        code: 'PLAN_LIMIT_REACHED',
+        limitKind: kind,
+        current,
+        limit,
+        message,
+      });
     }
     return true;
   }

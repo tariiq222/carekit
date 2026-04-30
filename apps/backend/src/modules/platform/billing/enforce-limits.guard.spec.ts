@@ -68,6 +68,26 @@ describe('PlanLimitsGuard', () => {
     await expect(guard.canActivate(mockCtx)).rejects.toThrow('Plan limit reached for BRANCHES: 3/3');
   });
 
+  it('returns structured metadata when a plan limit is reached', async () => {
+    mockReflector.get.mockReturnValue('BRANCHES');
+    mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBranches: 3 } });
+    mockPrisma.branch.count.mockResolvedValue(3);
+
+    try {
+      await guard.canActivate(mockCtx);
+      throw new Error('Expected guard to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ForbiddenException);
+      expect((error as ForbiddenException).getResponse()).toMatchObject({
+        code: 'PLAN_LIMIT_REACHED',
+        limitKind: 'BRANCHES',
+        current: 3,
+        limit: 3,
+        message: 'Plan limit reached for BRANCHES: 3/3',
+      });
+    }
+  });
+
   it('EMPLOYEES counts only active employees', async () => {
     mockReflector.get.mockReturnValue('EMPLOYEES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxEmployees: 10 } });
