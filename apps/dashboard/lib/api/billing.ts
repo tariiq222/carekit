@@ -4,7 +4,13 @@
  */
 
 import { api } from "@/lib/api"
-import type { Plan, Subscription, BillingCycle } from "@/lib/types/billing"
+import type {
+  AddSavedCardInput,
+  BillingCycle,
+  Plan,
+  SavedCard,
+  Subscription,
+} from "@/lib/types/billing"
 
 export const billingApi = {
   listPlans: () =>
@@ -27,4 +33,16 @@ export const billingApi = {
 
   resume: () =>
     api.post<Subscription>('/dashboard/billing/subscription/resume', {}),
+
+  listSavedCards: () =>
+    api.get<SavedCard[]>('/dashboard/billing/saved-cards'),
+
+  addSavedCard: (dto: AddSavedCardInput) =>
+    api.post<SavedCard>('/dashboard/billing/saved-cards', dto),
+
+  setDefaultSavedCard: (id: string) =>
+    api.patch<SavedCard>(`/dashboard/billing/saved-cards/${id}/set-default`, {}),
+
+  removeSavedCard: (id: string) =>
+    api.delete<{ ok: true }>(`/dashboard/billing/saved-cards/${id}`),
 }

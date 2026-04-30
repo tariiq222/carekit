@@ -36,6 +36,23 @@ export interface Subscription {
   usage?: Partial<Record<string, number>>
 }
 
+export interface SavedCard {
+  id: string
+  brand: string
+  last4: string
+  expiryMonth: number
+  expiryYear: number
+  holderName?: string | null
+  isDefault: boolean
+  createdAt: string
+}
+
+export interface AddSavedCardInput {
+  moyasarTokenId: string
+  makeDefault?: boolean
+  idempotencyKey?: string
+}
+
 export interface SubscriptionInvoice {
   id: string
   amount: string
