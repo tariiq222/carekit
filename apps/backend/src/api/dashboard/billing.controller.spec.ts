@@ -133,7 +133,7 @@ describe('BillingController scheduled downgrade routes', () => {
       scheduleDowngrade as never,
       cancelScheduledDowngrade as never,
     );
-    const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' };
+    const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' as const };
 
     await controller.scheduleDowngradePlan(dto);
     await controller.downgradePlan(dto);

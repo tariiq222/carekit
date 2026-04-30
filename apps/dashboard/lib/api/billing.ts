@@ -24,7 +24,10 @@ export const billingApi = {
     api.post<Subscription>('/dashboard/billing/subscription/start', dto),
 
   prorationPreview: (dto: ChangePlanInput) =>
-    api.get<ProrationPreview>('/dashboard/billing/subscription/proration-preview', dto),
+    api.get<ProrationPreview>('/dashboard/billing/subscription/proration-preview', {
+      planId: dto.planId,
+      billingCycle: dto.billingCycle,
+    }),
 
   upgrade: (dto: ChangePlanInput) =>
     api.post<Subscription>('/dashboard/billing/subscription/upgrade', dto),
