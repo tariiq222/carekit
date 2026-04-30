@@ -66,8 +66,18 @@ export function useBillingMutations() {
     onSuccess: invalidate,
   })
 
+  const scheduleCancelMut = useMutation({
+    mutationFn: (reason?: string) => billingApi.scheduleCancel(reason),
+    onSuccess: invalidate,
+  })
+
   const resumeMut = useMutation({
     mutationFn: () => billingApi.resume(),
+    onSuccess: invalidate,
+  })
+
+  const reactivateMut = useMutation({
+    mutationFn: () => billingApi.reactivate(),
     onSuccess: invalidate,
   })
 
@@ -95,7 +105,9 @@ export function useBillingMutations() {
     upgradeMut,
     downgradeMut,
     cancelMut,
+    scheduleCancelMut,
     resumeMut,
+    reactivateMut,
     addSavedCardMut,
     setDefaultSavedCardMut,
     removeSavedCardMut,

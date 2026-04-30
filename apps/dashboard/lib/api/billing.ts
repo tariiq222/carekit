@@ -28,11 +28,17 @@ export const billingApi = {
   downgrade: (dto: { planId: string; billingCycle: BillingCycle }) =>
     api.post<Subscription>('/dashboard/billing/subscription/downgrade', dto),
 
+  scheduleCancel: (reason?: string) =>
+    api.post<Subscription>('/dashboard/billing/subscription/schedule-cancel', { reason }),
+
   cancel: (reason?: string) =>
     api.post<Subscription>('/dashboard/billing/subscription/cancel', { reason }),
 
   resume: () =>
     api.post<Subscription>('/dashboard/billing/subscription/resume', {}),
+
+  reactivate: () =>
+    api.post<Subscription>('/dashboard/billing/subscription/reactivate', {}),
 
   listSavedCards: () =>
     api.get<SavedCard[]>('/dashboard/billing/saved-cards'),

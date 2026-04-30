@@ -30,6 +30,8 @@ export interface Subscription {
   currentPeriodEnd: string
   trialEndsAt?: string | null
   canceledAt?: string | null
+  cancelAtPeriodEnd?: boolean
+  scheduledCancellationDate?: string | null
   pastDueSince?: string | null
   plan: Plan
   invoices?: SubscriptionInvoice[]
