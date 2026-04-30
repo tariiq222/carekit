@@ -26,6 +26,13 @@ describe('Theme Tokens System', () => {
     expect(SawaaText.heading).toBeDefined();
   });
 
+  it('uses Deqah defaults for the locked Sawaa token fallback', () => {
+    expect(sawaaTokens.primary.light).toBe('#354FD8');
+    expect(sawaaTokens.primary.dark).toBe('#2438B0');
+    expect(sawaaTokens.accent.light).toBe('#82CC17');
+    expect(sawaaTokens.accent.dark).toBe('#5A9010');
+  });
+
   it('should NOT contain hardcoded hex colors in component definitions', () => {
     const path = require('path');
     const componentFile = require('fs').readFileSync(

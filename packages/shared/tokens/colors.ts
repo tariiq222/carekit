@@ -1,36 +1,36 @@
 /**
  * Deqah Design System — Color Tokens
- * Source of truth: Deqah-DesignSystem.jsx
+ * Source of truth: packages/shared/constants/brand.ts
  *
- * Primary: Royal Blue   #1D4ED8 (dark: #0037B0)
- * Secondary: Apple Green #84CC16 (dark: #65A30D)
+ * Primary: Royal Blue   #354FD8 (dark: #2438B0)
+ * Secondary: Lime Green  #82CC17 (dark: #5A9010)
  * Text: #191C1E — never pure black
  * Shadows: #001551 tinted — never pure black
  */
 export const colors = {
   primary: {
-    50: '#EFF6FF',
-    100: '#DBEAFE',
-    200: '#BFDBFE',
-    300: '#93C5FD',
-    400: '#60A5FA',
-    500: '#1D4ED8',
-    600: '#1D4ED8',
-    700: '#0037B0',
-    800: '#1E3A8A',
-    900: '#1E3163',
+    50: '#EEF1FF',
+    100: '#E1E6FF',
+    200: '#C5CEFF',
+    300: '#9DACF5',
+    400: '#7184EA',
+    500: '#354FD8',
+    600: '#354FD8',
+    700: '#2438B0',
+    800: '#1E2E86',
+    900: '#18235F',
   },
   secondary: {
-    50: '#F7FEE7',
-    100: '#ECFCCB',
-    200: '#D9F99D',
-    300: '#BEF264',
-    400: '#A3E635',
-    500: '#84CC16',
-    600: '#65A30D',
-    700: '#365314',
-    800: '#1A2E05',
-    900: '#0F1A03',
+    50: '#F5FCEB',
+    100: '#EAF8D4',
+    200: '#D7F0AA',
+    300: '#BCE677',
+    400: '#9DDA3F',
+    500: '#82CC17',
+    600: '#5A9010',
+    700: '#426D0B',
+    800: '#2D4B08',
+    900: '#1D3205',
   },
   accent: {
     500: '#FF6B35',
@@ -66,7 +66,7 @@ export const colors = {
   status: {
     pending: '#F59E0B',
     confirmed: '#059669',
-    completed: '#1D4ED8',
+    completed: '#354FD8',
     cancelled: '#DC2626',
     pendingCancellation: '#F97316',
   },

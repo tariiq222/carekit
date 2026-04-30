@@ -1,11 +1,11 @@
 import { buildTheme } from '../tokens';
 
 describe('buildTheme', () => {
-  it('falls back to default tokens when no branding', () => {
+  it('falls back to Deqah platform defaults when no branding is loaded', () => {
     const t = buildTheme();
-    expect(t.colors.primary).toMatch(/^#/);
-    expect(t.colors.accent).toMatch(/^#/);
-    expect(t.colors.background).toMatch(/^#/);
+    expect(t.colors.primary).toBe('#354FD8');
+    expect(t.colors.accent).toBe('#82CC17');
+    expect(t.colors.background).toBe('#F7F9FB');
   });
 
   it('overrides primary/accent/background from valid branding', () => {

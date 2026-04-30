@@ -21,6 +21,7 @@
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
     --color-primary-light: var(--primary-light);
+    --color-primary-dark: var(--primary-dark);
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
     --color-muted: var(--muted);
@@ -120,6 +121,7 @@
     --primary: #354FD8;
     --primary-foreground: #FFFFFF;
     --primary-light: #5B72E8;
+    --primary-dark: #2438B0;
     --primary-ultra-light: rgba(53, 79, 216, 0.08);
     --accent: #82CC17;
     --accent-foreground: #1B2026;
