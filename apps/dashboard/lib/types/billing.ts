@@ -32,10 +32,32 @@ export interface Subscription {
   canceledAt?: string | null
   cancelAtPeriodEnd?: boolean
   scheduledCancellationDate?: string | null
+  scheduledPlanId?: string | null
+  scheduledBillingCycle?: BillingCycle | null
+  scheduledPlanChangeAt?: string | null
   pastDueSince?: string | null
   plan: Plan
   invoices?: SubscriptionInvoice[]
   usage?: Partial<Record<string, number>>
+}
+
+export interface ChangePlanInput {
+  planId: string
+  billingCycle: BillingCycle
+}
+
+export interface ProrationPreview {
+  action: 'UPGRADE_NOW' | 'SCHEDULE_DOWNGRADE'
+  targetPlanId: string
+  billingCycle: BillingCycle
+  amountSar: string
+  amountHalalas: number
+  remainingRatio: number
+  periodStart: string
+  periodEnd: string
+  effectiveAt: string
+  isUpgrade: boolean
+  clearsScheduledCancellation?: boolean
 }
 
 export interface SavedCard {
@@ -61,10 +83,11 @@ export interface SubscriptionInvoice {
   flatAmount: string
   overageAmount: string
   lineItems: Array<{
-    kind: 'FLAT_FEE' | 'OVERAGE'
+    kind: 'FLAT_FEE' | 'OVERAGE' | 'PRORATION'
     metric?: string
     description?: string
-    amount: number
+    amount: number | string
+    amountHalalas?: number
   }>
   currency: string
   status: InvoiceStatus

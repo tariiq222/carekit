@@ -6,8 +6,9 @@
 import { api } from "@/lib/api"
 import type {
   AddSavedCardInput,
-  BillingCycle,
+  ChangePlanInput,
   Plan,
+  ProrationPreview,
   SavedCard,
   Subscription,
 } from "@/lib/types/billing"
@@ -19,14 +20,23 @@ export const billingApi = {
   currentSubscription: () =>
     api.get<Subscription | null>('/dashboard/billing/subscription'),
 
-  startSubscription: (dto: { planId: string; billingCycle: BillingCycle }) =>
+  startSubscription: (dto: ChangePlanInput) =>
     api.post<Subscription>('/dashboard/billing/subscription/start', dto),
 
-  upgrade: (dto: { planId: string; billingCycle: BillingCycle }) =>
+  prorationPreview: (dto: ChangePlanInput) =>
+    api.get<ProrationPreview>('/dashboard/billing/subscription/proration-preview', dto),
+
+  upgrade: (dto: ChangePlanInput) =>
     api.post<Subscription>('/dashboard/billing/subscription/upgrade', dto),
 
-  downgrade: (dto: { planId: string; billingCycle: BillingCycle }) =>
+  downgrade: (dto: ChangePlanInput) =>
     api.post<Subscription>('/dashboard/billing/subscription/downgrade', dto),
+
+  scheduleDowngrade: (dto: ChangePlanInput) =>
+    api.post<Subscription>('/dashboard/billing/subscription/schedule-downgrade', dto),
+
+  cancelScheduledDowngrade: () =>
+    api.post<Subscription>('/dashboard/billing/subscription/cancel-scheduled-downgrade', {}),
 
   scheduleCancel: (reason?: string) =>
     api.post<Subscription>('/dashboard/billing/subscription/schedule-cancel', { reason }),

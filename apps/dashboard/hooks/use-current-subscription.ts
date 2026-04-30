@@ -7,13 +7,15 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { billingApi } from '@/lib/api/billing'
-import type { AddSavedCardInput, BillingCycle } from '@/lib/types/billing'
+import type { AddSavedCardInput, ChangePlanInput } from '@/lib/types/billing'
 
 const BILLING_KEYS = {
   all: ['billing'] as const,
   subscription: () => ['billing', 'subscription'] as const,
   plans: () => ['billing', 'plans'] as const,
   savedCards: () => ['billing', 'saved-cards'] as const,
+  prorationPreview: (dto: ChangePlanInput) =>
+    ['billing', 'proration-preview', dto.planId, dto.billingCycle] as const,
 }
 
 export function useCurrentSubscription() {
@@ -38,26 +40,44 @@ export function useSavedCards() {
   })
 }
 
+export function useProrationPreview(dto: ChangePlanInput | null) {
+  return useQuery({
+    queryKey: dto ? BILLING_KEYS.prorationPreview(dto) : ['billing', 'proration-preview', 'idle'],
+    queryFn: () => billingApi.prorationPreview(dto as ChangePlanInput),
+    enabled: dto !== null,
+  })
+}
+
 export function useBillingMutations() {
   const queryClient = useQueryClient()
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: BILLING_KEYS.all })
 
   const startMut = useMutation({
-    mutationFn: (dto: { planId: string; billingCycle: BillingCycle }) =>
+    mutationFn: (dto: ChangePlanInput) =>
       billingApi.startSubscription(dto),
     onSuccess: invalidate,
   })
 
   const upgradeMut = useMutation({
-    mutationFn: (dto: { planId: string; billingCycle: BillingCycle }) =>
+    mutationFn: (dto: ChangePlanInput) =>
       billingApi.upgrade(dto),
     onSuccess: invalidate,
   })
 
   const downgradeMut = useMutation({
-    mutationFn: (dto: { planId: string; billingCycle: BillingCycle }) =>
+    mutationFn: (dto: ChangePlanInput) =>
       billingApi.downgrade(dto),
+    onSuccess: invalidate,
+  })
+
+  const scheduleDowngradeMut = useMutation({
+    mutationFn: (dto: ChangePlanInput) => billingApi.scheduleDowngrade(dto),
+    onSuccess: invalidate,
+  })
+
+  const cancelScheduledDowngradeMut = useMutation({
+    mutationFn: () => billingApi.cancelScheduledDowngrade(),
     onSuccess: invalidate,
   })
 
@@ -104,6 +124,8 @@ export function useBillingMutations() {
     startMut,
     upgradeMut,
     downgradeMut,
+    scheduleDowngradeMut,
+    cancelScheduledDowngradeMut,
     cancelMut,
     scheduleCancelMut,
     resumeMut,

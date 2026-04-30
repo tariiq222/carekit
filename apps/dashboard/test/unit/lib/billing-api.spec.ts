@@ -60,3 +60,40 @@ describe("billingApi saved cards", () => {
     expect(apiMock.delete).toHaveBeenCalledWith("/dashboard/billing/saved-cards/card-1")
   })
 })
+
+describe("billingApi plan changes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("requests a proration preview with plan and billing cycle query params", async () => {
+    apiMock.get.mockResolvedValueOnce({ action: "UPGRADE_NOW", amountHalalas: 30000 })
+
+    await billingApi.prorationPreview({ planId: "plan-pro", billingCycle: "MONTHLY" })
+
+    expect(apiMock.get).toHaveBeenCalledWith(
+      "/dashboard/billing/subscription/proration-preview",
+      { planId: "plan-pro", billingCycle: "MONTHLY" },
+    )
+  })
+
+  it("schedules and cancels a scheduled downgrade", async () => {
+    const dto = { planId: "plan-basic", billingCycle: "MONTHLY" as const }
+    apiMock.post.mockResolvedValueOnce({ scheduledPlanId: "plan-basic" })
+    apiMock.post.mockResolvedValueOnce({ scheduledPlanId: null })
+
+    await billingApi.scheduleDowngrade(dto)
+    await billingApi.cancelScheduledDowngrade()
+
+    expect(apiMock.post).toHaveBeenNthCalledWith(
+      1,
+      "/dashboard/billing/subscription/schedule-downgrade",
+      dto,
+    )
+    expect(apiMock.post).toHaveBeenNthCalledWith(
+      2,
+      "/dashboard/billing/subscription/cancel-scheduled-downgrade",
+      {},
+    )
+  })
+})
