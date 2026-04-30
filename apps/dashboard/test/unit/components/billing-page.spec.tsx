@@ -78,6 +78,8 @@ describe("BillingPage", () => {
           "billing.banner.suspended.description": "Access is restricted until billing is resumed.",
           "billing.banner.scheduledCancel.title": "Cancellation scheduled",
           "billing.banner.scheduledCancel.description": "Your subscription stays active until the period ends.",
+          "billing.banner.limitWarning.title": "Employee limit almost reached",
+          "billing.banner.limitWarning.description": "Upgrade before adding more active employees.",
           "billing.summary.nextBilling": "Next billing date",
           "billing.summary.trialEnds": "Trial ends",
           "billing.summary.currentCycle": "Current cycle",
@@ -256,6 +258,57 @@ describe("BillingPage", () => {
     expect(screen.getByText("Cancellation scheduled")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Reactivate" }))
     expect(reactivateMutate).toHaveBeenCalledOnce()
+  })
+
+  it("shows an employee limit warning at 80 percent usage", () => {
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "ACTIVE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      plan: {
+        ...proPlan,
+        currency: "SAR",
+        limits: { maxEmployees: 10 },
+      },
+      usage: { EMPLOYEES: 8 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status: "ACTIVE", subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+
+    render(<BillingPage />)
+
+    expect(screen.getByText("Employee limit almost reached")).toBeInTheDocument()
+  })
+
+  it("keeps scheduled cancellation priority over employee limit warning", () => {
+    const subscription = {
+      id: "sub-1",
+      organizationId: "org-1",
+      status: "ACTIVE",
+      billingCycle: "MONTHLY",
+      currentPeriodStart: "2026-04-01T00:00:00.000Z",
+      currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+      cancelAtPeriodEnd: true,
+      scheduledCancellationDate: "2026-05-01T00:00:00.000Z",
+      plan: {
+        ...proPlan,
+        currency: "SAR",
+        limits: { maxEmployees: 10 },
+      },
+      usage: { employees: 9 },
+      invoices: [],
+    }
+    useBilling.mockReturnValue({ status: "ACTIVE", subscription, isLoading: false })
+    useCurrentSubscription.mockReturnValue({ isLoading: false, data: subscription })
+
+    render(<BillingPage />)
+
+    expect(screen.getByText("Cancellation scheduled")).toBeInTheDocument()
+    expect(screen.queryByText("Employee limit almost reached")).not.toBeInTheDocument()
   })
 
   it("schedules paid cancellation instead of immediate cancel", async () => {

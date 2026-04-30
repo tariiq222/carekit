@@ -72,6 +72,21 @@ export function getBillingUsageSummary(subscription: Subscription | null | undef
   }
 }
 
+export function getEmployeeUsageSummary(subscription: Subscription | null | undefined): BillingUsageSummary {
+  const current = getUsageValue(subscription?.usage, ["EMPLOYEES", "employees"])
+  const max = readNumber(subscription?.plan?.limits?.maxEmployees)
+
+  if (current === null || max === null || max <= 0) {
+    return { current, max, ratio: 0 }
+  }
+
+  return {
+    current,
+    max,
+    ratio: Math.max(0, current / max),
+  }
+}
+
 export function formatBillingDate(value: string, locale: "ar" | "en") {
   return new Date(value).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",

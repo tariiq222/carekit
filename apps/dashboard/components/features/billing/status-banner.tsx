@@ -3,6 +3,7 @@
 import { Card } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useBilling } from "@/lib/billing/billing-context"
+import { getEmployeeUsageSummary } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
 
 const BANNER_VARIANTS = {
@@ -45,6 +46,16 @@ export function BillingStatusBanner() {
       <Card className="space-y-1 border border-warning/30 bg-warning/10 p-4 text-warning">
         <p className="font-semibold">{t("billing.banner.scheduledCancel.title")}</p>
         <p className="text-sm opacity-90">{t("billing.banner.scheduledCancel.description")}</p>
+      </Card>
+    )
+  }
+
+  const employeeUsage = getEmployeeUsageSummary(subscription)
+  if (status === "ACTIVE" && employeeUsage.ratio >= 0.8 && employeeUsage.ratio < 1) {
+    return (
+      <Card className="space-y-1 border border-warning/30 bg-warning/10 p-4 text-warning">
+        <p className="font-semibold">{t("billing.banner.limitWarning.title")}</p>
+        <p className="text-sm opacity-90">{t("billing.banner.limitWarning.description")}</p>
       </Card>
     )
   }

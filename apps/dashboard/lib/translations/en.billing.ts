@@ -13,6 +13,8 @@ export const enBilling: Record<string, string> = {
   "billing.banner.canceled.description": "Choose a plan to restart billing access.",
   "billing.banner.scheduledCancel.title": "Cancellation scheduled",
   "billing.banner.scheduledCancel.description": "Your subscription stays active until the period ends.",
+  "billing.banner.limitWarning.title": "Employee limit almost reached",
+  "billing.banner.limitWarning.description": "Upgrade before adding more active employees.",
   "billing.status.active": "Active",
   "billing.status.trialing": "Trial",
   "billing.status.pastDue": "Past due",

@@ -13,6 +13,8 @@ export const arBilling: Record<string, string> = {
   "billing.banner.canceled.description": "اختر خطة لإعادة تفعيل الوصول المرتبط بالفوترة.",
   "billing.banner.scheduledCancel.title": "تمت جدولة الإلغاء",
   "billing.banner.scheduledCancel.description": "يبقى الاشتراك فعالاً حتى نهاية الفترة الحالية.",
+  "billing.banner.limitWarning.title": "اقتربت من حد الموظفين",
+  "billing.banner.limitWarning.description": "رقّ الخطة قبل إضافة مزيد من الموظفين النشطين.",
   "billing.status.active": "نشط",
   "billing.status.trialing": "تجريبي",
   "billing.status.pastDue": "متأخر",
