@@ -13,7 +13,7 @@ We also need a transport for super-admin OTP login (planned in a follow-up PR), 
 ## What this is NOT
 
 - **Not** a replacement for the existing `SmtpService`. SMTP stays exactly where it is, serving the `comms` cluster (clinic ↔ client emails). Mobile + dashboard email flows do not change.
-- **Not** per-tenant email credentials. Every email sent through this path is from CareKit (the platform) to a tenant owner. One Resend account, one domain, one sender for the whole platform.
+- **Not** per-tenant email credentials. Every email sent through this path is from Deqah (the platform) to a tenant owner. One Resend account, one domain, one sender for the whole platform.
 - **Not** an `EmailTemplate` DB table. Platform emails are static, code-owned content; only `comms` cluster templates remain DB-driven.
 - **Not** the super-admin OTP login flow itself. This PR builds the mailer + the `sendOtpLogin()` method; the actual login flow is a separate spec.
 
@@ -135,13 +135,13 @@ The "owner email" in every case is resolved as: `Membership.findFirst({ where: {
 # Required in production, optional in dev/test
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
 # All optional with sensible defaults below
-RESEND_FROM=CareKit <noreply@webvue.pro>
+RESEND_FROM=Deqah <noreply@webvue.pro>
 RESEND_REPLY_TO=support@webvue.pro
 ```
 
 Defaults baked in code (so `.env.example` and Docker compose overlays don't drift):
 
-- `from`: `CareKit <noreply@webvue.pro>`
+- `from`: `Deqah <noreply@webvue.pro>`
 - `replyTo`: `support@webvue.pro`
 
 Domain `webvue.pro` is the platform's outbound email domain. DKIM/SPF setup happens once in Resend dashboard (operations task, tracked separately, not part of this PR).
@@ -204,4 +204,4 @@ No e2e for this PR. Adding a "real Resend send to a sandbox inbox" e2e is overki
 - [ ] Unit tests cover the service, all eight templates, and at least one trigger-site spec per email kind.
 - [ ] `npx jest` green on backend (no e2e regression).
 - [ ] `.env.example` updated with the three new vars.
-- [ ] CLAUDE.md (root or backend) gets a one-paragraph entry under Comms cluster: "Platform emails (CareKit ↔ tenant owner) go through `PlatformMailerService` (Resend); tenant↔client emails stay on `SmtpService`."
+- [ ] CLAUDE.md (root or backend) gets a one-paragraph entry under Comms cluster: "Platform emails (Deqah ↔ tenant owner) go through `PlatformMailerService` (Resend); tenant↔client emails stay on `SmtpService`."

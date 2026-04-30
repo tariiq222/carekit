@@ -6,7 +6,7 @@
 
 **Architecture:** Extend the existing `platform/billing` vertical slice without replacing current subscription flows. `CancelSubscriptionHandler` remains the tenant-facing cancel boundary for compatibility, but non-trial subscriptions now set `cancelAtPeriodEnd=true` instead of immediately changing status; a new `ReactivateSubscriptionHandler` clears that schedule, and a cron transitions due scheduled cancellations to `CANCELED`.
 
-**Tech Stack:** NestJS 11, Prisma 7 split schema, PostgreSQL, Jest, Next.js 15 App Router, React 19, TanStack Query, Vitest, CareKit UI primitives.
+**Tech Stack:** NestJS 11, Prisma 7 split schema, PostgreSQL, Jest, Next.js 15 App Router, React 19, TanStack Query, Vitest, Deqah UI primitives.
 
 ---
 

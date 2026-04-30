@@ -2,7 +2,7 @@
 
 > **⚠️ Plan status:** Most speculative of the four plans — written before Phases 1.5, 2, 3 land. Scope is large; expect to split Phase 4 into 4.b (ZATCA + Refunds) and 4.c (SEO) based on business priority when the time comes.
 >
-> **🛑 Track A (Subscriptions) REMOVED from scope (2026-04-19).** CareKit is strictly a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. The code that landed via Phase 4 Track A was removed in `chore/remove-subscription-feature` (PR #13). Tasks A1–A5, Q1, and any §5/§6 references below should be treated as historical context, not work items. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
+> **🛑 Track A (Subscriptions) REMOVED from scope (2026-04-19).** Deqah is strictly a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. The code that landed via Phase 4 Track A was removed in `chore/remove-subscription-feature` (PR #13). Tasks A1–A5, Q1, and any §5/§6 references below should be treated as historical context, not work items. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
 
 **Goal:** Ship the advanced capabilities that turn the public website from a booking tool into a full client-facing compliance + commerce surface: support-group bookings, ZATCA QR on invoices, refund flow, and SEO infrastructure (Schema.org, sitemap, OG images, JSON-LD).
 
@@ -20,7 +20,7 @@
 
 ## ~~Track A — Subscriptions~~
 
-**REMOVED from scope 2026-04-19.** See PR #13 (`chore/remove-subscription-feature`). CareKit is a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. Tasks A1–A5 deleted from this plan. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
+**REMOVED from scope 2026-04-19.** See PR #13 (`chore/remove-subscription-feature`). Deqah is a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. Tasks A1–A5 deleted from this plan. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
 
 ---
 

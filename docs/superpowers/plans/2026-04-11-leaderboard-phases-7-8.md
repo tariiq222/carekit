@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the Engagement (intake forms, notifications, chatbot admin) and Operations (reports, groups) sections of the CareKit Leaderboard dashboard.
+**Goal:** Build the Engagement (intake forms, notifications, chatbot admin) and Operations (reports, groups) sections of the Deqah Leaderboard dashboard.
 
 **Architecture:** Each domain follows the established leaderboard pattern — api-client module + types → hooks → route pages. New API modules get wired into `packages/api-client/src/index.ts` and `packages/api-client/src/types/index.ts`. All UI uses shared components (PageHeader, StatsGrid, FilterBar, DataTable) and semantic CSS tokens.
 
-**Tech Stack:** Vite + React 19, TanStack Router v1 (file-based routes), TanStack Query v5, @carekit/api-client (typed fetch), Tailwind 4, shadcn/ui
+**Tech Stack:** Vite + React 19, TanStack Router v1 (file-based routes), TanStack Query v5, @deqah/api-client (typed fetch), Tailwind 4, shadcn/ui
 
 **Sidebar status:** All 5 new routes are already present in `sidebar-config.ts`:
 - `/intake-forms` → key `intakeForms`, flag `intakeForms`
@@ -474,7 +474,7 @@ export * as groupsApi from './modules/groups.js'
   },
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit && npm run typecheck --filter=@carekit/api-client 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah && npm run typecheck --filter=@deqah/api-client 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -495,12 +495,12 @@ export * as groupsApi from './modules/groups.js'
 
 ```ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { intakeFormsApi } from '@carekit/api-client'
+import { intakeFormsApi } from '@deqah/api-client'
 import type {
   IntakeFormListQuery,
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
-} from '@carekit/api-client'
+} from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useIntakeForms(query: IntakeFormListQuery = {}) {
@@ -546,7 +546,7 @@ export function useDeleteIntakeForm() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -568,7 +568,7 @@ export function useDeleteIntakeForm() {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import type { IntakeFormListItem, IntakeFormListQuery, FormType, FormScope } from '@carekit/api-client'
+import type { IntakeFormListItem, IntakeFormListQuery, FormType, FormScope } from '@deqah/api-client'
 import { useIntakeForms, useDeleteIntakeForm } from '@/hooks/use-intake-forms'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
@@ -758,7 +758,7 @@ function IntakeFormsPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -780,7 +780,7 @@ function IntakeFormsPage() {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
-import type { CreateIntakeFormPayload, FormType, FormScope } from '@carekit/api-client'
+import type { CreateIntakeFormPayload, FormType, FormScope } from '@deqah/api-client'
 import { useCreateIntakeForm } from '@/hooks/use-intake-forms'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
@@ -946,7 +946,7 @@ function NewIntakeFormPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -968,7 +968,7 @@ function NewIntakeFormPage() {
 ```tsx
 import { useState, useEffect } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
-import type { UpdateIntakeFormPayload, FormType, FormScope, IntakeFormField } from '@carekit/api-client'
+import type { UpdateIntakeFormPayload, FormType, FormScope, IntakeFormField } from '@deqah/api-client'
 import { useIntakeForm, useUpdateIntakeForm, useDeleteIntakeForm } from '@/hooks/use-intake-forms'
 import { PageHeader } from '@/components/shared/page-header'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
@@ -1149,7 +1149,7 @@ function EditIntakeFormPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -1171,8 +1171,8 @@ function EditIntakeFormPage() {
 
 ```ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notificationsApi } from '@carekit/api-client'
-import type { NotificationListQuery } from '@carekit/api-client'
+import { notificationsApi } from '@deqah/api-client'
+import type { NotificationListQuery } from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useNotifications(query: NotificationListQuery = {}) {
@@ -1216,7 +1216,7 @@ export function useMarkAllRead() {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import type { NotificationListItem, NotificationListQuery } from '@carekit/api-client'
+import type { NotificationListItem, NotificationListQuery } from '@deqah/api-client'
 import { useNotifications, useUnreadCount, useMarkRead, useMarkAllRead } from '@/hooks/use-notifications'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
@@ -1363,7 +1363,7 @@ function NotificationsPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -1385,8 +1385,8 @@ function NotificationsPage() {
 
 ```ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { chatbotAdminApi } from '@carekit/api-client'
-import type { UpdateChatbotConfigPayload } from '@carekit/api-client'
+import { chatbotAdminApi } from '@deqah/api-client'
+import type { UpdateChatbotConfigPayload } from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useChatbotConfig() {
@@ -1432,7 +1432,7 @@ export function useSeedChatbotConfig() {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import type { ChatbotConfig } from '@carekit/api-client'
+import type { ChatbotConfig } from '@deqah/api-client'
 import {
   useChatbotConfig,
   useChatbotAnalytics,
@@ -1596,7 +1596,7 @@ function ChatbotAdminPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -1618,8 +1618,8 @@ function ChatbotAdminPage() {
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
-import { reportsApi } from '@carekit/api-client'
-import type { ReportDateParams } from '@carekit/api-client'
+import { reportsApi } from '@deqah/api-client'
+import type { ReportDateParams } from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useRevenueReport(params: ReportDateParams = {}) {
@@ -1658,9 +1658,9 @@ export async function downloadBlob(blob: Blob, filename: string) {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import type { RevenueByMonth } from '@carekit/api-client'
+import type { RevenueByMonth } from '@deqah/api-client'
 import { useRevenueReport, useBookingReport, useDashboardStats, downloadBlob } from '@/hooks/use-reports'
-import { reportsApi } from '@carekit/api-client'
+import { reportsApi } from '@deqah/api-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
@@ -1838,7 +1838,7 @@ function ReportsPage() {
   )
 }
 
-import type { BookingReport } from '@carekit/api-client'
+import type { BookingReport } from '@deqah/api-client'
 
 function BookingBreakdown({ booking, onExport, exporting }: { booking: BookingReport; onExport: () => void; exporting: boolean }) {
   const statusLabels: Record<string, string> = {
@@ -1912,7 +1912,7 @@ function BookingBreakdown({ booking, onExport, exporting }: { booking: BookingRe
 
 > Note: This file is ~220 lines, within the 350-line limit. The `BookingBreakdown` component is colocated since it is route-specific and ~80 lines. If future enhancements push this over 350 lines, extract `BookingBreakdown` to `@/components/reports/booking-breakdown.tsx`.
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -1929,7 +1929,7 @@ The booking breakdown and export buttons were fully implemented in Task 8 within
 - [ ] Verify line count of reports/index.tsx: `wc -l apps/leaderboard/src/routes/_dashboard/reports/index.tsx`
   Expected: ≤ 350 lines
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 ---
@@ -1946,8 +1946,8 @@ The booking breakdown and export buttons were fully implemented in Task 8 within
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
-import { groupsApi } from '@carekit/api-client'
-import type { GroupListQuery } from '@carekit/api-client'
+import { groupsApi } from '@deqah/api-client'
+import type { GroupListQuery } from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useGroups(query: GroupListQuery = {}) {
@@ -1971,7 +1971,7 @@ export function useGroup(id: string) {
 ```tsx
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import type { GroupListItem, GroupListQuery, GroupStatus } from '@carekit/api-client'
+import type { GroupListItem, GroupListQuery, GroupStatus } from '@deqah/api-client'
 import { useGroups } from '@/hooks/use-groups'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
@@ -2131,7 +2131,7 @@ function GroupSessionsPage() {
 }
 ```
 
-- [ ] Run: `cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
+- [ ] Run: `cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1 | tail -5`
   Expected: no errors
 
 - [ ] Commit:
@@ -2161,13 +2161,13 @@ The sidebar already contains all 5 new routes (confirmed in `sidebar-config.ts` 
 
 - [ ] Run full typecheck:
   ```
-  cd /Users/tariq/Documents/my_programs/CareKit/apps/leaderboard && npm run typecheck 2>&1
+  cd /Users/tariq/Documents/my_programs/Deqah/apps/leaderboard && npm run typecheck 2>&1
   ```
   Expected: `Found 0 errors.`
 
 - [ ] Run api-client typecheck:
   ```
-  cd /Users/tariq/Documents/my_programs/CareKit/packages/api-client && npm run typecheck 2>&1
+  cd /Users/tariq/Documents/my_programs/Deqah/packages/api-client && npm run typecheck 2>&1
   ```
   Expected: `Found 0 errors.`
 

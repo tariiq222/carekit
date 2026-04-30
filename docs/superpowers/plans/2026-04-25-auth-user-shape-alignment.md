@@ -4,9 +4,9 @@
 
 **Goal:** Resolve the long-standing drift where `apps/mobile` consumes `user.firstName`, `user.lastName`, and `user.organizationId` from `/auth/login`, but the backend's login endpoint returns none of those — so the mobile UI silently renders `undefined` strings and the auth slice writes `null` for the active org.
 
-**Architecture:** Fix at the source: `/auth/login` and `/auth/me` are made consistent with the same `firstName`/`lastName` derivation already used by `GetCurrentUserHandler`, and both endpoints attach the resolved `organizationId` from the active `Membership`. Then propagate the new fields through `@carekit/api-client`'s canonical `UserPayload` and tighten the mobile `User` type to import from there. No mobile screens have to change — they will simply start receiving the values they were already trying to read.
+**Architecture:** Fix at the source: `/auth/login` and `/auth/me` are made consistent with the same `firstName`/`lastName` derivation already used by `GetCurrentUserHandler`, and both endpoints attach the resolved `organizationId` from the active `Membership`. Then propagate the new fields through `@deqah/api-client`'s canonical `UserPayload` and tighten the mobile `User` type to import from there. No mobile screens have to change — they will simply start receiving the values they were already trying to read.
 
-**Tech Stack:** NestJS 11, Prisma 7, Jest (backend specs), Vitest (api-client + dashboard), @carekit/api-client TypeScript types.
+**Tech Stack:** NestJS 11, Prisma 7, Jest (backend specs), Vitest (api-client + dashboard), @deqah/api-client TypeScript types.
 
 ---
 
@@ -320,7 +320,7 @@ git commit -m "feat(auth): /auth/me returns organizationId from active membershi
 
 ---
 
-## Task 4: Extend canonical `UserPayload` in `@carekit/api-client`
+## Task 4: Extend canonical `UserPayload` in `@deqah/api-client`
 
 **Files:**
 - Modify: `packages/api-client/src/types/auth.ts`
@@ -363,7 +363,7 @@ Read `packages/api-client/src/modules/__tests__/auth.test.ts:9-21`. Replace the 
 ```typescript
 const fakeUser: UserPayload = {
   id: 'usr_1',
-  email: 'admin@carekit.app',
+  email: 'admin@deqah.app',
   name: 'Admin Owner',
   firstName: 'Admin',
   lastName: 'Owner',
@@ -469,7 +469,7 @@ Note the count and the consumer files. **Do not delete `User` if any consumer wo
 Read `apps/mobile/types/auth.ts:14-29`. Replace the existing `UserRoleItem` + `User` interfaces with:
 
 ```typescript
-import type { UserPayload } from '@carekit/api-client'
+import type { UserPayload } from '@deqah/api-client'
 
 // Mobile previously declared its own User shape. We now rely on the
 // canonical UserPayload returned by /auth/login + /auth/me — re-exported
@@ -535,7 +535,7 @@ Expected: 0 errors. If errors surface in screens reading `user.firstName` / `use
 
 ```bash
 git add apps/mobile/types/auth.ts apps/mobile/services/__tests__/auth.test.ts
-git commit -m "refactor(mobile): User type now re-exports canonical @carekit/api-client UserPayload
+git commit -m "refactor(mobile): User type now re-exports canonical @deqah/api-client UserPayload
 
 Drops the home-grown User interface that promised firstName/lastName/
 organizationId/roles[] but never received them at runtime. Now that the
@@ -555,7 +555,7 @@ existed) instead of user.roles[0].slug (the field that never did)."
 
 ```bash
 cd apps/backend && npx jest src/modules/identity src/api/public/auth.controller.spec.ts
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 npm run test --workspace=packages/api-client
 npm run test --workspace=apps/dashboard -- test/unit/lib/auth-api.spec.ts test/unit/auth/ test/unit/components/login-form.spec.tsx
 npm run test --workspace=apps/website -- features/auth

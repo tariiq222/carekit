@@ -1,4 +1,4 @@
-# CareKit Navigation & User Flows
+# Deqah Navigation & User Flows
 
 ---
 
@@ -163,7 +163,7 @@ Tab 4: Profile (الملف الشخصي)
 ```
 Dashboard Sidebar (RTL — right side):
 ┌─────────────────────┐
-│ [Logo] CareKit      │
+│ [Logo] Deqah      │
 │─────────────────────│
 │ ● الرئيسية (Home)    │
 │─────────────────────│
@@ -374,7 +374,7 @@ Notifications
 2. Selects "Bank Transfer" / "تحويل بنكي"
 3. Sees bank account details (from White Label config)
 4. Makes transfer via their bank app
-5. Returns to CareKit app
+5. Returns to Deqah app
 6. Taps "Upload Receipt" / "رفع الإيصال"
 7. Takes photo or selects from gallery
 8. Uploads receipt → stored in MinIO

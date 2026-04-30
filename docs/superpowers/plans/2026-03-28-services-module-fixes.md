@@ -583,8 +583,8 @@ Expected: No errors.
 - [ ] **Step 3: Check if dashboard uses `data` field from these endpoints**
 
 ```bash
-grep -r "\.data" /Users/tariq/Documents/my_programs/CareKit/dashboard/lib/api/services.ts
-grep -r "\.data" /Users/tariq/Documents/my_programs/CareKit/dashboard/hooks/use-services.ts
+grep -r "\.data" /Users/tariq/Documents/my_programs/Deqah/dashboard/lib/api/services.ts
+grep -r "\.data" /Users/tariq/Documents/my_programs/Deqah/dashboard/hooks/use-services.ts
 ```
 
 If any call does `response.data` for employees, booking-types, or intake-forms endpoints, update those calls to use the response directly. The API functions in `dashboard/lib/api/services.ts` use axios which already returns `response.data` from the HTTP layer — so the question is whether the functions do an additional `.data` unwrap. If found, remove the extra `.data`.
@@ -1039,7 +1039,7 @@ export interface ServiceBookingType {
 - [ ] **Step 2: Run typecheck from the root to catch any dashboard/mobile breakage**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/dashboard && npx tsc --noEmit
+cd /Users/tariq/Documents/my_programs/Deqah/dashboard && npx tsc --noEmit
 ```
 
 Fix any type errors that surface (they indicate the dashboard was silently using incomplete types).
@@ -1047,7 +1047,7 @@ Fix any type errors that surface (they indicate the dashboard was silently using
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit && git add shared/types/service.ts
+cd /Users/tariq/Documents/my_programs/Deqah && git add shared/types/service.ts
 git commit -m "fix(shared): sync Service type with Prisma schema — add 12 missing fields"
 ```
 
@@ -1066,8 +1066,8 @@ Expected: All suites PASS, no regressions.
 - [ ] **Step 2: Run typecheck across the monorepo**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx tsc --noEmit
-cd /Users/tariq/Documents/my_programs/CareKit/dashboard && npx tsc --noEmit
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx tsc --noEmit
+cd /Users/tariq/Documents/my_programs/Deqah/dashboard && npx tsc --noEmit
 ```
 
 Expected: Zero errors in both.

@@ -148,7 +148,7 @@
 
 - [ ] **8.1** `register`, `login`, `refresh`, `logout`.
 - [ ] **8.2** `getMe`, `getMyBookings`, `rescheduleMyBooking`, `cancelMyBooking`.
-- [ ] **8.3** Types in `@carekit/shared`.
+- [ ] **8.3** Types in `@deqah/shared`.
 - [ ] **8.4** Tests.
 - [ ] **8.5** Commit: `feat(api-client): client auth + /me endpoints`
 

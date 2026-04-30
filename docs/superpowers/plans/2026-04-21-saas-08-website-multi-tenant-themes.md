@@ -4,9 +4,9 @@
 
 **Goal:** Refactor `apps/website/` from a single-tenant (sawaa-only) Next.js app into a multi-tenant engine that serves many orgs on many hostnames: (a) `Host` header → slug resolution → org + theme + vertical, (b) 4 vertical theme families (medical / consulting / salon / fitness) × 4 visual families (mint / ocean / sand / royal) combined at render, (c) bilingual SEO (AR + EN URLs + hreflang + structured data per-vertical), (d) conditional routing (embed-only tenants, custom-domain-pending, suspended), (e) embeddable booking widget at `widget.js` for Starter-tier tenants.
 
-**Architecture:** `middleware.ts` reads `Host` header → resolves slug from `{slug}.carekit.app` OR custom domain (via Plan 09's `CustomDomain` table) → fetches `GET /api/v1/public/site-settings?slug=X` (short-TTL cached) → sets request headers `x-organization-id`, `x-vertical`, `x-visual-theme`, `x-website-enabled` → layout reads these via `headers()` and picks the right theme composition. Themes are restructured from the current `themes/{sawaa,premium}/` to `themes/visual/{mint,ocean,sand,royal}/` + `themes/vertical/{medical,consulting,salon,fitness}/`, combined at render time (vertical provides content shape; visual provides palette + typography + spacing).
+**Architecture:** `middleware.ts` reads `Host` header → resolves slug from `{slug}.deqah.app` OR custom domain (via Plan 09's `CustomDomain` table) → fetches `GET /api/v1/public/site-settings?slug=X` (short-TTL cached) → sets request headers `x-organization-id`, `x-vertical`, `x-visual-theme`, `x-website-enabled` → layout reads these via `headers()` and picks the right theme composition. Themes are restructured from the current `themes/{sawaa,premium}/` to `themes/visual/{mint,ocean,sand,royal}/` + `themes/vertical/{medical,consulting,salon,fitness}/`, combined at render time (vertical provides content shape; visual provides palette + typography + spacing).
 
-**Tech Stack:** Next.js 15 App Router, React 19, Tailwind 4, `@carekit/ui`, `@carekit/shared`, `@carekit/api-client`, next-intl, esbuild (for widget bundle), Vitest, Chrome DevTools MCP for manual QA.
+**Tech Stack:** Next.js 15 App Router, React 19, Tailwind 4, `@deqah/ui`, `@deqah/shared`, `@deqah/api-client`, next-intl, esbuild (for widget bundle), Vitest, Chrome DevTools MCP for manual QA.
 
 ---
 
@@ -222,12 +222,12 @@ Create `apps/website/__tests__/tenant-resolver.test.ts`:
 import { resolveSlugFromHost } from '../lib/tenant-resolver';
 
 describe('resolveSlugFromHost', () => {
-  it('extracts slug from {slug}.carekit.app', () => {
-    expect(resolveSlugFromHost('clinic-one.carekit.app')).toEqual({ kind: 'subdomain', slug: 'clinic-one' });
+  it('extracts slug from {slug}.deqah.app', () => {
+    expect(resolveSlugFromHost('clinic-one.deqah.app')).toEqual({ kind: 'subdomain', slug: 'clinic-one' });
   });
   it('returns marketing marker for root', () => {
-    expect(resolveSlugFromHost('carekit.app')).toEqual({ kind: 'root' });
-    expect(resolveSlugFromHost('www.carekit.app')).toEqual({ kind: 'root' });
+    expect(resolveSlugFromHost('deqah.app')).toEqual({ kind: 'root' });
+    expect(resolveSlugFromHost('www.deqah.app')).toEqual({ kind: 'root' });
   });
   it('flags custom domain', () => {
     expect(resolveSlugFromHost('clinic.com')).toEqual({ kind: 'custom', hostname: 'clinic.com' });
@@ -248,15 +248,15 @@ type Resolved =
   | { kind: 'custom'; hostname: string }
   | { kind: 'root' };
 
-const ROOT_HOSTS = new Set(['carekit.app', 'www.carekit.app']);
+const ROOT_HOSTS = new Set(['deqah.app', 'www.deqah.app']);
 const DEV_ROOT = ['localhost', '127.0.0.1'];
 
 export function resolveSlugFromHost(host: string): Resolved {
   const [h] = host.split(':');
   if (ROOT_HOSTS.has(h)) return { kind: 'root' };
 
-  if (h.endsWith('.carekit.app')) {
-    const slug = h.slice(0, -'.carekit.app'.length);
+  if (h.endsWith('.deqah.app')) {
+    const slug = h.slice(0, -'.deqah.app'.length);
     return { kind: 'subdomain', slug };
   }
   if (h.endsWith('.localhost')) {
@@ -320,8 +320,8 @@ export async function middleware(req: NextRequest) {
   const resolved = resolveSlugFromHost(host);
 
   if (resolved.kind === 'root') {
-    // Shouldn't happen — carekit.app is served by apps/landing.
-    return NextResponse.redirect('https://carekit.app');
+    // Shouldn't happen — deqah.app is served by apps/landing.
+    return NextResponse.redirect('https://deqah.app');
   }
 
   // Fetch via Edge-safe HTTP (no Prisma).
@@ -357,7 +357,7 @@ export const config = {
 - [ ] **Step 2.5: Run resolver + middleware tests**
 
 ```bash
-npm run test --workspace=@carekit/website
+npm run test --workspace=@deqah/website
 ```
 
 Expected: tenant-resolver + middleware tests pass.
@@ -532,7 +532,7 @@ Becomes a thin re-export wrapper around `resolve-theme.ts`. Remove the legacy `W
 - [ ] **Step 5.4: Run**
 
 ```bash
-npm run test --workspace=@carekit/website
+npm run test --workspace=@deqah/website
 ```
 
 - [ ] **Step 5.5: Commit**
@@ -609,7 +609,7 @@ git commit -m "feat(saas-08): [locale] segment + header-driven theme layout"
 
 - [ ] **Step 7.1: Create `_unavailable/embed-only.tsx`**
 
-Renders a centered card: "هذا المزود يستخدم أداة الحجز المضمنة / This provider uses the embed widget only" + instructions for site owners to use `<script src="https://carekit.app/widget.js" data-org="slug">`.
+Renders a centered card: "هذا المزود يستخدم أداة الحجز المضمنة / This provider uses the embed widget only" + instructions for site owners to use `<script src="https://deqah.app/widget.js" data-org="slug">`.
 
 - [ ] **Step 7.2: Create `_unavailable/suspended.tsx`**
 
@@ -641,7 +641,7 @@ import { headers } from 'next/headers';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const h = await headers();
   const slug = h.get('x-org-slug') ?? 'default';
-  const hostHeader = h.get('host') ?? 'carekit.app';
+  const hostHeader = h.get('host') ?? 'deqah.app';
   const base = `https://${hostHeader}`;
   const routes = ['', '/therapists', '/contact', '/booking', '/support-groups'];
   return routes.flatMap((r) => [
@@ -699,13 +699,13 @@ Create `apps/landing/widget-src/widget.ts`:
   if (!slug) return;
 
   const iframe = document.createElement('iframe');
-  iframe.src = `https://${slug}.carekit.app/ar/widget/book`;
+  iframe.src = `https://${slug}.deqah.app/ar/widget/book`;
   iframe.style.cssText = 'width:100%;height:720px;border:0;border-radius:16px';
   iframe.title = 'Book appointment';
   script.parentNode?.insertBefore(iframe, script.nextSibling);
 
   // Fire analytics
-  fetch('https://api.carekit.app/api/v1/public/widget/track', {
+  fetch('https://api.deqah.app/api/v1/public/widget/track', {
     method: 'POST',
     body: JSON.stringify({ slug, event: 'mount', referrer: document.referrer }),
     headers: { 'Content-Type': 'application/json' },
@@ -745,14 +745,14 @@ export default {
   async headers() {
     return [
       {
-        // Widget routes: allow framing only from carekit.app + *.carekit.app + the
+        // Widget routes: allow framing only from deqah.app + *.deqah.app + the
         // tenant's registered custom domains. No X-Frame-Options (deprecated and
         // conflicts with frame-ancestors; modern browsers prefer CSP).
         source: '/:locale/widget/:path*',
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://carekit.app https://*.carekit.app;",
+            value: "frame-ancestors 'self' https://deqah.app https://*.deqah.app;",
           },
           // Explicitly remove X-Frame-Options for this route (Next.js default may
           // inject it via middleware/hosting). If the hosting layer adds one, strip
@@ -781,7 +781,7 @@ if (req.nextUrl.pathname.match(/^\/[a-z]{2}\/widget\//)) {
   const extra = tenant?.customDomain ? ` https://${tenant.customDomain}` : '';
   res.headers.set(
     'Content-Security-Policy',
-    `frame-ancestors 'self' https://carekit.app https://*.carekit.app${extra};`,
+    `frame-ancestors 'self' https://deqah.app https://*.deqah.app${extra};`,
   );
   res.headers.delete('X-Frame-Options');
 }
@@ -802,7 +802,7 @@ Create `apps/backend/src/api/public/widget/widget-track.controller.ts` — `POST
 Create `apps/website/__tests__/widget-integration.test.ts` — spins up Next.js in test mode and asserts:
 - `/widget/book` returns HTML without `<header>`/`<footer>`.
 - `/widget/book` response has NO `X-Frame-Options` header.
-- `/widget/book` response has `Content-Security-Policy` containing `frame-ancestors 'self' https://carekit.app https://*.carekit.app` (plus the tenant's custom domain if one is registered for the test fixture).
+- `/widget/book` response has `Content-Security-Policy` containing `frame-ancestors 'self' https://deqah.app https://*.deqah.app` (plus the tenant's custom domain if one is registered for the test fixture).
 - CSP does NOT contain `*`, `'unsafe-any'`, or reflect the request's Origin/Referer header.
 - A non-widget route (e.g. `/ar/services`) still returns `X-Frame-Options: DENY` and `frame-ancestors 'none'`.
 

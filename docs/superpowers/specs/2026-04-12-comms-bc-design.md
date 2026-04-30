@@ -9,7 +9,7 @@
 
 ## 1. Scope
 
-Comms BC owns all outbound communication from CareKit:
+Comms BC owns all outbound communication from Deqah:
 
 - **Push notifications** (FCM)
 - **Email** (SMTP + editable templates with branding variables)

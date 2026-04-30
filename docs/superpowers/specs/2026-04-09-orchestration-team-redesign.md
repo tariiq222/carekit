@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-09  
 **Status:** Approved  
-**Scope:** CLAUDE.md (global) — applies to CareKit, Bawsala, Adeer, and all future projects
+**Scope:** CLAUDE.md (global) — applies to Deqah, Bawsala, Adeer, and all future projects
 
 ---
 
@@ -12,7 +12,7 @@ The current Maestro v5.0 orchestration in `~/.claude/CLAUDE.md` has GLM rules th
 - GLM has listed exceptions that allow Sonnet to write code directly without justification
 - No automated validation step between code generation and review
 - Reviewer has no path to flag a broken plan (only code retries)
-- "CareKit patterns" hardcoded — not generic across projects
+- "Deqah patterns" hardcoded — not generic across projects
 - Intent Gate missing branches for docs-only, config-change, migration, and out-of-scope
 
 This redesign fixes all of the above.
@@ -43,7 +43,7 @@ Before the Intent Gate, فهد always reads:
 - Active `CLAUDE.md` files (root + app-level)
 - Last 5 git commits (`git log --oneline -5`)
 - Tech stack (derived from CLAUDE.md — not re-explored each time if already in context)
-- Which project is active: CareKit / Bawsala / Adeer / other
+- Which project is active: Deqah / Bawsala / Adeer / other
 
 Output: internal context object passed to all subsequent steps.
 
@@ -199,7 +199,7 @@ Outputs Maestro Delivery Summary:
 Maestro v5.0 — Task Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Task: [one line]
-Project: [CareKit / Bawsala / Adeer / other]
+Project: [Deqah / Bawsala / Adeer / other]
 Intent: [feature / bug / refactor / ...]
 Size: [S/M/L/XL]
 Gate level: [fast-track / full-pipeline]
@@ -276,7 +276,7 @@ WARNING: No app-level CLAUDE.md found for [app-name].
          Recommendation: create [app]/CLAUDE.md with module-specific conventions.
 ```
 
-This makes خالد work correctly across all projects without hardcoding CareKit-specific references.
+This makes خالد work correctly across all projects without hardcoding Deqah-specific references.
 
 ---
 

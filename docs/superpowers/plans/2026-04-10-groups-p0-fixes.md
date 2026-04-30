@@ -88,7 +88,7 @@ it('should not allow overbooking when two enrollments race', async () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups-enrollments" --no-coverage
 ```
 
@@ -205,7 +205,7 @@ async enroll(groupId: string, clientId: string) {
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups-enrollments" --no-coverage
 ```
 
@@ -214,7 +214,7 @@ Expected: PASS
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -223,7 +223,7 @@ Expected: All passing (no regressions)
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/groups/groups-enrollments.service.ts \
         backend/test/unit/groups/groups-enrollments.service.spec.ts
 git commit -m "fix(groups): prevent overbooking race condition via Serializable transaction in enroll()
@@ -315,7 +315,7 @@ describe('triggerPaymentRequest', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups-payment" --no-coverage
 ```
 
@@ -367,7 +367,7 @@ const enrollments = await this.prisma.$transaction(async (tx) => {
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups-payment" --no-coverage
 ```
 
@@ -376,7 +376,7 @@ Expected: PASS
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -385,7 +385,7 @@ Expected: All passing
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/groups/groups-payment.service.ts \
         backend/test/unit/groups/groups-payment.service.spec.ts
 git commit -m "fix(groups): create GroupPayment records in triggerPaymentRequest to enable Moyasar webhook matching
@@ -444,7 +444,7 @@ it('should save remainingDueDate when paymentType is DEPOSIT', async () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups.service" --no-coverage
 ```
 
@@ -488,7 +488,7 @@ Place it next to `depositAmount`.
 - [ ] **Step 6: Run test to verify it passes**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="groups.service" --no-coverage
 ```
 
@@ -497,7 +497,7 @@ Expected: PASS
 - [ ] **Step 7: Run typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npx tsc --noEmit
 ```
 
@@ -506,7 +506,7 @@ Expected: 0 errors
 - [ ] **Step 8: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -515,7 +515,7 @@ Expected: All passing
 - [ ] **Step 9: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/groups/dto/create-group.dto.ts \
         backend/src/modules/groups/dto/update-group.dto.ts \
         backend/src/modules/groups/groups.service.ts \

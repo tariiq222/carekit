@@ -242,7 +242,7 @@ Complete Phase 4 of the mobile UX audit by optimizing list performance (ScrollVi
 ### Task 18a: Run test suite
 
 ```bash
-cd /Users/tariq/code/carekit/.worktrees/mobile-ux-audit-p0-p1/apps/mobile
+cd /Users/tariq/code/deqah/.worktrees/mobile-ux-audit-p0-p1/apps/mobile
 npm test
 ```
 
@@ -335,4 +335,4 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
 - After Phase 4, the worktree branches back to `main` and PRs are auto-merged per team policy
 - This plan targets **team orchestration** — work is distributed to parallel Executors for each task cluster (15a–15e, 16a–16d, 17a–17j, 18a–18e)
 - No architectural changes; all modifications are additive (a11y props, new hook, animation gates)
-- Accessibility is not optional in CareKit per WCAG 2.1 AAA target in CLAUDE.md
+- Accessibility is not optional in Deqah per WCAG 2.1 AAA target in CLAUDE.md

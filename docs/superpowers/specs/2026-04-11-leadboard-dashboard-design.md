@@ -1,4 +1,4 @@
-# Leadboard — CareKit Admin Dashboard Design Spec
+# Leadboard — Deqah Admin Dashboard Design Spec
 **Date:** 2026-04-11  
 **Status:** Approved  
 **Replaces:** `dashboard/` (dashboard-v2 prototype + existing Next.js dashboard)
@@ -7,7 +7,7 @@
 
 ## Context
 
-CareKit is a white-label SaaS clinic management system. The current dashboard exists only as an HTML prototype (`dashboard-v2.html`) with a partially built Next.js app. Leadboard is a greenfield admin dashboard built for:
+Deqah is a white-label SaaS clinic management system. The current dashboard exists only as an HTML prototype (`dashboard-v2.html`) with a partially built Next.js app. Leadboard is a greenfield admin dashboard built for:
 
 1. **Clinic Admins & Receptionists** — daily operations (bookings, patients, payments, etc.)
 2. **Super Admin (future phase)** — platform-level management of clinic licenses and white-label configs
@@ -40,7 +40,7 @@ The dashboard must support white-label visual identity per clinic, feature flags
 ## Monorepo Placement
 
 ```
-CareKit/
+Deqah/
 ├── apps/
 │   ├── leaderboard/              ← this project
 │   └── (mobile — Expo, future)
@@ -89,7 +89,7 @@ All color usage in components must use CSS custom properties (`--primary`, `--ac
 
 ## Feature Flag System
 
-Feature flags are per-clinic boolean values returned by the backend at login. They represent the contractual agreement between CareKit and the clinic. A flag being `false` means the feature **does not exist** in the system for that clinic — not just hidden.
+Feature flags are per-clinic boolean values returned by the backend at login. They represent the contractual agreement between Deqah and the clinic. A flag being `false` means the feature **does not exist** in the system for that clinic — not just hidden.
 
 ### Enforcement levels (all must be active when flag is false):
 1. **Sidebar** — item not rendered at all

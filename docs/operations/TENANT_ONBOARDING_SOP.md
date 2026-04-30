@@ -2,7 +2,7 @@
 
 > **Owner:** Platform Operations · **Last updated:** 2026-04-26 · **Status:** Active until Plan 07 (self-serve signup) ships.
 
-CareKit has **no self-serve tenant signup**. Every clinic is added by CareKit staff via either the super-admin app or a one-shot Prisma script. This document is the canonical procedure.
+Deqah has **no self-serve tenant signup**. Every clinic is added by Deqah staff via either the super-admin app or a one-shot Prisma script. This document is the canonical procedure.
 
 ---
 
@@ -32,7 +32,7 @@ Refuse onboarding until every required field is filled. Do **not** improvise —
 
 When the create page is shipped:
 
-1. Open `https://admin.carekit.app` (prod) or `http://localhost:5104` (dev).
+1. Open `https://admin.deqah.app` (prod) or `http://localhost:5104` (dev).
 2. Sign in as a super-admin (`SUPER_ADMIN_EMAIL` from `.env.prod`).
 3. Navigate to **Organizations → New**.
 4. Fill the form using the Section 1 inputs.
@@ -150,9 +150,9 @@ npx tsx prisma/seeds/onboard-<slug>.ts
 ### 3.3 — Verify rows
 
 ```bash
-docker exec -it carekit-postgres psql -U carekit -d carekit_prod -c \
+docker exec -it deqah-postgres psql -U deqah -d deqah_prod -c \
   "SELECT id, slug, name_en, status FROM \"Organization\" WHERE slug='<slug>';"
-docker exec -it carekit-postgres psql -U carekit -d carekit_prod -c \
+docker exec -it deqah-postgres psql -U deqah -d deqah_prod -c \
   "SELECT u.email, m.role FROM \"User\" u JOIN \"Membership\" m ON m.user_id=u.id JOIN \"Organization\" o ON o.id=m.organization_id WHERE o.slug='<slug>';"
 ```
 
@@ -162,7 +162,7 @@ docker exec -it carekit-postgres psql -U carekit -d carekit_prod -c \
 
 Send the clinic admin **out-of-band** (signed PDF, secure messenger):
 
-1. **Login URL** — `https://app.carekit.app` (prod) or per-deployment domain.
+1. **Login URL** — `https://app.deqah.app` (prod) or per-deployment domain.
 2. **Email** — the address from Section 1.
 3. **Temporary password** — generated above. Tell them: must be rotated on first login.
 4. Walkthrough script for the call:
@@ -171,7 +171,7 @@ Send the clinic admin **out-of-band** (signed PDF, secure messenger):
    - **Settings → Business hours** → days + hours.
    - **Services** → add their service catalogue.
    - **Employees** → invite at least one practitioner.
-   - **Settings → Payments** → enter their tenant Moyasar `sk_*` keys (separate from CareKit's platform Moyasar).
+   - **Settings → Payments** → enter their tenant Moyasar `sk_*` keys (separate from Deqah's platform Moyasar).
    - **Settings → SMS** → choose Unifonic or Taqnyat and enter their own credentials (we don't bill SMS — they pay the provider).
    - **Settings → Integrations → Zoom** → optional, only if they need video calls.
 
@@ -181,7 +181,7 @@ Send the clinic admin **out-of-band** (signed PDF, secure messenger):
 
 | Check | How | Pass when |
 |-------|-----|-----------|
-| Login works | Open `app.carekit.app`, sign in | Dashboard loads, branding is theirs |
+| Login works | Open `app.deqah.app`, sign in | Dashboard loads, branding is theirs |
 | Booking flow | Mobile app → book any service → pay (test card) | Booking row + Invoice row + Payment row created in DB |
 | Payment flow | Use Moyasar test card `4111 1111 1111 1111` | `Invoice.status=PAID` within 5s of redirect |
 | OTP delivery | Mobile login with their phone | Authentica SMS arrives within 30s |
@@ -211,7 +211,7 @@ COMMIT;
 If MinIO bucket cleanup is needed:
 
 ```bash
-docker exec -it carekit-minio mc rm --recursive --force local/carekit/orgs/<slug>/
+docker exec -it deqah-minio mc rm --recursive --force local/deqah/orgs/<slug>/
 ```
 
 ---

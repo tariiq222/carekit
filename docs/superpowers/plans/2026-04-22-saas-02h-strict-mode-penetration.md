@@ -168,7 +168,7 @@ npm run prisma:migrate
 Expected: migration applies cleanly; `psql` check shows unified policies.
 
 ```bash
-docker exec -i carekit_postgres psql -U carekit -d carekit -c \
+docker exec -i deqah_postgres psql -U deqah -d deqah -c \
   "SELECT polname, relname FROM pg_policy p JOIN pg_class c ON c.oid=p.polrelid WHERE polname='tenant_isolation' ORDER BY relname LIMIT 5;"
 ```
 
@@ -1085,8 +1085,8 @@ git commit -m "test(saas-02h): per-cluster RLS smoke in penetration suite"
 
 **Files:**
 - Modify: `apps/backend/docs/saas-tenancy.md`
-- Create: `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02h_status.md`
-- Modify: `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md`
+- Create: `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02h_status.md`
+- Modify: `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md`
 
 - [ ] **Step 1: Extend `saas-tenancy.md`**
 

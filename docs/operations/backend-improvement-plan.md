@@ -1,4 +1,4 @@
-# CareKit Backend — خطة التحسين الشاملة
+# Deqah Backend — خطة التحسين الشاملة
 
 > **STATUS: Pre-SaaS historical plan (2026-04-01).** The "30 modules / 111
 > unit tests / 63 e2e" snapshot below is from before the SaaS refactor; the
@@ -715,4 +715,4 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
 
 ---
 
-*CareKit Backend Improvement Plan — WebVue Technology Solutions — 2026-04-01*
+*Deqah Backend Improvement Plan — WebVue Technology Solutions — 2026-04-01*

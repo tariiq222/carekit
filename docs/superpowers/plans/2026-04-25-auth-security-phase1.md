@@ -1,6 +1,6 @@
 # Plan — Auth Security Phase 1 (3 independent fixes)
 
-**Worktree:** `/Users/tariq/code/carekit/.worktrees/auth-security-fixes`
+**Worktree:** `/Users/tariq/code/deqah/.worktrees/auth-security-fixes`
 **Branch:** `team/auth-security-fixes`
 **Date:** 2026-04-25
 **Owner-only review:** yes — every fix touches `identity/auth` (Security Tier 1).
@@ -53,7 +53,7 @@ Gemini owns FIX C end-to-end (backend DTO + 2 frontends + api-client).
 
 ### Test commands
 ```bash
-cd /Users/tariq/code/carekit/.worktrees/auth-security-fixes/apps/backend
+cd /Users/tariq/code/deqah/.worktrees/auth-security-fixes/apps/backend
 npx jest src/modules/identity/switch-organization/switch-organization.handler.spec.ts
 npm test
 ```
@@ -102,7 +102,7 @@ npm test
 
 ### Test commands
 ```bash
-cd /Users/tariq/code/carekit/.worktrees/auth-security-fixes/apps/backend
+cd /Users/tariq/code/deqah/.worktrees/auth-security-fixes/apps/backend
 npx jest src/modules/identity/otp/
 npm test
 ```
@@ -191,17 +191,17 @@ npm test
 ### Test commands
 ```bash
 # Backend
-cd /Users/tariq/code/carekit/.worktrees/auth-security-fixes/apps/backend
+cd /Users/tariq/code/deqah/.worktrees/auth-security-fixes/apps/backend
 npx jest src/api/public/auth.controller.spec.ts
 npm test
 npm run openapi:build-and-snapshot
 
 # Dashboard
-cd /Users/tariq/code/carekit/.worktrees/auth-security-fixes/apps/dashboard
+cd /Users/tariq/code/deqah/.worktrees/auth-security-fixes/apps/dashboard
 npm run typecheck && npm run lint && npm run test
 
 # Admin
-cd /Users/tariq/code/carekit/.worktrees/auth-security-fixes/apps/admin
+cd /Users/tariq/code/deqah/.worktrees/auth-security-fixes/apps/admin
 npm run typecheck && npm run lint && npm run test
 ```
 

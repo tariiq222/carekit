@@ -124,7 +124,7 @@ const SCOPED_MODELS = new Set<string>([
 - `test/e2e/content/site-setting-isolation.e2e-spec.ts`
 
 **Memory (create):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_status.md`
 
 **Transformation index (modify):**
 - `docs/superpowers/plans/2026-04-21-saas-transformation-index.md` — mark 02g done.
@@ -503,8 +503,8 @@ CREATE POLICY "tenant_isolation" ON "SiteSetting" USING ("organizationId" = curr
 
 ```bash
 cd apps/backend && npx prisma migrate deploy
-TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 ```
 
@@ -910,7 +910,7 @@ Tests:
 
 1. Org A upserts `home.hero.title.ar = "A"`, Org B upserts `home.hero.title.ar = "B"`. Both coexist under composite PK.
 2. Org A `get(home.hero.title.ar)` returns "A"; Org B returns "B".
-3. Public host-based read for orgA.carekit.app returns A; orgB.carekit.app returns B.
+3. Public host-based read for orgA.deqah.app returns A; orgB.deqah.app returns B.
 
 - [ ] **Step 10.10: Run all new suites**
 
@@ -963,7 +963,7 @@ Expected: all green — prior clusters + 9 new 02g suites.
 
 - [ ] **Step 11.4: Create memory file**
 
-`/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_status.md`:
+`/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_status.md`:
 
 ```markdown
 ---
@@ -1006,8 +1006,8 @@ Append:
 - [ ] **Step 11.7: Final commit**
 
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_status.md \
-        /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md \
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_status.md \
+        /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md \
         docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas): mark 02g done in index + memory (infra clusters)"
 ```

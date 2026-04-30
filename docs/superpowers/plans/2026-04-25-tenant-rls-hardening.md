@@ -185,7 +185,7 @@ Run:
 cd apps/backend && grep -rE "CREATE POLICY|tenant_isolation" prisma/migrations/*/migration.sql | grep -v "saas_02h" | grep -v "saas01_rls_scaffolding"
 ```
 
-Expected output: every `CREATE POLICY tenant_isolation*` statement across 02a, 02b, 02c, 02d, 02e, 02f, 02g, 02g-sms. Capture the exact policy names + table names — they become the DROP list in Step 2. (The 02h migration only adds the `carekit_rls_probe` role; it creates no policies.)
+Expected output: every `CREATE POLICY tenant_isolation*` statement across 02a, 02b, 02c, 02d, 02e, 02f, 02g, 02g-sms. Capture the exact policy names + table names — they become the DROP list in Step 2. (The 02h migration only adds the `deqah_rls_probe` role; it creates no policies.)
 
 If the count of distinct (table, policy) pairs is not 52, **stop** and reconcile against `SCOPED_MODELS` in `apps/backend/src/infrastructure/database/prisma.service.ts:22-92` before continuing.
 
@@ -287,7 +287,7 @@ Expected: migration `20260425120000_saas_rls_hardening` reports applied; no erro
 
 Run:
 ```bash
-docker exec -i carekit-postgres psql -U carekit -d carekit -c \
+docker exec -i deqah-postgres psql -U deqah -d deqah -c \
   "SELECT tablename, policyname, qual, with_check FROM pg_policies WHERE policyname LIKE 'tenant_isolation%' ORDER BY tablename, policyname;"
 ```
 Expected: every row has identical `qual` and `with_check` columns of the form `(("organizationId")::uuid = app_current_org_id()) OR (app_current_org_id() IS NULL)`. If any row has `with_check = NULL`, the migration missed that table — fix and re-run.
@@ -460,5 +460,5 @@ EOF
 
 ## Out of Scope (follow-up plan)
 
-- Replacing the `OR app_current_org_id() IS NULL` bypass clause with a dedicated `carekit_super_admin` Postgres role that carries `BYPASSRLS`. Today, any code path that runs outside `cls.run()` + `RlsHelper.applyInTransaction()` sees every tenant's rows; the only mitigation is the app-level extension. This is a separate design decision (which super-admin paths actually need to see across tenants? do they all go through `$allTenants`?) and deserves its own brainstorming pass before code lands.
+- Replacing the `OR app_current_org_id() IS NULL` bypass clause with a dedicated `deqah_super_admin` Postgres role that carries `BYPASSRLS`. Today, any code path that runs outside `cls.run()` + `RlsHelper.applyInTransaction()` sees every tenant's rows; the only mitigation is the app-level extension. This is a separate design decision (which super-admin paths actually need to see across tenants? do they all go through `$allTenants`?) and deserves its own brainstorming pass before code lands.
 - Adding ESLint rules to forbid `$allTenants` outside `apps/backend/src/modules/platform/admin/` and `apps/backend/src/cron/`. Worth doing once the super-admin path is locked in.

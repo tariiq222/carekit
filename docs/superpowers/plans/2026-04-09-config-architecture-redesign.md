@@ -224,7 +224,7 @@ Replace the `WhiteLabelConfig` model in `config.prisma` with:
 ```prisma
 model WhiteLabelConfig {
   id             String   @id @default(uuid())
-  systemName     String   @default("CareKit Clinic") @map("system_name")
+  systemName     String   @default("Deqah Clinic") @map("system_name")
   systemNameAr   String   @default("عيادة كيركت") @map("system_name_ar")
   logoUrl        String?  @map("logo_url")
   faviconUrl     String?  @map("favicon_url")
@@ -280,11 +280,11 @@ Remove the `WhiteLabelEntry` interface and `WHITE_LABEL_DEFAULTS` array. Replace
 // backend/prisma/seed.data.ts — replace lines 185-264
 
 // ──────────────────────────────────────────────
-// WhiteLabel Config Defaults (branding — CareKit controls)
+// WhiteLabel Config Defaults (branding — Deqah controls)
 // ──────────────────────────────────────────────
 
 export const WHITELABEL_DEFAULTS = {
-  systemName: 'CareKit Clinic',
+  systemName: 'Deqah Clinic',
   systemNameAr: 'عيادة كيركت',
   logoUrl: null,
   faviconUrl: null,
@@ -296,7 +296,7 @@ export const WHITELABEL_DEFAULTS = {
 };
 
 // ──────────────────────────────────────────────
-// License Config Defaults (feature availability — CareKit controls)
+// License Config Defaults (feature availability — Deqah controls)
 // ──────────────────────────────────────────────
 
 export const LICENSE_DEFAULTS = {
@@ -328,7 +328,7 @@ export const CLINIC_SETTINGS_DEFAULTS = {
   clinicCity: 'الرياض',
   postalCode: null,
   contactPhone: '+966500000000',
-  contactEmail: 'info@carekit.com',
+  contactEmail: 'info@deqah.com',
   address: null,
   socialMedia: {},
   aboutAr: null,
@@ -1227,7 +1227,7 @@ export class WhitelabelService {
     const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
 
     if (!current.clinicCanEdit) {
-      throw new ForbiddenException('Whitelabel config is locked. Contact CareKit support.');
+      throw new ForbiddenException('Whitelabel config is locked. Contact Deqah support.');
     }
 
     const updated = await this.prisma.whiteLabelConfig.update({
@@ -1240,7 +1240,7 @@ export class WhitelabelService {
 
   /**
    * Admin update — bypasses clinicCanEdit check.
-   * Used during initial setup / CareKit team deployment.
+   * Used during initial setup / Deqah team deployment.
    */
   async adminUpdate(dto: UpdateWhitelabelDto): Promise<WhiteLabelConfig> {
     const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
@@ -1395,7 +1395,7 @@ export class FeatureFlagsService {
       const licensed = await this.licenseService.isFeatureLicensed(key);
       if (!licensed) {
         throw new ForbiddenException(
-          `Feature '${key}' is not available in your license. Contact CareKit support.`,
+          `Feature '${key}' is not available in your license. Contact Deqah support.`,
         );
       }
     }
@@ -1667,8 +1667,8 @@ private async getLayoutConfig(): Promise<EmailLayoutConfig> {
     this.organizationSettingsService.get(),
   ]);
   return {
-    clinicName: branding.systemName || 'CareKit',
-    clinicNameAr: branding.systemNameAr || branding.systemName || 'CareKit',
+    clinicName: branding.systemName || 'Deqah',
+    clinicNameAr: branding.systemNameAr || branding.systemName || 'Deqah',
     logoUrl: branding.logoUrl || '',
     primaryColor: branding.primaryColor || '#2563EB',
     showLogo: settings.emailHeaderShowLogo,
@@ -1828,7 +1828,7 @@ async function migrate(): Promise<void> {
   // 1. WhiteLabelConfig
   await prisma.whiteLabelConfig.create({
     data: {
-      systemName: get('system_name') ?? 'CareKit Clinic',
+      systemName: get('system_name') ?? 'Deqah Clinic',
       systemNameAr: get('system_name_ar') ?? 'عيادة كيركت',
       logoUrl: get('logo'),
       faviconUrl: null,

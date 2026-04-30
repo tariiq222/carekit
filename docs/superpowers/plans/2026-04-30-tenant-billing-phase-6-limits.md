@@ -6,7 +6,7 @@
 
 **Architecture:** Keep enforcement in `PlanLimitsGuard` and keep employee login unaffected because the guard only sits on create endpoints. Count only active employees so deactivation opens a slot. Surface limits from existing subscription/usage data to dashboard banners and dialogs; backend warning cron records tenant notifications once when a threshold is crossed.
 
-**Tech Stack:** NestJS 11, Prisma 7, Jest, Next.js 15, React Query, Vitest, CareKit UI, dashboard i18n.
+**Tech Stack:** NestJS 11, Prisma 7, Jest, Next.js 15, React Query, Vitest, Deqah UI, dashboard i18n.
 
 ---
 
@@ -133,7 +133,7 @@ Do not touch Phase 4 proration or plan-change handlers.
 - Modify: `apps/backend/openapi.json` only if controller DTO metadata changes affects snapshot.
 
 - [ ] If OpenAPI snapshot changed, refresh from this worktree:
-  - `DOTENV_CONFIG_PATH=/Users/tariq/code/carekit/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
+  - `DOTENV_CONFIG_PATH=/Users/tariq/code/deqah/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
 - [ ] Run backend billing tests:
   - `cd apps/backend && npx jest --silent src/modules/platform/billing/enforce-limits.guard.spec.ts src/modules/platform/billing/send-limit-warning/send-limit-warning.cron.spec.ts --runInBand`
 - [ ] Run full backend Jest:

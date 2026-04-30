@@ -1,6 +1,6 @@
 # Admin Tenant Management Baseline - 2026-04-29
 
-Worktree: `/Users/tariq/code/carekit/.worktrees/admin-tenant-management-remediation`
+Worktree: `/Users/tariq/code/deqah/.worktrees/admin-tenant-management-remediation`
 Branch: `feat/admin-tenant-management-remediation`
 
 The main workspace was dirty before this worktree was created. Those existing changes were left untouched.

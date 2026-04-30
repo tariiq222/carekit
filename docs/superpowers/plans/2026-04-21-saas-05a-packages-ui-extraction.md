@@ -4,7 +4,7 @@
 
 **Goal:** Extract 35 shadcn/ui primitives from `apps/dashboard/components/ui/` into a new `packages/ui/` workspace consumed by dashboard today and by `apps/admin/` + `apps/landing/` (future plans). Pure move + re-export — zero behavior change. Unblocks Plans 05b, 06, 07, 08.
 
-**Architecture:** New monorepo workspace `@carekit/ui`. Peer-dependent on `react`, `react-dom`, `tailwindcss`, `lucide-react`, `class-variance-authority`, `@radix-ui/*`. Depends on `@carekit/shared` for tokens. Uses `"type": "module"` + TypeScript source exports (matching `@carekit/api-client` convention). No bundling — consumers transpile source directly.
+**Architecture:** New monorepo workspace `@deqah/ui`. Peer-dependent on `react`, `react-dom`, `tailwindcss`, `lucide-react`, `class-variance-authority`, `@radix-ui/*`. Depends on `@deqah/shared` for tokens. Uses `"type": "module"` + TypeScript source exports (matching `@deqah/api-client` convention). No bundling — consumers transpile source directly.
 
 **Tech Stack:** TypeScript 5.4, React 19, Tailwind 4, shadcn/ui, vitest (for component tests), Turborepo.
 
@@ -25,7 +25,7 @@ All `.tsx` files currently under `apps/dashboard/components/ui/`:
 ### Explicitly deferred
 
 - Feature-specific components in `apps/dashboard/components/features/*` — stay in dashboard (not reusable across apps).
-- Theme tokens — already live in `@carekit/shared/tokens`. Not touched here.
+- Theme tokens — already live in `@deqah/shared/tokens`. Not touched here.
 - Type-level changes — none. Move only.
 
 ### Invariants
@@ -43,9 +43,9 @@ All `.tsx` files currently under `apps/dashboard/components/ui/`:
 
 | File | Responsibility |
 |---|---|
-| `packages/ui/package.json` | Workspace manifest (`@carekit/ui`), peer deps, exports map |
+| `packages/ui/package.json` | Workspace manifest (`@deqah/ui`), peer deps, exports map |
 | `packages/ui/tsconfig.json` | Extends root tsconfig; emits no output (source-only) |
-| `packages/ui/vitest.config.ts` | Matches `@carekit/api-client` pattern for tests |
+| `packages/ui/vitest.config.ts` | Matches `@deqah/api-client` pattern for tests |
 | `packages/ui/src/lib/cn.ts` | `cn()` helper (clsx + tailwind-merge) — moved from dashboard |
 | `packages/ui/src/index.ts` | Barrel re-export of every component |
 | `packages/ui/src/primitives/*.tsx` | The 35 components (grouped by category, paths below) |
@@ -75,12 +75,12 @@ packages/ui/src/
 ### Modified files
 
 - `package.json` (root) — add `packages/ui` to `workspaces`.
-- `apps/dashboard/package.json` — add `@carekit/ui`: `"*"` dep.
-- `apps/dashboard/components.json` (shadcn config) — update `aliases.ui` to point at `@carekit/ui`.
-- `apps/dashboard/tsconfig.json` — path alias `@carekit/ui`.
+- `apps/dashboard/package.json` — add `@deqah/ui`: `"*"` dep.
+- `apps/dashboard/components.json` (shadcn config) — update `aliases.ui` to point at `@deqah/ui`.
+- `apps/dashboard/tsconfig.json` — path alias `@deqah/ui`.
 - `apps/dashboard/tailwind.config.ts` (or `globals.css`) — add `./packages/ui/src/**/*.{ts,tsx}` to content scan.
 - `apps/dashboard/components/ui/index.ts` (if exists) — delete or turn into re-export shim.
-- Every file in `apps/dashboard` that imports from `@/components/ui/*` → import from `@carekit/ui` instead.
+- Every file in `apps/dashboard` that imports from `@/components/ui/*` → import from `@deqah/ui` instead.
 
 ---
 
@@ -96,7 +96,7 @@ packages/ui/src/
 
 ```json
 {
-  "name": "@carekit/ui",
+  "name": "@deqah/ui",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -111,7 +111,7 @@ packages/ui/src/
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@carekit/shared": "*",
+    "@deqah/shared": "*",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.4"
   },
@@ -167,7 +167,7 @@ export default defineConfig({
 Create `packages/ui/src/index.ts`:
 
 ```ts
-// @carekit/ui — shadcn/ui primitives extracted from apps/dashboard.
+// @deqah/ui — shadcn/ui primitives extracted from apps/dashboard.
 // Components are re-exported from ./primitives. Do not add feature-specific
 // components here — those live in each app.
 export {};
@@ -194,13 +194,13 @@ In root `package.json`, extend `workspaces`:
 npm install
 ```
 
-Expected: `packages/ui/node_modules/` created, `@carekit/ui` resolvable from other workspaces.
+Expected: `packages/ui/node_modules/` created, `@deqah/ui` resolvable from other workspaces.
 
 - [ ] **Step 1.7: Commit**
 
 ```bash
 git add packages/ui package.json package-lock.json
-git commit -m "feat(saas-05a): scaffold @carekit/ui workspace"
+git commit -m "feat(saas-05a): scaffold @deqah/ui workspace"
 ```
 
 ---
@@ -254,7 +254,7 @@ describe('cn', () => {
 - [ ] **Step 2.3: Run**
 
 ```bash
-npm run test --workspace=@carekit/ui
+npm run test --workspace=@deqah/ui
 ```
 
 Expected: 3 green.
@@ -263,7 +263,7 @@ Expected: 3 green.
 
 ```bash
 git add packages/ui/src/lib
-git commit -m "feat(saas-05a): cn() helper moved to @carekit/ui/lib"
+git commit -m "feat(saas-05a): cn() helper moved to @deqah/ui/lib"
 ```
 
 ---
@@ -287,7 +287,7 @@ done
 For each moved file, find and replace:
 - `@/lib/utils` → `../lib/cn` (or `../../lib/cn` depending on depth)
 - `@/components/ui/*` → `./` (same directory now)
-- Any `@carekit/shared` imports — unchanged (already absolute package)
+- Any `@deqah/shared` imports — unchanged (already absolute package)
 
 Use a scripted sed (verify diff before running):
 
@@ -331,12 +331,12 @@ cd apps/dashboard/components/ui && rm button.tsx card.tsx dialog.tsx alert-dialo
 - [ ] **Step 3.5: Rewrite dashboard imports**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 grep -rln "@/components/ui/\(button\|card\|dialog\|alert-dialog\|badge\|label\|separator\|skeleton\)" apps/dashboard \
-  | xargs sed -i '' -E 's#@/components/ui/(button|card|dialog|alert-dialog|badge|label|separator|skeleton)#@carekit/ui#g'
+  | xargs sed -i '' -E 's#@/components/ui/(button|card|dialog|alert-dialog|badge|label|separator|skeleton)#@deqah/ui#g'
 ```
 
-This collapses `import { Button } from '@/components/ui/button'` → `import { Button } from '@carekit/ui'`.
+This collapses `import { Button } from '@/components/ui/button'` → `import { Button } from '@deqah/ui'`.
 
 - [ ] **Step 3.6: Typecheck + build**
 
@@ -350,7 +350,7 @@ Expected: no errors. If Tailwind complains about missing classes at runtime, Tas
 
 ```bash
 git add packages/ui apps/dashboard
-git commit -m "feat(saas-05a): move 8 core primitives (button/card/dialog/…) to @carekit/ui"
+git commit -m "feat(saas-05a): move 8 core primitives (button/card/dialog/…) to @deqah/ui"
 ```
 
 ---
@@ -386,13 +386,13 @@ Run:
 grep -n "@/hooks\|@/lib/api\|@/components/features" packages/ui/src/primitives/*.tsx
 ```
 
-If any match: **STOP**. Those components are not pure UI; they're feature components. Revert their move and keep them in `apps/dashboard/components/ui/` (rename the folder to `apps/dashboard/components/dashboard-ui/` if needed to avoid confusion). Do NOT inject API hooks into `@carekit/ui`.
+If any match: **STOP**. Those components are not pure UI; they're feature components. Revert their move and keep them in `apps/dashboard/components/ui/` (rename the folder to `apps/dashboard/components/dashboard-ui/` if needed to avoid confusion). Do NOT inject API hooks into `@deqah/ui`.
 
 Likely offenders (audit before moving):
 - `avatar-upload.tsx` — may depend on an upload hook
 - `nationality-select.tsx` — may depend on API for country lookup
 
-**Resolution pattern:** split. Keep the presentational part in `@carekit/ui` (`<AvatarUploadButton onSelect={...}>`), keep the data-fetching/upload part in `apps/dashboard`. Document this in `packages/ui/CLAUDE.md` (Task 10).
+**Resolution pattern:** split. Keep the presentational part in `@deqah/ui` (`<AvatarUploadButton onSelect={...}>`), keep the data-fetching/upload part in `apps/dashboard`. Document this in `packages/ui/CLAUDE.md` (Task 10).
 
 - [ ] **Step 4.3: Add to barrel**
 
@@ -422,7 +422,7 @@ Same pattern as Task 3.5 with the 10 component names.
 ```bash
 npm run typecheck --workspace=dashboard
 git add packages/ui apps/dashboard
-git commit -m "feat(saas-05a): move 10 form primitives to @carekit/ui"
+git commit -m "feat(saas-05a): move 10 form primitives to @deqah/ui"
 ```
 
 ---
@@ -460,7 +460,7 @@ If any visual regression: stop, diff CSS class output, fix the relevant import o
 
 ```bash
 git add packages/ui apps/dashboard
-git commit -m "feat(saas-05a): move 12 layout/navigation/feedback primitives to @carekit/ui"
+git commit -m "feat(saas-05a): move 12 layout/navigation/feedback primitives to @deqah/ui"
 ```
 
 ---
@@ -479,13 +479,13 @@ In `apps/dashboard/components.json`, change:
 "aliases": {
   "components": "@/components",
   "utils": "@/lib/utils",
-  "ui": "@carekit/ui"
+  "ui": "@deqah/ui"
 }
 ```
 
 This makes future `npx shadcn add <component>` place files in `packages/ui/src/primitives` — adjust the `aliases.ui` path if shadcn requires a relative path (consult shadcn docs for monorepo setups).
 
-Alternative if shadcn can't write into a package: set `"ui": "@/components/ui-app"` (new folder for dashboard-only UI) and accept that new shadcn adds go to `ui-app`, not `@carekit/ui`. Document choice in CLAUDE.md (Task 10).
+Alternative if shadcn can't write into a package: set `"ui": "@/components/ui-app"` (new folder for dashboard-only UI) and accept that new shadcn adds go to `ui-app`, not `@deqah/ui`. Document choice in CLAUDE.md (Task 10).
 
 - [ ] **Step 6.2: Update tsconfig path**
 
@@ -494,8 +494,8 @@ In `apps/dashboard/tsconfig.json`, ensure workspace packages resolve:
 ```json
 "paths": {
   "@/*": ["./*"],
-  "@carekit/ui": ["../../packages/ui/src/index.ts"],
-  "@carekit/ui/*": ["../../packages/ui/src/*"]
+  "@deqah/ui": ["../../packages/ui/src/index.ts"],
+  "@deqah/ui/*": ["../../packages/ui/src/*"]
 }
 ```
 
@@ -509,7 +509,7 @@ npm run typecheck --workspace=dashboard
 
 ```bash
 git add apps/dashboard/components.json apps/dashboard/tsconfig.json
-git commit -m "chore(saas-05a): update shadcn alias + tsconfig path for @carekit/ui"
+git commit -m "chore(saas-05a): update shadcn alias + tsconfig path for @deqah/ui"
 ```
 
 ---
@@ -556,7 +556,7 @@ If styles are missing, Tailwind didn't see the class strings in `packages/ui/src
 
 ```bash
 git add apps/dashboard/tailwind.config.* apps/dashboard/app/globals.css
-git commit -m "chore(saas-05a): extend Tailwind content scan to @carekit/ui"
+git commit -m "chore(saas-05a): extend Tailwind content scan to @deqah/ui"
 ```
 
 ---
@@ -565,7 +565,7 @@ git commit -m "chore(saas-05a): extend Tailwind content scan to @carekit/ui"
 
 **Files:**
 - Delete: `apps/dashboard/components/ui/` (should be empty now) OR any remaining non-primitive files
-- Modify: `apps/dashboard/lib/utils.ts` — remove `cn()` (moved to `@carekit/ui/lib/cn`)
+- Modify: `apps/dashboard/lib/utils.ts` — remove `cn()` (moved to `@deqah/ui/lib/cn`)
 
 - [ ] **Step 8.1: Verify `components/ui/` is empty (or only has non-primitive files)**
 
@@ -584,17 +584,17 @@ rmdir apps/dashboard/components/ui
 Edit `apps/dashboard/lib/utils.ts`. Delete the `cn` export (and its imports `clsx`, `tailwind-merge` if unused elsewhere). Replace with:
 
 ```ts
-// cn() moved to @carekit/ui/lib/cn as of SaaS-05a.
+// cn() moved to @deqah/ui/lib/cn as of SaaS-05a.
 // Re-export for backward compatibility inside this workspace:
-export { cn } from '@carekit/ui/lib/cn';
+export { cn } from '@deqah/ui/lib/cn';
 ```
 
-This lets existing dashboard files that imported `cn` from `@/lib/utils` keep working. Delete the re-export only after every dashboard file has been migrated to import directly from `@carekit/ui`.
+This lets existing dashboard files that imported `cn` from `@/lib/utils` keep working. Delete the re-export only after every dashboard file has been migrated to import directly from `@deqah/ui`.
 
 - [ ] **Step 8.3: Full build**
 
 ```bash
-cd /Users/tariq/code/carekit && npm run build
+cd /Users/tariq/code/deqah && npm run build
 ```
 
 Expected: all workspaces build successfully.
@@ -603,7 +603,7 @@ Expected: all workspaces build successfully.
 
 ```bash
 git add apps/dashboard
-git commit -m "chore(saas-05a): remove stale ui/ folder + re-export cn from @carekit/ui"
+git commit -m "chore(saas-05a): remove stale ui/ folder + re-export cn from @deqah/ui"
 ```
 
 ---
@@ -639,7 +639,7 @@ Delete a dummy row. Confirm: alert-dialog opens, confirm button works, sonner to
 - [ ] **Step 9.4: Run automated tests**
 
 ```bash
-cd /Users/tariq/code/carekit && npm run test
+cd /Users/tariq/code/deqah && npm run test
 ```
 
 Expected: all workspace tests pass (no snapshot regressions, no broken imports).
@@ -663,7 +663,7 @@ Skip this commit if no fixes were needed.
 - [ ] **Step 10.1: Write `packages/ui/CLAUDE.md`**
 
 ```markdown
-# @carekit/ui — Shared UI Primitives
+# @deqah/ui — Shared UI Primitives
 
 This package holds **presentation-only** UI primitives (shadcn/ui derivatives) reused across `apps/dashboard`, `apps/admin`, and `apps/landing`.
 
@@ -672,7 +672,7 @@ This package holds **presentation-only** UI primitives (shadcn/ui derivatives) r
 - Stateless visual components: Button, Card, Dialog, Input, etc.
 - Radix-wrapper primitives (DropdownMenu, Popover, Sheet).
 - Utility helpers: `cn()` in `lib/cn`.
-- `useTerminology()` will NOT live here — it's in `@carekit/shared`.
+- `useTerminology()` will NOT live here — it's in `@deqah/shared`.
 
 ## What does NOT belong here
 
@@ -697,22 +697,22 @@ npx shadcn add <component>
 # and rewrite imports per Task 3.2 pattern.
 ```
 
-Long-term: evaluate a shadcn monorepo config to write directly into `@carekit/ui`.
+Long-term: evaluate a shadcn monorepo config to write directly into `@deqah/ui`.
 ```
 
 - [ ] **Step 10.2: Open PR**
 
 ```bash
 git push -u origin feat/saas-05a-packages-ui-extraction
-gh pr create --title "feat(saas-05a): extract shared UI primitives into @carekit/ui" --body "$(cat <<'EOF'
+gh pr create --title "feat(saas-05a): extract shared UI primitives into @deqah/ui" --body "$(cat <<'EOF'
 ## Summary
 Unblocks Plans 05b (admin app), 06 (dashboard refactor), 07 (landing), 08 (website refactor) by extracting 35 shadcn primitives into a shared workspace package.
 
 ## What changed
-- New `packages/ui/` workspace with `@carekit/ui` package.
+- New `packages/ui/` workspace with `@deqah/ui` package.
 - Moved 35 primitives from `apps/dashboard/components/ui/` → `packages/ui/src/primitives/`.
-- `cn()` helper moved to `@carekit/ui/lib/cn`.
-- Dashboard imports rewritten to `@carekit/ui`.
+- `cn()` helper moved to `@deqah/ui/lib/cn`.
+- Dashboard imports rewritten to `@deqah/ui`.
 - Tailwind content scan extended to cover `packages/ui/src/**`.
 - Added `packages/ui/CLAUDE.md` with "what belongs / what doesn't" guide.
 
@@ -726,7 +726,7 @@ Zero functional change. Pure refactor. Dashboard should look and behave identica
 - [x] Destructive flow (alert-dialog + confirm + toast) works end-to-end.
 
 ## Next
-- Plan 05b can now scaffold `apps/admin/` consuming `@carekit/ui`.
+- Plan 05b can now scaffold `apps/admin/` consuming `@deqah/ui`.
 - Plan 06 dashboard refactor leverages the shared primitives.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -742,6 +742,6 @@ EOF
 
 - [x] Spec coverage: all 35 primitives moved or explicitly deferred with rationale.
 - [x] No placeholders: every sed command + every barrel entry + every config change is explicit.
-- [x] Type consistency: `@carekit/ui` package name, `cn` import path, primitive filenames all consistent across tasks.
+- [x] Type consistency: `@deqah/ui` package name, `cn` import path, primitive filenames all consistent across tasks.
 - [x] Reversible: every commit is a small move or config change; nothing destructive.
 - [x] Dependency: depends only on already-merged code (no forward references to SaaS-02b+).

@@ -1,6 +1,6 @@
-# CareKit — Multi-Tenant SaaS Clinic Platform
+# Deqah — Multi-Tenant SaaS Clinic Platform
 
-CareKit is a **multi-tenant SaaS** for clinics. One deployment serves many clinics (organizations), each with its own branding, vertical configuration, billing plan, and data — isolated by `organizationId` scoping and Postgres RLS. A super-admin control plane (`apps/admin`) operates the platform; each tenant uses the per-tenant clinic dashboard (`apps/dashboard`) and the client/employee mobile app (`apps/mobile`).
+Deqah is a **multi-tenant SaaS** for clinics. One deployment serves many clinics (organizations), each with its own branding, vertical configuration, billing plan, and data — isolated by `organizationId` scoping and Postgres RLS. A super-admin control plane (`apps/admin`) operates the platform; each tenant uses the per-tenant clinic dashboard (`apps/dashboard`) and the client/employee mobile app (`apps/mobile`).
 
 ## Orchestration
 
@@ -19,9 +19,9 @@ For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 - **Public Website (`apps/website`)**: Next.js 15 — marketing/info site
 - **Mobile**: React Native 0.83, Expo SDK 55, Expo Router, Redux Toolkit (auth slice only) + TanStack Query — **single-tenant per build** (see "Mobile Tenant Strategy" below)
 - **Shared packages**:
-  - `@carekit/api-client` — typed fetch client
-  - `@carekit/shared` — types, enums, i18n tokens, vertical seeds
-  - `@carekit/ui` — 33 design-system primitives + 2 hooks (extracted in Plan 05a)
+  - `@deqah/api-client` — typed fetch client
+  - `@deqah/shared` — types, enums, i18n tokens, vertical seeds
+  - `@deqah/ui` — 33 design-system primitives + 2 hooks (extracted in Plan 05a)
 - **Infra**: Docker Compose, Nginx, Sentry, Prometheus
 
 ## Multi-Tenancy
@@ -51,7 +51,7 @@ For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 - **Commits**: one system only, ≤10 files or ≤500 lines, conventional format
 - **Tests must pass** before any commit — fix first, ship after
 - **No audit loops** — code correct on first delivery
-- **Ports 5000–5999** reserved exclusively for CareKit tools/environments
+- **Ports 5000–5999** reserved exclusively for Deqah tools/environments
 - **All DB changes via Prisma migrations** — never `prisma db push`, never manual SQL
 - **Tenant-isolation tests required** for any new scoped model
 - **i18n parity (AR/EN)** required for any user-facing string in dashboard/mobile/admin/website
@@ -96,8 +96,8 @@ npm run dev               # Expo start
 npm run ios / android
 npm run test              # Jest + jest-expo
 
-# Kiwi TCMS — single source of truth (Product = "CareKit" ONLY)
-# URL https://localhost:6443 · admin / CareKit_2026 · never create a second product
+# Kiwi TCMS — single source of truth (Product = "Deqah" ONLY)
+# URL https://localhost:6443 · admin / Deqah_2026 · never create a second product
 npm run test:kiwi           # unit → Kiwi
 npm run test:kiwi:e2e       # E2E → Kiwi
 npm run test:kiwi:all
@@ -111,7 +111,7 @@ cd apps/backend && npx jest -t "describes partial name"
 ## Structure
 
 ```
-carekit/
+deqah/
 ├── apps/
 │   ├── backend/          # NestJS API — all business logic
 │   │   ├── prisma/schema/    # 12 split schemas (one per cluster)
@@ -123,9 +123,9 @@ carekit/
 │   ├── website/          # Public marketing/info site (Next.js 15)
 │   └── mobile/           # Expo — Client + Employee + Auth flows
 ├── packages/
-│   ├── api-client/       # @carekit/api-client
-│   ├── shared/           # @carekit/shared (types, enums, vertical seeds)
-│   └── ui/               # @carekit/ui (33 primitives + 2 hooks)
+│   ├── api-client/       # @deqah/api-client
+│   ├── shared/           # @deqah/shared (types, enums, vertical seeds)
+│   └── ui/               # @deqah/ui (33 primitives + 2 hooks)
 ├── docker/               # docker-compose.yml + Nginx
 ├── data/kiwi/            # Manual-QA plan JSONs synced to Kiwi
 └── docs/
@@ -179,11 +179,11 @@ The super-admin app operates the platform. Routes under `app/(admin)/`:
 
 ## Kiwi TCMS — single source of truth
 
-All automated + manual QA results land in the local Kiwi TCMS at `https://localhost:6443` (admin / `CareKit_2026`).
+All automated + manual QA results land in the local Kiwi TCMS at `https://localhost:6443` (admin / `Deqah_2026`).
 
 **Hard rules:**
 
-- **One Product only: `CareKit`** (id=1). Never create "CareKit Dashboard", "CareKit Mobile", etc. Domains use **Category** (Bookings, Clients, Employees, …) and **Plan type** (Unit, E2E, Manual QA), never a new Product.
+- **One Product only: `Deqah`** (id=1). Never create "Deqah Dashboard", "Deqah Mobile", etc. Domains use **Category** (Bookings, Clients, Employees, …) and **Plan type** (Unit, E2E, Manual QA), never a new Product.
 - **Version `main`** is canonical. Reuse it for every run unless tagging a release.
 - **Builds name the session**: `local-dev`, `manual-qa-2026-04-17`, `bookings-qa-fixes` — created with `Build.create` on `main`.
 - **One TestPlan per (domain, type)**. Reuse on re-runs.
@@ -222,7 +222,7 @@ DB inspection: `docker exec kiwi_web bash -c 'cd /Kiwi && python manage.py shell
 
 **Reference**: Apple Health / iOS — clean hierarchy, generous whitespace, restrained glassmorphism, signal surfaced just-in-time.
 
-**CareKit's own brand colors** (used for the marketing site + admin): Royal Blue `#354FD8` + Lime Green `#82CC17`. **Per-tenant dashboard/mobile must use semantic tokens only** (`--primary`, `--accent`, …) — each tenant's `BrandingConfig` overrides them at runtime via `PublicBranding`.
+**Deqah's own brand colors** (used for the marketing site + admin): Royal Blue `#354FD8` + Lime Green `#82CC17`. **Per-tenant dashboard/mobile must use semantic tokens only** (`--primary`, `--accent`, …) — each tenant's `BrandingConfig` overrides them at runtime via `PublicBranding`.
 
 **Visual signature**: frosted glass surfaces, animated gradient blobs, IBM Plex Sans Arabic, 8px grid, iOS-grade radii, whisper-soft shadows.
 
@@ -262,4 +262,4 @@ Dialogs / Sheets (at bottom)
 - Dates → `toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })`
 - Status badges → `bg-success/10 text-success border-success/30` (active) / `bg-muted text-muted-foreground` (inactive)
 
-UI primitives come from `@carekit/ui` (do not modify in-place); features compose them in `apps/<app>/components/features/`.
+UI primitives come from `@deqah/ui` (do not modify in-place); features compose them in `apps/<app>/components/features/`.

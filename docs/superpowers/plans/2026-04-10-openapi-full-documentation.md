@@ -43,8 +43,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle('CareKit API')
-    .setDescription('CareKit Clinic Management Platform — White-label API')
+    .setTitle('Deqah API')
+    .setDescription('Deqah Clinic Management Platform — White-label API')
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('Auth', 'Authentication and session management')
@@ -134,8 +134,8 @@ Replace lines 99–109 in `backend/src/main.ts`:
 // Before (lines 99-109):
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('CareKit API')
-      .setDescription('CareKit Clinic Management Platform API')
+      .setTitle('Deqah API')
+      .setDescription('Deqah Clinic Management Platform API')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

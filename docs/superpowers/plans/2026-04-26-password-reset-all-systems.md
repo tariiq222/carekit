@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add "forgot password" flows to every CareKit surface — mobile (client + employee), dashboard (clinic staff), and admin (super-admin) — backed by tenant-aware backend endpoints.
+**Goal:** Add "forgot password" flows to every Deqah surface — mobile (client + employee), dashboard (clinic staff), and admin (super-admin) — backed by tenant-aware backend endpoints.
 
 **Architecture:** Two distinct flows because the two identity entities differ:
 - **Client** (`Client` model — phone/email + `organizationId`): already has `POST /public/auth/reset-password` using OTP-session-token. Only mobile UI is missing. Phase A wires that UI.
@@ -582,13 +582,13 @@ await prisma.emailTemplate.upsert({
   create: {
     organizationId,
     slug: 'user_password_reset',
-    subjectAr: 'إعادة تعيين كلمة المرور — CareKit',
-    subjectEn: 'Reset your CareKit password',
+    subjectAr: 'إعادة تعيين كلمة المرور — Deqah',
+    subjectEn: 'Reset your Deqah password',
     htmlBody: `
       <div style="font-family: 'IBM Plex Sans Arabic', system-ui; padding: 24px; max-width: 560px;">
         <h2 style="color: #354FD8;">{{subject}}</h2>
         <p>Hi {{userName}},</p>
-        <p>We received a request to reset your CareKit password. Click the button below to set a new one. This link expires in 30 minutes.</p>
+        <p>We received a request to reset your Deqah password. Click the button below to set a new one. This link expires in 30 minutes.</p>
         <p style="margin: 24px 0;">
           <a href="{{resetUrl}}" style="background:#354FD8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">
             Reset password
@@ -655,7 +655,7 @@ describe('RequestPasswordResetHandler', () => {
       passwordResetToken: { create: jest.fn().mockResolvedValue({}), updateMany: jest.fn().mockResolvedValue({}) },
     };
     sendEmail = { execute: jest.fn().mockResolvedValue(undefined) };
-    config = { get: jest.fn().mockReturnValue('https://app.carekit.test') };
+    config = { get: jest.fn().mockReturnValue('https://app.deqah.test') };
     const moduleRef = await Test.createTestingModule({
       providers: [
         RequestPasswordResetHandler,
@@ -685,7 +685,7 @@ describe('RequestPasswordResetHandler', () => {
     expect(sendEmail.execute).toHaveBeenCalledWith(expect.objectContaining({
       to: 'a@b.com',
       templateSlug: 'user_password_reset',
-      vars: expect.objectContaining({ userName: 'Alice', resetUrl: expect.stringContaining('https://app.carekit.test/reset-password?token=') }),
+      vars: expect.objectContaining({ userName: 'Alice', resetUrl: expect.stringContaining('https://app.deqah.test/reset-password?token=') }),
     }));
   });
 
@@ -776,7 +776,7 @@ export class RequestPasswordResetHandler {
       vars: {
         userName: user.name,
         resetUrl,
-        subject: 'Reset your CareKit password',
+        subject: 'Reset your Deqah password',
       },
     });
 
@@ -1263,7 +1263,7 @@ forgotPassword: {
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Button, Input, Label, Card } from '@carekit/ui';
+import { Button, Input, Label, Card } from '@deqah/ui';
 import { useTranslations } from 'next-intl';
 import { requestStaffPasswordReset } from '@/lib/api/auth';
 
@@ -1397,7 +1397,7 @@ resetPassword: {
 
 import { useState, FormEvent } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Button, Input, Label, Card } from '@carekit/ui';
+import { Button, Input, Label, Card } from '@deqah/ui';
 import { useTranslations } from 'next-intl';
 import { performStaffPasswordReset } from '@/lib/api/auth';
 

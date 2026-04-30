@@ -103,7 +103,7 @@ git commit -m "chore(dashboard): add @axe-core/playwright for a11y tests"
 
 ```ts
 /**
- * CareKit Dashboard — RTL Layout E2E Tests
+ * Deqah Dashboard — RTL Layout E2E Tests
  *
  * Verifies that Arabic-first RTL layout is applied correctly across
  * protected pages, menus, date pickers, and phone inputs.
@@ -239,7 +239,7 @@ git commit -m "test(dashboard): add RTL layout e2e tests (A11Y-001..006)"
 
 ```ts
 /**
- * CareKit Dashboard — Keyboard Navigation E2E Tests
+ * Deqah Dashboard — Keyboard Navigation E2E Tests
  *
  * Verifies Tab order, Escape dismissal, Enter-to-submit, and arrow-key
  * navigation inside interactive widgets.
@@ -303,7 +303,7 @@ test.describe('@critical Accessibility — Keyboard Navigation', () => {
       // Use raw `page`, not adminPage, because this tests the login form itself.
       await page.goto('/');
       await page.waitForSelector('#email', { timeout: 12_000 });
-      await page.fill('#email', 'admin@carekit-test.com');
+      await page.fill('#email', 'admin@deqah-test.com');
       await page.fill('#password', 'Admin@1234');
       const urlBefore = page.url();
       await page.locator('#password').press('Enter');
@@ -364,7 +364,7 @@ git commit -m "test(dashboard): add keyboard nav e2e tests (A11Y-007..011)"
 
 ```ts
 /**
- * CareKit Dashboard — Contrast & Focus E2E Tests
+ * Deqah Dashboard — Contrast & Focus E2E Tests
  *
  * Runs axe-core WCAG 2.1 AA scans on representative pages and verifies
  * focus-visible styling on primary buttons. Known pre-existing violations
@@ -434,7 +434,7 @@ test.describe('@critical Accessibility — Contrast & Focus', () => {
       await adminPage.addInitScript(() => {
         try {
           localStorage.setItem('theme', 'dark');
-          localStorage.setItem('carekit-theme', 'dark');
+          localStorage.setItem('deqah-theme', 'dark');
         } catch {
           /* storage blocked — test will still run in whatever default theme */
         }

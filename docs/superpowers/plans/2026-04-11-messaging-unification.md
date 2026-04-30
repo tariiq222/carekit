@@ -1687,7 +1687,7 @@ import {
           },
         },
         defaults: {
-          from: config.get<string>('MAIL_FROM', '"CareKit" <noreply@carekit.app>'),
+          from: config.get<string>('MAIL_FROM', '"Deqah" <noreply@deqah.app>'),
         },
       }),
     }),

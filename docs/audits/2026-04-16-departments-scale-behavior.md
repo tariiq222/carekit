@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-16
 **Tester:** Claude (curl + Prisma)
-**Environment:** backend :5100 · DB `carekit_v2` · tenant-1 admin
+**Environment:** backend :5100 · DB `deqah_v2` · tenant-1 admin
 **Scope:** Pagination correctness + edge cases, default ordering, cascade delete semantics.
 
 **Setup:** Seeded 25 departments (`PAGINATION_SEED_قسم_01..25`, sortOrder 1..25, first 20 active) and 3 service categories attached to department #01. Cleaned up after the session.

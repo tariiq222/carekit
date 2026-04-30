@@ -12,7 +12,7 @@ cd apps/backend && npm run dev
 cd apps/dashboard && npm run dev
 ```
 
-**البيانات:** config branding موجود (CareKit defaults: Royal Blue + Lime Green).
+**البيانات:** config branding موجود (Deqah defaults: Royal Blue + Lime Green).
 
 **Permission check:** `branding:edit` مطلوب.
 
@@ -204,7 +204,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 - ⚠️ **WCAG calculation** — يجب أن يطابق المعايير الحقيقية
 - ⚠️ **Live preview** vs **on save** — UX expectation
 - ⚠️ **Cache invalidation** — بعد save، كل المستخدمين المفتوحين يجب يرون التغيير
-- ⚠️ **CareKit defaults لا تُعرض كـ universal** — كل deployment له ألوانه
+- ⚠️ **Deqah defaults لا تُعرض كـ universal** — كل deployment له ألوانه
 - ⚠️ **Semantic tokens** — لا hex hardcoded في الكود، كل شي via CSS vars
 - ⚠️ **fontUrl CORS** — tested with external fonts
 - ⚠️ **Permission edge:** owner-only أم branding:edit أيضاً لـ admin؟

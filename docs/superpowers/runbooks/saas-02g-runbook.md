@@ -31,16 +31,16 @@
 ## Preparation
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git fetch origin main
 git checkout -b feat/saas-02g-ai-media-ops-platform origin/main
 
 # Reset dev DB to latest main state
 cd apps/backend
 PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="[consent text]" \
-  DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev" \
+  DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev" \
   npx prisma migrate reset --force
-DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev" npm run seed
+DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev" npm run seed
 ```
 
 ---
@@ -305,11 +305,11 @@ CREATE POLICY "tenant_isolation" ON "SiteSetting"       USING ("organizationId" 
 ### Apply migration
 
 ```bash
-DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev" \
+DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev" \
   npx prisma migrate deploy
 
-TEST_DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 
 npx prisma generate
@@ -650,7 +650,7 @@ Record counts for memory file.
 
 ## Task 13 — Memory + index update
 
-**Create** `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_status.md`:
+**Create** `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_status.md`:
 
 ```markdown
 ---
@@ -680,8 +680,8 @@ type: project
 
 **Final commits:**
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_status.md \
-        /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md \
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_status.md \
+        /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md \
         docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas-02g): memory + index — AI/media/ops/platform cluster delivered"
 ```

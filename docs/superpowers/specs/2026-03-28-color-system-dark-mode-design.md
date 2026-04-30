@@ -73,13 +73,13 @@ injectLightVars(vars: CSSVarMap): void
   - Writes to document.documentElement.style (as before)
 
 injectDarkVars(vars: CSSVarMap): void
-  - Finds or creates <style id="carekit-dark-theme"> in document.head
+  - Finds or creates <style id="deqah-dark-theme"> in document.head
   - Writes: .dark { --primary: ...; --accent: ...; ... }
   - Replacing the element content on each call (no accumulation)
 
 clearVars(lightVars, darkVars): void
   - Removes light vars from documentElement.style
-  - Removes #carekit-dark-theme <style> element
+  - Removes #deqah-dark-theme <style> element
 ```
 
 All three call sites (mount fetch, preview, apply) updated to use both functions.

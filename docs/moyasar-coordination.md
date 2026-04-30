@@ -8,10 +8,10 @@
 
 ## Why this document exists
 
-As of Plan 02e CareKit now has **three distinct Moyasar flows** in active or planned use. Each flow has its own webhook URL, its own idempotency domain, and its own failure-recovery obligations. Without a single coordination document, details drift between plans:
+As of Plan 02e Deqah now has **three distinct Moyasar flows** in active or planned use. Each flow has its own webhook URL, its own idempotency domain, and its own failure-recovery obligations. Without a single coordination document, details drift between plans:
 
 - Plan **02e** booking-payment webhook (merged; owner-gated) — clinic charging its clients for bookings.
-- Plan **04** subscription webhook (planned; owner-gated at Task 1) — CareKit charging clinics for SaaS subscriptions. Moyasar has no native subscriptions, so we drive the cycle via a BullMQ cron and the webhook handles async status updates.
+- Plan **04** subscription webhook (planned; owner-gated at Task 1) — Deqah charging clinics for SaaS subscriptions. Moyasar has no native subscriptions, so we drive the cycle via a BullMQ cron and the webhook handles async status updates.
 - Plan **07** signup charge (planned; owner-gated) — first subscription charge collected during the 5-step signup wizard, BEFORE the Organization row is committed.
 
 Each flow reads and writes into the same Moyasar merchant account, uses the same HMAC signing scheme, and shares the Payment/Invoice/Subscription data model. The coordination risks are concrete: reusing a secret across flows would let one flow forge webhooks for another; mis-matching an idempotency key would cause double-charging; missing a compensation path would leak money to the gateway on partial failures. This document exists to prevent those mistakes.
@@ -23,8 +23,8 @@ Each flow reads and writes into the same Moyasar merchant account, uses the same
 | Flow | Plan | Who charges whom | Webhook URL | Secret env var | Charge trigger |
 |------|------|------------------|-------------|-----------------|-----------------|
 | Booking payment | 02e | Clinic → client | `POST /api/v1/public/payments/moyasar/webhook` | `MOYASAR_SECRET_KEY` | Client initiates via `init-guest-payment` or hosted checkout; Moyasar posts status async |
-| Subscription renewal | 04 | CareKit → clinic | `POST /api/v1/public/billing/webhooks/moyasar` | `MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET` | BullMQ cron `charge-due-subscriptions` invokes Moyasar charge API; Moyasar posts status async |
-| Signup charge | 07 | CareKit → new clinic owner | `POST /api/v1/public/billing/webhooks/moyasar` (shares with flow 04) | `MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET` | Synchronous server-side charge via `moyasar-api.client.ts` during `POST /api/v1/public/signup`; webhook only used for delayed async reconciliation |
+| Subscription renewal | 04 | Deqah → clinic | `POST /api/v1/public/billing/webhooks/moyasar` | `MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET` | BullMQ cron `charge-due-subscriptions` invokes Moyasar charge API; Moyasar posts status async |
+| Signup charge | 07 | Deqah → new clinic owner | `POST /api/v1/public/billing/webhooks/moyasar` (shares with flow 04) | `MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET` | Synchronous server-side charge via `moyasar-api.client.ts` during `POST /api/v1/public/signup`; webhook only used for delayed async reconciliation |
 
 Rules encoded in this table:
 

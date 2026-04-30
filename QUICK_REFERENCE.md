@@ -1,4 +1,4 @@
-# Quick Reference — Maestro v10 (CareKit)
+# Quick Reference — Maestro v10 (Deqah)
 
 ## Models
 
@@ -71,9 +71,9 @@ npm run typecheck --workspace=dashboard      # tsc --noEmit
 Use the `superpowers:using-git-worktrees` skill for the full protocol. Quick form:
 
 ```bash
-git worktree add ../carekit-feat-X -b feat/X main
+git worktree add ../deqah-feat-X -b feat/X main
 git worktree list
-git worktree remove ../carekit-feat-X && git branch -d feat/X
+git worktree remove ../deqah-feat-X && git branch -d feat/X
 ```
 
 Pick any free port in **5000–5999** for the worktree's services; there is no longer a fixed port table.
@@ -134,17 +134,17 @@ Task(subagent_type: "general-purpose", prompt: `
 
   Boundaries:
   - Files allowed: [scope]
-  - Working directory: [main or ../carekit-feat-X worktree]
+  - Working directory: [main or ../deqah-feat-X worktree]
   - Budget: [tokens]
 
-  CareKit rules:
+  Deqah rules:
   - Tenant scoping via \`organizationId\` read from \`TenantContextService\` (CLS); respect \`TENANT_ENFORCEMENT\` flag
   - 350-line max per file
   - Semantic tokens only (--primary, --accent) — no hex, no text-gray-*
   - RTL-first: ps-/pe-/ms-/me- only
   - i18n via next-intl (AR+EN)
   - Prisma migrations immutable; no \`prisma db push\`
-  - Kiwi Product = "CareKit" only
+  - Kiwi Product = "Deqah" only
 
   Output:
   - diff summary
@@ -181,6 +181,6 @@ Budget at 120% → Halt, save partial work
 9. ❌ E2E skipped on DEEP tasks
 10. ❌ No changelog entry for DEEP delivery
 11. ❌ Re-introducing Playwright (removed 2026-04-16)
-12. ❌ Creating a second Kiwi Product (only `CareKit`)
+12. ❌ Creating a second Kiwi Product (only `Deqah`)
 13. ❌ Reading `organizationId` from request body — it must come from `TenantContextService` (CLS)
 14. ❌ Using `pnpm` — the project is on `npm@11.6.2` via npm workspaces

@@ -15,8 +15,8 @@
 ## Environment
 
 - Backend `:5100` ✅ healthy — seeded via `npm run seed` + custom `prisma/demo-seed.ts` (3 employees, 3 services, 3 clients, 12 bookings across 8 statuses).
-- Dashboard `:5103` ✅ healthy — logged in as `admin@carekit-test.com` via Dev Admin Login.
-- Postgres on `:5999` (docker `carekit-postgres`), Redis up, MinIO/FCM/OpenAI disabled (warnings only).
+- Dashboard `:5103` ✅ healthy — logged in as `admin@deqah-test.com` via Dev Admin Login.
+- Postgres on `:5999` (docker `deqah-postgres`), Redis up, MinIO/FCM/OpenAI disabled (warnings only).
 
 ---
 

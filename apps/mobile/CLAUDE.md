@@ -1,4 +1,4 @@
-# CareKit Mobile — Expo React Native
+# Deqah Mobile — Expo React Native
 
 ## Tech
 

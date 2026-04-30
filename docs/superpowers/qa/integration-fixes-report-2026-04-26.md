@@ -74,7 +74,7 @@ Deleted `packages/shared/enums/booking.ts` and `packages/shared/types/booking.ts
 
 - Plan URL: `https://localhost:6443/plan/16/`
 - Run URL: `https://localhost:6443/runs/27/`
-- Build: `integration-fixes-qa-2026-04-26` on Version `main` of Product `CareKit`.
+- Build: `integration-fixes-qa-2026-04-26` on Version `main` of Product `Deqah`.
 
 ---
 
@@ -161,5 +161,5 @@ Net: **PR #71/#75 verified for the dashboard code path**. Website public flow ne
 
 - Plan: https://localhost:6443/plan/17/
 - Run: https://localhost:6443/runs/28/
-- Build: `integration-fixes-rerun-2026-04-26` · Version `main` · Product `CareKit`
+- Build: `integration-fixes-rerun-2026-04-26` · Version `main` · Product `Deqah`
 - 3 PASS / 1 FAIL (NEW path drift) / 3 SKIP

@@ -97,7 +97,7 @@ Productionize Zoom video calls for online bookings: per-tenant Server-to-Server 
 ## Tests
 - **Unit**: `zoom-credentials.service.spec.ts` (encrypt/decrypt, AAD tamper rejection); `zoom-api.client.spec.ts` (token cache, error mapping, retry on 401); `create-zoom-meeting.handler.spec.ts` (idempotent, persists FAILED with error string, success path); `retry-zoom-meeting.handler.spec.ts`; mobile `JoinVideoCallButton.test.tsx` (time window).
 - **E2E**: `zoom-config.e2e-spec.ts` (org A creates → org B GET = 404); `confirm-booking-zoom.e2e-spec.ts` (ONLINE booking + mocked Zoom 200 → CREATED; mocked 500 → FAILED but booking still CONFIRMED); cancel/reschedule propagation spec.
-- **Kiwi**: TestPlan `CareKit / Integrations / Manual QA` build `zoom-2026-04-25` — config, save, test, create meeting, retry on failure, mobile join.
+- **Kiwi**: TestPlan `Deqah / Integrations / Manual QA` build `zoom-2026-04-25` — config, save, test, create meeting, retry on failure, mobile join.
 
 ## Acceptance criteria
 - [ ] No plaintext Zoom credentials anywhere in DB (`Integration.config` for `provider='zoom'` is null/empty; ciphertext lives in encrypted column or ciphertext JSON envelope).

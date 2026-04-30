@@ -27,7 +27,7 @@
 
 ## 1. Module Overview
 
-The bookings module is the most complex domain in CareKit. It manages the full lifecycle of a patient appointment — from creation through payment, clinical workflow (check-in → session → completion), and cancellation with refund processing.
+The bookings module is the most complex domain in Deqah. It manages the full lifecycle of a patient appointment — from creation through payment, clinical workflow (check-in → session → completion), and cancellation with refund processing.
 
 **File count:** 25+ files across `backend/src/modules/bookings/` and `backend/src/modules/tasks/`
 

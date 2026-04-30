@@ -293,7 +293,7 @@ describe('WhitelabelController', () => {
 
   describe('getConfigMap', () => {
     it('should delegate to service.getConfigMap', async () => {
-      const map = { logo: 'url', name: 'CareKit' };
+      const map = { logo: 'url', name: 'Deqah' };
       mockService.getConfigMap.mockResolvedValue(map);
       expect(await controller.getConfigMap()).toEqual(map);
     });
@@ -1653,7 +1653,7 @@ describe('OrganizationSettingsController', () => {
 
   describe('getPublicSettings', () => {
     it('should wrap result', async () => {
-      const settings = { clinicName: 'CareKit Demo' };
+      const settings = { clinicName: 'Deqah Demo' };
       mockSettings.getPublicSettings.mockResolvedValue(settings);
 
       expect(await controller.getPublicSettings()).toEqual({ success: true, data: settings });

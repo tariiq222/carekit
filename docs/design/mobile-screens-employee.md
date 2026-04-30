@@ -1,4 +1,4 @@
-# CareKit Mobile — Employee Screens Specification
+# Deqah Mobile — Employee Screens Specification
 
 Employee-app screens (Expo Router `apps/mobile/app/(employee)/` route group). All screens support RTL-first (Arabic primary) and LTR (English). Domain language is "employee" everywhere — `(employee)` is the canonical route group; the user-facing label ("Doctor", "Therapist", etc.) comes from the active vertical's terminology pack via `useTerminology`.
 

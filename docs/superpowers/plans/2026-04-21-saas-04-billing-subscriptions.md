@@ -34,11 +34,11 @@ Plan 04 extends the **Moyasar payment gateway** integration for SaaS subscriptio
 2. No commit touching `src/modules/finance/moyasar-api/`, `src/modules/platform/billing/`, or the new subscription webhook route may merge without `@tariq` on the reviewer list and an approving review.
 3. The state machine (`subscription-state-machine.ts`) requires owner sign-off on the transition diagram BEFORE any handler is implemented. Draft the diagram in Task 3, get approval, then proceed.
 4. **No production Moyasar keys** are used in tests. Use `MOYASAR_TEST_MODE=true` and `sk_test_*` keys exclusively.
-5. **Subscription invoices are NEW artifacts issued by CareKit** (not by the clinic). They must be kept separate from booking `Invoice` rows. Do not mix ZATCA compliance paths — subscription invoices use CareKit's own VAT registration; booking invoices use the clinic's.
+5. **Subscription invoices are NEW artifacts issued by Deqah** (not by the clinic). They must be kept separate from booking `Invoice` rows. Do not mix ZATCA compliance paths — subscription invoices use Deqah's own VAT registration; booking invoices use the clinic's.
 
 **Scope decision:** `SubscriptionInvoice` is a **separate model from `Invoice`**. Reasoning:
-- Audience differs: `Invoice` is clinic → client; `SubscriptionInvoice` is CareKit → clinic.
-- ZATCA submission path differs: booking invoices go through each clinic's ZATCA onboarding; subscription invoices go through CareKit's own ZATCA account.
+- Audience differs: `Invoice` is clinic → client; `SubscriptionInvoice` is Deqah → clinic.
+- ZATCA submission path differs: booking invoices go through each clinic's ZATCA onboarding; subscription invoices go through Deqah's own ZATCA account.
 - Lifecycle / PDF format differ.
 - Search/filter needs differ.
 
@@ -56,7 +56,7 @@ Dunning flow: Moyasar subscription webhook drives state transitions (TRIALING �
 
 **Two Moyasar integrations, strictly separated.** Platform Moyasar (`MOYASAR_PLATFORM_SECRET_KEY` env) charges clinics for SaaS subscriptions — used ONLY by `src/modules/platform/billing/`. Tenant Moyasar (`OrganizationPaymentConfig.moyasarSecretKey`, encrypted) is Plan 02e's domain — clinic charges its own clients. Independent webhook signing secrets; no cross-imports.
 
-**Architecture:** Strangler pattern — all new code is additive. `Plan` and `SubscriptionInvoice` are **platform-level** (not tenant-scoped — they describe CareKit's catalog and CareKit's receivables). `Subscription` and `UsageRecord` are tenant-scoped (belong to an org, scoped via the existing Prisma `$extends` Proxy). A new module `src/modules/platform/billing/` holds all handlers. A second Moyasar webhook endpoint (`POST /api/v1/public/billing/webhooks/moyasar`) handles subscription events — separate route, separate signing secret from Plan 02e's booking webhook. Moyasar does not currently support native recurring subscriptions; we store Moyasar customer + tokenized card references and drive billing cycles via a BullMQ cron (`charge-due-subscriptions.cron.ts`). The webhook handles async payment confirmations and failures.
+**Architecture:** Strangler pattern — all new code is additive. `Plan` and `SubscriptionInvoice` are **platform-level** (not tenant-scoped — they describe Deqah's catalog and Deqah's receivables). `Subscription` and `UsageRecord` are tenant-scoped (belong to an org, scoped via the existing Prisma `$extends` Proxy). A new module `src/modules/platform/billing/` holds all handlers. A second Moyasar webhook endpoint (`POST /api/v1/public/billing/webhooks/moyasar`) handles subscription events — separate route, separate signing secret from Plan 02e's booking webhook. Moyasar does not currently support native recurring subscriptions; we store Moyasar customer + tokenized card references and drive billing cycles via a BullMQ cron (`charge-due-subscriptions.cron.ts`). The webhook handles async payment confirmations and failures.
 
 **Tech Stack:** NestJS 11, Prisma 7, `nestjs-cls` TenantContextService, BullMQ 5, Moyasar HTTP API (via existing `moyasar-api.client.ts`), Jest + Supertest.
 
@@ -158,7 +158,7 @@ const SCOPED_MODELS = new Set<string>([
 - Add to `apps/backend/src/config/env.validation.ts`: `MOYASAR_SUBSCRIPTION_WEBHOOK_SECRET`, `SAAS_TRIAL_DAYS`, `BILLING_CRON_ENABLED`.
 
 **Memory:**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas04_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas04_status.md`
 
 ### Modified files
 
@@ -209,7 +209,7 @@ gh pr create --draft --title "feat(saas-04): billing & subscriptions (DRAFT — 
 ⚠️ OWNER-REVIEW REQUIRED
 
 Scope decisions awaiting @tariq sign-off:
-1. SubscriptionInvoice is a **separate model** from Invoice (booking-client vs CareKit-clinic audiences; separate ZATCA paths).
+1. SubscriptionInvoice is a **separate model** from Invoice (booking-client vs Deqah-clinic audiences; separate ZATCA paths).
 2. Moyasar native recurring subscriptions not used — cron-driven charge cycle via saved card tokens. Confirm OK.
 3. PlanLimitsGuard applied to: create-branch, create-employee, create-booking, upload-file, send-notification. Confirm the list.
 4. State machine (see Task 3 diagram) — transitions need approval before implementation.
@@ -414,7 +414,7 @@ Append to `apps/backend/prisma/schema/platform.prisma`:
 
 ```prisma
 // ─── Billing (SaaS-04) ───────────────────────────────────────────────────────
-// Plan, SubscriptionInvoice = platform-level (CareKit's catalog / receivables).
+// Plan, SubscriptionInvoice = platform-level (Deqah's catalog / receivables).
 // Subscription, UsageRecord = tenant-scoped (belong to an org).
 
 enum PlanSlug {
@@ -515,7 +515,7 @@ model SubscriptionInvoice {
   id                 String                    @id @default(uuid())
   subscriptionId     String
   subscription       Subscription              @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
-  organizationId     String                    // denormalized for analytics; NOT a SCOPED_MODEL — this is CareKit's receivable
+  organizationId     String                    // denormalized for analytics; NOT a SCOPED_MODEL — this is Deqah's receivable
   amount             Decimal                   @db.Decimal(12, 2)  // flat + Σ(overage)
   flatAmount         Decimal                   @db.Decimal(12, 2)
   overageAmount      Decimal                   @db.Decimal(12, 2)  @default(0)

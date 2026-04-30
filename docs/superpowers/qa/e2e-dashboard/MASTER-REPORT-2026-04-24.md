@@ -1,4 +1,4 @@
-# CareKit Dashboard E2E QA — Master Report
+# Deqah Dashboard E2E QA — Master Report
 
 **Date:** 2026-04-24
 **Tester:** Claude (Chrome DevTools MCP)

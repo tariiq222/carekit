@@ -4,7 +4,7 @@
 
 **Goal:** A visitor can complete a real paid booking end-to-end on the public website. Guest identifies via OTP (email), picks service + therapist + slot, pays via Moyasar with 3DS, gets a confirmation. The booking appears in the dashboard immediately, invoiced and paid.
 
-**Architecture:** Three new backend modules — OTP, availability, guest bookings — plus extensions to the existing payments module for the guest path. Website grows a 5-step booking wizard shared by both themes. State machine in `@carekit/shared` makes the wizard mobile-portable later. All logic public-facing goes through `/api/v1/public/*` throttled, captcha-protected, OTP-session-gated for write operations.
+**Architecture:** Three new backend modules — OTP, availability, guest bookings — plus extensions to the existing payments module for the guest path. Website grows a 5-step booking wizard shared by both themes. State machine in `@deqah/shared` makes the wizard mobile-portable later. All logic public-facing goes through `/api/v1/public/*` throttled, captcha-protected, OTP-session-gated for write operations.
 
 **Tech Stack:** Same as Phases 1/1.5 plus: `xstate` (optional, for the booking state machine) or a simple reducer; `@nestjs/throttler` per endpoint; Moyasar SDK (hosted payment page via iframe + webhook).
 
@@ -194,7 +194,7 @@
 - [ ] **8.3** `getPublicAvailability(employeeId, date, serviceId)`.
 - [ ] **8.4** `createGuestBooking(payload, sessionToken)` — attaches Bearer header.
 - [ ] **8.5** `initGuestPayment({ invoiceId }, sessionToken)`.
-- [ ] **8.6** Types in `@carekit/shared`.
+- [ ] **8.6** Types in `@deqah/shared`.
 - [ ] **8.7** Vitest mocks.
 - [ ] **8.8** Commit: `feat(api-client): guest booking + OTP + payment endpoints`
 
@@ -211,7 +211,7 @@
 
 - [ ] **9.1** Implement as pure TS reducer (`type State`, `type Event`, `reduce(state, event): State`) — no framework dependency.
 - [ ] **9.2** Unit tests cover every transition + invalid transitions (should be no-ops).
-- [ ] **9.3** Exported from `@carekit/shared`.
+- [ ] **9.3** Exported from `@deqah/shared`.
 - [ ] **9.4** Commit: `feat(shared): booking wizard state machine`
 
 ---

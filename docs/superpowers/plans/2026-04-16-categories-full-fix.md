@@ -716,7 +716,7 @@ Then in another shell:
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:5100/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@carekit-test.com","password":"Admin@1234"}' | jq -r .accessToken)
+  -d '{"email":"admin@deqah-test.com","password":"Admin@1234"}' | jq -r .accessToken)
 
 curl -s -o /dev/null -w "%{http_code}\n" \
   -H "Authorization: Bearer $TOKEN" \

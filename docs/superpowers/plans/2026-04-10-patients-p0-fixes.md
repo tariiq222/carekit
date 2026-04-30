@@ -72,7 +72,7 @@ constructor(
 - [ ] **Step 3: Run typecheck to confirm no errors**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npx tsc --noEmit
 ```
 
@@ -147,7 +147,7 @@ describe('updateClient', () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
@@ -235,7 +235,7 @@ async updateClient(id: string, dto: UpdateClientDto, actorId?: string) {
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
@@ -244,7 +244,7 @@ Expected: PASS
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -253,7 +253,7 @@ Expected: All passing
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/clients/clients.module.ts \
         backend/src/modules/clients/clients.service.ts \
         backend/test/unit/clients/clients.service.spec.ts
@@ -297,7 +297,7 @@ describe('findOne', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
@@ -364,7 +364,7 @@ async findOne(id: string) {
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
@@ -373,7 +373,7 @@ Expected: PASS
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -382,7 +382,7 @@ Expected: All passing
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/clients/clients.service.ts \
         backend/test/unit/clients/clients.service.spec.ts
 git commit -m "fix(clients): add client role guard to findOne to prevent IDOR on non-client users

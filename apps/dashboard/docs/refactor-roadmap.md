@@ -1,4 +1,4 @@
-# Refactor Roadmap — CareKit Dashboard
+# Refactor Roadmap — Deqah Dashboard
 
 > **STATUS (2026-04-25):** Pre-SaaS historical record. The "Completed Refactors"
 > section captures Phases 3–8 from the single-organization era and is kept for

@@ -355,7 +355,7 @@ export class GetBrandingHandler {
       update: {},
       create: {
         organizationId,
-        organizationNameAr: 'CareKit',
+        organizationNameAr: 'Deqah',
         activeWebsiteTheme: 'SAWAA',
       },
     });
@@ -373,7 +373,7 @@ async execute(cmd: UpsertBrandingCommand) {
   return this.prisma.brandingConfig.upsert({
     where: { organizationId },
     update: { ...cmd },
-    create: { organizationId, ...cmd, organizationNameAr: cmd.organizationNameAr ?? 'CareKit' },
+    create: { organizationId, ...cmd, organizationNameAr: cmd.organizationNameAr ?? 'Deqah' },
   });
 }
 ```
@@ -389,7 +389,7 @@ async execute() {
   const organizationId = this.tenant.requireOrganizationIdOrDefault();
   const config = await this.prisma.brandingConfig.findUnique({ where: { organizationId } });
   // defaults for unbranded orgs
-  return config ?? { organizationNameAr: 'CareKit', activeWebsiteTheme: 'SAWAA' };
+  return config ?? { organizationNameAr: 'Deqah', activeWebsiteTheme: 'SAWAA' };
 }
 ```
 
@@ -402,7 +402,7 @@ async execute(cmd: UploadLogoCommand) {
   return this.prisma.brandingConfig.upsert({
     where: { organizationId },
     update: { logoUrl: publicUrl },
-    create: { organizationId, logoUrl: publicUrl, organizationNameAr: 'CareKit' },
+    create: { organizationId, logoUrl: publicUrl, organizationNameAr: 'Deqah' },
   });
 }
 ```

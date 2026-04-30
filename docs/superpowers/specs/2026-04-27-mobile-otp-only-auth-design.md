@@ -6,7 +6,7 @@
 
 ## Background
 
-CareKit Mobile (currently tenant-locked to Sawaa) has two distinct auth flows: clients use phone + OTP, employees use email + password. This split was a design choice tied to "professional" assumptions about employees, but role/permission decisions are independent of how a user logs in. The split also makes the same human go through two different flows on the same app once they get promoted to staff.
+Deqah Mobile (currently tenant-locked to Sawaa) has two distinct auth flows: clients use phone + OTP, employees use email + password. This split was a design choice tied to "professional" assumptions about employees, but role/permission decisions are independent of how a user logs in. The split also makes the same human go through two different flows on the same app once they get promoted to staff.
 
 The dashboard (web) keeps email + password — staff manage the platform from desktops where browser autofill of passwords is normal and there is no SMS gateway native to the workflow.
 
@@ -170,7 +170,7 @@ Tapping → `POST /api/mobile/auth/request-email-verification` (auth required).
 1. If User.emailVerifiedAt != null → no-op success.
 2. Delete any existing EmailVerificationToken for this user.
 3. Generate random 32-byte token, hash with sha256, insert.
-4. Email user a link: https://carekit.sa/verify-email?token=<raw>
+4. Email user a link: https://deqah.sa/verify-email?token=<raw>
 5. Token TTL = 30 minutes.
 ```
 
@@ -180,7 +180,7 @@ Tapping → `POST /api/mobile/auth/request-email-verification` (auth required).
 1. Hash incoming token, lookup EmailVerificationToken.
 2. If expired or consumed → reject.
 3. Mark consumedAt, update User.emailVerifiedAt = now.
-4. Return success page that deep-links back into the app (carekit://settings?verified=1).
+4. Return success page that deep-links back into the app (deqah://settings?verified=1).
 ```
 
 The `verify-email` page itself lives in `apps/website` (`/verify-email`) — it calls the backend on load, shows result, and triggers the deep link.

@@ -1,4 +1,4 @@
-# CareKit RTL-First Design Guidelines
+# Deqah RTL-First Design Guidelines
 
 Arabic is the primary language. All designs start in RTL and adapt to LTR for English.
 

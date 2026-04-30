@@ -100,7 +100,7 @@ ALTER TABLE "service_branches" ADD CONSTRAINT "service_branches_branch_id_fkey"
 - [ ] **Step 4: Apply the migration**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run prisma:migrate
 ```
 
@@ -139,7 +139,7 @@ describe('branch filter in findAll', () => {
 - [ ] **Step 2: Run test to confirm it fails (compile error or field missing)**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service.spec" --no-coverage 2>&1 | tail -20
 ```
 
@@ -176,7 +176,7 @@ export class SetServiceBranchesDto {
 - [ ] **Step 5: Run test — confirm it now passes**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service.spec" --no-coverage 2>&1 | tail -20
 ```
 
@@ -258,7 +258,7 @@ Also add `serviceBranch` to the `mockPrismaService` object at the top of the fil
 - [ ] **Step 2: Run tests to confirm they fail**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service.spec" --no-coverage 2>&1 | tail -30
 ```
 
@@ -351,7 +351,7 @@ Add these two methods to `services.service.ts` after the `softDelete` method:
 - [ ] **Step 5: Run tests — confirm they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service.spec" --no-coverage 2>&1 | tail -20
 ```
 
@@ -404,7 +404,7 @@ Add the two endpoints to the controller after the `getIntakeForms` endpoint (ins
 - [ ] **Step 2: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage 2>&1 | tail -20
 ```
 
@@ -413,7 +413,7 @@ Expected: All tests PASS.
 - [ ] **Step 3: Typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npx tsc --noEmit 2>&1 | head -30
 ```
 
@@ -502,7 +502,7 @@ Open `backend/src/modules/services/services.controller.ts`. Update the `getEmplo
 - [ ] **Step 3: Run tests + typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage 2>&1 | tail -10
 npx tsc --noEmit 2>&1 | head -20
 ```
@@ -553,7 +553,7 @@ Open `backend/src/modules/bookings/booking-creation.service.ts`. The service che
 - [ ] **Step 2: Typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npx tsc --noEmit 2>&1 | head -30
 ```
 
@@ -562,7 +562,7 @@ Expected: No errors.
 - [ ] **Step 3: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage 2>&1 | tail -15
 ```
 
@@ -589,7 +589,7 @@ git commit -m "feat(bookings): validate service availability at branch on bookin
 - [ ] **Step 1: Locate the services hook**
 
 ```bash
-ls /Users/tariq/Documents/my_programs/CareKit/dashboard/hooks/
+ls /Users/tariq/Documents/my_programs/Deqah/dashboard/hooks/
 ```
 
 Find the file that calls `GET /services` (likely `use-services.ts`). Read it.
@@ -651,7 +651,7 @@ The `findOne` and `findAll` responses must include branches. Update `services.se
 - [ ] **Step 5: Run dashboard typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/dashboard
+cd /Users/tariq/Documents/my_programs/Deqah/dashboard
 npm run typecheck 2>&1 | head -30
 ```
 

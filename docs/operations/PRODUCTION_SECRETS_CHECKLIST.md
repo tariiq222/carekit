@@ -1,6 +1,6 @@
 # Production Secrets Checklist
 
-Everything the platform owner must provide before running CareKit in production.
+Everything the platform owner must provide before running Deqah in production.
 Source template: [`apps/backend/.env.prod.example`](../../apps/backend/.env.prod.example).
 
 The backend's Joi schema rejects boot if any item marked **REQUIRED** below is
@@ -50,7 +50,7 @@ Run each command on your laptop, paste the result into `.env.prod`. Never share 
 
 - **Purpose**: prevents OTP flooding attacks (each OTP request costs you Authentica fees).
 - **Sign up**: <https://dashboard.hcaptcha.com>
-- **Create site**: Dashboard → New Site → add `app.carekit.app`, `admin.carekit.app`, `carekit.app`.
+- **Create site**: Dashboard → New Site → add `app.deqah.app`, `admin.deqah.app`, `deqah.app`.
 - **Fill**:
   - `CAPTCHA_PROVIDER=hcaptcha`
   - `HCAPTCHA_SECRET` (the secret key, NOT the site key — site key is hardcoded in frontend)
@@ -58,10 +58,10 @@ Run each command on your laptop, paste the result into `.env.prod`. Never share 
 
 ### B-3. Moyasar — Platform Account (REQUIRED for SaaS billing)
 
-- **Purpose**: charges clinics for their CareKit subscription. **This is a separate Moyasar account from anything tenants use.**
-- **Sign up**: <https://moyasar.com> as `CareKit` (the platform).
+- **Purpose**: charges clinics for their Deqah subscription. **This is a separate Moyasar account from anything tenants use.**
+- **Sign up**: <https://moyasar.com> as `Deqah` (the platform).
 - **Get keys**: Dashboard → Developers → API Keys → use **live** keys (`sk_live_*`).
-- **Configure webhook**: `POST https://api.carekit.app/api/v1/public/webhooks/moyasar/platform`
+- **Configure webhook**: `POST https://api.deqah.app/api/v1/public/webhooks/moyasar/platform`
 - **Fill**:
   - `MOYASAR_PLATFORM_SECRET_KEY` (sk_live_*)
   - `MOYASAR_PLATFORM_WEBHOOK_SECRET` (set in Moyasar webhook config; copy the same value here)
@@ -78,7 +78,7 @@ Recommended providers: SendGrid, Postmark, AWS SES, Mailgun.
   - `SMTP_PORT=587`
   - `SMTP_USER`
   - `SMTP_PASS`
-  - `SMTP_FROM` (must be a verified sender, e.g. `no-reply@carekit.app`)
+  - `SMTP_FROM` (must be a verified sender, e.g. `no-reply@deqah.app`)
 - **DNS**: configure SPF, DKIM, and DMARC for the sender domain or your delivery rate will tank.
 
 ### B-5. FCM — Firebase Cloud Messaging (REQUIRED for mobile push)
@@ -94,7 +94,7 @@ Recommended providers: SendGrid, Postmark, AWS SES, Mailgun.
 ### B-6. Sentry (RECOMMENDED — error tracking)
 
 - **Purpose**: capture runtime exceptions across backend + dashboards.
-- **Sign up**: <https://sentry.io>; create three projects: `carekit-backend`, `carekit-dashboard`, `carekit-admin`.
+- **Sign up**: <https://sentry.io>; create three projects: `deqah-backend`, `deqah-dashboard`, `deqah-admin`.
 - **Fill**: `SENTRY_DSN` (backend project DSN). The frontend DSNs are wired separately in `apps/<app>/.env.production`.
 - **Without it**: errors are logged to stdout only.
 
@@ -125,14 +125,14 @@ These do **not** go into `.env.prod`. Each clinic provides them via the dashboar
 
 | Subdomain | Points to | TLS |
 |-----------|-----------|-----|
-| `api.carekit.app` | Backend (port 5100) via nginx | Let's Encrypt |
-| `app.carekit.app` | `apps/dashboard` (port 5103) | Let's Encrypt |
-| `admin.carekit.app` | `apps/admin` (port 5104) | Let's Encrypt |
-| `carekit.app` | `apps/website` (port 5105) | Let's Encrypt |
+| `api.deqah.app` | Backend (port 5100) via nginx | Let's Encrypt |
+| `app.deqah.app` | `apps/dashboard` (port 5103) | Let's Encrypt |
+| `admin.deqah.app` | `apps/admin` (port 5104) | Let's Encrypt |
+| `deqah.app` | `apps/website` (port 5105) | Let's Encrypt |
 
 **SSL**: nginx loads certs from `docker/nginx/ssl/`. Use certbot with the dns-01 or http-01 challenge before first deploy. Auto-renewal cron must be configured.
 
-**Email DNS**: SPF + DKIM + DMARC for `carekit.app` so SMTP delivers.
+**Email DNS**: SPF + DKIM + DMARC for `deqah.app` so SMTP delivers.
 
 ---
 
@@ -172,7 +172,7 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml --
 
 ## F. After first deploy — manual verification
 
-1. **Auth**: log into `admin.carekit.app` with `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD`. Force-rotate the password from the UI immediately.
+1. **Auth**: log into `admin.deqah.app` with `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD`. Force-rotate the password from the UI immediately.
 2. **OTP**: trigger a test OTP from the mobile app → confirm Authentica delivers within 30s.
 3. **Push**: register an FCM token from a real device → trigger a test booking reminder → confirm push arrives.
 4. **Webhook**: trigger a Moyasar test payment in a tenant's sandbox → confirm `Invoice.status=PAID` flips within 5s.

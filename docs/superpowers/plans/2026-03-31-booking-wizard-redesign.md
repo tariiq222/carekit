@@ -80,7 +80,7 @@ Open `BookingSettings` table, confirm `booking_flow_order` column exists with va
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/prisma/schema/bookings.prisma backend/prisma/migrations/
 git commit -m "feat(backend/clinic): add booking_flow_order to BookingSettings"
 ```
@@ -284,7 +284,7 @@ Expected: PASS (3 tests)
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/clinic/ backend/test/unit/clinic/
 git commit -m "feat(backend/clinic): add booking flow order setting endpoint"
 ```
@@ -371,7 +371,7 @@ Expected: no errors for the modified files.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/lib/api/organization-settings.ts dashboard/lib/query-keys.ts dashboard/lib/api/services.ts
 git commit -m "feat(dashboard/api): add clinic booking flow order + service employees query"
 ```
@@ -514,7 +514,7 @@ Expected: no errors.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/lib/translations/
 git commit -m "feat(dashboard/i18n): add booking wizard translation keys"
 ```
@@ -786,7 +786,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/use-wizard-state.ts
 git commit -m "feat(dashboard/bookings): add useWizardState hook with cascade reset"
 ```
@@ -868,7 +868,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-card.tsx
 git commit -m "feat(dashboard/bookings): add WizardCard base component"
 ```
@@ -1022,7 +1022,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-steps/step-service.tsx
 git commit -m "feat(dashboard/bookings): add wizard step-service component"
 ```
@@ -1124,7 +1124,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-steps/step-employee.tsx
 git commit -m "feat(dashboard/bookings): add wizard step-employee component"
 ```
@@ -1307,7 +1307,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-steps/step-type-duration.tsx
 git commit -m "feat(dashboard/bookings): add wizard step-type-duration component"
 ```
@@ -1463,7 +1463,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-steps/step-datetime.tsx
 git commit -m "feat(dashboard/bookings): add wizard step-datetime component"
 ```
@@ -1641,7 +1641,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/wizard-steps/step-confirm.tsx
 git commit -m "feat(dashboard/bookings): add wizard step-confirm component"
 ```
@@ -1856,7 +1856,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/booking-wizard.tsx
 git commit -m "feat(dashboard/bookings): add BookingWizard orchestrator"
 ```
@@ -1942,7 +1942,7 @@ Expected: no errors.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add dashboard/components/features/bookings/booking-create-dialog.tsx
 git commit -m "feat(dashboard/bookings): wire BookingWizard into BookingCreateDialog"
 ```
@@ -1954,7 +1954,7 @@ git commit -m "feat(dashboard/bookings): wire BookingWizard into BookingCreateDi
 - [ ] **Step 1: Start the dev environment**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 npm run docker:up
 npm run dev:backend &
 npm run dev:dashboard

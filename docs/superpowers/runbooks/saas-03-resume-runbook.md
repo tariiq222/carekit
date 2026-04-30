@@ -3,7 +3,7 @@
 **For:** tariq (manual executor)
 **Branch:** `feat/saas-03-verticals-system`
 **Dev DB:** clean, 35 migrations applied, seeded ✅
-**PR:** [#25 DRAFT](https://github.com/tariiq222/carekit/pull/25)
+**PR:** [#25 DRAFT](https://github.com/tariiq222/deqah/pull/25)
 
 ## Current state
 
@@ -94,10 +94,10 @@ async execute(cmd: { slug: string }) {
 ### `get-terminology.handler.ts`
 Merges base family pack with vertical-specific overrides.
 ```ts
-import medicalPack from '@carekit/shared/terminology/medical.json';
-import consultingPack from '@carekit/shared/terminology/consulting.json';
-import salonPack from '@carekit/shared/terminology/salon.json';
-import fitnessPack from '@carekit/shared/terminology/fitness.json';
+import medicalPack from '@deqah/shared/terminology/medical.json';
+import consultingPack from '@deqah/shared/terminology/consulting.json';
+import salonPack from '@deqah/shared/terminology/salon.json';
+import fitnessPack from '@deqah/shared/terminology/fitness.json';
 
 const PACKS = {
   MEDICAL: medicalPack,
@@ -437,7 +437,7 @@ If any fails: stop, read the error, fix the failing handler/test, recommit on th
 
 ## Task 15: Memory + index update
 
-**Create** `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas03_status.md`:
+**Create** `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas03_status.md`:
 
 ```markdown
 ---
@@ -474,8 +474,8 @@ type: project
 
 **Final commit:**
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas03_status.md \
-        /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md \
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas03_status.md \
+        /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md \
         docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas-03): memory + index — verticals system delivered"
 ```
@@ -520,9 +520,9 @@ Each time you switch to a new feature branch with new migrations:
 git checkout <new-branch>
 cd apps/backend
 PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="[YOUR CONSENT TEXT]" \
-  DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev" \
+  DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev" \
   npx prisma migrate reset --force
-DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev" npm run seed
+DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev" npm run seed
 ```
 
 This prevents drift accumulation.
@@ -532,7 +532,7 @@ This prevents drift accumulation.
 ## If you hit a snag
 
 - **"relation does not exist" on e2e** — the test DB doesn't have the new migration. Apply with:
-  `TEST_DATABASE_URL="postgresql://carekit:carekit_dev_password@localhost:5999/carekit_test" DATABASE_URL=... npx prisma migrate deploy`
+  `TEST_DATABASE_URL="postgresql://deqah:deqah_dev_password@localhost:5999/deqah_test" DATABASE_URL=... npx prisma migrate deploy`
 - **Typecheck fails after schema change** — run `npx prisma generate` to regenerate the client types.
 - **Lesson 11 violation** (`tx.*.create` missing `organizationId`) — check the `$transaction(async (tx) => {...})` bodies in any handler the plan touches.
 - **OpenAPI snapshot drift** — `cd apps/backend && npm run openapi:build-and-snapshot` then commit `apps/backend/openapi.json` in the same commit as the controller change.

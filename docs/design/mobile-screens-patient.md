@@ -1,4 +1,4 @@
-# CareKit Mobile — Client Screens Specification
+# Deqah Mobile — Client Screens Specification
 
 Client-app screens (Expo Router `apps/mobile/app/(client)/` route group). All screens support RTL-first (Arabic primary) and LTR (English). The `(client)` group is gated by `_layout.tsx` and contains `(tabs)/` for the bottom-tab surfaces plus modal/stack routes for chat, therapists, video calls, booking, and appointment detail.
 

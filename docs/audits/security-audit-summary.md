@@ -1,4 +1,4 @@
-# CareKit — Security Audit Summary
+# Deqah — Security Audit Summary
 
 > **Audit Date:** March 2026 | **Status:** All findings remediated
 > **Auditor:** WebVue Technology Solutions — Internal Security Review
@@ -26,7 +26,7 @@
 
 ## 2. Security Architecture Overview
 
-CareKit implements an 8-layer defense-in-depth model:
+Deqah implements an 8-layer defense-in-depth model:
 
 | Layer | Component | Controls |
 |-------|-----------|----------|

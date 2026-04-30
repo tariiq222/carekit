@@ -6,7 +6,7 @@
 
 **Architecture:** كل test يشغّل NestJS app كامل عبر supertest ويتواصل مع test DB حقيقية. كل test suite يُنظّف جداوله عبر TRUNCATE في beforeAll/afterAll. الـ external services (Email, OpenAI, FCM, Moyasar) تُستبدل بـ mock providers فقط.
 
-**Tech Stack:** Jest + Supertest, NestJS Testing Module, Prisma (test DB: carekit_test), @prisma/adapter-pg, bcryptjs, jsonwebtoken. لا mock للـ DB، لا mock للـ Core services.
+**Tech Stack:** Jest + Supertest, NestJS Testing Module, Prisma (test DB: deqah_test), @prisma/adapter-pg, bcryptjs, jsonwebtoken. لا mock للـ DB، لا mock للـ Core services.
 
 ---
 
@@ -31,7 +31,7 @@ apps/backend/
 ├── test/
 │   ├── jest-e2e.json                       # موجود — يحتاج تحديث
 │   ├── setup/
-│   │   ├── global-setup.ts                 # يشغّل migrate على carekit_test
+│   │   ├── global-setup.ts                 # يشغّل migrate على deqah_test
 │   │   ├── global-teardown.ts              # placeholder
 │   │   ├── app.setup.ts                    # ينشئ NestJS app مع mock providers
 │   │   ├── db.setup.ts                     # testPrisma + cleanTables util
@@ -86,7 +86,7 @@ apps/backend/
   "testTimeout": 30000,
   "maxWorkers": 1,
   "moduleNameMapper": {
-    "^@carekit/shared$": "<rootDir>/../../packages/shared/src/index.ts"
+    "^@deqah/shared$": "<rootDir>/../../packages/shared/src/index.ts"
   }
 }
 ```
@@ -103,7 +103,7 @@ const execFileAsync = promisify(execFile);
 export default async function globalSetup() {
   process.env.TEST_DATABASE_URL =
     process.env.TEST_DATABASE_URL ??
-    'postgresql://postgres:postgres@localhost:5432/carekit_test?schema=public';
+    'postgresql://postgres:postgres@localhost:5432/deqah_test?schema=public';
 
   // شغّل migrations على test DB
   await execFileAsync(
@@ -137,7 +137,7 @@ import { Pool } from 'pg';
 
 const TEST_DB_URL =
   process.env.TEST_DATABASE_URL ??
-  'postgresql://postgres:postgres@localhost:5432/carekit_test?schema=public';
+  'postgresql://postgres:postgres@localhost:5432/deqah_test?schema=public';
 
 const pool = new Pool({ connectionString: TEST_DB_URL });
 
@@ -158,12 +158,12 @@ export async function closePrisma(): Promise<void> {
 }
 ```
 
-- [ ] **Step 5: إنشاء carekit_test database وتشغيل migrations**
+- [ ] **Step 5: إنشاء deqah_test database وتشغيل migrations**
 
 ```bash
 cd apps/backend
-psql -U postgres -c "CREATE DATABASE carekit_test;" 2>/dev/null || echo "already exists"
-TEST_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/carekit_test?schema=public" \
+psql -U postgres -c "CREATE DATABASE deqah_test;" 2>/dev/null || echo "already exists"
+TEST_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/deqah_test?schema=public" \
   npx prisma migrate deploy
 ```
 
@@ -215,7 +215,7 @@ export async function createTestApp(): Promise<{
   // override env vars ليشير الـ app للـ test DB
   process.env.DATABASE_URL =
     process.env.TEST_DATABASE_URL ??
-    'postgresql://postgres:postgres@localhost:5432/carekit_test?schema=public';
+    'postgresql://postgres:postgres@localhost:5432/deqah_test?schema=public';
   process.env.OPENAI_API_KEY = 'test-key';
   process.env.OPENROUTER_API_KEY = 'test-key';
   process.env.MOYASAR_API_KEY = 'test-key';

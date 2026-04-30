@@ -4,11 +4,11 @@
 >
 > **Owner-review required**: this plan touches Moyasar (payments/auth) and creates new public signup endpoints. Per root `CLAUDE.md`, payments + auth are owner-only. Every Moyasar-adjacent change needs explicit owner sign-off before merge.
 
-**Goal:** Build a brand-new Next.js 15 app at `apps/landing/` served on `carekit.app` — the root marketing domain. Contains: a marketing homepage, 8 vertical-specific landing pages (dental, cosmetic, etc.), a pricing page listing the 3 Plans from Plan 04, and a 5-step signup wizard that (1) picks vertical, (2) collects clinic info + slug, (3) selects plan, (4) collects payment via Moyasar, (5) creates the Organization + seeds from Vertical + redirects to `{slug}.carekit.app/dashboard?welcome=true`.
+**Goal:** Build a brand-new Next.js 15 app at `apps/landing/` served on `deqah.app` — the root marketing domain. Contains: a marketing homepage, 8 vertical-specific landing pages (dental, cosmetic, etc.), a pricing page listing the 3 Plans from Plan 04, and a 5-step signup wizard that (1) picks vertical, (2) collects clinic info + slug, (3) selects plan, (4) collects payment via Moyasar, (5) creates the Organization + seeds from Vertical + redirects to `{slug}.deqah.app/dashboard?welcome=true`.
 
-**Architecture:** New Next.js 15 App Router app consuming `@carekit/ui` (from Plan 05a), `@carekit/api-client`, `@carekit/shared`. Uses next-intl for AR/EN. The signup wizard is a client-side state machine that calls public (unauthenticated) API endpoints added in this plan. A single orchestration endpoint `POST /api/v1/public/signup` performs all creation inside a Prisma `$transaction` and returns a JWT that the landing app stores as a same-domain cookie readable from `{slug}.carekit.app` via a shared parent cookie on `.carekit.app`.
+**Architecture:** New Next.js 15 App Router app consuming `@deqah/ui` (from Plan 05a), `@deqah/api-client`, `@deqah/shared`. Uses next-intl for AR/EN. The signup wizard is a client-side state machine that calls public (unauthenticated) API endpoints added in this plan. A single orchestration endpoint `POST /api/v1/public/signup` performs all creation inside a Prisma `$transaction` and returns a JWT that the landing app stores as a same-domain cookie readable from `{slug}.deqah.app` via a shared parent cookie on `.deqah.app`.
 
-**Tech Stack:** Next.js 15 App Router, React 19, TypeScript 5.4 strict, Tailwind 4, shadcn/ui via `@carekit/ui`, next-intl 4, `@carekit/api-client`, Moyasar hosted checkout + webhook, Prisma 7, BullMQ (for post-signup welcome email job), Vitest, Playwright-free e2e (Chrome DevTools MCP for manual QA).
+**Tech Stack:** Next.js 15 App Router, React 19, TypeScript 5.4 strict, Tailwind 4, shadcn/ui via `@deqah/ui`, next-intl 4, `@deqah/api-client`, Moyasar hosted checkout + webhook, Prisma 7, BullMQ (for post-signup welcome email job), Vitest, Playwright-free e2e (Chrome DevTools MCP for manual QA).
 
 ---
 
@@ -31,9 +31,9 @@ Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-s
 1. **`$transaction` callback form bypasses the Proxy** (Lesson 11 from index). The signup orchestration runs inside `$transaction(async tx => {...})` creating Organization + Membership + User + Subscription + seeded rows. `organizationId` must be set explicitly on every `tx.*.create` for SCOPED_MODELS. The brand-new organization has no tenant context yet — use the newly-created `organization.id` directly.
 2. **Singleton upsert-on-read pattern** (Lesson 10). After creating the org, seed `BrandingConfig` + `OrganizationSettings` + `SiteSetting` via `tx.*.create` with the new `organization.id`.
 3. **Moyasar owner-review:** any change that touches the Moyasar adapter, webhook signature, or payment-handler callsites requires the owner's explicit approval. Call these out in the PR body.
-4. **Subdomain cookie strategy:** the signup endpoint returns a JWT cookie on `.carekit.app` (parent domain) so `{slug}.carekit.app/dashboard` can read it without a second login. Document this in the plan body.
+4. **Subdomain cookie strategy:** the signup endpoint returns a JWT cookie on `.deqah.app` (parent domain) so `{slug}.deqah.app/dashboard` can read it without a second login. Document this in the plan body.
 5. **Public endpoints are rate-limited.** All `/api/v1/public/signup` + `slug-available` endpoints go through `@nestjs/throttler` with stricter limits than the dashboard bucket (plan 10 tunes these; this plan sets baseline defaults).
-6. **Slug regex + reservation list:** reserve `www`, `api`, `admin`, `app`, `dashboard`, `carekit`, `cdn`, `static`, `assets`, `signup`, `login`, `support` from signup.
+6. **Slug regex + reservation list:** reserve `www`, `api`, `admin`, `app`, `dashboard`, `deqah`, `cdn`, `static`, `assets`, `signup`, `login`, `support` from signup.
 7. **Charge-before-tx requires compensating refund** (BLOCKER). Moyasar is charged *before* the `$transaction` (step 2), so any tx failure after a successful charge leaves the customer with money taken and no Organization. The handler MUST wrap `$transaction` in try/catch and call `moyasar.refund(charge.id, { reason: 'signup_tx_failed' })` on failure. If the refund call itself throws, enqueue a BullMQ retry (`signup-refund-retry`, `jobId: refund-<chargeId>` for idempotency) and re-raise the original tx error. Pre-requisites for this plan: (a) `MoyasarAdapter.refund(paymentId, opts)` method must exist (extend the adapter in Step 3.1 if missing — owner-review required, payments module), (b) `BullModule.registerQueue({ name: 'signup-refund-retry' })` must be added to the signup module imports, (c) a consumer/processor for that queue that re-attempts `moyasar.refund` with exponential backoff and alerts ops after max attempts.
 
 ---
@@ -44,10 +44,10 @@ Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-s
 
 | Path | Responsibility |
 |---|---|
-| `apps/landing/package.json` | Workspace manifest, next-intl + @carekit/* deps |
-| `apps/landing/next.config.mjs` | Port 5105, i18n routing, transpile `@carekit/*` |
+| `apps/landing/package.json` | Workspace manifest, next-intl + @deqah/* deps |
+| `apps/landing/next.config.mjs` | Port 5105, i18n routing, transpile `@deqah/*` |
 | `apps/landing/tsconfig.json` | Extends root; strict |
-| `apps/landing/tailwind.config.ts` + `app/globals.css` | Tailwind 4 with CareKit brand tokens + `@source` for `packages/ui` |
+| `apps/landing/tailwind.config.ts` + `app/globals.css` | Tailwind 4 with Deqah brand tokens + `@source` for `packages/ui` |
 | `apps/landing/middleware.ts` | next-intl locale routing (`/`, `/ar`, `/en`) |
 | `apps/landing/app/layout.tsx` | Root layout with `<NextIntlClientProvider>` |
 | `apps/landing/app/[locale]/layout.tsx` | Per-locale layout, direction switch |
@@ -62,11 +62,11 @@ Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-s
 | `apps/landing/app/[locale]/signup/components/step-payment.tsx` | Step 4 (Moyasar hosted checkout iframe) |
 | `apps/landing/app/[locale]/signup/components/step-success.tsx` | Step 5 (post-create redirect) |
 | `apps/landing/app/[locale]/signup/state/wizard-machine.ts` | Pure state machine (no side effects) |
-| `apps/landing/app/[locale]/login/page.tsx` | Login form — posts to `POST /api/v1/auth/login`, routes based on `isSuperAdmin` claim (→ `admin.carekit.app`) or `membership.organizationSlug` (→ `{slug}.carekit.app/dashboard`) |
+| `apps/landing/app/[locale]/login/page.tsx` | Login form — posts to `POST /api/v1/auth/login`, routes based on `isSuperAdmin` claim (→ `admin.deqah.app`) or `membership.organizationSlug` (→ `{slug}.deqah.app/dashboard`) |
 | `apps/landing/app/[locale]/legal/terms/page.tsx` | Terms of service (required by Moyasar) |
 | `apps/landing/app/[locale]/legal/privacy/page.tsx` | Privacy policy |
 | `apps/landing/app/[locale]/legal/refund/page.tsx` | Refund policy |
-| `apps/landing/app/api/signup/route.ts` | Proxies to backend `POST /api/v1/public/signup`, sets `.carekit.app` cookie on success |
+| `apps/landing/app/api/signup/route.ts` | Proxies to backend `POST /api/v1/public/signup`, sets `.deqah.app` cookie on success |
 | `apps/landing/messages/ar.json`, `en.json` | Full translations |
 | `apps/landing/public/*` | Static assets: logo, hero gradients, vertical icons |
 | `apps/landing/CLAUDE.md` | App conventions (port, i18n, wizard state) |
@@ -87,8 +87,8 @@ Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-s
 
 - Root `package.json` — add `apps/landing` to `workspaces`
 - Root `turbo.json` — add landing to pipeline
-- Root `CLAUDE.md` — add `apps/landing/` to Structure tree + `carekit.app` domain
-- `docker/nginx/nginx.conf` — route `carekit.app → apps/landing :5105`
+- Root `CLAUDE.md` — add `apps/landing/` to Structure tree + `deqah.app` domain
+- `docker/nginx/nginx.conf` — route `deqah.app → apps/landing :5105`
 - `docker/docker-compose.yml` — add `landing` service
 - `packages/api-client/src/endpoints/public.ts` — typed `signup`, `slugAvailable`, `getVerticals`, `getPlans` helpers
 - `memory/saas07_status.md` — new memory file after execution
@@ -101,7 +101,7 @@ Task 0 below blocks execution until owner posts `/approve saas-07` on this sub-s
 
 ```bash
 lsof -i :5105 || echo "5105 free"
-grep -rn "5105" /Users/tariq/code/carekit --include="*.json" --include="*.ts" --include="*.mjs" --include="*.conf" --include="*.yml" 2>/dev/null | head
+grep -rn "5105" /Users/tariq/code/deqah --include="*.json" --include="*.ts" --include="*.mjs" --include="*.conf" --include="*.yml" 2>/dev/null | head
 ```
 
 Expected: no existing binding. If occupied, propose an alternative port in the 5100-5199 range and document the divergence.
@@ -110,7 +110,7 @@ Expected: no existing binding. If occupied, propose an alternative port in the 5
 
 ```json
 {
-  "name": "@carekit/landing",
+  "name": "@deqah/landing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -126,9 +126,9 @@ Expected: no existing binding. If occupied, propose an alternative port in the 5
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "next-intl": "^4.0.0",
-    "@carekit/ui": "*",
-    "@carekit/shared": "*",
-    "@carekit/api-client": "*",
+    "@deqah/ui": "*",
+    "@deqah/shared": "*",
+    "@deqah/api-client": "*",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -154,7 +154,7 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@carekit/ui', '@carekit/shared', '@carekit/api-client'],
+  transpilePackages: ['@deqah/ui', '@deqah/shared', '@deqah/api-client'],
   experimental: { typedRoutes: true },
 };
 
@@ -181,7 +181,7 @@ npm install
 - [ ] **Step 1.7: Smoke dev server**
 
 ```bash
-npm run dev --workspace=@carekit/landing
+npm run dev --workspace=@deqah/landing
 ```
 
 Open `http://localhost:5105` — should render an empty Next.js welcome until pages are written.
@@ -203,7 +203,7 @@ Create `apps/backend/src/modules/platform/signup/reserved-slugs.ts`:
 
 ```ts
 export const RESERVED_SLUGS = new Set<string>([
-  'www', 'api', 'admin', 'app', 'dashboard', 'carekit', 'cdn',
+  'www', 'api', 'admin', 'app', 'dashboard', 'deqah', 'cdn',
   'static', 'assets', 'signup', 'login', 'support', 'help',
   'docs', 'blog', 'status', 'billing', 'accounts',
 ]);
@@ -698,7 +698,7 @@ Create `apps/landing/app/[locale]/signup/state/wizard-machine.ts`. Pure reducer 
 - [ ] **Step 5.3: Run**
 
 ```bash
-npm run test --workspace=@carekit/landing
+npm run test --workspace=@deqah/landing
 ```
 
 Expected: 5 green.
@@ -716,7 +716,7 @@ git commit -m "feat(saas-07): signup wizard state machine"
 
 - [ ] **Step 6.1: Build `wizard-stepper.tsx` + `step-vertical.tsx`**
 
-Fetch verticals via `@carekit/api-client` → `GET /api/v1/public/verticals`. Render grid of cards with vertical icon + name in current locale. Dispatch `SET_VERTICAL` + `NEXT` on click.
+Fetch verticals via `@deqah/api-client` → `GET /api/v1/public/verticals`. Render grid of cards with vertical icon + name in current locale. Dispatch `SET_VERTICAL` + `NEXT` on click.
 
 - [ ] **Step 6.2: Build `step-clinic.tsx`**
 
@@ -728,13 +728,13 @@ Fetch plans via `GET /api/v1/public/plans`. Render 3 plan cards (STARTER/PRO/PRE
 
 - [ ] **Step 6.4: Build `step-payment.tsx` — Moyasar hosted checkout**
 
-Embed Moyasar hosted checkout via their `mysr-form` script. On successful tokenization, the token callback fires → dispatch `SET_PAYMENT_TOKEN` → call `POST /api/landing/signup` (Next route handler that proxies to backend `POST /api/v1/public/signup` and sets a `.carekit.app` cookie with the returned JWT).
+Embed Moyasar hosted checkout via their `mysr-form` script. On successful tokenization, the token callback fires → dispatch `SET_PAYMENT_TOKEN` → call `POST /api/landing/signup` (Next route handler that proxies to backend `POST /api/v1/public/signup` and sets a `.deqah.app` cookie with the returned JWT).
 
 Reference: see the `moyasar` skill for hosted-checkout integration specifics. Include CSP allowlist for `https://api.moyasar.com` in `next.config.mjs` headers.
 
 - [ ] **Step 6.5: Build `step-success.tsx`**
 
-Renders spinner + "Preparing your dashboard…" message, then `window.location.href = \`https://${slug}.carekit.app/dashboard?welcome=true\`` after the cookie is set.
+Renders spinner + "Preparing your dashboard…" message, then `window.location.href = \`https://${slug}.deqah.app/dashboard?welcome=true\`` after the cookie is set.
 
 For local dev: redirect to `http://${slug}.localhost:5103/dashboard?welcome=true` gated by `NODE_ENV`.
 
@@ -755,7 +755,7 @@ export async function POST(req: NextRequest) {
   if (!res.ok) return NextResponse.json(data, { status: res.status });
 
   const response = NextResponse.json({ slug: data.slug });
-  const cookieDomain = process.env.NODE_ENV === 'production' ? '.carekit.app' : 'localhost';
+  const cookieDomain = process.env.NODE_ENV === 'production' ? '.deqah.app' : 'localhost';
   response.cookies.set('ck_access', data.accessToken, {
     domain: cookieDomain,
     httpOnly: true,
@@ -779,7 +779,7 @@ export async function POST(req: NextRequest) {
 - [ ] **Step 6.7: Smoke test**
 
 ```bash
-npm run dev --workspace=@carekit/landing
+npm run dev --workspace=@deqah/landing
 ```
 
 Walk through the wizard manually with a Moyasar sandbox token.
@@ -833,8 +833,8 @@ git commit -m "feat(saas-07): marketing homepage + 8 vertical pages + pricing + 
 Form → `POST /api/v1/auth/login` (existing endpoint). On success, the JWT claims contain `isSuperAdmin` and `organizationSlug` (add `organizationSlug` to JWT payload if not already present — **owner-review item**: confirm with owner before extending JWT).
 
 Routing logic:
-- `isSuperAdmin === true` → `https://admin.carekit.app`
-- `organizationSlug` present → `https://{slug}.carekit.app/dashboard`
+- `isSuperAdmin === true` → `https://admin.deqah.app`
+- `organizationSlug` present → `https://{slug}.deqah.app/dashboard`
 - else → error: "No active clinic membership."
 
 - [ ] **Step 8.2: Commit**
@@ -855,10 +855,10 @@ Add a server block:
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name carekit.app www.carekit.app;
+    server_name deqah.app www.deqah.app;
     include /etc/nginx/security_headers.conf;
-    ssl_certificate /etc/nginx/ssl/carekit.app.pem;
-    ssl_certificate_key /etc/nginx/ssl/carekit.app.key;
+    ssl_certificate /etc/nginx/ssl/deqah.app.pem;
+    ssl_certificate_key /etc/nginx/ssl/deqah.app.key;
 
     location / {
         proxy_pass http://landing:5105;
@@ -946,11 +946,11 @@ npm run kiwi:sync-manual data/kiwi/signup-<date>.json
 
 - [ ] **Step 11.1: Update root `CLAUDE.md`**
 
-Add `apps/landing/` to the Structure tree. Add `carekit.app` to domain listing.
+Add `apps/landing/` to the Structure tree. Add `deqah.app` to domain listing.
 
 - [ ] **Step 11.2: Create `apps/landing/CLAUDE.md`**
 
-Documents: port 5105, AR/EN routing, wizard state machine contract, `BACKEND_URL` env var, cookie domain `.carekit.app`, Moyasar owner-only caveat.
+Documents: port 5105, AR/EN routing, wizard state machine contract, `BACKEND_URL` env var, cookie domain `.deqah.app`, Moyasar owner-only caveat.
 
 - [ ] **Step 11.3: Update `docs/superpowers/plans/2026-04-21-saas-transformation-index.md`**
 
@@ -965,7 +965,7 @@ description: Plan 07 (marketing site + signup wizard) — status and key facts
 type: project
 ---
 **Status:** [fill in: PR #, tests passing, divergences]
-**Scope delivered:** apps/landing on :5105, carekit.app, 8 vertical pages + pricing + 5-step signup wizard + Moyasar integration + `.carekit.app` cookie handoff.
+**Scope delivered:** apps/landing on :5105, deqah.app, 8 vertical pages + pricing + 5-step signup wizard + Moyasar integration + `.deqah.app` cookie handoff.
 **Owner-review items:** JWT payload extension (organizationSlug claim), Moyasar signup charge endpoint.
 **Next:** Plan 08 (website multi-tenant + vertical themes).
 ```
@@ -973,10 +973,10 @@ type: project
 - [ ] **Step 11.5: Open PR**
 
 ```bash
-gh pr create --title "feat(saas-07): marketing landing + signup wizard on carekit.app" \
+gh pr create --title "feat(saas-07): marketing landing + signup wizard on deqah.app" \
   --body "$(cat <<'EOF'
 ## Summary
-New apps/landing workspace on port 5105 serving carekit.app. Marketing homepage + 8 vertical pages + pricing + 5-step signup wizard with Moyasar hosted checkout.
+New apps/landing workspace on port 5105 serving deqah.app. Marketing homepage + 8 vertical pages + pricing + 5-step signup wizard with Moyasar hosted checkout.
 
 ## Owner-review items
 - JWT payload extension: added `organizationSlug` claim (touches auth — owner-only).
@@ -998,7 +998,7 @@ EOF
 
 ## Critical Lessons (to propagate if they occur)
 
-1. **Cross-subdomain cookies:** `.carekit.app` parent cookie works for `{slug}.carekit.app` children, but requires HTTPS in production. Local dev needs `localhost` cookie (no leading dot for Chrome compliance).
+1. **Cross-subdomain cookies:** `.deqah.app` parent cookie works for `{slug}.deqah.app` children, but requires HTTPS in production. Local dev needs `localhost` cookie (no leading dot for Chrome compliance).
 2. **Moyasar token lifetime:** tokens are short-lived (~15 min). If the user stalls on step 4, re-tokenize on submit or the charge will fail with `expired_token`.
 3. **Seed ordering inside `$transaction`:** Branch must exist before Department (FK). `vertical.findUnique` happens outside tx. Verify FK order matches schema.
 4. **JWT claim extension is breaking** if older clients don't tolerate extra fields — verify the dashboard JWT parser is permissive.

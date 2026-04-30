@@ -1,8 +1,8 @@
-# Maestro v10 — CareKit Agents
+# Maestro v10 — Deqah Agents
 
-> **Status (2026-04-25): available, not mandatory.** Day-to-day CareKit work flows through superpowers skills (`writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `brainstorming`) on plain feature branches. The roster below is real — each agent has a spec in `.claude/agents/*.md` and the `/plan`, `/execute`, `/verify`, `/maestro` slash commands resolve — but you opt into Maestro per task; you do not have to route every request through it.
+> **Status (2026-04-25): available, not mandatory.** Day-to-day Deqah work flows through superpowers skills (`writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `brainstorming`) on plain feature branches. The roster below is real — each agent has a spec in `.claude/agents/*.md` and the `/plan`, `/execute`, `/verify`, `/maestro` slash commands resolve — but you opt into Maestro per task; you do not have to route every request through it.
 
-A tiered multi-agent system built entirely on Claude Code, tuned for the CareKit monorepo. When invoked, a cheap Router triages the request and routes it to one of three paths (Fast / Standard / Deep) with different budgets, agents, and deliverables.
+A tiered multi-agent system built entirely on Claude Code, tuned for the Deqah monorepo. When invoked, a cheap Router triages the request and routes it to one of three paths (Fast / Standard / Deep) with different budgets, agents, and deliverables.
 
 ---
 
@@ -78,7 +78,7 @@ USER REQUEST
 ┌────────────────────────────────┐
 │ 3. WORKTREE (if DEEP)          │
 │   Isolated dir, own DB + port  │
-│   carekit_<slug>, 5110+        │
+│   deqah_<slug>, 5110+        │
 └──────────────┬─────────────────┘
                │
                ▼
@@ -186,7 +186,7 @@ Fahad rejects any deliverable showing these:
 - ❌ Files > 350 lines — split before you cross
 - ❌ `prisma db push` or manual SQL — migrations only
 - ❌ Editing an existing Prisma migration — migrations are immutable
-- ❌ New Product in Kiwi TCMS (only `CareKit`) — distinguish by Category + Plan type
+- ❌ New Product in Kiwi TCMS (only `Deqah`) — distinguish by Category + Plan type
 - ❌ Playwright re-introduction — removed 2026-04-16; dashboard E2E is manual via Chrome DevTools MCP
 
 ---
@@ -200,8 +200,8 @@ Mobile (RN/Expo):    Jest + RN Testing Library, Maestro (E2E flows)
 DB:                  Prisma migrate test + seed validation
 Types:               tsc --noEmit (strict in each workspace)
 Lint:                ESLint --max-warnings 0 + Prettier
-QA source of truth:  Kiwi TCMS at https://localhost:6443 — Product = "CareKit" (id=1), Version = "main"
-                     One TestPlan per (domain, type): e.g. "CareKit / Bookings / Manual QA"
+QA source of truth:  Kiwi TCMS at https://localhost:6443 — Product = "Deqah" (id=1), Version = "main"
+                     One TestPlan per (domain, type): e.g. "Deqah / Bookings / Manual QA"
                      Use the existing sync scripts — never write new ones:
                        · scripts/kiwi-sync-manual-qa.mjs  (manual QA)
                        · /c/pro/kiwi-tcms/run-and-sync.sh (automated)

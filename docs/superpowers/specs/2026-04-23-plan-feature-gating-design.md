@@ -7,7 +7,7 @@
 
 ## 1. Problem
 
-CareKit has two independent systems that solve overlapping problems:
+Deqah has two independent systems that solve overlapping problems:
 
 - **Plan.limits (JSON)** — quantitative quotas (`maxBranches`, `maxEmployees`) + some boolean flags (`chatbotEnabled`, `zatcaEnabled`, `ratingsEnabled`). Enforced by `PlanLimitsGuard` for BRANCHES and EMPLOYEES only.
 - **FeatureFlag model** — per-org on/off switches (`organizationId` required), used by the dashboard sidebar (`featureFlag: "multi_branch"`). No link to plan tiers.
@@ -29,7 +29,7 @@ Result: no single source of truth for "does this org's plan include feature X?" 
 ## 3. Architecture Overview
 
 ```
-@carekit/shared
+@deqah/shared
   └─ FeatureKey enum (hardcoded, authoritative list)
 
 Backend
@@ -92,7 +92,7 @@ Migration: new Prisma migration only — existing Plan rows updated via seed scr
 
 ---
 
-## 5. Shared Types (@carekit/shared)
+## 5. Shared Types (@deqah/shared)
 
 ```typescript
 // packages/shared/src/constants/feature-keys.ts
@@ -124,7 +124,7 @@ export enum FeatureKey {
 export type FeatureFlagKey = `${FeatureKey}`
 ```
 
-`FeatureFlagKey` (string union) replaces the existing type in `@carekit/shared/constants` to stay backward-compatible with current sidebar-config imports.
+`FeatureFlagKey` (string union) replaces the existing type in `@deqah/shared/constants` to stay backward-compatible with current sidebar-config imports.
 
 ---
 

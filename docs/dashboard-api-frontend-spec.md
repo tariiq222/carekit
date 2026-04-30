@@ -1,4 +1,4 @@
-# CareKit Dashboard — API Contracts & Frontend Architecture
+# Deqah Dashboard — API Contracts & Frontend Architecture
 
 > **STATUS: Pre-SaaS historical record.** This spec was written before the
 > multi-tenant SaaS refactor and the API surface has drifted significantly:

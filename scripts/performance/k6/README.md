@@ -1,6 +1,6 @@
-# CareKit k6 Load Tests
+# Deqah k6 Load Tests
 
-Performance tests for the CareKit backend API (`http://localhost:5100/api/v1`).
+Performance tests for the Deqah backend API (`http://localhost:5100/api/v1`).
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ npm run dev:backend  # NestJS on :5100 (default)
 
 | Variable | Default | Description |
 |---|---|---|
-| `K6_EMAIL` | `admin@carekit.sa` | Admin login email |
+| `K6_EMAIL` | `admin@deqah.sa` | Admin login email |
 | `K6_PASSWORD` | `Password123!` | Admin password |
 | `K6_EMPLOYEE_ID` | `1` | Employee ID for slot/rating tests |
 | `K6_SERVICE_ID` | `1` | Service ID for booking creation |

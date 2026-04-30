@@ -15,8 +15,8 @@
 ## Environment
 
 - Backend `:5100` ✅ — seed inserted 3 employees, 3 services, 0 ratings, 0 inactive employees. Seed is **below spec** (plan wants 10+ employees, mixed active/inactive, 3+ specialties, 2+ branches, a rated employee, an employee without experience).
-- Dashboard `:5103` ✅ — logged in as `admin@carekit-test.com` via dev auth.
-- Kiwi duplicate product `CareKit Dashboard` (id=3) merged back into `CareKit` (id=1) before this session — fixed in container via `merge-playbook`.
+- Dashboard `:5103` ✅ — logged in as `admin@deqah-test.com` via dev auth.
+- Kiwi duplicate product `Deqah Dashboard` (id=3) merged back into `Deqah` (id=1) before this session — fixed in container via `merge-playbook`.
 
 ---
 
@@ -157,8 +157,8 @@ Minor — flagged for the design pass.
 
 ## Kiwi TCMS
 
-- Product: `CareKit` (id=1). Duplicate `CareKit Dashboard` merged before this session.
-- Plan: `CareKit / Employees / Manual QA`
+- Product: `Deqah` (id=1). Duplicate `Deqah Dashboard` merged before this session.
+- Plan: `Deqah / Employees / Manual QA`
 - Build: `manual-qa-2026-04-17`
 - Plan JSON: [`data/kiwi/employees-2026-04-17.json`](../../../data/kiwi/employees-2026-04-17.json)
 - Sync: `npm run kiwi:sync-manual data/kiwi/employees-2026-04-17.json`

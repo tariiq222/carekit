@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Lock the CareKit mobile app to a single hard-coded tenant via `X-Org-Id` header, rebrand the app's launcher identity to "سواء للإرشاد الأسري", and seed the dev tenant as a family-consulting org.
+**Goal:** Lock the Deqah mobile app to a single hard-coded tenant via `X-Org-Id` header, rebrand the app's launcher identity to "سواء للإرشاد الأسري", and seed the dev tenant as a family-consulting org.
 
 **Architecture:** Backend `TenantResolverMiddleware` gains a new resolution step that accepts `X-Org-Id` only on unauthenticated public routes (JWT still wins on authenticated). Mobile sends the header on every request via an Axios interceptor. App identity (name, icon, bundle ID) is set in `app.config.ts`. Customer's vertical/name applied via an idempotent seed script.
 
@@ -27,7 +27,7 @@
 | `apps/mobile/app.json` | Replaced by app.config.ts | Delete |
 | `apps/mobile/app.config.ts` | Expo dynamic config — name, icon, bundle | Create |
 | `apps/mobile/assets/sawa/icon.png` | Customer-provided launcher icon | Add (manual drop, blocking step) |
-| `apps/mobile/assets/sawa/splash.png` | Splash placeholder (copy of CareKit until customer provides) | Add |
+| `apps/mobile/assets/sawa/splash.png` | Splash placeholder (copy of Deqah until customer provides) | Add |
 | `apps/mobile/assets/sawa/android-icon-*.png` | Android adaptive icon (placeholder copies) | Add |
 
 Total: 6 modified, 6+ created/added, 1 deleted. Single PR.
@@ -545,7 +545,7 @@ Expected: stdout shows `✓ Updated organization: { id: '00000000-...', nameAr: 
 
 Run:
 ```bash
-docker exec carekit-postgres psql -U carekit -d carekit_dev -c \
+docker exec deqah-postgres psql -U deqah -d deqah_dev -c \
   "SELECT o.\"nameAr\", o.slug, v.slug AS vertical FROM \"Organization\" o LEFT JOIN \"Vertical\" v ON v.id = o.\"verticalId\" WHERE o.id = '00000000-0000-0000-0000-000000000001';"
 ```
 Expected: row showing `سواء للإرشاد الأسري | sawa | family-consulting`.
@@ -598,10 +598,10 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 Run: `cd apps/mobile && npx tsc --noEmit`
 Expected: PASS (no callers of `APP_SCHEME` should break — value change only).
 
-If any code depends on the literal `'carekit'` for scheme, leave a TODO and surface it; don't fix in this task. Search:
+If any code depends on the literal `'deqah'` for scheme, leave a TODO and surface it; don't fix in this task. Search:
 
 ```bash
-grep -rn "'carekit'" apps/mobile/ --include='*.ts' --include='*.tsx' | grep -v node_modules
+grep -rn "'deqah'" apps/mobile/ --include='*.ts' --include='*.tsx' | grep -v node_modules
 ```
 
 If matches found that aren't telemetry/analytics constants, list them in the commit body.
@@ -869,7 +869,7 @@ Expected: same data — falls back to `DEFAULT_ORGANIZATION_ID` in permissive mo
 
 - [ ] **Step 5: Open the mobile app on a development build**
 
-Note: Expo Go cannot show a custom app name or launcher icon — you'll see "Expo" or "carekit" in Expo Go. To verify the rebrand: `cd apps/mobile && npx expo run:ios` (or `run:android`) which builds a dev client with the real `app.config.ts` applied.
+Note: Expo Go cannot show a custom app name or launcher icon — you'll see "Expo" or "deqah" in Expo Go. To verify the rebrand: `cd apps/mobile && npx expo run:ios` (or `run:android`) which builds a dev client with the real `app.config.ts` applied.
 
 Expected on the home screen of the simulator/device:
 - App name in the launcher: **سواء للإرشاد الأسري**

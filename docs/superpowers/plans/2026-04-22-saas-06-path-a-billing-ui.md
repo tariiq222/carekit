@@ -243,7 +243,7 @@ Reads `useBilling()`. Primary metric: `usage.BOOKINGS` (count this month) vs `li
 - ≤ 90 lines.
 - Shows: plan name (`nameAr`/`nameEn`), progress bar (0–100%), `current / max` label, upgrade link if ≥ 80%.
 - Collapsed on mobile via `md:block hidden` so sidebar doesn't overflow.
-- Uses existing Progress UI primitive from `@carekit/ui` or shadcn `Progress`.
+- Uses existing Progress UI primitive from `@deqah/ui` or shadcn `Progress`.
 - `bg-warning/10 text-warning` tone when 80–99%; `bg-error/10 text-error` at 100%+.
 
 ### 3.3 Translation keys (add to `ar.billing.ts` / `en.billing.ts`)
@@ -510,7 +510,7 @@ Author `data/kiwi/dashboard-billing-<date>.json`:
   "domain": "dashboard-billing",
   "version": "main",
   "build": "saas-06-path-a-<date>",
-  "planName": "CareKit / Dashboard-Billing / Manual QA",
+  "planName": "Deqah / Dashboard-Billing / Manual QA",
   "planSummary": "Plan 06 Path A — billing UI manual QA",
   "runSummary": "Covers subscription list, upgrade dialog, cancel dialog, usage widget, status banners across AR/EN",
   "cases": [
@@ -584,7 +584,7 @@ Edit [2026-04-21-saas-transformation-index.md](docs/superpowers/plans/2026-04-21
 
 ### 8.4 Memory update
 
-Append to memory file [saas06_status.md](~/.claude/projects/-Users-tariq-code-carekit/memory/saas06_status.md): note Path A merged, Path B (literals + EN parity for non-billing) deferred to Plan 06a.
+Append to memory file [saas06_status.md](~/.claude/projects/-Users-tariq-code-deqah/memory/saas06_status.md): note Path A merged, Path B (literals + EN parity for non-billing) deferred to Plan 06a.
 
 ### 8.5 Commit cadence
 
@@ -631,4 +631,4 @@ Merge criteria:
 ## Amendments applied during execution
 
 - 2026-04-22: `GET /api/v1/dashboard/billing/subscription` on `main` does **not** include usage counters yet. The current handler only returns `include: { plan: true }`. For Path A execution we used a dashboard-side compatibility fallback: `Subscription.usage` remains optional, `BillingContext` exposes an empty usage map when absent, and both `UsageBars` / `BillingUsageWidget` render conservatively (no guessed usage). A backend follow-up is still needed to expose real counters (either by joining usage onto `Subscription` or adding `GET /api/v1/dashboard/billing/usage`).
-- 2026-04-22: Execution continued inside the existing DEEP-path worktree `/Users/tariq/code/carekit-feat-saas-06-i18n` instead of the main workspace so the branch could be safely rebased onto `origin/main` and kept isolated per `WORKTREES.md`.
+- 2026-04-22: Execution continued inside the existing DEEP-path worktree `/Users/tariq/code/deqah-feat-saas-06-i18n` instead of the main workspace so the branch could be safely rebased onto `origin/main` and kept isolated per `WORKTREES.md`.

@@ -1,4 +1,4 @@
-# Lighthouse CI — CareKit Dashboard
+# Lighthouse CI — Deqah Dashboard
 
 Performance audits for the Next.js admin dashboard using [LHCI](https://github.com/GoogleChrome/lighthouse-ci).
 

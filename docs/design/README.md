@@ -1,6 +1,6 @@
-# CareKit Design Specifications
+# Deqah Design Specifications
 
-Surviving design references for CareKit. The visual language (tokens, typography, components) lives in code; this directory documents flows and screen-level specs that are too narrative for inline JSDoc.
+Surviving design references for Deqah. The visual language (tokens, typography, components) lives in code; this directory documents flows and screen-level specs that are too narrative for inline JSDoc.
 
 ## Document Index
 
@@ -15,7 +15,7 @@ Surviving design references for CareKit. The visual language (tokens, typography
 ## Where the design system actually lives
 
 - **Design language / brand personality** — root `CLAUDE.md` § "Design Context" is the source of truth (Royal Blue + Lime Green, glassmorphism, IBM Plex Sans Arabic, 8px grid, semantic tokens only).
-- **Primitives** — `packages/ui/` (`@carekit/ui`) ships the cross-app primitives consumed by both `apps/dashboard` and `apps/mobile`. shadcn-style components live in `apps/dashboard/components/ui/` for dashboard-only pieces.
+- **Primitives** — `packages/ui/` (`@deqah/ui`) ships the cross-app primitives consumed by both `apps/dashboard` and `apps/mobile`. shadcn-style components live in `apps/dashboard/components/ui/` for dashboard-only pieces.
 - **Tokens / theming** — CSS custom properties driven by the per-clinic `BrandingConfig` (backend `org-experience/branding/`). Never hardcode hex colors; consume `--primary`, `--accent`, etc.
 - **Page anatomy** — root `CLAUDE.md` § "Page Anatomy — The Law" defines the dashboard list-page structure (PageHeader → StatsGrid → FilterBar → DataTable).
 
@@ -31,5 +31,5 @@ Surviving design references for CareKit. The visual language (tokens, typography
 
 | Platform | UI Library | Icons | Charts |
 |----------|-----------|-------|--------|
-| Mobile (Expo) | `@carekit/ui` + React Native core | Lucide React Native | — |
-| Dashboard (Next.js) | `@carekit/ui` + shadcn/ui (`components/ui/`) | Lucide React | Recharts |
+| Mobile (Expo) | `@deqah/ui` + React Native core | Lucide React Native | — |
+| Dashboard (Next.js) | `@deqah/ui` + shadcn/ui (`components/ui/`) | Lucide React | Recharts |

@@ -2,7 +2,7 @@
 
 - **Date:** 2026-04-17
 - **Build:** `manual-qa-2026-04-17`
-- **Plan:** CareKit / Branches / Manual QA
+- **Plan:** Deqah / Branches / Manual QA
 - **Environment:** localhost:5103 (dashboard) · localhost:5100 (backend)
 - **Tester:** Chrome DevTools MCP walkthrough
 - **Seed:** 3 branches (Main Branch `isMain=true`, Al Rawdah, "للللل")

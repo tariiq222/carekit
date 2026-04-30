@@ -1,11 +1,11 @@
-# apps/admin — CareKit Super-admin Panel
+# apps/admin — Deqah Super-admin Panel
 
 Next.js 15 (App Router) + React 19 + TanStack Query, mounted at
-`admin.carekit.app` in prod and `http://localhost:5104` in dev.
+`admin.deqah.app` in prod and `http://localhost:5104` in dev.
 
 ## Purpose
 
-Platform control plane used only by CareKit staff. NOT a clinic-facing
+Platform control plane used only by Deqah staff. NOT a clinic-facing
 dashboard — that lives in `apps/dashboard`. Super-admins:
 
 - list / suspend / reinstate organizations
@@ -23,8 +23,8 @@ dashboard — that lives in `apps/dashboard`. Super-admins:
    Mirror the backend layout at `modules/platform/admin/<action>/` so
    you can follow a feature end-to-end without bouncing across layers.
    No cross-feature imports (feature A → feature B). Shared primitives
-   go in `@carekit/ui` or `lib/`.
-2. **No feature-specific components in `@carekit/ui`** — that package is
+   go in `@deqah/ui` or `lib/`.
+2. **No feature-specific components in `@deqah/ui`** — that package is
    shared with the tenant dashboard. Admin-only widgets live here in
    the owning feature slice.
 3. **LTR only.** The tenant dashboard is Arabic-first / RTL. This panel
@@ -117,7 +117,7 @@ clinic dashboard against the tenant's own Moyasar — never here.
 npm run dev:admin   # → http://localhost:5104
 
 # create a super-admin to sign in with
-SUPER_ADMIN_EMAIL='you@carekit' SUPER_ADMIN_PASSWORD='changeme' \
+SUPER_ADMIN_EMAIL='you@deqah' SUPER_ADMIN_PASSWORD='changeme' \
   npm run seed --workspace=backend
 ```
 

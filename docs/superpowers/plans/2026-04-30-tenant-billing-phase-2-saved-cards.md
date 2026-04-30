@@ -4,7 +4,7 @@
 
 **Goal:** Add tenant-facing multi-card saved payment methods for SaaS billing, with one default card, tenant isolation, Moyasar token verification, and a dashboard payment-methods page.
 
-**Architecture:** Extend the existing `platform/billing` vertical slice without rewriting billing. `SavedCard` is tenant-scoped and becomes the source of truth for reusable Moyasar tokens; during Phase 2, handlers also keep `Subscription.moyasarCardTokenRef` synchronized with the default card so Phase 1 trial conversion and existing charge crons keep working. Raw PAN/CVC never reaches CareKit; the browser uses Moyasar.js tokenization with a `pk_*` key and sends only `token_*` to the backend.
+**Architecture:** Extend the existing `platform/billing` vertical slice without rewriting billing. `SavedCard` is tenant-scoped and becomes the source of truth for reusable Moyasar tokens; during Phase 2, handlers also keep `Subscription.moyasarCardTokenRef` synchronized with the default card so Phase 1 trial conversion and existing charge crons keep working. Raw PAN/CVC never reaches Deqah; the browser uses Moyasar.js tokenization with a `pk_*` key and sends only `token_*` to the backend.
 
 **Tech Stack:** NestJS 11, Prisma 7 split schema, PostgreSQL RLS, class-validator DTOs, Moyasar REST API, Next.js 15 App Router, React 19, TanStack Query, Tailwind 4, Vitest/Jest.
 
@@ -494,7 +494,7 @@ export class AddSavedCardHandler {
       amount: SAVED_CARD_VERIFICATION_AMOUNT_HALALAS,
       currency: 'SAR',
       idempotencyKey: `saved-card-verify:${organizationId}:${randomUUID()}`,
-      description: 'CareKit saved card verification',
+      description: 'Deqah saved card verification',
       callbackUrl: this.billingCallbackUrl(),
     });
 
@@ -1114,7 +1114,7 @@ describe("PaymentMethodsPage", () => {
       locale: "en",
       t: (key: string) => ({
         "billing.paymentMethods.title": "Payment methods",
-        "billing.paymentMethods.description": "Manage cards used for CareKit subscription billing.",
+        "billing.paymentMethods.description": "Manage cards used for Deqah subscription billing.",
         "billing.paymentMethods.add": "Add card",
         "billing.paymentMethods.default": "Default",
         "billing.paymentMethods.setDefault": "Set default",
@@ -1189,7 +1189,7 @@ Add keys to `en.billing.ts`:
 
 ```ts
   "billing.paymentMethods.title": "Payment methods",
-  "billing.paymentMethods.description": "Manage cards used for CareKit subscription billing.",
+  "billing.paymentMethods.description": "Manage cards used for Deqah subscription billing.",
   "billing.paymentMethods.add": "Add card",
   "billing.paymentMethods.default": "Default",
   "billing.paymentMethods.setDefault": "Set default",
@@ -1215,7 +1215,7 @@ Create `apps/dashboard/app/(dashboard)/settings/billing/payment-methods/page.tsx
 "use client"
 
 import { useState } from "react"
-import { Badge, Button, Card, Input, Skeleton } from "@carekit/ui"
+import { Badge, Button, Card, Input, Skeleton } from "@deqah/ui"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
@@ -1522,4 +1522,4 @@ Expected: clean worktree and 4-6 focused commits on `feat/tenant-billing-phase-2
 - Spec coverage: covers Phase 2 SavedCard schema, RLS, 4 handlers, saved-card endpoints, payment-methods page, add/set-default/remove flows, and Moyasar tokenization boundary.
 - Intentional defer: admin read-only saved-card views and DunningLog are Phase 5/9, not Phase 2.
 - Risk note: verification charge amount uses `100` halalas because Moyasar reference says minimum `100`; if product requires exactly `50`, verify against Moyasar sandbox before implementation.
-- No raw card data crosses into backend; only `token_*` is sent to CareKit.
+- No raw card data crosses into backend; only `token_*` is sent to Deqah.

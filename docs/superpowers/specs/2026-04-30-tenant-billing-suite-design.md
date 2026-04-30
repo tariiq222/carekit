@@ -9,10 +9,10 @@
 
 Today, `apps/backend/src/modules/platform/billing/` and `apps/dashboard/app/(dashboard)/settings/billing/` already ship a working baseline (≈60% of the surface area). What's missing is what makes a SaaS billing experience feel professional: cancel-at-period-end, multi-card saved-cards, smart-retry dunning, proration, PDF invoices, hard-limit UX, and a properly designed 14-day trial lifecycle.
 
-The goal is to deliver a billing suite that feels like Stripe/Linear in quality, while staying inside CareKit's design system (frosted glass, RTL-first, IBM Plex Sans Arabic, semantic tokens, Page Anatomy Law).
+The goal is to deliver a billing suite that feels like Stripe/Linear in quality, while staying inside Deqah's design system (frosted glass, RTL-first, IBM Plex Sans Arabic, semantic tokens, Page Anatomy Law).
 
 ### Non-goals
-- SMS billing (per-tenant providers; CareKit does not bill SMS — confirmed in `saas_sms_architecture.md`).
+- SMS billing (per-tenant providers; Deqah does not bill SMS — confirmed in `saas_sms_architecture.md`).
 - Bookings overage / credits / top-up (bookings are unlimited on every plan).
 - Bank-transfer payment method (everything via Moyasar cards).
 - Mobile billing UI (mobile is single-tenant per build; billing is a clinic-owner concern, not an end-user one).
@@ -220,7 +220,7 @@ Edge cases:
 
 ### 5.5 `/settings/billing/invoices/[id]`
 - InvoiceHeader with status badge, dates, total.
-- From/To cards (CareKit + ZATCA VAT vs. Organization + VAT).
+- From/To cards (Deqah + ZATCA VAT vs. Organization + VAT).
 - LineItems table (incl. proration line if applicable).
 - PaymentSummary (subtotal, VAT 15%, total).
 - PaymentInfo block (card brand + last4, Moyasar reference, paid-at).

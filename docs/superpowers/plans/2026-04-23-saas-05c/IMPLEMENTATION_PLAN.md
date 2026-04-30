@@ -4,7 +4,7 @@
 
 ## 1. Goal
 
-Add a **super-admin oversight layer** on top of the Plan 04 billing domain. CareKit staff get cross-tenant visibility (subscriptions, invoices, MRR/churn) and money-affecting controls (refund, waive, grant credit, force plan change) — every action audited via `SuperAdminActionLog`.
+Add a **super-admin oversight layer** on top of the Plan 04 billing domain. Deqah staff get cross-tenant visibility (subscriptions, invoices, MRR/churn) and money-affecting controls (refund, waive, grant credit, force plan change) — every action audited via `SuperAdminActionLog`.
 
 **Plan 04 is intentionally unchanged.** Domain logic (state machine, webhooks, cron, tenant endpoints) stays. This plan adds:
 
@@ -182,7 +182,7 @@ model SubscriptionInvoice {
 
 model BillingCredit {                           // NEW MODEL — platform table, not tenant-scoped
   id                String    @id @default(uuid())
-  organizationId    String    // denormalized; this is CareKit's liability to the tenant
+  organizationId    String    // denormalized; this is Deqah's liability to the tenant
   amount            Decimal   @db.Decimal(12, 2)  // positive credit, deducted from next invoice
   currency          String    @default("SAR")
   reason            String    @db.Text
@@ -249,8 +249,8 @@ model BillingCredit {                           // NEW MODEL — platform table,
 - **Path:** DEEP — owner-only + money-affecting + > 30 files.
 - **Worktree:** required.
   ```bash
-  git worktree add ../carekit-saas-05c -b feat/saas-05c-admin-billing main
-  cd ../carekit-saas-05c
+  git worktree add ../deqah-saas-05c -b feat/saas-05c-admin-billing main
+  cd ../deqah-saas-05c
   npm install
   ```
 - **Ports:** backend 5110, dashboard 5120, admin 5130 (per `WORKTREES.md`). Update local env files only — no commits to env mappings.

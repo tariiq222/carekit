@@ -9,7 +9,7 @@
 
 ## Context
 
-The practitioners module is the most complex in CareKit — 8 services, 8 DTOs, 13+ Prisma models. A three-agent parallel audit was conducted covering:
+The practitioners module is the most complex in Deqah — 8 services, 8 DTOs, 13+ Prisma models. A three-agent parallel audit was conducted covering:
 
 - Agent 1: CRUD + Onboarding + Ratings
 - Agent 2: Availability + Vacations + Breaks (time logic)

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** إصلاح 6 ثغرات في تطبيق CareKit Mobile + Backend — ربط شاشات بـ API حقيقي، إكمال navigation، وإضافة `@ApiTags` مفقود.
+**Goal:** إصلاح 6 ثغرات في تطبيق Deqah Mobile + Backend — ربط شاشات بـ API حقيقي، إكمال navigation، وإضافة `@ApiTags` مفقود.
 
 **Architecture:** كل ثغرة مستقلة. نبدأ بالأولوية العالية (شاشات الممارس → navigation المريض → واجهة التوفر → backend). لا يوجد schema أو migration جديد — فقط تعديلات على ملفات موجودة.
 

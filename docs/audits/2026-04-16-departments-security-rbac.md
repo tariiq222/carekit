@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-16
 **Tester:** Claude (curl + Prisma inspection)
-**Environment:** backend :5100 · DB `carekit_v2`
+**Environment:** backend :5100 · DB `deqah_v2`
 **Scope:** API-level security — tenant isolation, header spoofing, RBAC, JWT tampering, refresh rotation.
 
 ---
@@ -27,7 +27,7 @@
 ## Test setup
 
 - Seeded a second tenant (`c7b7c7b7-…`) + ADMIN user + 1 department via Prisma.
-- Logged in as tenant-1 admin (`admin@carekit-test.com`), tenant-2 admin (`admin@tenant2.test`), and an existing RECEPTIONIST under tenant-1 (password reset via script).
+- Logged in as tenant-1 admin (`admin@deqah-test.com`), tenant-2 admin (`admin@tenant2.test`), and an existing RECEPTIONIST under tenant-1 (password reset via script).
 - All scripts removed after the session. Tenant-2 data deleted.
 
 ---

@@ -4,16 +4,16 @@
 >
 > **Owner-review required:** this plan replaces the edge reverse proxy (Nginx → Caddy), changes TLS termination, and adds a new external exposure (`/public/domain-verified` ask endpoint). Every infra task below must be approved by the owner before merge. The cutover itself (DNS flip) happens in a maintenance window and is reversible within a 7-day parallel-run window.
 
-**Goal:** Enable each tenant to bind a custom domain (e.g., `dr-ahmed-clinic.com`) to their `apps/website` with automatic per-domain TLS. Uses Caddy's on-demand TLS mechanism gated by a backend ask endpoint. Wildcard certificate handles `*.carekit.app` via Let's Encrypt DNS-01 challenge. Per-tenant TXT verification proves domain ownership before Caddy is allowed to issue certificates.
+**Goal:** Enable each tenant to bind a custom domain (e.g., `dr-ahmed-clinic.com`) to their `apps/website` with automatic per-domain TLS. Uses Caddy's on-demand TLS mechanism gated by a backend ask endpoint. Wildcard certificate handles `*.deqah.app` via Let's Encrypt DNS-01 challenge. Per-tenant TXT verification proves domain ownership before Caddy is allowed to issue certificates.
 
 **Architecture:**
 
 ```
 DNS → Caddy (edge, TLS)
-        ├── carekit.app, www.carekit.app        → apps/landing :5105
-        ├── *.carekit.app (wildcard)            → apps/website :5104
-        ├── admin.carekit.app                   → apps/admin :5106 (future, Plan 05b)
-        ├── api.carekit.app                     → apps/backend :5100
+        ├── deqah.app, www.deqah.app        → apps/landing :5105
+        ├── *.deqah.app (wildcard)            → apps/website :5104
+        ├── admin.deqah.app                   → apps/admin :5106 (future, Plan 05b)
+        ├── api.deqah.app                     → apps/backend :5100
         └── <custom-domain> (on-demand TLS)     → apps/website :5104
             ↑ only if GET /api/v1/public/domain-verified?host=<h> returns 200
 ```
@@ -29,10 +29,10 @@ The Nginx→Caddy swap keeps Nginx running in a parallel docker-compose service 
 1. **On-demand TLS without an ask endpoint is a DoS vector.** Caddy will try to issue a cert for any Host header it sees. The ask endpoint (`GET /api/v1/public/domain-verified?host=X`) MUST return 200 only for hostnames our DB has marked ACTIVE. Rate-limit the endpoint (30 req/min/IP); it's unauthenticated.
 2. **TXT records take time to propagate.** The verify worker polls every 5 minutes, retries for 24 hours, then marks FAILED. UI must communicate this clearly.
 3. **DNS plugin auth lives in secrets.** Caddy's Cloudflare DNS plugin needs an API token. Store in docker secrets / env file never committed. Use `CLOUDFLARE_API_TOKEN` env var pattern.
-4. **Wildcard cert renewal needs DNS-01**, not HTTP-01. Cloudflare token scoped to `Zone: DNS: Edit` on `carekit.app` only.
-5. **Never put the API origin behind the custom-domain cert.** `api.carekit.app` only. Tenants never see `yourdomain.com/api/*` — CORS + cross-origin is the pattern.
+4. **Wildcard cert renewal needs DNS-01**, not HTTP-01. Cloudflare token scoped to `Zone: DNS: Edit` on `deqah.app` only.
+5. **Never put the API origin behind the custom-domain cert.** `api.deqah.app` only. Tenants never see `yourdomain.com/api/*` — CORS + cross-origin is the pattern.
 6. **Rollback plan is not optional.** Document the DNS flip-back steps.
-7. **Caddy must NOT emit CORS headers** (BLOCKER). An earlier draft had `header Access-Control-Allow-Origin "https://{http.request.header.Origin}"` on `api.carekit.app` — that reflects any origin and, combined with credentialed requests, lets any site call the API as the logged-in user. CORS lives in the NestJS app (`app.enableCors`) and validates origins against a per-tenant allowlist before echoing. Caddy proxies only.
+7. **Caddy must NOT emit CORS headers** (BLOCKER). An earlier draft had `header Access-Control-Allow-Origin "https://{http.request.header.Origin}"` on `api.deqah.app` — that reflects any origin and, combined with credentialed requests, lets any site call the API as the logged-in user. CORS lives in the NestJS app (`app.enableCors`) and validates origins against a per-tenant allowlist before echoing. Caddy proxies only.
 
 ---
 
@@ -50,7 +50,7 @@ The Nginx→Caddy swap keeps Nginx running in a parallel docker-compose service 
 | `apps/backend/src/modules/platform/domains/remove-domain.handler.ts` | Tenant removes |
 | `apps/backend/src/modules/platform/domains/get-domain.handler.ts` | Status read |
 | `apps/backend/src/modules/platform/domains/dns-resolver.service.ts` | Wraps `dns.promises.resolveTxt` — mockable |
-| `apps/backend/src/modules/platform/domains/generate-challenge.ts` | Pure fn: `carekit-verify=<random>` |
+| `apps/backend/src/modules/platform/domains/generate-challenge.ts` | Pure fn: `deqah-verify=<random>` |
 | `apps/backend/src/modules/platform/domains/domains.controller.ts` | Dashboard CRUD |
 | `apps/backend/src/api/public/domain-ask.controller.ts` | `GET /api/v1/public/domain-verified?host=X` — Caddy ask endpoint |
 | `apps/backend/src/modules/platform/domains/verify-domain.cron.ts` | BullMQ repeat job every 5min |
@@ -84,7 +84,7 @@ model CustomDomain {
   organizationId  String   @unique                       // one-to-one with Organization
   hostname        String   @unique                       // normalized lowercase, e.g. "clinic.com"
   status          CustomDomainStatus @default(PENDING)
-  dnsTxtChallenge String                                 // "carekit-verify=<random>"
+  dnsTxtChallenge String                                 // "deqah-verify=<random>"
   verifiedAt      DateTime?
   lastCheckedAt   DateTime?
   failureReason   String?
@@ -145,7 +145,7 @@ describe('AddDomainHandler', () => {
   it('creates CustomDomain with generated TXT challenge', async () => {
     const result = await handler.execute({ hostname: 'My-Clinic.COM ' });
     expect(result.hostname).toBe('my-clinic.com');         // normalized
-    expect(result.dnsTxtChallenge).toMatch(/^carekit-verify=[a-f0-9]{32}$/);
+    expect(result.dnsTxtChallenge).toMatch(/^deqah-verify=[a-f0-9]{32}$/);
     expect(result.status).toBe('PENDING');
   });
   it('rejects invalid hostnames', async () => {
@@ -155,8 +155,8 @@ describe('AddDomainHandler', () => {
     await handler.execute({ hostname: 'taken.com' });
     await expect(handler.execute({ hostname: 'taken.com' })).rejects.toThrow(ConflictException);
   });
-  it('rejects reserved hostnames (*.carekit.app)', async () => {
-    await expect(handler.execute({ hostname: 'anything.carekit.app' })).rejects.toThrow(BadRequestException);
+  it('rejects reserved hostnames (*.deqah.app)', async () => {
+    await expect(handler.execute({ hostname: 'anything.deqah.app' })).rejects.toThrow(BadRequestException);
   });
 });
 ```
@@ -166,7 +166,7 @@ describe('AddDomainHandler', () => {
 ```ts
 import { randomBytes } from 'node:crypto';
 export function generateChallenge(): string {
-  return `carekit-verify=${randomBytes(16).toString('hex')}`;
+  return `deqah-verify=${randomBytes(16).toString('hex')}`;
 }
 ```
 
@@ -189,7 +189,7 @@ export class AddDomainHandler {
     if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/.test(hostname)) {
       throw new BadRequestException('invalid_hostname');
     }
-    if (hostname.endsWith('.carekit.app') || hostname === 'carekit.app') {
+    if (hostname.endsWith('.deqah.app') || hostname === 'deqah.app') {
       throw new BadRequestException('reserved_hostname');
     }
 
@@ -243,7 +243,7 @@ git commit -m "feat(saas-09): add/get/remove CustomDomain handlers + controller"
 ```ts
 describe('VerifyDomainHandler', () => {
   it('marks ACTIVE when DNS returns the expected TXT', async () => {
-    dns.resolveTxt.mockResolvedValue([['carekit-verify=abc123']]);
+    dns.resolveTxt.mockResolvedValue([['deqah-verify=abc123']]);
     await handler.execute({ id: 'dom-1' });
     const row = await prisma.customDomain.findUnique({ where: { id: 'dom-1' } });
     expect(row.status).toBe('ACTIVE');
@@ -365,8 +365,8 @@ describe('GET /api/v1/public/domain-verified', () => {
     await prisma.customDomain.create({ data: { organizationId: ORG_ID, hostname: 'pending.example.com', status: 'PENDING', dnsTxtChallenge: 'x' } });
     await request(app.getHttpServer()).get('/api/v1/public/domain-verified?host=pending.example.com').expect(404);
   });
-  it('returns 200 for *.carekit.app (wildcard fast-path)', async () => {
-    await request(app.getHttpServer()).get('/api/v1/public/domain-verified?host=any.carekit.app').expect(200);
+  it('returns 200 for *.deqah.app (wildcard fast-path)', async () => {
+    await request(app.getHttpServer()).get('/api/v1/public/domain-verified?host=any.deqah.app').expect(200);
   });
   it('returns 404 for unknown host', async () => {
     await request(app.getHttpServer()).get('/api/v1/public/domain-verified?host=never-seen.com').expect(404);
@@ -391,7 +391,7 @@ export class DomainAskController {
   async check(@Query('host') host: string, @Res() res: Response) {
     if (!host) return res.status(400).send();
     const h = host.trim().toLowerCase();
-    if (h === 'carekit.app' || h.endsWith('.carekit.app')) {
+    if (h === 'deqah.app' || h.endsWith('.deqah.app')) {
       return res.status(200).send('ok');
     }
     const row = await this.prisma.customDomain.findUnique({ where: { hostname: h } });
@@ -459,8 +459,8 @@ Follows the Page Anatomy Law (but this is a settings page with no list → simpl
 - If no custom domain: card with AddDomainForm
 - If domain exists:
   - Status badge (PENDING / VERIFYING / ACTIVE / FAILED) with colored indicator
-  - DNS instructions card: "Add this TXT record to your DNS: `_carekit-verify.{hostname}` → `{dnsTxtChallenge}`" + copy-to-clipboard button
-  - CNAME instructions: "Point `{hostname}` to `{slug}.carekit.app` via CNAME"
+  - DNS instructions card: "Add this TXT record to your DNS: `_deqah-verify.{hostname}` → `{dnsTxtChallenge}`" + copy-to-clipboard button
+  - CNAME instructions: "Point `{hostname}` to `{slug}.deqah.app` via CNAME"
   - "Re-check now" button (triggers `POST /api/v1/dashboard/domain/verify`)
   - "Remove domain" button with confirm dialog
 
@@ -489,7 +489,7 @@ git commit -m "feat(saas-09): /settings/domain dashboard UI"
 
 ```caddyfile
 {
-    email ops@carekit.app
+    email ops@deqah.app
     on_demand_tls {
         ask http://backend:5100/api/v1/public/domain-verified
         interval 2m
@@ -499,17 +499,17 @@ git commit -m "feat(saas-09): /settings/domain dashboard UI"
 }
 
 # Marketing + auth (apps/landing)
-carekit.app, www.carekit.app {
+deqah.app, www.deqah.app {
     reverse_proxy landing:5105
     encode gzip zstd
     header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 }
 
-# Tenant dashboards and websites share *.carekit.app via Host routing;
-# for MVP, dashboards live at {slug}.carekit.app/dashboard and the website claims
+# Tenant dashboards and websites share *.deqah.app via Host routing;
+# for MVP, dashboards live at {slug}.deqah.app/dashboard and the website claims
 # the rest. We proxy everything to the website, which handles /dashboard via its own
 # middleware or a redirect to the dashboard origin. If separated in future:
-*.carekit.app {
+*.deqah.app {
     tls {
         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
     }
@@ -522,17 +522,17 @@ carekit.app, www.carekit.app {
     }
 }
 
-api.carekit.app {
+api.deqah.app {
     reverse_proxy backend:5100
     # CORS is handled by the NestJS app (see apps/backend/src/main.ts — `app.enableCors({ origin: <dynamic-allowlist> })`).
     # Do NOT reflect the Origin header here. Reflecting `{http.request.header.Origin}` unconditionally
     # (especially with credentials) is a well-known CORS vulnerability — any site can make authenticated
     # requests on behalf of the user. The backend validates the origin against a per-tenant allowlist
-    # (the tenant's registered custom domain + `{slug}.carekit.app` + `admin.carekit.app` + `carekit.app`)
+    # (the tenant's registered custom domain + `{slug}.deqah.app` + `admin.deqah.app` + `deqah.app`)
     # before echoing `Access-Control-Allow-Origin`. Caddy only proxies; it never writes CORS headers.
 }
 
-admin.carekit.app {
+admin.deqah.app {
     reverse_proxy admin:5106   # Plan 05b
 }
 
@@ -593,23 +593,23 @@ Leave `nginx` service running on alternate ports (e.g., 8080/8443) during the pa
 # Caddy Cutover Runbook (SaaS-09)
 
 ## Pre-flight
-- [ ] Cloudflare API token with `Zone:DNS:Edit` scope on `carekit.app` stored in secret `CLOUDFLARE_API_TOKEN`.
-- [ ] Wildcard cert issuance tested in staging (boot Caddy, confirm `*.carekit.app` cert via `curl -v https://staging.carekit.app`).
+- [ ] Cloudflare API token with `Zone:DNS:Edit` scope on `deqah.app` stored in secret `CLOUDFLARE_API_TOKEN`.
+- [ ] Wildcard cert issuance tested in staging (boot Caddy, confirm `*.deqah.app` cert via `curl -v https://staging.deqah.app`).
 - [ ] Ask endpoint returns 200 for known ACTIVE domains in staging DB.
 - [ ] Nginx running on ports 8080/8443 (shadow).
 
 ## Cutover (maintenance window, ~15 min)
 1. `npm run docker:up caddy` — boot Caddy on 80/443.
-2. Verify: `curl -sI https://carekit.app | head -1` → 200.
-3. Verify: `curl -sI https://<test-tenant>.carekit.app | head -1` → 200.
-4. Verify: `curl -sI https://api.carekit.app/api/v1/health | head -1` → 200.
+2. Verify: `curl -sI https://deqah.app | head -1` → 200.
+3. Verify: `curl -sI https://<test-tenant>.deqah.app | head -1` → 200.
+4. Verify: `curl -sI https://api.deqah.app/api/v1/health | head -1` → 200.
 5. Add a known test custom domain (`test.example.com` pointing at our IP + TXT verified) and verify: `curl -sI https://test.example.com | head -1` → 200 after ~30 sec (first-hit cert issuance).
 6. Monitor Caddy logs for errors: `docker logs -f caddy`.
 7. Monitor Sentry: zero new error spike.
 
 ## Parallel-run (7 days)
 - Nginx stays up on 8080/8443.
-- DNS `A` record for `carekit.app` points at the host IP → Caddy claims 80/443.
+- DNS `A` record for `deqah.app` points at the host IP → Caddy claims 80/443.
 - If anything breaks: flip `docker-compose` port mapping of `nginx` back to 80/443 and stop `caddy` — takes <30 sec.
 - After 7 days of clean metrics: remove `nginx` service in a follow-up PR.
 
@@ -650,7 +650,7 @@ describe('Custom domain full flow', () => {
       .send({ hostname: 'my-test-clinic.example' })
       .expect(201);
     const challenge = addRes.body.dnsTxtChallenge;
-    expect(challenge).toMatch(/^carekit-verify=[a-f0-9]{32}$/);
+    expect(challenge).toMatch(/^deqah-verify=[a-f0-9]{32}$/);
 
     // 2. verify with no DNS — stays VERIFYING
     dnsMock.resolveTxt.mockRejectedValue(new Error('ENODATA'));
@@ -754,7 +754,7 @@ gh pr create --title "feat(saas-09): custom domains + Caddy on-demand TLS" \
 - New CustomDomain model + /settings/domain dashboard UI.
 - DNS TXT verification worker (BullMQ 5-min cron, 24h FAILED timeout).
 - Caddy replaces Nginx as edge proxy with on-demand TLS gated by /api/v1/public/domain-verified ask endpoint.
-- Wildcard *.carekit.app via Cloudflare DNS plugin.
+- Wildcard *.deqah.app via Cloudflare DNS plugin.
 - 7-day parallel-run window: Nginx stays on 8080/8443 as rollback target.
 
 ## Owner-review items

@@ -96,7 +96,7 @@ describe('ServiceEmployeesService', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="service-employees" --no-coverage
 ```
 
@@ -154,7 +154,7 @@ Note: The `branchId` condition moved inside the `employee` filter (previously it
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="service-employees" --no-coverage
 ```
 
@@ -163,7 +163,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/services/service-employees.service.ts \
         backend/test/unit/services/service-employees.service.spec.ts
 git commit -m "fix(services): exclude inactive/deleted employees from getEmployeesForService
@@ -210,7 +210,7 @@ describe('ServiceListQueryDto validation', () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service" --no-coverage
 ```
 
@@ -244,7 +244,7 @@ export class ServiceListQueryDto {
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="services.service" --no-coverage
 ```
 
@@ -253,7 +253,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/services/dto/service-list-query.dto.ts \
         backend/test/unit/services/services.service.spec.ts
 git commit -m "fix(services): cap perPage at 100 in ServiceListQueryDto to prevent unbounded queries
@@ -276,8 +276,8 @@ Check if `/services/list-stats` exists first:
 
 ```bash
 grep -n "list-stats\|listStats\|getListStats" \
-  /Users/tariq/Documents/my_programs/CareKit/backend/src/modules/services/services.controller.ts \
-  /Users/tariq/Documents/my_programs/CareKit/backend/src/modules/services/services.service.ts
+  /Users/tariq/Documents/my_programs/Deqah/backend/src/modules/services/services.controller.ts \
+  /Users/tariq/Documents/my_programs/Deqah/backend/src/modules/services/services.service.ts
 ```
 
 Note what you find. If it exists, use it. If not, follow Step 2a (add to backend). If it already returns active/inactive counts, skip to Step 3.
@@ -373,7 +373,7 @@ Also update the `total` StatCard to use `listStats?.total` instead of `meta?.tot
 - [ ] **Step 4: Run typecheck on dashboard**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/dashboard
+cd /Users/tariq/Documents/my_programs/Deqah/dashboard
 npm run typecheck
 ```
 
@@ -382,7 +382,7 @@ Expected: 0 errors
 - [ ] **Step 5: Run full backend test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -391,7 +391,7 @@ Expected: All passing
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/services/services.service.ts \
         backend/src/modules/services/services.controller.ts \
         dashboard/lib/api/services.ts \

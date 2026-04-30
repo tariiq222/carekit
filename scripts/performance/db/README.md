@@ -1,4 +1,4 @@
-# CareKit — DB Query Performance Toolkit
+# Deqah — DB Query Performance Toolkit
 
 ## Files
 
@@ -17,7 +17,7 @@
 psql $DATABASE_URL -f scripts/performance/db/analyze-queries.sql
 
 # Against staging (read-only replica — safe)
-psql "postgres://user:pass@staging-host/carekit" -f scripts/performance/db/analyze-queries.sql
+psql "postgres://user:pass@staging-host/deqah" -f scripts/performance/db/analyze-queries.sql
 
 # Pipe output to a file for review
 psql $DATABASE_URL -f scripts/performance/db/analyze-queries.sql > /tmp/explain-output.txt 2>&1
@@ -84,7 +84,7 @@ Log output example:
 
 ---
 
-## Key Indexes to Watch in CareKit
+## Key Indexes to Watch in Deqah
 
 | Table | Index | Covers |
 |-------|-------|--------|

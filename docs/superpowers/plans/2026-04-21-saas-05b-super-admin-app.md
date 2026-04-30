@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create a brand-new Next.js 15 app at `apps/admin/` (served on `admin.carekit.app`) used by CareKit super-admin employees to manage all tenant organizations, impersonate users for support, suspend accounts, view platform-wide metrics, manage Plans + Verticals, and inspect cross-tenant billing. Adds a new backend audience `src/api/admin/`, a `SuperAdminGuard`, an impersonation flow with full audit trail, and an activity-log view for every destructive super-admin action.
+**Goal:** Create a brand-new Next.js 15 app at `apps/admin/` (served on `admin.deqah.app`) used by Deqah super-admin employees to manage all tenant organizations, impersonate users for support, suspend accounts, view platform-wide metrics, manage Plans + Verticals, and inspect cross-tenant billing. Adds a new backend audience `src/api/admin/`, a `SuperAdminGuard`, an impersonation flow with full audit trail, and an activity-log view for every destructive super-admin action.
 
-**Architecture:** Separate app — NOT a sub-route of `apps/dashboard/`. Tenants never download super-admin JS. Auth is SHARED with the dashboard (`POST /api/v1/auth/login`), but the admin UI only accepts JWTs whose claim `isSuperAdmin=true`. Impersonation issues a short-lived "shadow" JWT bearing the target `organizationId` + `targetUserId` + the originating super-admin's id; every request carried out under an impersonation session is tagged with `impersonationSessionId` and written to the audit log. Admin app depends on `@carekit/ui` (Plan 05a), `@carekit/api-client`, and `@carekit/shared`.
+**Architecture:** Separate app — NOT a sub-route of `apps/dashboard/`. Tenants never download super-admin JS. Auth is SHARED with the dashboard (`POST /api/v1/auth/login`), but the admin UI only accepts JWTs whose claim `isSuperAdmin=true`. Impersonation issues a short-lived "shadow" JWT bearing the target `organizationId` + `targetUserId` + the originating super-admin's id; every request carried out under an impersonation session is tagged with `impersonationSessionId` and written to the audit log. Admin app depends on `@deqah/ui` (Plan 05a), `@deqah/api-client`, and `@deqah/shared`.
 
-**Tech Stack:** Next.js 15 App Router, React 19, TanStack Query v5, shadcn primitives from `@carekit/ui`, Tailwind 4, next-intl, Zod + React Hook Form. Backend additions: NestJS 11, Prisma 7, nestjs-cls, Jest + Supertest (e2e).
+**Tech Stack:** Next.js 15 App Router, React 19, TanStack Query v5, shadcn primitives from `@deqah/ui`, Tailwind 4, next-intl, Zod + React Hook Form. Backend additions: NestJS 11, Prisma 7, nestjs-cls, Jest + Supertest (e2e).
 
 ---
 
@@ -39,9 +39,9 @@ Plan 05b introduces four primitives whose misuse creates cross-tenant data leaks
 
 ### Invariant 2 — Admin-audience routes only accept requests on the admin host
 
-- `AdminHostGuard` runs globally on every controller in `src/api/admin/**` and rejects requests whose `Host` header is not `admin.carekit.app` (or `admin.localhost:5104` in dev).
-- This is belt-and-braces with `SuperAdminGuard`: even if a super-admin's JWT leaks into an attacker's hands, the attacker can only use it against the admin domain (cookie is scoped to `.carekit.app`; CORS is host-locked; the new guard rejects mismatches at the application layer).
-- Attack prevented: leaked admin JWT replayed against `tenant-slug.carekit.app/api/v1/admin/*` is rejected with 403 regardless of claim validity.
+- `AdminHostGuard` runs globally on every controller in `src/api/admin/**` and rejects requests whose `Host` header is not `admin.deqah.app` (or `admin.localhost:5104` in dev).
+- This is belt-and-braces with `SuperAdminGuard`: even if a super-admin's JWT leaks into an attacker's hands, the attacker can only use it against the admin domain (cookie is scoped to `.deqah.app`; CORS is host-locked; the new guard rejects mismatches at the application layer).
+- Attack prevented: leaked admin JWT replayed against `tenant-slug.deqah.app/api/v1/admin/*` is rejected with 403 regardless of claim validity.
 - Task: **§3.5 is new** — adds this guard + registers it globally on the admin audience.
 
 ### Invariant 3 — Suspended-org JWTs are rejected within 30 seconds
@@ -56,7 +56,7 @@ Plan 05b introduces four primitives whose misuse creates cross-tenant data leaks
 
 - Impersonation JWT **omits `isSuperAdmin` entirely** (not `false` — absent). `SuperAdminGuard`'s strict `=== true` check therefore rejects the shadow JWT even if `AdminHostGuard` is somehow bypassed.
 - Impersonation JWT also carries a distinct claim `scope: 'impersonation'`; `SuperAdminContextInterceptor` refuses to set the CLS flag when it sees this scope.
-- Attack prevented: a super-admin who starts an impersonation session then (accidentally or maliciously) re-navigates to `admin.carekit.app` with the same browser tab cannot execute admin actions — the shadow JWT lacks the required claim shape.
+- Attack prevented: a super-admin who starts an impersonation session then (accidentally or maliciously) re-navigates to `admin.deqah.app` with the same browser tab cannot execute admin actions — the shadow JWT lacks the required claim shape.
 - Task: **§7A is amended** — shadow JWT payload omits `isSuperAdmin` and adds `scope: 'impersonation'`; tests assert both.
 
 ---
@@ -70,8 +70,8 @@ Plan 05b introduces four primitives whose misuse creates cross-tenant data leaks
 3. Handler cluster: `src/modules/platform/admin/` with vertical-slice handlers.
 4. `SuperAdminGuard` replacing `CaslGuard` on admin routes.
 5. Impersonation issuance + audit-log middleware.
-6. New Next.js app `apps/admin/` on port 5104 with App Router, RTL-first, consuming `@carekit/ui`.
-7. Docker Compose entry + Nginx route for `admin.carekit.app`.
+6. New Next.js app `apps/admin/` on port 5104 with App Router, RTL-first, consuming `@deqah/ui`.
+7. Docker Compose entry + Nginx route for `admin.deqah.app`.
 8. Root `CLAUDE.md` Structure tree updated; new `apps/admin/CLAUDE.md`.
 9. E2E isolation: a regular tenant user cannot hit ANY admin endpoint (403 on every route).
 
@@ -118,9 +118,9 @@ The impersonation flow is security-sensitive. Before coding:
 | File | Responsibility |
 |---|---|
 | `apps/admin/package.json` | Workspace manifest, port 5104 |
-| `apps/admin/next.config.mjs` | Next config; transpilePackages for `@carekit/ui` |
-| `apps/admin/tsconfig.json` | TS config with `@carekit/ui` alias |
-| `apps/admin/middleware.ts` | Session validation: redirect non-super-admin to `dashboard.carekit.app` |
+| `apps/admin/next.config.mjs` | Next config; transpilePackages for `@deqah/ui` |
+| `apps/admin/tsconfig.json` | TS config with `@deqah/ui` alias |
+| `apps/admin/middleware.ts` | Session validation: redirect non-super-admin to `dashboard.deqah.app` |
 | `apps/admin/app/layout.tsx` | Root layout; RTL-first; brand bar + user menu |
 | `apps/admin/app/(admin)/layout.tsx` | Admin shell: sidebar + impersonation banner slot |
 | `apps/admin/app/(admin)/page.tsx` | Home dashboard (metrics cards) |
@@ -136,7 +136,7 @@ The impersonation flow is security-sensitive. Before coding:
 | `apps/admin/components/impersonation-banner.tsx` | Red banner: "Impersonating {user}@{org} — End session" |
 | `apps/admin/components/sidebar-config.ts` | Admin sidebar items |
 | `apps/admin/hooks/use-organizations.ts`, `use-users.ts`, `use-plans.ts`, `use-verticals.ts`, `use-impersonation.ts`, `use-metrics.ts` | TanStack Query hooks |
-| `apps/admin/lib/api/*.ts` | Typed fetch wrappers via `@carekit/api-client` |
+| `apps/admin/lib/api/*.ts` | Typed fetch wrappers via `@deqah/api-client` |
 | `apps/admin/lib/schemas/*.ts` | Zod schemas |
 | `apps/admin/CLAUDE.md` | Super-admin conventions |
 
@@ -148,7 +148,7 @@ The impersonation flow is security-sensitive. Before coding:
 | `turbo.json` | Add `apps/admin` to pipeline |
 | `CLAUDE.md` (root) | Structure tree: add `apps/admin/`; Commands section: add `npm run dev:admin` |
 | `docker/docker-compose.yml` | Add `admin` service on port 5104 |
-| `docker/nginx/*.conf` | Route `admin.carekit.app` → `:5104` |
+| `docker/nginx/*.conf` | Route `admin.deqah.app` → `:5104` |
 | `apps/backend/src/app.module.ts` | Import `AdminModule` |
 | `apps/backend/src/api/dashboard/auth/auth.controller.ts` | `/login` response must include `isSuperAdmin` claim in the token |
 
@@ -237,7 +237,7 @@ If `isSuperAdmin` is already present, skip to 1B. Otherwise continue.
 Edit `apps/backend/prisma/schema/identity.prisma`. Inside `model User { ... }`, add after the `email` field:
 
 ```prisma
-  isSuperAdmin Boolean @default(false) // SaaS-05b: CareKit employees only
+  isSuperAdmin Boolean @default(false) // SaaS-05b: Deqah employees only
 ```
 
 Add an index:
@@ -370,7 +370,7 @@ git commit -m "feat(saas-05b): schema for super-admin, impersonation, audit log"
 Edit `apps/backend/prisma/seed.ts`. Add an environment-variable-driven super-admin user:
 
 ```ts
-const SUPER_ADMIN_EMAIL = process.env.SEED_SUPER_ADMIN_EMAIL ?? 'admin@carekit.app';
+const SUPER_ADMIN_EMAIL = process.env.SEED_SUPER_ADMIN_EMAIL ?? 'admin@deqah.app';
 const SUPER_ADMIN_PASSWORD = process.env.SEED_SUPER_ADMIN_PASSWORD;
 if (!SUPER_ADMIN_PASSWORD) {
   throw new Error('SEED_SUPER_ADMIN_PASSWORD is required to seed super-admin user');
@@ -556,7 +556,7 @@ git commit -m "feat(saas-05b): SuperAdminGuard with JWT-claim + DB re-verificati
 
 ## Task 3.5 — AdminHostGuard (security invariant 2)
 
-Admin routes must only answer on the admin domain. A super-admin JWT leaked to an attacker becomes useless if the attacker cannot route it to `admin.carekit.app` — our CORS + cookie scope already force that, but we add an application-layer check as belt-and-braces.
+Admin routes must only answer on the admin domain. A super-admin JWT leaked to an attacker becomes useless if the attacker cannot route it to `admin.deqah.app` — our CORS + cookie scope already force that, but we add an application-layer check as belt-and-braces.
 
 - [ ] **Step 3.5.1: Failing test**
 
@@ -576,21 +576,21 @@ function ctx(host: string): ExecutionContext {
 }
 
 describe('AdminHostGuard', () => {
-  const config = { get: jest.fn().mockReturnValue('admin.carekit.app,admin.localhost:5104') };
+  const config = { get: jest.fn().mockReturnValue('admin.deqah.app,admin.localhost:5104') };
   const guard = new AdminHostGuard(config as never);
 
-  it('allows admin.carekit.app', () => {
-    expect(guard.canActivate(ctx('admin.carekit.app'))).toBe(true);
+  it('allows admin.deqah.app', () => {
+    expect(guard.canActivate(ctx('admin.deqah.app'))).toBe(true);
   });
   it('allows dev admin host', () => {
     expect(guard.canActivate(ctx('admin.localhost:5104'))).toBe(true);
   });
-  it('rejects tenant-slug.carekit.app', () => {
-    expect(() => guard.canActivate(ctx('clinic-a.carekit.app')))
+  it('rejects tenant-slug.deqah.app', () => {
+    expect(() => guard.canActivate(ctx('clinic-a.deqah.app')))
       .toThrow(ForbiddenException);
   });
-  it('rejects carekit.app root (landing)', () => {
-    expect(() => guard.canActivate(ctx('carekit.app'))).toThrow(ForbiddenException);
+  it('rejects deqah.app root (landing)', () => {
+    expect(() => guard.canActivate(ctx('deqah.app'))).toThrow(ForbiddenException);
   });
   it('rejects an empty Host header (protocol violation)', () => {
     expect(() => guard.canActivate(ctx(''))).toThrow(ForbiddenException);
@@ -608,9 +608,9 @@ import { ConfigService } from '@nestjs/config';
 
 /**
  * Security invariant 2 (05b): admin-audience routes only accept requests
- * whose Host header matches an allow-list (production: admin.carekit.app;
+ * whose Host header matches an allow-list (production: admin.deqah.app;
  * dev: admin.localhost:5104). Belt-and-braces with SuperAdminGuard —
- * even a leaked admin JWT cannot be replayed against tenant-slug.carekit.app.
+ * even a leaked admin JWT cannot be replayed against tenant-slug.deqah.app.
  *
  * Applied globally on every controller in `src/api/admin/**` via
  * AdminModule.APP_GUARD registration.
@@ -620,7 +620,7 @@ export class AdminHostGuard implements CanActivate {
   private readonly allowedHosts: Set<string>;
 
   constructor(config: ConfigService) {
-    const raw = config.get<string>('ADMIN_ALLOWED_HOSTS', 'admin.carekit.app');
+    const raw = config.get<string>('ADMIN_ALLOWED_HOSTS', 'admin.deqah.app');
     this.allowedHosts = new Set(raw.split(',').map((h) => h.trim().toLowerCase()));
   }
 
@@ -642,14 +642,14 @@ Register in `AdminModule` (see Task 8) via `{ provide: APP_GUARD, useClass: Admi
 
 Add to `.env.example`:
 ```
-# Super-admin host allow-list (comma-separated). Prod default is admin.carekit.app only.
-ADMIN_ALLOWED_HOSTS=admin.carekit.app,admin.localhost:5104
+# Super-admin host allow-list (comma-separated). Prod default is admin.deqah.app only.
+ADMIN_ALLOWED_HOSTS=admin.deqah.app,admin.localhost:5104
 ```
 
 - [ ] **Step 3.5.4: Commit**
 
 ```bash
-git commit -m "feat(saas-05b): AdminHostGuard — admin routes answer only on admin.carekit.app (security invariant 2)"
+git commit -m "feat(saas-05b): AdminHostGuard — admin routes answer only on admin.deqah.app (security invariant 2)"
 ```
 
 ---
@@ -888,7 +888,7 @@ Add to `apps/backend/src/common/errors/error-codes.ts` (or equivalent):
 ```ts
 export const ERROR_CODES = {
   // ... existing ...
-  ORG_SUSPENDED: 'ORG_SUSPENDED', // Auth layer: org was suspended by CareKit super-admin
+  ORG_SUSPENDED: 'ORG_SUSPENDED', // Auth layer: org was suspended by Deqah super-admin
 };
 ```
 
@@ -1470,8 +1470,8 @@ Covers:
    - From a regular tenant controller (simulate by calling a tenant-audience handler that mistakenly reads `this.prisma.$allTenants.booking.findMany()`), assert `ForbiddenException('super_admin_context_required')` is thrown at runtime. This proves the CLS gate cannot be silently bypassed.
 
 6. **Security invariant 2 — `AdminHostGuard`:**
-   - Issue a valid super-admin JWT. Send request to `GET /api/v1/admin/organizations` with `Host: tenant-slug.carekit.app`. Assert 403 `admin_host_required`.
-   - Same JWT to `Host: admin.carekit.app`. Assert 200.
+   - Issue a valid super-admin JWT. Send request to `GET /api/v1/admin/organizations` with `Host: tenant-slug.deqah.app`. Assert 403 `admin_host_required`.
+   - Same JWT to `Host: admin.deqah.app`. Assert 200.
 
 7. **Security invariant 3 — `ORG_SUSPENDED`:**
    - Seed org A + a tenant user with JWT issued BEFORE suspension.
@@ -1481,8 +1481,8 @@ Covers:
 
 8. **Security invariant 4 — impersonation JWT cannot call admin routes:**
    - Start an impersonation session → receive shadow JWT.
-   - Call `GET /api/v1/admin/organizations` with the shadow JWT on `Host: admin.carekit.app`. Assert 403 `super_admin_required` (guard rejects because `isSuperAdmin` is absent).
-   - Call any admin route with shadow JWT + `Host: admin.carekit.app` → 403 regardless of route.
+   - Call `GET /api/v1/admin/organizations` with the shadow JWT on `Host: admin.deqah.app`. Assert 403 `super_admin_required` (guard rejects because `isSuperAdmin` is absent).
+   - Call any admin route with shadow JWT + `Host: admin.deqah.app` → 403 regardless of route.
 
 9. **Security invariant 4 (defense-in-depth) — shadow JWT does NOT unlock `$allTenants`:**
    - Using the shadow JWT on an admin route, observe the 403 from invariant 8's check before `SuperAdminContextInterceptor` runs. Then directly invoke the interceptor with a shadow JWT request object in a unit-style test and assert the CLS flag is NOT set (`cls.set` was never called with `SUPER_ADMIN_CONTEXT_CLS_KEY`).
@@ -1510,7 +1510,7 @@ Create `apps/admin/package.json`:
 
 ```json
 {
-  "name": "@carekit/admin",
+  "name": "@deqah/admin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -1530,9 +1530,9 @@ Create `apps/admin/package.json`:
     "zod": "^3.23.8",
     "react-hook-form": "^7.53.0",
     "@hookform/resolvers": "^3.9.0",
-    "@carekit/api-client": "*",
-    "@carekit/shared": "*",
-    "@carekit/ui": "*",
+    "@deqah/api-client": "*",
+    "@deqah/shared": "*",
+    "@deqah/ui": "*",
     "lucide-react": "^0.456.0",
     "date-fns": "^4.1.0"
   },
@@ -1576,8 +1576,8 @@ Edit root `package.json`:
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./*"],
-      "@carekit/ui": ["../../packages/ui/src/index.ts"],
-      "@carekit/ui/*": ["../../packages/ui/src/*"]
+      "@deqah/ui": ["../../packages/ui/src/index.ts"],
+      "@deqah/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
@@ -1591,17 +1591,17 @@ Edit root `package.json`:
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@carekit/ui', '@carekit/shared', '@carekit/api-client'],
+  transpilePackages: ['@deqah/ui', '@deqah/shared', '@deqah/api-client'],
 };
 export default nextConfig;
 ```
 
-`apps/admin/middleware.ts` — reads the session cookie + JWT; if not `isSuperAdmin`, redirects to `https://dashboard.carekit.app`.
+`apps/admin/middleware.ts` — reads the session cookie + JWT; if not `isSuperAdmin`, redirects to `https://dashboard.deqah.app`.
 
 - [ ] **Step 10.3: Install**
 
 ```bash
-cd /Users/tariq/code/carekit && npm install
+cd /Users/tariq/code/deqah && npm install
 ```
 
 - [ ] **Step 10.4: Commit**
@@ -1660,7 +1660,7 @@ export default function OrganizationsPage() {
       <Breadcrumbs items={[{ label: 'Admin', href: '/' }, { label: 'Organizations' }]} />
       <PageHeader
         title="Organizations"
-        description="Manage all tenant organizations on the CareKit platform"
+        description="Manage all tenant organizations on the Deqah platform"
         actions={[
           { label: 'Export', variant: 'outline', onClick: () => {/* …*/} },
           { label: '+ Add', variant: 'default', onClick: () => {/* …*/}, primary: true },
@@ -1683,7 +1683,7 @@ export default function OrganizationsPage() {
 ```tsx
 'use client';
 import { useParams } from 'next/navigation';
-import { Button, Card, Dialog } from '@carekit/ui';
+import { Button, Card, Dialog } from '@deqah/ui';
 import { useOrganization } from '@/hooks/use-organizations';
 import { useImpersonation } from '@/hooks/use-impersonation';
 import { ImpersonateDialog } from '@/components/features/organizations/impersonate-dialog';
@@ -1698,7 +1698,7 @@ export default function OrgDetailPage() {
     <div className="space-y-6">
       <Card>
         <h1 className="text-2xl">{org.nameAr}</h1>
-        <p className="text-muted-foreground">{org.slug}.carekit.app</p>
+        <p className="text-muted-foreground">{org.slug}.deqah.app</p>
         <div className="mt-4 flex gap-2">
           <ImpersonateDialog organizationId={org.id} />
           <SuspendDialog organizationId={org.id} suspended={!!org.suspendedAt} />
@@ -1710,7 +1710,7 @@ export default function OrgDetailPage() {
 }
 ```
 
-The `<ImpersonateDialog>` renders: target user select, reason textarea (min 10 chars), confirm button. On submit calls `POST /api/v1/admin/impersonation`, stores the returned JWT in an HttpOnly cookie via a server action, and navigates the user to `https://dashboard.carekit.app?impersonation-session=<id>`.
+The `<ImpersonateDialog>` renders: target user select, reason textarea (min 10 chars), confirm button. On submit calls `POST /api/v1/admin/impersonation`, stores the returned JWT in an HttpOnly cookie via a server action, and navigates the user to `https://dashboard.deqah.app?impersonation-session=<id>`.
 
 - [ ] **Step 11D: Commit the 3 representative page skeletons + hooks + sidebar**
 
@@ -1759,7 +1759,7 @@ Edit `docker/nginx/nginx.conf` (or the production counterpart):
 ```nginx
 server {
   listen 443 ssl;
-  server_name admin.carekit.app;
+  server_name admin.deqah.app;
 
   location / {
     proxy_pass http://admin:5104;
@@ -1777,7 +1777,7 @@ server {
 
 ```bash
 git add docker/ apps/admin/Dockerfile
-git commit -m "feat(saas-05b): docker + nginx for admin.carekit.app on :5104"
+git commit -m "feat(saas-05b): docker + nginx for admin.deqah.app on :5104"
 ```
 
 ---
@@ -1789,10 +1789,10 @@ git commit -m "feat(saas-05b): docker + nginx for admin.carekit.app on :5104"
 Contents:
 
 ```markdown
-# CareKit Super-admin App
+# Deqah Super-admin App
 
 ## Purpose
-CareKit employees manage all tenant organizations, impersonate users for support,
+Deqah employees manage all tenant organizations, impersonate users for support,
 suspend accounts, and view platform-wide metrics. Tenants never download this app.
 
 ## Hard rules
@@ -1801,10 +1801,10 @@ suspend accounts, and view platform-wide metrics. Tenants never download this ap
    MUST write a `SuperAdminActionLog` entry.
 3. Never expose tenant payment card data (PCI scope); Moyasar token IDs only, and only during explicit impersonation.
 4. UI must always show an "Impersonating as X" banner when an impersonation session is active.
-5. Auth reuses `POST /api/v1/auth/login`; non-super-admin users are redirected to dashboard.carekit.app.
+5. Auth reuses `POST /api/v1/auth/login`; non-super-admin users are redirected to dashboard.deqah.app.
 
 ## Layer rules
-Same as apps/dashboard/CLAUDE.md. File-size limits identical. Components from `@carekit/ui`.
+Same as apps/dashboard/CLAUDE.md. File-size limits identical. Components from `@deqah/ui`.
 
 ## Routes
 /                          Platform dashboard (metrics)
@@ -1831,10 +1831,10 @@ npm run dev:admin          # Next.js dev on :5104
 
 - [ ] **Step 13.2: Update root CLAUDE.md Structure tree**
 
-Edit `/Users/tariq/code/carekit/CLAUDE.md`. In the Structure section, change:
+Edit `/Users/tariq/code/deqah/CLAUDE.md`. In the Structure section, change:
 
 ```
-carekit/
+deqah/
 ├── apps/
 │   ├── backend/
 │   ├── dashboard/
@@ -1843,11 +1843,11 @@ carekit/
 to:
 
 ```
-carekit/
+deqah/
 ├── apps/
 │   ├── backend/
 │   ├── dashboard/
-│   ├── admin/             # NEW — super-admin panel (admin.carekit.app, :5104)
+│   ├── admin/             # NEW — super-admin panel (admin.deqah.app, :5104)
 ```
 
 Also add to the Commands section:
@@ -1870,7 +1870,7 @@ git commit -m "docs(saas-05b): admin app conventions + root structure update"
 - [ ] **Step 14.1: Full monorepo test + build**
 
 ```bash
-cd /Users/tariq/code/carekit && npm run test && npm run build
+cd /Users/tariq/code/deqah && npm run test && npm run build
 ```
 
 All workspaces green.
@@ -1912,7 +1912,7 @@ gh pr create \
   --title "feat(saas-05b): super-admin app + impersonation" \
   --body "$(cat <<'EOF'
 ## Summary
-- New app apps/admin/ on admin.carekit.app (:5104)
+- New app apps/admin/ on admin.deqah.app (:5104)
 - Backend audience src/api/admin/ with 6 controllers + 11 handlers
 - SuperAdminGuard + ImpersonationAuditInterceptor
 - Impersonation flow: 15-min shadow JWT, full audit trail, auto-expiry sweeper
@@ -1934,7 +1934,7 @@ EOF
 
 - [ ] **Step 14.5: Memory file**
 
-Create `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas05b_status.md`:
+Create `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas05b_status.md`:
 
 ```markdown
 ---
@@ -1944,7 +1944,7 @@ type: project
 ---
 **Status:** [fill in: PR number, test count, any divergences]
 
-**Scope delivered:** apps/admin on admin.carekit.app; 6 controllers + 11 handlers; SuperAdminGuard; impersonation with audit trail; schema: User.isSuperAdmin + ImpersonationSession + SuperAdminActionLog.
+**Scope delivered:** apps/admin on admin.deqah.app; 6 controllers + 11 handlers; SuperAdminGuard; impersonation with audit trail; schema: User.isSuperAdmin + ImpersonationSession + SuperAdminActionLog.
 
 **Security posture:**
 - Impersonation shadow JWT carries isSuperAdmin=false

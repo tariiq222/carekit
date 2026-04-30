@@ -119,7 +119,7 @@ const SCOPED_MODELS = new Set<string>([
 - Any booking spec that mocks coupon lookup.
 
 **Memory (create):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02e_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02e_status.md`
 
 **Transformation index (modify):**
 - `docs/superpowers/plans/2026-04-21-saas-transformation-index.md` — mark 02e done, update progress log, remove 02d-invoice TODO from risks.
@@ -447,8 +447,8 @@ CREATE POLICY "tenant_isolation" ON "ZatcaConfig" USING ("organizationId" = curr
 # Dev
 cd apps/backend && npx prisma migrate deploy
 # Test DB (required by moyasar-webhook-idempotency.spec.ts and new e2e suites)
-TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 ```
 
@@ -1114,7 +1114,7 @@ Expected: all green. Record count (was 38 isolation e2e after 02d = 6 booking-ne
 
 - [ ] **Step 11.4: Create the status memory file**
 
-Create `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02e_status.md`:
+Create `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02e_status.md`:
 
 ```markdown
 ---
@@ -1162,7 +1162,7 @@ In `docs/superpowers/plans/2026-04-21-saas-transformation-index.md`:
 - [ ] **Step 11.7: Final commit**
 
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02e_status.md /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md docs/superpowers/plans/2026-04-21-saas-transformation-index.md
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02e_status.md /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas): mark 02e done in index + memory (finance cluster + moyasar tenant resolution)"
 ```
 

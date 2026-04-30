@@ -1,12 +1,12 @@
-# Contributing to CareKit
+# Contributing to Deqah
 
-Welcome to CareKit — a multi-tenant SaaS clinic platform. This guide gets you productive in under 30 minutes.
+Welcome to Deqah — a multi-tenant SaaS clinic platform. This guide gets you productive in under 30 minutes.
 
 ## Quick Setup
 
 ```bash
 # 1. Clone & install
-git clone <repo-url> && cd carekit
+git clone <repo-url> && cd deqah
 npm install
 
 # 2. Environment
@@ -72,7 +72,7 @@ app/<route-group>/[feature]/page.tsx          ← thin route entry
               └── lib/api/[feature].ts        ← typed fetch
 ```
 
-- UI primitives come from `@carekit/ui` — **do not modify them in place**
+- UI primitives come from `@deqah/ui` — **do not modify them in place**
 - Compose primitives in `components/features/`
 - Imports are one-way downward; never sideways across features
 - All user-facing strings: AR + EN entries (i18n parity)
@@ -102,7 +102,7 @@ app/<route-group>/[feature]/page.tsx          ← thin route entry
 ### Dashboard / Admin
 - [ ] Page: `app/<route-group>/<feature>/page.tsx`
 - [ ] Components: `components/features/<feature>/`
-- [ ] Types: from `@carekit/api-client` (don't redefine)
+- [ ] Types: from `@deqah/api-client` (don't redefine)
 - [ ] Query/mutation hooks: `hooks/queries/<feature>/`
 - [ ] Query keys added to `lib/query-keys.ts`
 - [ ] Translations: `messages/ar.json` + `messages/en.json` (parity)
@@ -121,7 +121,7 @@ app/<route-group>/[feature]/page.tsx          ← thin route entry
 - [ ] No file exceeds **350 lines**
 - [ ] No `any` (use `unknown` + type guard if needed)
 - [ ] No hardcoded hex colors / no `text-gray-*` (semantic tokens only)
-- [ ] No raw `<input>`/`<select>`/`<textarea>` — use `@carekit/ui` primitives
+- [ ] No raw `<input>`/`<select>`/`<textarea>` — use `@deqah/ui` primitives
 - [ ] No cross-feature imports
 - [ ] No `prisma db push` — `prisma migrate dev` only
 - [ ] Migrations are additive (never edit/squash existing ones)
@@ -178,8 +178,8 @@ hotfix/<short-issue>
 
 ## FAQ
 
-**Q: Can I modify primitives in `@carekit/ui`?**
-A: Wrap them in `components/features/`. Modify `@carekit/ui` only if you're intentionally extending the design system.
+**Q: Can I modify primitives in `@deqah/ui`?**
+A: Wrap them in `components/features/`. Modify `@deqah/ui` only if you're intentionally extending the design system.
 
 **Q: Can I add a new color or hex value?**
 A: No. Add a semantic token. Per-tenant `BrandingConfig` depends on it.
@@ -191,7 +191,7 @@ A: Split by responsibility now. Don't wait to cross the line.
 A: Yes — `prisma migrate dev --name <descriptive>`. Never `prisma db push`.
 
 **Q: Can I import a component from another feature folder?**
-A: No. Promote to `@carekit/ui` (if generic) or `components/features/shared/` (if domain-shared).
+A: No. Promote to `@deqah/ui` (if generic) or `components/features/shared/` (if domain-shared).
 
 **Q: Where does shared backend logic go?**
 A: `apps/backend/src/common/` (guards, interceptors, decorators) or as a `shared/` slice inside the cluster.

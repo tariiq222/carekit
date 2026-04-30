@@ -30,7 +30,7 @@
 1. **Strict mode reveals missed callsites.** Any handler whose tests passed under permissive but relied on DEFAULT_ORG fallback will now throw. Treat every new failure as a callsite that was missed in 02a–02g and fix the handler (not the test).
 2. **`$transaction` callback form bypasses the Proxy.** Strict mode does NOT prevent `tx.*.create()` without an explicit `organizationId` — the CLS-required check lives in `requireOrganizationId()` which callers are supposed to invoke once at the top of `execute()`. Penetration tests include a direct probe of this.
 3. **`$queryRaw` is not scoped.** 02g ensured `semantic-search` includes the predicate; 02h's penetration suite re-verifies by attempting a direct `$queryRaw` read from a hostile context.
-4. **RLS tests need a non-superuser Postgres role** (02b lesson 5). The Postgres superuser bypasses RLS even with `FORCE ROW LEVEL SECURITY` — the RLS backstop tests must connect (or `SET ROLE`) to a non-superuser. CI needs a dedicated `carekit_rls_probe` role created during DB setup.
+4. **RLS tests need a non-superuser Postgres role** (02b lesson 5). The Postgres superuser bypasses RLS even with `FORCE ROW LEVEL SECURITY` — the RLS backstop tests must connect (or `SET ROLE`) to a non-superuser. CI needs a dedicated `deqah_rls_probe` role created during DB setup.
 5. **Divergence-before-commit.** Any penetration test failure that surfaces a real vulnerability — STOP, document the finding in `docs/superpowers/incidents/`, fix the handler, and re-run before committing.
 6. **System-context bypass (02e).** The Moyasar webhook legitimately uses `systemContext=true` to read Payment/Invoice without CLS. Penetration tests MUST verify this bypass is ONLY usable from the webhook entry, not from an authenticated request path.
 
@@ -63,7 +63,7 @@
 - `apps/backend/test/jest-security.json` — new Jest project config targeting `test/e2e/security/`.
 
 **Database (modify):**
-- `apps/backend/prisma/migrations/<timestamp>_saas_02h_rls_probe_role/migration.sql` — creates `carekit_rls_probe` role with `SELECT` on all tenant-scoped tables (for RLS backstop tests). NO schema changes. Pgvector-safe (no `migrate dev`).
+- `apps/backend/prisma/migrations/<timestamp>_saas_02h_rls_probe_role/migration.sql` — creates `deqah_rls_probe` role with `SELECT` on all tenant-scoped tables (for RLS backstop tests). NO schema changes. Pgvector-safe (no `migrate dev`).
 
 **Tests (create):**
 - `apps/backend/test/e2e/security/cross-tenant-penetration.e2e-spec.ts` — the headline adversarial suite.
@@ -73,7 +73,7 @@
 - `apps/backend/test/e2e/security/README.md` — documents suite structure + how to run locally.
 
 **Memory (create):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02h_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02h_status.md`
 
 **Transformation index (modify):**
 - `docs/superpowers/plans/2026-04-21-saas-transformation-index.md` — mark 02h done, close out Phase 02, show Phase 03 as next.
@@ -89,7 +89,7 @@
 - [ ] **Step 1.1: Confirm 02a–02g are merged**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git log --oneline --all | grep -E "saas-02[a-g]" | head -30
 ```
 
@@ -287,35 +287,35 @@ mkdir -p "prisma/migrations/${TS}_saas_02h_rls_probe_role"
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'carekit_rls_probe') THEN
-    CREATE ROLE carekit_rls_probe WITH LOGIN PASSWORD 'rls_probe_test_only_2026';
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'deqah_rls_probe') THEN
+    CREATE ROLE deqah_rls_probe WITH LOGIN PASSWORD 'rls_probe_test_only_2026';
   END IF;
 END$$;
 
-GRANT CONNECT ON DATABASE CURRENT_DATABASE() TO carekit_rls_probe;
-GRANT USAGE ON SCHEMA public TO carekit_rls_probe;
+GRANT CONNECT ON DATABASE CURRENT_DATABASE() TO deqah_rls_probe;
+GRANT USAGE ON SCHEMA public TO deqah_rls_probe;
 
 -- Grant SELECT on every tenant-scoped table (52 models from 02a–02g).
 -- The role inherits RLS policies, so it cannot read cross-org rows.
-GRANT SELECT ON "Organization", "Membership" TO carekit_rls_probe;
-GRANT SELECT ON "RefreshToken", "CustomRole", "Permission" TO carekit_rls_probe;
+GRANT SELECT ON "Organization", "Membership" TO deqah_rls_probe;
+GRANT SELECT ON "RefreshToken", "CustomRole", "Permission" TO deqah_rls_probe;
 GRANT SELECT ON "Client", "ClientRefreshToken", "Employee", "EmployeeBranch",
-  "EmployeeService", "EmployeeAvailability", "EmployeeAvailabilityException" TO carekit_rls_probe;
+  "EmployeeService", "EmployeeAvailability", "EmployeeAvailabilityException" TO deqah_rls_probe;
 GRANT SELECT ON "Branch", "Department", "ServiceCategory", "Service",
   "ServiceBookingConfig", "ServiceDurationOption", "EmployeeServiceOption",
   "BusinessHour", "Holiday", "IntakeForm", "IntakeField", "Rating",
-  "BrandingConfig", "OrganizationSettings" TO carekit_rls_probe;
+  "BrandingConfig", "OrganizationSettings" TO deqah_rls_probe;
 GRANT SELECT ON "Booking", "BookingStatusLog", "WaitlistEntry",
   "GroupSession", "GroupEnrollment", "GroupSessionWaitlist",
-  "BookingSettings" TO carekit_rls_probe;
+  "BookingSettings" TO deqah_rls_probe;
 GRANT SELECT ON "Invoice", "Payment", "Coupon", "CouponRedemption",
-  "RefundRequest", "ZatcaSubmission", "ZatcaConfig" TO carekit_rls_probe;
+  "RefundRequest", "ZatcaSubmission", "ZatcaConfig" TO deqah_rls_probe;
 GRANT SELECT ON "EmailTemplate", "Notification",
   "ChatConversation", "CommsChatMessage", "ChatSession", "ChatMessage",
-  "ContactMessage", "ChatbotConfig" TO carekit_rls_probe;
+  "ContactMessage", "ChatbotConfig" TO deqah_rls_probe;
 GRANT SELECT ON "KnowledgeDocument", "DocumentChunk", "File",
   "ActivityLog", "Report", "FeatureFlag", "Integration", "ProblemReport",
-  "SiteSetting" TO carekit_rls_probe;
+  "SiteSetting" TO deqah_rls_probe;
 
 -- FORCE RLS for the probe role — even if a table owner bypasses RLS, this role does not.
 -- Applies to every tenant-scoped table.
@@ -334,8 +334,8 @@ Complete the `ALTER TABLE ... FORCE ROW LEVEL SECURITY` list for all 52 scoped t
 
 ```bash
 cd apps/backend && npx prisma migrate deploy
-TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 ```
 
@@ -344,7 +344,7 @@ TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
 - [ ] **Step 3.4: Verify the role**
 
 ```bash
-psql -h localhost -p 5999 -U carekit -d carekit_test -c "\du carekit_rls_probe"
+psql -h localhost -p 5999 -U deqah -d deqah_test -c "\du deqah_rls_probe"
 ```
 
 Expected: role listed with no SUPERUSER attribute.
@@ -353,7 +353,7 @@ Expected: role listed with no SUPERUSER attribute.
 
 ```bash
 git add apps/backend/prisma/migrations/*saas_02h_rls_probe_role
-git commit -m "feat(saas-02h): create carekit_rls_probe non-superuser role for RLS backstop tests"
+git commit -m "feat(saas-02h): create deqah_rls_probe non-superuser role for RLS backstop tests"
 ```
 
 ---
@@ -539,7 +539,7 @@ it('$queryRaw without organizationId predicate returns only CLS org rows (RLS ba
 
 - [ ] **Step 5B.1: RLS isolation under the probe role**
 
-For each scoped table, connect as `carekit_rls_probe`, `SET app.current_organization_id = ORG_A`, select count → should match the number of rows for ORG_A only.
+For each scoped table, connect as `deqah_rls_probe`, `SET app.current_organization_id = ORG_A`, select count → should match the number of rows for ORG_A only.
 
 Iterate over all 52 scoped tables. Fail loudly on any table where the count is off by even one row.
 
@@ -699,7 +699,7 @@ Expected: all three green under the new `strict` default.
 
 - [ ] **Step 7.3: Create memory file**
 
-`/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02h_status.md`:
+`/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02h_status.md`:
 
 ```markdown
 ---
@@ -712,7 +712,7 @@ type: project
 **Scope delivered:**
 - `TENANT_ENFORCEMENT=strict` is the platform default. Permissive/off remain only for local dev + bootstrap.
 - Cross-tenant penetration suite (5 e2e files) runs as a required CI gate.
-- `carekit_rls_probe` non-superuser role created for RLS backstop tests.
+- `deqah_rls_probe` non-superuser role created for RLS backstop tests.
 - Docs + CLAUDE.md updated — "transitional" language removed.
 
 **Key findings from strict-mode dry-run (Task 1.3):** <fill in with real callsite fixes if any>
@@ -747,8 +747,8 @@ Append:
 - [ ] **Step 7.6: Final commit**
 
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02h_status.md \
-        /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md \
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02h_status.md \
+        /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md \
         docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas): close SaaS-02 — 02h strict mode + penetration suite done"
 ```
@@ -758,7 +758,7 @@ git commit -m "docs(saas): close SaaS-02 — 02h strict mode + penetration suite
 ```bash
 git push -u origin feat/saas-02h-strict-mode
 gh pr create --title "feat(saas-02h): strict mode default + cross-tenant penetration suite — closes Phase 02" \
-  --body "Flips TENANT_ENFORCEMENT default to strict. Adds adversarial e2e suite (5 specs) as a required CI gate. Creates carekit_rls_probe non-superuser role for RLS backstop tests. Updates docs. No schema changes beyond the role migration."
+  --body "Flips TENANT_ENFORCEMENT default to strict. Adds adversarial e2e suite (5 specs) as a required CI gate. Creates deqah_rls_probe non-superuser role for RLS backstop tests. Updates docs. No schema changes beyond the role migration."
 ```
 
 ---

@@ -27,7 +27,7 @@ The live dashboard overview ([apps/leaderboard/src/routes/_dashboard/index.tsx](
 ## Data strategy: Hybrid (user-approved)
 
 - **Real API** for: today's bookings count, pending bookings, patient counts, alerts, timeline items — these hooks exist (`useBookingStats`, `usePatientStats`, `useBookings`).
-- **Mock / static** for: revenue figures, attendance %, trend deltas (±X%). These will be marked clearly in code with `// TODO(carekit): wire when revenue endpoint lands` and rendered with muted copy (e.g. "الهدف المتوقع" rather than fake historic deltas) so the UI doesn't lie to the user — it shows targets and structure, not fabricated numbers.
+- **Mock / static** for: revenue figures, attendance %, trend deltas (±X%). These will be marked clearly in code with `// TODO(deqah): wire when revenue endpoint lands` and rendered with muted copy (e.g. "الهدف المتوقع" rather than fake historic deltas) so the UI doesn't lie to the user — it shows targets and structure, not fabricated numbers.
 - **Explicit rule:** no fake patient names, no fake booking rows. If `useBookings` returns empty, show a richer empty state — not mock timeline items.
 
 ## Design — 3 operations

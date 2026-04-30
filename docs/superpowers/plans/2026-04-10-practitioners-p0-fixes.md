@@ -127,7 +127,7 @@ describe('getSlots — holiday exclusion', () => {
 - [ ] **Step 3: Run tests to verify they fail**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="employee-availability" --no-coverage
 ```
 
@@ -189,7 +189,7 @@ Remove the `await this.organizationSettingsService.getTimezone()` call from insi
 - [ ] **Step 7: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="employee-availability" --no-coverage
 ```
 
@@ -198,7 +198,7 @@ Expected: PASS
 - [ ] **Step 8: Run typecheck**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npx tsc --noEmit
 ```
 
@@ -207,7 +207,7 @@ Expected: 0 errors
 - [ ] **Step 9: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -216,7 +216,7 @@ Expected: All passing
 - [ ] **Step 10: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/employees/employees.module.ts \
         backend/src/modules/employees/employee-availability.service.ts \
         backend/test/unit/employees/employee-availability.service.spec.ts
@@ -282,7 +282,7 @@ describe('create rating', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="ratings" --no-coverage
 ```
 
@@ -362,7 +362,7 @@ Remove the `updateEmployeeRating` standalone method call from `create` (it's now
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test -- --testPathPattern="ratings" --no-coverage
 ```
 
@@ -371,7 +371,7 @@ Expected: PASS
 - [ ] **Step 5: Run full test suite**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend
+cd /Users/tariq/Documents/my_programs/Deqah/backend
 npm run test --no-coverage
 ```
 
@@ -380,7 +380,7 @@ Expected: All passing
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add backend/src/modules/ratings/ratings.service.ts \
         backend/test/unit/ratings/ratings.service.spec.ts
 git commit -m "fix(ratings): prevent race condition — create rating + update aggregate in single transaction
@@ -470,7 +470,7 @@ Also replace `selectedColor: '#1D4ED8'` and `todayTextColor: '#1D4ED8'` in the C
 - [ ] **Step 4: Run typecheck on mobile**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/mobile
+cd /Users/tariq/Documents/my_programs/Deqah/mobile
 npx tsc --noEmit
 ```
 
@@ -479,7 +479,7 @@ Expected: 0 errors
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit
+cd /Users/tariq/Documents/my_programs/Deqah
 git add mobile/services/employees.ts \
         mobile/app/(client)/booking/schedule.tsx
 git commit -m "fix(mobile): pass serviceId and duration to slot query — prevents false availability display

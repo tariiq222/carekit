@@ -17,8 +17,8 @@ cd apps/backend && npm run dev        # :5100
 cd apps/dashboard && npm run dev      # :5103
 
 # إذا الـ worktree جديد
-cp /c/pro/carekit/apps/backend/.env apps/backend/.env
-cp /c/pro/carekit/apps/dashboard/.env apps/dashboard/.env
+cp /c/pro/deqah/apps/backend/.env apps/backend/.env
+cp /c/pro/deqah/apps/dashboard/.env apps/dashboard/.env
 cd apps/backend && npx prisma generate && npm run seed
 ```
 

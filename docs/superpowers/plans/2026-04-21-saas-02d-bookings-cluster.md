@@ -86,7 +86,7 @@ const SCOPED_MODELS = new Set<string>([
 - `test/e2e/bookings/booking-settings-isolation.e2e-spec.ts`
 
 **Memory (create/update):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02d_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02d_status.md`
 
 ---
 

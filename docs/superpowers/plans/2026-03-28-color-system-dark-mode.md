@@ -4,7 +4,7 @@
 
 **Goal:** Fix dark mode white-label colors so they derive automatically from the client's chosen color instead of being hardcoded lime green.
 
-**Architecture:** Extend `deriveCssVars()` to return both `light` and `dark` CSSVarMaps using HSL lightness manipulation. The branding provider injects dark vars via a `<style id="carekit-dark-theme">` tag. The hardcoded dark overrides in globals.css are removed — globals.css serves as the no-branding fallback only.
+**Architecture:** Extend `deriveCssVars()` to return both `light` and `dark` CSSVarMaps using HSL lightness manipulation. The branding provider injects dark vars via a `<style id="deqah-dark-theme">` tag. The hardcoded dark overrides in globals.css are removed — globals.css serves as the no-branding fallback only.
 
 **Tech Stack:** TypeScript, Next.js 15 App Router, CSS custom properties, Jest (existing test runner)
 
@@ -41,7 +41,7 @@ describe("hexToHsl", () => {
     expect(result.l).toBeCloseTo(0.5, 2)
   })
 
-  it("converts CareKit primary blue", () => {
+  it("converts Deqah primary blue", () => {
     const result = hexToHsl("#354FD8")
     expect(result.h).toBeCloseTo(230, 0)
     expect(result.s).toBeGreaterThan(0.6)
@@ -164,7 +164,7 @@ Append to `dashboard/lib/__tests__/color-utils.test.ts`:
 import { hexToHsl, hslToHex, darkVariant } from "../color-utils"
 
 describe("darkVariant", () => {
-  it("makes a dark primary from CareKit blue", () => {
+  it("makes a dark primary from Deqah blue", () => {
     const result = darkVariant("#354FD8", 0.68)
     const { l } = hexToHsl(result)
     expect(l).toBeCloseTo(0.68, 1)
@@ -448,7 +448,7 @@ export const useBranding = () => useContext(BrandingContext)
 
 /* ─── CSS var injection ─── */
 
-const DARK_STYLE_ID = "carekit-dark-theme"
+const DARK_STYLE_ID = "deqah-dark-theme"
 
 function injectLightVars(vars: CSSVarMap) {
   const root = document.documentElement
@@ -632,7 +632,7 @@ Replace them with a single comment so future devs understand the intent:
 
 ```css
     /* Brand vars (--primary, --accent, --ring, --sidebar-primary, etc.)
-       are injected dynamically by BrandingProvider via #carekit-dark-theme <style> tag.
+       are injected dynamically by BrandingProvider via #deqah-dark-theme <style> tag.
        Fallback defaults live in :root above and activate when no branding API is loaded. */
 ```
 

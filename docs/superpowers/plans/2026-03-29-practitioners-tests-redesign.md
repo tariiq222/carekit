@@ -267,7 +267,7 @@ describe('EmployeesService', () => {
 - [ ] **Step 3: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employees.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employees.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -505,7 +505,7 @@ describe('EmployeeAvailabilityService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-availability.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employee-availability.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -669,7 +669,7 @@ describe('EmployeeVacationService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-vacation.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employee-vacation.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -833,7 +833,7 @@ describe('EmployeeBreaksService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-breaks.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employee-breaks.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -995,7 +995,7 @@ describe('EmployeeServiceService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-service.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employee-service.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -1103,7 +1103,7 @@ describe('EmployeeRatingsService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-ratings.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employee-ratings.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -1122,7 +1122,7 @@ git commit -m "test(employees): add EmployeeRatingsService spec"
 - [ ] **Step 1: Run all employees tests**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employees --no-coverage 2>&1 | tail -20
+cd /Users/tariq/Documents/my_programs/Deqah/backend && npx jest employees --no-coverage 2>&1 | tail -20
 ```
 
 Expected: all suites pass, 0 failures in employees.

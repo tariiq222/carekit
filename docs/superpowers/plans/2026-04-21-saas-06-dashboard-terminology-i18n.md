@@ -4,16 +4,16 @@
 
 **Goal:** Refactor the tenant dashboard at `apps/dashboard/` so that (a) every user-facing string flows through `t()` / `tp()` / `tTerm()`, (b) the English translation covers the full surface (AR is default today), (c) RTL/LTR direction toggles with the active locale, (d) vertical-aware terminology comes from `useTerminology()` (Plan 03), (e) feature visibility is gated by `currentPlan.limits` (Plan 04), (f) a tenant switcher lets users belonging to multiple orgs switch context, and (g) a new `/settings/billing` page plus a sidebar usage widget surface the subscription state from Plan 04.
 
-**Architecture:** next-intl continues as the i18n engine (already wired per `apps/dashboard/CLAUDE.md`). Terminology lives in `@carekit/shared/terminology` with a React hook `useTerminology(key)` that reads `organization.verticalId` from the `OrgContext` and returns the vertical's label for `key` (e.g. `booking.verb` → "احجز موعد" vs "احجز جلسة"). Feature gating is a new `<FeatureGate feature="chatbot">` that reads the active `currentPlan.limits` from `BillingContext` and conditionally renders. Tenant switcher lives in the top-right of the app shell; switching calls `POST /api/v1/auth/switch-org`, receives a fresh JWT, and React-Query cache is flushed. Billing UI consumes endpoints added in Plan 04.
+**Architecture:** next-intl continues as the i18n engine (already wired per `apps/dashboard/CLAUDE.md`). Terminology lives in `@deqah/shared/terminology` with a React hook `useTerminology(key)` that reads `organization.verticalId` from the `OrgContext` and returns the vertical's label for `key` (e.g. `booking.verb` → "احجز موعد" vs "احجز جلسة"). Feature gating is a new `<FeatureGate feature="chatbot">` that reads the active `currentPlan.limits` from `BillingContext` and conditionally renders. Tenant switcher lives in the top-right of the app shell; switching calls `POST /api/v1/auth/switch-org`, receives a fresh JWT, and React-Query cache is flushed. Billing UI consumes endpoints added in Plan 04.
 
-**Tech Stack:** Next.js 15 App Router, React 19, next-intl, TanStack Query v5, `@carekit/ui` (from Plan 05a), `@carekit/shared` (terminology bundles from Plan 03), Zod, React Hook Form. Tests: Vitest + `@testing-library/react`. QA gate: Chrome DevTools MCP + Kiwi sync.
+**Tech Stack:** Next.js 15 App Router, React 19, next-intl, TanStack Query v5, `@deqah/ui` (from Plan 05a), `@deqah/shared` (terminology bundles from Plan 03), Zod, React Hook Form. Tests: Vitest + `@testing-library/react`. QA gate: Chrome DevTools MCP + Kiwi sync.
 
 ---
 
 ## Critical lessons from prior plans — READ BEFORE STARTING
 
 1. **Grep before refactoring.** Hardcoded strings hide in `toast()` calls, `console.error` messages, `aria-label`, `placeholder`, `title`, `alt`, Zod schema `message:` fields, and date-format fallbacks. Plan Task 1 is an exhaustive grep — do NOT start refactoring pages until the checklist is finalized.
-2. **No `any` in TypeScript** — the new `useTerminology` hook must be strongly typed off `@carekit/shared`'s terminology bundle.
+2. **No `any` in TypeScript** — the new `useTerminology` hook must be strongly typed off `@deqah/shared`'s terminology bundle.
 3. **350-line max per file** — some dashboard pages are already near the cap. Extracting translations may push them over; extract helper subcomponents proactively.
 4. **RTL-first layout** — never hardcode `left`/`right`. Use `ps-` / `pe-` / `ms-` / `me-`. The direction toggle in Task 5 flips the *document* direction; component-level classes must already be logical.
 5. **Semantic tokens only** — no hex colors, no `text-gray-*`.
@@ -54,7 +54,7 @@
 | File | Responsibility |
 |---|---|
 | `apps/dashboard/lib/i18n/direction-provider.tsx` | `<DirectionProvider>` sets `<html dir="…">` |
-| `apps/dashboard/lib/i18n/use-terminology.ts` | Hook returning vertical-aware labels from `@carekit/shared/terminology` |
+| `apps/dashboard/lib/i18n/use-terminology.ts` | Hook returning vertical-aware labels from `@deqah/shared/terminology` |
 | `apps/dashboard/lib/billing/billing-context.tsx` | React context carrying `currentPlan.limits` + `usage` |
 | `apps/dashboard/lib/billing/use-current-plan.ts` | TanStack Query hook for the active subscription |
 | `apps/dashboard/components/feature-gate.tsx` | `<FeatureGate feature="chatbot" fallback={…}>` |
@@ -356,7 +356,7 @@ Create `apps/dashboard/lib/i18n/use-terminology.ts`:
 import { useContext } from 'react';
 import { useLocale } from 'next-intl';
 import { OrgContext } from '@/lib/org-context';
-import { getTerminology, type TerminologyKey } from '@carekit/shared/terminology';
+import { getTerminology, type TerminologyKey } from '@deqah/shared/terminology';
 
 export function useTerminology(key: TerminologyKey): string {
   const org = useContext(OrgContext);
@@ -378,7 +378,7 @@ export { useTerminology as tTerm } from './use-terminology';
 
 ```bash
 git add apps/dashboard/lib/i18n/
-git commit -m "feat(saas-06): useTerminology hook over @carekit/shared terminology"
+git commit -m "feat(saas-06): useTerminology hook over @deqah/shared terminology"
 ```
 
 ---
@@ -635,7 +635,7 @@ Create `apps/dashboard/test/tenant-switcher.spec.tsx` with two memberships mocke
 
 ```tsx
 'use client';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button } from '@carekit/ui';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button } from '@deqah/ui';
 import { useTranslations } from 'next-intl';
 import { useMemberships } from '@/hooks/use-memberships';
 import { useSwitchOrganization } from '@/hooks/use-switch-organization';
@@ -705,7 +705,7 @@ Create `apps/dashboard/components/billing-usage-widget.tsx`:
 'use client';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Card } from '@carekit/ui';
+import { Card } from '@deqah/ui';
 import { useBilling } from '@/lib/billing/billing-context';
 
 export function BillingUsageWidget() {
@@ -932,7 +932,7 @@ Record outputs in `docs/superpowers/qa/saas-06-report-<date>.md`.
   "domain": "dashboard-i18n",
   "version": "main",
   "build": "manual-qa-<date>",
-  "planName": "CareKit / Dashboard / Manual QA",
+  "planName": "Deqah / Dashboard / Manual QA",
   "planSummary": "SaaS-06 dashboard terminology + EN i18n QA",
   "runSummary": "Verified 3 pages × 2 locales; 0 missing-translation console warnings",
   "cases": [
@@ -970,7 +970,7 @@ git commit -m "qa(saas-06): chrome-devtools + kiwi manual-QA gate"
 - [ ] **Step 13.1: Full monorepo tests**
 
 ```bash
-cd /Users/tariq/code/carekit && npm run test && npm run typecheck && npm run build
+cd /Users/tariq/code/deqah && npm run test && npm run typecheck && npm run build
 ```
 
 Expected: all green.
@@ -1006,7 +1006,7 @@ gh pr create \
 - [x] i18n snapshot forbids AR literals outside t()
 - [x] Vitest: DirectionProvider, useTerminology, FeatureGate, TenantSwitcher, BillingUsageWidget
 - [x] Chrome DevTools MCP: 3 pages × 2 locales, 0 missing-translation errors
-- [x] Kiwi sync: plan CareKit / Dashboard / Manual QA updated
+- [x] Kiwi sync: plan Deqah / Dashboard / Manual QA updated
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
@@ -1015,7 +1015,7 @@ EOF
 
 - [ ] **Step 13.4: Memory file**
 
-Create `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas06_status.md`:
+Create `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas06_status.md`:
 
 ```markdown
 ---

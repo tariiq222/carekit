@@ -29,7 +29,7 @@
 ### Reproduction
 1. Login and navigate to `/employees/create`.
 2. Fill all required fields in the "المعلومات الأساسية" tab:
-   - البريد الإلكتروني: `qa.tester@carekit-test.com`
+   - البريد الإلكتروني: `qa.tester@deqah-test.com`
    - الاسم الكامل (EN): `QA Tester`
    - الاسم الكامل (AR): `مختبر الجودة`
    - التخصص (EN): `QA Specialist`

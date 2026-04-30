@@ -80,7 +80,7 @@ const SCOPED_MODELS = new Set<string>([
 - `test/e2e/comms/sms-dlr-tenant-context.e2e-spec.ts` — DLR webhook for org A only updates org A's SmsDelivery row.
 
 **Memory (create):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_sms_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_sms_status.md`
 
 **Transformation index (modify):**
 - `docs/superpowers/plans/2026-04-21-saas-transformation-index.md` — mark 02g-sms done, progress-log entry, clear the Plan-04-blocker risk.
@@ -107,7 +107,7 @@ Expected: `comms/send-sms/send-sms.handler.ts`, `comms/events/on-booking-reminde
 - [ ] **Step 1.2: Identify the legacy provider client**
 
 ```bash
-grep -rn "unifonic\|taqnyat\|twilio\|SmsClient\|HttpService.*sms" src/ node_modules/@carekit/ 2>/dev/null | head -20
+grep -rn "unifonic\|taqnyat\|twilio\|SmsClient\|HttpService.*sms" src/ node_modules/@deqah/ 2>/dev/null | head -20
 ```
 
 Document the current provider, env vars in use, and which module imports it.
@@ -148,7 +148,7 @@ model OrganizationSmsConfig {
   id             String      @id @default(uuid())
   organizationId String      @unique // SaaS-02g-sms — singleton per org
   provider       SmsProvider @default(NONE)
-  senderId       String? // e.g. "CareKit" or per-tenant brand
+  senderId       String? // e.g. "Deqah" or per-tenant brand
   // Encrypted credential payload (AES-GCM). JSON-stringified provider-specific fields.
   credentialsCiphertext String? // base64(nonce || tag || ciphertext)
   webhookSecret         String? // HMAC secret for DLR signature
@@ -264,8 +264,8 @@ CREATE POLICY "tenant_isolation" ON "SmsDelivery" USING ("organizationId" = curr
 
 ```bash
 cd apps/backend && npx prisma migrate deploy
-TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 npx prisma generate
 ```
@@ -414,7 +414,7 @@ describe('UnifonicAdapter', () => {
       data: { MessageID: 'unif-123' },
     });
     const adapter = new UnifonicAdapter({ appSid: 'sid', apiKey: 'key' });
-    const res = await adapter.send('+966500000000', 'hi', 'CareKit');
+    const res = await adapter.send('+966500000000', 'hi', 'Deqah');
     expect(res).toEqual({ providerMessageId: 'unif-123', status: 'SENT' });
   });
 
@@ -777,7 +777,7 @@ git commit -m "test(saas-02g-sms): isolation e2e — config + send + DLR"
 
 - [ ] **Step 12.1: Create status memory**
 
-File `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02g_sms_status.md`:
+File `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02g_sms_status.md`:
 
 ```markdown
 ---

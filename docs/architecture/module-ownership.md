@@ -72,7 +72,7 @@ Direction: `A → B` means module A imports from module B.
 | NestJS `exports: []` in `*.module.ts` | ✅ existing | The actual public API surface |
 | `apps/backend/CLAUDE.md` cluster conventions | ✅ existing | Vertical slices, handler DI patterns |
 | Code review on cross-cluster imports | ✅ manual | No automated rule — cannot statically verify "is target in `exports: []`" without a full type checker |
-| ESLint `carekit/no-cross-cluster-import` | ❌ rejected 2026-04-23 | Conflicts with documented DI pattern: CLAUDE.md explicitly sanctions cross-cluster handler/service injection (`GetBookingSettingsHandler`, `PriceResolverService`). A blunt import-path rule would flag 23 legitimate DI type hints. |
+| ESLint `deqah/no-cross-cluster-import` | ❌ rejected 2026-04-23 | Conflicts with documented DI pattern: CLAUDE.md explicitly sanctions cross-cluster handler/service injection (`GetBookingSettingsHandler`, `PriceResolverService`). A blunt import-path rule would flag 23 legitimate DI type hints. |
 
 ## What to watch in code review
 

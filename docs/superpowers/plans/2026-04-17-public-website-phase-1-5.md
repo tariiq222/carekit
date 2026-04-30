@@ -29,7 +29,7 @@
 
 - [ ] **0.1** Ensure Phase 1 is merged to `main` and locally pulled.
 - [ ] **0.2** `git checkout -b feat/website-phase-1-5` from `main`.
-- [ ] **0.3** Ensure Kiwi `CareKit / Website / Manual QA` plan exists (from Phase 1 deferred sync). Create category if missing.
+- [ ] **0.3** Ensure Kiwi `Deqah / Website / Manual QA` plan exists (from Phase 1 deferred sync). Create category if missing.
 - [ ] **0.4** Read the Sawaa source under `docs/superpowers/assets/sawaa-source/` to identify therapist/specialty/contact/burnout components worth porting (structure + copy, not styling).
 
 ---
@@ -126,7 +126,7 @@
 
 - [ ] **4.1** Handler `list`: filters `isPublic = true`, returns only public fields + `id` + `slug` + `nameAr/En`. No phone/email leak.
 - [ ] **4.2** Handler `get`: lookup by `slug`, 404 if not found or `isPublic = false`.
-- [ ] **4.3** Response shape — typed `PublicEmployeeSummary` and `PublicEmployeeDetail` in `@carekit/shared`.
+- [ ] **4.3** Response shape — typed `PublicEmployeeSummary` and `PublicEmployeeDetail` in `@deqah/shared`.
 - [ ] **4.4** Controller: `GET /api/v1/public/employees`, `GET /api/v1/public/employees/:slug`. Throttle 30/min.
 - [ ] **4.5** Handler + controller specs.
 - [ ] **4.6** `openapi:build-and-snapshot`.
@@ -188,7 +188,7 @@
 - [ ] **8.4** `getPublicSpecialty(slug): Promise<PublicSpecialtyDetail>`
 - [ ] **8.5** `createContactMessage(payload): Promise<{ id: string }>`
 - [ ] **8.6** `getAdminContactMessages(query): Promise<Paginated<ContactMessage>>`
-- [ ] **8.7** All types imported from `@carekit/shared`, never redefined.
+- [ ] **8.7** All types imported from `@deqah/shared`, never redefined.
 - [ ] **8.8** Basic vitest mocks per endpoint.
 - [ ] **8.9** Commit: `feat(api-client): public directory + contact-messages endpoints`
 
@@ -367,7 +367,7 @@ Mirror Task 12 for specialties.
 - [ ] Every public endpoint throttled.
 - [ ] hCaptcha verified server-side before DB write.
 - [ ] No PII leaks through `/public/employees` (phone/email never returned).
-- [ ] All new types live in `@carekit/shared`.
+- [ ] All new types live in `@deqah/shared`.
 - [ ] No hex literals in new `.tsx` / `.ts` outside globals.css.
 - [ ] next-intl: zero hardcoded Arabic strings in feature/theme components.
 - [ ] OpenAPI snapshot committed.

@@ -33,7 +33,7 @@ This incoherence causes confusion for every new contributor and breaks the publi
 
 Single atomic rename executed on a dedicated branch (`feature/rename-branding`) with small internal commits for debuggability, then **squash-merged** to `main` as one commit. The intermediate state inside the branch can temporarily fail cross-package builds; `main` never sees a broken state.
 
-We deliberately **skip the CareKit ≤10 files / ≤500 lines commit rule** for this rename because splitting a whole-tree rename across merges into `main` creates more churn and confusion than a single squashed commit. This exception is owner-authorized for this task only.
+We deliberately **skip the Deqah ≤10 files / ≤500 lines commit rule** for this rename because splitting a whole-tree rename across merges into `main` creates more churn and confusion than a single squashed commit. This exception is owner-authorized for this task only.
 
 No transitional aliases. No deprecated re-exports. Full cut-over.
 
@@ -110,7 +110,7 @@ No transitional aliases. No deprecated re-exports. Full cut-over.
   - Inside each test, update route paths, selectors, and type imports
 
 ### apps/mobile
-- `apps/mobile/theme/ThemeProvider.tsx` — update imports from `@carekit/shared` (`OrganizationTheme` → `BrandingConfig`, `DEFAULT_THEME` → `DEFAULT_BRANDING`) and from `@carekit/api-client` (`getTheme` → `getBrandingPublic(tenantId)`)
+- `apps/mobile/theme/ThemeProvider.tsx` — update imports from `@deqah/shared` (`OrganizationTheme` → `BrandingConfig`, `DEFAULT_THEME` → `DEFAULT_BRANDING`) and from `@deqah/api-client` (`getTheme` → `getBrandingPublic(tenantId)`)
 
 ### Root documentation
 - `CLAUDE.md` (root) — update the Key Domains table row for branding:
@@ -129,7 +129,7 @@ No transitional aliases. No deprecated re-exports. Full cut-over.
 ## Architecture Impact
 
 - **Query cache invalidation on deploy:** users with stale dashboard tabs hold queryKey `["whitelabel", "config"]` in their TanStack Query cache. After deploy, the new code fetches with `["branding", "config"]` — a different key — so the old cache is simply orphaned and the new key triggers one fresh fetch. No action needed.
-- **Mobile app re-deploy:** mobile consumes `@carekit/shared` and `@carekit/api-client`. It must be rebuilt and redeployed with the renamed types. The backend remains compatible because the endpoint URL did not change.
+- **Mobile app re-deploy:** mobile consumes `@deqah/shared` and `@deqah/api-client`. It must be rebuilt and redeployed with the renamed types. The backend remains compatible because the endpoint URL did not change.
 - **Dashboard bookmarks:** any user-bookmarked `/white-label` URL breaks with 404 after rename. Acceptable — this is a low-traffic admin page, and a redirect adds permanent legacy surface area for a problem that resolves itself in one visit.
 
 ## Sequencing (Inside the Branch)

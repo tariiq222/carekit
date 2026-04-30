@@ -251,7 +251,7 @@ export class RegisterTenantDto {
   @ApiProperty({ description: 'Business name in Arabic', example: 'عيادة الرعاية' })
   @IsString() @IsNotEmpty() businessNameAr!: string;
 
-  @ApiPropertyOptional({ description: 'Business name in English', example: 'CareKit Clinic' })
+  @ApiPropertyOptional({ description: 'Business name in English', example: 'Deqah Clinic' })
   @IsOptional() @IsString() businessNameEn?: string;
 }
 ```
@@ -1059,7 +1059,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button, Input, Label } from "@carekit/ui"
+import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
 import { registerTenant } from "@/lib/api/auth"
@@ -1246,7 +1246,7 @@ Create `apps/dashboard/components/features/onboarding/onboarding-step-1-business
 ```typescript
 "use client"
 
-import { Button, Input, Label } from "@carekit/ui"
+import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useVerticals } from "@/hooks/use-verticals"
 
@@ -1323,7 +1323,7 @@ Create `apps/dashboard/components/features/onboarding/onboarding-step-2-branding
 ```typescript
 "use client"
 
-import { Button, Input, Label } from "@carekit/ui"
+import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 export interface Step2Data {
@@ -1392,7 +1392,7 @@ Create `apps/dashboard/components/features/onboarding/onboarding-step-3-branch.t
 ```typescript
 "use client"
 
-import { Button, Input, Label } from "@carekit/ui"
+import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 export interface DayHours {
@@ -1516,7 +1516,7 @@ Create `apps/dashboard/components/features/onboarding/onboarding-step-4-confirm.
 ```typescript
 "use client"
 
-import { Button } from "@carekit/ui"
+import { Button } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 
 interface Props {
@@ -1854,7 +1854,7 @@ If it does not include organization data, add a query for `membership.organizati
 
 Add to the return value: `onboardingCompletedAt: membership?.organization?.onboardingCompletedAt ?? null`.
 
-Also update `apps/dashboard/lib/api/auth.ts` — the `AuthUser` type (imported from `@carekit/api-client`) may need an update. Check `packages/api-client/src/` to add `onboardingCompletedAt?: string | null` to `UserPayload`.
+Also update `apps/dashboard/lib/api/auth.ts` — the `AuthUser` type (imported from `@deqah/api-client`) may need an update. Check `packages/api-client/src/` to add `onboardingCompletedAt?: string | null` to `UserPayload`.
 
 - [ ] **Step 4: Run typecheck**
 
@@ -1927,13 +1927,13 @@ git commit -m "feat(self-signup): complete tenant self-signup + onboarding wizar
 
 ---
 
-## CareKit Plan Notes
+## Deqah Plan Notes
 
 - **Path**: STANDARD (multi-file, no worktree required)
 - **Owner-only touches**: none — this feature does not touch payments, ZATCA, or auth secrets
 - **Migration**: `add_onboarding_completed_at_to_organization` — single nullable column addition; rollback = `ALTER TABLE "Organization" DROP COLUMN "onboardingCompletedAt"` — add to `apps/backend/prisma/NOTES.md`
 - **i18n**: AR+EN added in Task 6 (`ar.register.ts` / `en.register.ts`) — verified by `npm run i18n:verify`
 - **No Page Anatomy law** — `/register` and `/onboarding` are not list pages
-- **Kiwi TestPlan**: `CareKit / Identity / Manual QA`
+- **Kiwi TestPlan**: `Deqah / Identity / Manual QA`
 - **Semantic tokens**: all — no hex colors in components (`bg-warning/10`, `text-error`, etc.)
 - **staleTime**: set on `useVerticals` (1 hour)

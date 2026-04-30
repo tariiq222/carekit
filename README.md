@@ -1,4 +1,4 @@
-# CareKit
+# Deqah
 
 **Multi-tenant SaaS clinic platform** — built by WebVue Technology Solutions.
 
@@ -24,7 +24,7 @@ npm run dev:all
 | Website (public) | <http://localhost:5105> |
 | Mobile (Expo) | <http://localhost:5102> |
 
-> Ports 5000–5999 are reserved exclusively for CareKit environments.
+> Ports 5000–5999 are reserved exclusively for Deqah environments.
 
 ---
 
@@ -37,9 +37,9 @@ npm run dev:all
 | `apps/admin/` | Next.js 15 | Super-admin SaaS control plane (tenants, plans, verticals, billing oversight, impersonation) |
 | `apps/website/` | Next.js 15 | Public marketing/info site |
 | `apps/mobile/` | React Native 0.83 (Expo SDK 55) | Client + employee mobile app |
-| `packages/api-client/` | TypeScript | `@carekit/api-client` — typed fetch shared by UIs |
-| `packages/shared/` | TypeScript | `@carekit/shared` — types, enums, i18n tokens, vertical seeds |
-| `packages/ui/` | TypeScript + Tailwind | `@carekit/ui` — 33 design-system primitives + 2 hooks |
+| `packages/api-client/` | TypeScript | `@deqah/api-client` — typed fetch shared by UIs |
+| `packages/shared/` | TypeScript | `@deqah/shared` — types, enums, i18n tokens, vertical seeds |
+| `packages/ui/` | TypeScript + Tailwind | `@deqah/ui` — 33 design-system primitives + 2 hooks |
 
 ---
 
@@ -79,7 +79,7 @@ npm run dev:all
 
 **Backend:** NestJS 11 · Prisma 7 · PostgreSQL 16 (pgvector + RLS) · Redis 7 · BullMQ
 **Web:** Next.js 15 · React 19 · TanStack Query · Tailwind CSS v4 · next-intl
-**UI primitives:** `@carekit/ui` (33 components, extracted from shadcn lineage)
+**UI primitives:** `@deqah/ui` (33 components, extracted from shadcn lineage)
 **Mobile:** React Native 0.83 · Expo SDK 55 · Expo Router · Redux Toolkit (auth) + TanStack Query
 **AI:** OpenRouter · pgvector
 **Payments:** Moyasar (platform + per-tenant)
@@ -102,7 +102,7 @@ npm run dev:all
 5. **RTL layout** — use `start`/`end`, `ps-`/`pe-` — never `left`/`right` hardcoded
 6. **`TENANT_ENFORCEMENT=strict`** in production (validated at boot)
 7. **i18n parity (AR/EN)** for any user-facing string
-8. **Ports 5000–5999** reserved exclusively for CareKit environments
+8. **Ports 5000–5999** reserved exclusively for Deqah environments
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full pre-PR checklist.
 

@@ -556,7 +556,7 @@ Replace the entire `use-widget-booking.ts` file:
 
 ```typescript
 /**
- * Widget Booking Hook — CareKit Embeddable Widget
+ * Widget Booking Hook — Deqah Embeddable Widget
  *
  * Manages the multi-step booking wizard state machine.
  * Steps: service → datetime → auth → confirm → success

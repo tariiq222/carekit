@@ -131,6 +131,6 @@ const whitelabelSchema = z.object({
 ## Constraints
 
 - No mock or live preview — save to see changes
-- `clinicCanEdit` flag from API: if `false`, all fields are disabled and a warning banner is shown: "إعدادات العلامة التجارية مقفلة. تواصل مع فريق CareKit."
+- `clinicCanEdit` flag from API: if `false`, all fields are disabled and a warning banner is shown: "إعدادات العلامة التجارية مقفلة. تواصل مع فريق Deqah."
 - RTL-first layout, DS tokens only, no hardcoded colors
 - File max 350 lines — split into sub-components if needed

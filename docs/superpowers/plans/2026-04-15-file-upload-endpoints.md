@@ -46,9 +46,9 @@ Open `apps/backend/test/setup/app.setup.ts` and replace lines 115-120:
 ```ts
     .overrideProvider(MinioService)
     .useValue({
-      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key'),
+      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key'),
       deleteFile: jest.fn().mockResolvedValue(undefined),
-      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key?sig=x'),
+      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key?sig=x'),
       fileExists: jest.fn().mockResolvedValue(true),
     })
 ```
@@ -149,7 +149,7 @@ function makeHandler(overrides: {
       );
   const uploadFile = { execute: uploadFileExecute } as unknown as UploadFileHandler;
 
-  const config = { getOrThrow: (_k: string) => 'carekit' } as ConfigService;
+  const config = { getOrThrow: (_k: string) => 'deqah' } as ConfigService;
   const handler = new UploadAvatarHandler(prisma, uploadFile, config);
   return { handler, employeeFindUnique, employeeUpdate, uploadFileExecute };
 }
@@ -432,7 +432,7 @@ function makeHandler(overrides: { uploadResult?: { id: string; url: string } } =
     overrides.uploadResult ?? { id: 'file-1', url: 'https://cdn/logo.png' },
   );
   const uploadFile = { execute: uploadFileExecute } as unknown as UploadFileHandler;
-  const config = { getOrThrow: (_k: string) => 'carekit' } as ConfigService;
+  const config = { getOrThrow: (_k: string) => 'deqah' } as ConfigService;
   return {
     handler: new UploadLogoHandler(prisma, uploadFile, config),
     brandingUpsert,

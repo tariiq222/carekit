@@ -1,6 +1,6 @@
-# Path Playbook — Maestro v10 (CareKit)
+# Path Playbook — Maestro v10 (Deqah)
 
-This file is **guidance, not law**. It only applies when you have explicitly opted into Maestro for a task (see `MAESTRO.md`). Most CareKit work runs through superpowers skills on plain feature branches and never hits this playbook.
+This file is **guidance, not law**. It only applies when you have explicitly opted into Maestro for a task (see `MAESTRO.md`). Most Deqah work runs through superpowers skills on plain feature branches and never hits this playbook.
 
 When you *do* run Maestro, every request routes to one of three paths — each with a target budget, suggested agents, and an SLA. Fahad uses these as heuristics, not hard contracts.
 
@@ -59,7 +59,7 @@ Request → Yazid → Fahad → [Nawaf | Khaled | Salem] → Majed (type-check) 
 ### Git Strategy
 - Edit in place on current branch
 - Commit message: `fix: …` or `docs: …` (conventional)
-- ≤ 10 files / ≤ 500 lines / one system only — same CareKit commit rules apply
+- ≤ 10 files / ≤ 500 lines / one system only — same Deqah commit rules apply
 
 ### Examples
 - "Fix typo in error message on `apps/dashboard/app/(dashboard)/bookings/page.tsx`"
@@ -178,16 +178,16 @@ Request → Yazid → Fahad classify
 
 ### Git Strategy — Worktree Required
 ```bash
-# Fahad creates an isolated worktree at ../carekit-feat-<slug>
-cd /Users/tariq/code/carekit
-git worktree add ../carekit-feat-waitlist -b feat/waitlist-v2 main
+# Fahad creates an isolated worktree at ../deqah-feat-<slug>
+cd /Users/tariq/code/deqah
+git worktree add ../deqah-feat-waitlist -b feat/waitlist-v2 main
 
-cd ../carekit-feat-waitlist
+cd ../deqah-feat-waitlist
 
 # Independent environment:
 npm install                          # own node_modules
 cp .env.example .env                 # own env
-# Override: DATABASE_URL=postgresql://localhost/carekit_feat_waitlist
+# Override: DATABASE_URL=postgresql://localhost/deqah_feat_waitlist
 # Override: PORT=<pick a free port in 5000–5999>  (no fixed worktree port table anymore)
 npx prisma migrate dev               # against worktree's own DB
 
@@ -196,8 +196,8 @@ git push origin feat/waitlist-v2
 gh pr create --title "feat(bookings): waitlist v2" --body "…"
 
 # After merge:
-cd /Users/tariq/code/carekit
-git worktree remove ../carekit-feat-waitlist
+cd /Users/tariq/code/deqah
+git worktree remove ../deqah-feat-waitlist
 git branch -d feat/waitlist-v2
 ```
 
@@ -205,7 +205,7 @@ git branch -d feat/waitlist-v2
 1. **Parallel safety** — you can work on another task in the main workspace
 2. **Clean rollback** — if it goes wrong, delete the worktree
 3. **Isolated deps** — testing different package versions
-4. **Fresh DB state** — migrations don't pollute dev DB (keeps `carekit` DB clean)
+4. **Fresh DB state** — migrations don't pollute dev DB (keeps `deqah` DB clean)
 5. **Reviewer can `cd` into it** — test locally before merging
 
 ### Examples

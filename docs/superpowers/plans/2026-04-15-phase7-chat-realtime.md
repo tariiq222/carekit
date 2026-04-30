@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add 15 tagged E2E tests covering the AI chatbot, staff↔client chat, and notifications (API + dashboard sidebar badge) so they auto-appear in the CareKit test-report dashboard under three new modules (`AI`, `CH`, `NT`).
+**Goal:** Add 15 tagged E2E tests covering the AI chatbot, staff↔client chat, and notifications (API + dashboard sidebar badge) so they auto-appear in the Deqah test-report dashboard under three new modules (`AI`, `CH`, `NT`).
 
 **Architecture:** Four test files (3 backend Jest E2E, 1 Playwright). Backend tests follow the existing `clients.e2e-spec.ts` pattern — they reuse `createTestApp()` from `test/setup/app.setup.ts` which already stubs external adapters. The `ChatAdapter` override must be upgraded to match the real interface (`complete`/`stream`/`isAvailable`) so AI tests exercise the full handler path without a live LLM. The Playwright spec seeds notifications via backend API, then verifies the sidebar badge and mark-as-read flow in the browser. `test-reports/scripts/tag_tests.py` gets three new module prefixes and a generalised `-UI-` rollup.
 
@@ -44,7 +44,7 @@ These are verified against the current codebase — use them verbatim:
 - **Chat endpoints**: `POST /dashboard/comms/chat/conversations/:id/messages`, `GET /dashboard/comms/chat/conversations`, `PATCH /dashboard/comms/chat/conversations/:id/close`. There is no "create conversation" endpoint in the current dashboard controller — CH-001 creates the conversation directly in the DB via `testPrisma.chatConversation.create`, which matches how walk-in clients are seeded elsewhere.
 - **ChatSession + ChatMessage** (AI) and **ChatConversation + CommsChatMessage** (staff chat) are SEPARATE Prisma models — don't conflate.
 - **Header badge** in `apps/dashboard/components/header.tsx:154-156` renders `{unreadCount! > 9 ? "9+" : unreadCount}` when `unreadCount > 0`. It uses `useUnreadCount()` from TanStack Query — polling interval determines realtime latency.
-- **Playwright seed pattern** — `apps/dashboard/test/e2e/setup/seed-client.ts` logs in as `admin@carekit-test.com` / `Admin@1234` against `NEXT_PUBLIC_API_URL`, caches the token. New `seed-notification.ts` follows the same structure.
+- **Playwright seed pattern** — `apps/dashboard/test/e2e/setup/seed-client.ts` logs in as `admin@deqah-test.com` / `Admin@1234` against `NEXT_PUBLIC_API_URL`, caches the token. New `seed-notification.ts` follows the same structure.
 - **Test runner commands** — backend: `cd apps/backend && npx jest --config test/jest-e2e.json path/to/spec.ts`. Dashboard: `cd apps/dashboard && npx playwright test test/e2e/notifications/notifications-sidebar.e2e-spec.ts`.
 
 ---
@@ -663,10 +663,10 @@ import { randomUUID } from 'node:crypto';
 const DATABASE_URL =
   process.env['DATABASE_URL'] ??
   process.env['TEST_DATABASE_URL'] ??
-  'postgresql://carekit:carekit_dev_password@127.0.0.1:5432/carekit_dev?schema=public';
+  'postgresql://deqah:deqah_dev_password@127.0.0.1:5432/deqah_dev?schema=public';
 const TENANT_ID =
   process.env['NEXT_PUBLIC_TENANT_ID'] ?? 'b46accb4-dd8a-4f34-a2fd-1bac26119e1c';
-const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@carekit-test.com';
+const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@deqah-test.com';
 
 let pool: Pool | null = null;
 let cachedUserId: string | null = null;
@@ -758,7 +758,7 @@ git commit -m "test(dashboard): add notification seed helper (direct pg, no endp
 import { test, expect } from '@playwright/test';
 import { seedNotification, clearNotifications } from '../setup/seed-notification';
 
-const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@carekit-test.com';
+const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@deqah-test.com';
 const ADMIN_PASSWORD = process.env['TEST_ADMIN_PASSWORD'] ?? 'Admin@1234';
 
 async function login(page: import('@playwright/test').Page) {

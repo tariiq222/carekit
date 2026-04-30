@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a `PlatformMailerService` (Resend SDK) that ships eight CareKit-↔-tenant lifecycle emails, leaving the existing `SmtpService` (clinic↔client emails) untouched.
+**Goal:** Add a `PlatformMailerService` (Resend SDK) that ships eight Deqah-↔-tenant lifecycle emails, leaving the existing `SmtpService` (clinic↔client emails) untouched.
 
 **Architecture:** New service in `apps/backend/src/infrastructure/mail/` exposes one method per email kind (`sendTenantWelcome`, `sendOtpLogin`, `sendTrialEnding`, `sendTrialExpired`, `sendSubscriptionPaymentSucceeded`, `sendSubscriptionPaymentFailed`, `sendPlanChanged`, `sendAccountStatusChanged`). Templates are bilingual AR+EN HTML strings. One additive Prisma migration adds `Subscription.notifiedTrialEndingAt` to dedupe trial-ending notifications. Seven existing handlers each get one new line that calls the mailer; the eighth method (`sendOtpLogin`) is unwired (consumed by a separate super-admin OTP login PR).
 
@@ -123,7 +123,7 @@ describe('escapeHtml', () => {
 });
 
 describe('BRAND', () => {
-  it('exposes the CareKit primary color and font', () => {
+  it('exposes the Deqah primary color and font', () => {
     expect(BRAND.primary).toBe('#354FD8');
     expect(BRAND.fontFamily).toMatch(/IBM Plex Sans Arabic/);
   });
@@ -158,7 +158,7 @@ Expected: FAIL with `Cannot find module '../shared'`.
 
 ```ts
 /**
- * Brand tokens for platform emails. Hard-coded — these emails are CareKit
+ * Brand tokens for platform emails. Hard-coded — these emails are Deqah
  * platform identity, not per-tenant branding.
  */
 export const BRAND = {
@@ -202,7 +202,7 @@ export function bilingualLayout({ ar, en }: BilingualSections): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CareKit</title>
+<title>Deqah</title>
 </head>
 <body style="margin:0;padding:24px;background:${BRAND.surface};font-family:${BRAND.fontFamily};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;">
@@ -268,8 +268,8 @@ describe('platform email templates', () => {
       orgName: 'Sawa',
       dashboardUrl: 'https://app.example/dashboard',
     });
-    expect(out.subjectAr).toContain('CareKit');
-    expect(out.subjectEn).toContain('CareKit');
+    expect(out.subjectAr).toContain('Deqah');
+    expect(out.subjectEn).toContain('Deqah');
     expect(out.html).toContain('Sawa');
     expect(out.html).toContain('https://app.example/dashboard');
     expect(out.html).not.toContain('<script>alert(1)</script>');
@@ -397,7 +397,7 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   const ar = `
     <h1 style="color:${BRAND.primary};font-size:22px;margin:0 0 16px;">أهلاً ${name} 👋</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      شكرًا لانضمامك إلى CareKit. حسابك "${org}" جاهز، ومدّة التجربة المجانية ١٤ يومًا.
+      شكرًا لانضمامك إلى Deqah. حسابك "${org}" جاهز، ومدّة التجربة المجانية ١٤ يومًا.
     </p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${url}" style="display:inline-block;background:${BRAND.primary};color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;">افتح لوحة التحكم</a>
@@ -407,7 +407,7 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   const en = `
     <h1 style="color:${BRAND.primary};font-size:22px;margin:0 0 16px;">Welcome, ${name} 👋</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      Thanks for joining CareKit. Your "${org}" workspace is ready and your 14-day free trial has started.
+      Thanks for joining Deqah. Your "${org}" workspace is ready and your 14-day free trial has started.
     </p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${url}" style="display:inline-block;background:${BRAND.primary};color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;">Open Dashboard</a>
@@ -415,8 +415,8 @@ export function tenantWelcomeTemplate(vars: TenantWelcomeVars): {
   `;
 
   return {
-    subjectAr: 'مرحبًا بك في CareKit',
-    subjectEn: 'Welcome to CareKit',
+    subjectAr: 'مرحبًا بك في Deqah',
+    subjectEn: 'Welcome to Deqah',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -460,8 +460,8 @@ export function otpLoginTemplate(vars: OtpLoginVars): {
   `;
 
   return {
-    subjectAr: 'رمز تسجيل الدخول إلى CareKit',
-    subjectEn: 'Your CareKit login code',
+    subjectAr: 'رمز تسجيل الدخول إلى Deqah',
+    subjectEn: 'Your Deqah login code',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -509,8 +509,8 @@ export function trialEndingTemplate(vars: TrialEndingVars): {
   `;
 
   return {
-    subjectAr: `تجربة CareKit تنتهي خلال ${days} ${days === 1 ? 'يوم' : 'أيام'}`,
-    subjectEn: `Your CareKit trial ends in ${days} day${days === 1 ? '' : 's'}`,
+    subjectAr: `تجربة Deqah تنتهي خلال ${days} ${days === 1 ? 'يوم' : 'أيام'}`,
+    subjectEn: `Your Deqah trial ends in ${days} day${days === 1 ? '' : 's'}`,
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -556,8 +556,8 @@ export function trialExpiredTemplate(vars: TrialExpiredVars): {
   `;
 
   return {
-    subjectAr: 'انتهت تجربة CareKit',
-    subjectEn: 'Your CareKit trial has ended',
+    subjectAr: 'انتهت تجربة Deqah',
+    subjectEn: 'Your Deqah trial has ended',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -606,8 +606,8 @@ export function subscriptionPaymentSucceededTemplate(
   `;
 
   return {
-    subjectAr: 'تم استلام دفع اشتراك CareKit',
-    subjectEn: 'CareKit subscription payment received',
+    subjectAr: 'تم استلام دفع اشتراك Deqah',
+    subjectEn: 'Deqah subscription payment received',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -659,8 +659,8 @@ export function subscriptionPaymentFailedTemplate(
   `;
 
   return {
-    subjectAr: 'فشل دفع اشتراك CareKit',
-    subjectEn: 'CareKit subscription payment failed',
+    subjectAr: 'فشل دفع اشتراك Deqah',
+    subjectEn: 'Deqah subscription payment failed',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -705,8 +705,8 @@ export function planChangedTemplate(vars: PlanChangedVars): {
   `;
 
   return {
-    subjectAr: 'تم تحديث باقة اشتراك CareKit',
-    subjectEn: 'Your CareKit plan changed',
+    subjectAr: 'تم تحديث باقة اشتراك Deqah',
+    subjectEn: 'Your Deqah plan changed',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -759,8 +759,8 @@ export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
       </p>
     `;
     return {
-      subjectAr: 'تم تعليق حساب CareKit',
-      subjectEn: 'Your CareKit account was suspended',
+      subjectAr: 'تم تعليق حساب Deqah',
+      subjectEn: 'Your Deqah account was suspended',
       html: bilingualLayout({ ar, en }),
     };
   }
@@ -785,8 +785,8 @@ export function accountStatusChangedTemplate(vars: AccountStatusChangedVars): {
     </p>
   `;
   return {
-    subjectAr: 'تم إعادة تفعيل حساب CareKit',
-    subjectEn: 'Your CareKit account was reinstated',
+    subjectAr: 'تم إعادة تفعيل حساب Deqah',
+    subjectEn: 'Your Deqah account was reinstated',
     html: bilingualLayout({ ar, en }),
   };
 }
@@ -883,7 +883,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 
-const DEFAULT_FROM = 'CareKit <noreply@webvue.pro>';
+const DEFAULT_FROM = 'Deqah <noreply@webvue.pro>';
 const DEFAULT_REPLY_TO = 'support@webvue.pro';
 
 @Injectable()
@@ -994,7 +994,7 @@ describe('PlatformMailerService — send', () => {
     const svc = new PlatformMailerService(
       configWith({
         RESEND_API_KEY: 're_test',
-        RESEND_FROM: 'CareKit <noreply@webvue.pro>',
+        RESEND_FROM: 'Deqah <noreply@webvue.pro>',
         RESEND_REPLY_TO: 'support@webvue.pro',
       }),
     );
@@ -1014,10 +1014,10 @@ describe('PlatformMailerService — send', () => {
 
     expect(mockSend).toHaveBeenCalledTimes(1);
     const arg = mockSend.mock.calls[0][0];
-    expect(arg.from).toBe('CareKit <noreply@webvue.pro>');
+    expect(arg.from).toBe('Deqah <noreply@webvue.pro>');
     expect(arg.replyTo).toBe('support@webvue.pro');
     expect(arg.to).toEqual(['owner@example.com']);
-    expect(arg.subject).toContain('CareKit');
+    expect(arg.subject).toContain('Deqah');
     expect(arg.html).toContain('Tariq');
     expect(arg.html).toContain('Sawa');
   });
@@ -1841,7 +1841,7 @@ git commit -m "feat(admin): notify owner on account suspend/reinstate"
 # Required in production. Optional in dev/test (mailer no-ops + warns).
 RESEND_API_KEY=
 # Optional, sensible defaults in code:
-RESEND_FROM=CareKit <noreply@webvue.pro>
+RESEND_FROM=Deqah <noreply@webvue.pro>
 RESEND_REPLY_TO=support@webvue.pro
 PLATFORM_DASHBOARD_URL=https://app.webvue.pro/dashboard
 ```
@@ -1901,7 +1901,7 @@ git push -u origin feat/resend-platform-emails
 gh pr create --title "feat(mailer): Resend platform emails (welcome / trial / billing / account-status)" --body "$(cat <<'EOF'
 ## Summary
 
-Adds a new `PlatformMailerService` (Resend SDK) for CareKit ↔ tenant-owner
+Adds a new `PlatformMailerService` (Resend SDK) for Deqah ↔ tenant-owner
 emails, separate from the existing `SmtpService` (which keeps serving
 clinic ↔ client emails).
 

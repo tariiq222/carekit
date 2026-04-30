@@ -1,12 +1,12 @@
 # TEST CASES — SaaS-05c Admin Billing Oversight
 
-**Kiwi TCMS Product:** CareKit (id=1)
+**Kiwi TCMS Product:** Deqah (id=1)
 **Version:** main
 **Build:** `saas-05c-billing-2026-04-23`
 
 ---
 
-## Plan: `CareKit / Billing / Unit`
+## Plan: `Deqah / Billing / Unit`
 
 Colocated `*.handler.spec.ts` next to each handler under `apps/backend/src/modules/platform/admin/`.
 
@@ -71,7 +71,7 @@ Colocated `*.handler.spec.ts` next to each handler under `apps/backend/src/modul
 
 ---
 
-## Plan: `CareKit / Billing / E2E`
+## Plan: `Deqah / Billing / E2E`
 
 Under `apps/backend/test/e2e/admin/billing/`. Use `superAdminAgent` from existing helpers.
 
@@ -122,7 +122,7 @@ Under `apps/backend/test/e2e/admin/billing/`. Use `superAdminAgent` from existin
 
 ---
 
-## Plan: `CareKit / Billing / Manual QA`
+## Plan: `Deqah / Billing / Manual QA`
 
 QA agent walks through Chrome DevTools MCP at `http://localhost:5130` (worktree admin port) signed in as super-admin.
 

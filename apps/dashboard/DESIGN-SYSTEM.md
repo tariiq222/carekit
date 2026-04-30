@@ -1,10 +1,10 @@
-# CareKit Design System — Frosted Glass
+# Deqah Design System — Frosted Glass
 
 > **قانون التصميم** — يُقرأ قبل أي عمل على Dashboard.
 
 ## Visual Identity
 
-CareKit uses an **iOS-inspired Frosted Glass** aesthetic:
+Deqah uses an **iOS-inspired Frosted Glass** aesthetic:
 - Semi-transparent surfaces with `backdrop-filter: blur(24px)`
 - Animated gradient blobs in the background (primary blue + accent green)
 - Soft shadows, not heavy drop-shadows

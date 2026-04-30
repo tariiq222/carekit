@@ -6,7 +6,7 @@
 
 ## Context
 
-The CareKit backend exposes **178 endpoints** across **29 controllers** (Dashboard admin + Mobile Client + Mobile Employee + Public). `SwaggerModule` is wired in [apps/backend/src/main.ts](../../../apps/backend/src/main.ts) and serves `/api/docs`, but the documentation is effectively empty:
+The Deqah backend exposes **178 endpoints** across **29 controllers** (Dashboard admin + Mobile Client + Mobile Employee + Public). `SwaggerModule` is wired in [apps/backend/src/main.ts](../../../apps/backend/src/main.ts) and serves `/api/docs`, but the documentation is effectively empty:
 
 - Only 15/29 controllers have `@ApiTags`.
 - **0/178** endpoints have `@ApiOperation`.
@@ -28,7 +28,7 @@ This blocks: (a) onboarding external/mobile developers, (b) generating a reliabl
 - Translating docs into Arabic (English only — industry standard for developer-facing tooling).
 - Rewriting DTOs or controllers beyond adding decorators.
 - Building a public developer portal.
-- Auto-generating the `@carekit/api-client` package contents (called out as a follow-up, not part of this work).
+- Auto-generating the `@deqah/api-client` package contents (called out as a follow-up, not part of this work).
 
 ## Documentation Level — "Standard"
 
@@ -133,7 +133,7 @@ Each wave's subagent is constrained to: its cluster's controllers, its cluster's
 1. **Local ESLint rule** at `apps/backend/eslint-rules/require-api-operation.js`:
    - Detects any method with `@Get|@Post|@Put|@Patch|@Delete` decorators
    - Errors if no sibling `@ApiOperation` decorator exists
-   - Registered in `apps/backend/.eslintrc.cjs` as `carekit/require-api-operation: "error"`
+   - Registered in `apps/backend/.eslintrc.cjs` as `deqah/require-api-operation: "error"`
 2. **CI coverage script** at `apps/backend/scripts/check-openapi-coverage.ts`:
    - Runs `openapi:snapshot` to regenerate `openapi.json`
    - Asserts: every `paths[*]` entry has a `summary`; every operation has at least one 4xx response; every referenced schema's properties have `description` or `example`
@@ -167,7 +167,7 @@ Three layers, per the user's choice (option D):
 - [ ] `@ApiProperty`/`@ApiPropertyOptional` on every field of every DTO used in the API layer.
 - [ ] `apps/backend/src/common/swagger/` exists and is used by controllers.
 - [ ] `apps/backend/openapi.json` is committed and reproducible via `npm run openapi:snapshot`.
-- [ ] ESLint rule `carekit/require-api-operation` exists and errors on violations.
+- [ ] ESLint rule `deqah/require-api-operation` exists and errors on violations.
 - [ ] CI coverage script exists, is wired into the workflow, and fails on gaps.
 - [ ] `apps/backend/CLAUDE.md` documents the standard and links to `/api/docs`.
 - [ ] All existing controller/handler unit tests continue to pass unchanged.

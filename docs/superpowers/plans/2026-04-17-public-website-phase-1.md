@@ -6,7 +6,7 @@
 
 **Architecture:** Next.js 15 App Router inside the monorepo. Vertical-slice `features/` folders (mirrors backend). Themes are presentation-only; they consume feature hooks. Backend exposes `/api/public/*` endpoints (no auth, throttled). Branding tokens injected at SSR from `BrandingConfig`. Domain is clinic-owned (stored as `BrandingConfig.websiteDomain`).
 
-**Tech Stack:** Next.js 15, React 19, Tailwind 4, shadcn/ui, next-intl, framer-motion, zod, vitest, TanStack Query (for client-side islands), `@carekit/api-client` (fetch), `@carekit/shared` (zod + types). Backend: NestJS 11, Prisma 7, `@nestjs/throttler`.
+**Tech Stack:** Next.js 15, React 19, Tailwind 4, shadcn/ui, next-intl, framer-motion, zod, vitest, TanStack Query (for client-side islands), `@deqah/api-client` (fetch), `@deqah/shared` (zod + types). Backend: NestJS 11, Prisma 7, `@nestjs/throttler`.
 
 **Reference Spec:** `docs/superpowers/specs/2026-04-17-public-website-integration-design.md`.
 
@@ -58,8 +58,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@carekit/api-client": "*",
-    "@carekit/shared": "*",
+    "@deqah/api-client": "*",
+    "@deqah/shared": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.0",
@@ -126,7 +126,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@carekit/api-client", "@carekit/shared"],
+  transpilePackages: ["@deqah/api-client", "@deqah/shared"],
   experimental: { typedRoutes: true },
 };
 export default nextConfig;
@@ -202,7 +202,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CareKit",
+  title: "Deqah",
   description: "Clinic website",
 };
 
@@ -220,7 +220,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 export default function HomePage() {
   return (
     <main className="min-h-screen grid place-items-center">
-      <h1 className="text-3xl font-semibold text-primary">CareKit Website — Phase 1</h1>
+      <h1 className="text-3xl font-semibold text-primary">Deqah Website — Phase 1</h1>
     </main>
   );
 }
@@ -247,16 +247,16 @@ Root `turbo.json` — confirm/add the `dev` task does not cache (`"cache": false
 - [ ] **Step 6: Install and run**
 
 ```bash
-cd c:/pro/carekit && npm install
-cd c:/pro/carekit && npm run dev:website
+cd c:/pro/deqah && npm install
+cd c:/pro/deqah && npm run dev:website
 ```
 
-Expected: Next.js dev server on http://localhost:5104 showing "CareKit Website — Phase 1" in royal blue.
+Expected: Next.js dev server on http://localhost:5104 showing "Deqah Website — Phase 1" in royal blue.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/website package.json turbo.json package-lock.json
 git commit -m "feat(website): scaffold apps/website (Next.js 15, Tailwind 4, port 5104)"
 ```
@@ -274,7 +274,7 @@ git commit -m "feat(website): scaffold apps/website (Next.js 15, Tailwind 4, por
 - [ ] **Step 1: Locate Specialty model**
 
 ```bash
-grep -n "^model Specialty" c:/pro/carekit/apps/backend/prisma/schema/*.prisma
+grep -n "^model Specialty" c:/pro/deqah/apps/backend/prisma/schema/*.prisma
 ```
 
 Record the file (expected: `people.prisma` or `organization.prisma`). Use that path in Step 3.
@@ -344,7 +344,7 @@ model ContactMessage {
 - [ ] **Step 6: Generate migration**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npm run prisma:migrate -- --name website_phase1
 ```
 
@@ -353,7 +353,7 @@ Expected: new folder `prisma/migrations/<timestamp>_website_phase1/` with `migra
 - [ ] **Step 7: Verify typecheck**
 
 ```bash
-cd c:/pro/carekit/apps/backend && npm run typecheck
+cd c:/pro/deqah/apps/backend && npm run typecheck
 ```
 
 Expected: zero errors. (`isActive`, `bio` etc. unaffected.)
@@ -361,7 +361,7 @@ Expected: zero errors. (`isActive`, `bio` etc. unaffected.)
 - [ ] **Step 8: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend/prisma
 git commit -m "feat(backend): add website-phase1 schema (branding theme/domain, employee/specialty public fields, contact messages)"
 ```
@@ -428,7 +428,7 @@ describe("GetPublicBrandingHandler", () => {
     });
   });
 
-  it("falls back to CareKit defaults when no record exists", async () => {
+  it("falls back to Deqah defaults when no record exists", async () => {
     prisma.brandingConfig.findUnique.mockResolvedValue(null);
     const result = await handler.execute();
     expect(result.brandNameAr).toBe("");
@@ -441,7 +441,7 @@ describe("GetPublicBrandingHandler", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest src/modules/org-experience/branding/get-public-branding/get-public-branding.handler.spec.ts
 ```
 
@@ -521,7 +521,7 @@ Expected: PASS (2 tests).
 - [ ] **Step 6: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend/src/modules/org-experience/branding
 git commit -m "feat(backend): GetPublicBrandingHandler for public website"
 ```
@@ -621,7 +621,7 @@ ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 60 }]),
 ```
 Install the package if missing:
 ```bash
-cd c:/pro/carekit/apps/backend && npm install @nestjs/throttler
+cd c:/pro/deqah/apps/backend && npm install @nestjs/throttler
 ```
 
 Add `PublicApiModule` to the `imports` array.
@@ -629,7 +629,7 @@ Add `PublicApiModule` to the `imports` array.
 - [ ] **Step 6: Run tests**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest src/api/public/branding.controller.spec.ts
 npm run typecheck
 ```
@@ -657,14 +657,14 @@ Expected: JSON with `brandNameAr`, `activeTheme`, etc.
 - [ ] **Step 9: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend
 git commit -m "feat(backend): POST /public/branding endpoint with throttling"
 ```
 
 ---
 
-## Task 5: `@carekit/api-client` — public branding client
+## Task 5: `@deqah/api-client` — public branding client
 
 **Files:**
 - Modify: `packages/api-client/src/index.ts` (export new public namespace)
@@ -710,7 +710,7 @@ describe("createPublicBrandingClient", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-cd c:/pro/carekit/packages/api-client
+cd c:/pro/deqah/packages/api-client
 npx vitest run src/public/branding.test.ts
 ```
 
@@ -767,7 +767,7 @@ export type { PublicBranding } from "./public/types";
 - [ ] **Step 5: Verify + typecheck**
 
 ```bash
-cd c:/pro/carekit/packages/api-client
+cd c:/pro/deqah/packages/api-client
 npx vitest run
 npm run typecheck
 ```
@@ -777,7 +777,7 @@ Expected: 2 tests pass, no type errors.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add packages/api-client
 git commit -m "feat(api-client): createPublicBrandingClient"
 ```
@@ -816,7 +816,7 @@ export default defineConfig({
 
 `apps/website/lib/api-client.ts`:
 ```ts
-import { createPublicBrandingClient } from "@carekit/api-client";
+import { createPublicBrandingClient } from "@deqah/api-client";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100";
 
@@ -827,7 +827,7 @@ export const publicBrandingClient = createPublicBrandingClient({ baseUrl });
 
 `apps/website/features/branding/branding.types.ts`:
 ```ts
-export type { PublicBranding } from "@carekit/api-client";
+export type { PublicBranding } from "@deqah/api-client";
 ```
 
 `apps/website/features/branding/branding.api.ts`:
@@ -874,7 +874,7 @@ describe("BrandingTokens", () => {
 - [ ] **Step 5: Run to verify it fails**
 
 ```bash
-cd c:/pro/carekit/apps/website && npx vitest run features/branding/branding-tokens.test.tsx
+cd c:/pro/deqah/apps/website && npx vitest run features/branding/branding-tokens.test.tsx
 ```
 
 Expected: FAIL — module not found.
@@ -916,7 +916,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await fetchBranding().catch(() => null);
   return {
-    title: branding?.brandNameAr ?? "CareKit",
+    title: branding?.brandNameAr ?? "Deqah",
     description: "Clinic website",
     icons: branding?.faviconUrl ? { icon: branding.faviconUrl } : undefined,
   };
@@ -949,9 +949,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 ```bash
 # terminal A
-cd c:/pro/carekit/apps/backend && npm run dev
+cd c:/pro/deqah/apps/backend && npm run dev
 # terminal B
-cd c:/pro/carekit/apps/website && npm run dev
+cd c:/pro/deqah/apps/website && npm run dev
 ```
 
 Open http://localhost:5104 — verify page renders and DevTools → Elements shows `<style>` with `--primary` matching backend value.
@@ -959,7 +959,7 @@ Open http://localhost:5104 — verify page renders and DevTools → Elements sho
 - [ ] **Step 10: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/website
 git commit -m "feat(website): branding feature slice + SSR token injection"
 ```
@@ -981,7 +981,7 @@ git commit -m "feat(website): branding feature slice + SSR token injection"
 - [ ] **Step 1: Install plugin**
 
 ```bash
-cd c:/pro/carekit/apps/website && npm install next-intl
+cd c:/pro/deqah/apps/website && npm install next-intl
 ```
 (Already in dependencies from Task 1 — ensures it's installed at workspace level.)
 
@@ -1028,7 +1028,7 @@ describe("parseLocale", () => {
 `apps/website/features/i18n/locale-cookie.ts`:
 ```ts
 export type Locale = "ar" | "en";
-export const LOCALE_COOKIE = "carekit_locale";
+export const LOCALE_COOKIE = "deqah_locale";
 
 export function parseLocale(value: string | undefined | null): Locale {
   return value === "en" ? "en" : "ar";
@@ -1037,7 +1037,7 @@ export function parseLocale(value: string | undefined | null): Locale {
 
 Verify:
 ```bash
-cd c:/pro/carekit/apps/website && npx vitest run features/i18n/locale-cookie.test.ts
+cd c:/pro/deqah/apps/website && npx vitest run features/i18n/locale-cookie.test.ts
 ```
 Expected: PASS.
 
@@ -1065,7 +1065,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@carekit/api-client", "@carekit/shared"],
+  transpilePackages: ["@deqah/api-client", "@deqah/shared"],
   experimental: { typedRoutes: true },
 };
 export default withNextIntl(nextConfig);
@@ -1086,7 +1086,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await fetchBranding().catch(() => null);
-  return { title: branding?.brandNameAr ?? "CareKit" };
+  return { title: branding?.brandNameAr ?? "Deqah" };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -1144,7 +1144,7 @@ export function LanguageSwitcher() {
 - [ ] **Step 7: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/website
 git commit -m "feat(website): next-intl setup (Arabic default, English switcher via cookie)"
 ```
@@ -1199,7 +1199,7 @@ describe("ListPublicEmployeesHandler", () => {
 - [ ] **Step 2: Run to fail**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest list-public-employees.handler.spec.ts
 ```
 Expected: FAIL (module missing).
@@ -1409,7 +1409,7 @@ import { PublicEmployeesController } from "./employees.controller";
 - [ ] **Step 7: Run all new tests**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest list-public-employees get-public-employee api/public/employees
 npm run typecheck
 npm run openapi:build-and-snapshot
@@ -1420,7 +1420,7 @@ Expected: all green, OpenAPI updated.
 - [ ] **Step 8: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend
 git commit -m "feat(backend): GET /public/employees + /public/employees/:slug"
 ```
@@ -1461,7 +1461,7 @@ GET /public/specialties/:slug
 - [ ] **Step 3: Tests + typecheck + OpenAPI snapshot**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest list-public-specialties get-public-specialty api/public/specialties
 npm run typecheck
 npm run openapi:build-and-snapshot
@@ -1649,7 +1649,7 @@ If the local JWT guard lives at a different path, use the path already used by e
 - [ ] **Step 7: Tests + snapshot**
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest contact-message
 npm run typecheck
 npm run openapi:build-and-snapshot
@@ -1711,7 +1711,7 @@ export interface CreateContactMessagePayload {
 
 - [ ] **Step 2: Write failing tests** (mirror the `branding.test.ts` shape for each of list/get/create). Run:
 ```bash
-cd c:/pro/carekit/packages/api-client && npx vitest run
+cd c:/pro/deqah/packages/api-client && npx vitest run
 ```
 Expected: failures on each missing module.
 
@@ -1778,7 +1778,7 @@ export type {
 - [ ] **Step 5: Tests + typecheck**
 
 ```bash
-cd c:/pro/carekit/packages/api-client
+cd c:/pro/deqah/packages/api-client
 npx vitest run
 npm run typecheck
 ```
@@ -1810,7 +1810,7 @@ import {
   createPublicEmployeesClient,
   createPublicSpecialtiesClient,
   createPublicContactMessagesClient,
-} from "@carekit/api-client";
+} from "@deqah/api-client";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100";
 
@@ -1824,7 +1824,7 @@ export const publicContactMessagesClient = createPublicContactMessagesClient({ b
 
 `features/therapists/therapists.types.ts`:
 ```ts
-export type { PublicEmployeeCard as Therapist } from "@carekit/api-client";
+export type { PublicEmployeeCard as Therapist } from "@deqah/api-client";
 ```
 
 `features/therapists/therapists.api.ts`:
@@ -1956,7 +1956,7 @@ export function ContactForm() {
 - [ ] **Step 5: Run vitest**
 
 ```bash
-cd c:/pro/carekit/apps/website && npx vitest run
+cd c:/pro/deqah/apps/website && npx vitest run
 ```
 
 Expected: PASS.
@@ -2162,9 +2162,9 @@ Mirror for `clinics/` (maps to specialties), `clinics/[slug]`, `contact`, `about
 
 ```bash
 # shell A
-cd c:/pro/carekit/apps/backend && npm run dev
+cd c:/pro/deqah/apps/backend && npm run dev
 # shell B
-cd c:/pro/carekit/apps/website && npm run dev
+cd c:/pro/deqah/apps/website && npm run dev
 ```
 
 Visit:
@@ -2199,7 +2199,7 @@ git commit -m "feat(website): theme registry, sawaa migrated, premium scaffold, 
 - [ ] **Step 1: Regenerate typed API**
 
 ```bash
-cd c:/pro/carekit/apps/dashboard && npm run openapi:generate
+cd c:/pro/deqah/apps/dashboard && npm run openapi:generate
 ```
 
 Expected: new types for contact-messages and extended branding/employees/specialties.
@@ -2215,7 +2215,7 @@ Open `apps/backend/src/modules/org-experience/branding/upsert-branding.dto.ts`. 
 Update `upsert-branding.handler.ts` to pass them through to `prisma.brandingConfig.upsert`. Update its spec to cover each.
 
 ```bash
-cd c:/pro/carekit/apps/backend
+cd c:/pro/deqah/apps/backend
 npx jest branding
 npm run openapi:build-and-snapshot
 cd ../dashboard && npm run openapi:generate
@@ -2273,7 +2273,7 @@ Add "الموقع" link to the settings sidebar navigation (file location depend
 - [ ] **Step 8: Typecheck + lint**
 
 ```bash
-cd c:/pro/carekit/apps/dashboard
+cd c:/pro/deqah/apps/dashboard
 npm run typecheck
 npm run lint
 npm run test
@@ -2292,7 +2292,7 @@ Run backend + dashboard + website in three terminals. In dashboard:
 - [ ] **Step 10: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend apps/dashboard
 git commit -m "feat(dashboard): website settings page (theme, domain, contact inbox) + per-entity public fields"
 ```
@@ -2378,7 +2378,7 @@ CLINIC_WEBSITE_DOMAIN=sawaa.sa
 - [ ] **Step 4: Local verification**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 npm run docker:up
 # visit http://localhost:5104
 ```
@@ -2422,7 +2422,7 @@ Screenshots to `docs/superpowers/qa/website-phase1-<DATE>.md`.
   "domain": "Website",
   "version": "main",
   "build": "website-phase1-<DATE>",
-  "planName": "CareKit / Website / Manual QA",
+  "planName": "Deqah / Website / Manual QA",
   "planSummary": "Phase 1: marketing site, branding, theme switching, public listings, contact form",
   "runSummary": "Manual walkthrough against dev stack",
   "cases": [
@@ -2441,11 +2441,11 @@ Screenshots to `docs/superpowers/qa/website-phase1-<DATE>.md`.
 - [ ] **Step 3: Sync to Kiwi**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 npm run kiwi:sync-manual data/kiwi/website-phase1-<DATE>.json
 ```
 
-Expected: Plan + Run created under `Product=CareKit, Category=Website` (no new Product).
+Expected: Plan + Run created under `Product=Deqah, Category=Website` (no new Product).
 
 - [ ] **Step 4: Commit QA artifacts**
 

@@ -56,7 +56,7 @@ async uploadLogo(file: Express.Multer.File): Promise<{ url: string }> {
   const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
   if (!current.clinicCanEdit) {
     throw new ForbiddenException(
-      'Whitelabel config is locked. Contact CareKit support.',
+      'Whitelabel config is locked. Contact Deqah support.',
     );
   }
   const url = await this.storage.uploadPublic(file, 'whitelabel/logo');
@@ -72,7 +72,7 @@ async uploadFavicon(file: Express.Multer.File): Promise<{ url: string }> {
   const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
   if (!current.clinicCanEdit) {
     throw new ForbiddenException(
-      'Whitelabel config is locked. Contact CareKit support.',
+      'Whitelabel config is locked. Contact Deqah support.',
     );
   }
   const url = await this.storage.uploadPublic(file, 'whitelabel/favicon');
@@ -308,7 +308,7 @@ The old type had `clinicName`/`clinicNameAr`/`direction`/`locale`. If any caller
 Update `apply.ts` to use `systemNameAr`/`systemName` and drop the `direction`/`locale` lines (they belong to the clinic, not whitelabel). New version:
 
 ```typescript
-import type { BrandingConfig, PublicBrandingConfig } from '@carekit/api-client'
+import type { BrandingConfig, PublicBrandingConfig } from '@deqah/api-client'
 
 type BrandingConfig = BrandingConfig | PublicBrandingConfig
 
@@ -327,7 +327,7 @@ export function applyWhitelabel(config: BrandingConfig): void {
     )
   }
 
-  document.title = config.systemNameAr || config.systemName || 'CareKit'
+  document.title = config.systemNameAr || config.systemName || 'Deqah'
 
   if (config.faviconUrl) {
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
@@ -434,8 +434,8 @@ Create `apps/leaderboard/src/hooks/use-whitelabel.ts` with:
 
 ```typescript
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { whitelabelApi } from '@carekit/api-client'
-import type { UpdateWhitelabelPayload } from '@carekit/api-client'
+import { whitelabelApi } from '@deqah/api-client'
+import type { UpdateWhitelabelPayload } from '@deqah/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useWhitelabel() {
@@ -505,7 +505,7 @@ import { useRef } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { UpdateWhitelabelPayload } from '@carekit/api-client'
+import type { UpdateWhitelabelPayload } from '@deqah/api-client'
 import {
   useWhitelabel,
   useUpdateWhitelabel,
@@ -629,7 +629,7 @@ function WhitelabelSettingsPage() {
 
       {locked && (
         <div className="rounded-[var(--radius-md)] border border-[var(--warning)]/30 bg-[var(--warning-bg)] p-4 text-sm text-[var(--warning)]">
-          إعدادات العلامة التجارية مقفلة. تواصل مع فريق CareKit لتفعيل التعديل.
+          إعدادات العلامة التجارية مقفلة. تواصل مع فريق Deqah لتفعيل التعديل.
         </div>
       )}
 
@@ -799,7 +799,7 @@ function WhitelabelSettingsPage() {
             <Label htmlFor="domain">النطاق</Label>
             <Input
               id="domain"
-              placeholder="clinic.carekit.app"
+              placeholder="clinic.deqah.app"
               disabled={locked}
               {...form.register('domain')}
             />

@@ -1,8 +1,8 @@
-# MAESTRO.md — Maestro v10 Entry Point (CareKit edition)
+# MAESTRO.md — Maestro v10 Entry Point (Deqah edition)
 
-> **Status (2026-04-25): available scaffold, not mandatory.** The dominant CareKit workflow is now superpowers skills (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`) running on plain feature branches. Maestro v10 — the agents in `.claude/agents/` and the slash commands in `.claude/commands/` — is real and resolvable, and you may opt into it for tasks that benefit from a Planner-Verifier split. Treat the rules below as guidance for *when you choose to invoke Maestro*, not as a gate on every change.
+> **Status (2026-04-25): available scaffold, not mandatory.** The dominant Deqah workflow is now superpowers skills (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`) running on plain feature branches. Maestro v10 — the agents in `.claude/agents/` and the slash commands in `.claude/commands/` — is real and resolvable, and you may opt into it for tasks that benefit from a Planner-Verifier split. Treat the rules below as guidance for *when you choose to invoke Maestro*, not as a gate on every change.
 
-CareKit ships with **Maestro v10** — a tiered multi-agent system with a Planner-Verifier architecture that separates planning from code writing. This file is the orchestration entry for that system; project specifics still live in `CLAUDE.md`.
+Deqah ships with **Maestro v10** — a tiered multi-agent system with a Planner-Verifier architecture that separates planning from code writing. This file is the orchestration entry for that system; project specifics still live in `CLAUDE.md`.
 
 ## Three Ways to Activate Maestro
 
@@ -43,9 +43,9 @@ Want Maestro active for whole session?          → /output-style maestro
 
 ## Mandatory Reading Order (for Claude)
 
-1. `CLAUDE.md` — CareKit project rules, stack, domain map, design law
+1. `CLAUDE.md` — Deqah project rules, stack, domain map, design law
 2. `AGENTS.md` — agent roster + flow (Maestro v10)
-3. `PATHS.md` — path playbook (FAST/STANDARD/DEEP heuristic) with CareKit scripts
+3. `PATHS.md` — path playbook (FAST/STANDARD/DEEP heuristic) with Deqah scripts
 4. `.claude/commands/maestro.md` — master command with templates
 
 (There is no longer a `WORKTREES.md`; the worktree port table was retired. If you need worktree isolation, use `superpowers:using-git-worktrees`.)
@@ -82,7 +82,7 @@ These apply *inside* a Maestro run. They do not gate normal feature work done vi
 8. File length ≤ 350 lines; split before you cross
 9. Prisma migrations are immutable — never `prisma db push`, never manual SQL
 10. All UI strings behind i18n keys (next-intl, AR/EN); RTL-first with logical properties (`ps-`/`pe-`/`ms-`/`me-`)
-11. Kiwi TCMS is the single source of truth for test results — one Product (`CareKit`), distinguish by Category + Plan type
+11. Kiwi TCMS is the single source of truth for test results — one Product (`Deqah`), distinguish by Category + Plan type
 
 ## Agent Quick Reference
 

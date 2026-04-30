@@ -1,8 +1,8 @@
-# CareKit SaaS Transformation — Plan Index
+# Deqah SaaS Transformation — Plan Index
 
 > **Meta-plan.** This document lists every phase of the SaaS transformation. Each phase is a separate plan file with its own task list. Execute in order — each plan depends on the ones before it.
 
-**Goal:** Transform CareKit from a single-organization deployment into a bilingual (AR/EN), multi-vertical, multi-tenant SaaS platform with custom domains and a premium-tier website add-on.
+**Goal:** Transform Deqah from a single-organization deployment into a bilingual (AR/EN), multi-vertical, multi-tenant SaaS platform with custom domains and a premium-tier website add-on.
 
 **Strategy:** Strangler pattern. Add new primitives beside existing code. Migrate cluster-by-cluster. Keep the system deployable at every checkpoint.
 
@@ -48,7 +48,7 @@ Product direction adjusted. **Booking stays inside the dashboard + mobile app �
 4. **Minimal clinic info site** — static landing per tenant, NO booking integration
 
 **Deferred / reshaped:**
-- Plan 07 (CareKit marketing + signup wizard) → last. Manual onboarding until we scale.
+- Plan 07 (Deqah marketing + signup wizard) → last. Manual onboarding until we scale.
 - Plan 08 (client booking website) → reshape into marketplace theme + redefine as info-only skeleton.
 - "apps/website" and "apps/mobile" folders exist — leave alone until their priority window.
 
@@ -71,9 +71,9 @@ Product direction adjusted. **Booking stays inside the dashboard + mobile app �
 ```
 apps/
 ├── backend/       ← NestJS API (src/api/dashboard + mobile + public + platform)
-├── dashboard/     ← Tenant staff dashboard (existing; {slug}.carekit.app)
-├── admin/         ← NEW — CareKit super-admin panel (admin.carekit.app)
-├── landing/       ← NEW — marketing + signup (carekit.app)
+├── dashboard/     ← Tenant staff dashboard (existing; {slug}.deqah.app)
+├── admin/         ← NEW — Deqah super-admin panel (admin.deqah.app)
+├── landing/       ← NEW — marketing + signup (deqah.app)
 ├── website/       ← Tenant client-facing booking (existing; clinic.com)
 └── mobile/        ← Paused
 
@@ -92,20 +92,20 @@ Status legend: ✅ merged · 🟡 PR open / in-flight · 🟢 plan ready, not st
 | # | Plan | Status | PR | Dependencies | Duration |
 |---|---|---|---|---|---|
 | 01 | [Multi-tenancy Foundation](./2026-04-21-saas-01-multi-tenancy-foundation.md) | ✅ DONE (2026-04-21) | — | — | 2 weeks |
-| 02a | [Identity cluster rollout](./2026-04-21-saas-02a-identity-cluster.md) | ✅ DONE (2026-04-21) | [#15](https://github.com/tariiq222/carekit/pull/15) | 01 | 2–3 days |
-| 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/carekit/pull/16) | 02a | 3 days |
-| 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/carekit/pull/17) | 02b | 4 days |
-| 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | ✅ DONE (2026-04-21) | [#18](https://github.com/tariiq222/carekit/pull/18) | 02c | 3 days |
-| 02e | [Finance cluster rollout](./2026-04-21-saas-02e-finance-cluster.md) | ✅ DONE (2026-04-21) | [#21](https://github.com/tariiq222/carekit/pull/21) | 02d | 3 days |
-| 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) | ✅ DONE (2026-04-22) | [#24](https://github.com/tariiq222/carekit/pull/24) | 02e | 2 days |
-| 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) | ✅ DONE (2026-04-22) | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 02f | 2 days |
-| 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) | ✅ DONE (2026-04-22) | [#29](https://github.com/tariiq222/carekit/pull/29) | 02f | 2 days |
-| 02h | [Strict mode + penetration tests](./2026-04-22-saas-02h-strict-mode-penetration.md) | ✅ DONE (2026-04-22) | [#32](https://github.com/tariiq222/carekit/pull/32) | 02g, 02g-sms | 2 days |
-| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) | ✅ DONE (2026-04-22) | [#25](https://github.com/tariiq222/carekit/pull/25) | 02e | 2 weeks |
-| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) — backend complete incl. 15 e2e tests (Task 14 gap filled in PR #38 after audit) | ✅ DONE (2026-04-22) | [#30](https://github.com/tariiq222/carekit/pull/30) + [#38](https://github.com/tariiq222/carekit/pull/38) | 02e, 02g-sms | 2 weeks |
-| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) | ✅ DONE (2026-04-22) | [#20](https://github.com/tariiq222/carekit/pull/20) | 02a | 3 days |
-| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) — backend Tasks 0-7, 9, 13 shipped; apps/admin frontend + Docker + Nginx + Task 14 deferred | 🟡 BACKEND MERGED | [#40](https://github.com/tariiq222/carekit/pull/40) | 04, 05a | 2 weeks |
-| 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) — tenant switcher done (~15%); full refactor pending | 🟡 PR #31 | [#31](https://github.com/tariiq222/carekit/pull/31) | 03, 04, 05a | 3 weeks |
+| 02a | [Identity cluster rollout](./2026-04-21-saas-02a-identity-cluster.md) | ✅ DONE (2026-04-21) | [#15](https://github.com/tariiq222/deqah/pull/15) | 01 | 2–3 days |
+| 02b | [People cluster rollout](./2026-04-21-saas-02b-people-cluster.md) | ✅ DONE (2026-04-21) | [#16](https://github.com/tariiq222/deqah/pull/16) | 02a | 3 days |
+| 02c | [Org-config + singletons rollout](./2026-04-21-saas-02c-org-config-singletons.md) | ✅ DONE (2026-04-21) | [#17](https://github.com/tariiq222/deqah/pull/17) | 02b | 4 days |
+| 02d | [Bookings cluster rollout](./2026-04-21-saas-02d-bookings-cluster.md) | ✅ DONE (2026-04-21) | [#18](https://github.com/tariiq222/deqah/pull/18) | 02c | 3 days |
+| 02e | [Finance cluster rollout](./2026-04-21-saas-02e-finance-cluster.md) | ✅ DONE (2026-04-21) | [#21](https://github.com/tariiq222/deqah/pull/21) | 02d | 3 days |
+| 02f | [Comms cluster rollout](./2026-04-21-saas-02f-comms-cluster.md) | ✅ DONE (2026-04-22) | [#24](https://github.com/tariiq222/deqah/pull/24) | 02e | 2 days |
+| 02g | [AI + media + ops + platform rollout](./2026-04-21-saas-02g-ai-media-ops-platform.md) | ✅ DONE (2026-04-22) | [#27](https://github.com/tariiq222/deqah/pull/27) [#28](https://github.com/tariiq222/deqah/pull/28) | 02f | 2 days |
+| 02g-sms | [Per-tenant SMS provider refactor](./2026-04-22-saas-02g-sms-per-tenant-provider.md) | ✅ DONE (2026-04-22) | [#29](https://github.com/tariiq222/deqah/pull/29) | 02f | 2 days |
+| 02h | [Strict mode + penetration tests](./2026-04-22-saas-02h-strict-mode-penetration.md) | ✅ DONE (2026-04-22) | [#32](https://github.com/tariiq222/deqah/pull/32) | 02g, 02g-sms | 2 days |
+| 03 | [Verticals System](./2026-04-21-saas-03-verticals-system.md) | ✅ DONE (2026-04-22) | [#25](https://github.com/tariiq222/deqah/pull/25) | 02e | 2 weeks |
+| 04 | [Billing & Subscriptions](./2026-04-21-saas-04-billing-subscriptions.md) — backend complete incl. 15 e2e tests (Task 14 gap filled in PR #38 after audit) | ✅ DONE (2026-04-22) | [#30](https://github.com/tariiq222/deqah/pull/30) + [#38](https://github.com/tariiq222/deqah/pull/38) | 02e, 02g-sms | 2 weeks |
+| 05a | [Shared UI Package Extraction](./2026-04-21-saas-05a-packages-ui-extraction.md) | ✅ DONE (2026-04-22) | [#20](https://github.com/tariiq222/deqah/pull/20) | 02a | 3 days |
+| 05b | [Super-admin App](./2026-04-21-saas-05b-super-admin-app.md) — backend Tasks 0-7, 9, 13 shipped; apps/admin frontend + Docker + Nginx + Task 14 deferred | 🟡 BACKEND MERGED | [#40](https://github.com/tariiq222/deqah/pull/40) | 04, 05a | 2 weeks |
+| 06 | [Dashboard Terminology + EN i18n](./2026-04-21-saas-06-dashboard-terminology-i18n.md) — tenant switcher done (~15%); full refactor pending | 🟡 PR #31 | [#31](https://github.com/tariiq222/deqah/pull/31) | 03, 04, 05a | 3 weeks |
 | 06a | [Dashboard Literal Refactor](./2026-04-22-saas-06a-dashboard-literal-refactor.md) — parallel-safe with 06 | 🟢 WRITTEN | — | 05a | 1 week |
 | 07 | [Marketing Site + Signup Wizard](./2026-04-21-saas-07-marketing-landing-signup.md) ⚠️ **DEFERRED TO END** — only needed for mass acquisition; manual onboarding until then | 🟢 WRITTEN (deferred) | — | 03, 04, 05a, 02e | 3 weeks |
 | 08 | [Website Multi-tenant + Vertical Themes](./2026-04-21-saas-08-website-multi-tenant-themes.md) ⚠️ **RESHAPE** — 2026-04-22 revision: booking REMOVED from client website. Replace with info-only tenant site (about, services, contact, download app). Booking moves to mobile + future marketplace themes | 🔄 RESHAPE NEEDED | — | 02g, 03, 06 | TBD |
@@ -116,7 +116,7 @@ Status legend: ✅ merged · 🟡 PR open / in-flight · 🟢 plan ready, not st
 
 ## Scope Lock (agreed 2026-04-21)
 
-- **Super-admin dashboard:** separate app (`apps/admin/` on `admin.carekit.app`). Not a sub-route of the tenant dashboard. Tenants never download super-admin JS. Auth is shared: same `POST /api/v1/auth/login`, but super-admin UI requires `isSuperAdmin: true` JWT claim. Decided 2026-04-21.
+- **Super-admin dashboard:** separate app (`apps/admin/` on `admin.deqah.app`). Not a sub-route of the tenant dashboard. Tenants never download super-admin JS. Auth is shared: same `POST /api/v1/auth/login`, but super-admin UI requires `isSuperAdmin: true` JWT claim. Decided 2026-04-21.
 - **Verticals in MVP:** 8 (dental, cosmetic, dermatology, physiotherapy, family consulting, psychology, nutrition, barbershop, beauty salon, spa, nails). Group into 4 template families for MVP: medical / consulting / salon / fitness.
 - **Languages:** Arabic (default) + English, fully localized everywhere (backend data, dashboard, website, marketing site).
 - **Website:** premium tier add-on. Starter tier uses embed widget only.
@@ -165,21 +165,21 @@ Chronological record of completed plans. Updated by the planner (me) after each 
 | Date | Phase | PR | Notes |
 |---|---|---|---|
 | 2026-04-21 | 01 — Multi-tenancy Foundation | — | Organization + Membership + TenantContext + dormant scoping. 923/923 tests. Flag off → runtime unchanged. |
-| 2026-04-21 | 02a — Identity cluster | [#15](https://github.com/tariiq222/carekit/pull/15) | 3 models scoped + Proxy-based Prisma 7 $extends confirmed working + 5 divergences resolved pre-commit + playbook authored in `docs/saas-tenancy.md`. 934/934 tests. |
-| 2026-04-21 | 02b — People cluster | [#16](https://github.com/tariiq222/carekit/pull/16) | 7 models scoped (Client + ClientRefreshToken + Employee + 4 child tables). Client auth tenant-aware. 3 divergences: findUnique→findFirst on composite keys, extension covers where not data, CLS async callback requirement. 941/941 tests, 18/18 isolation e2e. |
-| 2026-04-21 | 02c — Org-config + singletons | [#17](https://github.com/tariiq222/carekit/pull/17) | 14 models scoped (Branch, Dept, ServiceCategory, Service + 5 sub-models, BusinessHour, Holiday, IntakeForm/Field, Rating) + BrandingConfig + OrganizationSettings singleton conversion (upsert-on-read pattern). 953/953 tests, 14 isolation e2e. No divergences reported. |
-| 2026-04-21 | 02d — Bookings cluster | [#18](https://github.com/tariiq222/carekit/pull/18) | 7 models scoped: Booking, BookingStatusLog, WaitlistEntry, GroupSession, GroupEnrollment, GroupSessionWaitlist, BookingSettings. 2 amendments: group-session-min-reached creates BookingStatusLog (plan missed); 5 callback-form $transaction handlers found (plan predicted 2). BookingSettings hierarchical singleton via findFirst. 953/953 unit + 6 new + 32 prior isolation e2e. Typecheck clean. |
-| 2026-04-21 | 02e — Finance cluster | [#21](https://github.com/tariiq222/carekit/pull/21) | 7 models scoped (Invoice, Payment, Coupon, CouponRedemption, RefundRequest, ZatcaSubmission + ZatcaConfig singleton). Moyasar 3-stage tenant resolution. 964 unit tests. |
-| 2026-04-21 | 05a — packages/ui extraction | [#20](https://github.com/tariiq222/carekit/pull/20) | 33 shadcn primitives + 2 hooks moved to `packages/ui`. Manual QA 9/9 PASS. |
-| 2026-04-22 | 02f — Comms cluster | [#24](https://github.com/tariiq222/carekit/pull/24) | 8 models scoped + ChatbotConfig singleton + EmailTemplate composite slug unique. 964 unit + 5 new isolation e2e. |
-| 2026-04-22 | 03 — Verticals System | [#25](https://github.com/tariiq222/carekit/pull/25) | Vertical primitive + 11 seeds × 4 families + terminology packs + useTerminology() hook. 60 unit + 22 e2e + 5 dashboard tests. |
-| 2026-04-22 | 02g — AI/media/ops/platform | [#27](https://github.com/tariiq222/carekit/pull/27) [#28](https://github.com/tariiq222/carekit/pull/28) | 9 models scoped + SiteSetting composite PK + pgvector org predicate. 1025/1025 unit. 6 isolation e2e suites. |
-| 2026-04-22 | 02g-sms — Per-tenant SMS | [#29](https://github.com/tariiq222/carekit/pull/29) | OrganizationSmsConfig singleton + SmsDelivery audit + Unifonic/Taqnyat adapters + AES-GCM creds + DLR webhook. 1060 unit + 6 isolation e2e. |
-| 2026-04-22 | 02h — Strict mode + penetration | [#32](https://github.com/tariiq222/carekit/pull/32) | TENANT_ENFORCEMENT=strict default + 4 penetration specs (18 tests) + carekit_rls_probe DB role + RlsHelper dual-GUC fix. |
-| 2026-04-22 | 04 — Billing & Subscriptions | [#30](https://github.com/tariiq222/carekit/pull/30) | Plan/Subscription/SubscriptionInvoice/UsageRecord + state machine + PlanLimitsGuard on 5 create-paths + UsageTrackerInterceptor + 4 BullMQ crons + Moyasar subscription webhook (3-stage) + dashboard billing skeleton. |
-| 2026-04-22 | 04 e2e follow-up | [#38](https://github.com/tariiq222/carekit/pull/38) | Closed Task 14 gap (PR #30 shipped without e2e; audit 2026-04-22 caught it). 15 tests across 4 specs: subscription-lifecycle, plan-limits-enforcement, usage-metering, moyasar-subscription-webhook. Admin-merged while GitHub Actions billing locked. |
-| 2026-04-22 | data-integrity hardening | [#34](https://github.com/tariiq222/carekit/pull/34) | CHECK constraints + OTP lockout + PasswordHistory fully scoped (added to SCOPED_MODELS — closed silent-scoping risk flagged by audit) + apply-coupon per-user limit. |
-| 2026-04-22 | 05b — Super-admin BACKEND | [#40](https://github.com/tariiq222/carekit/pull/40) | Schema (User.isSuperAdmin + ImpersonationSession + SuperAdminActionLog) + 4 runtime-enforced invariants (SuperAdminGuard DB re-verify, AdminHostGuard, $allTenants CLS-gated, shadow JWT without isSuperAdmin) + 7 admin controllers (organizations, users, plans, verticals, metrics, audit-log, impersonation) + 12 vertical-slice handlers + BullMQ sweeper cron + JwtGuard scope check + suspended-org Redis-cached rejection + dashboard/mobile force-logout on ORG_SUSPENDED + e2e isolation spec + docs. 1257/1257 unit pass. Tasks 10-12 (apps/admin Next.js + Docker + Nginx) + Task 14 deferred. |
+| 2026-04-21 | 02a — Identity cluster | [#15](https://github.com/tariiq222/deqah/pull/15) | 3 models scoped + Proxy-based Prisma 7 $extends confirmed working + 5 divergences resolved pre-commit + playbook authored in `docs/saas-tenancy.md`. 934/934 tests. |
+| 2026-04-21 | 02b — People cluster | [#16](https://github.com/tariiq222/deqah/pull/16) | 7 models scoped (Client + ClientRefreshToken + Employee + 4 child tables). Client auth tenant-aware. 3 divergences: findUnique→findFirst on composite keys, extension covers where not data, CLS async callback requirement. 941/941 tests, 18/18 isolation e2e. |
+| 2026-04-21 | 02c — Org-config + singletons | [#17](https://github.com/tariiq222/deqah/pull/17) | 14 models scoped (Branch, Dept, ServiceCategory, Service + 5 sub-models, BusinessHour, Holiday, IntakeForm/Field, Rating) + BrandingConfig + OrganizationSettings singleton conversion (upsert-on-read pattern). 953/953 tests, 14 isolation e2e. No divergences reported. |
+| 2026-04-21 | 02d — Bookings cluster | [#18](https://github.com/tariiq222/deqah/pull/18) | 7 models scoped: Booking, BookingStatusLog, WaitlistEntry, GroupSession, GroupEnrollment, GroupSessionWaitlist, BookingSettings. 2 amendments: group-session-min-reached creates BookingStatusLog (plan missed); 5 callback-form $transaction handlers found (plan predicted 2). BookingSettings hierarchical singleton via findFirst. 953/953 unit + 6 new + 32 prior isolation e2e. Typecheck clean. |
+| 2026-04-21 | 02e — Finance cluster | [#21](https://github.com/tariiq222/deqah/pull/21) | 7 models scoped (Invoice, Payment, Coupon, CouponRedemption, RefundRequest, ZatcaSubmission + ZatcaConfig singleton). Moyasar 3-stage tenant resolution. 964 unit tests. |
+| 2026-04-21 | 05a — packages/ui extraction | [#20](https://github.com/tariiq222/deqah/pull/20) | 33 shadcn primitives + 2 hooks moved to `packages/ui`. Manual QA 9/9 PASS. |
+| 2026-04-22 | 02f — Comms cluster | [#24](https://github.com/tariiq222/deqah/pull/24) | 8 models scoped + ChatbotConfig singleton + EmailTemplate composite slug unique. 964 unit + 5 new isolation e2e. |
+| 2026-04-22 | 03 — Verticals System | [#25](https://github.com/tariiq222/deqah/pull/25) | Vertical primitive + 11 seeds × 4 families + terminology packs + useTerminology() hook. 60 unit + 22 e2e + 5 dashboard tests. |
+| 2026-04-22 | 02g — AI/media/ops/platform | [#27](https://github.com/tariiq222/deqah/pull/27) [#28](https://github.com/tariiq222/deqah/pull/28) | 9 models scoped + SiteSetting composite PK + pgvector org predicate. 1025/1025 unit. 6 isolation e2e suites. |
+| 2026-04-22 | 02g-sms — Per-tenant SMS | [#29](https://github.com/tariiq222/deqah/pull/29) | OrganizationSmsConfig singleton + SmsDelivery audit + Unifonic/Taqnyat adapters + AES-GCM creds + DLR webhook. 1060 unit + 6 isolation e2e. |
+| 2026-04-22 | 02h — Strict mode + penetration | [#32](https://github.com/tariiq222/deqah/pull/32) | TENANT_ENFORCEMENT=strict default + 4 penetration specs (18 tests) + deqah_rls_probe DB role + RlsHelper dual-GUC fix. |
+| 2026-04-22 | 04 — Billing & Subscriptions | [#30](https://github.com/tariiq222/deqah/pull/30) | Plan/Subscription/SubscriptionInvoice/UsageRecord + state machine + PlanLimitsGuard on 5 create-paths + UsageTrackerInterceptor + 4 BullMQ crons + Moyasar subscription webhook (3-stage) + dashboard billing skeleton. |
+| 2026-04-22 | 04 e2e follow-up | [#38](https://github.com/tariiq222/deqah/pull/38) | Closed Task 14 gap (PR #30 shipped without e2e; audit 2026-04-22 caught it). 15 tests across 4 specs: subscription-lifecycle, plan-limits-enforcement, usage-metering, moyasar-subscription-webhook. Admin-merged while GitHub Actions billing locked. |
+| 2026-04-22 | data-integrity hardening | [#34](https://github.com/tariiq222/deqah/pull/34) | CHECK constraints + OTP lockout + PasswordHistory fully scoped (added to SCOPED_MODELS — closed silent-scoping risk flagged by audit) + apply-coupon per-user limit. |
+| 2026-04-22 | 05b — Super-admin BACKEND | [#40](https://github.com/tariiq222/deqah/pull/40) | Schema (User.isSuperAdmin + ImpersonationSession + SuperAdminActionLog) + 4 runtime-enforced invariants (SuperAdminGuard DB re-verify, AdminHostGuard, $allTenants CLS-gated, shadow JWT without isSuperAdmin) + 7 admin controllers (organizations, users, plans, verticals, metrics, audit-log, impersonation) + 12 vertical-slice handlers + BullMQ sweeper cron + JwtGuard scope check + suspended-org Redis-cached rejection + dashboard/mobile force-logout on ORG_SUSPENDED + e2e isolation spec + docs. 1257/1257 unit pass. Tasks 10-12 (apps/admin Next.js + Docker + Nginx) + Task 14 deferred. |
 
 ---
 

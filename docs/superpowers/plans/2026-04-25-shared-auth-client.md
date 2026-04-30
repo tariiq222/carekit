@@ -2,12 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Eliminate duplication of auth API code across `apps/admin` and `apps/dashboard` by making `@carekit/api-client/auth` the single source of truth, with tests pinning the response contract.
+**Goal:** Eliminate duplication of auth API code across `apps/admin` and `apps/dashboard` by making `@deqah/api-client/auth` the single source of truth, with tests pinning the response contract.
 
 **Scope:** This plan covers **admin + dashboard only**. Mobile (Expo + Axios + SecureStore) and a shared `<EmailPasswordFields/>` UI primitive ship in a separate plan to keep this one mergeable.
 
 **Architecture:**
-- The `@carekit/api-client` package already exposes `initClient(cfg)` + `apiRequest()` + a stub `modules/auth.ts`. We harden the auth module, fix `UserPayload` drift, and switch admin + dashboard to consume it.
+- The `@deqah/api-client` package already exposes `initClient(cfg)` + `apiRequest()` + a stub `modules/auth.ts`. We harden the auth module, fix `UserPayload` drift, and switch admin + dashboard to consume it.
 - Dashboard keeps its `api.ts` wrapper (proxy paths + `ORG_SUSPENDED` handling) but the **auth functions themselves** come from the shared package — wrapper only resolves URLs.
 - Tests live in `packages/api-client/src/modules/__tests__/auth.test.ts` and pin the contract (envelope unwrap, request shape, type surface).
 
@@ -83,7 +83,7 @@ No commit yet — this is research.
 
 ---
 
-## Task 2: Update canonical types in `@carekit/api-client`
+## Task 2: Update canonical types in `@deqah/api-client`
 
 **Files:**
 - Modify: `packages/api-client/src/types/auth.ts`
@@ -183,7 +183,7 @@ const fakeRefresh = 'refresh.jwt'
 
 const fakeUser = {
   id: 'usr_1',
-  email: 'admin@carekit.app',
+  email: 'admin@deqah.app',
   name: 'Admin',
   phone: null,
   gender: null,
@@ -242,7 +242,7 @@ describe('authApi.login', () => {
     )
 
     const result = await authApi.login({
-      email: 'admin@carekit.app',
+      email: 'admin@deqah.app',
       password: 'pw',
     })
 
@@ -252,7 +252,7 @@ describe('authApi.login', () => {
     expect(url).toBe('http://api.test/auth/login')
     expect(init?.method).toBe('POST')
     expect(JSON.parse(init?.body as string)).toEqual({
-      email: 'admin@carekit.app',
+      email: 'admin@deqah.app',
       password: 'pw',
     })
   })
@@ -452,8 +452,8 @@ git commit -m "feat(api-client): add changePassword + return AuthResponse from r
 Replace `apps/admin/features/auth/login/login.api.ts` entirely with:
 
 ```typescript
-import { authApi } from '@carekit/api-client'
-import type { AuthResponse, LoginPayload } from '@carekit/api-client'
+import { authApi } from '@deqah/api-client'
+import type { AuthResponse, LoginPayload } from '@deqah/api-client'
 
 export type LoginRequest = LoginPayload
 export type LoginResponse = AuthResponse
@@ -501,7 +501,7 @@ Open `http://localhost:5104/login`, sign in with seeded super-admin. Expected: r
 git add apps/admin/features/auth/login/login.api.ts \
         packages/api-client/src/index.ts \
         $(git diff --name-only apps/admin/next.config.mjs 2>/dev/null)
-git commit -m "refactor(admin): consume @carekit/api-client/authApi for login"
+git commit -m "refactor(admin): consume @deqah/api-client/authApi for login"
 ```
 
 ---
@@ -524,19 +524,19 @@ The dashboard is harder because:
 Add at the top of `apps/dashboard/lib/api.ts` (after the existing imports), and **before** the existing `api` export:
 
 ```typescript
-import { initClient } from '@carekit/api-client'
+import { initClient } from '@deqah/api-client'
 
-// Initialise the shared @carekit/api-client so authApi calls travel through
+// Initialise the shared @deqah/api-client so authApi calls travel through
 // the same in-memory access token and same-origin /api/proxy used by the
 // dashboard's local fetch wrapper above.
 if (typeof window !== 'undefined') {
   initClient({
     baseUrl: '', // resolveUrl below prepends /api/proxy or API_BASE_URL per endpoint
     getAccessToken: () => accessToken,
-    getRefreshToken: () => localStorage.getItem('carekit_refresh_token'),
+    getRefreshToken: () => localStorage.getItem('deqah_refresh_token'),
     onTokenRefreshed: (a, r) => {
       setAccessToken(a)
-      if (r) localStorage.setItem('carekit_refresh_token', r)
+      if (r) localStorage.setItem('deqah_refresh_token', r)
     },
     onAuthFailure: () => {
       clearAuthState()
@@ -564,21 +564,21 @@ Replace the body (preserve the public exports `login`, `fetchMe`, `refreshToken`
 
 ```typescript
 /**
- * Auth API — CareKit Dashboard
- * Thin wrapper over @carekit/api-client/authApi. The shared package owns
+ * Auth API — Deqah Dashboard
+ * Thin wrapper over @deqah/api-client/authApi. The shared package owns
  * request shape, envelope unwrapping, and 401 refresh; this file only adds
  * persist/clear local-storage helpers + dashboard-specific aliases.
  */
 
-import { authApi } from '@carekit/api-client'
-import type { AuthResponse, UserPayload } from '@carekit/api-client'
+import { authApi } from '@deqah/api-client'
+import type { AuthResponse, UserPayload } from '@deqah/api-client'
 import { setAccessToken, getAccessToken } from '@/lib/api'
 
 export type AuthUser = UserPayload
 export type { AuthResponse }
 
-const USER_KEY = 'carekit_user'
-const REFRESH_KEY = 'carekit_refresh_token'
+const USER_KEY = 'deqah_user'
+const REFRESH_KEY = 'deqah_refresh_token'
 
 export async function login(
   email: string,
@@ -659,10 +659,10 @@ function clearAuth(): void {
 
 Run: `cd apps/dashboard && npx vitest run test/unit/lib/auth-api.spec.ts`
 
-If failures: tests probably mocked the inline `api.post('/auth/login', ...)` call. Update mocks to stub `@carekit/api-client` instead:
+If failures: tests probably mocked the inline `api.post('/auth/login', ...)` call. Update mocks to stub `@deqah/api-client` instead:
 
 ```typescript
-import * as authApi from '@carekit/api-client/auth'
+import * as authApi from '@deqah/api-client/auth'
 vi.spyOn(authApi, 'login').mockResolvedValue(fakeAuthResponse)
 ```
 
@@ -692,7 +692,7 @@ Document outcomes in `docs/superpowers/qa/auth-shared-client-<date>.md`.
 git add apps/dashboard/lib/api.ts apps/dashboard/lib/api/auth.ts \
         $(git diff --name-only apps/dashboard/next.config.mjs 2>/dev/null) \
         $(git diff --name-only apps/dashboard/test/ 2>/dev/null)
-git commit -m "refactor(dashboard): consume @carekit/api-client/authApi for auth flows"
+git commit -m "refactor(dashboard): consume @deqah/api-client/authApi for auth flows"
 ```
 
 ---
@@ -727,7 +727,7 @@ Expected: admin file ≤10 lines (was 19). Dashboard file ≤95 lines (was 119) 
 
 - [ ] **Step 4: Open PR**
 
-Title: `refactor: unify admin+dashboard auth on @carekit/api-client`
+Title: `refactor: unify admin+dashboard auth on @deqah/api-client`
 Body: link this plan; include line-count diff; note mobile + UI primitive deferred to follow-up plan.
 
 ---
@@ -735,5 +735,5 @@ Body: link this plan; include line-count diff; note mobile + UI primitive deferr
 ## Out of Scope (Follow-up plans)
 
 1. **`apps/mobile/services/auth.ts`** — uses Axios + Expo SecureStore + Redux. The shared package would need a `createAuthClient({ storage })` adapter pattern. Separate plan: `2026-04-26-mobile-auth-on-shared-client.md`.
-2. **Shared `<EmailPasswordFields/>`** UI primitive in `@carekit/ui` for admin + dashboard login screens (saves ~80 lines × 2). Separate plan when design tokens for the admin LTR screen are settled.
+2. **Shared `<EmailPasswordFields/>`** UI primitive in `@deqah/ui` for admin + dashboard login screens (saves ~80 lines × 2). Separate plan when design tokens for the admin LTR screen are settled.
 3. **`clientLogin` / `clientRegister`** consolidation — public client auth flow used by mobile + website. Already partially extracted into `modules/client-auth.ts`; needs the same TDD treatment as `authApi` here.

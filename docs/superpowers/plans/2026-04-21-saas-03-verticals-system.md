@@ -4,9 +4,9 @@
 
 **Goal:** Introduce a `Vertical` primitive that drives clinic-type-aware terminology, seed data, and UI behavior. Each Organization belongs to one Vertical. The Vertical determines: (a) default Departments + ServiceCategories seeded into a new org, (b) bilingual terminology (`doctor` vs `consultant` vs `stylist`), (c) template family grouping (MEDICAL / CONSULTING / SALON / FITNESS) that Plan 08 uses for website themes. This plan ADDS infrastructure + seed data + terminology packs + an HTTP surface + a `useTerminology()` hook. It does NOT refactor existing dashboard strings — that is Plan 06's responsibility.
 
-**Architecture:** Strangler pattern, consistent with Plans 01–02d. `Vertical` + `VerticalSeedDepartment` + `VerticalSeedServiceCategory` + `VerticalTerminologyOverride` are **platform-level** tables (not tenant-scoped — they describe the catalog of verticals CareKit offers). `Organization.verticalId` is a nullable FK; migration backfills the default org to the `dental` vertical. A new module at `src/modules/platform/verticals/` exposes vertical list / get / terminology endpoints under `src/api/public/` (for the signup wizard) and `src/api/dashboard/` (for super-admin CRUD). The signup wizard (Plan 07) calls `seedOrganizationFromVertical(orgId, verticalId)` which copies seed rows into the tenant's `Department` + `ServiceCategory` tables (respecting the tenant scoping Proxy). Terminology packs are JSON files under `packages/shared/terminology/{medical,consulting,salon,fitness}.json` merged at runtime with `VerticalTerminologyOverride` rows. A new dashboard hook `useTerminology()` reads `session.organization.vertical.templateFamily` and returns a `t(key)` function returning `{ ar, en }`.
+**Architecture:** Strangler pattern, consistent with Plans 01–02d. `Vertical` + `VerticalSeedDepartment` + `VerticalSeedServiceCategory` + `VerticalTerminologyOverride` are **platform-level** tables (not tenant-scoped — they describe the catalog of verticals Deqah offers). `Organization.verticalId` is a nullable FK; migration backfills the default org to the `dental` vertical. A new module at `src/modules/platform/verticals/` exposes vertical list / get / terminology endpoints under `src/api/public/` (for the signup wizard) and `src/api/dashboard/` (for super-admin CRUD). The signup wizard (Plan 07) calls `seedOrganizationFromVertical(orgId, verticalId)` which copies seed rows into the tenant's `Department` + `ServiceCategory` tables (respecting the tenant scoping Proxy). Terminology packs are JSON files under `packages/shared/terminology/{medical,consulting,salon,fitness}.json` merged at runtime with `VerticalTerminologyOverride` rows. A new dashboard hook `useTerminology()` reads `session.organization.vertical.templateFamily` and returns a `t(key)` function returning `{ ar, en }`.
 
-**Tech Stack:** NestJS 11, Prisma 7, `nestjs-cls` (`TenantContextService`), `@carekit/shared` (new `terminology/` folder), Next.js 15 dashboard, Jest + Supertest (e2e).
+**Tech Stack:** NestJS 11, Prisma 7, `nestjs-cls` (`TenantContextService`), `@deqah/shared` (new `terminology/` folder), Next.js 15 dashboard, Jest + Supertest (e2e).
 
 ---
 
@@ -63,7 +63,7 @@ Vertical tables are **platform-level** (not tenant-scoped). SCOPED_MODELS is unc
 - `apps/backend/src/modules/platform/verticals/upsert-terminology-override/upsert-terminology-override.handler.ts` (super-admin)
 - `apps/backend/src/modules/platform/verticals/upsert-terminology-override/upsert-terminology-override.handler.spec.ts`
 - `apps/backend/src/modules/platform/verticals/terminology.types.ts` — shared TS types for terminology keys
-- `apps/backend/src/modules/platform/verticals/terminology.loader.ts` — loads JSON packs from `@carekit/shared/terminology/*`
+- `apps/backend/src/modules/platform/verticals/terminology.loader.ts` — loads JSON packs from `@deqah/shared/terminology/*`
 - `apps/backend/src/modules/platform/verticals/dto/list-verticals.dto.ts`
 - `apps/backend/src/modules/platform/verticals/dto/create-vertical.dto.ts`
 - `apps/backend/src/modules/platform/verticals/dto/upsert-vertical-seed.dto.ts`
@@ -94,7 +94,7 @@ Vertical tables are **platform-level** (not tenant-scoped). SCOPED_MODELS is unc
 - `apps/backend/test/e2e/platform/seed-organization-from-vertical.e2e-spec.ts`
 
 **Memory:**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas03_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas03_status.md`
 
 ### Modified files
 
@@ -387,7 +387,7 @@ Edit `apps/backend/prisma/schema/platform.prisma`. Append at end of file:
 
 ```prisma
 // ─── Vertical (SaaS-03) ──────────────────────────────────────────────────────
-// Platform-level catalog of clinic verticals CareKit supports.
+// Platform-level catalog of clinic verticals Deqah supports.
 
 enum TemplateFamily {
   MEDICAL
@@ -456,7 +456,7 @@ model VerticalTerminologyOverride {
   id         String   @id @default(uuid())
   verticalId String
   vertical   Vertical @relation(fields: [verticalId], references: [id], onDelete: Cascade)
-  tokenKey   String   // must match a TerminologyKey in @carekit/shared
+  tokenKey   String   // must match a TerminologyKey in @deqah/shared
   valueAr    String
   valueEn    String
   createdAt  DateTime @default(now())
@@ -980,7 +980,7 @@ import {
   TemplateFamily,
   TerminologyPack,
   mergeOverrides,
-} from '@carekit/shared';
+} from '@deqah/shared';
 
 @Injectable()
 export class TerminologyLoader {
@@ -1056,7 +1056,7 @@ describe('GetTerminologyHandler', () => {
 
 ```ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TerminologyPack } from '@carekit/shared';
+import { TerminologyPack } from '@deqah/shared';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { TerminologyLoader } from '../terminology.loader';
 
@@ -1518,7 +1518,7 @@ import {
   TerminologyKey,
   TerminologyPack,
   mergeOverrides,
-} from '@carekit/shared';
+} from '@deqah/shared';
 import { useSession } from './use-session';
 
 export interface UseTerminologyResult {
@@ -1709,7 +1709,7 @@ type: project
 ---
 **Status:** Delivered <date> in PR #<n>. 11 verticals seeded across 4 template families. Default org backfilled to dental.
 
-**Deliverables:** Vertical + 3 seed/override models; platform/verticals module (8 handlers); public + super-admin controllers; 4 terminology JSON packs in @carekit/shared; useTerminology() hook; 3 e2e specs; SuperAdminGuard stub (Plan 05b replaces).
+**Deliverables:** Vertical + 3 seed/override models; platform/verticals module (8 handlers); public + super-admin controllers; 4 terminology JSON packs in @deqah/shared; useTerminology() hook; 3 e2e specs; SuperAdminGuard stub (Plan 05b replaces).
 
 **No SCOPED_MODELS changes.** Vertical tables are platform-level.
 

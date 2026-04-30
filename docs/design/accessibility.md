@@ -1,6 +1,6 @@
-# CareKit Accessibility Guidelines (WCAG AAA)
+# Deqah Accessibility Guidelines (WCAG AAA)
 
-All CareKit interfaces target WCAG 2.1 Level AAA. AA is the floor; AAA is the goal we design and review against (per root `CLAUDE.md` § "Design Principles").
+All Deqah interfaces target WCAG 2.1 Level AAA. AA is the floor; AAA is the goal we design and review against (per root `CLAUDE.md` § "Design Principles").
 
 ---
 

@@ -1,4 +1,4 @@
-# @carekit/ui — Shared UI Primitives
+# @deqah/ui — Shared UI Primitives
 
 This package holds **presentation-only** UI primitives (shadcn/ui derivatives) reused across `apps/dashboard` (today) and `apps/admin`/`apps/landing`/`apps/website` (future plans 05b, 06, 07, 08).
 
@@ -27,7 +27,7 @@ During the SaaS-05a extraction we kept two primitives in the dashboard because t
 | `date-picker.tsx` | Uses `useLocale` from `@/components/locale-provider` to drive `date-fns` locale + translated month/weekday strings. |
 | `nationality-select.tsx` | Imports `COUNTRIES` from `@/lib/countries-data` plus `useLocale` for Arabic/English country display. |
 
-**Resolution pattern** if/when we port these to `@carekit/ui`: split each into a presentational primitive here (`<DatePickerPrimitive locale={..} t={..}>` / `<NationalitySelectPrimitive options={..} dir={..}>`) and keep the data + locale wiring in the consuming app.
+**Resolution pattern** if/when we port these to `@deqah/ui`: split each into a presentational primitive here (`<DatePickerPrimitive locale={..} t={..}>` / `<NationalitySelectPrimitive options={..} dir={..}>`) and keep the data + locale wiring in the consuming app.
 
 ## Adding new components
 
@@ -43,23 +43,23 @@ npx shadcn add <component>
 # and add `export * from "./primitives/<name>"` to packages/ui/src/index.ts.
 ```
 
-Long-term: evaluate a shadcn monorepo config (`components.json` aliases) that writes directly into `@carekit/ui`.
+Long-term: evaluate a shadcn monorepo config (`components.json` aliases) that writes directly into `@deqah/ui`.
 
 ## Consuming from an app
 
-1. Add `"@carekit/ui": "*"` to the app's `dependencies`.
+1. Add `"@deqah/ui": "*"` to the app's `dependencies`.
 2. Add a tsconfig `paths` entry:
    ```json
-   "@carekit/ui":   ["../../packages/ui/src/index.ts"],
-   "@carekit/ui/*": ["../../packages/ui/src/*"]
+   "@deqah/ui":   ["../../packages/ui/src/index.ts"],
+   "@deqah/ui/*": ["../../packages/ui/src/*"]
    ```
 3. Extend the Tailwind content scan to include `packages/ui/src/**/*.{ts,tsx}`.
    - Tailwind 4 inline-CSS config: add `@source "../../../packages/ui/src/**/*.{ts,tsx}";` near the `@import "tailwindcss";` line.
-4. Import components: `import { Button, Card, Dialog } from "@carekit/ui"`.
+4. Import components: `import { Button, Card, Dialog } from "@deqah/ui"`.
 
 ## Commands
 
 ```bash
-npm run test --workspace=@carekit/ui       # vitest
-npm run typecheck --workspace=@carekit/ui  # tsc --noEmit
+npm run test --workspace=@deqah/ui       # vitest
+npm run typecheck --workspace=@deqah/ui  # tsc --noEmit
 ```

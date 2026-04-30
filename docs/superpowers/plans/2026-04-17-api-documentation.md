@@ -216,11 +216,11 @@ Edit [apps/backend/src/main.ts](../../../apps/backend/src/main.ts) — replace t
 
 ```ts
 const swaggerConfig = new DocumentBuilder()
-  .setTitle('CareKit API')
-  .setDescription('CareKit clinic management platform — dashboard & mobile API')
+  .setTitle('Deqah API')
+  .setDescription('Deqah clinic management platform — dashboard & mobile API')
   .setVersion('2.0')
-  .setContact('CareKit Engineering', 'https://carekit.dev', 'dev@carekit.dev')
-  .setLicense('Proprietary', 'https://carekit.dev/license')
+  .setContact('Deqah Engineering', 'https://deqah.dev', 'dev@deqah.dev')
+  .setLicense('Proprietary', 'https://deqah.dev/license')
   .addBearerAuth()
   .addServer('http://localhost:5100', 'Local dev')
   .build();
@@ -305,7 +305,7 @@ Commit `apps/backend/openapi.json` alongside the endpoint change — CI fails if
 - [ ] **Step 13: Commit**
 
 ```bash
-cd /c/pro/carekit && git add apps/backend/src/common/swagger apps/backend/src/main.ts apps/backend/package.json apps/backend/openapi.json apps/backend/CLAUDE.md && git commit -m "feat(backend): swagger helpers + deterministic openapi snapshot"
+cd /c/pro/deqah && git add apps/backend/src/common/swagger apps/backend/src/main.ts apps/backend/package.json apps/backend/openapi.json apps/backend/CLAUDE.md && git commit -m "feat(backend): swagger helpers + deterministic openapi snapshot"
 ```
 
 ---
@@ -443,7 +443,7 @@ cd apps/backend && npm run openapi:build-and-snapshot
 - [ ] **Step E: Commit**
 
 ```bash
-cd /c/pro/carekit && git add apps/backend/src/api/<audience>/<cluster>.controller.ts apps/backend/src/modules/<cluster> apps/backend/openapi.json && git commit -m "docs(backend): document <cluster> endpoints and dtos"
+cd /c/pro/deqah && git add apps/backend/src/api/<audience>/<cluster>.controller.ts apps/backend/src/modules/<cluster> apps/backend/openapi.json && git commit -m "docs(backend): document <cluster> endpoints and dtos"
 ```
 
 ### Wave assignment
@@ -471,7 +471,7 @@ For waves 12 and 13 (reuse DTOs from other clusters), skip DTO edits when those 
 ## Task 14: Local ESLint rule — require `@ApiOperation`
 
 **Files:**
-- Create: `apps/backend/eslint-rules/carekit-plugin.mjs`
+- Create: `apps/backend/eslint-rules/deqah-plugin.mjs`
 - Create: `apps/backend/eslint-rules/require-api-operation.mjs`
 - Create: `apps/backend/eslint-rules/require-api-operation.test.mjs`
 - Modify: `apps/backend/eslint.config.mjs`
@@ -586,7 +586,7 @@ export default rule;
 
 - [ ] **Step 4: Create the flat-config plugin wrapper**
 
-Create `apps/backend/eslint-rules/carekit-plugin.mjs`:
+Create `apps/backend/eslint-rules/deqah-plugin.mjs`:
 
 ```js
 import requireApiOperation from './require-api-operation.mjs';
@@ -603,15 +603,15 @@ export default {
 Edit `apps/backend/eslint.config.mjs` — add to the `plugins` object and the `rules` block:
 
 ```js
-import carekitPlugin from './eslint-rules/carekit-plugin.mjs';
+import deqahPlugin from './eslint-rules/deqah-plugin.mjs';
 // ...
 plugins: {
   '@typescript-eslint': tsPlugin,
-  carekit: carekitPlugin,
+  deqah: deqahPlugin,
 },
 rules: {
   // ...existing rules
-  'carekit/require-api-operation': 'error',
+  'deqah/require-api-operation': 'error',
 },
 ```
 
@@ -620,7 +620,7 @@ And add this block (after the tests block) so specs/tests are exempt:
 ```js
 {
   files: ['**/*.spec.ts', 'test/**/*.ts'],
-  rules: { 'carekit/require-api-operation': 'off' },
+  rules: { 'deqah/require-api-operation': 'off' },
 },
 ```
 
@@ -639,7 +639,7 @@ cd apps/backend && npm run lint
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /c/pro/carekit && git add apps/backend/eslint-rules apps/backend/eslint.config.mjs && git commit -m "feat(backend): eslint rule require-api-operation"
+cd /c/pro/deqah && git add apps/backend/eslint-rules apps/backend/eslint.config.mjs && git commit -m "feat(backend): eslint rule require-api-operation"
 ```
 
 ---
@@ -739,7 +739,7 @@ Edit `.github/workflows/ci.yml` — add a new job (read the existing file first,
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /c/pro/carekit && git add apps/backend/scripts/check-openapi-coverage.ts .github/workflows/ci.yml && git commit -m "ci(backend): openapi coverage + snapshot drift checks"
+cd /c/pro/deqah && git add apps/backend/scripts/check-openapi-coverage.ts .github/workflows/ci.yml && git commit -m "ci(backend): openapi coverage + snapshot drift checks"
 ```
 
 ---
@@ -788,7 +788,7 @@ Open [the spec's Acceptance Criteria section](../specs/2026-04-17-api-documentat
 - [ ] **Step 3: Final commit if anything remains**
 
 ```bash
-cd /c/pro/carekit && git status
+cd /c/pro/deqah && git status
 ```
 
 Should be clean.

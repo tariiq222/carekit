@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-CareKit is a white-label clinic management platform (backend + dashboard + mobile). A standalone Arabic/RTL marketing website (`sawaa-website`) was designed externally as a Next.js 14 app with static data and no backend. It must be integrated into CareKit so that:
+Deqah is a white-label clinic management platform (backend + dashboard + mobile). A standalone Arabic/RTL marketing website (`sawaa-website`) was designed externally as a Next.js 14 app with static data and no backend. It must be integrated into Deqah so that:
 
 - Each clinic deployment includes a public-facing website.
 - Website content is controlled from the dashboard (no code changes per clinic).
@@ -18,9 +18,9 @@ Single-organization mode holds: one deployment = one clinic. The website is part
 ## 2. Goals
 
 - Deliver a conversion-driving public site per clinic (not just marketing).
-- Re-use existing CareKit backend modules (bookings, payments, branding, employees, specialties) via new `/api/public/*` endpoints.
+- Re-use existing Deqah backend modules (bookings, payments, branding, employees, specialties) via new `/api/public/*` endpoints.
 - Enable clinic owners to control visible content, theme, and branding from the dashboard.
-- Establish a shared layer (`@carekit/api-client`, `@carekit/shared`) rich enough for the mobile app to consume directly later.
+- Establish a shared layer (`@deqah/api-client`, `@deqah/shared`) rich enough for the mobile app to consume directly later.
 - Ship progressively in four phases — each phase production-releasable on its own.
 
 ## 3. Non-Goals
@@ -36,7 +36,7 @@ Single-organization mode holds: one deployment = one clinic. The website is part
 ### 4.1 Monorepo placement
 
 ```
-carekit/
+deqah/
 ├── apps/
 │   ├── backend/
 │   ├── dashboard/
@@ -47,7 +47,7 @@ carekit/
 │   └── shared/       (extended)
 ```
 
-- Port: **5104** (reserved CareKit range 5000–5999).
+- Port: **5104** (reserved Deqah range 5000–5999).
 - Stack: Next.js 15 App Router, React 19, Tailwind 4, shadcn/ui, next-intl, framer-motion.
 - Deployed as a docker-compose service; Nginx routes the clinic's domain → website.
 
@@ -99,8 +99,8 @@ apps/website/
 2. Themes contain zero data fetching, validation, or business logic. A theme page calls a feature hook (e.g. `useTherapists()`) and renders the result.
 3. `app/<route>/page.tsx` is a thin shell: it resolves the active theme from `branding` and renders the theme's page component. It does not know about APIs.
 4. Cross-feature imports go through a feature's explicit `public.ts` export or through the API layer. No reaching into another feature's internals.
-5. Logic that becomes useful to the mobile app (state machines, zod schemas, enums) is promoted to `@carekit/shared` the moment it has a second consumer.
-6. 350-line cap per file (existing CareKit rule); split within the same feature, never by creating a sibling "utils" bucket.
+5. Logic that becomes useful to the mobile app (state machines, zod schemas, enums) is promoted to `@deqah/shared` the moment it has a second consumer.
+6. 350-line cap per file (existing Deqah rule); split within the same feature, never by creating a sibling "utils" bucket.
 
 ### 4.2 Branding flow (dynamic, per clinic)
 
@@ -123,8 +123,8 @@ Two themes share the same data and logic but differ in visual structure.
 
 To make the website a true test-bed for mobile:
 
-- **`@carekit/api-client`** — framework-agnostic fetch client. No React hooks, no Next-specific features. Extended to cover all `/public/*` endpoints, auth/OTP flows, and payment init.
-- **`@carekit/shared`** — zod schemas (booking, contact, client registration), booking state machine, pricing rules, availability calendar logic, enums, types derived from Prisma.
+- **`@deqah/api-client`** — framework-agnostic fetch client. No React hooks, no Next-specific features. Extended to cover all `/public/*` endpoints, auth/OTP flows, and payment init.
+- **`@deqah/shared`** — zod schemas (booking, contact, client registration), booking state machine, pricing rules, availability calendar logic, enums, types derived from Prisma.
 - Both packages are consumed by `apps/website` immediately and by `apps/mobile` later without rewrites.
 
 ### 4.5 Public API surface
@@ -166,7 +166,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 - `ContactMessage` model: id, orgId, name, phone, email, subject, body, createdAt, status — phase 1.
 - `Client.phoneVerified`, `Client.emailVerified` — phase 2.
 - `OtpCode` model: `channel` (enum: `email | sms`), `identifier` (email or phone), `codeHash`, `purpose`, `expiresAt`, `consumedAt`, `attempts` — phase 2. Designed channel-agnostic so SMS adds a row type, not a schema change.
-- All migrations additive and immutable per CareKit rules.
+- All migrations additive and immutable per Deqah rules.
 
 ## 6. Phased Delivery
 
@@ -177,12 +177,12 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 - Scaffold `apps/website` with Next.js 15, Tailwind 4, next-intl, shadcn/ui.
 - Migrate current Sawaa pages into `themes/sawaa/*`, converting all hardcoded colors to semantic tokens.
 - Design and build `themes/premium/*` (a separate visual-design subtask precedes this).
-- Extend `@carekit/api-client` with phase-1 endpoints.
+- Extend `@deqah/api-client` with phase-1 endpoints.
 - Implement `BrandingProvider` (SSR token injection).
 - Add phase-1 Prisma migrations + public controllers.
 - Dashboard: "Website" settings page — theme selector, per-employee `isPublic` toggle + public bio editor, per-specialty public fields, contact-messages inbox.
 - Docker service + Nginx routing.
-- QA via Chrome DevTools MCP; sync to Kiwi TCMS under `Product=CareKit, Category=Website, Plan=Manual QA`.
+- QA via Chrome DevTools MCP; sync to Kiwi TCMS under `Product=Deqah, Category=Website, Plan=Manual QA`.
 
 ### Phase 2 — Guest Booking + Payment (2–3 weeks)
 
@@ -207,7 +207,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 
 ### Phase 4 — Advanced (2 weeks)
 
-- ~~Subscription packages~~ — removed from scope 2026-04-19; CareKit is a booking platform, not a subscription system. See PR #13 (`chore/remove-subscription-feature`). Future "packages" will be modelled as service bundles.
+- ~~Subscription packages~~ — removed from scope 2026-04-19; Deqah is a booking platform, not a subscription system. See PR #13 (`chore/remove-subscription-feature`). Future "packages" will be modelled as service bundles.
 - Support-group bookings (group capacity, waitlist).
 - ZATCA QR code on invoices (existing module).
 - Refund flow.
@@ -234,7 +234,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 ## 9. Decisions
 
 - **OTP channel (phase 2): email only.** Uses the existing `email/` (SMTP) module. SMS providers will be added later as a pluggable `NotificationChannel` adapter — the `OtpCode` model carries a `channel` column from day one to avoid a future migration.
-- **Domain model: each clinic brings its own domain.** CareKit does not own or assign subdomains. Deployment provisions Nginx + TLS (Let's Encrypt or provided cert) per clinic domain. A `Branding.websiteDomain` field stores the authoritative domain for CORS allowlisting, canonical URLs, sitemap, and email links.
+- **Domain model: each clinic brings its own domain.** Deqah does not own or assign subdomains. Deployment provisions Nginx + TLS (Let's Encrypt or provided cert) per clinic domain. A `Branding.websiteDomain` field stores the authoritative domain for CORS allowlisting, canonical URLs, sitemap, and email links.
 - **Default language: Arabic (RTL).** The site always renders in Arabic on first visit regardless of browser locale. English translation is available via a visible language switcher; the choice is persisted in a cookie and respected on subsequent visits. `next-intl` drives both locales; every string lives in `messages/ar.json` and `messages/en.json`. No auto-detect — Arabic is the product's primary voice.
 
 ## 10. Out of Scope (for this spec)

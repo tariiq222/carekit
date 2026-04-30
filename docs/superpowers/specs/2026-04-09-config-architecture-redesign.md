@@ -6,9 +6,9 @@
 
 ## Context
 
-CareKit is a white-label product sold as perpetual licenses to clinics. Each clinic gets its own deployment. Two distinct ownership levels exist:
+Deqah is a white-label product sold as perpetual licenses to clinics. Each clinic gets its own deployment. Two distinct ownership levels exist:
 
-- **CareKit (product owner)**: Sets branding, feature availability per license deal, delivers the system
+- **Deqah (product owner)**: Sets branding, feature availability per license deal, delivers the system
 - **Clinic (license holder)**: Manages all operational settings, integrations, and compliance after delivery
 
 Currently, 60+ config keys are stored in a single `WhiteLabelConfig` EAV table with no ownership distinction. Multiple services bypass `WhitelabelService` and query the table directly. `WhitelabelService.getPublicBranding()` reaches into `BookingSettings`. No separation between license-level and runtime feature flags.
@@ -19,14 +19,14 @@ Split into 4 structured tables, each with a dedicated module and clear ownership
 
 ## Data Model
 
-### Table 1: `WhiteLabelConfig` — Product Identity (CareKit controls)
+### Table 1: `WhiteLabelConfig` — Product Identity (Deqah controls)
 
 Singleton row. Read-only for clinic unless `clinicCanEdit = true` (e.g., government entity with full rights).
 
 | Field | Type | Default | Notes |
 |-------|------|---------|-------|
 | `id` | UUID | auto | PK |
-| `systemName` | String | "CareKit Clinic" | English display name |
+| `systemName` | String | "Deqah Clinic" | English display name |
 | `systemNameAr` | String | "عيادة كيركت" | Arabic display name |
 | `logoUrl` | String? | null | Logo image URL |
 | `faviconUrl` | String? | null | Favicon URL |
@@ -38,7 +38,7 @@ Singleton row. Read-only for clinic unless `clinicCanEdit = true` (e.g., governm
 
 **Table name:** `white_label_config`
 
-### Table 2: `LicenseConfig` — Feature Availability (CareKit controls)
+### Table 2: `LicenseConfig` — Feature Availability (Deqah controls)
 
 Singleton row. Determines which features the clinic is licensed to use. Clinic cannot modify.
 
@@ -178,7 +178,7 @@ PUT  /whitelabel            → whitelabel:edit (rejects if clinicCanEdit = fals
 ### LicenseModule
 ```
 GET  /license               → license:view
-PUT  /license               → license:edit (super-admin only, CareKit team)
+PUT  /license               → license:edit (super-admin only, Deqah team)
 GET  /license/features      → license:view — licensed features + runtime state
 ```
 
@@ -206,9 +206,9 @@ PATCH  /feature-flags/:key      → feature-flags:toggle — checks LicenseConfi
 | Module | Permission | Who |
 |--------|-----------|-----|
 | `whitelabel` | `whitelabel:view` | All authenticated |
-| `whitelabel` | `whitelabel:edit` | CareKit team (or clinic if `clinicCanEdit`) |
+| `whitelabel` | `whitelabel:edit` | Deqah team (or clinic if `clinicCanEdit`) |
 | `license` | `license:view` | Admin |
-| `license` | `license:edit` | CareKit team only |
+| `license` | `license:edit` | Deqah team only |
 | `organization-settings` | `organization-settings:view` | Admin |
 | `organization-settings` | `organization-settings:edit` | Admin |
 | `clinic-integrations` | `clinic-integrations:view` | Admin |

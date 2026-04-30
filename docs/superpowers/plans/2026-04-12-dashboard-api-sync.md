@@ -115,7 +115,7 @@ Replace entire `apps/dashboard/lib/api/bookings.ts` content with:
 
 ```typescript
 /**
- * Bookings API — CareKit Dashboard
+ * Bookings API — Deqah Dashboard
  * Controller: dashboard/bookings
  */
 
@@ -214,7 +214,7 @@ Backend: `dashboard/people/clients`. Delete functions with no backend endpoint: 
 
 ```typescript
 /**
- * Clients API — CareKit Dashboard
+ * Clients API — Deqah Dashboard
  * Controller: dashboard/people/clients
  */
 
@@ -309,7 +309,7 @@ Backend: `dashboard/organization/branches`. Keep: `fetchBranches`, `fetchBranch`
 
 ```typescript
 /**
- * Branches API — CareKit Dashboard
+ * Branches API — Deqah Dashboard
  * Controller: dashboard/organization/branches
  */
 
@@ -488,7 +488,7 @@ Backend: `dashboard/finance/invoices`. Available: `POST /dashboard/finance/invoi
 
 ```typescript
 /**
- * Invoices API — CareKit Dashboard
+ * Invoices API — Deqah Dashboard
  * Controller: dashboard/finance/invoices
  */
 
@@ -530,7 +530,7 @@ Backend: `GET /dashboard/finance/payments` (list) only. Remove all other functio
 
 ```typescript
 /**
- * Payments API — CareKit Dashboard
+ * Payments API — Deqah Dashboard
  * Controller: dashboard/finance/payments
  */
 
@@ -635,7 +635,7 @@ Backend: `dashboard/comms/chat/conversations`. Keep only `fetchChatSessions` (ma
 
 ```typescript
 /**
- * Chatbot API — CareKit Dashboard
+ * Chatbot API — Deqah Dashboard
  * Controller: dashboard/comms/chat
  */
 
@@ -768,7 +768,7 @@ Backend: `POST /dashboard/ops/reports` (single endpoint, report type in body). C
 
 ```typescript
 /**
- * Reports API — CareKit Dashboard
+ * Reports API — Deqah Dashboard
  * Controller: dashboard/ops/reports
  */
 
@@ -892,7 +892,7 @@ Backend: `POST /dashboard/bookings/waitlist` (add to waitlist). `GET` list has n
 
 ```typescript
 /**
- * Waitlist API — CareKit Dashboard
+ * Waitlist API — Deqah Dashboard
  * Controller: dashboard/bookings/waitlist
  */
 
@@ -1069,7 +1069,7 @@ Backend: `dashboard/media` — 4 endpoints: POST upload, GET/:id, DELETE/:id, GE
 
 ```typescript
 /**
- * Media API — CareKit Dashboard
+ * Media API — Deqah Dashboard
  * Controller: dashboard/media
  */
 
@@ -1219,7 +1219,7 @@ Backend: `dashboard/platform/problem-reports` — POST, GET list, PATCH /:id/sta
 
 ```typescript
 /**
- * Problem Reports API — CareKit Dashboard
+ * Problem Reports API — Deqah Dashboard
  * Controller: dashboard/platform/problem-reports
  */
 
@@ -1373,7 +1373,7 @@ Backend: `dashboard/organization/ratings` — POST submit, GET list.
 
 ```typescript
 /**
- * Ratings API — CareKit Dashboard
+ * Ratings API — Deqah Dashboard
  * Controller: dashboard/organization/ratings
  */
 

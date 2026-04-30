@@ -132,7 +132,7 @@ Always runs first, before Intent Gate:
 - Project type (monorepo / single app)
 - Root `CLAUDE.md` + active app `CLAUDE.md` (backend / dashboard / mobile)
 - Last 5 commits: `git log --oneline -5`
-- Which project: CareKit / Bawsala / Adeer / other
+- Which project: Deqah / Bawsala / Adeer / other
 - Tech stack (from CLAUDE.md — not re-explored if already in context)
 
 ### Step 1 — Intent Gate (فهد — جاري التحليل...)
@@ -336,7 +336,7 @@ New content:
 Maestro v6.0 — Task Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Task: [one line]
-Project: [CareKit / Bawsala / Adeer / other]
+Project: [Deqah / Bawsala / Adeer / other]
 Intent: [feature / bug / refactor / migration / test / config-change]
 Size: [S/M/L/XL]   Gate: [fast-track / full-pipeline]
 

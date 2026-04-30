@@ -189,7 +189,7 @@ describe('uploadBankTransferReceipt', () => {
       service.uploadBankTransferReceipt('user-1', 'booking-1', mockFile),
     ).rejects.toThrow('DB constraint error');
 
-    expect(minioServiceMock.deleteFile).toHaveBeenCalledWith('carekit', expect.stringMatching(/^receipts\/.+\.jpg$/));
+    expect(minioServiceMock.deleteFile).toHaveBeenCalledWith('deqah', expect.stringMatching(/^receipts\/.+\.jpg$/));
   });
 });
 ```

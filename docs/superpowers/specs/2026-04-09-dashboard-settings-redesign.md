@@ -11,14 +11,14 @@ The backend split the monolithic WhiteLabelConfig EAV table into 4 structured ta
 
 ## Two Pages
 
-### `/white-label` — CareKit team only (deployment setup)
+### `/white-label` — Deqah team only (deployment setup)
 
 Visible only to users with `whitelabel:edit` permission. Used during initial setup.
 
 **Tabs:**
 1. **Branding** — system_name, system_name_ar, logo, favicon, colors, font, domain
    - Endpoint: `GET /whitelabel` + `PUT /whitelabel`
-2. **License** — feature availability per license deal (read/write for CareKit)
+2. **License** — feature availability per license deal (read/write for Deqah)
    - Endpoint: `GET /license/features` + `PUT /license`
    - Shows each feature with licensed (boolean) + runtime enabled status
 

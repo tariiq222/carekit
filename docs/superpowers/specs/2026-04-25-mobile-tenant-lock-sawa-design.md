@@ -7,23 +7,23 @@
 
 ## Goal
 
-Lock the CareKit mobile app to a single tenant (`Default Organization` for now, swappable to any tenant ID with one config change) and rebrand the app's launcher identity (name + icon + bundle ID) to **سواء للإرشاد الأسري**. Defer multi-tenant build pipeline until a second customer requires it.
+Lock the Deqah mobile app to a single tenant (`Default Organization` for now, swappable to any tenant ID with one config change) and rebrand the app's launcher identity (name + icon + bundle ID) to **سواء للإرشاد الأسري**. Defer multi-tenant build pipeline until a second customer requires it.
 
 ## Non-Goals
 
 - White-label build pipeline (EAS profiles per tenant) — deferred to Phase B when a second branded tenant is signed.
-- Per-tenant theme/colors at runtime — out of scope for this iteration. The CareKit default theme stays.
+- Per-tenant theme/colors at runtime — out of scope for this iteration. The Deqah default theme stays.
 - Tenant subdomain resolver (Plan 09) — not required because we hard-code the tenant.
 - Mobile selection screen / multi-tenant onboarding — explicitly excluded.
 - Production app store submission — local dev binary only at this stage.
 
 ## Context
 
-The CareKit backend is multi-tenant (`TENANT_ENFORCEMENT=permissive` in dev). The mobile app currently sends no tenant context on public endpoints, so the backend's `TenantResolverMiddleware` falls through to `DEFAULT_ORGANIZATION_ID`. This works coincidentally today but breaks the moment we flip dev to `strict` or add a second tenant.
+The Deqah backend is multi-tenant (`TENANT_ENFORCEMENT=permissive` in dev). The mobile app currently sends no tenant context on public endpoints, so the backend's `TenantResolverMiddleware` falls through to `DEFAULT_ORGANIZATION_ID`. This works coincidentally today but breaks the moment we flip dev to `strict` or add a second tenant.
 
 For the first paying customer (سواء للإرشاد الأسري) the user wants:
 
-1. The mobile app launcher shows the customer's name and icon — not "CareKit".
+1. The mobile app launcher shows the customer's name and icon — not "Deqah".
 2. The app, when opened, only ever talks to the customer's tenant.
 3. Zero logic for "switching tenants" — single-tenant binary.
 
@@ -195,11 +195,11 @@ apps/mobile/assets/sawa/
   android-icon-monochrome.png    (placeholder)
 ```
 
-The user will drop `icon.png` (the one already ready) into `assets/sawa/`. Other assets start as copies of the existing CareKit ones until the customer provides their versions — they only affect Android adaptive icon and splash, not the launcher icon on iOS.
+The user will drop `icon.png` (the one already ready) into `assets/sawa/`. Other assets start as copies of the existing Deqah ones until the customer provides their versions — they only affect Android adaptive icon and splash, not the launcher icon on iOS.
 
 ### 7. Mobile — In-app text references
 
-Search and replace `'CareKit'` literal in mobile UI strings that are user-visible (e.g., title bar, about screen, splash) → use `APP_NAME` constant which is updated to `'سواء للإرشاد الأسري'` in `constants/config.ts`. Anything that's a CareKit identifier (analytics events, log tags, scheme references) stays as `carekit` to avoid breaking telemetry.
+Search and replace `'Deqah'` literal in mobile UI strings that are user-visible (e.g., title bar, about screen, splash) → use `APP_NAME` constant which is updated to `'سواء للإرشاد الأسري'` in `constants/config.ts`. Anything that's a Deqah identifier (analytics events, log tags, scheme references) stays as `deqah` to avoid breaking telemetry.
 
 ## Data Flow — Mobile request lifecycle
 
@@ -277,6 +277,6 @@ For authenticated calls (e.g., post-login client API), the JWT carries the orgId
 | `apps/mobile/app.json` | DELETED |
 | `apps/mobile/app.config.ts` | new file (replaces app.json) |
 | `apps/mobile/assets/sawa/icon.png` | new asset (customer-provided) |
-| `apps/mobile/assets/sawa/*` | placeholder copies of existing CareKit assets |
+| `apps/mobile/assets/sawa/*` | placeholder copies of existing Deqah assets |
 
 Total: ~10 files, < 200 LoC change. Single PR, owner-only review (touches tenant resolver).

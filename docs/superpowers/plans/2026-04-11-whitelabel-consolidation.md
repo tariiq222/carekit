@@ -10,7 +10,7 @@
 - الـ endpoint الموحّد: `GET/PUT /whitelabel` يعود بـ config كاملة. `GET /whitelabel/public` للبيانات العامة.
 - الداشبورد والموبايل يستهلكان `/whitelabel/public` فقط لعمل theming.
 
-**Tech Stack:** NestJS 11, Prisma 7, PostgreSQL, Next.js 15, React Native / Expo, `@carekit/shared`, `@carekit/api-client`
+**Tech Stack:** NestJS 11, Prisma 7, PostgreSQL, Next.js 15, React Native / Expo, `@deqah/shared`, `@deqah/api-client`
 
 ---
 
@@ -67,7 +67,7 @@
 model WhiteLabelConfig {
   id                String   @id @default(uuid())
   // Identity
-  systemName        String   @default("CareKit Clinic") @map("system_name")
+  systemName        String   @default("Deqah Clinic") @map("system_name")
   systemNameAr      String   @default("عيادة كيركت") @map("system_name_ar")
   productTagline    String?  @map("product_tagline")
   // Assets
@@ -256,7 +256,7 @@ export class WhitelabelService {
   async update(dto: UpdateWhitelabelDto): Promise<WhiteLabelConfig> {
     const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
     if (!current.clinicCanEdit) {
-      throw new ForbiddenException('Whitelabel config is locked. Contact CareKit support.');
+      throw new ForbiddenException('Whitelabel config is locked. Contact Deqah support.');
     }
     const updated = await this.prisma.whiteLabelConfig.update({
       where: { id: current.id },
@@ -367,7 +367,7 @@ git commit -m "refactor(organization-settings): remove ThemeService, ThemeContro
 
 ```typescript
 export const WHITELABEL_DEFAULTS = {
-  systemName:        'CareKit Clinic',
+  systemName:        'Deqah Clinic',
   systemNameAr:      'عيادة كيركت',
   productTagline:    'إدارة العيادة',
   logoUrl:           null as string | null,
@@ -406,7 +406,7 @@ git commit -m "refactor(seeds): update WHITELABEL_DEFAULTS with full theme field
 
 ---
 
-## Task 5: تحديث `@carekit/shared` — توحيد `OrganizationTheme`
+## Task 5: تحديث `@deqah/shared` — توحيد `OrganizationTheme`
 
 **Files:**
 - Modify: `packages/shared/types/theme.ts`
@@ -450,7 +450,7 @@ export interface DerivedTokens {
 }
 
 export const DEFAULT_THEME: OrganizationTheme = {
-  systemName:        'CareKit',
+  systemName:        'Deqah',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',
   logoUrl:           null,
@@ -506,7 +506,7 @@ git commit -m "refactor(shared): consolidate OrganizationTheme — single source
 
 ---
 
-## Task 6: تحديث `@carekit/api-client`
+## Task 6: تحديث `@deqah/api-client`
 
 **Files:**
 - Modify: `packages/api-client/src/modules/theme.ts`
@@ -516,7 +516,7 @@ git commit -m "refactor(shared): consolidate OrganizationTheme — single source
 
 ```typescript
 import { apiRequest } from '../client.js'
-import type { OrganizationTheme } from '@carekit/shared/types'
+import type { OrganizationTheme } from '@deqah/shared/types'
 
 /**
  * Fetches public branding/theme from the unified whitelabel endpoint.
@@ -531,7 +531,7 @@ export async function getTheme(): Promise<OrganizationTheme> {
 
 ```typescript
 import { apiRequest } from '../client.js'
-import type { OrganizationTheme } from '@carekit/shared/types'
+import type { OrganizationTheme } from '@deqah/shared/types'
 
 export async function getWhitelabelPublic(): Promise<OrganizationTheme> {
   return apiRequest<OrganizationTheme>('/whitelabel/public')
@@ -823,7 +823,7 @@ git commit -m "refactor(dashboard): remove all calls to deprecated /organization
 
 ## Task 10: تحديث Mobile — ربط الثيم بـ `/whitelabel/public`
 
-**Context:** الموبايل حالياً يستخدم `theme/tokens.ts` التي تجلب tokens من `@carekit/shared/tokens` (ثابتة في bundle). لا يوجد حالياً جلب ديناميكي من الـ API. هذه المهمة تضيف dynamic theming عند startup.
+**Context:** الموبايل حالياً يستخدم `theme/tokens.ts` التي تجلب tokens من `@deqah/shared/tokens` (ثابتة في bundle). لا يوجد حالياً جلب ديناميكي من الـ API. هذه المهمة تضيف dynamic theming عند startup.
 
 **Files:**
 - Modify: `apps/mobile/theme/ThemeProvider.tsx`
@@ -832,8 +832,8 @@ git commit -m "refactor(dashboard): remove all calls to deprecated /organization
 - [ ] **Step 1: تعديل `tokens.ts` ليقبل override ديناميكي**
 
 ```typescript
-import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
-import type { OrganizationTheme } from '@carekit/shared/types';
+import { colors, typography, spacing, radius, rnShadows, animations } from '@deqah/shared/tokens';
+import type { OrganizationTheme } from '@deqah/shared/types';
 
 function buildTheme(overrides?: Partial<OrganizationTheme>) {
   return {
@@ -862,7 +862,7 @@ export { buildTheme };
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { I18nManager } from 'react-native';
 import { buildTheme, type AppTheme } from './tokens';
-import type { OrganizationTheme } from '@carekit/shared/types';
+import type { OrganizationTheme } from '@deqah/shared/types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1';
 
@@ -993,7 +993,7 @@ cd apps/mobile && npx tsc --noEmit
 - [ ] **Step 4: Full build**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit && npm run build
+cd /Users/tariq/Documents/my_programs/Deqah && npm run build
 ```
 
 - [ ] **Step 5: تشغيل Seed للتحقق**

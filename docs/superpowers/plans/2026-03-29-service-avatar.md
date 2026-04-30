@@ -252,7 +252,7 @@ async uploadAvatar(id: string, file: Express.Multer.File) {
   const ext = file.originalname.split('.').pop() ?? 'jpg';
   const objectName = `services/${id}/avatar-${Date.now()}.${ext}`;
   const imageUrl = await this.minio.uploadFile(
-    'carekit',
+    'deqah',
     objectName,
     file.buffer,
     file.mimetype,

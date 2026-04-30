@@ -107,7 +107,7 @@
 
 - Kiwi Plan: https://localhost:6443/plan/55/
 - Kiwi Run: https://localhost:6443/runs/141/
-- Build: `manual-qa-2026-04-19` (under Version `main`, Product `CareKit`, Category `Client Account`)
+- Build: `manual-qa-2026-04-19` (under Version `main`, Product `Deqah`, Category `Client Account`)
 
 ## Follow-ups
 

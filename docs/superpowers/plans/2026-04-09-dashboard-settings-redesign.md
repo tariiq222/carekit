@@ -76,7 +76,7 @@ Replace entire `dashboard/lib/types/whitelabel.ts` with:
 
 ```typescript
 /**
- * WhiteLabel Types — CareKit Dashboard
+ * WhiteLabel Types — Deqah Dashboard
  * Structured singleton (no longer EAV key-value)
  */
 
@@ -115,7 +115,7 @@ Create `dashboard/lib/types/organization-settings.ts`:
 
 ```typescript
 /**
- * Clinic Settings Types — CareKit Dashboard
+ * Clinic Settings Types — Deqah Dashboard
  */
 
 export interface OrganizationSettings {
@@ -181,7 +181,7 @@ Create `dashboard/lib/types/clinic-integrations.ts`:
 
 ```typescript
 /**
- * Clinic Integrations Types — CareKit Dashboard
+ * Clinic Integrations Types — Deqah Dashboard
  */
 
 export interface ClinicIntegrations {
@@ -219,7 +219,7 @@ Create `dashboard/lib/types/license.ts`:
 
 ```typescript
 /**
- * License Types — CareKit Dashboard
+ * License Types — Deqah Dashboard
  */
 
 export interface LicenseConfig {
@@ -276,7 +276,7 @@ Replace entire `dashboard/lib/api/whitelabel.ts` with:
 
 ```typescript
 /**
- * WhiteLabel API — CareKit Dashboard
+ * WhiteLabel API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"
@@ -307,7 +307,7 @@ Create `dashboard/lib/api/organization-settings.ts`:
 
 ```typescript
 /**
- * Clinic Settings API — CareKit Dashboard
+ * Clinic Settings API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"
@@ -342,7 +342,7 @@ Create `dashboard/lib/api/clinic-integrations.ts`:
 
 ```typescript
 /**
- * Clinic Integrations API — CareKit Dashboard
+ * Clinic Integrations API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"
@@ -372,7 +372,7 @@ Create `dashboard/lib/api/license.ts`:
 
 ```typescript
 /**
- * License API — CareKit Dashboard
+ * License API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"
@@ -637,7 +637,7 @@ In `dashboard/hooks/use-feature-flags.ts`, find the `useFeatureFlagMutation()` f
 ```typescript
 onError: (error: Error & { response?: { status?: number } }) => {
   if (error.response?.status === 403) {
-    toast.error("هذه الميزة غير متاحة في رخصتك. تواصل مع فريق CareKit.")
+    toast.error("هذه الميزة غير متاحة في رخصتك. تواصل مع فريق Deqah.")
   } else {
     toast.error("حدث خطأ أثناء تحديث الميزة")
   }
@@ -722,7 +722,7 @@ Rewrite to show license management (licensed + enabled status). Use `useLicenseF
 
 Key changes:
 - Import `useLicenseFeatures` and `useUpdateLicense` from hooks
-- Each feature row shows: name, licensed toggle (CareKit controls), enabled state
+- Each feature row shows: name, licensed toggle (Deqah controls), enabled state
 - Licensed=false → feature is greyed out, cannot be enabled at runtime
 
 - [ ] **Step 4: Delete old white-label components**

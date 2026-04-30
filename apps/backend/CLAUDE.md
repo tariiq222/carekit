@@ -1,4 +1,4 @@
-# CareKit Backend — Conventions
+# Deqah Backend — Conventions
 
 This file provides guidance to Claude Code when working inside `apps/backend`. Read the root [CLAUDE.md](../../CLAUDE.md) first for stack-wide rules (single-organization mode, immutable migrations, golden rules).
 

@@ -1,4 +1,4 @@
-# CareKit Dashboard — Complete Redesign Specification
+# Deqah Dashboard — Complete Redesign Specification
 
 > **STATUS: Pre-SaaS historical record.** This redesign brief was written
 > before the SaaS multi-tenancy work and before the dashboard's "Page Anatomy
@@ -1041,4 +1041,4 @@ lib/
 ---
 
 *Generated: April 2026*
-*CareKit Dashboard Redesign Documentation v1.0*
+*Deqah Dashboard Redesign Documentation v1.0*

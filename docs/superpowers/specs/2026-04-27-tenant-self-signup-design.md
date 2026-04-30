@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-A prospective tenant (clinic owner, salon owner, gym owner, etc.) visits the CareKit dashboard and self-registers. They get a **14-day free trial** immediately — no payment required. After registration they pass through a **4-step onboarding wizard** before seeing the main dashboard. When the trial expires the account moves to `PAST_DUE` and then `SUSPENDED` unless the tenant subscribes.
+A prospective tenant (clinic owner, salon owner, gym owner, etc.) visits the Deqah dashboard and self-registers. They get a **14-day free trial** immediately — no payment required. After registration they pass through a **4-step onboarding wizard** before seeing the main dashboard. When the trial expires the account moves to `PAST_DUE` and then `SUSPENDED` unless the tenant subscribes.
 
 ---
 

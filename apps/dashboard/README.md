@@ -1,6 +1,6 @@
-# CareKit Dashboard
+# Deqah Dashboard
 
-لوحة تحكم منصة إدارة العيادات الذكية — CareKit by WebVue Technology Solutions.
+لوحة تحكم منصة إدارة العيادات الذكية — Deqah by WebVue Technology Solutions.
 
 ---
 
@@ -54,7 +54,7 @@ npm run dev
 app/(dashboard)/[feature]/    ← Pages (orchestration only)
 components/features/[feature]/ ← Feature UI components
 components/ui/                 ← App-local wrappers only (date-picker, nationality-select)
-@carekit/ui                    ← shadcn primitives (workspace package — لا تُعدَّل)
+@deqah/ui                    ← shadcn primitives (workspace package — لا تُعدَّل)
 hooks/                         ← TanStack Query hooks
 lib/api/                       ← Network calls
 lib/types/                     ← TypeScript types

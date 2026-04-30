@@ -1,8 +1,8 @@
-# Rebrand CareKit → Deqah Implementation Plan
+# Rebrand Deqah → Deqah Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace every occurrence of "CareKit" / "carekit" with "Deqah" / "deqah" across the entire monorepo — package names, imports, configuration, source strings, email templates, and documentation — and rename the PostgreSQL database.
+**Goal:** Replace every occurrence of "Deqah" / "deqah" with "Deqah" / "deqah" across the entire monorepo — package names, imports, configuration, source strings, email templates, and documentation — and rename the PostgreSQL database.
 
 **Architecture:** Five sequential layers executed with `sed` and targeted file edits, each verified with typecheck + grep before proceeding to the next. Layer order: package.json → tsconfig paths → source imports → runtime strings/config → docs.
 
@@ -49,7 +49,7 @@
 - Modify: `apps/backend/src/infrastructure/mail/templates/trial-suspended-no-card.template.ts`
 - Modify: `apps/backend/src/infrastructure/mail/platform-mailer.service.ts`
 - Modify: `apps/backend/openapi.json`
-- All remaining `.ts`/`.tsx` files with `CareKit` or `carekit` in strings/comments
+- All remaining `.ts`/`.tsx` files with `Deqah` or `deqah` in strings/comments
 
 ### Layer 5 — Documentation
 - Modify: `CLAUDE.md`
@@ -67,24 +67,24 @@
 
 **Files:** `package.json`, `apps/*/package.json`, `packages/*/package.json`
 
-- [ ] **Step 1: Run sed to replace carekit in all package.json files**
+- [ ] **Step 1: Run sed to replace deqah in all package.json files**
 
 ```bash
-find /Users/tariq/code/carekit -name "package.json" \
+find /Users/tariq/code/deqah -name "package.json" \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
   -exec sed -i '' \
-    -e 's/"carekit"/"deqah"/g' \
-    -e 's/@carekit\//@deqah\//g' \
-    -e 's/CareKit/Deqah/g' \
+    -e 's/"deqah"/"deqah"/g' \
+    -e 's/@deqah\//@deqah\//g' \
+    -e 's/Deqah/Deqah/g' \
     {} +
 ```
 
 - [ ] **Step 2: Verify the changes**
 
 ```bash
-grep -r "carekit\|CareKit\|@carekit" /Users/tariq/code/carekit \
+grep -r "deqah\|Deqah\|@deqah" /Users/tariq/code/deqah \
   --include="package.json" \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
@@ -96,7 +96,7 @@ Expected: zero results.
 - [ ] **Step 3: Reinstall dependencies to update lockfile**
 
 ```bash
-cd /Users/tariq/code/carekit && npm install
+cd /Users/tariq/code/deqah && npm install
 ```
 
 Expected: installs cleanly, `package-lock.json` updated with `@deqah/*` references.
@@ -105,7 +105,7 @@ Expected: installs cleanly, `package-lock.json` updated with `@deqah/*` referenc
 
 ```bash
 git add package.json package-lock.json apps/*/package.json packages/*/package.json
-git commit -m "chore: rename packages from carekit to deqah"
+git commit -m "chore: rename packages from deqah to deqah"
 ```
 
 ---
@@ -114,20 +114,20 @@ git commit -m "chore: rename packages from carekit to deqah"
 
 **Files:** `apps/dashboard/tsconfig.json`, `apps/admin/tsconfig.json`, `apps/website/tsconfig.json`
 
-- [ ] **Step 1: Replace @carekit path aliases**
+- [ ] **Step 1: Replace @deqah path aliases**
 
 ```bash
-find /Users/tariq/code/carekit -name "tsconfig*.json" \
+find /Users/tariq/code/deqah -name "tsconfig*.json" \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
-  -exec sed -i '' 's/@carekit\//@deqah\//g' {} +
+  -exec sed -i '' 's/@deqah\//@deqah\//g' {} +
 ```
 
 - [ ] **Step 2: Verify**
 
 ```bash
-grep -r "@carekit" /Users/tariq/code/carekit \
+grep -r "@deqah" /Users/tariq/code/deqah \
   --include="tsconfig*.json" \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
@@ -140,29 +140,29 @@ Expected: zero results.
 
 ```bash
 git add apps/dashboard/tsconfig.json apps/admin/tsconfig.json apps/website/tsconfig.json
-git commit -m "chore: update tsconfig paths from @carekit to @deqah"
+git commit -m "chore: update tsconfig paths from @deqah to @deqah"
 ```
 
 ---
 
-## Task 3: Replace all @carekit imports in TypeScript source files
+## Task 3: Replace all @deqah imports in TypeScript source files
 
 **Files:** All `.ts` and `.tsx` files in `apps/` and `packages/`
 
 - [ ] **Step 1: Run sed across all TypeScript files**
 
 ```bash
-find /Users/tariq/code/carekit -type f \( -name "*.ts" -o -name "*.tsx" \) \
+find /Users/tariq/code/deqah -type f \( -name "*.ts" -o -name "*.tsx" \) \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
-  -exec sed -i '' "s/@carekit\//@deqah\//g" {} +
+  -exec sed -i '' "s/@deqah\//@deqah\//g" {} +
 ```
 
-- [ ] **Step 2: Verify no @carekit imports remain**
+- [ ] **Step 2: Verify no @deqah imports remain**
 
 ```bash
-grep -r "from '@carekit/\|from \"@carekit/" /Users/tariq/code/carekit \
+grep -r "from '@deqah/\|from \"@deqah/" /Users/tariq/code/deqah \
   --include="*.ts" --include="*.tsx" \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
@@ -174,7 +174,7 @@ Expected: 0
 - [ ] **Step 3: Run typecheck on backend**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/backend && npx tsc --noEmit 2>&1 | head -30
+cd /Users/tariq/code/deqah/apps/backend && npx tsc --noEmit 2>&1 | head -30
 ```
 
 Expected: same errors as before this task (no new errors introduced).
@@ -182,7 +182,7 @@ Expected: same errors as before this task (no new errors introduced).
 - [ ] **Step 4: Run typecheck on dashboard**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/dashboard && npm run typecheck 2>&1 | tail -20
+cd /Users/tariq/code/deqah/apps/dashboard && npm run typecheck 2>&1 | tail -20
 ```
 
 Expected: no new errors.
@@ -190,34 +190,34 @@ Expected: no new errors.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git add -A
-git commit -m "chore: replace @carekit imports with @deqah across all source files"
+git commit -m "chore: replace @deqah imports with @deqah across all source files"
 ```
 
 ---
 
-## Task 4: Replace CareKit/carekit strings in all remaining TypeScript/TSX source
+## Task 4: Replace Deqah/deqah strings in all remaining TypeScript/TSX source
 
 **Files:** All `.ts` and `.tsx` files
 
-- [ ] **Step 1: Replace all remaining CareKit / carekit string occurrences**
+- [ ] **Step 1: Replace all remaining Deqah / deqah string occurrences**
 
 ```bash
-find /Users/tariq/code/carekit -type f \( -name "*.ts" -o -name "*.tsx" \) \
+find /Users/tariq/code/deqah -type f \( -name "*.ts" -o -name "*.tsx" \) \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
   -exec sed -i '' \
-    -e 's/CareKit/Deqah/g' \
-    -e 's/carekit/deqah/g' \
+    -e 's/Deqah/Deqah/g' \
+    -e 's/deqah/deqah/g' \
     {} +
 ```
 
-- [ ] **Step 2: Verify no CareKit/carekit remain in source**
+- [ ] **Step 2: Verify no Deqah/deqah remain in source**
 
 ```bash
-grep -r "CareKit\|carekit" /Users/tariq/code/carekit \
+grep -r "Deqah\|deqah" /Users/tariq/code/deqah \
   --include="*.ts" --include="*.tsx" \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
@@ -229,7 +229,7 @@ Expected: zero results.
 - [ ] **Step 3: Run backend tests**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/backend && npm run test 2>&1 | tail -20
+cd /Users/tariq/code/deqah/apps/backend && npm run test 2>&1 | tail -20
 ```
 
 Expected: all tests pass (same count as before).
@@ -237,9 +237,9 @@ Expected: all tests pass (same count as before).
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git add -A
-git commit -m "chore: replace CareKit strings with Deqah in all TypeScript source"
+git commit -m "chore: replace Deqah strings with Deqah in all TypeScript source"
 ```
 
 ---
@@ -251,10 +251,10 @@ git commit -m "chore: replace CareKit strings with Deqah in all TypeScript sourc
 - [ ] **Step 1: Verify current state (should already be updated by Task 4)**
 
 ```bash
-grep -n "Deqah\|deqah\|CareKit\|carekit" /Users/tariq/code/carekit/apps/backend/src/main.ts
+grep -n "Deqah\|deqah\|Deqah\|deqah" /Users/tariq/code/deqah/apps/backend/src/main.ts
 ```
 
-- [ ] **Step 2: If any CareKit remains, manually set the correct Swagger metadata**
+- [ ] **Step 2: If any Deqah remains, manually set the correct Swagger metadata**
 
 Edit `apps/backend/src/main.ts` — find the Swagger DocumentBuilder block and ensure it reads:
 
@@ -287,36 +287,36 @@ git commit -m "chore: update Swagger metadata to Deqah brand"
 
 ```bash
 sed -i '' \
-  -e 's/carekit/deqah/g' \
-  -e 's/CareKit/Deqah/g' \
-  /Users/tariq/code/carekit/.env.example
+  -e 's/deqah/deqah/g' \
+  -e 's/Deqah/Deqah/g' \
+  /Users/tariq/code/deqah/.env.example
 ```
 
 - [ ] **Step 2: Update backend .env.example**
 
 ```bash
 sed -i '' \
-  -e 's/carekit/deqah/g' \
-  -e 's/CareKit/Deqah/g' \
-  /Users/tariq/code/carekit/apps/backend/.env.example
+  -e 's/deqah/deqah/g' \
+  -e 's/Deqah/Deqah/g' \
+  /Users/tariq/code/deqah/apps/backend/.env.example
 ```
 
 - [ ] **Step 3: Update docker-compose.yml**
 
 ```bash
 sed -i '' \
-  -e 's/carekit/deqah/g' \
-  -e 's/CareKit/Deqah/g' \
-  /Users/tariq/code/carekit/docker/docker-compose.yml
+  -e 's/deqah/deqah/g' \
+  -e 's/Deqah/Deqah/g' \
+  /Users/tariq/code/deqah/docker/docker-compose.yml
 ```
 
 - [ ] **Step 4: Verify**
 
 ```bash
-grep -n "carekit\|CareKit" \
-  /Users/tariq/code/carekit/.env.example \
-  /Users/tariq/code/carekit/apps/backend/.env.example \
-  /Users/tariq/code/carekit/docker/docker-compose.yml
+grep -n "deqah\|Deqah" \
+  /Users/tariq/code/deqah/.env.example \
+  /Users/tariq/code/deqah/apps/backend/.env.example \
+  /Users/tariq/code/deqah/docker/docker-compose.yml
 ```
 
 Expected: zero results.
@@ -338,8 +338,8 @@ git commit -m "chore: update env and docker config to deqah database/service nam
 
 ```bash
 # Stop the app first, then:
-psql -U postgres -h localhost -p 5432 -c "ALTER DATABASE carekit_dev RENAME TO deqah_dev;" 2>/dev/null || \
-psql -U carekit -h localhost -p 5433 -c "ALTER DATABASE carekit_dev RENAME TO deqah_dev;" 2>/dev/null || \
+psql -U postgres -h localhost -p 5432 -c "ALTER DATABASE deqah_dev RENAME TO deqah_dev;" 2>/dev/null || \
+psql -U deqah -h localhost -p 5433 -c "ALTER DATABASE deqah_dev RENAME TO deqah_dev;" 2>/dev/null || \
 echo "DB rename may need manual step — check your local .env for the correct connection"
 ```
 
@@ -350,12 +350,12 @@ Open `apps/backend/.env` (not committed) and change:
 DATABASE_URL=postgresql://deqah:deqah_dev_password@localhost:5432/deqah_dev?schema=public
 ```
 
-Replace `carekit` with `deqah` in the entire URL.
+Replace `deqah` with `deqah` in the entire URL.
 
 - [ ] **Step 3: Verify backend connects**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/backend && npm run dev &
+cd /Users/tariq/code/deqah/apps/backend && npm run dev &
 sleep 5 && curl -s http://localhost:5100/health | head -5
 kill %1
 ```
@@ -365,7 +365,7 @@ Expected: health endpoint responds (no DB connection errors).
 - [ ] **Step 4: Commit note (no code change needed — .env is gitignored)**
 
 ```bash
-git commit --allow-empty -m "chore: note — local DB renamed from carekit_dev to deqah_dev"
+git commit --allow-empty -m "chore: note — local DB renamed from deqah_dev to deqah_dev"
 ```
 
 ---
@@ -377,31 +377,31 @@ git commit --allow-empty -m "chore: note — local DB renamed from carekit_dev t
 - [ ] **Step 1: Update all JSON files**
 
 ```bash
-find /Users/tariq/code/carekit -name "*.json" \
+find /Users/tariq/code/deqah -name "*.json" \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
   -not -name "package-lock.json" \
   -exec sed -i '' \
-    -e 's/CareKit/Deqah/g' \
-    -e 's/carekit/deqah/g' \
+    -e 's/Deqah/Deqah/g' \
+    -e 's/deqah/deqah/g' \
     {} +
 ```
 
 - [ ] **Step 2: Update all YAML files**
 
 ```bash
-find /Users/tariq/code/carekit -name "*.yml" -o -name "*.yaml" | \
+find /Users/tariq/code/deqah -name "*.yml" -o -name "*.yaml" | \
   grep -v node_modules | grep -v .git | grep -v ".claude/worktrees" | \
   xargs sed -i '' \
-    -e 's/CareKit/Deqah/g' \
-    -e 's/carekit/deqah/g'
+    -e 's/Deqah/Deqah/g' \
+    -e 's/deqah/deqah/g'
 ```
 
 - [ ] **Step 3: Verify**
 
 ```bash
-grep -r "CareKit\|carekit" /Users/tariq/code/carekit \
+grep -r "Deqah\|deqah" /Users/tariq/code/deqah \
   --include="*.json" --include="*.yml" --include="*.yaml" \
   --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.claude \
   --exclude="package-lock.json"
@@ -412,7 +412,7 @@ Expected: zero results.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git add -A
 git commit -m "chore: update JSON and YAML files to Deqah brand"
 ```
@@ -426,20 +426,20 @@ git commit -m "chore: update JSON and YAML files to Deqah brand"
 - [ ] **Step 1: Replace in all markdown files**
 
 ```bash
-find /Users/tariq/code/carekit -name "*.md" \
+find /Users/tariq/code/deqah -name "*.md" \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*" \
   -not -path "*/.claude/worktrees/*" \
   -exec sed -i '' \
-    -e 's/CareKit/Deqah/g' \
-    -e 's/carekit/deqah/g' \
+    -e 's/Deqah/Deqah/g' \
+    -e 's/deqah/deqah/g' \
     {} +
 ```
 
 - [ ] **Step 2: Verify**
 
 ```bash
-grep -r "CareKit\|carekit" /Users/tariq/code/carekit \
+grep -r "Deqah\|deqah" /Users/tariq/code/deqah \
   --include="*.md" \
   --exclude-dir=node_modules \
   --exclude-dir=.git \
@@ -451,9 +451,9 @@ Expected: 0 (or a small number that are intentional historical references in old
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git add -A
-git commit -m "docs: rebrand all documentation from CareKit to Deqah"
+git commit -m "docs: rebrand all documentation from Deqah to Deqah"
 ```
 
 ---
@@ -463,7 +463,7 @@ git commit -m "docs: rebrand all documentation from CareKit to Deqah"
 - [ ] **Step 1: Full grep sweep across all file types**
 
 ```bash
-grep -r "CareKit\|@carekit\|carekit" /Users/tariq/code/carekit \
+grep -r "Deqah\|@deqah\|deqah" /Users/tariq/code/deqah \
   --include="*.ts" --include="*.tsx" \
   --include="*.json" --include="*.md" \
   --include="*.yml" --include="*.yaml" \
@@ -480,7 +480,7 @@ Expected: zero files. If any remain, fix manually and commit.
 - [ ] **Step 2: Run full backend test suite**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/backend && npm run test 2>&1 | tail -5
+cd /Users/tariq/code/deqah/apps/backend && npm run test 2>&1 | tail -5
 ```
 
 Expected: all tests pass.
@@ -488,7 +488,7 @@ Expected: all tests pass.
 - [ ] **Step 3: Run backend typecheck**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/backend && npx tsc --noEmit 2>&1 | tail -10
+cd /Users/tariq/code/deqah/apps/backend && npx tsc --noEmit 2>&1 | tail -10
 ```
 
 Expected: no new errors.
@@ -496,7 +496,7 @@ Expected: no new errors.
 - [ ] **Step 4: Run dashboard typecheck**
 
 ```bash
-cd /Users/tariq/code/carekit/apps/dashboard && npm run typecheck 2>&1 | tail -10
+cd /Users/tariq/code/deqah/apps/dashboard && npm run typecheck 2>&1 | tail -10
 ```
 
 Expected: no new errors.
@@ -504,9 +504,9 @@ Expected: no new errors.
 - [ ] **Step 5: Final commit**
 
 ```bash
-cd /Users/tariq/code/carekit
+cd /Users/tariq/code/deqah
 git add -A
-git commit -m "chore: complete rebrand from CareKit to Deqah"
+git commit -m "chore: complete rebrand from Deqah to Deqah"
 ```
 
 ---
@@ -515,7 +515,7 @@ git commit -m "chore: complete rebrand from CareKit to Deqah"
 
 Each developer on the team must do the following after pulling this branch:
 
-1. Rename local DB: `psql -c "ALTER DATABASE carekit_dev RENAME TO deqah_dev;"`
-2. Update local `.env`: change `carekit` → `deqah` in `DATABASE_URL`
+1. Rename local DB: `psql -c "ALTER DATABASE deqah_dev RENAME TO deqah_dev;"`
+2. Update local `.env`: change `deqah` → `deqah` in `DATABASE_URL`
 3. Run `npm install` to refresh node_modules symlinks
 4. Restart Docker: `npm run docker:down && npm run docker:up`

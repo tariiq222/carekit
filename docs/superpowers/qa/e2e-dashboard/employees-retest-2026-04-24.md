@@ -8,7 +8,7 @@ Verification of fixes applied after the initial Phase 2 Employees report.
 |---|-----|--------|----------|
 | 3 | Create employee silent failure | ✅ **FIXED** | `POST /api/v1/dashboard/people/employees/onboarding → 201`. New employee "مختبر الجودة" appeared at the top of the list. Total 10→11, active 8→9. |
 | 4 | Experience spinbutton `valuemax="0"` | ✅ **FIXED** | a11y snapshot on `/employees/create`: `spinbutton "e.g. 5" valuemax="70" valuemin="0"`. |
-| 5 | Email field missing on edit form | ✅ **FIXED** | Edit page now renders email as `textbox readonly value="qa.tester2@carekit-test.com"`. |
+| 5 | Email field missing on edit form | ✅ **FIXED** | Edit page now renders email as `textbox readonly value="qa.tester2@deqah-test.com"`. |
 | 6 | Stats "غير متاح" vs row "موقوف" label drift | ✅ **FIXED** | Stats card 3 now reads **"موقوف"** (count 2), matching the badge text in each inactive row. |
 | 7 | avg rating 4.5 but rating column "—" for all rows | 🛑 **STILL BROKEN** (two regressions) | See below |
 

@@ -112,7 +112,7 @@ apps/dashboard/services/employees.ts                # new searchUserByIdentifier
 ### Website — modified files
 
 ```
-apps/website/app/[locale]/verify-email/page.tsx     # new route — calls backend, deep-links carekit://settings?verified=1
+apps/website/app/[locale]/verify-email/page.tsx     # new route — calls backend, deep-links deqah://settings?verified=1
 ```
 
 ---
@@ -1011,10 +1011,10 @@ export class RequestEmailVerificationHandler {
       },
     });
 
-    const verifyUrl = `https://carekit.sa/verify-email?token=${raw}`;
+    const verifyUrl = `https://deqah.sa/verify-email?token=${raw}`;
     await this.sendEmail.execute({
       to: user.email,
-      subject: 'تأكيد بريدك الإلكتروني — CareKit',
+      subject: 'تأكيد بريدك الإلكتروني — Deqah',
       html: `<p>أهلاً ${user.firstName ?? ''},</p>
              <p>اضغط الرابط لتأكيد بريدك (صالح 30 دقيقة):</p>
              <p><a href="${verifyUrl}">تأكيد البريد</a></p>`,
@@ -2183,7 +2183,7 @@ export default function VerifyEmailPage() {
         if (!ok) { setStatus('error'); setError(j?.message ?? 'Verification failed'); return; }
         setStatus('ok');
         // Try deep link to mobile app
-        setTimeout(() => { window.location.href = 'carekit://settings?verified=1'; }, 500);
+        setTimeout(() => { window.location.href = 'deqah://settings?verified=1'; }, 500);
       })
       .catch(e => { setStatus('error'); setError(e?.message ?? 'Network error'); });
   }, [token]);
@@ -2230,7 +2230,7 @@ git commit -m "feat(website): add /verify-email page that calls backend + deep-l
     { "summary": "OTP rate limit: 6th SMS request in an hour rejected", "text": "Trigger 5 OTPs within an hour. 6th request returns 429.", "result": "PASS" },
     { "summary": "OTP attempts cap: 4th wrong code invalidates session", "text": "Enter 3 wrong codes. 4th attempt returns 'invalid' even with the correct code; user must request a new OTP.", "result": "PASS" },
     { "summary": "Tenant lock: Sawaa app cannot consume an OTP issued for another org", "text": "Already covered by E2E suite — confirm spec on QA env.", "result": "PASS" },
-    { "summary": "Dashboard email+password login still works", "text": "Open dashboard /login, sign in as admin@carekit-test.com / Admin@1234. Confirm: dashboard loads as before.", "result": "PASS" }
+    { "summary": "Dashboard email+password login still works", "text": "Open dashboard /login, sign in as admin@deqah-test.com / Admin@1234. Confirm: dashboard loads as before.", "result": "PASS" }
   ]
 }
 ```

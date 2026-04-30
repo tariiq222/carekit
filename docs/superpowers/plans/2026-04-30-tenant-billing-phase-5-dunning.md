@@ -6,7 +6,7 @@
 
 **Architecture:** Dunning starts when `RecordSubscriptionPaymentFailureHandler` records a failed subscription invoice: the subscription becomes `PAST_DUE`, `dunningRetryCount` is initialized, `nextRetryAt` is scheduled, and a `DunningLog` row records the failure. Cron and manual retry share the same retry budget and always re-resolve the current default saved card before charging so card changes during dunning are honored. Moyasar retry payments treat only `paid` as success; `initiated`/3DS statuses are rejected and logged as failed because cron/manual retry has no interactive 3DS flow.
 
-**Tech Stack:** NestJS 11, Prisma 7 migrations/RLS, Moyasar token charges, Resend templates, Jest, Next.js 15, React Query, Vitest, CareKit UI, dashboard i18n.
+**Tech Stack:** NestJS 11, Prisma 7 migrations/RLS, Moyasar token charges, Resend templates, Jest, Next.js 15, React Query, Vitest, Deqah UI, dashboard i18n.
 
 ---
 
@@ -199,7 +199,7 @@ Do not touch the unrelated branding sanitizer files currently dirty in the main 
 - Modify: `apps/backend/openapi.json`
 
 - [ ] Refresh OpenAPI from this worktree:
-  - `DOTENV_CONFIG_PATH=/Users/tariq/code/carekit/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
+  - `DOTENV_CONFIG_PATH=/Users/tariq/code/deqah/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
 - [ ] Run backend targeted dunning tests:
   - `cd apps/backend && npx jest --silent src/modules/platform/billing/record-subscription-payment-failure/record-subscription-payment-failure.handler.spec.ts src/modules/platform/billing/dunning-retry/dunning-retry.service.spec.ts src/modules/platform/billing/dunning-retry/dunning-retry.cron.spec.ts src/modules/platform/billing/retry-failed-payment/retry-failed-payment.handler.spec.ts src/api/dashboard/billing.controller.spec.ts --runInBand`
 - [ ] Run full backend Jest with OpenAPI pointing at this worktree backend or with the snapshot test skipped intentionally if no backend is running.

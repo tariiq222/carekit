@@ -272,7 +272,7 @@ git commit -m "feat(dashboard): add group-sessions as tab in services page"
 - [ ] **Step 1: Start dev server**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit && npm run dev:dashboard
+cd /Users/tariq/Documents/my_programs/Deqah && npm run dev:dashboard
 ```
 
 - [ ] **Step 2: Check services page tabs**

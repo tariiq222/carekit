@@ -1,8 +1,8 @@
-# CareKit Mobile UX Audit — P0 & P1 Execution Plan
+# Deqah Mobile UX Audit — P0 & P1 Execution Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix all P0 blockers (design system duplication, OTP autofill, chat nav trap, employee status labels) and P1 improvements (dark mode, progress lies, 7-day limit, placeholder names, timezones), restoring CareKit mobile to a cohesive, accessible, performant iOS-quality app.
+**Goal:** Fix all P0 blockers (design system duplication, OTP autofill, chat nav trap, employee status labels) and P1 improvements (dark mode, progress lies, 7-day limit, placeholder names, timezones), restoring Deqah mobile to a cohesive, accessible, performant iOS-quality app.
 
 **Architecture:**
 - **Phase 1 (P0s, 2–3 days):** Parallel fixes to OTP autofill, chat nav, and employee status labels (independent); these unblock QA.
@@ -330,7 +330,7 @@ Expected: FAIL (helper doesn't exist)
 Create `apps/mobile/lib/status-helpers.ts`:
 
 ```typescript
-import type { BookingStatus } from '@carekit/shared';
+import type { BookingStatus } from '@deqah/shared';
 
 const STATUS_LABEL_MAP: Record<BookingStatus, string> = {
   pending: 'appointments.pending',
@@ -449,7 +449,7 @@ export const sawaaColors = {
     dark: '#5B21B6',
   },
   accent: {
-    light: '#82CC17',     // CareKit lime green (from CLAUDE.md)
+    light: '#82CC17',     // Deqah lime green (from CLAUDE.md)
     dark: '#65A30D',
   },
   // Map Themed colors
@@ -775,7 +775,7 @@ In `apps/mobile/.eslintrc.json`, add custom rule:
 
 - [ ] **Step 4: Verify lint passes**
 
-Run: `npm run lint --filter=@carekit/mobile`
+Run: `npm run lint --filter=@deqah/mobile`
 
 Expected: 0 hex color violations
 

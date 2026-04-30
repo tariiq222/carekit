@@ -4,7 +4,7 @@
 **Tester:** Claude (Chrome DevTools MCP)
 **Dashboard URL:** http://localhost:5103
 **Backend URL:** http://localhost:5100/api/v1
-**Login:** admin@carekit-test.com / Admin@1234
+**Login:** admin@deqah-test.com / Admin@1234
 
 ## Results Summary
 
@@ -24,7 +24,7 @@
 ### Severity: **HIGH** (blocker for any dev/QA session)
 
 ### Reproduction
-1. Fresh login to dashboard as `admin@carekit-test.com`.
+1. Fresh login to dashboard as `admin@deqah-test.com`.
 2. Navigate to any authenticated dashboard page (e.g., `/clients`).
 3. UI renders but empty — all stats = 0 and the screen shows raw error string `ORG_SUSPENDED`.
 
@@ -100,7 +100,7 @@ The dashboard displays the raw `ORG_SUSPENDED` string in the UI (visible on the 
 
 ### Temporary workaround used during testing
 ```bash
-docker exec <postgres-container> psql -U carekit -d carekit_dev -c \
+docker exec <postgres-container> psql -U deqah -d deqah_dev -c \
   "UPDATE \"Organization\" SET \"suspendedAt\" = NULL WHERE id = '00000000-0000-0000-0000-000000000001';"
 docker exec <redis-container> redis-cli DEL "org-suspension:00000000-0000-0000-0000-000000000001"
 ```

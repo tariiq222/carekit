@@ -1,4 +1,4 @@
-# CareKit Multi-Tenancy — Engineering Guide
+# Deqah Multi-Tenancy — Engineering Guide
 
 This backend is multi-tenant SaaS. As of SaaS-02h (2026-04-22), `TENANT_ENFORCEMENT=strict` is the platform default and every cluster is scoped (52 tenant-scoped models). Use this document to understand the contract and how to contribute new tenant-aware code correctly.
 

@@ -1995,7 +1995,7 @@ git commit -m "test(saas-01): tenant isolation harness + foundation e2e"
 Create `apps/backend/docs/saas-tenancy.md`:
 
 ````markdown
-# CareKit Multi-Tenancy — Engineering Guide
+# Deqah Multi-Tenancy — Engineering Guide
 
 This backend is transitioning from single-tenant to multi-tenant SaaS. The transition is **in progress** — not every cluster is scoped yet. Use this document to understand what's enforced today, what isn't, and how to contribute new tenant-aware code correctly.
 

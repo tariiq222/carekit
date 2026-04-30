@@ -1,4 +1,4 @@
-# CareKit Backend
+# Deqah Backend
 
 NestJS 11 modular monolith — **Domain Clusters + Vertical Slices** (see [CLAUDE.md](./CLAUDE.md)).
 

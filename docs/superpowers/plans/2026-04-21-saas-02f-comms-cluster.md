@@ -110,7 +110,7 @@ const SCOPED_MODELS = new Set<string>([
 - `test/e2e/comms/chatbot-config-isolation.e2e-spec.ts`
 
 **Memory (create):**
-- `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02f_status.md`
+- `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02f_status.md`
 
 **Transformation index (modify):**
 - `docs/superpowers/plans/2026-04-21-saas-transformation-index.md` — mark 02f done, append progress log entry.
@@ -517,8 +517,8 @@ CREATE POLICY "tenant_isolation" ON "ChatbotConfig" USING ("organizationId" = cu
 
 ```bash
 cd apps/backend && npx prisma migrate deploy
-TEST_DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
-  DATABASE_URL="postgresql://carekit:carekit@localhost:5999/carekit_test" \
+TEST_DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
+  DATABASE_URL="postgresql://deqah:deqah@localhost:5999/deqah_test" \
   npx prisma migrate deploy
 ```
 
@@ -1007,7 +1007,7 @@ Expected: all green. Record new isolation count.
 
 - [ ] **Step 10.4: Create the status memory file**
 
-Create `/Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02f_status.md`:
+Create `/Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02f_status.md`:
 
 ```markdown
 ---
@@ -1050,8 +1050,8 @@ In `docs/superpowers/plans/2026-04-21-saas-transformation-index.md`:
 - [ ] **Step 10.7: Final commit**
 
 ```bash
-git add /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/saas02f_status.md \
-        /Users/tariq/.claude/projects/-Users-tariq-code-carekit/memory/MEMORY.md \
+git add /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/saas02f_status.md \
+        /Users/tariq/.claude/projects/-Users-tariq-code-deqah/memory/MEMORY.md \
         docs/superpowers/plans/2026-04-21-saas-transformation-index.md
 git commit -m "docs(saas): mark 02f done in index + memory (comms cluster)"
 ```

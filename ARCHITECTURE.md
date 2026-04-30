@@ -1,9 +1,9 @@
-# CareKit Architecture
+# Deqah Architecture
 
 **Version**: 2.0 (multi-tenant SaaS)
 **Last reauthored**: 2026-04-25 — replaces v1.0 (2026-03-26, pre-SaaS)
 
-CareKit is a multi-tenant SaaS clinic platform. One deployment serves many organizations (tenants), each with isolated data, branding, vertical configuration, and billing. A super-admin control plane (`apps/admin`) operates the platform; per-tenant clinic admins use `apps/dashboard`; clients and employees use `apps/mobile`; the public marketing site is `apps/website`.
+Deqah is a multi-tenant SaaS clinic platform. One deployment serves many organizations (tenants), each with isolated data, branding, vertical configuration, and billing. A super-admin control plane (`apps/admin`) operates the platform; per-tenant clinic admins use `apps/dashboard`; clients and employees use `apps/mobile`; the public marketing site is `apps/website`.
 
 ---
 
@@ -42,7 +42,7 @@ All four web apps and the mobile app talk to a single backend. The backend resol
 ## Repository Structure
 
 ```
-carekit/
+deqah/
 ├── apps/
 │   ├── backend/         # NestJS 11 — all business logic
 │   ├── dashboard/       # Next.js 15 — per-tenant clinic admin
@@ -50,9 +50,9 @@ carekit/
 │   ├── website/         # Next.js 15 — public marketing/info site
 │   └── mobile/          # Expo SDK 55 — client + employee + auth
 ├── packages/
-│   ├── api-client/      # @carekit/api-client — typed fetch
-│   ├── shared/          # @carekit/shared — types/enums/i18n/seeds
-│   └── ui/              # @carekit/ui — 33 primitives + 2 hooks
+│   ├── api-client/      # @deqah/api-client — typed fetch
+│   ├── shared/          # @deqah/shared — types/enums/i18n/seeds
+│   └── ui/              # @deqah/ui — 33 primitives + 2 hooks
 ├── docker/              # docker-compose.yml + Nginx
 ├── data/kiwi/           # Manual-QA plan JSONs synced to Kiwi TCMS
 ├── scripts/             # build/test helpers + Kiwi sync
@@ -145,7 +145,7 @@ Source of truth for owned models: `docs/architecture/module-ownership.md`.
 
 - **`organizationId`** column on every tenant-scoped model (12 schemas, 147 occurrences). Singletons (`BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `ZatcaConfig`, `OrganizationSmsConfig`) use `organizationId` as a unique key.
 - **`TENANT_ENFORCEMENT='strict'`** is the default and the only mode allowed in production (validated at boot in `common/tenant/tenant.module.ts`).
-- **Postgres RLS**: 9 SaaS-phase migrations install row-level policies per cluster. Bypass via the dedicated `carekit_rls_probe` role only in admin/cron contexts.
+- **Postgres RLS**: 9 SaaS-phase migrations install row-level policies per cluster. Bypass via the dedicated `deqah_rls_probe` role only in admin/cron contexts.
 - **Tenant context** is propagated via `AsyncLocalStorage` (`common/tenant/tenant-context.service.ts`) and applied to Prisma via `TenantScopingExtension`.
 - **API surfaces** (`src/api/`):
   - `admin/*` — super-admin only, requires `SUPER_ADMIN` role; can act on any org
@@ -181,7 +181,7 @@ JWT access + refresh (separate `RefreshToken` and `ClientRefreshToken` per ident
 - Next.js 15 App Router, React 19, Tailwind 4, next-intl (AR/EN)
 - 22 features under `app/(dashboard)/`: bookings, clients, employees, services, branches, categories, departments, intake-forms, branding, chatbot, content, contact-messages, coupons, invoices, payments, ratings, notifications, reports, activity-log, users, zatca, settings
 - TanStack Query hooks in `hooks/queries/<feature>/`
-- UI: `@carekit/ui` primitives (do not modify in place); compose them in `components/features/`
+- UI: `@deqah/ui` primitives (do not modify in place); compose them in `components/features/`
 - Terminology: `useTerminology()` reads vertical-driven labels (Plan 03)
 - Billing UI: `useCurrentSubscription()`, `useFeatureEnabled()`, `<FeatureGate />` (Plan 04)
 

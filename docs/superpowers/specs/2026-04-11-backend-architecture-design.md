@@ -1,4 +1,4 @@
-# CareKit Backend — Architecture Design Spec
+# Deqah Backend — Architecture Design Spec
 
 **Date:** 2026-04-11  
 **Status:** Approved  
@@ -23,7 +23,7 @@ The current backend has 36+ modules with three confirmed circular dependencies:
 
 ## 2. Deployment Model — White-label Licensed Software
 
-CareKit is **not SaaS**. Each client gets a complete, independent instance (database, backend, frontend) installed on their own infrastructure or a dedicated server.
+Deqah is **not SaaS**. Each client gets a complete, independent instance (database, backend, frontend) installed on their own infrastructure or a dedicated server.
 
 ### License Server (separate project)
 

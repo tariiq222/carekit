@@ -4,7 +4,7 @@
 >
 > **Owner-review required:** rate-limiting bucket sizes, data-export format, Sentry DSN rotation, and the go/no-go launch gate all require explicit owner approval before merge/launch.
 
-**Goal:** Take CareKit from "feature-complete" to "production-launchable." This plan:
+**Goal:** Take Deqah from "feature-complete" to "production-launchable." This plan:
 
 1. Extends the cross-tenant penetration test suite from Plan 02h with race conditions, fuzzing, and full authorization-matrix coverage.
 2. Adds per-tenant API rate limiting (`@nestjs/throttler` + Redis), driven by the tenant's current `Plan.limits.apiRateLimit`.
@@ -59,8 +59,8 @@
 | `docs/performance-baseline-v1.md` | Baseline from first load-test run |
 | `docs/runbook.md` | Operational runbook |
 | `docs/launch-checklist.md` | Go/no-go gates |
-| `docker/grafana/dashboards/carekit-tenant-overview.json` | Per-tenant dashboard |
-| `docker/grafana/dashboards/carekit-platform-health.json` | Platform-wide dashboard |
+| `docker/grafana/dashboards/deqah-tenant-overview.json` | Per-tenant dashboard |
+| `docker/grafana/dashboards/deqah-platform-health.json` | Platform-wide dashboard |
 
 ### Modified files
 
@@ -274,8 +274,8 @@ it('does not exceed cardinality budget after synthetic traffic', async () => {
 
 Add `prometheus` + `grafana` to `docker/docker-compose.yml`. Create dashboards as JSON in `docker/grafana/dashboards/`:
 
-- `carekit-tenant-overview.json` — throughput, error rate, P95 latency, subscription status (per-tenant via variable).
-- `carekit-platform-health.json` — platform-wide: total orgs, active subscriptions, errors/sec, P95, DB connection pool.
+- `deqah-tenant-overview.json` — throughput, error rate, P95 latency, subscription status (per-tenant via variable).
+- `deqah-platform-health.json` — platform-wide: total orgs, active subscriptions, errors/sec, P95, DB connection pool.
 
 - [ ] **Step 3.6: Commit**
 
@@ -433,7 +433,7 @@ const ORG_TOKENS = new SharedArray('orgs', () => JSON.parse(open('./tokens.json'
 
 export default function () {
   const t = ORG_TOKENS[Math.floor(Math.random() * ORG_TOKENS.length)];
-  const res = http.post('https://staging.carekit.app/api/v1/dashboard/bookings', JSON.stringify({
+  const res = http.post('https://staging.deqah.app/api/v1/dashboard/bookings', JSON.stringify({
     branchId: t.branchId, clientId: t.clientId, employeeId: t.employeeId, serviceId: t.serviceId,
     scheduledAt: new Date(Date.now() + Math.random() * 30 * 86400 * 1000).toISOString(),
   }), { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t.token}` } });
@@ -584,7 +584,7 @@ git commit -m "feat(saas-10): per-tenant data export (GDPR-ready ZIP via BullMQ)
 - [ ] **Step 8.1: Create `docs/runbook.md`**
 
 ```markdown
-# CareKit Operational Runbook
+# Deqah Operational Runbook
 
 ## Suspend tenant
 1. Super-admin dashboard (Plan 05b) → tenant row → "Suspend".
@@ -594,7 +594,7 @@ git commit -m "feat(saas-10): per-tenant data export (GDPR-ready ZIP via BullMQ)
 ## Restore tenant
 1. Super-admin dashboard → "Reactivate".
 2. `UPDATE "Organization" SET status = 'ACTIVE' WHERE id = $1`.
-3. Clear Next.js cache: `curl -X POST https://api.carekit.app/internal/cache/invalidate -d '{"tag":"site-settings"}'`.
+3. Clear Next.js cache: `curl -X POST https://api.deqah.app/internal/cache/invalidate -d '{"tag":"site-settings"}'`.
 
 ## Recover from failed migration
 1. Do NOT modify the failed migration file (immutability rule).
@@ -640,7 +640,7 @@ git commit -m "docs(saas-10): operational runbook"
 - [ ] **Step 9.1: Create `docs/launch-checklist.md`**
 
 ```markdown
-# CareKit Launch Checklist (go/no-go)
+# Deqah Launch Checklist (go/no-go)
 
 Every box must be ticked before production launch.
 
@@ -658,7 +658,7 @@ Every box must be ticked before production launch.
 
 ## Infrastructure
 - [ ] Caddy cutover complete, 7-day parallel-run observed
-- [ ] Wildcard `*.carekit.app` cert issued and auto-renewing
+- [ ] Wildcard `*.deqah.app` cert issued and auto-renewing
 - [ ] Nginx decommissioned OR scheduled (if within window)
 - [ ] Backups verified: `pg_dump` restored to a staging DB and queried
 

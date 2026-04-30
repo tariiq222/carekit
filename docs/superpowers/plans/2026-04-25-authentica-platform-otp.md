@@ -6,7 +6,7 @@
 
 **Goal:** Wire **Authentica** (`api.authentica.sa`) as the single, platform-wide OTP delivery provider for SMS, WhatsApp, and (optionally) Email across every tenant and every user — distinct from the per-tenant SMS notification providers (Unifonic / Taqnyat) that already live under `OrganizationSmsConfig`.
 
-**Architecture:** OTP delivery is a **platform concern** — CareKit owns one Authentica account, charges nothing to tenants for it, and tenants never see the credentials. Implementation slots into the existing `NotificationChannelRegistry` pattern: today it has only `EmailChannelAdapter` (SMTP); we add `SmsChannelAdapter` + `WhatsappChannelAdapter`, both delegating to a shared `AuthenticaClient`. The per-tenant SMS provider stack stays untouched — it is for booking/marketing notifications, not OTP.
+**Architecture:** OTP delivery is a **platform concern** — Deqah owns one Authentica account, charges nothing to tenants for it, and tenants never see the credentials. Implementation slots into the existing `NotificationChannelRegistry` pattern: today it has only `EmailChannelAdapter` (SMTP); we add `SmsChannelAdapter` + `WhatsappChannelAdapter`, both delegating to a shared `AuthenticaClient`. The per-tenant SMS provider stack stays untouched — it is for booking/marketing notifications, not OTP.
 
 **Tech Stack:** NestJS 11, axios/fetch, Prisma 7 (enum addition), Authentica REST API v2, Jest.
 
@@ -16,9 +16,9 @@
 
 | | Per-tenant SMS (Unifonic/Taqnyat) | Platform OTP (Authentica) |
 |---|---|---|
-| Scope | One config per `Organization` | One config for the whole CareKit platform |
+| Scope | One config per `Organization` | One config for the whole Deqah platform |
 | Credentials | `OrganizationSmsConfig` (AES-GCM, orgId AAD) | `AUTHENTICA_API_KEY` env var |
-| Who pays | Tenant pays Authentica/Unifonic directly | CareKit pays Authentica, absorbs the cost |
+| Who pays | Tenant pays Authentica/Unifonic directly | Deqah pays Authentica, absorbs the cost |
 | Used for | Booking confirmations, reminders, marketing | Sign-up, login, password reset, sensitive-action confirmation |
 | Tenant context | Required (AAD on decrypt) | Not required — same key for every caller |
 | Failure mode | Tenant config missing → SMS fails for that tenant only | Authentica balance exhausted → OTP fails platform-wide |
@@ -728,7 +728,7 @@ curl -s -H "X-Authorization: $AUTHENTICA_API_KEY" \
 ```
 Expected: `{"success":true,"data":{"balance":<int>},"message":"…"}`. Aborts the smoke test if balance < 5 — don't burn the demo allowance.
 
-- [ ] **Step 2: Trigger a real SMS OTP via the existing CareKit endpoint**
+- [ ] **Step 2: Trigger a real SMS OTP via the existing Deqah endpoint**
 
 ```bash
 curl -s -X POST http://localhost:5100/api/v1/public/otp/request \

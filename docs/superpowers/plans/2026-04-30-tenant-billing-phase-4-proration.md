@@ -6,7 +6,7 @@
 
 **Architecture:** Keep proration math in a pure helper so edge cases are unit tested without Nest setup. Upgrades are immediate only after a successful default-card Moyasar token charge; downgrades are scheduled on the subscription and processed by a daily cron at `currentPeriodEnd`. Dashboard plan switching calls the preview endpoint first, then either upgrades or schedules the downgrade.
 
-**Tech Stack:** NestJS 11, Prisma 7 migrations, Moyasar token charges via `MoyasarSubscriptionClient`, Jest, Next.js 15, React Query, Vitest, CareKit UI, custom dashboard i18n.
+**Tech Stack:** NestJS 11, Prisma 7 migrations, Moyasar token charges via `MoyasarSubscriptionClient`, Jest, Next.js 15, React Query, Vitest, Deqah UI, custom dashboard i18n.
 
 ---
 
@@ -184,7 +184,7 @@ Do not touch Phase 6 limit-warning files except shared translations if unavoidab
 - Possibly regenerate: `apps/dashboard/lib/types/api.generated.ts` if the repo expects it tracked.
 
 - [ ] Build backend then refresh local snapshot from this worktree, not another server:
-  - `DOTENV_CONFIG_PATH=/Users/tariq/code/carekit/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
+  - `DOTENV_CONFIG_PATH=/Users/tariq/code/deqah/apps/backend/.env npm run openapi:build-and-snapshot --workspace=backend`
 - [ ] Run backend targeted billing tests.
 - [ ] Run `cd apps/backend && npx jest --silent --runInBand`.
 - [ ] Run dashboard targeted tests.

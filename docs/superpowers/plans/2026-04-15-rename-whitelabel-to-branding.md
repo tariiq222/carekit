@@ -6,7 +6,7 @@
 
 **Architecture:** Single atomic rename delivered as many small commits on branch `feature/rename-branding`, then squash-merged to `main` as one commit. No backend module, schema, or endpoint changes (already correct). Defensive Prisma migration handles any production `Permission` rows with `subject='whitelabel'`.
 
-**Tech Stack:** TypeScript strict, Next.js 15 dashboard, Expo mobile, `@carekit/shared`, `@carekit/api-client`, NestJS backend, Prisma, TanStack Query v5, next-intl, Vitest, Playwright.
+**Tech Stack:** TypeScript strict, Next.js 15 dashboard, Expo mobile, `@deqah/shared`, `@deqah/api-client`, NestJS backend, Prisma, TanStack Query v5, next-intl, Vitest, Playwright.
 
 **Spec:** [`docs/superpowers/specs/2026-04-15-rename-whitelabel-to-branding-design.md`](../specs/2026-04-15-rename-whitelabel-to-branding-design.md)
 
@@ -74,7 +74,7 @@
 - [ ] **Step 1: Create the feature branch**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git checkout -b feature/rename-branding
 ```
 
@@ -146,7 +146,7 @@ export interface DerivedTokens {
 }
 
 export const DEFAULT_BRANDING: BrandingConfig = {
-  systemName:        'CareKit',
+  systemName:        'Deqah',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',
   logoUrl:           null,
@@ -223,16 +223,16 @@ Copy any types defined here (beyond a re-export of `OrganizationTheme`) to be in
 
 Write the file, preserving all exports found in the old file but renamed. If the old file was just:
 ```ts
-export type { OrganizationTheme as WhitelabelConfig } from '@carekit/shared/types'
+export type { OrganizationTheme as WhitelabelConfig } from '@deqah/shared/types'
 ```
 then the new file is:
 ```ts
-export type { BrandingConfig } from '@carekit/shared/types'
+export type { BrandingConfig } from '@deqah/shared/types'
 ```
 
 If the old file contained additional interfaces (e.g., `UpdateWhitelabelPayload`), port them as `UpdateBrandingPayload`:
 ```ts
-export type { BrandingConfig } from '@carekit/shared/types'
+export type { BrandingConfig } from '@deqah/shared/types'
 
 export type UpdateBrandingPayload = Partial<Omit<BrandingConfig, 'id' | 'createdAt' | 'updatedAt'>>
 ```
@@ -241,7 +241,7 @@ export type UpdateBrandingPayload = Partial<Omit<BrandingConfig, 'id' | 'created
 
 ```ts
 import { apiRequest } from '../client.js'
-import type { BrandingConfig } from '@carekit/shared/types'
+import type { BrandingConfig } from '@deqah/shared/types'
 
 /**
  * Fetches public branding for a tenant from the unified branding endpoint.
@@ -303,7 +303,7 @@ Expected: clean build, no errors.
 - [ ] **Step 9: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add packages/api-client/
 git commit -m "refactor(api-client): merge theme+whitelabel into branding, fix endpoint to /public/branding/:tenantId"
 ```
@@ -364,7 +364,7 @@ Expected: `subject='branding'`. Clean up the test row.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/backend/prisma/migrations/
 git commit -m "feat(backend): defensive migration to rename Permission subject whitelabel→branding"
 ```
@@ -383,7 +383,7 @@ git commit -m "feat(backend): defensive migration to rename Permission subject w
 
 ```ts
 /**
- * Branding Types — CareKit Dashboard
+ * Branding Types — Deqah Dashboard
  */
 
 export interface BrandingConfig {
@@ -421,7 +421,7 @@ export type UpdateBrandingPayload = Partial<Omit<BrandingConfig, "id" | "created
 
 ```ts
 /**
- * Branding API — CareKit Dashboard
+ * Branding API — Deqah Dashboard
  */
 
 import { api } from "@/lib/api"
@@ -918,7 +918,7 @@ Expected: all tests pass. If a test references an old translation key, update it
 - [ ] **Step 5: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/dashboard/test/unit/
 git commit -m "test(dashboard): rename whitelabel → branding unit specs"
 ```
@@ -970,7 +970,7 @@ Expected: pass. If the dashboard dev server isn't running, skip this and rely on
 - [ ] **Step 5: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/dashboard/test/e2e/
 git commit -m "test(dashboard): rename whitelabel → branding e2e specs"
 ```
@@ -1034,8 +1034,8 @@ grep -n "whitelabel\|OrganizationTheme\|DEFAULT_THEME\|getTheme\|themeApi" apps/
 - [ ] **Step 2: Apply substitutions**
 
 Open `apps/mobile/theme/ThemeProvider.tsx` and apply:
-- Import from `@carekit/shared/types`: `OrganizationTheme` → `BrandingConfig`, `DEFAULT_THEME` → `DEFAULT_BRANDING`
-- Import from `@carekit/api-client`: remove `themeApi` or `whitelabelApi`; replace with `brandingApi`
+- Import from `@deqah/shared/types`: `OrganizationTheme` → `BrandingConfig`, `DEFAULT_THEME` → `DEFAULT_BRANDING`
+- Import from `@deqah/api-client`: remove `themeApi` or `whitelabelApi`; replace with `brandingApi`
 - Call site: `themeApi.getTheme()` → `brandingApi.getBrandingPublic(tenantId)`
 - The mobile ThemeProvider must now obtain the `tenantId` (from env or bootstrap config) to pass through.
 
@@ -1054,12 +1054,12 @@ Expected: zero matches.
 cd apps/mobile && npx tsc --noEmit 2>&1 | tail -20
 ```
 
-Expected: clean. If errors surface from `@carekit/shared` resolution, the workspace package may need `npm install` or `npm run build --workspace=@carekit/shared` first.
+Expected: clean. If errors surface from `@deqah/shared` resolution, the workspace package may need `npm install` or `npm run build --workspace=@deqah/shared` first.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 git add apps/mobile/
 git commit -m "refactor(mobile): use BrandingConfig + brandingApi.getBrandingPublic in ThemeProvider"
 ```
@@ -1075,7 +1075,7 @@ git commit -m "refactor(mobile): use BrandingConfig + brandingApi.getBrandingPub
 
 - [ ] **Step 1: Update root `CLAUDE.md`**
 
-Open `c:/pro/carekit/CLAUDE.md`. Find the Key Domains table. Locate the row:
+Open `c:/pro/deqah/CLAUDE.md`. Find the Key Domains table. Locate the row:
 
 ```
 | Whitelabel | `whitelabel/` | `settings/` | Clinic branding config |
@@ -1136,7 +1136,7 @@ git commit -m "docs: update CLAUDE.md files for branding rename"
 - [ ] **Step 1: Full build**
 
 ```bash
-cd c:/pro/carekit && npm run build 2>&1 | tail -40
+cd c:/pro/deqah && npm run build 2>&1 | tail -40
 ```
 
 Expected: every workspace builds clean. If a workspace fails, open the error, fix the file, re-commit in the owning task. Do not continue until clean.
@@ -1160,7 +1160,7 @@ Expected: 0 errors.
 - [ ] **Step 4: Run all unit tests**
 
 ```bash
-cd c:/pro/carekit && npm run test 2>&1 | tail -40
+cd c:/pro/deqah && npm run test 2>&1 | tail -40
 ```
 
 Expected: all pass.
@@ -1176,7 +1176,7 @@ Expected: migration already applied in Task 3; re-run is a no-op.
 - [ ] **Step 6: Smoke-test the dashboard manually**
 
 ```bash
-cd c:/pro/carekit && npm run dev:dashboard
+cd c:/pro/deqah && npm run dev:dashboard
 ```
 
 In browser, navigate to `http://localhost:5103/branding`. Confirm:
@@ -1192,7 +1192,7 @@ Also confirm:
 - [ ] **Step 7: Final repo-wide grep**
 
 ```bash
-cd c:/pro/carekit
+cd c:/pro/deqah
 grep -rn "whitelabel\|white-label\|WhiteLabel\|whiteLabel" apps/ packages/ 2>/dev/null | grep -v node_modules | grep -v ".next"
 ```
 

@@ -1,6 +1,6 @@
 # Test Cases — Tenant Self-Signup
 
-**Kiwi TestPlan:** `CareKit / Identity / Manual QA`
+**Kiwi TestPlan:** `Deqah / Identity / Manual QA`
 **Feature:** Tenant Self-Signup + Onboarding Wizard + Trial Banner
 
 ---

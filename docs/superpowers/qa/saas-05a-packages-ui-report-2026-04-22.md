@@ -1,7 +1,7 @@
-# QA Report — PR #20 (`feat(saas-05a): extract shared UI primitives into @carekit/ui`)
+# QA Report — PR #20 (`feat(saas-05a): extract shared UI primitives into @deqah/ui`)
 
 - **Date:** 2026-04-22
-- **Branch:** `feat/saas-05a-packages-ui` (worktree `/Users/tariq/code/carekit/.claude/worktrees/agent-af7d557c`)
+- **Branch:** `feat/saas-05a-packages-ui` (worktree `/Users/tariq/code/deqah/.claude/worktrees/agent-af7d557c`)
 - **Tester:** Claude (Chrome DevTools MCP, local)
 - **Dashboard port:** 5113 (5103 held by Docker)
 - **Backend port:** 5101 (fresh from main source; existing :5100 dist was pre-saas-02e)
@@ -10,7 +10,7 @@
 
 ## Scope of this PR (reminder)
 
-Pure refactor. 33 shadcn primitives moved from `apps/dashboard/components/ui/` into a new `packages/ui/` (`@carekit/ui`) workspace. Two primitives (`date-picker`, `nationality-select`) intentionally left behind due to locale/data coupling. No backend, prisma, mobile, or website changes.
+Pure refactor. 33 shadcn primitives moved from `apps/dashboard/components/ui/` into a new `packages/ui/` (`@deqah/ui`) workspace. Two primitives (`date-picker`, `nationality-select`) intentionally left behind due to locale/data coupling. No backend, prisma, mobile, or website changes.
 
 ## Environment resolution
 
@@ -34,7 +34,7 @@ The destructive-flow gate the PR description calls out explicitly ("`delete row 
 
 ## Minor unrelated issue surfaced during QA
 
-Home `/` throws a handled boundary error from `RecentPayments` — `TypeError: Cannot read properties of undefined (reading 'ar')`. This is a data-shape/i18n issue in the dashboard home feature (likely expects a bilingual `{ar, en}` object where the payments API now returns a string). It is **not** related to PR #20 (no primitive is misbehaving; the ErrorBoundary itself is a `@carekit/ui` component and renders correctly). Worth a follow-up issue on `main`.
+Home `/` throws a handled boundary error from `RecentPayments` — `TypeError: Cannot read properties of undefined (reading 'ar')`. This is a data-shape/i18n issue in the dashboard home feature (likely expects a bilingual `{ar, en}` object where the payments API now returns a string). It is **not** related to PR #20 (no primitive is misbehaving; the ErrorBoundary itself is a `@deqah/ui` component and renders correctly). Worth a follow-up issue on `main`.
 
 ## Coupon/Invoice compile errors in PR #20 branch (pre-saas-02e)
 
@@ -50,6 +50,6 @@ Attempting to run the worktree's backend produced 16 TS errors in `bookings/crea
   - `saas-05a-packages-ui-2026-04-22-login.png`
   - `saas-05a-packages-ui-2026-04-22-settings.png`
 - Kiwi TCMS:
-  - Plan: https://localhost:6443/plan/15/ (`CareKit / Packages UI / Manual QA`)
+  - Plan: https://localhost:6443/plan/15/ (`Deqah / Packages UI / Manual QA`)
   - Run (final): https://localhost:6443/runs/26/ — 9/9 PASS under build `manual-qa-2026-04-22`
   - Earlier blocked run: https://localhost:6443/runs/25/ (superseded)

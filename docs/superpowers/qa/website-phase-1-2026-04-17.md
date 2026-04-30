@@ -23,7 +23,7 @@
 ### Case 2 — Website renders Sawaa with identity strings
 - **Action:** Reset DB to SAWAA, open http://localhost:5104
 - **Expected:** Sawaa layout, organizationNameAr visible
-- **Observed:** Arabic RTL nav (الرئيسية / المعالجون / التخصصات / تواصل معنا), H1 = "منظمتي" (organizationNameAr), footer "Sawaa theme · CareKit", "لماذا نحن" benefits grid.
+- **Observed:** Arabic RTL nav (الرئيسية / المعالجون / التخصصات / تواصل معنا), H1 = "منظمتي" (organizationNameAr), footer "Sawaa theme · Deqah", "لماذا نحن" benefits grid.
 - **Result:** PASS
 - **Screenshot:** `screenshots/website-phase-1/02-sawaa-home.png`
 
@@ -58,5 +58,5 @@
 
 ## Kiwi TCMS
 
-- Plan: `CareKit / Website / Manual QA`
-- Run: Kiwi sync deferred — `Category "Website" missing under CareKit`. Needs the "Website" category created under Product "CareKit" before the sync script can upload. Follow-up action for the QA maintainer.
+- Plan: `Deqah / Website / Manual QA`
+- Run: Kiwi sync deferred — `Category "Website" missing under Deqah`. Needs the "Website" category created under Product "Deqah" before the sync script can upload. Follow-up action for the QA maintainer.
