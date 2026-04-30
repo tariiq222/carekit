@@ -53,6 +53,7 @@ function buildAddHarness() {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     subscription: {
+      findFirst: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({}),
     },
     $transaction: jest.fn(),
@@ -220,6 +221,30 @@ describe('AddSavedCardHandler', () => {
     );
     expect(prisma.savedCard.create).not.toHaveBeenCalled();
     expect(moyasar.refundPayment).not.toHaveBeenCalled();
+  });
+
+  it('re-arms dunning immediately when adding a default card to a past-due subscription', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-04-30T12:00:00.000Z'));
+    const { handler, prisma } = buildAddHarness();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'PAST_DUE',
+    });
+
+    await handler.execute({
+      moyasarTokenId: 'token_abc',
+      makeDefault: true,
+      idempotencyKey: '1f210deb-3501-4c46-8fd5-2f89f318a39b',
+    });
+
+    expect(prisma.subscription.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { organizationId: 'org-1' },
+      data: expect.objectContaining({
+        dunningRetryCount: 0,
+        nextRetryAt: new Date('2026-04-30T12:00:00.000Z'),
+      }),
+    }));
+    jest.useRealTimers();
   });
 });
 

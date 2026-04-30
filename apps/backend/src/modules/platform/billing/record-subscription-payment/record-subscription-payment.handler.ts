@@ -43,6 +43,9 @@ export class RecordSubscriptionPaymentHandler {
           pastDueSince: null,
           lastPaymentAt: new Date(),
           retryCount: 0,
+          dunningRetryCount: 0,
+          nextRetryAt: null,
+          lastFailureReason: null,
         },
       });
     });

@@ -56,6 +56,14 @@ export class AddSavedCardHandler {
       select: { id: true },
     });
     const shouldDefault = cmd.makeDefault === true || cards.length === 0;
+    const subscription = shouldDefault
+      ? await this.prisma.subscription.findFirst({
+          where: { organizationId },
+          select: { status: true },
+        })
+      : null;
+    const shouldRearmDunning = subscription?.status === 'PAST_DUE';
+    const rearmAt = new Date();
 
     const created = await this.prisma.$transaction(async (tx) => {
       if (shouldDefault) {
@@ -84,6 +92,12 @@ export class AddSavedCardHandler {
           data: {
             defaultSavedCardId: card.id,
             moyasarCardTokenRef: card.moyasarTokenId,
+            ...(shouldRearmDunning
+              ? {
+                  dunningRetryCount: 0,
+                  nextRetryAt: rearmAt,
+                }
+              : {}),
           },
         });
       }

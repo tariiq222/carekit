@@ -160,6 +160,35 @@ describe('RecordSubscriptionPaymentHandler', () => {
     );
   });
 
+  it('clears dunning fields on successful payment recovery', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: { id: 'sub-1', status: 'PAST_DUE', organizationId: 'org-A' },
+    });
+    const handler = new RecordSubscriptionPaymentHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
+    );
+
+    await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
+
+    expect(txPrisma.subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          dunningRetryCount: 0,
+          nextRetryAt: null,
+          lastFailureReason: null,
+        }),
+      }),
+    );
+  });
+
   it('invalidates cache after recording payment', async () => {
     const txPrisma = buildTxPrisma();
     const prisma = buildPrisma(txPrisma);
