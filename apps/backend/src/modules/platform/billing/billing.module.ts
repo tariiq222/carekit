@@ -20,6 +20,7 @@ import { CancelScheduledDowngradeHandler } from "./cancel-scheduled-downgrade/ca
 import { CancelSubscriptionHandler } from "./cancel-subscription/cancel-subscription.handler";
 import { ProcessScheduledCancellationsCron } from "./process-scheduled-cancellations/process-scheduled-cancellations.cron";
 import { SendLimitWarningCron } from "./send-limit-warning/send-limit-warning.cron";
+import { ProcessScheduledPlanChangesCron } from "./process-scheduled-plan-changes/process-scheduled-plan-changes.cron";
 import { ReactivateSubscriptionHandler } from "./reactivate-subscription/reactivate-subscription.handler";
 import { ResumeSubscriptionHandler } from "./resume-subscription/resume-subscription.handler";
 import { RecordSubscriptionPaymentHandler } from "./record-subscription-payment/record-subscription-payment.handler";
@@ -46,6 +47,7 @@ const HANDLERS = [
   CancelSubscriptionHandler,
   ProcessScheduledCancellationsCron,
   SendLimitWarningCron,
+  ProcessScheduledPlanChangesCron,
   ReactivateSubscriptionHandler,
   ResumeSubscriptionHandler,
   ListSavedCardsHandler,

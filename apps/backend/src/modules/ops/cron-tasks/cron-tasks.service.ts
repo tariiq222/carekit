@@ -14,6 +14,7 @@ import { EnforceGracePeriodCron } from '../../platform/billing/enforce-grace-per
 import { ExpireImpersonationSessionsCron } from '../../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 import { ExpireTrialsCron } from '../../platform/billing/expire-trials/expire-trials.cron';
 import { SendLimitWarningCron } from '../../platform/billing/send-limit-warning/send-limit-warning.cron';
+import { ProcessScheduledPlanChangesCron } from '../../platform/billing/process-scheduled-plan-changes/process-scheduled-plan-changes.cron';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -30,6 +31,7 @@ export const CRON_JOBS = {
   EXPIRE_IMPERSONATION_SESSIONS: 'expire-impersonation-sessions',
   EXPIRE_TRIALS: 'expire-trials',
   USAGE_WARNINGS: 'usage-warnings',
+  PROCESS_SCHEDULED_PLAN_CHANGES: 'process-scheduled-plan-changes',
 } as const;
 
 @Injectable()
@@ -51,6 +53,7 @@ export class CronTasksService implements OnModuleInit {
     private readonly expireImpersonationSessions: ExpireImpersonationSessionsCron,
     private readonly expireTrials: ExpireTrialsCron,
     private readonly usageWarnings: SendLimitWarningCron,
+    private readonly processScheduledPlanChanges: ProcessScheduledPlanChangesCron,
   ) {}
 
   onModuleInit(): void {
@@ -74,6 +77,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, cron: '* * * * *' }, // every minute
       { name: CRON_JOBS.EXPIRE_TRIALS, cron: '0 * * * *' }, // hourly
       { name: CRON_JOBS.USAGE_WARNINGS, cron: '0 9 * * *' }, // daily at 09:00 AST
+      { name: CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES, cron: '0 2 * * *' }, // daily
     ];
 
     for (const { name, cron } of jobs) {
@@ -138,6 +142,9 @@ export class CronTasksService implements OnModuleInit {
             break;
           case CRON_JOBS.USAGE_WARNINGS:
             await this.usageWarnings.execute();
+            break;
+          case CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES:
+            await this.processScheduledPlanChanges.execute();
             break;
           default:
             this.logger.warn(`Unknown cron job: ${job.name}`);

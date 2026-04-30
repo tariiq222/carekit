@@ -24,6 +24,7 @@ import { EnforceGracePeriodCron } from '../platform/billing/enforce-grace-period
 import { ExpireImpersonationSessionsCron } from '../platform/admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
 import { ExpireTrialsCron } from '../platform/billing/expire-trials/expire-trials.cron';
 import { SendLimitWarningCron } from '../platform/billing/send-limit-warning/send-limit-warning.cron';
+import { ProcessScheduledPlanChangesCron } from '../platform/billing/process-scheduled-plan-changes/process-scheduled-plan-changes.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 
 const handlers = [
@@ -47,6 +48,7 @@ const cronHandlers = [
   EnforceGracePeriodCron,
   ExpireTrialsCron,
   SendLimitWarningCron,
+  ProcessScheduledPlanChangesCron,
   // Admin crons
   ExpireImpersonationSessionsCron,
 ];

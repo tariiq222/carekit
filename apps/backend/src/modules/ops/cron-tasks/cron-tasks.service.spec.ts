@@ -32,9 +32,10 @@ type CronDeps = [
   never,
   never,
   never,
+  never,
 ];
 
-/** Build 13 cron mocks (all crons except BullMqService itself). */
+/** Build cron mocks (all crons except BullMqService itself). */
 const buildAllMocks = () => [
   buildCronMock(), // bookingAutocomplete
   buildCronMock(), // bookingExpiry
@@ -49,19 +50,20 @@ const buildAllMocks = () => [
   buildCronMock(), // expireImpersonationSessions (SaaS-05b)
   buildCronMock(), // expireTrials
   buildCronMock(), // usageWarnings
+  buildCronMock(), // processScheduledPlanChanges
 ] as const;
 
 const buildService = (bullMq: ReturnType<typeof buildBullMq>, mocks: ReturnType<typeof buildAllMocks>) =>
   new CronTasksService(bullMq as never, ...(mocks.map((m) => m as never) as CronDeps));
 
 describe('CronTasksService', () => {
-  it('schedules all 12 cron jobs on module init', () => {
+  it('schedules all 13 cron jobs on module init', () => {
     const bullMq = buildBullMq();
     const mocks = buildAllMocks();
     const service = buildService(bullMq, mocks);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(12);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(13);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -69,6 +71,11 @@ describe('CronTasksService', () => {
       CRON_JOBS.USAGE_WARNINGS,
       {},
       expect.objectContaining({ repeat: { pattern: '0 9 * * *' } }),
+    );
+    expect(bullMq.queue.add).toHaveBeenCalledWith(
+      CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES,
+      {},
+      expect.objectContaining({ repeat: { pattern: '0 2 * * *' } }),
     );
   });
 
@@ -95,6 +102,7 @@ describe('CronTasksService', () => {
     [CRON_JOBS.EXPIRE_IMPERSONATION_SESSIONS, 10],
     [CRON_JOBS.EXPIRE_TRIALS, 11],
     [CRON_JOBS.USAGE_WARNINGS, 12],
+    [CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES, 13],
   ];
 
   it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {
