@@ -3,10 +3,10 @@
 import Link from "next/link"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  MedicalMaskIcon,
   CustomerService01Icon,
   Book02Icon,
 } from "@hugeicons/core-free-icons"
+import { DeqahMark } from "@/components/brand/deqah-mark"
 
 import {
   Sidebar,
@@ -54,9 +54,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link href="/">
-                  <div className="flex aspect-square size-10 items-center justify-center rounded-[16px] bg-gradient-to-br from-primary to-primary-light text-primary-foreground shadow-primary">
-                    <HugeiconsIcon icon={MedicalMaskIcon} size={20} />
-                  </div>
+                  <DeqahMark />
                   <div className="grid flex-1 text-start leading-tight">
                     <span className="truncate text-lg font-bold">{t("app.name")}</span>
                     <span className="truncate text-xs text-muted-foreground">
