@@ -11,6 +11,7 @@ import { usePlans } from "@/hooks/use-current-subscription"
 import { CurrentPlanCard } from "./components/current-plan-card"
 import { UsageBars } from "./components/usage-bars"
 import { InvoicesTable } from "./components/invoices-table"
+import { BillingOverviewStats } from "./components/billing-overview-stats"
 
 export default function BillingPage() {
   const { t } = useLocale()
@@ -24,6 +25,8 @@ export default function BillingPage() {
         title={t("billing.title")}
         description={t("billing.description")}
       />
+
+      <BillingOverviewStats subscription={subscription} isLoading={isLoading} />
 
       <div className="space-y-4">
         <BillingStatusBanner />
