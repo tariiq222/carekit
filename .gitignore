@@ -112,3 +112,4 @@ data/*.xls
 
 # ─── HTML artifacts in docs ───────────────────────────────────
 docs/*.html
+docs/
