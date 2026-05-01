@@ -72,7 +72,6 @@ scripts/performance/results/
 # ─── Local Claude Code / agent config ─────────────────────────
 .claude/*
 !.claude/commands/
-!.claude/commands/oo.md
 .kilo/
 .kilocode/
 .opencode/
@@ -101,3 +100,6 @@ _archived_dashboard/
 # ─── Binary test data ─────────────────────────────────────────
 data/*.xlsx
 data/*.xls
+
+# ─── QA run artifacts ─────────────────────────────────────────
+data/kiwi/
