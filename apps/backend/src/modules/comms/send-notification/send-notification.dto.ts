@@ -13,22 +13,26 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export type RecipientType = 'CLIENT' | 'EMPLOYEE';
 export type NotificationType =
+  | 'BOOKING_CREATED'
   | 'BOOKING_CONFIRMED'
   | 'BOOKING_CANCELLED'
   | 'BOOKING_REMINDER'
   | 'PAYMENT_RECEIVED'
   | 'PAYMENT_FAILED'
+  | 'PAYMENT_COMPLETED'
   | 'PAYMENT_REMINDER'
   | 'WELCOME'
   | 'GENERAL';
 
 const RECIPIENT_TYPES: RecipientType[] = ['CLIENT', 'EMPLOYEE'];
 const NOTIFICATION_TYPES: NotificationType[] = [
+  'BOOKING_CREATED',
   'BOOKING_CONFIRMED',
   'BOOKING_CANCELLED',
   'BOOKING_REMINDER',
   'PAYMENT_RECEIVED',
   'PAYMENT_FAILED',
+  'PAYMENT_COMPLETED',
   'PAYMENT_REMINDER',
   'WELCOME',
   'GENERAL',

@@ -2,6 +2,7 @@ import { MobileClientNotificationsController } from './notifications.controller'
 
 const USER = { id: 'client-1', email: null, phone: null };
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
+const mockTenant = { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-1') };
 
 function build() {
   const listNotifications = fn({ data: [], meta: {} });
@@ -15,6 +16,7 @@ function build() {
     getUnreadCount as never,
     registerFcm as never,
     unregisterFcm as never,
+    mockTenant as never,
   );
   return { controller, listNotifications, markRead, getUnreadCount, registerFcm, unregisterFcm };
 }
@@ -24,7 +26,7 @@ describe('MobileClientNotificationsController', () => {
     const { controller, listNotifications } = build();
     await controller.listNotificationsEndpoint(USER, {} as never);
     expect(listNotifications.execute).toHaveBeenCalledWith(expect.objectContaining({
-      recipientId: USER.id, page: 1, limit: 20,
+      organizationId: 'org-1', recipientId: USER.id, page: 1, limit: 20,
     }));
   });
 
@@ -37,13 +39,14 @@ describe('MobileClientNotificationsController', () => {
   it('markReadEndpoint — passes recipientId from JWT (mark all)', async () => {
     const { controller, markRead } = build();
     await controller.markReadEndpoint(USER);
-    expect(markRead.execute).toHaveBeenCalledWith({ recipientId: USER.id });
+    expect(markRead.execute).toHaveBeenCalledWith({ organizationId: 'org-1', recipientId: USER.id });
   });
 
   it('markReadEndpoint — passes notificationId when provided', async () => {
     const { controller, markRead } = build();
     await controller.markReadEndpoint(USER, { notificationId: 'n-1' });
     expect(markRead.execute).toHaveBeenCalledWith({
+      organizationId: 'org-1',
       recipientId: USER.id,
       notificationId: 'n-1',
     });
@@ -52,7 +55,7 @@ describe('MobileClientNotificationsController', () => {
   it('getUnreadCountEndpoint — returns count for the JWT user', async () => {
     const { controller, getUnreadCount } = build();
     await controller.getUnreadCountEndpoint(USER);
-    expect(getUnreadCount.execute).toHaveBeenCalledWith({ recipientId: USER.id });
+    expect(getUnreadCount.execute).toHaveBeenCalledWith({ organizationId: 'org-1', recipientId: USER.id });
   });
 
   it('registerFcmEndpoint — forwards clientId + body', async () => {

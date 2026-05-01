@@ -30,6 +30,12 @@ export const arMisc: Record<string, string> = {
   "notifications.empty.description": "لا توجد إشعارات جديدة!",
   "notifications.recent": "آخر الإشعارات",
   "notifications.total": "الإجمالي",
+  "notifications.viewAll": "عرض جميع الإشعارات",
+  "notifications.types.BOOKING_CREATED": "حجز جديد",
+  "notifications.types.BOOKING_CONFIRMED": "تأكيد حجز",
+  "notifications.types.BOOKING_CANCELLED": "إلغاء حجز",
+  "notifications.types.PAYMENT_COMPLETED": "دفع مكتمل",
+  "notifications.types.PAYMENT_FAILED": "فشل الدفع",
 
   // — Chatbot —
   "chatbot.col.id": "المعرف",
