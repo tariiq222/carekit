@@ -1,6 +1,3 @@
-// instrument.ts must be the first import — Sentry wraps OpenTelemetry before
-// NestJS/Express load so all spans are captured from the start.
-import './instrument';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
