@@ -156,6 +156,7 @@ export class DashboardCommsController {
     @Query() query: ListNotificationsDto,
   ) {
     return this.listNotifications.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
       recipientId: user.sub,
       unreadOnly: query.unreadOnly,
       page: query.page ?? 1,
@@ -169,7 +170,10 @@ export class DashboardCommsController {
   getUnreadCountEndpoint(
     @CurrentUser() user: JwtUser,
   ) {
-    return this.getUnreadCount.execute({ recipientId: user.sub });
+    return this.getUnreadCount.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
+      recipientId: user.sub,
+    });
   }
 
   @ApiOperation({ summary: 'Mark notifications as read (all or a single one)' })
@@ -180,7 +184,11 @@ export class DashboardCommsController {
     @CurrentUser() user: JwtUser,
     @Body() body: MarkReadDto = {},
   ) {
-    return this.markRead.execute({ recipientId: user.sub, ...body });
+    return this.markRead.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
+      recipientId: user.sub,
+      ...body,
+    });
   }
 
   // ── Email Templates ────────────────────────────────────────────────────────

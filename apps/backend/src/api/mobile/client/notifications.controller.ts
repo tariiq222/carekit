@@ -16,6 +16,7 @@ import { GetUnreadCountHandler } from '../../../modules/comms/notifications/get-
 import { RegisterFcmTokenHandler } from '../../../modules/comms/fcm-tokens/register-fcm-token.handler';
 import { UnregisterFcmTokenHandler } from '../../../modules/comms/fcm-tokens/unregister-fcm-token.handler';
 import { RegisterFcmTokenDto } from '../../../modules/comms/fcm-tokens/register-fcm-token.dto';
+import { TenantContextService } from '../../../common/tenant';
 
 export class MobileListNotificationsQuery {
   @ApiPropertyOptional({ description: 'Return only unread notifications', example: true })
@@ -40,6 +41,7 @@ export class MobileClientNotificationsController {
     private readonly getUnreadCount: GetUnreadCountHandler,
     private readonly registerFcm: RegisterFcmTokenHandler,
     private readonly unregisterFcm: UnregisterFcmTokenHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   @ApiOperation({ summary: 'List notifications for the current client' })
@@ -50,6 +52,7 @@ export class MobileClientNotificationsController {
     @Query() q: MobileListNotificationsQuery,
   ) {
     return this.listNotifications.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
       recipientId: user.id,
       unreadOnly: q.unreadOnly,
       page: q.page ?? 1,
@@ -61,7 +64,10 @@ export class MobileClientNotificationsController {
   @ApiOkResponse({ description: 'Unread count value' })
   @Get('unread-count')
   getUnreadCountEndpoint(@ClientSession() user: ClientSession) {
-    return this.getUnreadCount.execute({ recipientId: user.id });
+    return this.getUnreadCount.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
+      recipientId: user.id,
+    });
   }
 
   @ApiOperation({
@@ -74,7 +80,11 @@ export class MobileClientNotificationsController {
     @ClientSession() user: ClientSession,
     @Body() body: MarkReadDto = {},
   ) {
-    return this.markRead.execute({ recipientId: user.id, ...body });
+    return this.markRead.execute({
+      organizationId: this.tenant.requireOrganizationIdOrDefault(),
+      recipientId: user.id,
+      ...body,
+    });
   }
 
   @ApiOperation({ summary: 'Register an FCM/APNs device token for the current client' })

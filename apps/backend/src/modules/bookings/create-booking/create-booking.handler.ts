@@ -10,6 +10,8 @@ import { TenantContextService } from '../../../common/tenant';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { GroupSessionMinReachedHandler } from '../group-session-min-reached/group-session-min-reached.handler';
+import { EventBusService } from '../../../infrastructure/events';
+import { BookingCreatedEvent } from '../events/booking-created.event';
 import { CreateBookingDto } from './create-booking.dto';
 
 const VAT_RATE = 0.15;
@@ -29,6 +31,7 @@ export class CreateBookingHandler {
     private readonly priceResolver: PriceResolverService,
     private readonly settingsHandler: GetBookingSettingsHandler,
     private readonly groupMinReachedHandler: GroupSessionMinReachedHandler,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: CreateBookingCommand) {
@@ -243,6 +246,17 @@ export class CreateBookingHandler {
         }).catch(() => { /* logged by eventBus */ });
       }
     }
+
+    // Notify staff about new booking
+    const createdEvent = new BookingCreatedEvent({
+      bookingId: booking.id,
+      clientId: booking.clientId,
+      employeeId: booking.employeeId ?? '',
+      organizationId,
+      scheduledAt: booking.scheduledAt,
+      serviceId: booking.serviceId,
+    });
+    this.eventBus.publish(createdEvent.eventName, createdEvent.toEnvelope()).catch(() => {});
 
     return booking;
   }

@@ -4,6 +4,7 @@ import { ClientSession } from '../../../../common/auth/client-session.decorator'
 const USER: ClientSession = { id: 'client-1', email: null, phone: null };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
+const mockTenant = { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-1') };
 
 function buildController() {
   const listBookings = fn({ data: [{ id: 'b-1' }], meta: {} });
@@ -16,6 +17,7 @@ function buildController() {
     listNotifications as never,
     listPayments as never,
     getClient as never,
+    mockTenant as never,
   );
 
   return { controller, listBookings, listNotifications, listPayments, getClient };
@@ -37,7 +39,7 @@ describe('MobileClientHomeController', () => {
       expect.objectContaining({ clientId: USER.id, fromDate: now, page: 1, limit: 5 }),
     );
     expect(listNotifications.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ recipientId: USER.id, unreadOnly: true, page: 1, limit: 5 }),
+      expect.objectContaining({ organizationId: 'org-1', recipientId: USER.id, unreadOnly: true, page: 1, limit: 5 }),
     );
     expect(listPayments.execute).toHaveBeenCalledWith(
       expect.objectContaining({ clientId: USER.id, page: 1, limit: 3 }),
@@ -71,6 +73,7 @@ describe('MobileClientHomeController', () => {
       listNotifications as never,
       listPayments as never,
       getClient as never,
+      mockTenant as never,
     );
 
     const result = await controller.home(USER);

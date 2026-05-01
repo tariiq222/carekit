@@ -42,6 +42,11 @@ import { SmsDlrHandler } from './sms-dlr/sms-dlr.handler';
 import { RegisterFcmTokenHandler } from './fcm-tokens/register-fcm-token.handler';
 import { UnregisterFcmTokenHandler } from './fcm-tokens/unregister-fcm-token.handler';
 import { GetClientPushTargetsHandler } from './fcm-tokens/get-client-push-targets.handler';
+import { GetStaffTargetsHandler } from './notifications/get-staff-targets.handler';
+import { OnBookingCreatedStaffHandler } from './events/on-booking-created-staff.handler';
+import { OnBookingCancelledStaffHandler } from './events/on-booking-cancelled-staff.handler';
+import { OnPaymentCompletedStaffHandler } from './events/on-payment-completed-staff.handler';
+import { OnClientEnrolledStaffHandler } from './events/on-client-enrolled-staff.handler';
 
 const handlers = [
   SendPushHandler,
@@ -74,6 +79,7 @@ const handlers = [
   RegisterFcmTokenHandler,
   UnregisterFcmTokenHandler,
   GetClientPushTargetsHandler,
+  GetStaffTargetsHandler,
 ];
 
 const eventHandlers = [
@@ -82,6 +88,10 @@ const eventHandlers = [
   OnPaymentFailedHandler,
   OnClientEnrolledHandler,
   OnGroupSessionPaymentLinksReadyHandler,
+  OnBookingCreatedStaffHandler,
+  OnBookingCancelledStaffHandler,
+  OnPaymentCompletedStaffHandler,
+  OnClientEnrolledStaffHandler,
 ];
 
 @Module({
@@ -98,6 +108,10 @@ export class CommsModule implements OnModuleInit {
     private readonly onPaymentFailed: OnPaymentFailedHandler,
     private readonly onClientEnrolled: OnClientEnrolledHandler,
     private readonly onGroupSessionPaymentLinksReady: OnGroupSessionPaymentLinksReadyHandler,
+    private readonly onBookingCreatedStaff: OnBookingCreatedStaffHandler,
+    private readonly onBookingCancelledStaff: OnBookingCancelledStaffHandler,
+    private readonly onPaymentCompletedStaff: OnPaymentCompletedStaffHandler,
+    private readonly onClientEnrolledStaff: OnClientEnrolledStaffHandler,
   ) {}
 
   onModuleInit(): void {
@@ -106,5 +120,9 @@ export class CommsModule implements OnModuleInit {
     this.onPaymentFailed.register(this.eventBus);
     this.onClientEnrolled.register(this.eventBus);
     this.onGroupSessionPaymentLinksReady.register(this.eventBus);
+    this.onBookingCreatedStaff.register(this.eventBus);
+    this.onBookingCancelledStaff.register(this.eventBus);
+    this.onPaymentCompletedStaff.register(this.eventBus);
+    this.onClientEnrolledStaff.register(this.eventBus);
   }
 }

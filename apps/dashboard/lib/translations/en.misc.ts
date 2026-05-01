@@ -30,6 +30,12 @@ export const enMisc: Record<string, string> = {
   "notifications.empty.description": "You're all caught up!",
   "notifications.recent": "Recent Notifications",
   "notifications.total": "Total",
+  "notifications.viewAll": "View All Notifications",
+  "notifications.types.BOOKING_CREATED": "New Booking",
+  "notifications.types.BOOKING_CONFIRMED": "Booking Confirmed",
+  "notifications.types.BOOKING_CANCELLED": "Booking Cancelled",
+  "notifications.types.PAYMENT_COMPLETED": "Payment Completed",
+  "notifications.types.PAYMENT_FAILED": "Payment Failed",
 
   // — Chatbot —
   "chatbot.col.id": "ID",

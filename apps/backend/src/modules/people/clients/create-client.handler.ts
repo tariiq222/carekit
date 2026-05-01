@@ -69,6 +69,7 @@ export class CreateClientHandler {
       name: client.name,
       phone: client.phone ?? undefined,
       email: client.email ?? undefined,
+      organizationId,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 

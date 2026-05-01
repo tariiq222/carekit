@@ -5,6 +5,7 @@ export interface ClientEnrolledPayload {
   name: string;
   phone?: string;
   email?: string;
+  organizationId?: string;
 }
 
 /**

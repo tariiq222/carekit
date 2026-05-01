@@ -7,6 +7,7 @@ import { ListBookingsHandler } from '../../../../modules/bookings/list-bookings/
 import { ListNotificationsHandler } from '../../../../modules/comms/notifications/list-notifications.handler';
 import { ListPaymentsHandler } from '../../../../modules/finance/list-payments/list-payments.handler';
 import { GetClientHandler } from '../../../../modules/people/clients/get-client.handler';
+import { TenantContextService } from '../../../../common/tenant';
 
 @ApiTags('Mobile Client / Portal')
 @ApiBearerAuth()
@@ -19,6 +20,7 @@ export class MobileClientHomeController {
     private readonly listNotifications: ListNotificationsHandler,
     private readonly listPayments: ListPaymentsHandler,
     private readonly getClient: GetClientHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   @Get('home')
@@ -31,7 +33,7 @@ export class MobileClientHomeController {
     const now = new Date();
     const [upcomingResult, notificationsResult, paymentsResult, profile] = await Promise.all([
       this.listBookings.execute({ clientId: user.id, fromDate: now, page: 1, limit: 5 }),
-      this.listNotifications.execute({ recipientId: user.id, unreadOnly: true, page: 1, limit: 5 }),
+      this.listNotifications.execute({ organizationId: this.tenant.requireOrganizationIdOrDefault(), recipientId: user.id, unreadOnly: true, page: 1, limit: 5 }),
       this.listPayments.execute({ clientId: user.id, page: 1, limit: 3 }),
       this.getClient.execute({ clientId: user.id }),
     ]);
