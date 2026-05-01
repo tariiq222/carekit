@@ -25,16 +25,15 @@ import { queryKeys } from "@/lib/query-keys"
 
 /* ─── Query Keys ─── */
 
-const ORGANIZATION_HOURS_KEY = ["organization-hours"] as const
-const ORGANIZATION_HOLIDAYS_KEY = ["organization-holidays"] as const
 const BOOKING_SETTINGS_KEY = ["booking-settings"] as const
 
 /* ─── Clinic Working Hours ─── */
 
-export function useOrganizationHours() {
+export function useOrganizationHours(branchId: string | null) {
   return useQuery({
-    queryKey: ORGANIZATION_HOURS_KEY,
-    queryFn: () => fetchOrganizationHours(),
+    queryKey: queryKeys.organization.hours(branchId ?? ""),
+    queryFn: () => fetchOrganizationHours(branchId!),
+    enabled: !!branchId,
     staleTime: 30 * 60 * 1000, // 30 min — hours rarely change
   })
 }
@@ -42,19 +41,23 @@ export function useOrganizationHours() {
 export function useOrganizationHoursMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: updateOrganizationHours,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORGANIZATION_HOURS_KEY })
+    mutationFn: ({ branchId, hours }: {
+      branchId: string
+      hours: Parameters<typeof updateOrganizationHours>[1]
+    }) => updateOrganizationHours(branchId, hours),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.hours(variables.branchId) })
     },
   })
 }
 
 /* ─── Clinic Holidays ─── */
 
-export function useOrganizationHolidays() {
+export function useOrganizationHolidays(branchId: string | null, year?: number) {
   return useQuery({
-    queryKey: ORGANIZATION_HOLIDAYS_KEY,
-    queryFn: () => fetchOrganizationHolidays(),
+    queryKey: queryKeys.organization.holidays(branchId ?? "", year),
+    queryFn: () => fetchOrganizationHolidays(branchId!, year),
+    enabled: !!branchId,
     staleTime: 30 * 60 * 1000, // 30 min — holidays are planned in advance
   })
 }
@@ -62,9 +65,14 @@ export function useOrganizationHolidays() {
 export function useCreateHoliday() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: createOrganizationHoliday,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORGANIZATION_HOLIDAYS_KEY })
+    mutationFn: ({ branchId, ...data }: {
+      branchId: string
+      date: string
+      nameAr: string
+      nameEn: string
+    }) => createOrganizationHoliday(branchId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.holidays(variables.branchId) })
     },
   })
 }
@@ -74,7 +82,7 @@ export function useDeleteHoliday() {
   return useMutation({
     mutationFn: deleteOrganizationHoliday,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORGANIZATION_HOLIDAYS_KEY })
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.all })
     },
   })
 }

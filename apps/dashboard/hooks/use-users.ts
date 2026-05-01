@@ -15,8 +15,7 @@ import {
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 } from "@/lib/api/users"
 import type { UserListQuery, UserRole } from "@/lib/types/user"
@@ -114,19 +113,13 @@ export function useRoleMutations() {
   const createMut = useMutation({ mutationFn: createRole, onSuccess: invalidate })
   const deleteMut = useMutation({ mutationFn: deleteRole, onSuccess: invalidate })
 
-  const assignPermMut = useMutation({
-    mutationFn: ({ roleId, ...payload }: { roleId: string } & Parameters<typeof assignPermission>[1]) =>
-      assignPermission(roleId, payload),
+  const setPermsMut = useMutation({
+    mutationFn: ({ roleId, permissions }: { roleId: string; permissions: Parameters<typeof setRolePermissions>[1] }) =>
+      setRolePermissions(roleId, permissions),
     onSuccess: invalidate,
   })
 
-  const removePermMut = useMutation({
-    mutationFn: ({ roleId, ...payload }: { roleId: string } & Parameters<typeof removePermission>[1]) =>
-      removePermission(roleId, payload),
-    onSuccess: invalidate,
-  })
-
-  return { createMut, deleteMut, assignPermMut, removePermMut }
+  return { createMut, deleteMut, setPermsMut }
 }
 
 /* ─── Permissions ─── */

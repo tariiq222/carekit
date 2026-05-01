@@ -10,6 +10,7 @@ import { Skeleton } from "@deqah/ui"
 import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
 import { useLocale } from "@/components/locale-provider"
+import { formatLocaleDate } from "@/lib/date"
 import type { Subscription } from "@/lib/types/billing"
 
 interface BillingOverviewStatsProps {
@@ -29,11 +30,7 @@ function readUsageVal(
 }
 
 function fmtDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
-    { year: "numeric", month: "short", day: "numeric" },
-  )
+  return formatLocaleDate(iso, locale, { year: "numeric", month: "short", day: "numeric" })
 }
 
 export function BillingOverviewStats({ subscription, isLoading }: BillingOverviewStatsProps) {

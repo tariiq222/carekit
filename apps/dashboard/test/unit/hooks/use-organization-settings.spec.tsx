@@ -61,11 +61,11 @@ describe("useOrganizationHours", () => {
     const hours = [{ day: "MONDAY", isOpen: true }]
     fetchOrganizationHours.mockResolvedValueOnce(hours)
 
-    const { result } = renderHook(() => useOrganizationHours(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useOrganizationHours("branch-1"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchOrganizationHours).toHaveBeenCalled()
+    expect(fetchOrganizationHours).toHaveBeenCalledWith("branch-1")
     expect(result.current.data).toEqual(hours)
   })
 })
@@ -79,10 +79,10 @@ describe("useOrganizationHoursMutation", () => {
     const { result } = renderHook(() => useOrganizationHoursMutation(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.mutate([] as Parameters<typeof updateOrganizationHours>[0])
+      result.current.mutate({ branchId: "branch-1", hours: [] })
     })
 
-    await waitFor(() => expect(updateOrganizationHours).toHaveBeenCalled())
+    await waitFor(() => expect(updateOrganizationHours).toHaveBeenCalledWith("branch-1", []))
   })
 })
 
@@ -93,11 +93,11 @@ describe("useOrganizationHolidays", () => {
     const holidays = [{ id: "h-1", name: "National Day", date: "2026-09-23" }]
     fetchOrganizationHolidays.mockResolvedValueOnce(holidays)
 
-    const { result } = renderHook(() => useOrganizationHolidays(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useOrganizationHolidays("branch-1"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchOrganizationHolidays).toHaveBeenCalled()
+    expect(fetchOrganizationHolidays).toHaveBeenCalledWith("branch-1", undefined)
     expect(result.current.data).toEqual(holidays)
   })
 })
@@ -111,13 +111,13 @@ describe("useCreateHoliday", () => {
     const { result } = renderHook(() => useCreateHoliday(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.mutate({ nameAr: "عيد", nameEn: "Eid", date: "2026-03-30", isRecurring: false })
+      result.current.mutate({ branchId: "branch-1", nameAr: "عيد", nameEn: "Eid", date: "2026-03-30" })
     })
 
     await waitFor(() =>
       expect(createOrganizationHoliday).toHaveBeenCalledWith(
+        "branch-1",
         expect.objectContaining({ nameAr: "عيد" }),
-        expect.anything(),
       ),
     )
   })
@@ -133,7 +133,8 @@ describe("useDeleteHoliday", () => {
 
     act(() => { result.current.mutate("h-1") })
 
-    await waitFor(() => expect(deleteOrganizationHoliday).toHaveBeenCalledWith("h-1", expect.anything()))
+    await waitFor(() => expect(deleteOrganizationHoliday).toHaveBeenCalled())
+    expect(deleteOrganizationHoliday.mock.calls[0][0]).toBe("h-1")
   })
 })
 
@@ -141,7 +142,7 @@ describe("useBookingSettings", () => {
   beforeEach(() => vi.clearAllMocks())
 
   it("fetches booking settings", async () => {
-    const settings = { allowWalkIn: true, maxAdvanceDays: 30 }
+    const settings = { bufferMinutes: 10, maxAdvanceBookingDays: 30 }
     fetchBookingSettings.mockResolvedValueOnce(settings)
 
     const { result } = renderHook(() => useBookingSettings(), { wrapper: makeWrapper() })
@@ -157,19 +158,17 @@ describe("useBookingSettingsMutation", () => {
   beforeEach(() => vi.clearAllMocks())
 
   it("calls updateBookingSettings with payload", async () => {
-    updateBookingSettings.mockResolvedValueOnce({ allowWalkIn: false })
+    updateBookingSettings.mockResolvedValueOnce({ waitlistEnabled: false })
 
     const { result } = renderHook(() => useBookingSettingsMutation(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.mutate({ allowWalkIn: false } as Parameters<typeof updateBookingSettings>[0])
+      result.current.mutate({ waitlistEnabled: false } as Parameters<typeof updateBookingSettings>[0])
     })
 
-    await waitFor(() =>
-      expect(updateBookingSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ allowWalkIn: false }),
-        expect.anything(),
-      ),
+    await waitFor(() => expect(updateBookingSettings).toHaveBeenCalled())
+    expect(updateBookingSettings.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ waitlistEnabled: false }),
     )
   })
 })

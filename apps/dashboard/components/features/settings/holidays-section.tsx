@@ -7,7 +7,6 @@ import {
   Calendar03Icon,
   Delete02Icon,
   PlusSignIcon,
-  RepeatIcon,
 } from "@hugeicons/core-free-icons"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
@@ -15,8 +14,6 @@ import { Button } from "@deqah/ui"
 import { Input } from "@deqah/ui"
 import { Label } from "@deqah/ui"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Switch } from "@deqah/ui"
-import { Badge } from "@deqah/ui"
 import { Separator } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import type { OrganizationHoliday } from "@/lib/api/organization"
@@ -30,18 +27,18 @@ import {
 
 interface Props {
   t: (key: string) => string
+  branchId: string
 }
 
 /* ─── Component ─── */
 
-export function HolidaysSection({ t }: Props) {
+export function HolidaysSection({ t, branchId }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [date, setDate] = useState("")
   const [nameAr, setNameAr] = useState("")
   const [nameEn, setNameEn] = useState("")
-  const [isRecurring, setIsRecurring] = useState(false)
 
-  const { data: holidays, isLoading } = useOrganizationHolidays()
+  const { data: holidays, isLoading } = useOrganizationHolidays(branchId)
   const createMutation = useCreateHoliday()
   const deleteMutation = useDeleteHoliday()
 
@@ -49,14 +46,13 @@ export function HolidaysSection({ t }: Props) {
     setDate("")
     setNameAr("")
     setNameEn("")
-    setIsRecurring(false)
     setShowForm(false)
   }
 
   const handleAdd = () => {
     if (!date || !nameAr || !nameEn) return
     createMutation.mutate(
-      { date, nameAr, nameEn, isRecurring },
+      { branchId, date, nameAr, nameEn },
       {
         onSuccess: () => { toast.success(t("settings.saved")); resetForm() },
         onError: (err: Error) => toast.error(err.message),
@@ -122,15 +118,6 @@ export function HolidaysSection({ t }: Props) {
                   onChange={(e) => setNameEn(e.target.value)}
                   placeholder="Eid Al-Fitr"
                 />
-              </div>
-              <div className="flex items-center gap-2 self-end">
-                <Switch
-                  checked={isRecurring}
-                  onCheckedChange={setIsRecurring}
-                />
-                <Label className="text-xs">
-                  {t("settings.holidayRecurring")}
-                </Label>
               </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -199,18 +186,12 @@ function HolidayRow({
         />
         <div>
           <p className="text-sm font-medium text-foreground">
-            {holiday.nameEn} / {holiday.nameAr}
+            {holiday.nameEn ? `${holiday.nameEn} / ` : ""}{holiday.nameAr}
           </p>
           <p className="text-xs tabular-nums text-muted-foreground">
-            {holiday.date}
+            {holiday.date.slice(0, 10)}
           </p>
         </div>
-        {holiday.isRecurring && (
-          <Badge variant="secondary" className="gap-1 text-xs">
-            <HugeiconsIcon icon={RepeatIcon} size={12} />
-            {t("settings.holidayRecurring")}
-          </Badge>
-        )}
       </div>
       <Button
         size="icon"

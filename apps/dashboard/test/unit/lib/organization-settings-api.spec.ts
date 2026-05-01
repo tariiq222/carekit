@@ -42,17 +42,17 @@ describe("organization-settings api", () => {
     expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/settings", expect.anything())
   })
 
-  it("fetchBookingFlowOrder calls /dashboard/organization/booking-settings", async () => {
+  it("fetchBookingFlowOrder reads from /dashboard/organization/settings", async () => {
     getMock.mockResolvedValueOnce({ bookingFlowOrder: "service_first" })
     const result = await fetchBookingFlowOrder()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/settings")
     expect(result).toBe("service_first")
   })
 
-  it("updateBookingFlowOrder patches /dashboard/organization/booking-settings", async () => {
+  it("updateBookingFlowOrder patches /dashboard/organization/settings", async () => {
     patchMock.mockResolvedValueOnce({ bookingFlowOrder: "employee_first" })
     const result = await updateBookingFlowOrder("employee_first")
-    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { bookingFlowOrder: "employee_first" })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/settings", { bookingFlowOrder: "employee_first" })
     expect(result).toBe("employee_first")
   })
 

@@ -15,8 +15,7 @@ const apiMocks = vi.hoisted(() => ({
   fetchRoles: vi.fn(),
   createRole: vi.fn(),
   deleteRole: vi.fn(),
-  assignPermission: vi.fn(),
-  removePermission: vi.fn(),
+  setRolePermissions: vi.fn(),
   fetchPermissions: vi.fn(),
 }))
 

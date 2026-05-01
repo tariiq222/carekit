@@ -21,7 +21,9 @@ import {
   userCreateSchema,
   userEditSchema,
   type UserCreateFormData,
+  type UserEditFormData,
 } from "@/lib/schemas/user.schema"
+import type { TenantUserRole, UserRole } from "@/lib/types/user"
 
 /* ─── Types ─── */
 
@@ -29,7 +31,18 @@ type Props =
   | { mode: "create" }
   | { mode: "edit"; userId: string }
 
-type FormData = UserCreateFormData
+type FormData = UserCreateFormData | UserEditFormData
+
+const TENANT_FORM_ROLES = new Set<UserRole>([
+  "ADMIN",
+  "RECEPTIONIST",
+  "ACCOUNTANT",
+  "EMPLOYEE",
+])
+
+function toTenantFormRole(role: UserRole): TenantUserRole | undefined {
+  return TENANT_FORM_ROLES.has(role) ? (role as TenantUserRole) : undefined
+}
 
 /* ─── User Form Page ─── */
 
@@ -60,18 +73,19 @@ export function UserFormPage(props: Props) {
       name: user.name,
       phone: user.phone ?? "",
       gender: user.gender ?? undefined,
-      role: user.role,
+      role: toTenantFormRole(user.role),
     })
   }, [user, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       if (isEdit) {
-        const { password: _pw, ...editData } = data as FormData
+        const editData = data as UserEditFormData
         await updateMut.mutateAsync({ id: userId!, ...editData, phone: editData.phone || undefined })
         toast.success(t("users.edit.success"))
       } else {
-        await createMut.mutateAsync({ ...(data as UserCreateFormData), phone: data.phone || undefined })
+        const createData = data as UserCreateFormData
+        await createMut.mutateAsync({ ...createData, phone: createData.phone || undefined })
         toast.success(t("users.create.success"))
       }
       router.push("/users")

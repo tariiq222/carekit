@@ -345,6 +345,9 @@ export const enEmployees: Record<string, string> = {
   "employees.attach.title": "Attach Existing User",
   "employees.attach.description": "Search for an existing user by phone or email to add as an employee.",
   "employees.attach.identifierLabel": "Phone or Email",
+  "employees.attach.identifierPlaceholder": "user@example.com or +966501234567",
+  "employees.attach.identifierHelp":
+    "The user must already be registered before you can link them to this organization.",
   "employees.attach.roleLabel": "Role",
   "employees.attach.roleAdmin": "Admin",
   "employees.attach.roleReceptionist": "Receptionist",

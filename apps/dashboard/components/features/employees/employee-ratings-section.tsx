@@ -13,7 +13,7 @@ import { Separator } from "@deqah/ui"
 import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
-import { format } from "date-fns"
+import { formatDatePattern } from "@/lib/date"
 import { ar } from "date-fns/locale"
 
 /* ─── Props ─── */
@@ -159,7 +159,7 @@ export function EmployeeRatingsSection({
                   <p className="text-sm leading-relaxed text-foreground">{r.comment}</p>
                 )}
                 <span className="text-xs tabular-nums text-muted-foreground">
-                  {format(new Date(r.createdAt), "MMM d, yyyy", {
+                  {formatDatePattern(r.createdAt, "MMM d, yyyy", {
                     locale: isAr ? ar : undefined,
                   })}
                 </span>

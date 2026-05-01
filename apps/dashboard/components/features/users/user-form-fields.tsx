@@ -23,7 +23,6 @@ import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 
 const USER_ROLES = [
-  "SUPER_ADMIN",
   "ADMIN",
   "RECEPTIONIST",
   "ACCOUNTANT",
@@ -46,13 +45,13 @@ export function UserFormFields({ form, isEdit }: UserFormFieldsProps) {
         <CardContent className="pt-6">
           <SectionHeader
             icon={UserIcon}
-            title={t("users.create.firstName")}
+            title={t("users.create.fullName")}
             description={t("users.create.description")}
           />
           <div className="space-y-4">
             <div className="flex flex-col gap-1.5">
-              <Label>{t("users.create.firstName")} *</Label>
-              <Input placeholder={t("users.create.firstName")} {...form.register("name")} />
+              <Label>{t("users.create.fullName")} *</Label>
+              <Input placeholder={t("users.create.fullNamePlaceholder")} {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message as string}</p>
               )}
@@ -63,13 +62,13 @@ export function UserFormFields({ form, isEdit }: UserFormFieldsProps) {
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v as "male" | "female")}>
+                  <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v as "MALE" | "FEMALE")}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t("users.create.genderPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">{t("users.create.male")}</SelectItem>
-                      <SelectItem value="female">{t("users.create.female")}</SelectItem>
+                      <SelectItem value="MALE">{t("users.create.male")}</SelectItem>
+                      <SelectItem value="FEMALE">{t("users.create.female")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

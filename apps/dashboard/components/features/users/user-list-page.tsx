@@ -30,7 +30,7 @@ export function UserListPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const defaultTab = searchParams.get("tab") === "activityLog" ? "activityLog" : "users"
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { users, meta, isLoading, error, search, setSearch } = useUsers()
   const { data: roles } = useRoles()
   const { activateMut, deactivateMut } = useUserMutations()
@@ -53,7 +53,7 @@ export function UserListPage() {
     }
   }, [activateMut, deactivateMut, t])
 
-  const columns = getUserColumns({ onEdit: (u) => router.push(`/users/${u.id}/edit`), onDelete: setDeleteUser, onToggleActive: handleToggleActive }, t)
+  const columns = getUserColumns({ onEdit: (u) => router.push(`/users/${u.id}/edit`), onDelete: setDeleteUser, onToggleActive: handleToggleActive }, t, locale)
   const isUsersTab = activeTab === "users"
   const isRolesTab = activeTab === "roles"
 

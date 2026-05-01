@@ -21,48 +21,29 @@ export const RECURRING_PATTERNS: { value: RecurringPattern; labelKey: string }[]
   { value: "monthly", labelKey: "settings.recurringPattern.monthly" },
 ]
 
+export type RefundType = "FULL" | "PARTIAL" | "NONE"
+
 export interface BookingSettings {
-  id: string
-  paymentTimeoutMinutes: number
-  freeCancelBeforeHours: number
-  freeCancelRefundType: string
-  lateCancelRefundType: string
-  lateCancelRefundPercent: number
-  adminCanDirectCancel: boolean
-  clientCanCancelPending: boolean
-  clientCanReschedule: boolean
-  rescheduleBeforeHours: number
-  maxReschedulesPerBooking: number
-  allowWalkIn: boolean
-  walkInPaymentRequired: boolean
-  allowRecurring: boolean
-  maxRecurrences: number
-  allowedRecurringPatterns: string[]
-  waitlistEnabled: boolean
-  waitlistMaxPerSlot: number
-  waitlistAutoNotify: boolean
+  id?: string
+  organizationId?: string
+  branchId?: string | null
   bufferMinutes: number
+  freeCancelBeforeHours: number
+  freeCancelRefundType: RefundType
+  lateCancelRefundPercent: number
+  maxReschedulesPerBooking: number
   autoCompleteAfterHours: number
   autoNoShowAfterMinutes: number
-  noShowPolicy: string
-  noShowRefundPercent: number
-  cancellationReviewTimeoutHours: number
-  cancellationPolicyEn: string
-  cancellationPolicyAr: string
-  reminder24hEnabled: boolean
-  reminder1hEnabled: boolean
-  reminderInteractive: boolean
-  suggestAlternativesOnConflict: boolean
-  suggestAlternativesCount: number
   minBookingLeadMinutes: number
   maxAdvanceBookingDays: number
-  adminCanBookOutsideHours: boolean
-  // Widget settings
-  widgetShowPrice: boolean
-  widgetAnyEmployee: boolean
-  widgetRedirectUrl: string | null
-  createdAt: string
-  updatedAt: string
+  waitlistEnabled: boolean
+  waitlistMaxPerSlot: number
+  payAtClinicEnabled: boolean
+  requireCancelApproval: boolean
+  autoRefundOnCancel: boolean
+  clientRescheduleMinHoursBefore: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export async function fetchBookingSettings(): Promise<BookingSettings> {

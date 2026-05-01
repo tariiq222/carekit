@@ -28,34 +28,46 @@ import {
 describe("organization api", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetchOrganizationHours calls /organization/hours", async () => {
+  it("fetchOrganizationHours calls branch-scoped hours endpoint", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchOrganizationHours()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/hours")
+    await fetchOrganizationHours("branch-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/hours/branch-1")
   })
 
-  it("updateOrganizationHours posts to /organization/hours", async () => {
+  it("updateOrganizationHours posts backend schedule shape", async () => {
     postMock.mockResolvedValueOnce([])
-    await updateOrganizationHours([])
-    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/hours", { hours: [] })
+    await updateOrganizationHours("branch-1", [
+      { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", isActive: true },
+    ])
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/hours", {
+      branchId: "branch-1",
+      schedule: [
+        { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", isOpen: true },
+      ],
+    })
   })
 
-  it("fetchOrganizationHolidays calls /organization/holidays without params", async () => {
+  it("fetchOrganizationHolidays passes required branchId", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchOrganizationHolidays()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", undefined)
+    await fetchOrganizationHolidays("branch-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", { branchId: "branch-1" })
   })
 
-  it("fetchOrganizationHolidays passes year param", async () => {
+  it("fetchOrganizationHolidays passes branchId and year params", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchOrganizationHolidays(2026)
-    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", { year: 2026 })
+    await fetchOrganizationHolidays("branch-1", 2026)
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", { branchId: "branch-1", year: 2026 })
   })
 
-  it("createOrganizationHoliday posts to /organization/holidays", async () => {
+  it("createOrganizationHoliday includes branchId", async () => {
     postMock.mockResolvedValueOnce({})
-    await createOrganizationHoliday({ date: "2026-12-25", nameAr: "عيد", nameEn: "Holiday" })
-    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/holidays", expect.objectContaining({ date: "2026-12-25" }))
+    await createOrganizationHoliday("branch-1", { date: "2026-12-25", nameAr: "عيد", nameEn: "Holiday" })
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/holidays", {
+      branchId: "branch-1",
+      date: "2026-12-25",
+      nameAr: "عيد",
+      nameEn: "Holiday",
+    })
   })
 
   it("deleteOrganizationHoliday deletes /organization/holidays/:id", async () => {

@@ -10,7 +10,7 @@ const validBase = {
   email: "a@clinic.test",
   name: "Sara Ali",
   phone: "+966501234567",
-  gender: "female" as const,
+  gender: "FEMALE" as const,
 }
 
 describe("userBaseSchema", () => {
@@ -52,9 +52,14 @@ describe("userCreateSchema", () => {
   })
 
   it("accepts each documented USER_ROLES enum value", () => {
-    for (const role of ["SUPER_ADMIN", "ADMIN", "RECEPTIONIST", "ACCOUNTANT", "EMPLOYEE", "CLIENT"] as const) {
+    for (const role of ["ADMIN", "RECEPTIONIST", "ACCOUNTANT", "EMPLOYEE"] as const) {
       expect(userCreateSchema.safeParse({ ...validCreate, role }).success).toBe(true)
     }
+  })
+
+  it("rejects platform and client-only roles from tenant user creation", () => {
+    expect(userCreateSchema.safeParse({ ...validCreate, role: "SUPER_ADMIN" }).success).toBe(false)
+    expect(userCreateSchema.safeParse({ ...validCreate, role: "CLIENT" }).success).toBe(false)
   })
 })
 
@@ -72,7 +77,7 @@ describe("createRoleSchema", () => {
     expect(createRoleSchema.safeParse({ name: "Cashier" }).success).toBe(true)
   })
 
-  it("accepts an optional description", () => {
-    expect(createRoleSchema.safeParse({ name: "Cashier", description: "Handles POS" }).success).toBe(true)
+  it("rejects unsupported description payloads that the backend does not persist", () => {
+    expect(createRoleSchema.safeParse({ name: "Cashier", description: "Handles POS" }).success).toBe(false)
   })
 })

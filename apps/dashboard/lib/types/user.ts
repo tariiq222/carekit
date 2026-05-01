@@ -2,7 +2,7 @@
  * User & Role Types — Deqah Dashboard
  */
 
-import type { SearchableQuery, UserGender } from "./common"
+import type { SearchableQuery } from "./common"
 
 /* ─── Entities ─── */
 
@@ -13,6 +13,14 @@ export type UserRole =
   | "ACCOUNTANT"
   | "EMPLOYEE"
   | "CLIENT"
+
+export type TenantUserRole =
+  | "ADMIN"
+  | "RECEPTIONIST"
+  | "ACCOUNTANT"
+  | "EMPLOYEE"
+
+export type UserGender = "MALE" | "FEMALE"
 
 export interface User {
   id: string
@@ -41,7 +49,8 @@ export interface Role {
 
 export interface Permission {
   id: string
-  module: string
+  module?: string
+  subject?: string
   action: string
 }
 
@@ -58,7 +67,7 @@ export interface CreateUserPayload {
   email: string
   password: string
   name: string
-  role: UserRole
+  role: TenantUserRole
   phone?: string
   gender?: UserGender
   customRoleId?: string
@@ -69,22 +78,19 @@ export interface UpdateUserPayload {
   name?: string
   phone?: string
   gender?: UserGender
-  role?: UserRole
+  role?: TenantUserRole
   customRoleId?: string | null
 }
 
 export interface AssignRolePayload {
-  roleId?: string
-  roleSlug?: string
+  customRoleId: string
 }
 
 export interface CreateRolePayload {
   name: string
-  slug?: string
-  description?: string
 }
 
-export interface AssignPermissionPayload {
-  module: string
+export interface RolePermissionPayload {
+  subject: string
   action: string
 }

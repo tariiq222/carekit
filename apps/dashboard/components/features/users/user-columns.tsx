@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@deqah/ui"
 import type { User } from "@/lib/types/user"
+import type { Locale } from "@/lib/translations"
+import type { UserRole } from "@/lib/types/user"
 
 interface UserColumnCallbacks {
   onEdit: (user: User) => void
@@ -32,6 +34,7 @@ interface UserColumnCallbacks {
 export function getUserColumns(
   callbacks?: UserColumnCallbacks,
   t: (key: string) => string = (k) => k,
+  locale: Locale = "ar",
 ): ColumnDef<User>[] {
   const columns: ColumnDef<User>[] = [
     {
@@ -60,7 +63,7 @@ export function getUserColumns(
       header: t("users.col.roles"),
       cell: ({ row }) => (
         <Badge variant="secondary" className="text-[10px]">
-          {t(`users.role.${row.original.role}`)}
+          {formatUserRole(row.original.role, t, locale)}
         </Badge>
       ),
     },
@@ -145,4 +148,33 @@ export function getUserColumns(
   }
 
   return columns
+}
+
+const USER_ROLE_FALLBACKS: Record<Locale, Record<UserRole, string>> = {
+  ar: {
+    SUPER_ADMIN: "مدير المنصة",
+    ADMIN: "مدير",
+    RECEPTIONIST: "موظف استقبال",
+    ACCOUNTANT: "محاسب",
+    EMPLOYEE: "موظف",
+    CLIENT: "مستفيد",
+  },
+  en: {
+    SUPER_ADMIN: "Super Admin",
+    ADMIN: "Admin",
+    RECEPTIONIST: "Receptionist",
+    ACCOUNTANT: "Accountant",
+    EMPLOYEE: "Employee",
+    CLIENT: "Client",
+  },
+}
+
+export function formatUserRole(
+  role: UserRole,
+  t: (key: string) => string,
+  locale: Locale,
+) {
+  const key = `users.role.${role}`
+  const label = t(key)
+  return label === key ? USER_ROLE_FALLBACKS[locale][role] : label
 }

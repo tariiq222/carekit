@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { beforeEach } from 'vitest'
 
 // Suppress the known cross-file 'Refresh failed' unhandled rejection.
 // The api-client deliberately rejects the cached refresh-mutex promise so

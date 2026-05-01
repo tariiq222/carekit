@@ -220,13 +220,13 @@ export function Header() {
           className="w-48"
         >
           <div dir={dir}>
-            <button
-              onClick={() => {}}
+            <Link
+              href="/profile"
               className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
             >
               <HugeiconsIcon icon={UserCircle02Icon} size={16} className="text-muted-foreground" />
               {t("header.myProfile")}
-            </button>
+            </Link>
             <button
               onClick={() => setPasswordOpen(true)}
               className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"

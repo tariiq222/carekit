@@ -24,8 +24,7 @@ import {
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 } from "@/lib/api/users"
 
@@ -78,8 +77,8 @@ describe("users api", () => {
 
   it("assigns role to user via POST /users/:id/roles", async () => {
     postMock.mockResolvedValueOnce(undefined)
-    await assignRole("u-1", { roleId: "r-1" })
-    expect(postMock).toHaveBeenCalledWith("/dashboard/identity/users/u-1/roles", { roleId: "r-1" })
+    await assignRole("u-1", { customRoleId: "r-1" })
+    expect(postMock).toHaveBeenCalledWith("/dashboard/identity/users/u-1/roles", { customRoleId: "r-1" })
   })
 
   it("removes role from user via DELETE /users/:id/roles/:roleId", async () => {
@@ -96,7 +95,7 @@ describe("users api", () => {
 
   it("creates a role via POST /roles", async () => {
     postMock.mockResolvedValueOnce({ id: "r-2" })
-    await createRole({ name: "receptionist", description: "Front desk" })
+    await createRole({ name: "receptionist" })
     expect(postMock).toHaveBeenCalledWith("/dashboard/identity/roles", expect.objectContaining({ name: "receptionist" }))
   })
 
@@ -106,16 +105,12 @@ describe("users api", () => {
     expect(deleteMock).toHaveBeenCalledWith("/dashboard/identity/roles/r-1")
   })
 
-  it("assigns permission to role via POST /roles/:id/permissions", async () => {
+  it("saves the full permission set via POST /roles/:id/permissions", async () => {
     postMock.mockResolvedValueOnce(undefined)
-    await assignPermission("r-1", { module: "clients", action: "read" })
-    expect(postMock).toHaveBeenCalledWith("/dashboard/identity/roles/r-1/permissions", { module: "clients", action: "read" })
-  })
-
-  it("removes permission from role via POST /roles/:id/permissions/remove", async () => {
-    postMock.mockResolvedValueOnce(undefined)
-    await removePermission("r-1", { module: "clients", action: "read" })
-    expect(postMock).toHaveBeenCalledWith("/dashboard/identity/roles/r-1/permissions/remove", { module: "clients", action: "read" })
+    await setRolePermissions("r-1", [{ subject: "Client", action: "read" }])
+    expect(postMock).toHaveBeenCalledWith("/dashboard/identity/roles/r-1/permissions", {
+      permissions: [{ subject: "Client", action: "read" }],
+    })
   })
 
   it("fetches all permissions via GET /permissions", async () => {

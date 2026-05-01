@@ -15,7 +15,6 @@ import {
 } from "@deqah/ui"
 import { Input } from "@deqah/ui"
 import { Label } from "@deqah/ui"
-import { Textarea } from "@deqah/ui"
 import { Button } from "@deqah/ui"
 
 import { useRoleMutations } from "@/hooks/use-users"
@@ -40,14 +39,13 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
 
   const form = useForm<CreateRoleFormData>({
     resolver: zodResolver(createRoleSchema),
-    defaultValues: { name: "", description: "" },
+    defaultValues: { name: "" },
   })
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       await createMut.mutateAsync({
         name: data.name,
-        description: data.description || undefined,
       })
       toast.success(t("users.roles.create.success"))
       form.reset()
@@ -81,16 +79,6 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
                   {form.formState.errors.name.message}
                 </p>
               )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="role-description">{t("users.roles.create.descriptionLabel")}</Label>
-              <Textarea
-                id="role-description"
-                placeholder={t("users.roles.create.descriptionPlaceholder")}
-                rows={3}
-                {...form.register("description")}
-              />
             </div>
           </form>
         </DialogBody>

@@ -92,7 +92,7 @@ describe("queryKeys", () => {
 
   describe("organization", () => {
     it("holidays includes year", () => {
-      expect(queryKeys.organization.holidays(2026)).toContain(2026)
+      expect(queryKeys.organization.holidays("branch-1", 2026)).toContain(2026)
     })
   })
 

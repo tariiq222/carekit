@@ -83,7 +83,9 @@ function groupByDay(bookings: Booking[]): { date: string; count: number; revenue
 function fmtDate(dateStr: string, locale: string, period: Period): string {
   const opts: Intl.DateTimeFormatOptions = period === "6m"
     ? { month: "short" } : { day: "numeric", month: "short" }
-  return new Date(dateStr).toLocaleDateString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US", opts)
+  const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return "—"
+  return date.toLocaleDateString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US", opts)
 }
 
 function fmtRevenue(halalat: number, _locale: string): string {

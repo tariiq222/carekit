@@ -15,8 +15,7 @@ const {
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 } = vi.hoisted(() => ({
   fetchUsers: vi.fn(),
@@ -30,8 +29,7 @@ const {
   fetchRoles: vi.fn(),
   createRole: vi.fn(),
   deleteRole: vi.fn(),
-  assignPermission: vi.fn(),
-  removePermission: vi.fn(),
+  setRolePermissions: vi.fn(),
   fetchPermissions: vi.fn(),
 }))
 
@@ -47,8 +45,7 @@ vi.mock("@/lib/api/users", () => ({
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 }))
 

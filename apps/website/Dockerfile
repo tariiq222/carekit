@@ -4,17 +4,16 @@
 
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
+RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
+COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY apps/website/package.json ./apps/website/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/shared/package.json ./packages/shared/
-# npm ci keeps the package-lock platform selection, which on Windows hosts
-# omits the target linux optional binaries (lightningcss, tailwindcss).
-# Force them in for the image's actual arch so Tailwind v4's native CSS
-# engine can load on both x64 runners (CI) and arm64 hosts (Apple Silicon).
+# Force linux native binaries for the image's actual arch so Tailwind v4's
+# native CSS engine can load on both x64 runners (CI) and arm64 hosts.
 RUN ARCH=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/') \
- && npm ci --workspaces --include-workspace-root \
- && npm install --no-save --ignore-scripts=false \
+ && pnpm install --frozen-lockfile \
+ && pnpm add --no-save --ignore-scripts=false \
       lightningcss-linux-${ARCH}-gnu \
       @tailwindcss/oxide-linux-${ARCH}-gnu
 
@@ -22,11 +21,12 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build --workspace=@deqah/shared --if-present
-RUN npm run build --workspace=@deqah/api-client --if-present
-RUN npm run build --workspace=website
+RUN pnpm --filter=@deqah/shared run build --if-present
+RUN pnpm --filter=@deqah/api-client run build --if-present
+RUN pnpm --filter=website run build
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app

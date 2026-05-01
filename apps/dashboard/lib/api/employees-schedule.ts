@@ -20,6 +20,19 @@ import type {
 } from "@/lib/types/employee"
 import type { Rating } from "@/lib/types/rating"
 
+type RawRating = Omit<Rating, "stars"> & {
+  score?: number
+  stars?: number
+}
+
+function mapRating(raw: RawRating): Rating {
+  return {
+    ...raw,
+    stars: raw.stars ?? raw.score ?? 0,
+    comment: raw.comment ?? null,
+  }
+}
+
 /* ─── Availability ─── */
 
 export async function fetchAvailability(
@@ -160,8 +173,29 @@ export async function fetchEmployeeRatings(
   id: string,
   query: { page?: number; perPage?: number } = {},
 ): Promise<PaginatedResponse<Rating>> {
-  return api.get<PaginatedResponse<Rating>>(
+  const res = await api.get<PaginatedResponse<RawRating> | RawRating[]>(
     `/dashboard/people/employees/${id}/ratings`,
     { page: query.page, limit: query.perPage },
   )
+
+  if (Array.isArray(res)) {
+    const page = query.page ?? 1
+    const perPage = query.perPage ?? 20
+    return {
+      items: res.map(mapRating),
+      meta: {
+        total: res.length,
+        page,
+        perPage,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: page > 1,
+      },
+    }
+  }
+
+  return {
+    items: res.items.map(mapRating),
+    meta: res.meta,
+  }
 }

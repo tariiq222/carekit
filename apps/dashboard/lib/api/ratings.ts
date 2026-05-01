@@ -1,6 +1,6 @@
 /**
  * Ratings API — Deqah Dashboard
- * Controller: dashboard/organization-settings/ratings
+ * Controller: dashboard/organization/ratings
  */
 
 import { api } from "@/lib/api"
@@ -37,7 +37,7 @@ export async function fetchRatings(
   query: ListRatingsQuery = {},
 ): Promise<PaginatedResponse<Rating>> {
   return api.get<PaginatedResponse<Rating>>(
-    "/dashboard/organization-settings/ratings",
+    "/dashboard/organization/ratings",
     {
       page: query.page,
       limit: query.limit,
@@ -51,7 +51,7 @@ export async function submitRating(
   payload: SubmitRatingPayload,
 ): Promise<Rating> {
   return api.post<Rating>(
-    "/dashboard/organization-settings/ratings",
+    "/dashboard/organization/ratings",
     payload,
   )
 }

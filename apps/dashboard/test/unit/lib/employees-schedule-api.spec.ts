@@ -164,6 +164,29 @@ describe("employees-schedule api", () => {
   })
 
   describe("fetchEmployeeRatings edge cases", () => {
+    it("normalizes backend score into the rating stars field", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [
+          {
+            id: "rating-1",
+            bookingId: "booking-1",
+            score: 5,
+            comment: "ممتاز",
+            createdAt: "2026-05-01T00:00:00.000Z",
+          },
+        ],
+        meta: { total: 1, page: 1, perPage: 20, totalPages: 1 },
+      })
+
+      const result = await fetchEmployeeRatings("p-1", { page: 1 })
+
+      expect(result.items[0]).toMatchObject({
+        id: "rating-1",
+        stars: 5,
+        comment: "ممتاز",
+      })
+    })
+
     it("sends page and perPage params", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: {} })
       await fetchEmployeeRatings("p-1", { page: 3, perPage: 50 })

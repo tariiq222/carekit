@@ -1,11 +1,10 @@
 "use client"
 
-import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
+import { DetailSection } from "@/components/features/detail-sheet-parts"
 import { useLocale } from "@/components/locale-provider"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { Badge } from "@deqah/ui"
-import { format } from "date-fns"
 
 interface Props {
   bookingId: string

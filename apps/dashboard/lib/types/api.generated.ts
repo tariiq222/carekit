@@ -5211,7 +5211,7 @@ export interface components {
             vatRegistrationNumber?: string;
             /**
              * @description Legal seller name as registered with ZATCA
-             * @example Carekit Medical Clinic
+             * @example Deqah Medical Clinic
              */
             sellerName?: string;
             /**

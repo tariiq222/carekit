@@ -17,7 +17,7 @@ describe("booking-settings api", () => {
   })
 
   it("fetchBookingSettings calls /booking-settings", async () => {
-    const mockSettings = { id: "bs-1", paymentTimeoutMinutes: 30 }
+    const mockSettings = { id: "bs-1", bufferMinutes: 10 }
     getMock.mockResolvedValueOnce(mockSettings)
     const result = await fetchBookingSettings()
     expect(getMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings")
@@ -25,10 +25,10 @@ describe("booking-settings api", () => {
   })
 
   it("updateBookingSettings patches /booking-settings", async () => {
-    const updated = { id: "bs-1", paymentTimeoutMinutes: 60 }
+    const updated = { id: "bs-1", bufferMinutes: 15 }
     patchMock.mockResolvedValueOnce(updated)
-    const result = await updateBookingSettings({ paymentTimeoutMinutes: 60 })
-    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { paymentTimeoutMinutes: 60 })
+    const result = await updateBookingSettings({ bufferMinutes: 15 })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { bufferMinutes: 15 })
     expect(result).toEqual(updated)
   })
 })

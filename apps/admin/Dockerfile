@@ -4,20 +4,21 @@
 
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
+RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
+COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY apps/admin/package.json ./apps/admin/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json ./packages/ui/
 
 ARG TARGETARCH
-RUN npm ci --workspaces --include-workspace-root \
+RUN pnpm install --frozen-lockfile \
  && if [ "$TARGETARCH" = "arm64" ]; then \
-      npm install --no-save --ignore-scripts=false \
+      pnpm add --no-save --ignore-scripts=false \
         lightningcss-linux-arm64-gnu \
         @tailwindcss/oxide-linux-arm64-gnu; \
     else \
-      npm install --no-save --ignore-scripts=false \
+      pnpm add --no-save --ignore-scripts=false \
         lightningcss-linux-x64-gnu \
         @tailwindcss/oxide-linux-x64-gnu; \
     fi
@@ -25,12 +26,13 @@ RUN npm ci --workspaces --include-workspace-root \
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build --workspace=@deqah/shared --if-present
-RUN npm run build --workspace=@deqah/api-client --if-present
-RUN npm run build --workspace=@deqah/ui --if-present
-RUN npm run build --workspace=admin
+RUN pnpm --filter=@deqah/shared run build --if-present
+RUN pnpm --filter=@deqah/api-client run build --if-present
+RUN pnpm --filter=@deqah/ui run build --if-present
+RUN pnpm --filter=admin run build
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app

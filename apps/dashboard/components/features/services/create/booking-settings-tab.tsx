@@ -144,8 +144,7 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
           />
 
           {/* Recurring: switch card + pattern picker expand inside the same visual container */}
-          {globalSettings?.allowRecurring && (
-            <div className={cn(
+          <div className={cn(
               "space-y-3 rounded-lg border p-3 transition-colors duration-200",
               allowRecurring
                 ? "border-primary/30 bg-primary/[0.03]"
@@ -227,8 +226,7 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
                   )}
                 </div>
               )}
-            </div>
-          )}
+          </div>
         </div>
 
       </CardContent>

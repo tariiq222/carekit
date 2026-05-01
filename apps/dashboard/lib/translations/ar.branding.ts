@@ -61,7 +61,7 @@ export const arBranding: Record<string, string> = {
   "branding.website.themes.sawaa": "ساوا",
   "branding.website.themes.premium": "بريميوم",
   // Organization name + tagline placeholders
-  "branding.organizationNamePlaceholderAr": "عيادة كيركت",
+  "branding.organizationNamePlaceholderAr": "عيادة دِقة",
   "branding.productTaglinePlaceholder": "نحو رعاية أفضل",
   // Color preview labels
   "branding.preview.accentOnBg": "لون التمييز على الخلفية",

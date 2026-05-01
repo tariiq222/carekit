@@ -13,7 +13,7 @@ import type {
   UpdateUserPayload,
   AssignRolePayload,
   CreateRolePayload,
-  AssignPermissionPayload,
+  RolePermissionPayload,
 } from "@/lib/types/user"
 
 /* ─── Users ─── */
@@ -87,18 +87,11 @@ export async function deleteRole(id: string): Promise<void> {
   await api.delete(`/dashboard/identity/roles/${id}`)
 }
 
-export async function assignPermission(
+export async function setRolePermissions(
   roleId: string,
-  payload: AssignPermissionPayload,
+  permissions: RolePermissionPayload[],
 ): Promise<void> {
-  await api.post(`/dashboard/identity/roles/${roleId}/permissions`, payload)
-}
-
-export async function removePermission(
-  roleId: string,
-  payload: AssignPermissionPayload,
-): Promise<void> {
-  await api.post(`/dashboard/identity/roles/${roleId}/permissions/remove`, payload)
+  await api.post(`/dashboard/identity/roles/${roleId}/permissions`, { permissions })
 }
 
 /* ─── Permissions ─── */

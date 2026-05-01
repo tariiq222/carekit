@@ -27,6 +27,7 @@ import { useLocale } from "@/components/locale-provider"
 import { Skeleton } from "@deqah/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@deqah/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
+import { formatLocaleDate } from "@/lib/date"
 import { sarToHalalas } from "@/lib/money"
 
 /* ─── ProfileSkeleton ─── */
@@ -122,7 +123,6 @@ export function CombinedInfoCard({
   createdAt, updatedAt, locale,
 }: CombinedInfoCardProps) {
   const { t } = useLocale()
-  const dateLocale = locale === "ar" ? "ar-SA" : "en-US"
   return (
     <Card>
       <CardContent className="flex flex-col gap-0 divide-y divide-border p-0">
@@ -168,13 +168,13 @@ export function CombinedInfoCard({
           <InfoRow
             icon={Calendar03Icon}
             label={t("employees.detail.registered")}
-            value={new Date(createdAt).toLocaleDateString(dateLocale)}
+            value={formatLocaleDate(createdAt, locale)}
             numeric
           />
           <InfoRow
             icon={Calendar03Icon}
             label={t("employees.detail.lastUpdated")}
-            value={new Date(updatedAt).toLocaleDateString(dateLocale)}
+            value={formatLocaleDate(updatedAt, locale)}
             numeric
           />
         </div>

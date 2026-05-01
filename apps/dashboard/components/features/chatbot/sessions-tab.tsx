@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { type ColumnDef } from "@tanstack/react-table"
-import { format } from "date-fns"
 
 import { DataTable } from "@/components/features/data-table"
 import { Badge } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
+import { formatDatePattern } from "@/lib/date"
 import { useChatSessions } from "@/hooks/use-chatbot"
 import { SessionDetailSheet } from "./session-detail-sheet"
 import type { ChatSession } from "@/lib/types/chatbot"
@@ -99,7 +99,7 @@ function getColumns(
       header: t("chatbot.col.startedAt"),
       cell: ({ row }) => (
         <span className="text-sm tabular-nums text-muted-foreground">
-          {format(new Date(row.original.startedAt), "MMM d, yyyy HH:mm")}
+          {formatDatePattern(row.original.startedAt, "MMM d, yyyy HH:mm")}
         </span>
       ),
     },

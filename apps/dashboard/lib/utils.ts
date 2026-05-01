@@ -76,7 +76,7 @@ export function getInitials(
 
 // ─── Clinic Date/Time Formatting ───────────────────────────────────────────
 
-export type DateFormat = "Y-m-d" | "d/m/Y" | "m/d/Y"
+export type DateFormat = "Y-m-d" | "d/m/Y" | "m/d/Y" | "DD/MM/YYYY"
 export type TimeFormat = "24h" | "12h"
 
 /**
@@ -94,6 +94,7 @@ export function formatClinicDate(date: Date | string, format: DateFormat = "Y-m-
   const day = String(d.getDate()).padStart(2, "0")
 
   switch (format) {
+    case "DD/MM/YYYY":
     case "d/m/Y": return `${day}/${month}/${year}`
     case "m/d/Y": return `${month}/${day}/${year}`
     case "Y-m-d":

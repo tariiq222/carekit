@@ -1,12 +1,10 @@
 import { z } from "zod"
 
 const USER_ROLES = [
-  "SUPER_ADMIN",
   "ADMIN",
   "RECEPTIONIST",
   "ACCOUNTANT",
   "EMPLOYEE",
-  "CLIENT",
 ] as const
 
 /* ─── User base schema (user-form-page) ─── */
@@ -18,7 +16,7 @@ export const userBaseSchema = z.object({
     (v) => !v || /^\+[1-9]\d{6,14}$/.test(v),
     { message: "أدخل الرقم بصيغة دولية مثل: +966501234567" }
   ),
-  gender: z.enum(["male", "female"]).optional(),
+  gender: z.enum(["MALE", "FEMALE"]).optional(),
 })
 
 export const userCreateSchema = userBaseSchema.extend({
@@ -38,7 +36,6 @@ export type UserEditFormData   = z.infer<typeof userEditSchema>
 
 export const createRoleSchema = z.object({
   name: z.string().min(1, "Role name is required"),
-  description: z.string().optional(),
-})
+}).strict()
 
 export type CreateRoleFormData = z.infer<typeof createRoleSchema>

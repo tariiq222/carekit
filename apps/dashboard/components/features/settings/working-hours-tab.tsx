@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Clock01Icon } from "@hugeicons/core-free-icons"
@@ -10,12 +10,20 @@ import { Switch } from "@deqah/ui"
 import { Input } from "@deqah/ui"
 import { Label } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import type { OrganizationHour } from "@/lib/api/organization"
 import { useOrganizationHours, useOrganizationHoursMutation } from "@/hooks/use-organization-settings"
 import { HolidaysSection } from "./holidays-section"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import { useLocale } from "@/components/locale-provider"
+import { useBranches } from "@/hooks/use-branches"
 
 /* ─── Constants ─── */
 
@@ -53,37 +61,57 @@ type TabId = "hours" | "holidays"
 
 /* ─── Working Hours Panel ─── */
 
-function WorkingHoursPanel({ t }: Props) {
+function WorkingHoursPanel({ t, branchId }: Props & { branchId: string }) {
   const { weekStartDayNumber } = useOrganizationConfig()
   const orderedDays = useMemo(() => getOrderedDays(weekStartDayNumber), [weekStartDayNumber])
   const [hours, setHours] = useState<OrganizationHour[]>(() => buildDefaultHours(orderedDays))
+  const hoursRef = useRef(hours)
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  const { data: serverHours, isLoading } = useOrganizationHours()
+  const { data: serverHours, isLoading } = useOrganizationHours(branchId)
   const mutation = useOrganizationHoursMutation()
 
   useEffect(() => {
     const defaults = buildDefaultHours(orderedDays)
+    const nextHours = !serverHours || serverHours.length === 0
+      ? defaults
+      : defaults.map((def) => {
+          const match = serverHours.find((s: OrganizationHour) => s.dayOfWeek === def.dayOfWeek)
+          return match ?? { ...def, isActive: false }
+        })
+    hoursRef.current = nextHours
     // Sync hours grid with server data (and re-seed when weekStart day order changes).
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHours(
-      !serverHours || serverHours.length === 0
-        ? defaults
-        : defaults.map((def) => {
-            const match = serverHours.find((s: OrganizationHour) => s.dayOfWeek === def.dayOfWeek)
-            return match ?? { ...def, isActive: false }
-          }),
-    )
+    setHours(nextHours)
   }, [serverHours, orderedDays])
 
   const updateDay = (index: number, patch: Partial<OrganizationHour>) => {
-    setHours((prev) => prev.map((h, i) => (i === index ? { ...h, ...patch } : h)))
+    setHours((prev) => {
+      const nextHours = prev.map((h, i) => (i === index ? { ...h, ...patch } : h))
+      hoursRef.current = nextHours
+      return nextHours
+    })
   }
 
   const handleSave = () => {
-    const payload = hours.map(({ dayOfWeek, startTime, endTime, isActive }) => ({
+    const timeInputs = Array.from(
+      panelRef.current?.querySelectorAll<HTMLInputElement>("input[data-time-field='true']") ?? [],
+    )
+    const currentHours = hoursRef.current.map((hour, index) => {
+      const startInput = timeInputs[index * 2]
+      const endInput = timeInputs[index * 2 + 1]
+      return {
+        ...hour,
+        startTime: startInput?.value || hour.startTime,
+        endTime: endInput?.value || hour.endTime,
+      }
+    })
+    hoursRef.current = currentHours
+    setHours(currentHours)
+    const payload = currentHours.map(({ dayOfWeek, startTime, endTime, isActive }) => ({
       dayOfWeek, startTime, endTime, isActive,
     }))
-    mutation.mutate(payload, {
+    mutation.mutate({ branchId, hours: payload }, {
       onSuccess: () => toast.success(t("settings.saved")),
       onError: (err: Error) => toast.error(err.message),
     })
@@ -98,7 +126,7 @@ function WorkingHoursPanel({ t }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div ref={panelRef} className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
         {hours.map((hour, index) => (
           <Card key={hour.dayOfWeek} className="shadow-sm bg-surface">
@@ -113,7 +141,7 @@ function WorkingHoursPanel({ t }: Props) {
         ))}
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={mutation.isPending} onClick={handleSave}>
+        <Button type="button" size="sm" disabled={mutation.isPending} onClick={handleSave}>
           {t("settings.save")}
         </Button>
       </div>
@@ -147,13 +175,39 @@ function DayRow({
         </Label>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <Input type="time" disabled={!hour.isActive} value={hour.startTime}
-          onChange={(e) => onChange({ startTime: e.target.value })}
-          className="h-8 w-28 text-center text-xs tabular-nums disabled:opacity-40" />
+        <Input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-2][0-9]:[0-5][0-9]"
+          maxLength={5}
+          dir="ltr"
+          disabled={!hour.isActive}
+          value={hour.startTime}
+          data-time-field="true"
+          data-day={hour.dayOfWeek}
+          data-field="startTime"
+          onChange={(e) => onChange({ startTime: e.currentTarget.value })}
+          onInput={(e) => onChange({ startTime: e.currentTarget.value })}
+          onBlur={(e) => onChange({ startTime: e.currentTarget.value })}
+          className="h-8 w-28 text-center text-xs tabular-nums disabled:opacity-40"
+        />
         <span className="text-xs text-muted-foreground">–</span>
-        <Input type="time" disabled={!hour.isActive} value={hour.endTime}
-          onChange={(e) => onChange({ endTime: e.target.value })}
-          className="h-8 w-28 text-center text-xs tabular-nums disabled:opacity-40" />
+        <Input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-2][0-9]:[0-5][0-9]"
+          maxLength={5}
+          dir="ltr"
+          disabled={!hour.isActive}
+          value={hour.endTime}
+          data-time-field="true"
+          data-day={hour.dayOfWeek}
+          data-field="endTime"
+          onChange={(e) => onChange({ endTime: e.currentTarget.value })}
+          onInput={(e) => onChange({ endTime: e.currentTarget.value })}
+          onBlur={(e) => onChange({ endTime: e.currentTarget.value })}
+          className="h-8 w-28 text-center text-xs tabular-nums disabled:opacity-40"
+        />
       </div>
     </div>
   )
@@ -161,10 +215,10 @@ function DayRow({
 
 /* ─── Holidays Panel ─── */
 
-function HolidaysPanel({ t }: Props) {
+function HolidaysPanel({ t, branchId }: Props & { branchId: string }) {
   return (
     <div className="flex flex-col gap-3 h-full">
-      <HolidaysSection t={t} />
+      <HolidaysSection t={t} branchId={branchId} />
     </div>
   )
 }
@@ -173,6 +227,18 @@ function HolidaysPanel({ t }: Props) {
 
 export function WorkingHoursTab({ t }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("hours")
+  const { branches, isLoading: branchesLoading } = useBranches()
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("")
+
+  useEffect(() => {
+    if (selectedBranchId || branches.length === 0) return
+    const defaultBranch = branches.find((branch) => branch.isMain && branch.isActive)
+      ?? branches.find((branch) => branch.isActive)
+      ?? branches[0]
+    // Seed the selected branch once from server branches.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedBranchId(defaultBranch.id)
+  }, [branches, selectedBranchId])
 
   const tabs: { id: TabId; label: string; desc: string }[] = [
     {
@@ -226,9 +292,33 @@ export function WorkingHoursTab({ t }: Props) {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
-          {activeTab === "hours" && <WorkingHoursPanel t={t} />}
-          {activeTab === "holidays" && <HolidaysPanel t={t} />}
+        <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col gap-4">
+          {branchesLoading ? (
+            <Skeleton className="h-10 w-64 rounded-lg" />
+          ) : branches.length === 0 ? (
+            <div className="flex h-full min-h-[260px] items-center justify-center text-sm text-muted-foreground">
+              {t("settings.branches.emptyForHours")}
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder={t("settings.branches.selectForHours")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.nameAr || branch.nameEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeTab === "hours" && selectedBranchId && <WorkingHoursPanel t={t} branchId={selectedBranchId} />}
+              {activeTab === "holidays" && selectedBranchId && <HolidaysPanel t={t} branchId={selectedBranchId} />}
+            </>
+          )}
         </div>
       </div>
     </Card>

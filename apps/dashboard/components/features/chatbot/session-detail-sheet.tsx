@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { format } from "date-fns"
 import { toast } from "sonner"
 
 import {
@@ -19,6 +18,7 @@ import { Input } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { useChatSession, useChatbotMutations } from "@/hooks/use-chatbot"
 import { useLocale } from "@/components/locale-provider"
+import { formatDatePattern } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import type { ChatMessage } from "@/lib/types/chatbot"
 
@@ -77,7 +77,7 @@ function MessageBubble({
         {message.content}
       </div>
       <span className="text-[10px] text-muted-foreground tabular-nums">
-        {format(new Date(message.createdAt), "HH:mm:ss")}
+        {formatDatePattern(message.createdAt, "HH:mm:ss")}
       </span>
     </div>
   )

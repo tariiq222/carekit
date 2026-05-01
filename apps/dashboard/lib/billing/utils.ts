@@ -1,6 +1,7 @@
 "use client"
 
 import type { BillingCycle, Plan, Subscription, SubscriptionStatus } from "@/lib/types/billing"
+import { formatLocaleDate } from "@/lib/date"
 
 export interface BillingUsageSummary {
   current: number | null
@@ -88,7 +89,7 @@ export function getEmployeeUsageSummary(subscription: Subscription | null | unde
 }
 
 export function formatBillingDate(value: string, locale: "ar" | "en") {
-  return new Date(value).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+  return formatLocaleDate(value, locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

@@ -35,8 +35,11 @@ describe("email-templates api", () => {
 
   it("updateEmailTemplate patches /email-templates/:id", async () => {
     patchMock.mockResolvedValueOnce({})
-    await updateEmailTemplate("tpl-1", { subjectAr: "موضوع" } as Parameters<typeof updateEmailTemplate>[1])
-    expect(patchMock).toHaveBeenCalledWith("/dashboard/comms/email-templates/tpl-1", expect.anything())
+    await updateEmailTemplate("tpl-1", { subjectAr: "موضوع", htmlBody: "<p>مرحبا</p>" })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/comms/email-templates/tpl-1", {
+      subjectAr: "موضوع",
+      htmlBody: "<p>مرحبا</p>",
+    })
   })
 
 })

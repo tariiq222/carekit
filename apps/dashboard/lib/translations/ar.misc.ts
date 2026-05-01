@@ -158,6 +158,8 @@ export const arMisc: Record<string, string> = {
   "ratings.selectEmployee": "اختر الممارس",
   "ratings.chooseEmployee": "اختر ممارساً",
   "ratings.selectToView": "اختر ممارساً لعرض تقييماته",
+  "ratings.noEmployees.title": "لا يوجد ممارسون لعرض تقييماتهم",
+  "ratings.noEmployees.description": "أضف ممارساً أولاً حتى تظهر التقييمات والملاحظات هنا.",
   "ratings.totalRatings": "إجمالي التقييمات",
   "ratings.empty": "لا توجد تقييمات بعد",
   "ratings.anonymous": "مستفيد مجهول",

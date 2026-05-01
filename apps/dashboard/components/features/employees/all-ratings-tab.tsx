@@ -18,9 +18,11 @@ import {
   SelectValue,
 } from "@deqah/ui"
 
+import { EmptyState } from "@/components/features/empty-state"
 import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
+import { formatLocaleDate } from "@/lib/date"
 import type { Employee } from "@/lib/types/employee"
 
 interface AllRatingsTabProps {
@@ -41,6 +43,17 @@ export function AllRatingsTab({ employees }: AllRatingsTabProps) {
 
   const ratings = data?.items ?? []
   const meta = data?.meta ?? null
+
+  if (employees.length === 0) {
+    return (
+      <EmptyState
+        icon={StarIcon}
+        title={t("ratings.noEmployees.title")}
+        description={t("ratings.noEmployees.description")}
+        className="min-h-[280px]"
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -142,7 +155,7 @@ export function AllRatingsTab({ employees }: AllRatingsTabProps) {
                         : t("ratings.anonymous")}
                       {" · "}
                       <span className="tabular-nums">
-                        {new Date(r.createdAt).toLocaleDateString()}
+                        {formatLocaleDate(r.createdAt, locale)}
                       </span>
                     </p>
                   </div>

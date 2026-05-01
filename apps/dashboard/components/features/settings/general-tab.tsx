@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils"
 import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 
-type TabId = "contact" | "regional"
+type TabId = "contact" | "regional" | "notifications"
 
 const DATE_FORMAT_OPTIONS = [
+  { value: "DD/MM/YYYY", label: "24/03/2026 (DD/MM/YYYY)" },
   { value: "Y-m-d", label: "2026-03-24 (Y-m-d)" },
   { value: "d/m/Y", label: "24/03/2026 (d/m/Y)" },
   { value: "m/d/Y", label: "03/24/2026 (m/d/Y)" },
@@ -65,6 +66,9 @@ export function GeneralTab() {
   const [dateFormat, setDateFormat] = useState("Y-m-d")
   const [timeFormat, setTimeFormat] = useState("24h")
   const [clinicTimezone, setClinicTimezone] = useState("Asia/Riyadh")
+  const [defaultLanguage, setDefaultLanguage] = useState("ar")
+  const [sessionDuration, setSessionDuration] = useState("60")
+  const [reminderBeforeMinutes, setReminderBeforeMinutes] = useState("60")
 
   useEffect(() => {
     if (!settings) return
@@ -77,6 +81,9 @@ export function GeneralTab() {
     setDateFormat(settings.dateFormat ?? "Y-m-d")
     setTimeFormat(settings.timeFormat ?? "24h")
     setClinicTimezone(settings.timezone ?? "Asia/Riyadh")
+    setDefaultLanguage(settings.defaultLanguage ?? "ar")
+    setSessionDuration(String(settings.sessionDuration ?? 60))
+    setReminderBeforeMinutes(String(settings.reminderBeforeMinutes ?? 60))
   }, [settings])
 
   const handleSaveContact = () => {
@@ -100,6 +107,20 @@ export function GeneralTab() {
         dateFormat,
         timeFormat,
         timezone: clinicTimezone,
+        defaultLanguage,
+      },
+      {
+        onSuccess: () => toast.success(t("settings.saved")),
+        onError: () => toast.error(t("settings.error")),
+      },
+    )
+  }
+
+  const handleSaveNotifications = () => {
+    updateSettings.mutate(
+      {
+        sessionDuration: Number(sessionDuration) || 60,
+        reminderBeforeMinutes: Number(reminderBeforeMinutes) || 60,
       },
       {
         onSuccess: () => toast.success(t("settings.saved")),
@@ -122,9 +143,15 @@ export function GeneralTab() {
     )
   }
 
+  const DEFAULT_LANGUAGE_OPTIONS = [
+    { value: "ar", label: t("settings.defaultLanguage.ar") },
+    { value: "en", label: t("settings.defaultLanguage.en") },
+  ]
+
   const tabs: { id: TabId; label: string; desc: string }[] = [
     { id: "contact", label: t("settings.tabs.general"), desc: t("settings.organizationEmail") },
     { id: "regional", label: t("settings.regionalSettings"), desc: t("settings.weekStartDay") },
+    { id: "notifications", label: t("settings.reminders"), desc: t("settings.sessionDuration") },
   ]
 
   return (
@@ -240,9 +267,65 @@ export function GeneralTab() {
                     </Select>
                   </CardContent>
                 </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.defaultLanguage")}</Label>
+                    <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {DEFAULT_LANGUAGE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
               </div>
               <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={updateSettings.isPending} onClick={handleSaveRegional}>
+                  {t("settings.save")}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "notifications" && (
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.sessionDuration")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("settings.sessionDurationDesc")}</p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={sessionDuration}
+                        onChange={(e) => setSessionDuration(e.target.value)}
+                        className="w-24 tabular-nums"
+                        min={5}
+                        max={480}
+                      />
+                      <span className="text-xs text-muted-foreground">min</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.reminderBeforeMinutes")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("settings.reminderBeforeMinutesDesc")}</p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={reminderBeforeMinutes}
+                        onChange={(e) => setReminderBeforeMinutes(e.target.value)}
+                        className="w-24 tabular-nums"
+                        min={0}
+                      />
+                      <span className="text-xs text-muted-foreground">min</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
+                <Button size="sm" disabled={updateSettings.isPending} onClick={handleSaveNotifications}>
                   {t("settings.save")}
                 </Button>
               </div>

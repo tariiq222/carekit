@@ -16,6 +16,7 @@ import { useCouponMutations } from "@/hooks/use-coupons"
 import { useLocale } from "@/components/locale-provider"
 import { fetchCoupon } from "@/lib/api/coupons"
 import { queryKeys } from "@/lib/query-keys"
+import { formatDateTimeLocalValue } from "@/lib/date"
 import { CouponFormFields } from "./coupon-form-fields"
 import { couponSchema, type CouponFormData } from "@/lib/schemas/coupon.schema"
 
@@ -74,7 +75,7 @@ export function CouponFormPage(props: Props) {
       minOrderAmt: coupon.minOrderAmt != null ? coupon.minOrderAmt / 100 : "",
       maxUses: coupon.maxUses ?? "",
       maxUsesPerUser: coupon.maxUsesPerUser ?? "",
-      expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 16) : "",
+      expiresAt: formatDateTimeLocalValue(coupon.expiresAt),
       isActive: coupon.isActive,
     })
   }, [coupon, form])

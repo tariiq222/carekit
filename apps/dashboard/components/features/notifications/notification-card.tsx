@@ -1,9 +1,9 @@
 "use client"
 
-import { formatDistanceToNow } from "date-fns"
 import { ar } from "date-fns/locale"
 import { Card, CardContent } from "@deqah/ui"
 import { cn } from "@/lib/utils"
+import { formatRelativeTime } from "@/lib/date"
 import { useLocale } from "@/components/locale-provider"
 import type { Notification } from "@/lib/types/notification"
 
@@ -58,7 +58,7 @@ export function NotificationCard({
             {notification.body}
           </p>
           <p className="mt-1 text-xs text-muted-foreground tabular-nums">
-            {formatDistanceToNow(new Date(notification.createdAt), {
+            {formatRelativeTime(notification.createdAt, {
               addSuffix: true,
               locale: locale === "ar" ? ar : undefined,
             })}

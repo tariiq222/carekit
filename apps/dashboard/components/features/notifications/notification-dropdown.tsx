@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
 import { ar } from "date-fns/locale"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Notification03Icon } from "@hugeicons/core-free-icons"
@@ -15,6 +14,7 @@ import { Separator } from "@deqah/ui"
 import { Button } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { cn } from "@/lib/utils"
+import { formatRelativeTime } from "@/lib/date"
 import { useLocale } from "@/components/locale-provider"
 import {
   useNotifications,
@@ -71,7 +71,7 @@ function NotificationRow({
           {body}
         </p>
         <p className="mt-1 text-xs text-muted-foreground font-numeric">
-          {formatDistanceToNow(new Date(notification.createdAt), {
+          {formatRelativeTime(notification.createdAt, {
             addSuffix: true,
             locale: locale === "ar" ? ar : undefined,
           })}

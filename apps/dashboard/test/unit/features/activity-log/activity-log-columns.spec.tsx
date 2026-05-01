@@ -98,4 +98,10 @@ describe("getActivityLogColumns", () => {
     // Don't pin exact locale formatting — just ensure it includes the year.
     expect(text).toMatch(/2026/)
   })
+
+  it("renders an em-dash instead of throwing when createdAt is invalid", () => {
+    const col = getActivityLogColumns(t).find((c) => (c as { accessorKey?: string }).accessorKey === "createdAt")!
+    const text = cellHtml(col, { ...baseLog, createdAt: undefined as unknown as string }).textContent ?? ""
+    expect(text).toBe("—")
+  })
 })

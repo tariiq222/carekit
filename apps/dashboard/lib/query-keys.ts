@@ -153,8 +153,8 @@ export const queryKeys = {
   organization: {
     all: ["organization"] as const,
     profile: () => ["organization", "profile"] as const,
-    hours: () => ["organization-hours"] as const,
-    holidays: (year?: number) => ["organization-holidays", year] as const,
+    hours: (branchId?: string) => ["organization-hours", branchId] as const,
+    holidays: (branchId?: string, year?: number) => ["organization-holidays", branchId, year] as const,
   },
 
   /* ─── Coupons ─── */
@@ -221,12 +221,6 @@ export const queryKeys = {
     bookingFlowOrder: () =>
       ["organization-settings", "booking-flow-order"] as const,
     payment: () => ["organization-settings", "payment"] as const,
-  },
-
-  /* ─── Organization Integrations ─── */
-  organizationIntegrations: {
-    all: ["organization-integrations"] as const,
-    config: () => ["organization-integrations", "config"] as const,
   },
 
   /* ─── Feature Flags ─── */

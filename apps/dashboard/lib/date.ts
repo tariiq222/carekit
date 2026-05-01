@@ -14,10 +14,26 @@
  * "ar-SA" : "en-US", …)` so AR/EN parity stays consistent.
  */
 
+import { format, formatDistanceToNow } from "date-fns"
+
 export type DateLike = Date | string | number | null | undefined
+
+type DatePatternOptions = NonNullable<Parameters<typeof format>[2]> & {
+  fallback?: string
+}
+
+type RelativeTimeOptions = NonNullable<Parameters<typeof formatDistanceToNow>[1]> & {
+  fallback?: string
+}
 
 const AR_LOCALE = "ar-SA"
 const EN_LOCALE = "en-US"
+
+function toValidDate(date: DateLike): Date | null {
+  if (date == null) return null
+  const d = date instanceof Date ? date : new Date(date)
+  return Number.isNaN(d.getTime()) ? null : d
+}
 
 /** Resolve our 2-letter locale to the matching BCP-47 tag. */
 export function resolveDateLocale(locale: "ar" | "en" | string): string {
@@ -34,8 +50,39 @@ export function formatLocaleDate(
   locale: "ar" | "en" | string,
   options?: Intl.DateTimeFormatOptions,
 ): string {
-  if (date == null) return "—"
-  const d = date instanceof Date ? date : new Date(date)
-  if (Number.isNaN(d.getTime())) return "—"
+  const d = toValidDate(date)
+  if (!d) return "—"
   return d.toLocaleDateString(resolveDateLocale(locale), options)
+}
+
+/**
+ * Safe date-fns formatter for dashboard render paths.
+ * date-fns throws RangeError for invalid Date objects; UI cells should render
+ * a placeholder instead of breaking the whole page.
+ */
+export function formatDatePattern(
+  date: DateLike,
+  pattern: string,
+  options: DatePatternOptions = {},
+): string {
+  const { fallback = "—", ...formatOptions } = options
+  const d = toValidDate(date)
+  if (!d) return fallback
+  return format(d, pattern, formatOptions)
+}
+
+export function formatRelativeTime(
+  date: DateLike,
+  options: RelativeTimeOptions = {},
+): string {
+  const { fallback = "—", ...formatOptions } = options
+  const d = toValidDate(date)
+  if (!d) return fallback
+  return formatDistanceToNow(d, formatOptions)
+}
+
+export function formatDateTimeLocalValue(date: DateLike): string {
+  const d = toValidDate(date)
+  if (!d) return ""
+  return d.toISOString().slice(0, 16)
 }

@@ -7,7 +7,7 @@ import { Skeleton } from "@deqah/ui"
 import { useRoleMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
-import type { Role, Permission } from "@/lib/types/user"
+import type { Role, Permission, RolePermissionPayload } from "@/lib/types/user"
 
 interface Props {
   role: Role
@@ -16,13 +16,15 @@ interface Props {
 
 export function PermissionMatrix({ role, allPermissions }: Props) {
   const { t } = useLocale()
-  const { assignPermMut, removePermMut } = useRoleMutations()
+  const { setPermsMut } = useRoleMutations()
 
   // Group permissions by module — dynamic, driven by what the DB returns
   const moduleMap = new Map<string, string[]>()
   for (const p of allPermissions) {
-    if (!moduleMap.has(p.module)) moduleMap.set(p.module, [])
-    moduleMap.get(p.module)!.push(p.action)
+    const resource = permissionResource(p)
+    if (!resource) continue
+    if (!moduleMap.has(resource)) moduleMap.set(resource, [])
+    moduleMap.get(resource)!.push(p.action)
   }
 
   // Collect all unique actions across all modules for column headers
@@ -30,7 +32,7 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
     new Set(allPermissions.map((p) => p.action)),
   ).sort((a, b) => {
     // Standard actions first, then extras
-    const order = ["view", "create", "edit", "delete", "update", "use"]
+    const order = ["manage", "read", "view", "create", "edit", "update", "delete", "use"]
     const ai = order.indexOf(a)
     const bi = order.indexOf(b)
     if (ai !== -1 && bi !== -1) return ai - bi
@@ -43,23 +45,44 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
 
   // Build a set of "module:action" for quick lookup
   const rolePerms = new Set(
-    role.permissions.map((p) => `${p.module}:${p.action}`),
+    role.permissions
+      .map((p) => {
+        const resource = permissionResource(p)
+        return resource ? `${resource}:${p.action}` : null
+      })
+      .filter((key): key is string => Boolean(key)),
   )
 
-  const isPending = assignPermMut.isPending || removePermMut.isPending
+  const isPending = setPermsMut.isPending
 
   const handleToggle = (module: string, action: string, checked: boolean) => {
-    if (checked) {
-      assignPermMut.mutate(
-        { roleId: role.id, module, action },
-        { onError: () => toast.error(t("users.roles.permError")) },
-      )
-    } else {
-      removePermMut.mutate(
-        { roleId: role.id, module, action },
-        { onError: () => toast.error(t("users.roles.permError")) },
-      )
-    }
+    const nextPermissions = buildNextPermissions(role.permissions, {
+      subject: module,
+      action,
+    }, checked)
+
+    setPermsMut.mutate(
+      { roleId: role.id, permissions: nextPermissions },
+      { onError: () => toast.error(t("users.roles.permError")) },
+    )
+  }
+
+  if (modules.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">{role.name}</CardTitle>
+            <Badge variant="outline" className="text-[10px] tabular-nums">
+              0 {t("users.roles.permCount")}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{t("users.roles.noAvailablePermissions")}</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   // Translate action label — fallback to the raw action string
@@ -157,6 +180,35 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
       </CardContent>
     </Card>
   )
+}
+
+function permissionResource(permission: Pick<Permission, "module" | "subject">): string {
+  return permission.subject ?? permission.module ?? ""
+}
+
+function buildNextPermissions(
+  current: Permission[],
+  target: RolePermissionPayload,
+  checked: boolean,
+): RolePermissionPayload[] {
+  const byKey = new Map<string, RolePermissionPayload>()
+  for (const permission of current) {
+    const subject = permissionResource(permission)
+    if (!subject) continue
+    byKey.set(`${subject}:${permission.action}`, {
+      subject,
+      action: permission.action,
+    })
+  }
+
+  const key = `${target.subject}:${target.action}`
+  if (checked) {
+    byKey.set(key, target)
+  } else {
+    byKey.delete(key)
+  }
+
+  return Array.from(byKey.values())
 }
 
 export function PermissionMatrixSkeleton() {

@@ -6,22 +6,21 @@ export interface EmailTemplate {
   id: string
   slug: string
   nameAr: string
-  nameEn: string
+  nameEn: string | null
   subjectAr: string
-  subjectEn: string
-  bodyAr: string
-  bodyEn: string
-  variables: string[]
+  subjectEn: string | null
+  htmlBody: string
   isActive: boolean
   createdAt: string
   updatedAt: string
 }
 
 export interface UpdateEmailTemplatePayload {
+  nameAr?: string
+  nameEn?: string
   subjectAr?: string
   subjectEn?: string
-  bodyAr?: string
-  bodyEn?: string
+  htmlBody?: string
   isActive?: boolean
 }
 

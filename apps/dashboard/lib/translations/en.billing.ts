@@ -118,7 +118,7 @@ export const enBilling: Record<string, string> = {
   "featureGate.locked.upgrade": "Upgrade plan",
   // Phase 7 — invoice history page.
   "billing.invoices.page.title": "Invoices",
-  "billing.invoices.page.description": "Download tax invoices for your CareKit subscription.",
+  "billing.invoices.page.description": "Download tax invoices for your Deqah subscription.",
   "billing.invoices.breadcrumb.settings": "Settings",
   "billing.invoices.breadcrumb.billing": "Billing",
   "billing.invoices.breadcrumb.invoices": "Invoices",

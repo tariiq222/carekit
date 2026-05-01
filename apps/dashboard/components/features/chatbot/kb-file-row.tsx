@@ -1,8 +1,8 @@
-import { format } from "date-fns"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@deqah/ui"
+import { formatDatePattern } from "@/lib/date"
 import type { KnowledgeBaseFile } from "@/lib/types/chatbot"
 
 interface KbFileRowProps {
@@ -29,7 +29,7 @@ export function KbFileRow({
         <span className="text-xs text-muted-foreground tabular-nums">
           {file.status}
           {file.updatedAt &&
-            ` — ${format(new Date(file.updatedAt), "MMM d, yyyy")}`}
+            ` — ${formatDatePattern(file.updatedAt, "MMM d, yyyy")}`}
         </span>
       </div>
       <div className="flex items-center gap-2">

@@ -1,122 +1,83 @@
-// EXCEPTION: 3-tab payment settings (Moyasar/bank/clinic) share form state; split would require lifting state, approved 2026-04-24
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon } from "@hugeicons/core-free-icons"
-import { Card, CardContent } from "@deqah/ui"
-import { Label } from "@deqah/ui"
-import { Input } from "@deqah/ui"
-import { Button } from "@deqah/ui"
-import { Switch } from "@deqah/ui"
-import { Separator } from "@deqah/ui"
-import { Skeleton } from "@deqah/ui"
+import { Card, CardContent, Button, Input, Label, Skeleton, Switch } from "@deqah/ui"
 import { cn } from "@/lib/utils"
-import { useOrganizationIntegrations, useUpdateOrganizationIntegrations } from "@/hooks/use-organization-integrations"
-import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
-import { BankAccountCard, SAUDI_BANKS } from "./bank-account-card"
-import type { BankAccount } from "./bank-account-card"
+import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-organization-settings"
+import {
+  useMoyasarConfig,
+  useTestMoyasarConfig,
+  useUpsertMoyasarConfig,
+} from "@/hooks/use-moyasar-config"
 
-function generateId() {
-  return Math.random().toString(36).slice(2, 9)
-}
-
-type TabId = "moyasar" | "atclinic" | "bank"
+type TabId = "moyasar" | "atclinic"
 
 export function SettingsPaymentTab() {
-  const { t, locale } = useLocale()
-  const { data: integrations, isLoading: integrationsLoading } = useOrganizationIntegrations()
+  const { t } = useLocale()
   const { data: paymentSettings, isLoading: paymentLoading } = usePaymentSettings()
-  const updateIntegrations = useUpdateOrganizationIntegrations()
+  const { data: moyasarConfig, isLoading: moyasarLoading } = useMoyasarConfig()
   const paymentMut = usePaymentSettingsMutation()
+  const upsertMoyasar = useUpsertMoyasarConfig()
+  const testMoyasar = useTestMoyasarConfig()
 
   const [activeTab, setActiveTab] = useState<TabId>("moyasar")
-
-  const [moyasarKey, setMoyasarKey] = useState("")
-  const [moyasarSecret, setMoyasarSecret] = useState("")
-  const [bankEnabled, setBankEnabled] = useState(false)
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
+  const [publishableKey, setPublishableKey] = useState("")
+  const [secretKey, setSecretKey] = useState("")
+  const [webhookSecret, setWebhookSecret] = useState("")
+  const [isLive, setIsLive] = useState(false)
 
   useEffect(() => {
-    if (!integrations) return
-    // Seed editable form fields from async-loaded integrations; user edits locally and saves explicitly.
+    if (!moyasarConfig) return
+    // Seed editable form fields from server settings; user edits locally and saves explicitly.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMoyasarKey(integrations.moyasarPublishableKey ?? "")
-    setMoyasarSecret(integrations.moyasarSecretKey ?? "")
-    setBankEnabled(!!integrations.bankName || !!integrations.bankIban)
-
-    const legacyName = integrations.bankName ?? ""
-    const legacyIban = integrations.bankIban ?? ""
-    const legacyHolder = integrations.bankAccountHolder ?? ""
-    const legacyBank = SAUDI_BANKS.find(
-      (b) => b.nameEn.toLowerCase().includes(legacyName.toLowerCase()) || b.nameAr.includes(legacyName)
-    )
-    if (legacyIban || legacyHolder || legacyName) {
-      setBankAccounts([{ id: generateId(), bankId: legacyBank?.id ?? "", iban: legacyIban, holderName: legacyHolder }])
-    } else {
-      setBankAccounts([{ id: generateId(), bankId: "", iban: "", holderName: "" }])
-    }
-  }, [integrations])
-
-  const handleAddAccount = useCallback(() => {
-    setBankAccounts((prev) => [...prev, { id: generateId(), bankId: "", iban: "", holderName: "" }])
-  }, [])
-
-  const handleRemoveAccount = useCallback((id: string) => {
-    setBankAccounts((prev) => prev.filter((a) => a.id !== id))
-  }, [])
-
-  const handleUpdateAccount = useCallback(
-    (id: string, field: keyof Omit<BankAccount, "id">, value: string) => {
-      setBankAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)))
-    }, []
-  )
-
-  const handleSaveMoyasar = () => {
-    const payload: Record<string, string | null> = {
-      moyasarPublishableKey: moyasarKey,
-    }
-    if (moyasarSecret && moyasarSecret !== "***") {
-      payload.moyasarSecretKey = moyasarSecret
-    }
-    updateIntegrations.mutate(payload, {
-      onSuccess: () => toast.success(t("settings.saved")),
-      onError: () => toast.error(t("settings.error")),
-    })
-  }
-
-  const handleSaveBank = () => {
-    const first = bankAccounts[0]
-    const firstName = first ? (SAUDI_BANKS.find((b) => b.id === first.bankId)?.nameEn ?? "") : ""
-    const payload: Record<string, string | null> = {
-      bankName: firstName,
-    }
-    if (first?.iban && first.iban !== "***") {
-      payload.bankIban = first.iban
-    }
-    if (first?.holderName && first.holderName !== "***") {
-      payload.bankAccountHolder = first.holderName
-    }
-    updateIntegrations.mutate(payload, {
-      onSuccess: () => toast.success(t("settings.saved")),
-      onError: () => toast.error(t("settings.error")),
-    })
-  }
+    setPublishableKey(moyasarConfig.publishableKey)
+    setIsLive(moyasarConfig.isLive)
+  }, [moyasarConfig])
 
   const togglePaymentMethod = (key: "paymentMoyasarEnabled" | "paymentAtClinicEnabled", value: boolean) => {
     paymentMut.mutate(
       { [key]: value },
-      { onSuccess: () => toast.success(t("settings.saved")), onError: (err: Error) => toast.error(err.message) }
+      { onSuccess: () => toast.success(t("settings.saved")), onError: (err: Error) => toast.error(err.message) },
     )
   }
 
-  if (integrationsLoading || paymentLoading) {
+  const handleSaveMoyasar = () => {
+    upsertMoyasar.mutate(
+      {
+        publishableKey: publishableKey.trim(),
+        secretKey: secretKey.trim(),
+        ...(webhookSecret.trim() ? { webhookSecret: webhookSecret.trim() } : {}),
+        isLive,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t("settings.saved"))
+          setSecretKey("")
+          setWebhookSecret("")
+        },
+        onError: (err: Error) => toast.error(err.message),
+      },
+    )
+  }
+
+  const handleTestMoyasar = () => {
+    testMoyasar.mutate(undefined, {
+      onSuccess: (result) => {
+        toast[result.ok ? "success" : "error"](
+          result.ok ? t("settings.moyasar.testOk") : `${t("settings.moyasar.testFailed")}: ${result.status}`,
+        )
+      },
+      onError: (err: Error) => toast.error(err.message),
+    })
+  }
+
+  if (paymentLoading || moyasarLoading) {
     return (
-      <div className="flex gap-0 rounded-xl border border-border overflow-hidden">
-        <div className="w-64 border-e border-border bg-surface-muted space-y-1 p-2">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+      <div className="flex gap-0 overflow-hidden rounded-xl border border-border">
+        <div className="w-64 space-y-1 border-e border-border bg-surface-muted p-2">
+          {[1, 2].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
         </div>
         <div className="flex-1 p-6"><Skeleton className="h-48 rounded-lg" /></div>
       </div>
@@ -143,32 +104,26 @@ export function SettingsPaymentTab() {
       id: "atclinic",
       label: t("settings.booking.paymentMethods.atClinic"),
       desc: t("settings.booking.paymentMethods.atClinicDesc"),
-      enabled: paymentSettings?.paymentAtClinicEnabled ?? true,
+      enabled: paymentSettings?.paymentAtClinicEnabled ?? false,
       onToggle: (v) => togglePaymentMethod("paymentAtClinicEnabled", v),
       alwaysAvailable: true,
       toggleHint: t("settings.payment.atClinicToggleHint"),
     },
-    {
-      id: "bank",
-      label: t("settings.bankTransfer"),
-      desc: t("settings.bankTransferDesc"),
-      enabled: bankEnabled,
-      onToggle: setBankEnabled,
-    },
   ]
 
   const activeTabDef = tabs.find((tab) => tab.id === activeTab)!
+  const canSaveMoyasar = publishableKey.trim().length > 0 && secretKey.trim().length > 0
 
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex min-h-[420px]">
-        <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
-          <div className="p-3 border-b border-border">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex w-64 shrink-0 flex-col border-e border-border bg-surface-muted">
+          <div className="border-b border-border p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("settings.payment.methods")}
             </p>
           </div>
-          <div className="flex-1 p-2 space-y-1">
+          <div className="flex-1 space-y-1 p-2">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -178,29 +133,25 @@ export function SettingsPaymentTab() {
                 onClick={() => setActiveTab(tab.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id) }}
                 className={cn(
-                  "w-full flex items-center justify-between gap-3 rounded-lg px-3 py-3 cursor-pointer select-none transition-colors",
+                  "flex w-full cursor-pointer select-none items-center justify-between gap-3 rounded-lg px-3 py-3 transition-colors",
                   activeTab === tab.id
                     ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate leading-tight">{tab.label}</p>
+                  <p className="truncate text-sm font-medium leading-tight">{tab.label}</p>
                   {activeTab === tab.id && (
-                    <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">{tab.desc}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs leading-tight opacity-80">{tab.desc}</p>
                   )}
                 </div>
                 <div
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
-                  className="shrink-0 flex flex-col items-center gap-0.5"
+                  className="flex shrink-0 flex-col items-center gap-0.5"
                   title={tab.toggleHint}
                 >
-                  <Switch
-                    checked={tab.enabled}
-                    onCheckedChange={tab.onToggle}
-                    disabled={paymentMut.isPending}
-                  />
+                  <Switch checked={tab.enabled} onCheckedChange={tab.onToggle} disabled={paymentMut.isPending} />
                 </div>
               </div>
             ))}
@@ -208,14 +159,14 @@ export function SettingsPaymentTab() {
         </div>
 
         <div className="flex-1 p-6">
-          {(!activeTabDef.enabled && !activeTabDef.alwaysAvailable) ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-surface-muted flex items-center justify-center border border-border">
-                <Switch checked={false} disabled className="scale-75 pointer-events-none" />
+          {!activeTabDef.enabled && !activeTabDef.alwaysAvailable ? (
+            <div className="flex h-full min-h-[300px] flex-col items-center justify-center gap-3 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-muted">
+                <Switch checked={false} disabled className="pointer-events-none scale-75" />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{activeTabDef.label}</p>
-                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                <p className="mt-1 max-w-xs text-xs text-muted-foreground">
                   {t("settings.payment.disabledHint")}
                 </p>
               </div>
@@ -231,23 +182,46 @@ export function SettingsPaymentTab() {
           ) : (
             <>
               {activeTab === "moyasar" && (
-                <div className="flex flex-col gap-3 h-full">
+                <div className="flex h-full flex-col gap-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Card className="shadow-sm bg-surface">
+                    <Card className="bg-surface shadow-sm">
                       <CardContent className="space-y-2 pt-3 pb-3">
                         <Label>{t("settings.moyasarKey")}</Label>
-                        <Input value={moyasarKey} onChange={(e) => setMoyasarKey(e.target.value)} placeholder="pk_live_..." type="password" dir="ltr" />
+                        <Input value={publishableKey} onChange={(e) => setPublishableKey(e.target.value)} placeholder="pk_live_..." dir="ltr" />
                       </CardContent>
                     </Card>
-                    <Card className="shadow-sm bg-surface">
+                    <Card className="bg-surface shadow-sm">
                       <CardContent className="space-y-2 pt-3 pb-3">
                         <Label>{t("settings.moyasarSecret")}</Label>
-                        <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "............" : "sk_live_..."} type="password" dir="ltr" />
+                        <Input value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder={moyasarConfig?.secretKeyMasked ?? "sk_live_..."} type="password" dir="ltr" />
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-surface shadow-sm">
+                      <CardContent className="space-y-2 pt-3 pb-3">
+                        <Label>{t("settings.moyasar.webhookSecret")}</Label>
+                        <Input value={webhookSecret} onChange={(e) => setWebhookSecret(e.target.value)} placeholder={moyasarConfig?.hasWebhookSecret ? "............" : "whsec_..."} type="password" dir="ltr" />
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-surface shadow-sm">
+                      <CardContent className="flex items-center justify-between gap-4 pt-3 pb-3">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{t("settings.moyasar.liveMode")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.moyasar.liveModeDesc")}</p>
+                        </div>
+                        <Switch checked={isLive} onCheckedChange={setIsLive} />
                       </CardContent>
                     </Card>
                   </div>
-                  <div className="flex justify-end mt-auto pt-2">
-                    <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveMoyasar}>
+                  {moyasarConfig && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.moyasar.lastStatus")}: {moyasarConfig.lastVerifiedStatus ?? "—"}
+                    </p>
+                  )}
+                  <div className="mt-auto flex justify-end gap-2 pt-2">
+                    <Button size="sm" variant="outline" disabled={!moyasarConfig || testMoyasar.isPending} onClick={handleTestMoyasar}>
+                      {t("settings.moyasar.test")}
+                    </Button>
+                    <Button size="sm" disabled={!canSaveMoyasar || upsertMoyasar.isPending} onClick={handleSaveMoyasar}>
                       {t("settings.save")}
                     </Button>
                   </div>
@@ -255,73 +229,30 @@ export function SettingsPaymentTab() {
               )}
 
               {activeTab === "atclinic" && (
-                <div className="flex flex-col gap-3 h-full">
+                <div className="flex h-full flex-col gap-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Card className="shadow-sm bg-surface border-success/20 bg-success/5">
-                      <CardContent className="pt-3 pb-3 flex items-start gap-3">
-                        <div className="h-2 w-2 rounded-full bg-success mt-1 shrink-0" />
+                    <Card className="border-success/20 bg-success/5 shadow-sm">
+                      <CardContent className="flex items-start gap-3 pt-3 pb-3">
+                        <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-success" />
                         <div>
                           <p className="text-sm font-medium text-success">{t("settings.payment.atClinicAlwaysOn")}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicAlwaysOnDesc")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.payment.atClinicAlwaysOnDesc")}</p>
                         </div>
                       </CardContent>
                     </Card>
-                    <Card className="shadow-sm bg-surface">
-                      <CardContent className="pt-3 pb-3 flex items-start gap-3">
-                        <div className={`h-2 w-2 rounded-full mt-1 shrink-0 ${(paymentSettings?.paymentAtClinicEnabled ?? true) ? "bg-success" : "bg-muted-foreground"}`} />
+                    <Card className="bg-surface shadow-sm">
+                      <CardContent className="flex items-start gap-3 pt-3 pb-3">
+                        <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${(paymentSettings?.paymentAtClinicEnabled ?? false) ? "bg-success" : "bg-muted-foreground"}`} />
                         <div>
                           <p className="text-sm font-medium text-foreground">
-                            {(paymentSettings?.paymentAtClinicEnabled ?? true)
+                            {(paymentSettings?.paymentAtClinicEnabled ?? false)
                               ? t("settings.payment.atClinicClientOn")
                               : t("settings.payment.atClinicClientOff")}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicToggleHint")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.payment.atClinicToggleHint")}</p>
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "bank" && (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-semibold">{t("settings.bankTransfer")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t("settings.bankTransferDesc")}</p>
-                  </div>
-                  <Separator />
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                    {bankAccounts.map((account, index) => (
-                      <BankAccountCard
-                        key={account.id}
-                        account={account}
-                        index={index}
-                        onUpdate={handleUpdateAccount}
-                        onRemove={handleRemoveAccount}
-                        canRemove={bankAccounts.length > 1}
-                        t={t}
-                        locale={locale}
-                      />
-                    ))}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={handleAddAccount}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleAddAccount() }}
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-surface min-h-[200px] cursor-pointer select-none transition-colors hover:border-primary/40 hover:bg-primary/5 group"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-muted transition-colors group-hover:border-primary/30 group-hover:bg-primary/10">
-                        <HugeiconsIcon icon={Add01Icon} size={20} className="text-muted-foreground transition-colors group-hover:text-primary" />
-                      </div>
-                      <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
-                        {t("settings.bankTransfer.addAccount")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end pt-2">
-                    <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveBank}>
-                      {t("settings.save")}
-                    </Button>
                   </div>
                 </div>
               )}

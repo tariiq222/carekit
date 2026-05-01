@@ -28,7 +28,7 @@ function TemplateView({ template, t, locale, onEdit }: {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-foreground">
-            {locale === "ar" ? template.nameAr : template.nameEn}
+            {locale === "ar" ? template.nameAr : (template.nameEn ?? template.nameAr)}
           </p>
           <Badge
             variant="outline"
@@ -52,7 +52,7 @@ function TemplateView({ template, t, locale, onEdit }: {
         <Card className="shadow-sm bg-surface min-w-0">
           <CardContent className="space-y-1.5 pt-3 pb-3">
             <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.subjectEn")}</p>
-            <p className="text-sm text-foreground truncate" dir="ltr">{template.subjectEn || "—"}</p>
+            <p className="text-sm text-foreground truncate" dir="ltr">{template.subjectEn ?? "—"}</p>
           </CardContent>
         </Card>
         <Card className="shadow-sm bg-surface min-w-0">
@@ -64,24 +64,14 @@ function TemplateView({ template, t, locale, onEdit }: {
       </div>
 
       {/* Body */}
-      <div className="grid grid-cols-2 gap-3 min-w-0">
-        <Card className="shadow-sm bg-surface min-w-0 overflow-hidden">
-          <CardContent className="space-y-1.5 pt-3 pb-3">
-            <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.bodyEn")}</p>
-            <pre className="whitespace-pre-wrap break-words text-xs text-foreground leading-relaxed font-mono overflow-hidden" dir="ltr">
-              {template.bodyEn || "—"}
-            </pre>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm bg-surface min-w-0 overflow-hidden">
-          <CardContent className="space-y-1.5 pt-3 pb-3">
-            <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.bodyAr")}</p>
-            <pre className="whitespace-pre-wrap break-words text-xs text-foreground leading-relaxed font-mono overflow-hidden" dir="rtl">
-              {template.bodyAr || "—"}
-            </pre>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="shadow-sm bg-surface min-w-0 overflow-hidden">
+        <CardContent className="space-y-1.5 pt-3 pb-3">
+          <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.htmlBody")}</p>
+          <pre className="whitespace-pre-wrap break-words text-xs text-foreground leading-relaxed font-mono overflow-hidden" dir="ltr">
+            {template.htmlBody || "—"}
+          </pre>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -161,7 +151,7 @@ export function EmailTemplatesTab() {
                   )}
                 >
                   <p className="text-sm font-medium truncate leading-tight">
-                    {locale === "ar" ? tmpl.nameAr : tmpl.nameEn}
+                    {locale === "ar" ? tmpl.nameAr : (tmpl.nameEn ?? tmpl.nameAr)}
                   </p>
                   {isActive && (
                     <p className="text-xs mt-0.5 line-clamp-1 leading-tight opacity-80 font-mono">

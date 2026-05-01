@@ -15,8 +15,8 @@ import { Badge } from "@deqah/ui"
 import { Button } from "@deqah/ui"
 import { Separator } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
-import { format } from "date-fns"
 import { ar } from "date-fns/locale"
+import { formatDatePattern } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import type { Service } from "@/lib/types/service"
 import { ServiceAvatar } from "./service-avatar"
@@ -239,7 +239,7 @@ export function ServiceDetailSheet({
               label={t("services.detail.created")}
               value={
                 <span className="tabular-nums text-muted-foreground">
-                  {format(new Date(service.createdAt), "PP", { locale: dateFnsLocale })}
+                  {formatDatePattern(service.createdAt, "PP", { locale: dateFnsLocale })}
                 </span>
               }
             />
@@ -247,7 +247,7 @@ export function ServiceDetailSheet({
               label={t("services.detail.updated")}
               value={
                 <span className="tabular-nums text-muted-foreground">
-                  {format(new Date(service.updatedAt), "PP", { locale: dateFnsLocale })}
+                  {formatDatePattern(service.updatedAt, "PP", { locale: dateFnsLocale })}
                 </span>
               }
             />

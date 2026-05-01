@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { format } from "date-fns"
 
 import { Controller } from "react-hook-form"
 import { Button } from "@deqah/ui"
@@ -36,6 +35,7 @@ import {
   useVacationMutations,
 } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
+import { formatDatePattern } from "@/lib/date"
 
 /* ─── Types ─── */
 
@@ -142,8 +142,8 @@ export function VacationManager({ employeeId }: VacationManagerProps) {
             >
               <div className="flex flex-col">
                 <span className="text-xs font-medium tabular-nums text-foreground">
-                  {format(new Date(v.startDate), "MMM d, yyyy")} &mdash;{" "}
-                  {format(new Date(v.endDate), "MMM d, yyyy")}
+                  {formatDatePattern(v.startDate, "MMM d, yyyy")} &mdash;{" "}
+                  {formatDatePattern(v.endDate, "MMM d, yyyy")}
                 </span>
                 {v.reason && (
                   <span className="text-xs text-muted-foreground">

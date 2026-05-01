@@ -345,6 +345,9 @@ export const arEmployees: Record<string, string> = {
   "employees.attach.title": "إرفاق مستخدم موجود",
   "employees.attach.description": "ابحث عن مستخدم موجود لإضافته كممارس.",
   "employees.attach.identifierLabel": "رقم الهاتف أو البريد الإلكتروني",
+  "employees.attach.identifierPlaceholder": "user@example.com أو +966501234567",
+  "employees.attach.identifierHelp":
+    "يجب أن يكون المستخدم مسجلاً مسبقاً قبل ربطه بهذه المنشأة.",
   "employees.attach.roleLabel": "الدور",
   "employees.attach.roleAdmin": "مدير",
   "employees.attach.roleReceptionist": "استقبال",

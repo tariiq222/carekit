@@ -12,6 +12,7 @@ import {
 } from "@/lib/types/site-settings"
 import { useUpsertSiteSettings } from "@/hooks/use-site-settings"
 import { useLocale } from "@/components/locale-provider"
+import { formatLocaleDate } from "@/lib/date"
 import { toast } from "sonner"
 
 function buildInitial(rows: SiteSettingRow[]): PrivacyPolicyFormValues {
@@ -23,10 +24,7 @@ function buildInitial(rows: SiteSettingRow[]): PrivacyPolicyFormValues {
 }
 
 function formatDate(iso: string, locale: string): string {
-  return new Date(iso).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
-    { year: "numeric", month: "short", day: "numeric" },
-  )
+  return formatLocaleDate(iso, locale, { year: "numeric", month: "short", day: "numeric" })
 }
 
 interface Props {

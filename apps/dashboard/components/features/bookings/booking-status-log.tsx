@@ -5,8 +5,8 @@ import { queryKeys } from "@/lib/query-keys"
 import { Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { fetchBookingStatusLog } from "@/lib/api/bookings"
-import { format } from "date-fns"
 import { arSA, enUS } from "date-fns/locale"
+import { formatDatePattern } from "@/lib/date"
 
 const STATUS_COLORS: Record<string, string> = {
   pending:              "bg-warning/10 text-warning border-warning/20",
@@ -91,7 +91,7 @@ export function BookingStatusLog({ bookingId }: BookingStatusLogProps) {
             {/* Timestamp + optional reason */}
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums">
-                {format(new Date(entry.createdAt), "MMM d, yyyy HH:mm", {
+                {formatDatePattern(entry.createdAt, "MMM d, yyyy HH:mm", {
                   locale: dateLocale,
                 })}
               </span>

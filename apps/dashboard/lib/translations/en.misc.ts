@@ -156,8 +156,10 @@ export const enMisc: Record<string, string> = {
 
   // — Ratings —
   "ratings.selectEmployee": "Select Employee",
-  "ratings.chooseEmployee": "Choose a employee",
-  "ratings.selectToView": "Select a employee to view their ratings",
+  "ratings.chooseEmployee": "Choose an employee",
+  "ratings.selectToView": "Select an employee to view their ratings",
+  "ratings.noEmployees.title": "No employees available for ratings",
+  "ratings.noEmployees.description": "Add an employee first so ratings and feedback can appear here.",
   "ratings.totalRatings": "Total Ratings",
   "ratings.empty": "No reviews yet",
   "ratings.anonymous": "Anonymous",

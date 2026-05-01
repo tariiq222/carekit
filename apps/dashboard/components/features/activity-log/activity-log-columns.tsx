@@ -1,11 +1,11 @@
 "use client"
 
-import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@deqah/ui"
 import { Avatar, AvatarFallback } from "@deqah/ui"
 import { getInitials } from "@/lib/utils"
+import { formatDatePattern } from "@/lib/date"
 import type { ActivityLog } from "@/lib/types/activity-log"
 
 const actionStyles: Record<string, string> = {
@@ -88,7 +88,7 @@ export function getActivityLogColumns(
       header: t("activityLog.col.time"),
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {format(new Date(row.original.createdAt), "MMM d, yyyy HH:mm", {
+          {formatDatePattern(row.original.createdAt, "MMM d, yyyy HH:mm", {
             locale: locale === "ar" ? ar : undefined,
           })}
         </span>

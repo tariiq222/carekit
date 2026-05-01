@@ -20,6 +20,7 @@ import {
 } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useDownloadBillingInvoice } from "@/hooks/use-billing-invoices"
+import { formatLocaleDate } from "@/lib/date"
 import type { Invoice, InvoiceStatus } from "@/lib/types/billing"
 
 interface Props {
@@ -36,8 +37,7 @@ const STATUS_BADGE: Record<InvoiceStatus, string> = {
 }
 
 function formatDate(iso: string | null, locale: "ar" | "en"): string {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+  return formatLocaleDate(iso, locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

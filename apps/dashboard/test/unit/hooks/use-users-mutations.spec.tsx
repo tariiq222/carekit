@@ -15,8 +15,7 @@ const {
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 } = vi.hoisted(() => ({
   fetchUsers: vi.fn(),
@@ -30,8 +29,7 @@ const {
   fetchRoles: vi.fn(),
   createRole: vi.fn(),
   deleteRole: vi.fn(),
-  assignPermission: vi.fn(),
-  removePermission: vi.fn(),
+  setRolePermissions: vi.fn(),
   fetchPermissions: vi.fn(),
 }))
 
@@ -47,8 +45,7 @@ vi.mock("@/lib/api/users", () => ({
   fetchRoles,
   createRole,
   deleteRole,
-  assignPermission,
-  removePermission,
+  setRolePermissions,
   fetchPermissions,
 }))
 
@@ -126,10 +123,10 @@ describe("useUserMutations", () => {
     const { result } = renderHook(() => useUserMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.assignRoleMut.mutate({ userId: "u-1", roleId: "r-1" } as Parameters<typeof result.current.assignRoleMut.mutate>[0])
+      result.current.assignRoleMut.mutate({ userId: "u-1", customRoleId: "r-1" } as Parameters<typeof result.current.assignRoleMut.mutate>[0])
     })
 
-    await waitFor(() => expect(assignRole).toHaveBeenCalledWith("u-1", expect.objectContaining({ roleId: "r-1" })))
+    await waitFor(() => expect(assignRole).toHaveBeenCalledWith("u-1", expect.objectContaining({ customRoleId: "r-1" })))
   })
 
   it("removeRoleMut calls removeRole with userId and roleId", async () => {
@@ -170,31 +167,20 @@ describe("useRoleMutations", () => {
     await waitFor(() => expect(deleteRole).toHaveBeenCalledWith("r-1", expect.anything()))
   })
 
-  it("assignPermMut calls assignPermission with roleId and payload", async () => {
-    assignPermission.mockResolvedValueOnce(undefined)
+  it("setPermsMut calls setRolePermissions with roleId and the full permission list", async () => {
+    setRolePermissions.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(() => useRoleMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.assignPermMut.mutate({ roleId: "r-1", permissionId: "perm-1", module: "clients", action: "read" } as Parameters<typeof result.current.assignPermMut.mutate>[0])
+      result.current.setPermsMut.mutate({
+        roleId: "r-1",
+        permissions: [{ subject: "Client", action: "read" }],
+      } as Parameters<typeof result.current.setPermsMut.mutate>[0])
     })
 
     await waitFor(() =>
-      expect(assignPermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ module: "clients", action: "read" })),
-    )
-  })
-
-  it("removePermMut calls removePermission with roleId and payload", async () => {
-    removePermission.mockResolvedValueOnce(undefined)
-
-    const { result } = renderHook(() => useRoleMutations(), { wrapper: makeWrapper() })
-
-    act(() => {
-      result.current.removePermMut.mutate({ roleId: "r-1", permissionId: "perm-1", module: "clients", action: "read" } as Parameters<typeof result.current.removePermMut.mutate>[0])
-    })
-
-    await waitFor(() =>
-      expect(removePermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ module: "clients", action: "read" })),
+      expect(setRolePermissions).toHaveBeenCalledWith("r-1", [{ subject: "Client", action: "read" }]),
     )
   })
 })

@@ -32,14 +32,14 @@ export async function updateOrganizationSettings(
 export type BookingFlowOrder = "service_first" | "employee_first" | "both"
 
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
-  const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/booking-settings")
+  const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/settings")
   return res.bookingFlowOrder ?? "service_first"
 }
 
 export async function updateBookingFlowOrder(
   order: BookingFlowOrder,
 ): Promise<BookingFlowOrder> {
-  const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/booking-settings", {
+  const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/settings", {
     bookingFlowOrder: order,
   })
   return res.bookingFlowOrder ?? "service_first"

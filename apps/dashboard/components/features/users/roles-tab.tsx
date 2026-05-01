@@ -6,6 +6,7 @@ import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 
 import { Button } from "@deqah/ui"
+import { EmptyState } from "@/components/features/empty-state"
 import {
   Sheet,
   SheetContent,
@@ -51,7 +52,12 @@ export function RolesTab() {
   return (
     <div className="flex flex-col gap-6">
       {/* Permission Matrix per Role */}
-      {roles?.map((role) => (
+      {roles && roles.length === 0 ? (
+        <EmptyState
+          title={t("users.roles.empty.title")}
+          description={t("users.roles.empty.description")}
+        />
+      ) : roles?.map((role) => (
         <div key={role.id} className="relative">
           <PermissionMatrix role={role} allPermissions={permissions ?? []} />
           {!role.isSystem && (

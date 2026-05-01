@@ -10,6 +10,11 @@ import { Skeleton } from "@deqah/ui"
 import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 
+function toPercentRate(rate: number | null | undefined): string {
+  if (rate == null) return "15"
+  return String(rate <= 1 ? rate * 100 : rate)
+}
+
 export function EntityTab() {
   const { t } = useLocale()
   const { data: settings, isLoading } = useOrganizationSettings()
@@ -32,7 +37,7 @@ export function EntityTab() {
     setCompanyNameEn(settings.companyNameEn ?? "")
     setBusinessRegistration(settings.businessRegistration ?? "")
     setVatRegistrationNumber(settings.vatRegistrationNumber ?? "")
-    setVatRate(String(settings.vatRate ?? 15))
+    setVatRate(toPercentRate(settings.vatRate))
     setSellerAddress(settings.sellerAddress ?? "")
     setClinicCity(settings.organizationCity ?? "")
     setPostalCode(settings.postalCode ?? "")
@@ -45,7 +50,7 @@ export function EntityTab() {
         companyNameEn: companyNameEn || null,
         businessRegistration: businessRegistration || null,
         vatRegistrationNumber: vatRegistrationNumber || null,
-        vatRate: Number(vatRate),
+        vatRate: Number(vatRate) / 100,
         sellerAddress: sellerAddress || null,
         organizationCity,
         postalCode: postalCode || null,

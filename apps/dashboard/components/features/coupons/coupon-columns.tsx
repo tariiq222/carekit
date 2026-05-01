@@ -13,8 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@deqah/ui"
-import { format } from "date-fns"
 import { ar } from "date-fns/locale"
+import { formatDatePattern } from "@/lib/date"
 import type { Coupon } from "@/lib/types/coupon"
 
 type TFn = (key: string) => string
@@ -74,7 +74,7 @@ export function getCouponColumns(
         const isExpired = new Date(c.expiresAt) < new Date()
         return (
           <span className={`tabular-nums text-sm ${isExpired ? "text-destructive" : "text-muted-foreground"}`}>
-            {format(new Date(c.expiresAt), "PP", { locale: locale === "ar" ? ar : undefined })}
+            {formatDatePattern(c.expiresAt, "PP", { locale: locale === "ar" ? ar : undefined })}
           </span>
         )
       },

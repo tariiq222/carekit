@@ -75,6 +75,8 @@ export const arChatbot: Record<string, string> = {
   "ratings.selectEmployee": "اختر ممارساً",
   "ratings.chooseEmployee": "اختر ممارساً",
   "ratings.selectToView": "اختر ممارساً لعرض تقييماته",
+  "ratings.noEmployees.title": "لا يوجد ممارسون لعرض تقييماتهم",
+  "ratings.noEmployees.description": "أضف ممارساً أولاً حتى تظهر التقييمات والملاحظات هنا.",
   "ratings.empty": "لا توجد تقييمات لهذا الممارس بعد",
   "ratings.totalRatings": "إجمالي التقييمات",
   "ratings.anonymous": "مجهول",

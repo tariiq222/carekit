@@ -1,7 +1,6 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import {
   Sheet,
@@ -20,6 +19,7 @@ import { fetchInvoice } from "@/lib/api/invoices"
 import { queryKeys } from "@/lib/query-keys"
 import type { Invoice } from "@/lib/types/invoice"
 import { useLocale } from "@/components/locale-provider"
+import { formatDatePattern } from "@/lib/date"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { InvoiceActions } from "./invoice-actions"
 
@@ -160,7 +160,7 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
         {invoice.sentAt && (
           <DetailRow
             label={t("invoices.detail.sentAt")}
-            value={format(new Date(invoice.sentAt), "PPp", { locale: isAr ? ar : undefined })}
+            value={formatDatePattern(invoice.sentAt, "PPp", { locale: isAr ? ar : undefined })}
             numeric
           />
         )}
@@ -194,7 +194,7 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
           label={t("invoices.detail.date")}
           value={
             invoice.payment?.booking?.date
-              ? format(new Date(invoice.payment.booking.date), "PP", { locale: isAr ? ar : undefined })
+              ? formatDatePattern(invoice.payment.booking.date, "PP", { locale: isAr ? ar : undefined })
               : "\u2014"
           }
           numeric

@@ -1,10 +1,10 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { format } from "date-fns"
 
 import { queryKeys } from "@/lib/query-keys"
 import { fetchEmployeeRatings } from "@/lib/api/employees"
+import { formatDatePattern } from "@/lib/date"
 import type { Rating } from "@/lib/types/rating"
 
 /* ─── Helpers ─── */
@@ -57,7 +57,7 @@ export function EmployeeRatings({
               <div className="flex items-center justify-between">
                 <StarDisplay stars={r.stars} />
                 <span className="text-[10px] tabular-nums text-muted-foreground">
-                  {format(new Date(r.createdAt), "MMM d, yyyy")}
+                  {formatDatePattern(r.createdAt, "MMM d, yyyy")}
                 </span>
               </div>
               {r.client && (
