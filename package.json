@@ -16,13 +16,12 @@
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
     "openapi:sync": "pnpm --filter=backend run openapi:export && pnpm --filter=dashboard run openapi:generate",
-    "test:report": "py data/test-reports/scripts/generate_html_report.py",
-    "test:report:open": "py data/test-reports/scripts/generate_html_report.py && start data/test-reports/output/test-report.html",
+    "test:report": "py scripts/qa/generate_html_report.py",
+    "test:report:open": "py scripts/qa/generate_html_report.py && start data/test-reports/output/test-report.html",
     "kiwi:sync-manual": "node scripts/kiwi/kiwi-sync-manual-qa.mjs --plan",
     "brand:check": "node scripts/brand/check-brand-identity.mjs"
   },
   "devDependencies": {
-    "lru-cache": "^11.3.3",
     "react-test-renderer": "19.2.4",
     "turbo": "^2"
   },
@@ -34,9 +33,5 @@
       "@types/react": "18.3.28",
       "@types/react-dom": "18.3.7"
     }
-  },
-  "dependencies": {
-    "@hugeicons/core-free-icons": "^4.1.1",
-    "minipass": "^7.1.3"
   }
 }
