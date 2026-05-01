@@ -12,9 +12,9 @@ const buildConfig = () => ({
       case 'PLATFORM_VAT_NUMBER':
         return '300000000000003';
       case 'PLATFORM_COMPANY_NAME_AR':
-        return 'منصة كير كِت';
+        return 'منصة دِقة';
       case 'PLATFORM_COMPANY_NAME_EN':
-        return 'CareKit Platform';
+        return 'Deqah Platform';
       default:
         throw new Error(`missing ${key}`);
     }

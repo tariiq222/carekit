@@ -21,8 +21,8 @@ const buildTenant = (organizationId = 'org-A') => ({
 });
 
 const buildConfig = () => ({
-  get: jest.fn().mockReturnValue('carekit-invoices'),
-  getOrThrow: jest.fn().mockReturnValue('carekit'),
+  get: jest.fn().mockReturnValue('deqah-invoices'),
+  getOrThrow: jest.fn().mockReturnValue('deqah'),
 });
 
 describe('DownloadInvoiceHandler', () => {
@@ -82,7 +82,7 @@ describe('DownloadInvoiceHandler', () => {
 
     expect(out).toEqual({ url: 'https://signed.example/pdf' });
     expect(minio.getSignedUrl).toHaveBeenCalledWith(
-      'carekit-invoices',
+      'deqah-invoices',
       'invoices/org-A/inv-1.pdf',
       600,
     );
@@ -134,7 +134,7 @@ describe('DownloadInvoiceHandler', () => {
 
     expect(generator.execute).toHaveBeenCalledWith('inv-1');
     expect(minio.getSignedUrl).toHaveBeenCalledWith(
-      'carekit-invoices',
+      'deqah-invoices',
       'invoices/org-A/inv-1.pdf',
       600,
     );

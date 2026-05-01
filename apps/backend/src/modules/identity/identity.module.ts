@@ -14,6 +14,7 @@ import { RefreshTokenHandler } from './refresh-token/refresh-token.handler';
 import { LogoutHandler } from './logout/logout.handler';
 import { GetCurrentUserHandler } from './get-current-user/get-current-user.handler';
 import { CreateUserHandler } from './users/create-user.handler';
+import { GetUserHandler } from './users/get-user.handler';
 import { UpdateUserHandler } from './users/update-user.handler';
 import { ListUsersHandler } from './users/list-users.handler';
 import { DeactivateUserHandler } from './users/deactivate-user.handler';
@@ -56,7 +57,7 @@ import { AttachMembershipHandler } from './attach-membership/attach-membership.h
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
-  GetCurrentUserHandler, CreateUserHandler, UpdateUserHandler, ListUsersHandler,
+  GetCurrentUserHandler, CreateUserHandler, GetUserHandler, UpdateUserHandler, ListUsersHandler,
   DeactivateUserHandler, DeleteUserHandler, AssignRoleHandler, RemoveRoleHandler,
   CreateRoleHandler, DeleteRoleHandler, AssignPermissionsHandler, ListRolesHandler,
   ListPermissionsHandler,

@@ -42,10 +42,10 @@ export class DashboardOrganizationHoursController {
 
   @Get('hours/:branchId')
   @ApiOperation({ summary: 'Get business hours for a branch' })
-  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'branchId', description: 'Branch ID', example: 'main-branch' })
   @ApiOkResponse({ description: 'Business hours schedule' })
   @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
-  getBusinessHoursEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
+  getBusinessHoursEndpoint(@Param('branchId') branchId: string) {
     return this.getBusinessHours.execute({ branchId });
   }
 
@@ -69,7 +69,7 @@ export class DashboardOrganizationHoursController {
 
   @Get('holidays')
   @ApiOperation({ summary: 'List holidays for a branch' })
-  @ApiQuery({ name: 'branchId', required: true, description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiQuery({ name: 'branchId', required: true, description: 'Branch ID', example: 'main-branch' })
   @ApiQuery({ name: 'year', required: false, description: 'Filter by year', example: 2025 })
   @ApiOkResponse({ description: 'List of holidays' })
   listHolidaysEndpoint(@Query() query: ListHolidaysDto) {

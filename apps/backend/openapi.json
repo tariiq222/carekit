@@ -23641,7 +23641,7 @@
           "sellerName": {
             "type": "string",
             "description": "Legal seller name as registered with ZATCA",
-            "example": "Carekit Medical Clinic"
+            "example": "Deqah Medical Clinic"
           },
           "environment": {
             "type": "string",

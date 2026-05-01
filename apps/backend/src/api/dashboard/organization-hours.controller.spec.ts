@@ -1,3 +1,5 @@
+import { ParseUUIDPipe } from '@nestjs/common';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { DashboardOrganizationHoursController } from './organization-hours.controller';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
@@ -44,5 +46,16 @@ describe('DashboardOrganizationHoursController', () => {
     const { controller, listHolidays } = buildController();
     await controller.listHolidaysEndpoint({} as never);
     expect(listHolidays.execute).toHaveBeenCalled();
+  });
+
+  it('getBusinessHoursEndpoint — does not require UUID branch ids', () => {
+    const metadata = Reflect.getMetadata(
+      ROUTE_ARGS_METADATA,
+      DashboardOrganizationHoursController,
+      'getBusinessHoursEndpoint',
+    ) as Record<string, { pipes?: unknown[] }> | undefined;
+    const pipes = Object.values(metadata ?? {}).flatMap((entry) => entry.pipes ?? []);
+
+    expect(pipes).not.toContain(ParseUUIDPipe);
   });
 });

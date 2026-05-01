@@ -1,9 +1,9 @@
-import { IsDateString, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddHolidayDto {
-  @ApiProperty({ description: 'UUID of the branch this holiday applies to', example: '00000000-0000-0000-0000-000000000000' })
-  @IsUUID() branchId!: string;
+  @ApiProperty({ description: 'ID of the branch this holiday applies to', example: 'main-branch' })
+  @IsString() @MaxLength(100) branchId!: string;
 
   @ApiProperty({ description: 'Holiday date in ISO 8601 format (YYYY-MM-DD)', example: '2025-12-31' })
   @IsDateString() date!: string;

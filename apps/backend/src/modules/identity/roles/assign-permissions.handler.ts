@@ -3,7 +3,9 @@ import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { AssignPermissionsDto } from './assign-permissions.dto';
 
-export type AssignPermissionsCommand = AssignPermissionsDto;
+export type AssignPermissionsCommand = AssignPermissionsDto & {
+  customRoleId: string;
+};
 
 @Injectable()
 export class AssignPermissionsHandler {

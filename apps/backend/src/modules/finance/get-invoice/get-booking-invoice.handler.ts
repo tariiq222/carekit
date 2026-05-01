@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import type { GetPublicInvoiceResult } from './get-public-invoice.handler';
+import { resolveInvoiceSellerName } from './invoice-seller-name';
 
 @Injectable()
 export class GetBookingInvoiceHandler {
@@ -26,8 +27,11 @@ export class GetBookingInvoiceHandler {
       throw new NotFoundException(`Invoice for booking ${bookingId} not found`);
     }
 
+    const sellerName = await resolveInvoiceSellerName(this.prisma, invoice.organizationId);
+
     return {
       id: invoice.id,
+      sellerName,
       branchId: invoice.branchId,
       clientId: invoice.clientId,
       employeeId: invoice.employeeId,

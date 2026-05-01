@@ -19,7 +19,7 @@ export class BusinessHourSlotDto {
 }
 
 export class SetBusinessHoursDto {
-  @ApiProperty({ description: 'UUID of the branch to configure', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiProperty({ description: 'ID of the branch to configure', example: 'main-branch' })
   @IsString() branchId!: string;
 
   @ApiProperty({

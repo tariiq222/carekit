@@ -26,11 +26,11 @@ const buildConfig = (
   overrides: Partial<Record<string, string | undefined>> = {},
 ) => ({
   get: jest.fn((k: string) =>
-    k in overrides ? overrides[k] : 'carekit-invoices',
+    k in overrides ? overrides[k] : 'deqah-invoices',
   ),
   getOrThrow: jest.fn((k: string) => {
-    if (k === 'MINIO_BUCKET') return 'carekit';
-    if (k === 'PLATFORM_COMPANY_NAME_AR') return 'منصة كير كِت';
+    if (k === 'MINIO_BUCKET') return 'deqah';
+    if (k === 'PLATFORM_COMPANY_NAME_AR') return 'منصة دِقة';
     if (k === 'PLATFORM_VAT_NUMBER') return '300000000000003';
     throw new Error(`missing ${k}`);
   }),
@@ -135,7 +135,7 @@ describe('GenerateInvoicePdfHandler', () => {
     expect(out).toEqual({ key: 'invoices/org-A/inv-1.pdf' });
     expect(renderer.render).toHaveBeenCalledTimes(1);
     expect(minio.uploadFile).toHaveBeenCalledWith(
-      'carekit-invoices',
+      'deqah-invoices',
       'invoices/org-A/inv-1.pdf',
       expect.any(Buffer),
       'application/pdf',
@@ -161,7 +161,7 @@ describe('GenerateInvoicePdfHandler', () => {
     await handler.execute('inv-1');
 
     expect(minio.uploadFile).toHaveBeenCalledWith(
-      'carekit',
+      'deqah',
       expect.any(String),
       expect.any(Buffer),
       'application/pdf',

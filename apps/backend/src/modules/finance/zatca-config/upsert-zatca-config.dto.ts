@@ -5,7 +5,7 @@ export class UpsertZatcaConfigDto {
   @ApiPropertyOptional({ description: 'VAT registration number (15 digits)', example: '300000000000003' })
   @IsOptional() @IsString() vatRegistrationNumber?: string;
 
-  @ApiPropertyOptional({ description: 'Legal seller name as registered with ZATCA', example: 'Carekit Medical Clinic' })
+  @ApiPropertyOptional({ description: 'Legal seller name as registered with ZATCA', example: 'Deqah Medical Clinic' })
   @IsOptional() @IsString() sellerName?: string;
 
   @ApiPropertyOptional({ description: 'ZATCA integration environment', enum: ['sandbox', 'production'], example: 'sandbox' })

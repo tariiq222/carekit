@@ -26,9 +26,9 @@ const mockRow = {
   updatedAt: new Date(),
 };
 
-const buildPrisma = () => ({
+const buildPrisma = (row: typeof mockRow | null = mockRow) => ({
   brandingConfig: {
-    upsert: jest.fn().mockResolvedValue(mockRow),
+    findUnique: jest.fn().mockResolvedValue(row),
   },
 });
 
@@ -65,16 +65,26 @@ describe('GetPublicBrandingHandler', () => {
     expect(result).not.toHaveProperty('id');
   });
 
-  it('uses upsert-on-read scoped by organizationId', async () => {
+  it('reads via findUnique scoped by organizationId (no write)', async () => {
     const prisma = buildPrisma();
     const handler = new GetPublicBrandingHandler(prisma as never, buildTenant());
 
     await handler.execute();
 
-    expect(prisma.brandingConfig.upsert).toHaveBeenCalledWith({
+    expect(prisma.brandingConfig.findUnique).toHaveBeenCalledWith({
       where: { organizationId: DEFAULT_ORG },
-      create: { organizationId: DEFAULT_ORG, organizationNameAr: 'منظمتي' },
-      update: {},
     });
+  });
+
+  it('returns safe defaults when no row exists (does not create one)', async () => {
+    const prisma = buildPrisma(null);
+    const handler = new GetPublicBrandingHandler(prisma as never, buildTenant());
+
+    const result = await handler.execute();
+
+    expect(result.organizationNameAr).toBe('منظمتي');
+    expect(result.activeWebsiteTheme).toBe('SAWAA');
+    expect(result.colorPrimary).toBeNull();
+    expect((prisma.brandingConfig as any).create).toBeUndefined();
   });
 });

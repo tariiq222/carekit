@@ -12,11 +12,29 @@ export class GetPublicBrandingHandler {
 
   async execute(): Promise<PublicBranding> {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
-    const row = await this.prisma.brandingConfig.upsert({
+    const row = await this.prisma.brandingConfig.findUnique({
       where: { organizationId },
-      create: { organizationId, organizationNameAr: 'منظمتي' },
-      update: {},
     });
+
+    if (!row) {
+      return {
+        organizationNameAr: 'منظمتي',
+        organizationNameEn: null,
+        productTagline: null,
+        logoUrl: null,
+        faviconUrl: null,
+        colorPrimary: null,
+        colorPrimaryLight: null,
+        colorPrimaryDark: null,
+        colorAccent: null,
+        colorAccentDark: null,
+        colorBackground: null,
+        fontFamily: null,
+        fontUrl: null,
+        websiteDomain: null,
+        activeWebsiteTheme: 'SAWAA',
+      };
+    }
 
     return {
       organizationNameAr: row.organizationNameAr,

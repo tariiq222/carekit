@@ -28,9 +28,9 @@ describe('Phase 7 — tenant-billing-invoices', () => {
 
   beforeAll(async () => {
     process.env.PLATFORM_VAT_NUMBER ??= '300000000000003';
-    process.env.PLATFORM_COMPANY_NAME_AR ??= 'منصة كير كِت';
-    process.env.PLATFORM_COMPANY_NAME_EN ??= 'CareKit Platform';
-    process.env.MINIO_INVOICE_BUCKET ??= 'carekit-invoices';
+    process.env.PLATFORM_COMPANY_NAME_AR ??= 'منصة دِقة';
+    process.env.PLATFORM_COMPANY_NAME_EN ??= 'Deqah Platform';
+    process.env.MINIO_INVOICE_BUCKET ??= 'deqah-invoices';
     h = await bootHarness();
     issue = h.app.get(IssueInvoiceHandler);
     list = h.app.get(ListInvoicesHandler);

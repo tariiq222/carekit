@@ -28,6 +28,8 @@ const mockConfig = {
 const buildPrisma = () => ({
   brandingConfig: {
     upsert: jest.fn().mockResolvedValue(mockConfig),
+    findUnique: jest.fn().mockResolvedValue(mockConfig),
+    create: jest.fn().mockResolvedValue(mockConfig),
   },
 });
 
@@ -67,14 +69,72 @@ describe('UpsertBrandingHandler', () => {
 });
 
 describe('GetBrandingHandler', () => {
-  it('returns the org-scoped row via upsert-on-read', async () => {
+  it('returns the org-scoped row via findUnique when it exists', async () => {
     const prisma = buildPrisma();
     const handler = new GetBrandingHandler(prisma as never, buildTenant());
     await handler.execute();
-    expect(prisma.brandingConfig.upsert).toHaveBeenCalledWith({
+    expect(prisma.brandingConfig.findUnique).toHaveBeenCalledWith({
       where: { organizationId: DEFAULT_ORG },
-      create: expect.objectContaining({ organizationId: DEFAULT_ORG }),
-      update: {},
     });
+    expect(prisma.brandingConfig.create).not.toHaveBeenCalled();
+  });
+
+  it('creates a default row only when none exists', async () => {
+    const prisma = {
+      brandingConfig: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue(mockConfig),
+      },
+    };
+    const handler = new GetBrandingHandler(prisma as never, buildTenant());
+    await handler.execute();
+    expect(prisma.brandingConfig.create).toHaveBeenCalledWith({
+      data: { organizationId: DEFAULT_ORG, organizationNameAr: 'منظمتي' },
+    });
+  });
+});
+
+describe('UpsertBrandingHandler — security validations', () => {
+  beforeEach(() => {
+    process.env.BRANDING_ALLOWED_ASSET_HOSTS = 'cdn.example.com';
+  });
+  afterEach(() => {
+    delete process.env.BRANDING_ALLOWED_ASSET_HOSTS;
+  });
+
+  it('rejects logoUrl from non-allowed host', async () => {
+    const handler = new UpsertBrandingHandler(buildPrisma() as never, buildTenant());
+    await expect(
+      handler.execute({ organizationNameAr: 'X', logoUrl: 'https://attacker.com/logo.png' }),
+    ).rejects.toThrow(/logoUrl/);
+  });
+
+  it('rejects fontUrl from non-allowed host', async () => {
+    const handler = new UpsertBrandingHandler(buildPrisma() as never, buildTenant());
+    await expect(
+      handler.execute({ organizationNameAr: 'X', fontUrl: 'https://evil.com/f.css' }),
+    ).rejects.toThrow(/fontUrl/);
+  });
+
+  it('rejects customCss containing @import', async () => {
+    const handler = new UpsertBrandingHandler(buildPrisma() as never, buildTenant());
+    await expect(
+      handler.execute({ organizationNameAr: 'X', customCss: '@import url(https://cdn.example.com/x.css);' }),
+    ).rejects.toThrow(/customCss/);
+  });
+
+  it('rejects customCss containing <script>', async () => {
+    const handler = new UpsertBrandingHandler(buildPrisma() as never, buildTenant());
+    await expect(
+      handler.execute({ organizationNameAr: 'X', customCss: '</style><script>alert(1)</script>' }),
+    ).rejects.toThrow(/customCss/);
+  });
+
+  it('accepts logoUrl from allowed host', async () => {
+    const prisma = buildPrisma();
+    const handler = new UpsertBrandingHandler(prisma as never, buildTenant());
+    await expect(
+      handler.execute({ organizationNameAr: 'X', logoUrl: 'https://cdn.example.com/logo.png' }),
+    ).resolves.toBeDefined();
   });
 });

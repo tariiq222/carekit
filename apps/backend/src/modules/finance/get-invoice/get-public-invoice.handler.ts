@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { resolveInvoiceSellerName } from './invoice-seller-name';
 
 export interface GetPublicInvoiceResult {
   id: string;
+  sellerName: string;
   branchId: string;
   clientId: string;
   employeeId: string;
@@ -46,8 +48,11 @@ export class GetPublicInvoiceHandler {
       throw new NotFoundException(`Invoice ${invoiceId} not found`);
     }
 
+    const sellerName = await resolveInvoiceSellerName(this.prisma, invoice.organizationId);
+
     return {
       id: invoice.id,
+      sellerName,
       branchId: invoice.branchId,
       clientId: invoice.clientId,
       employeeId: invoice.employeeId,

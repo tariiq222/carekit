@@ -10,6 +10,7 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { ListUsersHandler } from '../../modules/identity/users/list-users.handler';
+import { GetUserHandler } from '../../modules/identity/users/get-user.handler';
 import { CreateUserHandler } from '../../modules/identity/users/create-user.handler';
 import { UpdateUserHandler } from '../../modules/identity/users/update-user.handler';
 import { DeactivateUserHandler } from '../../modules/identity/users/deactivate-user.handler';
@@ -24,9 +25,10 @@ import { ListPermissionsHandler } from '../../modules/identity/roles/list-permis
 import { CreateUserDto } from '../../modules/identity/users/create-user.dto';
 import { CreateRoleDto } from '../../modules/identity/roles/create-role.dto';
 import { AssignPermissionsDto } from '../../modules/identity/roles/assign-permissions.dto';
-import { IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserGender, UserRole } from '@prisma/client';
 
 class ListUsersQueryDto {
   @ApiPropertyOptional({ description: 'Search by name or email', example: 'sara' })
@@ -43,11 +45,20 @@ class ListUsersQueryDto {
 }
 
 class UpdateUserDto {
+  @ApiPropertyOptional({ description: 'Updated email address', example: 'user@example.com' })
+  @IsOptional() @IsEmail() email?: string;
+
   @ApiPropertyOptional({ description: 'Updated display name', example: 'Sara Al-Harbi' })
   @IsOptional() @IsString() name?: string;
 
   @ApiPropertyOptional({ description: 'Updated phone number', example: '+966501234567' })
   @IsOptional() @IsString() phone?: string;
+
+  @ApiPropertyOptional({ description: 'Updated gender', enum: UserGender, enumName: 'UserGender', example: UserGender.FEMALE })
+  @IsOptional() @IsEnum(UserGender) gender?: UserGender;
+
+  @ApiPropertyOptional({ description: 'Updated system role', enum: UserRole, enumName: 'UserRole', example: UserRole.RECEPTIONIST })
+  @IsOptional() @IsEnum(UserRole) role?: UserRole;
 
   @ApiPropertyOptional({ description: 'Custom role UUID or null to clear', example: '00000000-0000-0000-0000-000000000000', nullable: true })
   @IsOptional() @IsString() customRoleId?: string | null;
@@ -66,6 +77,7 @@ class AssignRoleDto {
 export class DashboardIdentityController {
   constructor(
     private readonly listUsersHandler: ListUsersHandler,
+    private readonly getUserHandler: GetUserHandler,
     private readonly createUserHandler: CreateUserHandler,
     private readonly updateUserHandler: UpdateUserHandler,
     private readonly deactivateUserHandler: DeactivateUserHandler,
@@ -95,6 +107,15 @@ export class DashboardIdentityController {
       search: query.search,
       isActive: query.isActive,
     });
+  }
+
+  @Get('users/:id')
+  @ApiOperation({ summary: 'Get a user' })
+  @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'User details' })
+  @ApiResponse({ status: 404, description: 'User not found', type: ApiErrorDto })
+  async getUserEndpoint(@Param('id', ParseUUIDPipe) userId: string) {
+    return this.getUserHandler.execute({ userId });
   }
 
   @Post('users')

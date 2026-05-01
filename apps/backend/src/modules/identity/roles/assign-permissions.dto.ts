@@ -1,4 +1,4 @@
-import { IsArray, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -11,9 +11,6 @@ class PermissionEntryDto {
 }
 
 export class AssignPermissionsDto {
-  @ApiProperty({ description: 'UUID of the custom role', example: '00000000-0000-0000-0000-000000000000' })
-  @IsUUID() customRoleId!: string;
-
   @ApiProperty({ description: 'Full list of permissions to assign to the role', type: [PermissionEntryDto] })
   @IsArray() @ValidateNested({ each: true }) @Type(() => PermissionEntryDto) permissions!: PermissionEntryDto[];
 }

@@ -11,10 +11,12 @@ export class GetBrandingHandler {
 
   async execute() {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
-    return this.prisma.brandingConfig.upsert({
+    const row = await this.prisma.brandingConfig.findUnique({
       where: { organizationId },
-      create: { organizationId, organizationNameAr: 'منظمتي' },
-      update: {},
+    });
+    if (row) return row;
+    return this.prisma.brandingConfig.create({
+      data: { organizationId, organizationNameAr: 'منظمتي' },
     });
   }
 }

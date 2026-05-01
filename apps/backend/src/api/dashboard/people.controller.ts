@@ -54,6 +54,7 @@ import { EmployeeStatsHandler } from '../../modules/people/employees/employee-st
 import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
 import { AttachMembershipHandler } from '../../modules/identity/attach-membership/attach-membership.handler';
 import { AttachMembershipDto } from '../../modules/identity/attach-membership/attach-membership.dto';
+import { PaginationDto } from '../../common/dto';
 
 class EmployeeSlotsQuery {
   @IsDateString() date!: string;
@@ -470,8 +471,11 @@ export class DashboardPeopleController {
   @ApiOperation({ summary: "List ratings for an employee" })
   @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'List of employee ratings' })
-  listEmployeeRatingsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
-    return this.listEmployeeRatings.execute({ employeeId: id });
+  listEmployeeRatingsEndpoint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.listEmployeeRatings.execute({ employeeId: id, ...query });
   }
 
   @Post('employees/:employeeId/avatar')

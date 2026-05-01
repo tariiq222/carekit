@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { GetBookingInvoiceHandler } from './get-booking-invoice.handler';
+import { GetPublicInvoiceHandler } from './get-public-invoice.handler';
 
 const mockInvoice = {
   id: 'inv-1',
@@ -22,7 +22,7 @@ const mockInvoice = {
   zatcaSub: { qrCode: 'data:image/png;base64,xxx', status: 'REPORTED' },
 };
 
-describe('GetBookingInvoiceHandler', () => {
+describe('GetPublicInvoiceHandler', () => {
   const buildPrisma = (invoice: typeof mockInvoice | null = mockInvoice) => ({
     invoice: { findFirst: jest.fn().mockResolvedValue(invoice) },
     zatcaConfig: {
@@ -36,15 +36,15 @@ describe('GetBookingInvoiceHandler', () => {
     },
   });
 
-  it('returns invoice scoped to booking + client with QR passthrough', async () => {
+  it('returns invoice scoped to invoice + client with QR passthrough', async () => {
     const prisma = buildPrisma();
-    const handler = new GetBookingInvoiceHandler(prisma as never);
+    const handler = new GetPublicInvoiceHandler(prisma as never);
 
-    const result = await handler.execute('booking-1', 'client-1');
+    const result = await handler.execute('inv-1', 'client-1');
 
     expect(prisma.invoice.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { bookingId: 'booking-1', clientId: 'client-1' },
+        where: { id: 'inv-1', clientId: 'client-1' },
       }),
     );
     expect(result.id).toBe('inv-1');
@@ -55,9 +55,9 @@ describe('GetBookingInvoiceHandler', () => {
 
   it('returns the configured ZATCA seller name for client-facing invoices', async () => {
     const prisma = buildPrisma();
-    const handler = new GetBookingInvoiceHandler(prisma as never);
+    const handler = new GetPublicInvoiceHandler(prisma as never);
 
-    const result = await handler.execute('booking-1', 'client-1');
+    const result = await handler.execute('inv-1', 'client-1');
 
     expect(prisma.zatcaConfig.findUnique).toHaveBeenCalledWith({
       where: { organizationId: 'org-1' },
@@ -69,9 +69,9 @@ describe('GetBookingInvoiceHandler', () => {
   it('falls back to the organization branding name when ZATCA seller name is missing', async () => {
     const prisma = buildPrisma();
     prisma.zatcaConfig.findUnique.mockResolvedValueOnce({ sellerName: null });
-    const handler = new GetBookingInvoiceHandler(prisma as never);
+    const handler = new GetPublicInvoiceHandler(prisma as never);
 
-    const result = await handler.execute('booking-1', 'client-1');
+    const result = await handler.execute('inv-1', 'client-1');
 
     expect(prisma.brandingConfig.findUnique).toHaveBeenCalledWith({
       where: { organizationId: 'org-1' },
@@ -80,10 +80,10 @@ describe('GetBookingInvoiceHandler', () => {
     expect(result.sellerName).toBe('Fallback Clinic');
   });
 
-  it('throws NotFoundException when no invoice belongs to the booking for this client', async () => {
+  it('throws NotFoundException when no invoice belongs to this client', async () => {
     const prisma = buildPrisma(null);
-    const handler = new GetBookingInvoiceHandler(prisma as never);
+    const handler = new GetPublicInvoiceHandler(prisma as never);
 
-    await expect(handler.execute('booking-x', 'client-1')).rejects.toThrow(NotFoundException);
+    await expect(handler.execute('inv-x', 'client-1')).rejects.toThrow(NotFoundException);
   });
 });

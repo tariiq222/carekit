@@ -1,36 +1,68 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateUserHandler } from './create-user.handler';
 import { DeactivateUserHandler } from './deactivate-user.handler';
+import { GetUserHandler } from './get-user.handler';
 import { ListUsersHandler } from './list-users.handler';
 import { UpdateUserHandler } from './update-user.handler';
 
-const buildUsersPrisma = () => ({
-  user: {
-    findUnique: jest.fn().mockResolvedValue({ id: 'u-1', name: 'Ahmad', isActive: true }),
-    create: jest.fn().mockResolvedValue({ id: 'u-1', email: 'a@clinic.sa', name: 'Ahmad' }),
-    update: jest.fn().mockResolvedValue({ id: 'u-1', name: 'Updated', isActive: false }),
-    findMany: jest.fn().mockResolvedValue([{ id: 'u-1' }]),
-    count: jest.fn().mockResolvedValue(1),
-  },
+const buildUsersPrisma = () => {
+  const prisma = {
+    $transaction: jest.fn(),
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'u-1', name: 'Ahmad', isActive: true }),
+      findFirst: jest.fn().mockResolvedValue({ id: 'u-1', email: 'a@clinic.sa', name: 'Ahmad', isActive: true }),
+      create: jest.fn().mockResolvedValue({ id: 'u-1', email: 'a@clinic.sa', name: 'Ahmad' }),
+      update: jest.fn().mockResolvedValue({ id: 'u-1', name: 'Updated', isActive: false }),
+      findMany: jest.fn().mockResolvedValue([{ id: 'u-1' }]),
+      count: jest.fn().mockResolvedValue(1),
+    },
+    membership: {
+      upsert: jest.fn().mockResolvedValue({ id: 'm-1', userId: 'u-1', organizationId: 'org-1' }),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    },
+  };
+  prisma.$transaction.mockImplementation((fn) => fn(prisma));
+  return prisma;
+};
+
+const buildTenantCtx = (organizationId = 'org-1') => ({
+  requireOrganizationId: jest.fn().mockReturnValue(organizationId),
 });
 
 describe('CreateUserHandler', () => {
-  it('creates user with hashed password', async () => {
+  it('creates user with hashed password and active tenant membership', async () => {
     const prisma = buildUsersPrisma();
     prisma.user.findUnique = jest.fn().mockResolvedValue(null);
     const passwordService = { hash: jest.fn().mockResolvedValue('hashed') };
-    const handler = new CreateUserHandler(prisma as never, passwordService as never);
+    const tenantCtx = buildTenantCtx('org-1');
+    const handler = new CreateUserHandler(prisma as never, passwordService as never, tenantCtx as never);
     const result = await handler.execute({
       email: 'a@b.com', password: 'pass123', name: 'Ali', role: 'RECEPTIONIST' as never,
     });
     expect(result.id).toBe('u-1');
+    expect(tenantCtx.requireOrganizationId).toHaveBeenCalled();
+    expect(prisma.membership.upsert).toHaveBeenCalledWith({
+      where: { userId_organizationId: { userId: 'u-1', organizationId: 'org-1' } },
+      create: {
+        userId: 'u-1',
+        organizationId: 'org-1',
+        role: 'RECEPTIONIST',
+        isActive: true,
+        acceptedAt: expect.any(Date),
+      },
+      update: {
+        role: 'RECEPTIONIST',
+        isActive: true,
+        acceptedAt: expect.any(Date),
+      },
+    });
   });
 
   it('throws ConflictException when email already taken', async () => {
     const prisma = buildUsersPrisma();
     prisma.user.findUnique = jest.fn().mockResolvedValue({ id: 'existing' });
     const passwordService = { hash: jest.fn().mockResolvedValue('hashed') };
-    const handler = new CreateUserHandler(prisma as never, passwordService as never);
+    const handler = new CreateUserHandler(prisma as never, passwordService as never, buildTenantCtx() as never);
     await expect(
       handler.execute({ email: 'a@b.com', password: 'pass', name: 'Ali', role: 'RECEPTIONIST' as never }),
     ).rejects.toThrow(ConflictException);
@@ -64,20 +96,74 @@ describe('ListUsersHandler', () => {
   });
 });
 
+describe('GetUserHandler', () => {
+  it('returns a user scoped to the current tenant membership', async () => {
+    const prisma = buildUsersPrisma();
+    const tenantCtx = buildTenantCtx('org-1');
+    const handler = new GetUserHandler(prisma as never, tenantCtx as never);
+    const result = await handler.execute({ userId: 'u-1' });
+    expect(result.id).toBe('u-1');
+    expect(prisma.user.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'u-1',
+          memberships: { some: { organizationId: 'org-1', isActive: true } },
+        }),
+        omit: { passwordHash: true },
+      }),
+    );
+  });
+
+  it('throws NotFoundException when user is outside the current tenant', async () => {
+    const prisma = buildUsersPrisma();
+    prisma.user.findFirst = jest.fn().mockResolvedValue(null);
+    const handler = new GetUserHandler(prisma as never, buildTenantCtx('org-2') as never);
+    await expect(handler.execute({ userId: 'u-1' })).rejects.toThrow(NotFoundException);
+  });
+});
+
 describe('UpdateUserHandler', () => {
   it('updates user fields', async () => {
     const prisma = buildUsersPrisma();
-    const handler = new UpdateUserHandler(prisma as never);
-    await handler.execute({ userId: 'u-1', name: 'New Name' });
+    const handler = new UpdateUserHandler(prisma as never, buildTenantCtx('org-1') as never);
+    await handler.execute({
+      userId: 'u-1',
+      email: 'new@clinic.sa',
+      name: 'New Name',
+      gender: 'FEMALE' as never,
+      role: 'ACCOUNTANT' as never,
+    });
+    expect(prisma.user.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'u-1',
+          memberships: { some: { organizationId: 'org-1', isActive: true } },
+        }),
+      }),
+    );
     expect(prisma.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'u-1' }, data: expect.objectContaining({ name: 'New Name' }) }),
+      expect.objectContaining({
+        where: { id: 'u-1' },
+        data: expect.objectContaining({
+          email: 'new@clinic.sa',
+          name: 'New Name',
+          gender: 'FEMALE',
+          role: 'ACCOUNTANT',
+        }),
+      }),
+    );
+    expect(prisma.membership.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'u-1', organizationId: 'org-1' },
+        data: { role: 'ACCOUNTANT' },
+      }),
     );
   });
 
   it('throws NotFoundException when user not found', async () => {
     const prisma = buildUsersPrisma();
-    prisma.user.findUnique = jest.fn().mockResolvedValue(null);
-    const handler = new UpdateUserHandler(prisma as never);
+    prisma.user.findFirst = jest.fn().mockResolvedValue(null);
+    const handler = new UpdateUserHandler(prisma as never, buildTenantCtx() as never);
     await expect(handler.execute({ userId: 'bad' })).rejects.toThrow('not found');
   });
 });

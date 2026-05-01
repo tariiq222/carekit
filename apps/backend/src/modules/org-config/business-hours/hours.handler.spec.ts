@@ -1,9 +1,14 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { SetBusinessHoursHandler } from './set-business-hours.handler';
 import { GetBusinessHoursHandler } from './get-business-hours.handler';
 import { AddHolidayHandler } from './add-holiday.handler';
 import { RemoveHolidayHandler } from './remove-holiday.handler';
 import { ListHolidaysHandler } from './list-holidays.handler';
+import { AddHolidayDto } from './add-holiday.dto';
+import { ListHolidaysDto } from './list-holidays.dto';
+import { SetBusinessHoursDto } from './set-business-hours.dto';
 import { TenantContextService } from '../../../common/tenant';
 
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
@@ -118,5 +123,33 @@ describe('ListHolidaysHandler', () => {
     const handler = new ListHolidaysHandler(prisma as never, buildTenant());
     const result = await handler.execute({ branchId: 'branch-1' });
     expect(result).toHaveLength(1);
+  });
+});
+
+describe('business hours DTOs', () => {
+  it('accepts seeded branch ids that are not UUIDs', async () => {
+    const addHolidayErrors = await validate(
+      plainToInstance(AddHolidayDto, {
+        branchId: 'main-branch',
+        date: '2026-09-23',
+        nameAr: 'اليوم الوطني',
+      }),
+    );
+    const listHolidayErrors = await validate(
+      plainToInstance(ListHolidaysDto, {
+        branchId: 'main-branch',
+        year: 2026,
+      }),
+    );
+    const setHoursErrors = await validate(
+      plainToInstance(SetBusinessHoursDto, {
+        branchId: 'main-branch',
+        schedule: [{ dayOfWeek: 0, startTime: '09:00', endTime: '17:00', isOpen: true }],
+      }),
+    );
+
+    expect(addHolidayErrors).toEqual([]);
+    expect(listHolidayErrors).toEqual([]);
+    expect(setHoursErrors).toEqual([]);
   });
 });

@@ -43,7 +43,19 @@ function buildController() {
     deleteEmployeeException as never, listEmployeeRatings as never,
     employeeStats as never, uploadAvatar as never, attachMembership as never,
   );
-  return { controller, createClient, updateClient, listClients, getClient, createEmployee, listEmployees, getEmployee, updateAvailability, employeeOnboarding };
+  return {
+    controller,
+    createClient,
+    updateClient,
+    listClients,
+    getClient,
+    createEmployee,
+    listEmployees,
+    getEmployee,
+    updateAvailability,
+    employeeOnboarding,
+    listEmployeeRatings,
+  };
 }
 
 describe('DashboardPeopleController', () => {
@@ -114,6 +126,16 @@ describe('DashboardPeopleController', () => {
     const { controller, getEmployee } = buildController();
     await controller.getEmployeeEndpoint('e-1');
     expect(getEmployee.execute).toHaveBeenCalledWith({ employeeId: 'e-1' });
+  });
+
+  it('listEmployeeRatingsEndpoint — passes id and pagination', async () => {
+    const { controller, listEmployeeRatings } = buildController();
+    await controller.listEmployeeRatingsEndpoint('e-1', { page: 2, limit: 5 } as never);
+    expect(listEmployeeRatings.execute).toHaveBeenCalledWith({
+      employeeId: 'e-1',
+      page: 2,
+      limit: 5,
+    });
   });
 
   it('updateAvailabilityEndpoint — passes employeeId', async () => {
