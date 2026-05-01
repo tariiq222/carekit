@@ -12,6 +12,7 @@ build/
 # Test artifacts
 coverage/
 coverage-e2e/
+test-results*.json
 .nyc_output/
 
 # Prisma — local SQLite caches (we use Postgres; never commit *.db)
@@ -43,3 +44,6 @@ npm-debug.log*
 .vscode/
 .idea/
 *.swp
+
+# ─── Local docs ───────────────────────────────────────────────
+docs/
