@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as Sentry from '@sentry/nestjs';
+import { captureException } from '../../../infrastructure/telemetry/posthog.client';
 import { BullMqService } from '../../../infrastructure/queue/bull-mq.service';
 import { BookingAutocompleteCron } from './booking-autocomplete.cron';
 import { BookingExpiryCron } from './booking-expiry.cron';
@@ -163,15 +163,11 @@ export class CronTasksService implements OnModuleInit {
           `Cron ${job.name} failed (attempt ${job.attemptsMade + 1})`,
           err instanceof Error ? err.stack : err,
         );
-        Sentry.withScope((scope) => {
-          scope.setTag('cron.job', job.name);
-          scope.setTag('cron.queue', QUEUE_NAME);
-          scope.setContext('bullmq', {
-            jobId: job.id,
-            attemptsMade: job.attemptsMade,
-            attemptsAllowed: job.opts.attempts,
-          });
-          Sentry.captureException(err);
+        captureException(err, {
+          'cron.job': job.name,
+          'cron.queue': QUEUE_NAME,
+          'bullmq.attemptsMade': job.attemptsMade,
+          'bullmq.attemptsAllowed': job.opts.attempts,
         });
         throw err; // re-throw so BullMQ records the failure and applies backoff
       }
@@ -184,11 +180,10 @@ export class CronTasksService implements OnModuleInit {
           `Cron ${job?.name ?? 'unknown'} EXHAUSTED retries — job ${job?.id} → DLQ`,
           err.stack,
         );
-        Sentry.withScope((scope) => {
-          scope.setLevel('fatal');
-          scope.setTag('cron.job', job?.name ?? 'unknown');
-          scope.setTag('cron.dlq', 'true');
-          Sentry.captureException(err);
+        captureException(err, {
+          'cron.job': job?.name ?? 'unknown',
+          'cron.dlq': true,
+          severity: 'fatal',
         });
       }
     });
