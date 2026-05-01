@@ -24,9 +24,9 @@ export const envValidationSchema = Joi.object({
   // In production MUST be set to the dashboard + mobile origins (no localhost).
   CORS_ORIGINS: Joi.string().allow('').optional(),
 
-  // Sentry — optional. When unset, error reporting is silently disabled.
-  // Set to the project DSN from https://sentry.io/settings/<org>/projects/<project>/keys/
-  SENTRY_DSN: Joi.string().uri().allow('').optional(),
+  // PostHog — optional. When unset, error/event capture is silently disabled.
+  POSTHOG_API_KEY: Joi.string().allow('').optional(),
+  POSTHOG_HOST: Joi.string().uri().default('https://eu.i.posthog.com'),
 
   // ZATCA e-invoicing — set to 'true' ONLY when UBL 2.1 XML builder is complete
   // and compliance-reviewed. Any other value leaves the submit endpoint
