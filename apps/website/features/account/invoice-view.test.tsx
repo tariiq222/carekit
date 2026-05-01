@@ -35,6 +35,11 @@ describe('InvoiceView', () => {
     expect(screen.getByText('Discount')).toBeTruthy();
   });
 
+  it('renders the seller name from the invoice payload', () => {
+    render(<InvoiceView invoice={{ ...paid, sellerName: 'Deqah Medical Clinic' }} />);
+    expect(screen.getByText('Deqah Medical Clinic')).toBeTruthy();
+  });
+
   it('hides the discount row when discountAmt is zero', () => {
     render(<InvoiceView invoice={{ ...paid, discountAmt: 0 }} />);
     expect(screen.queryByText('Discount')).toBeNull();

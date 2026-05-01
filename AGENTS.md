@@ -1,6 +1,6 @@
 # Maestro v10 — Deqah Agents
 
-> **Status (2026-04-25): available, not mandatory.** Day-to-day Deqah work flows through superpowers skills (`writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `brainstorming`) on plain feature branches. The roster below is real — each agent has a spec in `.claude/agents/*.md` and the `/plan`, `/execute`, `/verify`, `/maestro` slash commands resolve — but you opt into Maestro per task; you do not have to route every request through it.
+> **Status (2026-04-25): available, not mandatory.** Day-to-day Deqah work flows through superpowers skills (`writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `brainstorming`) on plain feature branches. The roster below is real — each agent has a spec in `agents/*.md` and the `/plan`, `/execute`, `/verify`, `/maestro` slash commands resolve — but you opt into Maestro per task; you do not have to route every request through it.
 
 A tiered multi-agent system built entirely on Claude Code, tuned for the Deqah monorepo. When invoked, a cheap Router triages the request and routes it to one of three paths (Fast / Standard / Deep) with different budgets, agents, and deliverables.
 
@@ -11,12 +11,12 @@ A tiered multi-agent system built entirely on Claude Code, tuned for the Deqah m
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Project rules, stack, domain map, design law |
-| `MAESTRO.md` | Maestro v10 entry point — how to activate |
+| `docs/ai/MAESTRO.md` | Maestro v10 entry point — how to activate |
 | `AGENTS.md` | This file — agent roster + flow |
-| `PATHS.md` | Path playbook — budgets, agents, SLA per path (heuristic) |
-| `.claude/agents/*.md` | Individual agent specs |
+| `docs/ai/PATHS.md` | Path playbook — budgets, agents, SLA per path (heuristic) |
+| `agents/*.md` | Individual agent specs |
 
-For worktree mechanics, use `superpowers:using-git-worktrees` (the previous `WORKTREES.md` and its 5110/5120/5130 port table were retired). When you do invoke Maestro, skim `PATHS.md` to pick a lane.
+For worktree mechanics, use `superpowers:using-git-worktrees` (the previous `WORKTREES.md` and its 5110/5120/5130 port table were retired). When you do invoke Maestro, skim `docs/ai/PATHS.md` to pick a lane.
 
 ---
 
@@ -203,7 +203,7 @@ Lint:                ESLint --max-warnings 0 + Prettier
 QA source of truth:  Kiwi TCMS at https://localhost:6443 — Product = "Deqah" (id=1), Version = "main"
                      One TestPlan per (domain, type): e.g. "Deqah / Bookings / Manual QA"
                      Use the existing sync scripts — never write new ones:
-                       · scripts/kiwi-sync-manual-qa.mjs  (manual QA)
+                       · scripts/kiwi/kiwi-sync-manual-qa.mjs  (manual QA)
                        · /c/pro/kiwi-tcms/run-and-sync.sh (automated)
 ```
 
@@ -216,7 +216,7 @@ Coverage thresholds (backend): **40% branch, 50% fn/line** — enforce via `npm 
 Once you opt into Maestro for a task (via `/plan`, `/execute`, `/verify`, `/maestro`, or `/output-style maestro`):
 
 1. **Yazid routes first** (~200 tokens, < $0.01)
-2. Based on path, follow `PATHS.md`
+2. Based on path, follow `docs/ai/PATHS.md`
 3. Fahad never skips the Router *within a Maestro run* — no direct execution without a path
 4. Fahad reports budget + cost at delivery
 

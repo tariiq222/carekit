@@ -19,6 +19,8 @@ const PRINT_STYLES = `
 `;
 
 export function InvoiceView({ invoice }: InvoiceViewProps) {
+  const sellerName = invoice.sellerName?.trim() || 'Deqah';
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
@@ -42,6 +44,9 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>
             Invoice
           </h1>
+          <p style={{ opacity: 0.9, fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+            {sellerName}
+          </p>
           <p style={{ opacity: 0.8, fontSize: '0.875rem' }}>#{invoice.id.slice(0, 8)}</p>
         </div>
 

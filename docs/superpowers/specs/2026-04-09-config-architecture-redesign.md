@@ -27,7 +27,7 @@ Singleton row. Read-only for clinic unless `clinicCanEdit = true` (e.g., governm
 |-------|------|---------|-------|
 | `id` | UUID | auto | PK |
 | `systemName` | String | "Deqah Clinic" | English display name |
-| `systemNameAr` | String | "عيادة كيركت" | Arabic display name |
+| `systemNameAr` | String | "عيادة دِقة" | Arabic display name |
 | `logoUrl` | String? | null | Logo image URL |
 | `faviconUrl` | String? | null | Favicon URL |
 | `primaryColor` | String | "#2563EB" | Primary brand hex |

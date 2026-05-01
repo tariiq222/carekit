@@ -4,7 +4,7 @@
 
 **Goal:** Give every tenant a self-service invoice history page with downloadable Arabic-first PDF receipts, ZATCA Phase-1 simplified e-invoice fields (sequential numbering, previous-hash chain, base64 TLV QR), and chronological hash integrity. The PDF is a tenant-facing receipt for the SaaS subscription charge — it is not a Moyasar payment receipt and it is not a fully-stamped XAdES ZATCA invoice (deferred to a later phase).
 
-**Architecture:** Extend the existing `platform/billing` vertical slice. Add four columns to `SubscriptionInvoice` (`invoiceNumber`, `invoiceHash`, `previousHash`, `pdfStorageKey`) plus a per-organization `OrganizationInvoiceCounter` table for monotonic sequential numbering. A new `generate-invoice-pdf/` slice owns rendering (pdfmake + IBM Plex Sans Arabic), QR encoding (base64 TLV), and MinIO upload. PDF generation runs synchronously on first download, caches the result in MinIO under `invoices/{orgId}/{invoiceId}.pdf`, and returns a presigned URL. `SubscriptionInvoice` is intentionally NOT in `SCOPED_MODELS` (it is CareKit's receivable, not the tenant's data) — every tenant-facing handler MUST filter `where: { organizationId }` explicitly, and an isolation e2e spec enforces this invariant.
+**Architecture:** Extend the existing `platform/billing` vertical slice. Add four columns to `SubscriptionInvoice` (`invoiceNumber`, `invoiceHash`, `previousHash`, `pdfStorageKey`) plus a per-organization `OrganizationInvoiceCounter` table for monotonic sequential numbering. A new `generate-invoice-pdf/` slice owns rendering (pdfmake + IBM Plex Sans Arabic), QR encoding (base64 TLV), and MinIO upload. PDF generation runs synchronously on first download, caches the result in MinIO under `invoices/{orgId}/{invoiceId}.pdf`, and returns a presigned URL. `SubscriptionInvoice` is intentionally NOT in `SCOPED_MODELS` (it is Deqah's receivable, not the tenant's data) — every tenant-facing handler MUST filter `where: { organizationId }` explicitly, and an isolation e2e spec enforces this invariant.
 
 **Tech Stack:** NestJS 11, Prisma 7 split schema, PostgreSQL, pdfmake, qrcode, MinIO (existing `MinioService`), class-validator DTOs, Next.js 15 App Router, React 19, TanStack Query, Tailwind 4, next-intl, Vitest/Jest.
 
@@ -173,10 +173,10 @@ Append to `apps/backend/.env.example`:
 
 ```dotenv
 # Phase 7 — invoice PDF rendering
-MINIO_INVOICE_BUCKET=carekit-invoices            # optional; falls back to MINIO_BUCKET
+MINIO_INVOICE_BUCKET=deqah-invoices              # optional; falls back to MINIO_BUCKET
 PLATFORM_VAT_NUMBER=300000000000003
-PLATFORM_COMPANY_NAME_AR=منصة كير كِت
-PLATFORM_COMPANY_NAME_EN=CareKit Platform
+PLATFORM_COMPANY_NAME_AR=منصة دِقة
+PLATFORM_COMPANY_NAME_EN=Deqah Platform
 PLATFORM_COMPANY_ADDRESS=Riyadh, Saudi Arabia / الرياض، المملكة العربية السعودية
 ```
 
@@ -982,7 +982,7 @@ DataTable: # / Date / Period / Amount / Status / [Download icon]
 Pagination
 ```
 
-Use `@carekit/ui` primitives. No Card wrapper around the table. Action button is icon-only `size-9 rounded-sm` with Tooltip. The download button is disabled (with tooltip explaining why) when `issuedAt === null` — i.e. the invoice has not been issued yet.
+Use `@deqah/ui` primitives. No Card wrapper around the table. Action button is icon-only `size-9 rounded-sm` with Tooltip. The download button is disabled (with tooltip explaining why) when `issuedAt === null` — i.e. the invoice has not been issued yet.
 
 - [ ] **Step 4: Translation keys (only the 5 real statuses)**
 

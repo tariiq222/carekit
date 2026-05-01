@@ -22,6 +22,7 @@ const fakeUser: UserPayload = {
   permissions: ['booking:read'],
   organizationId: 'org_1',
   verticalSlug: null,
+  onboardingCompletedAt: null,
 }
 
 const fakeAuth: AuthResponse = {

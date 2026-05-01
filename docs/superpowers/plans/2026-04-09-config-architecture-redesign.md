@@ -225,7 +225,7 @@ Replace the `WhiteLabelConfig` model in `config.prisma` with:
 model WhiteLabelConfig {
   id             String   @id @default(uuid())
   systemName     String   @default("Deqah Clinic") @map("system_name")
-  systemNameAr   String   @default("عيادة كيركت") @map("system_name_ar")
+  systemNameAr   String   @default("عيادة دِقة") @map("system_name_ar")
   logoUrl        String?  @map("logo_url")
   faviconUrl     String?  @map("favicon_url")
   primaryColor   String   @default("#2563EB") @map("primary_color")
@@ -285,7 +285,7 @@ Remove the `WhiteLabelEntry` interface and `WHITE_LABEL_DEFAULTS` array. Replace
 
 export const WHITELABEL_DEFAULTS = {
   systemName: 'Deqah Clinic',
-  systemNameAr: 'عيادة كيركت',
+  systemNameAr: 'عيادة دِقة',
   logoUrl: null,
   faviconUrl: null,
   primaryColor: '#2563EB',
@@ -1829,7 +1829,7 @@ async function migrate(): Promise<void> {
   await prisma.whiteLabelConfig.create({
     data: {
       systemName: get('system_name') ?? 'Deqah Clinic',
-      systemNameAr: get('system_name_ar') ?? 'عيادة كيركت',
+      systemNameAr: get('system_name_ar') ?? 'عيادة دِقة',
       logoUrl: get('logo'),
       faviconUrl: null,
       primaryColor: get('primary_color') ?? '#2563EB',

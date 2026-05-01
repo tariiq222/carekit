@@ -1,6 +1,6 @@
 # MAESTRO.md — Maestro v10 Entry Point (Deqah edition)
 
-> **Status (2026-04-25): available scaffold, not mandatory.** The dominant Deqah workflow is now superpowers skills (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`) running on plain feature branches. Maestro v10 — the agents in `.claude/agents/` and the slash commands in `.claude/commands/` — is real and resolvable, and you may opt into it for tasks that benefit from a Planner-Verifier split. Treat the rules below as guidance for *when you choose to invoke Maestro*, not as a gate on every change.
+> **Status (2026-04-25): available scaffold, not mandatory.** The dominant Deqah workflow is now superpowers skills (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`) running on plain feature branches. Maestro v10 — the agents in `agents/` and the slash commands in `.claude/commands/` — is real and resolvable, and you may opt into it for tasks that benefit from a Planner-Verifier split. Treat the rules below as guidance for *when you choose to invoke Maestro*, not as a gate on every change.
 
 Deqah ships with **Maestro v10** — a tiered multi-agent system with a Planner-Verifier architecture that separates planning from code writing. This file is the orchestration entry for that system; project specifics still live in `CLAUDE.md`.
 

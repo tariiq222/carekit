@@ -9,10 +9,10 @@ One deployment serves many clinics (organizations). Each tenant gets isolated da
 ## Quick Start
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env     # fill in secrets
-cd apps/backend && npx prisma migrate deploy && npm run seed && cd ../..
-npm run dev:all
+cd apps/backend && npx prisma migrate deploy && pnpm seed && cd ../..
+pnpm dev:all
 ```
 
 | Service | URL |
@@ -64,7 +64,7 @@ npm run dev:all
 | You are... | Start with |
 |-----------|------------|
 | New developer | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| Reviewing architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Reviewing architecture | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) |
 | Working on backend | [`apps/backend/CLAUDE.md`](apps/backend/CLAUDE.md) |
 | Working on dashboard UI | [`apps/dashboard/CLAUDE.md`](apps/dashboard/CLAUDE.md) |
 | Working on super-admin | [`apps/admin/CLAUDE.md`](apps/admin/CLAUDE.md) |

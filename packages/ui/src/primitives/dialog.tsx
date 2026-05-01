@@ -58,11 +58,11 @@ function DialogContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className="overflow-y-auto grid place-items-center p-4" />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 flex flex-col w-full max-w-lg h-auto max-h-[90vh] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-surface-solid p-0 text-sm shadow-lg ring-1 ring-border outline-none",
+          "fixed inset-0 z-50 m-auto flex flex-col w-[calc(100vw-2rem)] max-w-lg h-fit max-h-[90vh] rounded-xl bg-surface-solid p-0 text-sm shadow-lg ring-1 ring-border outline-none",
           className
         )}
         {...props}

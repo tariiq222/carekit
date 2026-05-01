@@ -2,6 +2,7 @@ import { getApiBase } from '@/lib/api-base';
 
 export interface InvoiceDetail {
   id: string;
+  sellerName?: string | null;
   branchId: string;
   clientId: string;
   employeeId: string;

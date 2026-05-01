@@ -6,13 +6,13 @@ Deqah is a **multi-tenant SaaS** for clinics. One deployment serves many clinics
 
 Day-to-day work uses **superpowers skills** (`superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:dispatching-parallel-agents`, `superpowers:brainstorming`, …). These are the actual workflow.
 
-A separate **Maestro v10** scaffold lives in `MAESTRO.md`, `AGENTS.md`, `PATHS.md`, `QUICK_REFERENCE.md`, `.claude/agents/*`, `.claude/commands/*`, `.claude/output-styles/maestro.md` — invoke when explicitly asked (`/plan`, `/execute`, `/verify`, `/maestro`). It's available, not mandatory.
+A separate **Maestro v10** scaffold lives in `docs/ai/MAESTRO.md`, `AGENTS.md`, `docs/ai/PATHS.md`, `docs/ai/QUICK_REFERENCE.md`, `agents/*`, `.claude/commands/*`, `.claude/output-styles/maestro.md` — invoke when explicitly asked (`/plan`, `/execute`, `/verify`, `/maestro`). It's available, not mandatory.
 
 For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 
 ## Tech Stack
 
-- **Monorepo**: npm workspaces + Turborepo
+- **Monorepo**: pnpm workspaces + Turborepo
 - **Backend**: NestJS 11, Prisma 7 (PostgreSQL + pgvector), BullMQ, Redis, MinIO
 - **Per-tenant Dashboard**: Next.js 15 (App Router) + React 19, TanStack Query, Tailwind 4, next-intl (AR/EN)
 - **Super-admin (`apps/admin`)**: Next.js 15 — SaaS control plane (tenants, plans, verticals, billing oversight, impersonation, metrics)
@@ -192,7 +192,7 @@ All automated + manual QA results land in the local Kiwi TCMS at `https://localh
 **Sync scripts (extend, don't rewrite):**
 
 - Automated: `/c/pro/kiwi-tcms/run-and-sync.sh` + Python helpers — `npm run test:kiwi{,:e2e,:all}`.
-- Manual QA: `scripts/kiwi-sync-manual-qa.mjs` reads `data/kiwi/<domain>-<date>.json` — `npm run kiwi:sync-manual <path>`.
+- Manual QA: `scripts/kiwi/kiwi-sync-manual-qa.mjs` reads `data/kiwi/<domain>-<date>.json` — `npm run kiwi:sync-manual <path>`.
 
 **Manual QA workflow:**
 

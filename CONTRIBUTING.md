@@ -7,7 +7,7 @@ Welcome to Deqah — a multi-tenant SaaS clinic platform. This guide gets you pr
 ```bash
 # 1. Clone & install
 git clone <repo-url> && cd deqah
-npm install
+pnpm install
 
 # 2. Environment
 cp .env.example .env
@@ -22,7 +22,7 @@ npx prisma migrate deploy
 npm run seed
 
 # 4. Start everything
-cd ../.. && npm run dev:all
+cd ../.. && pnpm dev:all
 # backend   → http://localhost:5100
 # dashboard → http://localhost:5103   (per-tenant)
 # admin     → http://localhost:5104   (super-admin)
@@ -37,7 +37,7 @@ Read these in order — skip none:
 | # | File | What it covers |
 |---|------|----------------|
 | 1 | `CLAUDE.md` | Project rules, multi-tenancy, golden rules, design context |
-| 2 | `ARCHITECTURE.md` | Topology, request pipeline, cluster tree, vertical slices |
+| 2 | `docs/architecture/ARCHITECTURE.md` | Topology, request pipeline, cluster tree, vertical slices |
 | 3 | `apps/backend/CLAUDE.md` | Backend module conventions per cluster |
 | 4 | `apps/dashboard/CLAUDE.md` | Dashboard layer rules + Page Anatomy Law |
 | 5 | `apps/mobile/CLAUDE.md` (if mobile) or `apps/admin/CLAUDE.md` (if super-admin) | App-specific conventions |

@@ -68,7 +68,7 @@ model WhiteLabelConfig {
   id                String   @id @default(uuid())
   // Identity
   systemName        String   @default("Deqah Clinic") @map("system_name")
-  systemNameAr      String   @default("عيادة كيركت") @map("system_name_ar")
+  systemNameAr      String   @default("عيادة دِقة") @map("system_name_ar")
   productTagline    String?  @map("product_tagline")
   // Assets
   logoUrl           String?  @map("logo_url")
@@ -368,7 +368,7 @@ git commit -m "refactor(organization-settings): remove ThemeService, ThemeContro
 ```typescript
 export const WHITELABEL_DEFAULTS = {
   systemName:        'Deqah Clinic',
-  systemNameAr:      'عيادة كيركت',
+  systemNameAr:      'عيادة دِقة',
   productTagline:    'إدارة العيادة',
   logoUrl:           null as string | null,
   faviconUrl:        null as string | null,
