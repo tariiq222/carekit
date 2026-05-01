@@ -19,11 +19,7 @@
     "test:report": "py data/test-reports/scripts/generate_html_report.py",
     "test:report:open": "py data/test-reports/scripts/generate_html_report.py && start data/test-reports/output/test-report.html",
     "kiwi:sync-manual": "node scripts/kiwi/kiwi-sync-manual-qa.mjs --plan",
-    "brand:check": "node scripts/brand/check-brand-identity.mjs",
-    "orchestrate": "pnpm --filter=@deqah/orchestration orchestrate",
-    "o": "pnpm --filter=@deqah/orchestration orchestrate",
-    "model-proxy": "pnpm --filter=@deqah/orchestration model-proxy",
-    "proxy": "pnpm --filter=@deqah/orchestration proxy"
+    "brand:check": "node scripts/brand/check-brand-identity.mjs"
   },
   "devDependencies": {
     "lru-cache": "^11.3.3",
