@@ -3,6 +3,7 @@ const isProduction = process.env.NODE_ENV === "production"
 
 const nextConfig = {
   transpilePackages: ["@deqah/ui", "@deqah/shared", "@deqah/api-client"],
+  skipTrailingSlashRedirect: true,
   // Strip dev-only credentials from production builds regardless of what is set in .env
   env: {
     NEXT_PUBLIC_DEV_EMAIL: isProduction ? "" : (process.env.NEXT_PUBLIC_DEV_EMAIL ?? ""),
