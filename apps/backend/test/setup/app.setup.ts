@@ -9,6 +9,7 @@ import { EmbeddingAdapter } from '../../src/infrastructure/ai/embedding.adapter'
 import { ChatAdapter } from '../../src/infrastructure/ai/chat.adapter';
 import { SemanticSearchHandler } from '../../src/modules/ai/semantic-search/semantic-search.handler';
 import { MinioService } from '../../src/infrastructure/storage/minio.service';
+import { CAPTCHA_VERIFIER } from '../../src/modules/comms/contact-messages/captcha.verifier';
 import { ensureTestUsers } from './auth.helper';
 
 const TEST_JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
@@ -104,6 +105,11 @@ export async function createTestApp(
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
           MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
+          MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
+          MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
+          PLATFORM_VAT_NUMBER: '300000000000003',
+          PLATFORM_COMPANY_NAME_AR: 'ديقة',
+          PLATFORM_COMPANY_NAME_EN: 'Deqah',
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
           TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
@@ -138,6 +144,11 @@ export async function createTestApp(
           SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
           ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
           MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
+          MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
+          MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
+          PLATFORM_VAT_NUMBER: '300000000000003',
+          PLATFORM_COMPANY_NAME_AR: 'ديقة',
+          PLATFORM_COMPANY_NAME_EN: 'Deqah',
           ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
           TENANT_ENFORCEMENT: tenantEnforcement,
           DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
@@ -177,6 +188,8 @@ export async function createTestApp(
       getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key?sig=x'),
       fileExists: jest.fn().mockResolvedValue(true),
     })
+    .overrideProvider(CAPTCHA_VERIFIER)
+    .useValue({ verify: async () => true })
     .compile();
 
   const app = moduleRef.createNestApplication();

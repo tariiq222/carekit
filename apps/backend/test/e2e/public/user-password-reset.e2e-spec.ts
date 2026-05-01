@@ -85,7 +85,7 @@ describe('Staff Password Reset (e2e)', () => {
 
       const res = await req
         .post('/auth/request-password-reset')
-        .send({ email: `no-such-user-${Date.now()}@test.com` });
+        .send({ email: `no-such-user-${Date.now()}@test.com`, hCaptchaToken: 'test-valid' });
 
       expect(res.status).toBe(204);
       const countAfter = await testPrisma.passwordResetToken.count();
@@ -106,7 +106,7 @@ describe('Staff Password Reset (e2e)', () => {
 
       const res = await req
         .post('/auth/request-password-reset')
-        .send({ email: user.email });
+        .send({ email: user.email, hCaptchaToken: 'test-valid' });
 
       expect(res.status).toBe(204);
 

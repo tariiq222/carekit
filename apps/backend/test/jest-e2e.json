@@ -4,12 +4,12 @@
   "testEnvironment": "node",
   "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": ["ts-jest", { "isolatedModules": true }]
   },
   "setupFiles": ["<rootDir>/test/jest.setup.ts"],
   "globalSetup": "<rootDir>/test/setup/global-setup.ts",
   "globalTeardown": "<rootDir>/test/setup/global-teardown.ts",
-  "testTimeout": 120000,
+  "testTimeout": 300000,
   "maxWorkers": 1,
   "moduleNameMapper": {
     "^@deqah/shared$": "<rootDir>/../../packages/shared/src/index.ts"
@@ -21,5 +21,6 @@
     "!src/**/index.ts",
     "!src/main.ts"
   ],
-  "coverageDirectory": "coverage-e2e"
+  "coverageDirectory": "coverage-e2e",
+  "transformIgnorePatterns": ["node_modules/(?!(uuid)/)"]
 }

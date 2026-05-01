@@ -24,7 +24,7 @@ describe('Staff↔Client Chat API (e2e)', () => {
   it('[CH-001][Chat/create-conversation][P1-High] إنشاء محادثة جديدة عبر DB وظهورها في list', async () => {
     const client = await seedClient(testPrisma as any);
     await (testPrisma as any).chatConversation.create({
-      data: { clientId: client.id, status: 'OPEN' },
+      data: { organizationId: '00000000-0000-0000-0000-000000000001', clientId: client.id, status: 'OPEN' },
     });
 
     const res = await req
@@ -40,7 +40,7 @@ describe('Staff↔Client Chat API (e2e)', () => {
   it('[CH-002][Chat/send-staff-message][P1-High] إرسال رسالة من الموظف وعرضها في list-messages', async () => {
     const client = await seedClient(testPrisma as any);
     const conv = await (testPrisma as any).chatConversation.create({
-      data: { clientId: client.id, status: 'OPEN' },
+      data: { organizationId: '00000000-0000-0000-0000-000000000001', clientId: client.id, status: 'OPEN' },
     });
 
     const sendRes = await req
@@ -62,7 +62,7 @@ describe('Staff↔Client Chat API (e2e)', () => {
   it('[CH-003][Chat/close-conversation][P2-Medium] قفل محادثة يغيّر status إلى CLOSED', async () => {
     const client = await seedClient(testPrisma as any);
     const conv = await (testPrisma as any).chatConversation.create({
-      data: { clientId: client.id, status: 'OPEN' },
+      data: { organizationId: '00000000-0000-0000-0000-000000000001', clientId: client.id, status: 'OPEN' },
     });
 
     const res = await req

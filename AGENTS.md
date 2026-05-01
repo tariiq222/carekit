@@ -30,7 +30,7 @@ For worktree mechanics, use `superpowers:using-git-worktrees` (the previous `WOR
 | 🏗️ **Rashed** (architect) | `claude-opus-4-7` | Architecture, DB schema, API contracts (DEEP only) | ❌ |
 | 💻 **Nawaf** (backend) | `claude-sonnet-4-6` | NestJS 11 / Prisma 7 / PostgreSQL + pgvector / BullMQ / Redis / MinIO | ✅ |
 | 🎨 **Khaled** (frontend) | `claude-sonnet-4-6` | Next.js 15 (App Router) + React 19 · React Native 0.83 + Expo SDK 55 · Tailwind 4 · shadcn/ui · next-intl | ✅ |
-| 🧪 **Saad** (tester) | `claude-sonnet-4-6` | Jest + Supertest + Vitest + Maestro (mobile) + Chrome DevTools MCP for manual QA · Kiwi TCMS sync | ✅ |
+| 🧪 **Saad** (tester) | `claude-sonnet-4-6` | Jest + Supertest + Vitest + Chrome DevTools MCP for manual QA · Kiwi TCMS sync | ✅ |
 | 🔍 **Majed** (type-checker) | `claude-sonnet-4-6` | TypeScript strict, Zod schemas, ESLint, Prettier | ✅ |
 | 🔒 **Abdullah** (security) | `claude-opus-4-7` | Security review — owner-only tiers (payments, ZATCA, auth, migrations, schema, CODEOWNERS) | ❌ |
 | ♻️ **Badr** (refactor) | `claude-sonnet-4-6` | Refactor within the 350-line rule | ✅ |
@@ -143,7 +143,7 @@ Fahad tracks spend live. Exceeding budget by 20% halts and asks for user approva
 | Lint (`turbo run lint`) | ✅ | ✅ | ✅ |
 | Unit tests (Jest / Vitest) | — | ✅ | ✅ |
 | Integration tests (Supertest) | — | ✅ | ✅ |
-| E2E tests (Maestro mobile flows / Chrome DevTools MCP walk-through) | — | — | ✅ |
+| E2E tests (Chrome DevTools MCP walk-through) | — | — | ✅ |
 | Security review (Abdullah) | — | — | ✅ |
 | Architecture review (Rashed) | — | If schema | ✅ |
 | Regression check (Omar) | — | — | ✅ |

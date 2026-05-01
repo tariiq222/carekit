@@ -290,14 +290,16 @@ describe("GET /dashboard/billing/my-features (e2e)", () => {
     expect(res.status).toBe(200);
 
     // employees — quantitative: currentCount must equal exactly 5
-    const employees = res.body.features.employees;
+    // Key in response is the plan-limits JSON key: "maxEmployees" (via FEATURE_KEY_MAP).
+    const employees = res.body.features.maxEmployees;
     expect(employees).toBeDefined();
     expect(employees.currentCount).toBe(5);
     expect(typeof employees.limit).toBe("number");
     expect(employees).toHaveProperty("enabled");
 
     // branches — quantitative: currentCount must equal exactly 2
-    const branches = res.body.features.branches;
+    // Key in response is the plan-limits JSON key: "maxBranches" (via FEATURE_KEY_MAP).
+    const branches = res.body.features.maxBranches;
     expect(branches).toBeDefined();
     expect(branches.currentCount).toBe(2);
     expect(typeof branches.limit).toBe("number");

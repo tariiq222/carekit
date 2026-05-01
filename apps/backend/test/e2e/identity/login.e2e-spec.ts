@@ -22,7 +22,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/login (
   it('✅ بيانات صحيحة → 200 + accessToken + refreshToken', async () => {
     const res = await req
       .post('/auth/login')
-      .send({ email: 'admin@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'admin@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accessToken');
@@ -36,7 +36,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/login (
   it('❌ كلمة مرور خاطئة → 401', async () => {
     const res = await req
       .post('/auth/login')
-      .send({ email: 'admin@clinic.com', password: 'WrongPass' });
+      .send({ email: 'admin@clinic.com', password: 'WrongPass', hCaptchaToken: 'test-valid' });
 
     expect(res.status).toBe(401);
     expect(res.body).not.toHaveProperty('accessToken');
@@ -45,7 +45,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/login (
   it('❌ مستخدم غير موجود → 401', async () => {
     const res = await req
       .post('/auth/login')
-      .send({ email: 'ghost@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'ghost@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
 
     expect(res.status).toBe(401);
   });
@@ -59,7 +59,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/login (
 
     const res = await req
       .post('/auth/login')
-      .send({ email: 'inactive@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'inactive@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
 
     expect(res.status).toBe(401);
   });

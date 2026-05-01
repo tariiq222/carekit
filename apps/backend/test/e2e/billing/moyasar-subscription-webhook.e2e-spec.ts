@@ -19,7 +19,8 @@ describe('SaaS-04 — Moyasar subscription webhook', () => {
   let h: IsolationHarness;
 
   let BASIC_PLAN_ID: string;
-  const SECRET = 'test-platform-webhook-secret';
+  // Must match MOYASAR_PLATFORM_WEBHOOK_SECRET set by bootHarness (line 63 of isolation-harness.ts).
+  const SECRET = 'test-moyasar-webhook-secret';
 
   function sign(rawBody: string): string {
     return createHmac('sha256', SECRET).update(rawBody).digest('hex');
@@ -75,7 +76,8 @@ describe('SaaS-04 — Moyasar subscription webhook', () => {
 
   beforeAll(async () => {
     process.env.MOYASAR_PLATFORM_SECRET_KEY ??= 'test-platform-secret-key';
-    process.env.MOYASAR_PLATFORM_WEBHOOK_SECRET = SECRET;
+    // Note: bootHarness() unconditionally sets MOYASAR_PLATFORM_WEBHOOK_SECRET =
+    // 'test-moyasar-webhook-secret' — SECRET above must match that value.
     h = await bootHarness();
     const basic = await h.prisma.plan.findFirstOrThrow({ where: { slug: 'BASIC' } });
     BASIC_PLAN_ID = basic.id;

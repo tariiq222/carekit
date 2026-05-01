@@ -281,6 +281,7 @@ describe('Clients API (e2e)', () => {
     it('[CL-025][Clients/update-client][P2-Medium] مسح حقل اختياري (null)', async () => {
       const c = await (testPrisma as any).client.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           name: 'Has Notes',
           firstName: 'Has',
           lastName: 'Notes',

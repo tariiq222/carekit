@@ -99,7 +99,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'SavedCard',
   'DunningLog',
   // Platform models with organizationId (admin-level, but scoped for defense-in-depth)
-  'PasswordResetToken',
+  // NOTE: PasswordResetToken deliberately NOT scoped — it has no organizationId column.
   'BillingCredit',
   'Invitation',
   // ImpersonationSession deliberately NOT scoped — list-impersonation-sessions handler

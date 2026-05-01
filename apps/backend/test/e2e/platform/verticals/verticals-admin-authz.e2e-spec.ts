@@ -23,7 +23,7 @@ describe('Dashboard /verticals authorization (e2e)', () => {
     const passwordHash = await bcrypt.hash('Test@1234', 10);
     await testPrisma.user.upsert({
       where: { id: SUPER_ADMIN_USER_ID },
-      update: {},
+      update: { isSuperAdmin: true },
       create: {
         id: SUPER_ADMIN_USER_ID,
         email: 'super-admin-verticals@e2e.test',
@@ -31,6 +31,7 @@ describe('Dashboard /verticals authorization (e2e)', () => {
         passwordHash,
         role: 'SUPER_ADMIN',
         isActive: true,
+        isSuperAdmin: true,
       },
     });
   });

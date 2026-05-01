@@ -73,6 +73,7 @@ describe('PATCH /dashboard/people/clients/:id/active (e2e)', () => {
       // Seed a live refresh token for this client
       const token = await (testPrisma as any).clientRefreshToken.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           clientId: client.id,
           tokenHash: 'hash-abc',
           tokenSelector: 'sel-abc',
@@ -108,6 +109,7 @@ describe('PATCH /dashboard/people/clients/:id/active (e2e)', () => {
       const revokedAt = new Date(Date.now() - 60_000);
       const token = await (testPrisma as any).clientRefreshToken.create({
         data: {
+          organizationId: '00000000-0000-0000-0000-000000000001',
           clientId: client.id,
           tokenHash: 'hash-xyz',
           tokenSelector: 'sel-xyz',

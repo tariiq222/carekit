@@ -73,6 +73,8 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
   process.env.JWT_ACCESS_TTL = '15m';
   process.env.JWT_REFRESH_TTL = '30d';
   process.env.SMS_PROVIDER_ENCRYPTION_KEY = TEST_SMS_PROVIDER_ENCRYPTION_KEY;
+  process.env.ZOOM_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 2).toString('base64');
+  process.env.MOYASAR_TENANT_ENCRYPTION_KEY = Buffer.alloc(32, 3).toString('base64');
 
   const CONFIG_MAP: Record<string, string | number> = {
     DATABASE_URL: TEST_DATABASE_URL,
@@ -99,6 +101,15 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     MINIO_SECRET_KEY: 'minioadmin123',
     MINIO_BUCKET: 'deqah',
     SMS_PROVIDER_ENCRYPTION_KEY: TEST_SMS_PROVIDER_ENCRYPTION_KEY,
+    ZOOM_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 2).toString('base64'),
+    MOYASAR_TENANT_ENCRYPTION_KEY: Buffer.alloc(32, 3).toString('base64'),
+    MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
+    MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
+    PLATFORM_VAT_NUMBER: '300000000000003',
+    PLATFORM_COMPANY_NAME_AR: 'ديقة',
+    PLATFORM_COMPANY_NAME_EN: 'Deqah',
+    TENANT_ENFORCEMENT: 'permissive',
+    DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
   };
 
   const moduleRef: TestingModule = await Test.createTestingModule({

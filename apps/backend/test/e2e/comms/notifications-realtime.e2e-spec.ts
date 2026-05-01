@@ -9,6 +9,7 @@ const RECIPIENT = adminUser.id;
 async function seedNotification(overrides: Partial<{ title: string; body: string; isRead: boolean }> = {}) {
   return (testPrisma as any).notification.create({
     data: {
+      organizationId: '00000000-0000-0000-0000-000000000001',
       recipientId: RECIPIENT,
       recipientType: 'EMPLOYEE',
       type: 'BOOKING_REMINDER',

@@ -55,6 +55,15 @@ const CONFIG_MAP: Record<string, string | number> = {
   MINIO_ACCESS_KEY: 'minioadmin',
   MINIO_SECRET_KEY: 'minioadmin123',
   MINIO_BUCKET: 'deqah',
+  SMS_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
+  ZOOM_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 2).toString('base64'),
+  MOYASAR_TENANT_ENCRYPTION_KEY: Buffer.alloc(32, 3).toString('base64'),
+  MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
+  MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
+  PLATFORM_VAT_NUMBER: '300000000000003',
+  PLATFORM_COMPANY_NAME_AR: 'ديقة',
+  PLATFORM_COMPANY_NAME_EN: 'Deqah',
+  ADMIN_HOSTS: 'admin.deqah.app',
   // Tenant middleware: 'off' so TenantResolverMiddleware fast-paths for all routes.
   TENANT_ENFORCEMENT: 'off',
   DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
@@ -94,6 +103,9 @@ export async function createVerticalsTestApp(): Promise<VerticalsTestApp> {
   process.env.TENANT_ENFORCEMENT = 'off';
   process.env.DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001';
   process.env.LICENSE_SERVER_URL = 'http://localhost:9999';
+  process.env.SMS_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
+  process.env.ZOOM_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 2).toString('base64');
+  process.env.MOYASAR_TENANT_ENCRYPTION_KEY = Buffer.alloc(32, 3).toString('base64');
 
   // Ensure the baseline admin user exists (JwtStrategy looks up user in DB)
   const passwordHash = await bcrypt.hash('Test@1234', 10);

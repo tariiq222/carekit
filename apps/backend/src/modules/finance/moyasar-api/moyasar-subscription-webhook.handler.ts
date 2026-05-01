@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { SYSTEM_CONTEXT_CLS_KEY, TENANT_CLS_KEY } from '../../../common/tenant/tenant.constants';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY, SYSTEM_CONTEXT_CLS_KEY, TENANT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { MoyasarSubscriptionClient } from './moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../../platform/billing/record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../../platform/billing/record-subscription-payment-failure/record-subscription-payment-failure.handler';
@@ -61,7 +61,9 @@ export class MoyasarSubscriptionWebhookHandler {
       return { ok: true };
     }
 
-    // Stage 3: enter tenant context for scoped writes
+    // Stage 3: enter tenant context for scoped writes.
+    // Also set SUPER_ADMIN_CONTEXT_CLS_KEY so that billing handlers can call
+    // prisma.$allTenants for cross-tenant owner email lookup without throwing.
     return this.cls.run(async () => {
       this.cls.set(TENANT_CLS_KEY, {
         organizationId: invoice.subscription.organizationId,
@@ -70,6 +72,7 @@ export class MoyasarSubscriptionWebhookHandler {
         role: 'system',
         isSuperAdmin: false,
       });
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
 
       if (event.type === 'payment_paid') {
         await this.recordPayment.execute({

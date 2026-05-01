@@ -15,7 +15,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/refresh
 
     const res = await req
       .post('/auth/login')
-      .send({ email: 'user@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'user@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
     firstRefreshToken = res.body.refreshToken;
   });
 
@@ -51,7 +51,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/refresh
     });
     const loginRes = await req
       .post('/auth/login')
-      .send({ email: 'rotation@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'rotation@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
     const token = loginRes.body.refreshToken;
 
     await req.post('/auth/refresh').send({ refreshToken: token });

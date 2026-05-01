@@ -16,7 +16,7 @@ import { seedUser } from '../../setup/seed.helper';describe('POST /auth/logout 
 
     const res = await req
       .post('/auth/login')
-      .send({ email: 'logout@clinic.com', password: 'Pass@1234' });
+      .send({ email: 'logout@clinic.com', password: 'Pass@1234', hCaptchaToken: 'test-valid' });
     refreshToken = res.body.refreshToken;
   });
 

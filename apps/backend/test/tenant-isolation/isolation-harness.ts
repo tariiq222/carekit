@@ -4,6 +4,12 @@ import { ClsService } from 'nestjs-cls';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/infrastructure/database/prisma.service';
 import { TenantContextService, TenantContext } from '../../src/common/tenant';
+import { FcmService } from '../../src/infrastructure/mail/fcm.service';
+import { SmtpService } from '../../src/infrastructure/mail/smtp.service';
+import { MinioService } from '../../src/infrastructure/storage/minio.service';
+import { EmbeddingAdapter } from '../../src/infrastructure/ai/embedding.adapter';
+import { ChatAdapter } from '../../src/infrastructure/ai/chat.adapter';
+import { SemanticSearchHandler } from '../../src/modules/ai/semantic-search/semantic-search.handler';
 
 export interface IsolationHarness {
   app: INestApplication;
@@ -21,9 +27,65 @@ export interface IsolationHarness {
  * cross-tenant isolation proofs — NOT for fast unit tests.
  */
 export async function bootHarness(): Promise<IsolationHarness> {
+  // Set all required env vars before AppModule bootstraps
+  process.env.DATABASE_URL =
+    process.env.TEST_DATABASE_URL ??
+    'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
+  process.env.REDIS_HOST = process.env.REDIS_HOST ?? 'localhost';
+  process.env.REDIS_PORT = process.env.REDIS_PORT ?? '5380';
+  process.env.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ?? 'test-access-secret-32chars-min';
+  process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? 'test-refresh-secret-32chars-min';
+  process.env.JWT_ACCESS_TTL = '15m';
+  process.env.JWT_REFRESH_TTL = '30d';
+  process.env.JWT_CLIENT_ACCESS_SECRET = 'test-client-access-secret-32chars';
+  process.env.JWT_CLIENT_REFRESH_SECRET = 'test-client-refresh-secret-32chars';
+  process.env.JWT_CLIENT_ACCESS_TTL = '15m';
+  process.env.JWT_CLIENT_REFRESH_TTL = '30d';
+  process.env.OPENAI_API_KEY = 'test-key';
+  process.env.OPENROUTER_API_KEY = 'test-key';
+  process.env.MOYASAR_API_KEY = 'test-key';
+  process.env.FCM_PROJECT_ID = ''; // empty → FcmService.onModuleInit() skips firebase init
+  process.env.SMTP_HOST = 'localhost';
+  process.env.SMTP_PORT = '1025';
+  process.env.LICENSE_SERVER_URL = 'http://localhost:9999';
+  process.env.MINIO_ENDPOINT = 'localhost';
+  process.env.MINIO_PORT = '9000';
+  process.env.MINIO_ACCESS_KEY = 'minioadmin';
+  process.env.MINIO_SECRET_KEY = 'minioadmin123';
+  process.env.MINIO_BUCKET = 'deqah';
+  process.env.SMS_PROVIDER_ENCRYPTION_KEY =
+    process.env.SMS_PROVIDER_ENCRYPTION_KEY ?? Buffer.alloc(32, 1).toString('base64');
+  process.env.ZOOM_PROVIDER_ENCRYPTION_KEY =
+    process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ?? Buffer.alloc(32, 2).toString('base64');
+  process.env.MOYASAR_TENANT_ENCRYPTION_KEY =
+    process.env.MOYASAR_TENANT_ENCRYPTION_KEY ?? Buffer.alloc(32, 3).toString('base64');
+  process.env.MOYASAR_PLATFORM_SECRET_KEY = 'test-moyasar-platform-key';
+  process.env.MOYASAR_PLATFORM_WEBHOOK_SECRET = 'test-moyasar-webhook-secret';
+  process.env.PLATFORM_VAT_NUMBER = '300000000000003';
+  process.env.PLATFORM_COMPANY_NAME_AR = 'ديقة';
+  process.env.PLATFORM_COMPANY_NAME_EN = 'Deqah';
+  process.env.TENANT_ENFORCEMENT = process.env.TENANT_ENFORCEMENT ?? 'strict';
+  process.env.DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001';
+  process.env.ZATCA_ENABLED = 'true';
+  process.env.ZATCA_API_URL = 'http://localhost:9999/zatca-stub';
+  process.env.ZATCA_API_KEY = 'test-zatca-key';
+
   const mod: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(FcmService)
+    .useValue({ sendPush: jest.fn(), sendMulticast: jest.fn(), isAvailable: () => false })
+    .overrideProvider(SmtpService)
+    .useValue({ send: jest.fn().mockResolvedValue(undefined), sendTemplate: jest.fn().mockResolvedValue(undefined) })
+    .overrideProvider(MinioService)
+    .useValue({ uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key'), deleteFile: jest.fn(), getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/deqah/mocked-key?sig=x'), fileExists: jest.fn().mockResolvedValue(true) })
+    .overrideProvider(EmbeddingAdapter)
+    .useValue({ isAvailable: () => true, embed: jest.fn().mockResolvedValue([new Array(1536).fill(0)]) })
+    .overrideProvider(SemanticSearchHandler)
+    .useValue({ execute: jest.fn().mockResolvedValue([]) })
+    .overrideProvider(ChatAdapter)
+    .useValue({ isAvailable: () => true, complete: jest.fn().mockResolvedValue('test reply'), stream: jest.fn(async function* () { yield 'test'; }) })
+    .compile();
 
   const app = mod.createNestApplication();
   await app.init();

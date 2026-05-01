@@ -5,6 +5,7 @@ import { RecordSubscriptionPaymentHandler } from '../../../src/modules/platform/
 import { RecordSubscriptionPaymentFailureHandler } from '../../../src/modules/platform/billing/record-subscription-payment-failure/record-subscription-payment-failure.handler';
 import { CancelSubscriptionHandler } from '../../../src/modules/platform/billing/cancel-subscription/cancel-subscription.handler';
 import { EnforceGracePeriodCron } from '../../../src/modules/platform/billing/enforce-grace-period/enforce-grace-period.cron';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
 
 /**
  * SaaS-04 Task 14A — Subscription lifecycle e2e.
@@ -41,6 +42,25 @@ describe('SaaS-04 — subscription lifecycle', () => {
   afterAll(async () => {
     if (h) await h.close();
   });
+
+  /**
+   * Wraps `h.runAs` but also sets SUPER_ADMIN_CONTEXT_CLS_KEY = true so that
+   * billing handlers that call `prisma.$allTenants` (for cross-tenant owner
+   * email lookup) do not throw ForbiddenException('super_admin_context_required').
+   */
+  function runAsBilling<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
+    return h.cls.run(async () => {
+      h.ctx.set({
+        organizationId,
+        membershipId: 'billing-system',
+        id: 'billing-system',
+        role: 'ADMIN',
+        isSuperAdmin: false,
+      });
+      h.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return fn();
+    });
+  }
 
   async function seedInvoice(
     subscriptionId: string,
@@ -86,7 +106,9 @@ describe('SaaS-04 — subscription lifecycle', () => {
 
     // ── chargeSuccess → ACTIVE ──────────────────────────────────────────────
     const inv1 = await seedInvoice(sub.id, org.id, `pay-success-1-${ts}`);
-    await h.runAs({ organizationId: org.id }, () =>
+    // runAsBilling sets SUPER_ADMIN_CONTEXT_CLS_KEY so prisma.$allTenants
+    // (owner email lookup inside the payment handler) does not throw.
+    await runAsBilling(org.id, () =>
       paymentHandler.execute({ invoiceId: inv1, moyasarPaymentId: `pay-success-1-${ts}` }),
     );
     let current = await h.prisma.subscription.findFirstOrThrow({ where: { id: sub.id } });
@@ -97,7 +119,7 @@ describe('SaaS-04 — subscription lifecycle', () => {
 
     // ── chargeFailure → PAST_DUE (pastDueSince set) ─────────────────────────
     const inv2 = await seedInvoice(sub.id, org.id, `pay-fail-1-${ts}`);
-    await h.runAs({ organizationId: org.id }, () =>
+    await runAsBilling(org.id, () =>
       failureHandler.execute({
         invoiceId: inv2,
         moyasarPaymentId: `pay-fail-1-${ts}`,
@@ -132,7 +154,7 @@ describe('SaaS-04 — subscription lifecycle', () => {
       data: { status: 'PAST_DUE', pastDueSince: new Date() }, // return to PAST_DUE so chargeSuccess is legal
     });
     const inv3 = await seedInvoice(sub.id, org.id, `pay-success-2-${ts}`);
-    await h.runAs({ organizationId: org.id }, () =>
+    await runAsBilling(org.id, () =>
       paymentHandler.execute({ invoiceId: inv3, moyasarPaymentId: `pay-success-2-${ts}` }),
     );
     current = await h.prisma.subscription.findFirstOrThrow({ where: { id: sub.id } });
@@ -140,13 +162,17 @@ describe('SaaS-04 — subscription lifecycle', () => {
     expect(current.pastDueSince).toBeNull();
     expect(current.retryCount).toBe(0);
 
-    // ── cancel → CANCELED ──────────────────────────────────────────────────
+    // ── cancel → soft-cancel for ACTIVE subscriptions ──────────────────────
+    // ACTIVE subscriptions use cancel-at-period-end (no immediate CANCELED status).
+    // The handler sets cancelAtPeriodEnd=true and returns the updated row still
+    // with status ACTIVE. Immediate CANCELED is only applied to TRIALING/other states.
     const canceled = await h.runAs({ organizationId: org.id }, () =>
       cancelHandler.execute({ reason: 'user-requested' }),
     );
-    expect(canceled.status).toBe('CANCELED');
-    expect(canceled.canceledAt).not.toBeNull();
-    expect(canceled.cancelReason).toBe('user-requested');
+    // ACTIVE → soft cancel: status stays ACTIVE, cancelAtPeriodEnd becomes true
+    expect(canceled.status).toBe('ACTIVE');
+    expect((canceled as Record<string, unknown>).cancelAtPeriodEnd).toBe(true);
+    expect((canceled as Record<string, unknown>).cancelReason).toBe('user-requested');
   });
 
   it('prevents double-subscription (409) when one already exists', async () => {

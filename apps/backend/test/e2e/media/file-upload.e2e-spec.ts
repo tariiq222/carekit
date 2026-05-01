@@ -44,8 +44,8 @@ describe('File Upload API (e2e)', () => {
     expect(fileRow).not.toBeNull();
     expect(fileRow.ownerType).toBe('branding');
 
-    const brandingRow = await (testPrisma as any).brandingConfig.findUnique({
-      where: { id: 'default' },
+    const brandingRow = await (testPrisma as any).brandingConfig.findFirst({
+      where: { organizationId: '00000000-0000-0000-0000-000000000001' },
     });
     expect(brandingRow).not.toBeNull();
     expect(brandingRow.logoUrl).toBe(res.body.url);
