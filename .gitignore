@@ -105,3 +105,10 @@ docs/superpowers/assets/sawaa-source/
 
 # ─── Legacy / archived (do not track) ─────────────────────────
 _archived_dashboard/
+
+# ─── Binary test data (use MinIO or CSV instead) ──────────────
+data/*.xlsx
+data/*.xls
+
+# ─── HTML artifacts in docs ───────────────────────────────────
+docs/*.html
