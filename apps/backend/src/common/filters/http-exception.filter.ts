@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import * as Sentry from '@sentry/nestjs';
+import { captureException } from '../../infrastructure/telemetry/posthog.client';
 import { RequestContextStorage } from '../http/request-context';
 
 interface ErrorResponse {
@@ -64,7 +64,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `${req.method} ${req.url} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
-      Sentry.captureException(exception);
+      captureException(exception, {
+        method: req.method,
+        path: req.url,
+        statusCode: status,
+        requestId: requestContext?.requestId,
+      });
     }
 
     res.status(status).json(body);
