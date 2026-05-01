@@ -236,6 +236,8 @@ function WizardInner({
         {state.step === 5 && (
           <StepDatetime
             employeeId={state.employeeId!}
+            serviceId={state.serviceId!}
+            bookingType={state.type ?? "in_person"}
             durationOptionId={state.durationOptionId}
             selectedDate={state.date}
             selectedTime={state.startTime}

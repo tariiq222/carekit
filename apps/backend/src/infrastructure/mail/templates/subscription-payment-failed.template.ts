@@ -20,7 +20,7 @@ export function subscriptionPaymentFailedTemplate(
   const ar = `
     <h1 style="color:#B91C1C;font-size:20px;margin:0 0 12px;">${name}، تعذّرت عملية الدفع</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      حاولنا خصم <strong>${amount} SAR</strong> لاشتراك "${org}" ولم تنجح العملية.
+      حاولنا خصم <strong>${amount} ⃁</strong> لاشتراك "${org}" ولم تنجح العملية.
       السبب: ${reason}.
     </p>
     <p style="text-align:center;margin:28px 0;">
@@ -30,7 +30,7 @@ export function subscriptionPaymentFailedTemplate(
   const en = `
     <h1 style="color:#B91C1C;font-size:20px;margin:0 0 12px;">${name}, payment failed</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      We tried to charge <strong>${amount} SAR</strong> for your "${org}" subscription and it didn't go through.
+      We tried to charge <strong>${amount} ⃁</strong> for your "${org}" subscription and it didn't go through.
       Reason: ${reason}.
     </p>
     <p style="text-align:center;margin:28px 0;">

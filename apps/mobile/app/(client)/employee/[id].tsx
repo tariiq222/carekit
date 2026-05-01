@@ -187,7 +187,7 @@ export default function EmployeeProfileScreen() {
                 {dir.isRTL ? 'السعر لكل جلسة' : 'Per session'}
               </Text>
               <Text style={[styles.ctaPriceVal, { fontFamily: f700 }]}>
-                {dir.isRTL ? '٢٥٠ ر.س' : 'SAR 250'}
+                {'٢٥٠ ⃁'}
               </Text>
             </View>
             <Pressable

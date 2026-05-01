@@ -33,7 +33,7 @@ const CHIPS: Array<{ key: Exclude<TherapistChip, null>; ar: string; en: string }
   { key: 'available', ar: 'متاح الآن', en: 'Available' },
   { key: 'women', ar: 'النساء', en: 'Women' },
   { key: 'remote', ar: 'عن بُعد', en: 'Remote' },
-  { key: 'under300', ar: '< ٣٠٠ ر.س', en: '< 300 SAR' },
+  { key: 'under300', ar: '< ٣٠٠ ⃁', en: '< 300 ⃁' },
 ];
 
 export default function TherapistsListScreen() {

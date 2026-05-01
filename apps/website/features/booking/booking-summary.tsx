@@ -47,7 +47,7 @@ export function BookingSummary({
           <div>
             <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Total</div>
             <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>
-              {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(totalHalalat / 100)} SAR
+              {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(totalHalalat / 100)} {'⃁'}
             </div>
           </div>
         </div>

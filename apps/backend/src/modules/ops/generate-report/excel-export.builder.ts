@@ -13,12 +13,12 @@ export async function buildRevenueExcel(report: RevenueReportResult): Promise<Bu
   ];
   const s = report.summary;
   summary.addRows([
-    { metric: 'Total Revenue (SAR)', value: s.totalRevenue.toFixed(2) },
+    { metric: 'Total Revenue (⃁)', value: s.totalRevenue.toFixed(2) },
     { metric: 'Total Payments', value: s.totalPayments },
     { metric: 'Total Bookings', value: s.totalBookings },
     { metric: 'Completed Bookings', value: s.completedBookings },
     { metric: 'Cancelled Bookings', value: s.cancelledBookings },
-    { metric: 'Avg Booking Value (SAR)', value: s.averageBookingValue.toFixed(2) },
+    { metric: 'Avg Booking Value (⃁)', value: s.averageBookingValue.toFixed(2) },
   ]);
   styleHeaderRow(summary);
 
@@ -26,7 +26,7 @@ export async function buildRevenueExcel(report: RevenueReportResult): Promise<Bu
   const byDay = wb.addWorksheet('By Day');
   byDay.columns = [
     { header: 'Date', key: 'date', width: 15 },
-    { header: 'Revenue (SAR)', key: 'revenue', width: 18 },
+    { header: 'Revenue (⃁)', key: 'revenue', width: 18 },
     { header: 'Payments', key: 'count', width: 12 },
   ];
   byDay.addRows(report.byDay);
@@ -36,7 +36,7 @@ export async function buildRevenueExcel(report: RevenueReportResult): Promise<Bu
   const byBranch = wb.addWorksheet('By Branch');
   byBranch.columns = [
     { header: 'Branch ID', key: 'branchId', width: 36 },
-    { header: 'Revenue (SAR)', key: 'revenue', width: 18 },
+    { header: 'Revenue (⃁)', key: 'revenue', width: 18 },
     { header: 'Bookings', key: 'count', width: 12 },
   ];
   byBranch.addRows(report.byBranch);
@@ -46,7 +46,7 @@ export async function buildRevenueExcel(report: RevenueReportResult): Promise<Bu
   const byEmployee = wb.addWorksheet('By Employee');
   byEmployee.columns = [
     { header: 'Employee ID', key: 'employeeId', width: 36 },
-    { header: 'Revenue (SAR)', key: 'revenue', width: 18 },
+    { header: 'Revenue (⃁)', key: 'revenue', width: 18 },
     { header: 'Bookings', key: 'count', width: 12 },
   ];
   byEmployee.addRows(report.byEmployee);

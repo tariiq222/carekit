@@ -16,16 +16,16 @@ describe("waitlist api", () => {
     vi.clearAllMocks()
   })
 
-  it("fetchWaitlist calls GET /bookings/waitlist with query", async () => {
+  it("fetchWaitlist calls GET /dashboard/bookings/waitlist with query", async () => {
     getMock.mockResolvedValueOnce([{ id: "1", status: "waiting" }])
     await fetchWaitlist({ employeeId: "p1", status: "waiting" })
-    expect(getMock).toHaveBeenCalledWith("/bookings/waitlist", { employeeId: "p1", status: "waiting" })
+    expect(getMock).toHaveBeenCalledWith("/dashboard/bookings/waitlist", { employeeId: "p1", status: "waiting" })
   })
 
   it("fetchWaitlist works without query", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchWaitlist()
-    expect(getMock).toHaveBeenCalledWith("/bookings/waitlist", undefined)
+    expect(getMock).toHaveBeenCalledWith("/dashboard/bookings/waitlist", undefined)
   })
 
   it("removeWaitlistEntry calls DELETE /bookings/waitlist/:id", async () => {

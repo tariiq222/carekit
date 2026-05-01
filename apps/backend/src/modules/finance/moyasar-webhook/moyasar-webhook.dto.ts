@@ -1,5 +1,5 @@
 import { IsIn, IsInt, IsObject, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MoyasarWebhookMetadataDto {
@@ -7,20 +7,15 @@ export class MoyasarWebhookMetadataDto {
   @IsOptional() @IsString() invoiceId?: string;
 }
 
-/**
- * Shape of the JSON body Moyasar POSTs to our webhook endpoint.
- * Signature verification uses the *raw* body (before JSON parse) and is
- * not part of this DTO — the handler reads it from headers/raw middleware.
- */
 export class MoyasarWebhookDto {
   @ApiProperty({ description: 'Moyasar payment ID', example: 'pay_abc123' })
   @IsString() id!: string;
 
-  @ApiProperty({ description: 'Payment status reported by Moyasar', enum: ['paid', 'failed', 'refunded'], example: 'paid' })
-  @IsIn(['paid', 'failed', 'refunded']) status!: 'paid' | 'failed' | 'refunded';
+  @ApiProperty({ description: 'Payment status reported by Moyasar', enum: ['paid', 'failed', 'refunded', 'authorized', 'captured', 'voided'], example: 'paid' })
+  @IsIn(['paid', 'failed', 'refunded', 'authorized', 'captured', 'voided']) status!: 'paid' | 'failed' | 'refunded' | 'authorized' | 'captured' | 'voided';
 
   @ApiProperty({ description: 'Amount in the smallest currency unit (halalas)', example: 10000 })
-  @IsInt() @Min(0) amount!: number;
+  @IsInt() @Min(0) @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value)) amount!: number;
 
   @ApiProperty({ description: 'ISO 4217 currency code', example: 'SAR' })
   @IsString() currency!: string;
@@ -31,4 +26,22 @@ export class MoyasarWebhookDto {
 
   @ApiPropertyOptional({ description: 'Human-readable message from Moyasar (e.g. failure reason)', example: 'Insufficient funds' })
   @IsOptional() @IsString() message?: string;
+
+  @ApiPropertyOptional({ description: 'Indicates if the payment was made in live mode', example: true })
+  @IsOptional() live?: unknown;
+
+  @ApiPropertyOptional({ description: 'Additional payment data' })
+  @IsOptional() data?: unknown;
+
+  @ApiPropertyOptional({ description: 'Payment type', example: 'payment' })
+  @IsOptional() @IsString() type?: string;
+
+  @ApiPropertyOptional({ description: 'ISO 8601 timestamp when the payment was created', example: '2024-01-15T10:30:00Z' })
+  @IsOptional() @IsString() created_at?: string;
+
+  @ApiPropertyOptional({ description: 'Secret token for payment verification' })
+  @IsOptional() @IsString() secret_token?: string;
+
+  @ApiPropertyOptional({ description: 'Name of the account associated with the payment', example: 'My Account' })
+  @IsOptional() @IsString() account_name?: string;
 }

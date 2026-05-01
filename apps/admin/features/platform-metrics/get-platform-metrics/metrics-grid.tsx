@@ -48,7 +48,7 @@ export function MetricsGrid() {
             <MetricCard label="Users (all tenants)" value={data.users.total} />
             <MetricCard label="Bookings (30d)" value={data.bookings.totalLast30Days} />
             <MetricCard
-              label="Lifetime revenue (SAR)"
+              label="Lifetime revenue (⃁)"
               value={Number(data.revenue.lifetimePaidSar).toLocaleString()}
             />
           </>

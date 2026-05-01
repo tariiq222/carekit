@@ -24,7 +24,7 @@ export function dunningRetryTemplate(
   const ar = `
     <h1 style="color:#B91C1C;font-size:20px;margin:0 0 12px;">${name}، لم تنجح محاولة الدفع</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      حاولنا إعادة خصم <strong>${amount} SAR</strong> لاشتراك "${org}".
+      حاولنا إعادة خصم <strong>${amount} ⃁</strong> لاشتراك "${org}".
       هذه المحاولة رقم <strong>${attempt}</strong> من <strong>${max}</strong>.
       السبب: ${reason}.
     </p>
@@ -38,7 +38,7 @@ export function dunningRetryTemplate(
   const en = `
     <h1 style="color:#B91C1C;font-size:20px;margin:0 0 12px;">${name}, payment retry failed</h1>
     <p style="color:${BRAND.textBody};font-size:15px;line-height:1.7;">
-      We retried <strong>${amount} SAR</strong> for your "${org}" subscription.
+      We retried <strong>${amount} ⃁</strong> for your "${org}" subscription.
       This was attempt <strong>${attempt}</strong> of <strong>${max}</strong>.
       Reason: ${reason}.
     </p>

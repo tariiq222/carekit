@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="general">
         <div className="overflow-x-auto">
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="w-max">
             <TabsTrigger value="general">{t("settings.tabs.general")}</TabsTrigger>
             <TabsTrigger value="entity">{t("settings.tabs.entity")}</TabsTrigger>
             <TabsTrigger value="booking">{t("settings.tabs.booking")}</TabsTrigger>
@@ -36,6 +36,7 @@ export default function SettingsPage() {
             <TabsTrigger value="integrations">{t("settings.tabs.integrations")}</TabsTrigger>
             <TabsTrigger value="legal">{t("settings.tabs.legal")}</TabsTrigger>
             <TabsTrigger value="email-templates">{t("settings.tabs.emailTemplates")}</TabsTrigger>
+
           </TabsList>
         </div>
 
@@ -66,6 +67,7 @@ export default function SettingsPage() {
         <TabsContent value="email-templates" className="mt-4">
           <EmailTemplatesTab />
         </TabsContent>
+
       </Tabs>
     </ListPageShell>
   )

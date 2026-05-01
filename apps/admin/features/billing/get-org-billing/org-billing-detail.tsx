@@ -126,7 +126,7 @@ export function OrgBillingDetail({ orgId }: Props) {
                 <Field label="Plan">
                   {data.subscription.plan.nameEn}{' '}
                   <span className="text-muted-foreground">
-                    ({Number(data.subscription.plan.priceMonthly).toFixed(2)} SAR/mo)
+                    ({Number(data.subscription.plan.priceMonthly).toFixed(2)} ⃁/mo)
                   </span>
                 </Field>
                 <Field label="Status">
@@ -383,7 +383,7 @@ export function OrgBillingDetail({ orgId }: Props) {
           onOpenChange={setChangePlanOpen}
           organizationId={orgId}
           currentPlanId={data.subscription.planId}
-          currentPlanLabel={`${data.subscription.plan.nameEn} (${data.subscription.plan.slug}) · ${Number(data.subscription.plan.priceMonthly).toFixed(2)} SAR/mo`}
+          currentPlanLabel={`${data.subscription.plan.nameEn} (${data.subscription.plan.slug}) · ${Number(data.subscription.plan.priceMonthly).toFixed(2)} ⃁/mo`}
         />
       ) : null}
     </div>

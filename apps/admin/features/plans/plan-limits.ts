@@ -31,9 +31,9 @@ export const QUOTA_FIELDS = [
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string; hint: string }>;
 
 export const OVERAGE_FIELDS = [
-  { key: 'overageRateBookings', label: 'Overage — per booking (SAR)' },
-  { key: 'overageRateClients', label: 'Overage — per client (SAR)' },
-  { key: 'overageRateStorageGB', label: 'Overage — per GB storage (SAR)' },
+  { key: 'overageRateBookings', label: 'Overage — per booking (⃁)' },
+  { key: 'overageRateClients', label: 'Overage — per client (⃁)' },
+  { key: 'overageRateStorageGB', label: 'Overage — per GB storage (⃁)' },
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string }>;
 
 export const FEATURE_FIELDS = [

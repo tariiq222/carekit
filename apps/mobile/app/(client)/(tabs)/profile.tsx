@@ -82,9 +82,7 @@ export default function ProfileScreen() {
     },
     {
       value: summary
-        ? (dir.isRTL
-            ? `${summary.outstandingBalance.toLocaleString('ar-SA')} ر.س`
-            : `${summary.outstandingBalance.toLocaleString('en-US')} SAR`)
+        ? `${summary.outstandingBalance.toLocaleString(dir.isRTL ? 'ar-SA' : 'en-US')} ⃁`
         : '—',
       ar: 'مبلغ مستحق',
       en: 'Outstanding',

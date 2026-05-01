@@ -130,7 +130,7 @@ export default function BillingPlansPage() {
                 })}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPlan ? selectedPlan.currency : "SAR"}
+                  {"⃁"}
                 </p>
               </div>
 

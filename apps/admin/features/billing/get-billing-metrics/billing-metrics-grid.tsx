@@ -29,8 +29,8 @@ export function BillingMetricsGrid() {
           </>
         ) : (
           <>
-            <MetricCard label="MRR (SAR)" value={Number(data.mrr).toLocaleString()} tone="success" />
-            <MetricCard label="ARR (SAR)" value={Number(data.arr).toLocaleString()} tone="success" />
+            <MetricCard label="MRR (⃁)" value={Number(data.mrr).toLocaleString()} tone="success" />
+            <MetricCard label="ARR (⃁)" value={Number(data.arr).toLocaleString()} tone="success" />
             <MetricCard label="Active subs" value={data.counts.ACTIVE} />
             <MetricCard label="Past due" value={data.counts.PAST_DUE} tone="warning" />
           </>
@@ -127,7 +127,7 @@ function PlanBar({
           {slug} <span className="text-muted-foreground">({count} active)</span>
         </span>
         <span className="text-muted-foreground">
-          {Number(mrr).toLocaleString()} SAR ({pct}%)
+          {Number(mrr).toLocaleString()} ⃁ ({pct}%)
         </span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

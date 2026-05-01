@@ -32,9 +32,7 @@ export default function BankTransferScreen() {
   const [submitting, setSubmitting] = useState(false);
   const uploaded = !!receiptUri;
   const numericAmount = amount ? Number(amount) : 0;
-  const amountLabel = dir.isRTL
-    ? `${numericAmount.toLocaleString('ar-SA')} ر.س`
-    : `SAR ${numericAmount.toLocaleString('en-US')}`;
+  const amountLabel = `${numericAmount.toLocaleString(dir.isRTL ? 'ar-SA' : 'en-US')} ⃁`;
 
   const pickReceipt = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

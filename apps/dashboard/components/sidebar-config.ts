@@ -16,7 +16,6 @@ import {
   DocumentValidationIcon,
   PaintBrush01Icon,
   StarIcon,
-  TaxesIcon,
   Activity01Icon,
 } from "@hugeicons/core-free-icons"
 import { FeatureKey } from "@deqah/shared/constants"
@@ -76,12 +75,6 @@ export const financeNav: NavItem[] = [
     href: "/reports",
     icon: AnalyticsUpIcon,
     featureFlag: FeatureKey.ADVANCED_REPORTS,
-  },
-  {
-    titleKey: "nav.zatca",
-    href: "/zatca",
-    icon: TaxesIcon,
-    featureFlag: FeatureKey.ZATCA,
   },
 ]
 

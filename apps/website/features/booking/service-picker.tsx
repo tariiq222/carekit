@@ -32,7 +32,7 @@ export function ServicePicker({ services, selected, onSelect }: ServicePickerPro
           <div style={{ fontWeight: 500 }}>{service.nameAr}</div>
           <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>{service.nameEn}</div>
           <div style={{ marginTop: '0.5rem', fontWeight: 600 }}>
-            {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(service.price / 100)} SAR
+            {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(service.price / 100)} {'⃁'}
           </div>
         </button>
       ))}

@@ -18,6 +18,7 @@ import {
 import { Input } from "@deqah/ui/primitives/input";
 import { Label } from "@deqah/ui/primitives/label";
 import { login } from "./login.api";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   return (
@@ -57,6 +58,11 @@ function Inner() {
       }
       window.localStorage.setItem("admin.accessToken", res.accessToken);
       document.cookie = `admin.authenticated=1; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24}`;
+      posthog.identify(res.user.id, {
+        email: res.user.email,
+        name: `${res.user.firstName ?? ''} ${res.user.lastName ?? ''}`.trim(),
+        role: 'super_admin',
+      })
       router.push(next);
     } catch {
       toast.error(t("error.failed"));

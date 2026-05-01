@@ -78,7 +78,7 @@ describe("waitlist api", () => {
   it("fetchWaitlist calls /bookings/waitlist", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchWaitlist()
-    expect(getMock).toHaveBeenCalledWith("/bookings/waitlist", undefined)
+    expect(getMock).toHaveBeenCalledWith("/dashboard/bookings/waitlist", undefined)
   })
 
   it("removeWaitlistEntry deletes /bookings/waitlist/:id", async () => {

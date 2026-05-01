@@ -95,10 +95,8 @@ export default function BookingConfirmScreen() {
   const subtotal = service ? Number(service.price) : 0;
   const vat = Math.round(subtotal * VAT_RATE * 100) / 100;
   const total = subtotal + vat;
-  const currency = service?.currency ?? 'SAR';
-
   const formatMoney = (n: number) =>
-    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
+    `${n.toLocaleString(dir.isRTL ? 'ar-SA' : 'en-US')} ⃁`;
 
   const rows = [
     {

@@ -61,13 +61,13 @@ export function GrantCreditDialog({ open, onOpenChange, organizationId }: Props)
           <DialogTitle>Grant credit</DialogTitle>
           <DialogDescription>
             Adds a billing credit applied against this organization’s next invoice.
-            Range: 1 – 100,000 SAR. All actions are audited.
+            Range: 1 – 100,000 ⃁. All actions are audited.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="gc-amount">Amount (SAR)</Label>
+            <Label htmlFor="gc-amount">Amount (⃁)</Label>
             <Input
               id="gc-amount"
               type="number"
@@ -79,7 +79,7 @@ export function GrantCreditDialog({ open, onOpenChange, organizationId }: Props)
               placeholder="50"
             />
             {amount && !validAmount ? (
-              <p className="text-xs text-destructive">Amount must be between 1 and 100,000 SAR.</p>
+              <p className="text-xs text-destructive">Amount must be between 1 and 100,000 ⃁.</p>
             ) : null}
           </div>
           <div className="space-y-1.5">

@@ -16,7 +16,7 @@ export async function fetchWaitlist(
   query?: WaitlistQuery,
 ): Promise<WaitlistEntry[]> {
   return api.get<WaitlistEntry[]>(
-    "/bookings/waitlist",
+    "/dashboard/bookings/waitlist",
     query,
   )
 }

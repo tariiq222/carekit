@@ -1,41 +1,36 @@
-'use client'
-
-import { useMemo } from 'react'
-import { useLocale } from '@/components/locale-provider'
-import { useQuery } from '@tanstack/react-query'
-import { fetchSlots } from '@/lib/api/employees-schedule'
-import { queryKeys } from '@/lib/query-keys'
-import { WizardCard } from '../wizard-card'
 import { cn } from '@/lib/utils'
-import type { TimeSlot } from '@/lib/types/employee'
+import { useLocale } from '@/components/locale-provider'
+import { useCreateBookingSlots } from '../use-booking-slots'
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function generateDays(count = 14): Date[] {
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() + i)
+    return d
+  })
+}
+
+const days = generateDays()
 
 interface StepDatetimeProps {
   employeeId: string
+  serviceId: string
+  bookingType: string
   durationOptionId: string | null
   selectedDate: string | null
   selectedTime: string | null
   onSelectDate: (date: string) => void
-  onSelectTime: (time: string) => void
-}
-
-function toISODate(date: Date): string {
-  return date.toISOString().slice(0, 10)
-}
-
-function build14Days(): Date[] {
-  const days: Date[] = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(today)
-    d.setDate(today.getDate() + i)
-    days.push(d)
-  }
-  return days
+  onSelectTime: (startTime: string) => void
 }
 
 export function StepDatetime({
   employeeId,
+  serviceId,
+  bookingType,
   durationOptionId,
   selectedDate,
   selectedTime,
@@ -44,28 +39,16 @@ export function StepDatetime({
 }: StepDatetimeProps) {
   const { t } = useLocale()
 
-  const days = useMemo(() => build14Days(), [])
-
-  // We need the resolved duration minutes to pass to fetchSlots.
-  // The parent already resolved it via useCreateBookingSlots; here we only
-  // need to re-fetch slots given the final durationOptionId is resolved to
-  // a duration number. Since step-datetime receives durationOptionId (not
-  // durationMinutes), we skip duration — the parent controls enabled state.
-  // If the slot query needs duration, the parent should pass durationMinutes instead.
-  // For now: fetch without duration (matches pattern where duration may be optional).
-
-  const canFetch = !!employeeId && !!selectedDate
-
-  const { data: slots = [], isLoading } = useQuery<TimeSlot[]>({
-    queryKey: [...queryKeys.employees.slots(employeeId, selectedDate ?? ''), durationOptionId],
-    queryFn: () => fetchSlots(employeeId, selectedDate!, undefined),
-    enabled: canFetch,
-    staleTime: 60_000,
+  const { slots = [], slotsLoading } = useCreateBookingSlots({
+    employeeId,
+    serviceId,
+    bookingType,
+    date: selectedDate ?? '',
+    durationOptionId: durationOptionId ?? '',
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Day strip */}
+    <div className="space-y-6">
       <div>
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {t('bookings.wizard.step.datetime.dayTitle')}
@@ -75,14 +58,15 @@ export function StepDatetime({
             const iso = toISODate(day)
             const isSelected = iso === selectedDate
             const weekday = day.toLocaleDateString('ar-SA', { weekday: 'short' })
-            const dayMonth = day.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
+            const dayNum = day.toLocaleDateString('ar-SA', { day: 'numeric' })
+            const monthName = day.toLocaleDateString('ar-SA', { month: 'short' })
             return (
               <button
                 key={iso}
                 type="button"
                 onClick={() => onSelectDate(iso)}
                 className={cn(
-                  'flex min-w-[72px] flex-col items-center gap-1 rounded-2xl border border-border bg-surface px-4 py-3',
+                  'flex min-w-[88px] flex-col items-center gap-1 rounded-xl border border-border bg-surface px-3 py-4',
                   'text-center transition-all duration-150',
                   'hover:border-primary/60 hover:bg-primary/5',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
@@ -90,43 +74,46 @@ export function StepDatetime({
                 )}
               >
                 <span className="text-xs text-muted-foreground">{weekday}</span>
-                <span className={cn('text-base font-bold', isSelected && 'text-primary')}>
-                  {dayMonth}
-                </span>
+                <span className={cn('text-sm font-bold', isSelected && 'text-primary')}>{dayNum}</span>
+                <span className="text-xs text-muted-foreground">{monthName}</span>
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Time slots */}
       {selectedDate && (
         <div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t('bookings.wizard.step.datetime.timeTitle')}
           </p>
 
-          {isLoading ? (
+          {slotsLoading ? (
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded-xl bg-muted" />
+                <div key={i} className="h-10 animate-pulse rounded-lg bg-muted" />
               ))}
             </div>
           ) : slots.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-6">
+            <p className="text-sm text-muted-foreground">
               {t('bookings.wizard.step.datetime.noSlots')}
             </p>
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {slots.map((slot) => (
-                <WizardCard
+                <button
                   key={slot.startTime}
+                  type="button"
                   onClick={() => onSelectTime(slot.startTime)}
-                  selected={slot.startTime === selectedTime}
-                  className="flex items-center justify-center py-3 text-base font-semibold"
+                  className={cn(
+                    'rounded-lg border border-border bg-surface px-3 py-2 text-sm transition-all duration-150',
+                    'hover:border-primary/60 hover:bg-primary/5',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                    selectedTime === slot.startTime && 'border-primary bg-primary/10 font-semibold text-primary ring-1 ring-primary/20',
+                  )}
                 >
                   {slot.startTime}
-                </WizardCard>
+                </button>
               ))}
             </div>
           )}

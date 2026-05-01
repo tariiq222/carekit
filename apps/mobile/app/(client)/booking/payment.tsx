@@ -41,9 +41,8 @@ export default function BookingPaymentScreen() {
   const GoIcon = dir.isRTL ? ChevronLeft : ChevronRight;
 
   const total = params.amount ? Number(params.amount) : 0;
-  const currency = params.currency ?? 'SAR';
   const formatMoney = (n: number) =>
-    dir.isRTL ? `${n.toLocaleString('ar-SA')} ر.س` : `${currency} ${n.toLocaleString('en-US')}`;
+    `${n.toLocaleString(dir.isRTL ? 'ar-SA' : 'en-US')} ⃁`;
 
   const methods: Array<{ key: Method; icon: React.ReactNode; labelAr: string; labelEn: string; subAr: string; subEn: string; color: string }> = [
     { key: 'card', icon: <CreditCard size={20} color={sawaaColors.teal[600]} strokeWidth={1.75} />, labelAr: 'بطاقة ائتمانية', labelEn: 'Credit card', subAr: 'Visa · Mada · Mastercard', subEn: 'Visa · Mada · Mastercard', color: sawaaColors.teal[600] },

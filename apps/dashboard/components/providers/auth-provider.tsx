@@ -18,6 +18,7 @@ import {
   refreshToken,
 } from "@/lib/api/auth"
 import type { AuthUser, AuthResponse } from "@/lib/api/auth"
+import posthog from 'posthog-js'
 import { setAccessToken } from "@/lib/api"
 
 /* ─── Context Shape ─── */
@@ -73,9 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, delay)
   }, [])
 
-  // Restore session on mount — refresh token first to get a fresh accessToken
-  // and the actual expiresIn, then fetch the user profile.
-  // If either fails, the session is truly expired — clear local state.
   useEffect(() => {
     scheduleRefreshRef.current = scheduleRefresh
 
@@ -86,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then((u) => {
           setUser(u)
           setPermissions(u.permissions ?? [])
+          posthog.identify(u.id, { email: u.email, name: u.name, organizationId: u.organizationId, role: u.role })
         })
         .catch(() => {
           setAccessToken(null)
@@ -109,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((u) => {
         setUser(u)
         setPermissions(u.permissions ?? [])
+        posthog.identify(u.id, { email: u.email, name: u.name, organizationId: u.organizationId, role: u.role })
       })
       .catch(() => {
         setUser(null)
@@ -126,12 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await apiLogin(email, password, hCaptchaToken)
     setUser(res.user)
     setPermissions(res.user.permissions ?? [])
+    posthog.identify(res.user.id, { email: res.user.email, name: res.user.name, organizationId: res.user.organizationId, role: res.user.role })
     scheduleRefresh(res.expiresIn)
   }, [scheduleRefresh])
 
   const loginWithTokens = useCallback((res: AuthResponse) => {
     setUser(res.user)
     setPermissions(res.user.permissions ?? [])
+    posthog.identify(res.user.id, { email: res.user.email, name: res.user.name, organizationId: res.user.organizationId, role: res.user.role })
     scheduleRefresh(res.expiresIn)
   }, [scheduleRefresh])
 
@@ -140,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutApi()
     setUser(null)
     setPermissions([])
+    posthog.reset()
   }, [])
 
   const canDo = useCallback(

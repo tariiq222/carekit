@@ -135,6 +135,36 @@ export class DashboardBookingsController {
     return this.statusLogHandler.execute({ bookingId: id });
   }
 
+  @Post('waitlist')
+  @ApiOperation({ summary: 'Add a client to the waitlist' })
+  @ApiCreatedResponse({ description: 'Waitlist entry created', schema: { type: 'object' } })
+  addToWaitlist(@Body() body: AddToWaitlistDto) {
+    const { preferredDate, ...rest } = body;
+    return this.waitlistHandler.execute({
+      ...rest,
+      preferredDate: preferredDate ? new Date(preferredDate) : undefined,
+    });
+  }
+
+  @Get('waitlist')
+  @ApiOperation({ summary: 'List waitlist entries' })
+  @ApiOkResponse({ description: 'List of waitlist entries', schema: { type: 'object' } })
+  listWaitlist(@Query() query: ListWaitlistDto) {
+    return this.listWaitlistHandler.execute({ ...query });
+  }
+
+  @Delete('waitlist/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a waitlist entry' })
+  @ApiParam({ name: 'id', description: 'Waitlist entry ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Waitlist entry removed' })
+  @ApiResponse({ status: 404, description: 'Waitlist entry not found', type: ApiErrorDto })
+  removeWaitlistEntry(
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.removeWaitlistHandler.execute({ id });
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
@@ -246,35 +276,5 @@ export class DashboardBookingsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.noShowHandler.execute({ bookingId: id, changedBy: userId });
-  }
-
-  @Post('waitlist')
-  @ApiOperation({ summary: 'Add a client to the waitlist' })
-  @ApiCreatedResponse({ description: 'Waitlist entry created', schema: { type: 'object' } })
-  addToWaitlist(@Body() body: AddToWaitlistDto) {
-    const { preferredDate, ...rest } = body;
-    return this.waitlistHandler.execute({
-      ...rest,
-      preferredDate: preferredDate ? new Date(preferredDate) : undefined,
-    });
-  }
-
-  @Get('waitlist')
-  @ApiOperation({ summary: 'List waitlist entries' })
-  @ApiOkResponse({ description: 'List of waitlist entries', schema: { type: 'object' } })
-  listWaitlist(@Query() query: ListWaitlistDto) {
-    return this.listWaitlistHandler.execute({ ...query });
-  }
-
-  @Delete('waitlist/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Remove a waitlist entry' })
-  @ApiParam({ name: 'id', description: 'Waitlist entry ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiNoContentResponse({ description: 'Waitlist entry removed' })
-  @ApiResponse({ status: 404, description: 'Waitlist entry not found', type: ApiErrorDto })
-  removeWaitlistEntry(
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.removeWaitlistHandler.execute({ id });
   }
 }

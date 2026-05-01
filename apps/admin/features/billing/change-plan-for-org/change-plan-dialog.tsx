@@ -93,7 +93,7 @@ export function ChangePlanDialog({
                   .filter((p) => p.isActive && p.id !== currentPlanId)
                   .map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.nameEn} ({p.slug}) · {Number(p.priceMonthly).toFixed(2)} SAR/mo
+                      {p.nameEn} ({p.slug}) · {Number(p.priceMonthly).toFixed(2)} ⃁/mo
                     </SelectItem>
                   ))}
               </SelectContent>
