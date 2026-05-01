@@ -57,7 +57,6 @@ coverage-e2e/
 **/test-results-*.json
 **/playwright-report/
 **/playwright-*-results.json
-test-reports/output/
 **/~$*
 
 # ─── Docker volumes (local) ───────────────────────────────────
@@ -67,12 +66,7 @@ docker/data/
 *.tmp
 *.temp
 
-# ─── Screenshots & local dev artifacts ────────────────────────
-pic-test/
-docs/screenshots/
-
 # ─── Performance test artifacts ───────────────────────────────
-performance/k6/results/
 scripts/performance/results/
 
 # ─── Local Claude Code / agent config ─────────────────────────
@@ -89,27 +83,21 @@ scripts/performance/results/
 
 # ─── Maestro / orchestration scratch ──────────────────────────
 IMPLEMENTATION_PLAN.md
-.opencode/maestro-memory.db
 .orchestration/
 
-# ─── Runtime artifacts (agents, browser, orchestration outputs) ──
+# ─── Runtime artifacts ────────────────────────────────────────
 .runtime/
 
-# ─── Python cache (test-reports + scripts) ────────────────────
+# ─── Python cache ─────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
 
-# ─── Reference / source-of-other-projects (not tracked) ───────
-docs/superpowers/assets/sawaa-source/
-
-# ─── Legacy / archived (do not track) ─────────────────────────
+# ─── Local-only folders (not tracked) ─────────────────────────
+docs/
+.superpowers/
 _archived_dashboard/
 
-# ─── Binary test data (use MinIO or CSV instead) ──────────────
+# ─── Binary test data ─────────────────────────────────────────
 data/*.xlsx
 data/*.xls
-
-# ─── HTML artifacts in docs ───────────────────────────────────
-docs/*.html
-docs/
