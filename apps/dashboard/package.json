@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 5103",
+    "dev": "next dev --port 5103",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -17,7 +17,9 @@
     "openapi:generate": "openapi-typescript ../../apps/backend/openapi.json -o lib/types/api.generated.ts"
   },
   "dependencies": {
-    "@deqah/ui": "*",
+    "@deqah/api-client": "workspace:*",
+    "@deqah/shared": "workspace:*",
+    "@deqah/ui": "workspace:*",
     "@hcaptcha/react-hcaptcha": "^1.17.4",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^4.0.0",

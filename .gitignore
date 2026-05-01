@@ -76,8 +76,11 @@ performance/k6/results/
 scripts/performance/results/
 
 # ─── Local Claude Code / agent config ─────────────────────────
-.claude/
+.claude/*
+!.claude/commands/
+!.claude/commands/oo.md
 .kilo/
+.kilocode/
 .opencode/
 
 # ─── Browser MCP artifacts ────────────────────────────────────
@@ -87,6 +90,10 @@ scripts/performance/results/
 # ─── Maestro / orchestration scratch ──────────────────────────
 IMPLEMENTATION_PLAN.md
 .opencode/maestro-memory.db
+.orchestration/
+
+# ─── Runtime artifacts (agents, browser, orchestration outputs) ──
+.runtime/
 
 # ─── Python cache (test-reports + scripts) ────────────────────
 __pycache__/

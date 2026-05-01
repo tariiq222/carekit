@@ -10,7 +10,9 @@
     "./auth": "./src/modules/auth.js",
     "./types": "./src/types/index.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@deqah/shared": "workspace:*"
+  },
   "scripts": {
     "test": "vitest run"
   },

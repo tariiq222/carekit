@@ -1,0 +1,10 @@
+packages:
+  - "apps/backend"
+  - "apps/dashboard"
+  - "apps/admin"
+  - "apps/website"
+  - "apps/mobile"
+  - "packages/shared"
+  - "packages/api-client"
+  - "packages/ui"
+  - "packages/orchestration"

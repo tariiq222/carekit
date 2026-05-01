@@ -15,5 +15,11 @@
     "./types/theme.js": "./types/theme.ts",
     "./state-machines": "./state-machines/index.ts",
     "./terminology": "./terminology/index.ts"
+  },
+  "devDependencies": {
+    "@prisma/client": "^7.8.0"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^7.8.0"
   }
 }

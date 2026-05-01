@@ -41,10 +41,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
 
-      - run: npm ci
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: apps/backend
@@ -76,7 +89,7 @@ jobs:
 
       - name: Unit tests
         working-directory: apps/backend
-        run: npm run test
+        run: pnpm run test
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
           REDIS_HOST: localhost
@@ -97,7 +110,7 @@ jobs:
 
       - name: E2E tests
         working-directory: apps/backend
-        run: npm run test:e2e
+        run: pnpm run test:e2e
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
           REDIS_HOST: localhost
@@ -118,7 +131,7 @@ jobs:
 
       - name: Cross-tenant penetration suite
         working-directory: apps/backend
-        run: npm run test:security
+        run: pnpm run test:security
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
           REDIS_HOST: localhost
@@ -157,25 +170,44 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - run: pnpm install --frozen-lockfile
+
       - name: Generate Prisma Client
         working-directory: apps/backend
         run: npx prisma generate
+
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_docs -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
       - name: Run migrations
         working-directory: apps/backend
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
+
       - name: Build backend
         working-directory: apps/backend
-        run: npm run build
+        run: pnpm run build
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
           REDIS_HOST: localhost
@@ -195,9 +227,10 @@ jobs:
           BILLING_CRON_ENABLED: "false"
           MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
           MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
+
       - name: Regenerate openapi.json
         working-directory: apps/backend
-        run: npm run openapi:snapshot
+        run: pnpm run openapi:snapshot
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
           REDIS_HOST: localhost
@@ -217,8 +250,10 @@ jobs:
           BILLING_CRON_ENABLED: "false"
           MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
           MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
+
       - name: Fail if snapshot drifted
         run: git diff --exit-code apps/backend/openapi.json
+
       - name: Coverage check
         working-directory: apps/backend
-        run: npm run check:openapi-coverage
+        run: pnpm run check:openapi-coverage

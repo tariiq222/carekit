@@ -11,10 +11,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config test/jest-e2e.json --json --outputFile=test-results-clients.json && npm run test:report",
+    "test:e2e": "jest --config test/jest-e2e.json --json --outputFile=test-results-clients.json && pnpm run test:report",
     "test:kiwi": "jest --json --outputFile=/tmp/jest-backend-unit.json || true && node ../../scripts/kiwi-sync-manual-qa.mjs --jest /tmp/jest-backend-unit.json --tag backend --domain Backend --plan-name 'Deqah / Backend / Unit' --plan-summary 'Automated Jest unit tests for apps/backend.'",
     "test:kiwi:e2e": "jest --config test/jest-e2e.json --json --outputFile=/tmp/jest-backend-e2e.json || true && node ../../scripts/kiwi-sync-manual-qa.mjs --jest /tmp/jest-backend-e2e.json --tag backend-e2e --domain 'Backend E2E' --plan-name 'Deqah / Backend / E2E' --plan-summary 'Jest E2E tests for apps/backend.'",
-    "test:kiwi:all": "npm run test:kiwi && npm run test:kiwi:e2e",
+    "test:kiwi:all": "pnpm run test:kiwi && pnpm run test:kiwi:e2e",
     "test:e2e:cov": "jest --config test/jest-e2e.json --coverage --coverageReporters=text-summary --coverageReporters=html",
     "test:security": "jest --config test/jest-security.json --runInBand",
     "test:report": "py ../../data/test-reports/scripts/generate_html_report.py",
@@ -22,8 +22,8 @@
     "prisma:generate": "prisma generate",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
-    "prisma:migrate": "prisma migrate dev && npm run prisma:hooks",
-    "prisma:migrate:deploy": "prisma migrate deploy && npm run prisma:hooks",
+    "prisma:migrate": "prisma migrate dev && pnpm run prisma:hooks",
+    "prisma:migrate:deploy": "prisma migrate deploy && pnpm run prisma:hooks",
     "prisma:hooks": "prisma db execute --file prisma/hooks/ensure_vector_indexes.sql",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
@@ -31,11 +31,12 @@
     "reset:org-suspension": "tsx scripts/reset-org-suspension.ts",
     "openapi:export": "tsx scripts/export-openapi.ts",
     "openapi:snapshot": "WRITE_OPENAPI_SPEC=1 tsx -e \"require('./dist/main.js')\"",
-    "openapi:build-and-snapshot": "npm run build && npm run openapi:snapshot",
+    "openapi:build-and-snapshot": "pnpm run build && pnpm run openapi:snapshot",
     "check:openapi-coverage": "tsx scripts/check-openapi-coverage.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",
+    "@deqah/shared": "workspace:*",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
@@ -71,7 +72,8 @@
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.12.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
