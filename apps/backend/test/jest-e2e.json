@@ -12,7 +12,8 @@
   "testTimeout": 300000,
   "maxWorkers": 1,
   "moduleNameMapper": {
-    "^@deqah/shared$": "<rootDir>/../../packages/shared/src/index.ts"
+    "^@deqah/shared$": "<rootDir>/../../packages/shared/index.ts",
+    "^@deqah/shared/(.*)$": "<rootDir>/../../packages/shared/$1"
   },
   "collectCoverageFrom": [
     "src/**/*.{js,ts}",
