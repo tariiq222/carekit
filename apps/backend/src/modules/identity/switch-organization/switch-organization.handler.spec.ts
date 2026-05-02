@@ -122,7 +122,7 @@ describe('SwitchOrganizationHandler', () => {
       organizationId: 'org-e',
       isActive: true,
     });
-    prisma.user.findUnique.mockResolvedValue({ ...userBase, role: 'SUPER_ADMIN' });
+    prisma.user.findUnique.mockResolvedValue({ ...userBase, isSuperAdmin: true });
 
     await handler.execute({ userId: 'user-1', targetOrganizationId: 'org-e' });
     expect(tokens.issueTokenPair).toHaveBeenCalledWith(

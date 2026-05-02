@@ -132,8 +132,8 @@ describe('LoginHandler', () => {
       );
     });
 
-    it('marks isSuperAdmin true when user.role is SUPER_ADMIN', async () => {
-      prisma.user.findUnique.mockResolvedValue({ ...mockUser, role: 'SUPER_ADMIN' } as never);
+    it('marks isSuperAdmin true when user.isSuperAdmin is true', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, isSuperAdmin: true } as never);
       passwordService.verify.mockResolvedValue(true);
       prisma.membership.findFirst.mockResolvedValue(null);
 

@@ -38,7 +38,7 @@ export class RefreshTokenHandler {
     // be zero in prod once the backfill migration runs.
     return this.tokens.issueTokenPair(user, {
       organizationId: matched.organizationId ?? DEFAULT_ORGANIZATION_ID,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }
 }

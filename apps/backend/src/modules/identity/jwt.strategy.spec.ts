@@ -109,9 +109,9 @@ describe('JwtStrategy', () => {
     expect((result as { sub?: string }).sub).toBe('u-7');
   });
 
-  it('marks isSuperAdmin true when the DB user has role SUPER_ADMIN', async () => {
+  it('marks isSuperAdmin true when the DB user has isSuperAdmin=true', async () => {
     prisma.user.findUnique.mockResolvedValue({
-      id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN',
+      id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN', isSuperAdmin: true,
       customRoleId: null, customRole: null, isActive: true,
     } as never);
 

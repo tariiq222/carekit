@@ -140,7 +140,7 @@ export class AuthController {
         ...user,
         firstName,
         lastName: rest.join(' '),
-        isSuperAdmin: user.role === 'SUPER_ADMIN',
+        isSuperAdmin: user.isSuperAdmin,
         organizationId: membership?.organizationId ?? null,
         permissions: flattenPermissions(user),
       },
@@ -188,7 +188,7 @@ export class AuthController {
 
     const tokens = await this.tokens.issueTokenPair(user, {
       organizationId: record.organizationId ?? DEFAULT_ORGANIZATION_ID,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      isSuperAdmin: user.isSuperAdmin,
     });
     this.setRefreshCookie(res, tokens.refreshToken);
     return {

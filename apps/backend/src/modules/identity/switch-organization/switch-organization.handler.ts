@@ -60,7 +60,7 @@ export class SwitchOrganizationHandler {
     return this.tokens.issueTokenPair(user, {
       organizationId: membership.organizationId,
       membershipId: membership.id,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }
 }

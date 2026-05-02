@@ -42,7 +42,7 @@ export class LoginHandler {
     return this.tokens.issueTokenPair(user, {
       organizationId: membership?.organizationId ?? DEFAULT_ORGANIZATION_ID,
       membershipId: membership?.id,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }
 }
