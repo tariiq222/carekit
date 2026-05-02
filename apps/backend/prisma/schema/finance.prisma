@@ -62,8 +62,9 @@ model Invoice {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  payments Payment[]
-  zatcaSub ZatcaSubmission?
+  payments       Payment[]
+  zatcaSub       ZatcaSubmission?
+  refundRequests RefundRequest[]
 
   @@index([clientId])
   @@index([bookingId])
@@ -88,6 +89,8 @@ model Payment {
   processedAt    DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  refundRequests RefundRequest[]
 
   @@index([invoiceId])
   @@index([gatewayRef])
@@ -183,7 +186,9 @@ model RefundRequest {
   id             String       @id @default(uuid())
   organizationId String // SaaS-02e (denormalized from Invoice)
   invoiceId      String
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
   paymentId      String
+  payment        Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
   clientId       String
   amount         Decimal      @db.Decimal(12, 2)
   reason         String?
