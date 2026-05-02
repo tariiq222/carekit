@@ -117,6 +117,7 @@ export class DashboardFinanceController {
   }
 
   @Post('payments/bank-transfer')
+  @RequireFeature(FeatureKey.BANK_TRANSFER_PAYMENTS)
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('receipt'))
   @ApiOperation({ summary: 'Upload a bank transfer receipt for an invoice' })

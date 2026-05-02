@@ -118,3 +118,17 @@ describe('@RequireFeature metadata — EMAIL_TEMPLATES', () => {
     expect(meta).toBe(FeatureKey.EMAIL_TEMPLATES);
   });
 });
+
+describe('@RequireFeature metadata — SMS_PROVIDER_PER_TENANT', () => {
+  it.each([
+    'getSmsConfigEndpoint',
+    'upsertSmsConfigEndpoint',
+    'testSmsConfigEndpoint',
+  ])('annotates %s with FeatureKey.SMS_PROVIDER_PER_TENANT', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardCommsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.SMS_PROVIDER_PER_TENANT);
+  });
+});

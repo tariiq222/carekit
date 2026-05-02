@@ -10,6 +10,8 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { EnforceLimit } from '../../modules/platform/billing/plan-limits.decorator';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { CreateBranchHandler } from '../../modules/org-config/branches/create-branch.handler';
 import { CreateBranchDto } from '../../modules/org-config/branches/create-branch.dto';
 import { UpdateBranchHandler } from '../../modules/org-config/branches/update-branch.handler';
@@ -41,6 +43,7 @@ export class DashboardOrganizationBranchesController {
   ) {}
 
   @Post('branches')
+  @RequireFeature(FeatureKey.MULTI_BRANCH)
   @EnforceLimit('BRANCHES')
   @ApiOperation({ summary: 'Create a branch' })
   @ApiCreatedResponse({ description: 'Branch created' })
@@ -69,6 +72,7 @@ export class DashboardOrganizationBranchesController {
   }
 
   @Patch('branches/:branchId')
+  @RequireFeature(FeatureKey.MULTI_BRANCH)
   @ApiOperation({ summary: 'Update a branch' })
   @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Branch updated' })

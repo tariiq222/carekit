@@ -127,3 +127,15 @@ describe('@RequireFeature metadata — ZATCA', () => {
     expect(meta).toBe(FeatureKey.ZATCA);
   });
 });
+
+describe('@RequireFeature metadata — BANK_TRANSFER_PAYMENTS', () => {
+  it.each([
+    'bankTransferEndpoint',
+  ])('annotates %s with FeatureKey.BANK_TRANSFER_PAYMENTS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.BANK_TRANSFER_PAYMENTS);
+  });
+});

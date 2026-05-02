@@ -1,4 +1,6 @@
 import { DashboardOrganizationDepartmentsController } from './organization-departments.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -39,5 +41,19 @@ describe('DashboardOrganizationDepartmentsController', () => {
     const { controller, deleteDepartment } = buildController();
     await controller.deleteDepartmentEndpoint('dept-1');
     expect(deleteDepartment.execute).toHaveBeenCalledWith({ departmentId: 'dept-1' });
+  });
+});
+
+describe('@RequireFeature metadata — DEPARTMENTS', () => {
+  it.each([
+    'createDepartmentEndpoint',
+    'updateDepartmentEndpoint',
+    'deleteDepartmentEndpoint',
+  ])('annotates %s with FeatureKey.DEPARTMENTS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOrganizationDepartmentsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.DEPARTMENTS);
   });
 });

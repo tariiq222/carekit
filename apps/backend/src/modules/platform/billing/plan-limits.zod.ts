@@ -30,6 +30,22 @@ export const planLimitsSchema = z.object({
   zatca: z.boolean(),
   custom_roles: z.boolean(),
   activity_log: z.boolean(),
+  // Phase 3: 15 new boolean keys
+  zoom_integration: z.boolean(),
+  walk_in_bookings: z.boolean(),
+  bank_transfer_payments: z.boolean(),
+  multi_branch: z.boolean(),
+  departments: z.boolean(),
+  client_ratings: z.boolean(),
+  data_export: z.boolean(),
+  sms_provider_per_tenant: z.boolean(),
+  white_label_mobile: z.boolean(),
+  custom_domain: z.boolean(),
+  api_access: z.boolean(),
+  webhooks: z.boolean(),
+  priority_support: z.boolean(),
+  audit_export: z.boolean(),
+  multi_currency: z.boolean(),
 });
 
 export type PlanLimits = z.infer<typeof planLimitsSchema>;
@@ -55,6 +71,22 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   zatca: false,
   custom_roles: false,
   activity_log: false,
+  // Phase 3: 15 new boolean keys
+  zoom_integration: false,
+  walk_in_bookings: false,
+  bank_transfer_payments: false,
+  multi_branch: false,
+  departments: false,
+  client_ratings: false,
+  data_export: false,
+  sms_provider_per_tenant: false,
+  white_label_mobile: false,
+  custom_domain: false,
+  api_access: false,
+  webhooks: false,
+  priority_support: false,
+  audit_export: false,
+  multi_currency: false,
 };
 
 export function parsePlanLimits(raw: unknown): PlanLimits {

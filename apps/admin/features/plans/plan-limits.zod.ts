@@ -27,6 +27,22 @@ export const planLimitsSchema = z.object({
   zatca: z.boolean(),
   custom_roles: z.boolean(),
   activity_log: z.boolean(),
+  // Phase 3: 15 new boolean keys
+  zoom_integration: z.boolean(),
+  walk_in_bookings: z.boolean(),
+  bank_transfer_payments: z.boolean(),
+  multi_branch: z.boolean(),
+  departments: z.boolean(),
+  client_ratings: z.boolean(),
+  data_export: z.boolean(),
+  sms_provider_per_tenant: z.boolean(),
+  white_label_mobile: z.boolean(),
+  custom_domain: z.boolean(),
+  api_access: z.boolean(),
+  webhooks: z.boolean(),
+  priority_support: z.boolean(),
+  audit_export: z.boolean(),
+  multi_currency: z.boolean(),
 }) satisfies z.ZodType<PlanLimits>;
 
 export type PlanLimitsInput = z.input<typeof planLimitsSchema>;

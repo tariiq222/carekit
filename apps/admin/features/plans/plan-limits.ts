@@ -19,6 +19,22 @@ export interface PlanLimits {
   zatca: boolean;
   custom_roles: boolean;
   activity_log: boolean;
+  // Phase 3: 15 new boolean keys
+  zoom_integration: boolean;
+  walk_in_bookings: boolean;
+  bank_transfer_payments: boolean;
+  multi_branch: boolean;
+  departments: boolean;
+  client_ratings: boolean;
+  data_export: boolean;
+  sms_provider_per_tenant: boolean;
+  white_label_mobile: boolean;
+  custom_domain: boolean;
+  api_access: boolean;
+  webhooks: boolean;
+  priority_support: boolean;
+  audit_export: boolean;
+  multi_currency: boolean;
 }
 
 export const QUOTA_FIELDS = [
@@ -48,6 +64,22 @@ export const FEATURE_FIELDS = [
   { key: 'zatca', label: 'ZATCA e-invoicing' },
   { key: 'custom_roles', label: 'Custom roles' },
   { key: 'activity_log', label: 'Activity log' },
+  // Phase 3: 15 new keys — Phase 4 will replace this array with FEATURE_CATALOG iteration
+  { key: 'zoom_integration', label: 'Zoom Integration' },
+  { key: 'walk_in_bookings', label: 'Walk-in Bookings' },
+  { key: 'bank_transfer_payments', label: 'Bank Transfer Payments' },
+  { key: 'multi_branch', label: 'Multi-Branch' },
+  { key: 'departments', label: 'Departments' },
+  { key: 'client_ratings', label: 'Client Ratings' },
+  { key: 'data_export', label: 'Data Export' },
+  { key: 'sms_provider_per_tenant', label: 'Dedicated SMS Provider' },
+  { key: 'white_label_mobile', label: 'White-label Mobile App' },
+  { key: 'custom_domain', label: 'Custom Domain' },
+  { key: 'api_access', label: 'API Access' },
+  { key: 'webhooks', label: 'Webhooks' },
+  { key: 'priority_support', label: 'Priority Support' },
+  { key: 'audit_export', label: 'Audit Log Export' },
+  { key: 'multi_currency', label: 'Multi-Currency' },
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string }>;
 
 export const DEFAULT_PLAN_LIMITS: PlanLimits = {
@@ -71,6 +103,22 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   zatca: false,
   custom_roles: false,
   activity_log: false,
+  // Phase 3: 15 new boolean keys
+  zoom_integration: false,
+  walk_in_bookings: false,
+  bank_transfer_payments: false,
+  multi_branch: false,
+  departments: false,
+  client_ratings: false,
+  data_export: false,
+  sms_provider_per_tenant: false,
+  white_label_mobile: false,
+  custom_domain: false,
+  api_access: false,
+  webhooks: false,
+  priority_support: false,
+  audit_export: false,
+  multi_currency: false,
 };
 
 /**
