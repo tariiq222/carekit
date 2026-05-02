@@ -21,6 +21,9 @@ function buildController() {
   const getOrgSmsConfig = fn({ provider: 'NONE', credentialsConfigured: false });
   const upsertOrgSmsConfig = fn({ provider: 'NONE', credentialsConfigured: false });
   const testSmsConfig = fn({ ok: true });
+  const getOrgEmailConfig = fn({ provider: 'NONE', credentialsConfigured: false });
+  const upsertOrgEmailConfig = fn({ provider: 'NONE', credentialsConfigured: false });
+  const testEmailConfig = fn({ ok: true });
   const prisma = { smsDelivery: { findMany: jest.fn().mockResolvedValue([]) } };
   const tenant = { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') };
   const controller = new DashboardCommsController(
@@ -31,6 +34,7 @@ function buildController() {
     getConversation as never, closeConversation as never, sendStaffMessage as never,
     listContactMessages as never, updateContactMessageStatus as never,
     getOrgSmsConfig as never, upsertOrgSmsConfig as never, testSmsConfig as never,
+    getOrgEmailConfig as never, upsertOrgEmailConfig as never, testEmailConfig as never,
     prisma as never, tenant as never,
   );
   return {

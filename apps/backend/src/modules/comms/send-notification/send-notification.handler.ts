@@ -5,6 +5,10 @@ import { TenantContextService } from '../../../common/tenant';
 import { SendPushHandler } from '../send-push/send-push.handler';
 import { SendEmailHandler } from '../send-email/send-email.handler';
 import { SendSmsHandler } from '../send-sms/send-sms.handler';
+import {
+  ResilientNotificationDispatcher,
+  CRITICAL_TYPES,
+} from '../resilient-notification-dispatcher/resilient-notification-dispatcher.service';
 import { SendNotificationDto } from './send-notification.dto';
 
 export type SendNotificationCommand = SendNotificationDto & {
@@ -22,10 +26,13 @@ export class SendNotificationHandler {
     private readonly push: SendPushHandler,
     private readonly email: SendEmailHandler,
     private readonly sms: SendSmsHandler,
+    private readonly dispatcher: ResilientNotificationDispatcher,
   ) {}
 
   async execute(dto: SendNotificationCommand): Promise<void> {
     const organizationId = dto.organizationId ?? this.tenant.requireOrganizationIdOrDefault();
+
+    // ── 1. Persist in-app notification ────────────────────────────────────
     try {
       await this.prisma.notification.create({
         data: {
@@ -43,8 +50,45 @@ export class SendNotificationHandler {
       // Don't return — still attempt channel dispatches
     }
 
-    // 'in-app' channel is handled by the notification.create above.
-    // Remaining channels dispatch via external adapters.
+    const isCritical = CRITICAL_TYPES.has(dto.type);
+
+    // ── 2a. CRITICAL — resilient dispatcher with retry ─────────────────────
+    if (isCritical) {
+      const channels: Array<'email' | 'sms' | 'push'> = [];
+
+      if (dto.channels.includes('email') && dto.recipientEmail && dto.emailTemplateSlug) {
+        channels.push('email');
+      }
+      if (dto.channels.includes('sms') && dto.recipientPhone) {
+        channels.push('sms');
+      }
+      const fcmTokens = dto.fcmTokens ?? (dto.fcmToken ? [dto.fcmToken] : []);
+      if (dto.channels.includes('push') && fcmTokens.length > 0) {
+        channels.push('push');
+      }
+
+      if (channels.length > 0) {
+        await this.dispatcher.dispatch(
+          {
+            organizationId,
+            recipientId: dto.recipientId,
+            type: dto.type,
+            recipientEmail: dto.recipientEmail,
+            emailTemplateSlug: dto.emailTemplateSlug,
+            emailVars: dto.emailVars,
+            recipientPhone: dto.recipientPhone,
+            smsBody: dto.body,
+            fcmTokens,
+            pushTitle: dto.title,
+            pushBody: dto.body,
+          },
+          channels,
+        );
+      }
+      return;
+    }
+
+    // ── 2b. STANDARD — best-effort (existing behavior) ────────────────────
     const tasks: Promise<void>[] = [];
 
     if (dto.channels.includes('push')) {
@@ -55,11 +99,13 @@ export class SendNotificationHandler {
     }
 
     if (dto.channels.includes('email') && dto.recipientEmail && dto.emailTemplateSlug) {
-      tasks.push(this.email.execute({
-        to: dto.recipientEmail,
-        templateSlug: dto.emailTemplateSlug,
-        vars: dto.emailVars ?? {},
-      }));
+      tasks.push(
+        this.email.execute({
+          to: dto.recipientEmail,
+          templateSlug: dto.emailTemplateSlug,
+          vars: dto.emailVars ?? {},
+        }),
+      );
     }
 
     if (dto.channels.includes('sms') && dto.recipientPhone) {
