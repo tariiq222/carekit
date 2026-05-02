@@ -5,9 +5,13 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 /**
  * Thin data-access layer for UsageCounter rows.
  *
- * All methods bypass CLS tenant scoping via prisma.$allTenants because
- * listeners run in an async event context that may not have a CLS store.
- * The organizationId is always passed explicitly — defense-in-depth.
+ * All methods rely on the caller establishing CLS tenant context.
+ * In tenant request flow this is automatic via TenantResolverMiddleware.
+ * In system flows (cron, event listeners), the caller must set TENANT_CLS_KEY
+ * (preferred) or SYSTEM_CONTEXT_CLS_KEY inside a cls.run() before calling.
+ *
+ * The organizationId is always passed explicitly in the where clause —
+ * defense-in-depth, idempotent with the auto-scoping extension.
  */
 @Injectable()
 export class UsageCounterService {
@@ -23,7 +27,7 @@ export class UsageCounterService {
     periodStart: Date,
     by = 1,
   ): Promise<void> {
-    await this.prisma.$allTenants.usageCounter.upsert({
+    await this.prisma.usageCounter.upsert({
       where: {
         organizationId_featureKey_periodStart: {
           organizationId: orgId,
@@ -50,7 +54,7 @@ export class UsageCounterService {
     periodStart: Date,
     value: number,
   ): Promise<void> {
-    await this.prisma.$allTenants.usageCounter.upsert({
+    await this.prisma.usageCounter.upsert({
       where: {
         organizationId_featureKey_periodStart: {
           organizationId: orgId,
@@ -76,7 +80,7 @@ export class UsageCounterService {
     featureKey: FeatureKey,
     periodStart: Date,
   ): Promise<number | null> {
-    const row = await this.prisma.$allTenants.usageCounter.findUnique({
+    const row = await this.prisma.usageCounter.findUnique({
       where: {
         organizationId_featureKey_periodStart: {
           organizationId: orgId,

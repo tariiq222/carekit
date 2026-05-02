@@ -19,10 +19,21 @@ const buildCounters = () => ({
   upsertExact: jest.fn().mockResolvedValue(undefined),
 });
 
+/**
+ * Mock ClsService whose cls.run() calls the callback synchronously
+ * (same tick) with the mocked CLS store. cls.set() is a no-op since
+ * the tenant-scoping extension is not loaded in unit tests.
+ */
+const buildCls = () => ({
+  run: jest.fn(async (cb: () => Promise<unknown>) => cb()),
+  set: jest.fn(),
+});
+
 describe('ReconcileUsageCountersHandler', () => {
   it('returns zero repairs when counters match reality', async () => {
     const prisma = buildPrisma();
     const counters = buildCounters();
+    const cls = buildCls();
 
     prisma.$allTenants.organization.findMany.mockResolvedValue([{ id: 'org-1' }]);
     // Source counts: 3 for all keyed types
@@ -42,6 +53,7 @@ describe('ReconcileUsageCountersHandler', () => {
     const handler = new ReconcileUsageCountersHandler(
       prisma as never,
       counters as never,
+      cls as never,
     );
 
     const result = await handler.execute();
@@ -53,6 +65,7 @@ describe('ReconcileUsageCountersHandler', () => {
   it('repairs drifted monthly_bookings counter', async () => {
     const prisma = buildPrisma();
     const counters = buildCounters();
+    const cls = buildCls();
 
     prisma.$allTenants.organization.findMany.mockResolvedValue([{ id: 'org-1' }]);
     // Source: branches=1, employees=1, services=1, bookings=7, storage=1MB
@@ -73,6 +86,7 @@ describe('ReconcileUsageCountersHandler', () => {
     const handler = new ReconcileUsageCountersHandler(
       prisma as never,
       counters as never,
+      cls as never,
     );
 
     const result = await handler.execute();
@@ -89,6 +103,7 @@ describe('ReconcileUsageCountersHandler', () => {
   it('handles missing counter (null stored) by upsert', async () => {
     const prisma = buildPrisma();
     const counters = buildCounters();
+    const cls = buildCls();
 
     prisma.$allTenants.organization.findMany.mockResolvedValue([{ id: 'org-2' }]);
     prisma.branch.count.mockResolvedValue(2);
@@ -102,6 +117,7 @@ describe('ReconcileUsageCountersHandler', () => {
     const handler = new ReconcileUsageCountersHandler(
       prisma as never,
       counters as never,
+      cls as never,
     );
 
     const result = await handler.execute();

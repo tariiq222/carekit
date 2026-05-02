@@ -1,10 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { UsageCounterService } from '../../../platform/billing/usage-counter/usage-counter.service';
 import { EPOCH, startOfMonthUTC } from '../../../platform/billing/usage-counter/period.util';
 import { QUANTITATIVE_KEYS } from '../../../platform/billing/get-usage/get-usage.handler';
+import {
+  SUPER_ADMIN_CONTEXT_CLS_KEY,
+  TENANT_CLS_KEY,
+} from '../../../../common/tenant/tenant.constants';
 
 /**
  * Daily reconciliation handler.
@@ -14,7 +19,10 @@ import { QUANTITATIVE_KEYS } from '../../../platform/billing/get-usage/get-usage
  * counter drifts from truth the counter is corrected and the discrepancy is
  * logged at WARN so on-call can audit.
  *
- * Runs outside CLS tenant context → all DB calls use `prisma.$allTenants`.
+ * Org list is fetched under SUPER_ADMIN_CONTEXT_CLS_KEY (required for
+ * prisma.$allTenants). Each org's counter reads/writes run inside a
+ * cls.run() that sets TENANT_CLS_KEY so the tenant-scoping extension
+ * auto-scopes UsageCounter queries correctly.
  */
 @Injectable()
 export class ReconcileUsageCountersHandler {
@@ -23,6 +31,7 @@ export class ReconcileUsageCountersHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly counters: UsageCounterService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(): Promise<{ orgsScanned: number; rowsRepaired: number }> {
@@ -34,25 +43,47 @@ export class ReconcileUsageCountersHandler {
     let repaired = 0;
 
     for (const { id: orgId } of orgs) {
-      for (const key of QUANTITATIVE_KEYS) {
-        const period = key === FeatureKey.MONTHLY_BOOKINGS ? startOfMonthUTC() : EPOCH;
+      // Run all counter reads/writes for this org inside a tenant CLS context
+      // so the tenant-scoping extension allows UsageCounter queries.
+      const orgRepaired = await this.cls.run(async () => {
+        this.cls.set(TENANT_CLS_KEY, {
+          organizationId: orgId,
+          membershipId: 'system',
+          id: 'system',
+          role: 'system',
+          isSuperAdmin: false,
+        });
+        // Also set SUPER_ADMIN_CONTEXT_CLS_KEY in case any downstream call
+        // needs prisma.$allTenants (e.g. recomputeFromSource uses scoped models
+        // directly, so this is defensive only).
+        this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
 
-        try {
-          const truth = await this.recomputeFromSource(orgId, key, period);
-          const stored = await this.counters.read(orgId, key, period);
+        let localRepaired = 0;
 
-          if (stored !== truth) {
-            await this.counters.upsertExact(orgId, key, period, truth);
-            this.logger.warn(
-              { orgId, key, stored, truth },
-              'usage_counter_drift_repaired',
-            );
-            repaired++;
+        for (const key of QUANTITATIVE_KEYS) {
+          const period = key === FeatureKey.MONTHLY_BOOKINGS ? startOfMonthUTC() : EPOCH;
+
+          try {
+            const truth = await this.recomputeFromSource(orgId, key, period);
+            const stored = await this.counters.read(orgId, key, period);
+
+            if (stored !== truth) {
+              await this.counters.upsertExact(orgId, key, period, truth);
+              this.logger.warn(
+                { orgId, key, stored, truth },
+                'usage_counter_drift_repaired',
+              );
+              localRepaired++;
+            }
+          } catch (err: unknown) {
+            this.logger.error({ err, orgId, key }, 'usage_counter_reconcile_error');
           }
-        } catch (err: unknown) {
-          this.logger.error({ err, orgId, key }, 'usage_counter_reconcile_error');
         }
-      }
+
+        return localRepaired;
+      });
+
+      repaired += orgRepaired;
     }
 
     this.logger.log(

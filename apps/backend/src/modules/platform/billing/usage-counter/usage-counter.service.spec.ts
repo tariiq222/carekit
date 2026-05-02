@@ -49,7 +49,7 @@ function makePrisma() {
   };
 
   return {
-    $allTenants: { usageCounter: mockCounter },
+    usageCounter: mockCounter,
     _store: store,
     _key: key,
   } as unknown as PrismaService & { _store: Map<string, number>; _key: typeof key };
