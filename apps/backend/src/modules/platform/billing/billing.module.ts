@@ -6,6 +6,7 @@ import { MailModule } from "../../../infrastructure/mail";
 import { MessagingModule } from "../../../infrastructure/messaging.module";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 import { IncrementUsageListener } from "./usage-counter/increment-usage.listener";
+import { GetUsageHandler } from "./get-usage/get-usage.handler";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SUBSCRIPTION_CACHE_TOKEN } from "../../../common/tenant/tenant-context.service";
 import { BillingController } from "../../../api/dashboard/billing.controller";
@@ -109,12 +110,14 @@ const HANDLERS = [
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
     UsageCounterService,
     IncrementUsageListener,
+    GetUsageHandler,
   ],
   exports: [
     SubscriptionCacheService,
     UsageAggregatorService,
     SubscriptionStateMachine,
     UsageCounterService,
+    GetUsageHandler,
     ...HANDLERS,
   ],
 })
