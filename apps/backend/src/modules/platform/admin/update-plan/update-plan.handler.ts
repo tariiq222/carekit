@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
+import { parsePlanLimits } from '../../billing/plan-limits.zod';
 
 export interface UpdatePlanCommand {
   planId: string;
@@ -35,7 +36,7 @@ export class UpdatePlanHandler {
       if (cmd.data.priceMonthly !== undefined) updateData.priceMonthly = new Prisma.Decimal(cmd.data.priceMonthly);
       if (cmd.data.priceAnnual !== undefined) updateData.priceAnnual = new Prisma.Decimal(cmd.data.priceAnnual);
       if (cmd.data.currency !== undefined) updateData.currency = cmd.data.currency;
-      if (cmd.data.limits !== undefined) updateData.limits = cmd.data.limits as Prisma.InputJsonValue;
+      if (cmd.data.limits !== undefined) updateData.limits = parsePlanLimits(cmd.data.limits) as Prisma.InputJsonValue;
       if (cmd.data.isActive !== undefined) updateData.isActive = cmd.data.isActive;
       if (cmd.data.sortOrder !== undefined) updateData.sortOrder = cmd.data.sortOrder;
 

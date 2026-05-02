@@ -112,7 +112,7 @@ Top-level layout/error/loading: `layout.tsx`, `error.tsx`, `loading.tsx`, `page.
   `hooks/use-current-subscription.ts` is the underlying TanStack Query
   hook for the raw subscription record.
 - **Subscription-aware page gating** is done with
-  `<FeatureGate feature="chatbot">...</FeatureGate>`
+  `<FeatureGate feature={FeatureKey.AI_CHATBOT}>...</FeatureGate>`
   (`components/feature-gate.tsx`) or the `useFeatureEnabled(feature)`
   hook (`hooks/use-feature-enabled.ts`). This is separate from the legacy
   sidebar `featureFlag` config.

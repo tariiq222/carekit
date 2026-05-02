@@ -73,14 +73,31 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   activity_log: false,
 };
 
+/**
+ * Hydrates a raw Plan.limits JSON blob into a typed PlanLimits, filling
+ * missing keys from DEFAULT_PLAN_LIMITS. Unknown keys are dropped — but
+ * loudly: each unknown key emits a console.warn so plan-config drift is
+ * visible in dev/CI logs.
+ */
 export function hydrateLimits(raw: Record<string, unknown> | undefined): PlanLimits {
   const out = { ...DEFAULT_PLAN_LIMITS };
   if (!raw) return out;
+  const known = new Set(Object.keys(out));
+  for (const key of Object.keys(raw)) {
+    if (!known.has(key)) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[plan-limits] hydrateLimits: dropping unknown key "${key}" — ` +
+          "not present in PlanLimits. Add it to plan-limits.ts (and " +
+          "plan-limits.zod.ts) or remove from Plan.limits JSON.",
+      );
+    }
+  }
   for (const key of Object.keys(out) as Array<keyof PlanLimits>) {
     const v = raw[key];
-    if (typeof out[key] === 'boolean' && typeof v === 'boolean') {
+    if (typeof out[key] === "boolean" && typeof v === "boolean") {
       (out[key] as boolean) = v;
-    } else if (typeof out[key] === 'number' && typeof v === 'number') {
+    } else if (typeof out[key] === "number" && typeof v === "number") {
       (out[key] as number) = v;
     }
   }

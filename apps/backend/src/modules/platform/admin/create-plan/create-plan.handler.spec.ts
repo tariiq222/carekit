@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { CreatePlanHandler } from './create-plan.handler';
 import { PrismaService } from '../../../../infrastructure/database';
+import { DEFAULT_PLAN_LIMITS } from '../../billing/plan-limits.zod';
 
 describe('CreatePlanHandler', () => {
   let handler: CreatePlanHandler;
@@ -42,7 +43,7 @@ describe('CreatePlanHandler', () => {
       nameEn: 'Basic',
       priceMonthly: 99,
       priceAnnual: 990,
-      limits: { maxBranches: 1 },
+      limits: DEFAULT_PLAN_LIMITS,
     },
   };
 

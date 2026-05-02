@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
+import { parsePlanLimits } from '../../billing/plan-limits.zod';
 
 export interface CreatePlanCommand {
   superAdminUserId: string;
@@ -37,7 +38,7 @@ export class CreatePlanHandler {
           priceMonthly: new Prisma.Decimal(cmd.data.priceMonthly),
           priceAnnual: new Prisma.Decimal(cmd.data.priceAnnual),
           currency: cmd.data.currency ?? 'SAR',
-          limits: cmd.data.limits as Prisma.InputJsonValue,
+          limits: parsePlanLimits(cmd.data.limits) as Prisma.InputJsonValue,
           isActive: cmd.data.isActive ?? true,
           sortOrder: cmd.data.sortOrder ?? 0,
         },

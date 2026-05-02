@@ -9,8 +9,9 @@ import {
   systemNav,
   navGroups,
 } from "@/components/sidebar-config"
-// Sidebar nav uses the tiered FeatureKey enum (single source of truth for
-// billing-gated features) rather than the legacy FEATURE_FLAG_KEYS list.
+// Sidebar nav uses the tiered FeatureKey enum — the single source of truth
+// for billing-gated features. (The legacy FEATURE_FLAG_KEYS array was
+// removed in the Phase 2 registry-unification work, 2026-05-02.)
 import { FeatureKey } from "@deqah/shared/constants"
 
 const ALL_FEATURE_KEYS = Object.values(FeatureKey) as readonly string[]
