@@ -55,18 +55,6 @@ export const enContent: Record<string, string> = {
   "content.cards.iconPlaceholder": "Choose an icon",
   "content.cards.cardHeading": "Card {index} of {total}",
 
-  // — Legal / Privacy Policy page —
-  "content.landing.section.legal.title": "Privacy Policy",
-  "content.landing.section.legal.desc": "Edit privacy policy in Arabic and English",
-  "content.legal.title": "Privacy Policy",
-  "content.legal.description": "Edit privacy policy — changes reflect in the app and website immediately",
-  "content.legal.tab.privacy": "Privacy Policy",
-  "content.legal.privacy.arLabel": "Arabic Text",
-  "content.legal.privacy.enLabel": "English Text",
-  "content.legal.privacy.lastUpdated": "Last updated",
-  "content.legal.privacy.never": "Not yet updated",
-  "content.legal.privacy.resetToDefault": "Reset to default",
-
   // — Section intros form —
   "content.intros.field.tag": "Tag",
   "content.intros.field.titlePrefix": "Title prefix",

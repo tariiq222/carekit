@@ -9,7 +9,44 @@
     "billing": "الفوترة",
     "metrics": "المقاييس",
     "auditLog": "سجل التدقيق",
-    "impersonation": "جلسات الانتحال"
+    "impersonation": "جلسات الانتحال",
+    "notifications": "سجل الإشعارات"
+  },
+  "notifications": {
+    "title": "سجل توصيل الإشعارات",
+    "description": "مراقبة توصيل الإشعارات الصادرة عبر جميع القنوات والمنظمات. يتحدث تلقائياً كل 30 ثانية.",
+    "stats": {
+      "total": "الإجمالي",
+      "sent": "المُرسلة (هذه الصفحة)",
+      "failed": "الفاشلة (هذه الصفحة)",
+      "pending": "المعلّقة (هذه الصفحة)"
+    },
+    "filters": {
+      "organizationId": "معرّف المنظمة",
+      "status": "الحالة",
+      "channel": "القناة",
+      "reset": "إعادة ضبط"
+    },
+    "error": "فشل تحميل سجل التوصيل.",
+    "pagination": {
+      "summary": "الصفحة {page} من {totalPages} · الإجمالي {total}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "table": {
+      "type": "النوع",
+      "channel": "القناة",
+      "status": "الحالة",
+      "priority": "الأولوية",
+      "organization": "المنظمة",
+      "recipient": "المستلم",
+      "address": "العنوان",
+      "attempts": "المحاولات",
+      "sentAt": "وقت الإرسال",
+      "error": "الخطأ",
+      "created": "تاريخ الإنشاء",
+      "empty": "لا توجد سجلات توصيل تطابق الفلاتر الحالية."
+    }
   },
   "organizations": {
     "title": "المنظمات",
