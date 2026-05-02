@@ -15,7 +15,12 @@ import {
   hydrateLimits,
   mergeLimits,
   type PlanLimits,
+  FEATURE_FIELDS,
 } from '@/features/plans/plan-limits';
+import { DiffPreviewDialog } from '@/features/plans/features-tab/diff-preview-dialog';
+import { computeDowngrades } from '@/features/plans/features-tab/diff';
+import type { PlanLimits as FeatureLimits } from '@/features/plans/features-tab/presets';
+import type { FeatureKey } from '@deqah/shared';
 
 interface FormState {
   nameAr: string;
@@ -51,9 +56,18 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
   return <PlanEditForm key={plan.id} plan={plan} />;
 }
 
+function flatToFeatureLimits(flat: PlanLimits): FeatureLimits {
+  const features: Partial<Record<FeatureKey, boolean>> = {};
+  for (const f of FEATURE_FIELDS) {
+    features[f.key as FeatureKey] = flat[f.key] as boolean;
+  }
+  return { features, quotas: {} };
+}
+
 function PlanEditForm({ plan }: { plan: Plan }) {
   const router = useRouter();
   const mutation = useUpdatePlan();
+  const activeSubscribers = plan._count.subscriptions;
 
   const [form, setForm] = useState<FormState>(() => ({
     nameAr: plan.nameAr,
@@ -64,6 +78,9 @@ function PlanEditForm({ plan }: { plan: Plan }) {
     reason: '',
   }));
   const [limits, setLimits] = useState<PlanLimits>(() => hydrateLimits(plan.limits));
+  const [savedLimits] = useState<PlanLimits>(() => hydrateLimits(plan.limits));
+  const [diffDialogOpen, setDiffDialogOpen] = useState(false);
+  const [pendingDowngrades, setPendingDowngrades] = useState<FeatureKey[]>([]);
 
   const isValid =
     form.nameAr.trim().length > 0 &&
@@ -75,8 +92,7 @@ function PlanEditForm({ plan }: { plan: Plan }) {
   const set = (field: keyof FormState) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const submit = () => {
-    if (!isValid) return;
+  const doSave = () => {
     mutation.mutate(
       {
         planId: plan.id,
@@ -90,6 +106,19 @@ function PlanEditForm({ plan }: { plan: Plan }) {
       },
       { onSuccess: () => router.push('/plans') },
     );
+  };
+
+  const submit = () => {
+    if (!isValid) return;
+    const savedFeatures = flatToFeatureLimits(savedLimits);
+    const draftFeatures = flatToFeatureLimits(limits);
+    const downgrades = computeDowngrades(savedFeatures, draftFeatures);
+    if (activeSubscribers > 0 && downgrades.length > 0) {
+      setPendingDowngrades(downgrades);
+      setDiffDialogOpen(true);
+    } else {
+      doSave();
+    }
   };
 
   const general = (
@@ -174,9 +203,9 @@ function PlanEditForm({ plan }: { plan: Plan }) {
         </p>
       </div>
 
-      {plan._count.subscriptions > 0 ? (
+      {activeSubscribers > 0 ? (
         <div className="rounded-lg border border-warning/40 bg-warning/5 p-4 text-sm text-warning">
-          <strong>⚠ {plan._count.subscriptions} active subscriber(s).</strong>{' '}
+          <strong>⚠ {activeSubscribers} active subscriber(s).</strong>{' '}
           Price changes won&apos;t apply to existing subscriptions.
         </div>
       ) : null}
@@ -202,6 +231,17 @@ function PlanEditForm({ plan }: { plan: Plan }) {
           {mutation.isPending ? 'Saving…' : 'Save changes'}
         </Button>
       </div>
+
+      <DiffPreviewDialog
+        open={diffDialogOpen}
+        onOpenChange={setDiffDialogOpen}
+        downgrades={pendingDowngrades}
+        activeSubscribers={activeSubscribers}
+        onConfirm={() => {
+          setDiffDialogOpen(false);
+          doSave();
+        }}
+      />
     </div>
   );
 }
