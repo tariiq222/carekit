@@ -48,7 +48,7 @@ describe('@RequireFeature metadata — ZOOM_INTEGRATION', () => {
   ])('annotates %s with FeatureKey.ZOOM_INTEGRATION', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardIntegrationsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardIntegrationsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.ZOOM_INTEGRATION);
   });

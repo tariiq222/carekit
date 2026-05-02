@@ -109,7 +109,7 @@ describe('@RequireFeature metadata — CUSTOM_ROLES (writes)', () => {
   ])('annotates %s with FeatureKey.CUSTOM_ROLES', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardIdentityController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardIdentityController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.CUSTOM_ROLES);
   });

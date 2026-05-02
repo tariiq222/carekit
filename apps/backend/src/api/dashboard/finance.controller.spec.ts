@@ -107,7 +107,7 @@ describe('@RequireFeature metadata — COUPONS', () => {
   ])('annotates %s with FeatureKey.COUPONS', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardFinanceController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.COUPONS);
   });
@@ -122,7 +122,7 @@ describe('@RequireFeature metadata — ZATCA', () => {
   ])('annotates %s with FeatureKey.ZATCA', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardFinanceController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.ZATCA);
   });
@@ -134,7 +134,7 @@ describe('@RequireFeature metadata — BANK_TRANSFER_PAYMENTS', () => {
   ])('annotates %s with FeatureKey.BANK_TRANSFER_PAYMENTS', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardFinanceController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.BANK_TRANSFER_PAYMENTS);
   });

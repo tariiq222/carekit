@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "AcceptInvitationDto": {
+        "properties": {
+          "name": {
+            "description": "Name for new account creation (ignored if account exists).",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password for new account creation (min 8 chars, must contain uppercase + digit). Ignored if the email already has an account.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Invitation token sent by email.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
       "AddHolidayDto": {
         "properties": {
           "branchId": {
@@ -2317,6 +2337,41 @@
         ],
         "type": "object"
       },
+      "InviteUserDto": {
+        "properties": {
+          "displayName": {
+            "description": "Per-org display name carried into the new Membership.",
+            "example": "د. أحمد المطيري",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email address of the invitee.",
+            "example": "ahmad@clinic.sa",
+            "type": "string"
+          },
+          "jobTitle": {
+            "description": "Per-org job title carried into the new Membership.",
+            "example": "استشاري نفسي",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role within the inviting organization.",
+            "enum": [
+              "OWNER",
+              "ADMIN",
+              "RECEPTIONIST",
+              "ACCOUNTANT",
+              "EMPLOYEE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ],
+        "type": "object"
+      },
       "LoginDto": {
         "properties": {
           "email": {
@@ -4544,6 +4599,42 @@
         },
         "type": "object"
       },
+      "UpsertFeatureFlagOverrideDto": {
+        "properties": {
+          "key": {
+            "description": "Feature key from FeatureKey enum",
+            "example": "coupons",
+            "type": "string"
+          },
+          "mode": {
+            "description": "INHERIT removes the override; FORCE_ON/FORCE_OFF pin the value",
+            "enum": [
+              "INHERIT",
+              "FORCE_ON",
+              "FORCE_OFF"
+            ],
+            "type": "string"
+          },
+          "organizationId": {
+            "description": "Organization to override for",
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Reason for the override (audit trail)",
+            "maxLength": 500,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [
+          "organizationId",
+          "key",
+          "mode",
+          "reason"
+        ],
+        "type": "object"
+      },
       "UpsertIntegrationDto": {
         "properties": {
           "config": {
@@ -4985,6 +5076,73 @@
           "zoomClientId",
           "zoomClientSecret",
           "zoomAccountId"
+        ],
+        "type": "object"
+      },
+      "UsageRowDto": {
+        "properties": {
+          "current": {
+            "description": "Current usage value",
+            "type": "number"
+          },
+          "featureKey": {
+            "description": "The feature key for this quota row",
+            "enum": [
+              "recurring_bookings",
+              "waitlist",
+              "group_sessions",
+              "ai_chatbot",
+              "email_templates",
+              "coupons",
+              "advanced_reports",
+              "intake_forms",
+              "zatca",
+              "custom_roles",
+              "activity_log",
+              "branches",
+              "employees",
+              "services",
+              "monthly_bookings",
+              "storage",
+              "zoom_integration",
+              "walk_in_bookings",
+              "bank_transfer_payments",
+              "multi_branch",
+              "departments",
+              "client_ratings",
+              "data_export",
+              "sms_provider_per_tenant",
+              "white_label_mobile",
+              "custom_domain",
+              "api_access",
+              "webhooks",
+              "priority_support",
+              "audit_export",
+              "multi_currency"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Plan limit; -1 means unlimited",
+            "type": "number"
+          },
+          "percentage": {
+            "description": "0–100; 0 if limit is unlimited",
+            "type": "number"
+          },
+          "periodEnd": {
+            "description": "End of the metering period; null for lifetime counters",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "featureKey",
+          "current",
+          "limit",
+          "percentage",
+          "periodEnd"
         ],
         "type": "object"
       },
@@ -5675,6 +5833,42 @@
           }
         ],
         "summary": "List feature flags and organization overrides",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/feature-flags/override": {
+      "put": {
+        "operationId": "AdminFeatureFlagsController_upsertOverride",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertFeatureFlagOverrideDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Override applied"
+          },
+          "400": {
+            "description": "Validation error (e.g. reason < 10 chars, unknown key)"
+          },
+          "404": {
+            "description": "Organization or platform flag not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upsert or remove a per-org feature flag override (INHERIT / FORCE_ON / FORCE_OFF)",
         "tags": [
           "admin"
         ]
@@ -6553,6 +6747,143 @@
         ]
       }
     },
+    "/api/v1/auth/invitations": {
+      "post": {
+        "description": "Privacy-safe — the response is identical regardless of whether the invited email already has an account in the system. Only an active membership conflict is surfaced (409). Optional displayName/jobTitle are carried into the new Membership on accept.",
+        "operationId": "AuthController_inviteUserEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "PENDING invitation row"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid JWT"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Email already has an active membership in this org"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invite a user to the active organization",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/invitations/accept": {
+      "post": {
+        "description": "Idempotent on the token. If the email already has an account, the new Membership is linked silently. If not, password + name are required to create the User. Expired or already-accepted tokens return 410 Gone.",
+        "operationId": "AuthController_acceptInvitationEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Active Membership info"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing password/name for new account"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Token not found"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Token expired or already used"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Accept a pending invitation token",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "AuthController_loginEndpoint",
@@ -6784,6 +7115,96 @@
           }
         ],
         "summary": "List organizations the current user belongs to",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/memberships/{id}/avatar": {
+      "post": {
+        "description": "Per-membership-profile — stores at memberships/{id}/avatar-{ts}.{ext}. Max 5MB, image/jpeg|png|webp only. Cross-user uploads return 403. The previous avatar object is intentionally NOT deleted (audit trail).",
+        "operationId": "AuthController_uploadMembershipAvatarEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "avatar": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "avatar"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Avatar image for the caller’s membership",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Persisted avatar URL"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid mime/size or empty file"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Caller does not own the membership"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Membership not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload an avatar for the caller’s membership",
         "tags": [
           "Public / Auth"
         ]
@@ -9062,6 +9483,76 @@
           }
         ],
         "summary": "Upgrade subscription plan",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/usage": {
+      "get": {
+        "operationId": "BillingController_usage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UsageRowDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List quota usage for the current tenant",
         "tags": [
           "Dashboard / Billing"
         ]

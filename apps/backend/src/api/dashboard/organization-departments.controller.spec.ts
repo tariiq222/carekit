@@ -52,7 +52,7 @@ describe('@RequireFeature metadata — DEPARTMENTS', () => {
   ])('annotates %s with FeatureKey.DEPARTMENTS', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardOrganizationDepartmentsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardOrganizationDepartmentsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.DEPARTMENTS);
   });
