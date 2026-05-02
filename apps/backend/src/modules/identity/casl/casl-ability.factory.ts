@@ -5,6 +5,24 @@ export type AppAbility = MongoAbility;
 
 const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
   SUPER_ADMIN: [{ action: 'manage', subject: 'all' }],
+  // OWNER is the per-org top-level role (MembershipRole). It has the same
+  // tenant-scoped permissions as ADMIN — full control over all tenant resources.
+  // Super-admin platform access is gated by isSuperAdmin boolean, not this map.
+  OWNER: [
+    { action: 'manage', subject: 'User' },
+    { action: 'manage', subject: 'Booking' },
+    { action: 'manage', subject: 'Client' },
+    { action: 'manage', subject: 'Employee' },
+    { action: 'manage', subject: 'Invoice' },
+    { action: 'manage', subject: 'Payment' },
+    { action: 'manage', subject: 'Report' },
+    { action: 'manage', subject: 'Setting' },
+    { action: 'manage', subject: 'Department' },
+    { action: 'manage', subject: 'Category' },
+    { action: 'manage', subject: 'Service' },
+    { action: 'manage', subject: 'Branch' },
+    { action: 'manage', subject: 'Branding' },
+  ],
   ADMIN: [
     { action: 'manage', subject: 'User' },
     { action: 'manage', subject: 'Booking' },
