@@ -139,6 +139,7 @@ export class DashboardBookingsController {
   }
 
   @Post('waitlist')
+  @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'Add a client to the waitlist' })
   @ApiCreatedResponse({ description: 'Waitlist entry created', schema: { type: 'object' } })
   addToWaitlist(@Body() body: AddToWaitlistDto) {
@@ -150,6 +151,7 @@ export class DashboardBookingsController {
   }
 
   @Get('waitlist')
+  @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'List waitlist entries' })
   @ApiOkResponse({ description: 'List of waitlist entries', schema: { type: 'object' } })
   listWaitlist(@Query() query: ListWaitlistDto) {
@@ -157,6 +159,7 @@ export class DashboardBookingsController {
   }
 
   @Delete('waitlist/:id')
+  @RequireFeature(FeatureKey.WAITLIST)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a waitlist entry' })
   @ApiParam({ name: 'id', description: 'Waitlist entry ID', example: '00000000-0000-0000-0000-000000000000' })
