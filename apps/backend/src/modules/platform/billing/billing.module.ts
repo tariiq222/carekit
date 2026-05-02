@@ -3,6 +3,9 @@ import { FeatureRegistryValidator } from "./feature-registry.validator";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "../../../infrastructure/database/database.module";
 import { MailModule } from "../../../infrastructure/mail";
+import { MessagingModule } from "../../../infrastructure/messaging.module";
+import { UsageCounterService } from "./usage-counter/usage-counter.service";
+import { IncrementUsageListener } from "./usage-counter/increment-usage.listener";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SUBSCRIPTION_CACHE_TOKEN } from "../../../common/tenant/tenant-context.service";
 import { BillingController } from "../../../api/dashboard/billing.controller";
@@ -81,7 +84,7 @@ const HANDLERS = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MailModule],
+  imports: [DatabaseModule, MailModule, MessagingModule],
   controllers: [BillingController],
   providers: [
     SubscriptionStateMachine,
@@ -104,11 +107,14 @@ const HANDLERS = [
     { provide: APP_GUARD, useClass: PlanLimitsGuard },
     { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
+    UsageCounterService,
+    IncrementUsageListener,
   ],
   exports: [
     SubscriptionCacheService,
     UsageAggregatorService,
     SubscriptionStateMachine,
+    UsageCounterService,
     ...HANDLERS,
   ],
 })
