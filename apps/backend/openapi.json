@@ -1063,14 +1063,9 @@
             "example": "<p>Hello {{name}}</p>",
             "type": "string"
           },
-          "nameAr": {
-            "description": "Arabic display name",
+          "name": {
+            "description": "Display name (free-form, any language)",
             "example": "تأكيد الحجز",
-            "type": "string"
-          },
-          "nameEn": {
-            "description": "English display name",
-            "example": "Booking Confirmed",
             "type": "string"
           },
           "slug": {
@@ -1078,21 +1073,16 @@
             "example": "booking-confirmed",
             "type": "string"
           },
-          "subjectAr": {
-            "description": "Arabic email subject line",
+          "subject": {
+            "description": "Email subject line (free-form, any language)",
             "example": "تم تأكيد حجزك",
-            "type": "string"
-          },
-          "subjectEn": {
-            "description": "English email subject line",
-            "example": "Your booking is confirmed",
             "type": "string"
           }
         },
         "required": [
           "slug",
-          "nameAr",
-          "subjectAr",
+          "name",
+          "subject",
           "htmlBody"
         ],
         "type": "object"
@@ -2358,6 +2348,18 @@
         ],
         "type": "object"
       },
+      "MailchimpCredentialsDto": {
+        "properties": {
+          "apiKey": {
+            "description": "Mailchimp Transactional (Mandrill) API key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiKey"
+        ],
+        "type": "object"
+      },
       "MarkReadDto": {
         "properties": {
           "notificationId": {
@@ -2808,29 +2810,9 @@
               "name": "Fatima"
             },
             "type": "object"
-          },
-          "lang": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PreviewLang"
-              }
-            ],
-            "description": "Language to render the template in",
-            "example": "ar"
           }
         },
-        "required": [
-          "lang"
-        ],
         "type": "object"
-      },
-      "PreviewLang": {
-        "description": "Language to render the template in",
-        "enum": [
-          "ar",
-          "en"
-        ],
-        "type": "string"
       },
       "ProcessPaymentDto": {
         "properties": {
@@ -3149,6 +3131,19 @@
         ],
         "type": "object"
       },
+      "ResendCredentialsDto": {
+        "properties": {
+          "apiKey": {
+            "description": "Resend API key",
+            "example": "re_...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiKey"
+        ],
+        "type": "object"
+      },
       "ResetPasswordDto": {
         "properties": {
           "newPassword": {
@@ -3191,6 +3186,19 @@
         },
         "required": [
           "verticalSlug"
+        ],
+        "type": "object"
+      },
+      "SendGridCredentialsDto": {
+        "properties": {
+          "apiKey": {
+            "description": "SendGrid API key",
+            "example": "SG...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiKey"
         ],
         "type": "object"
       },
@@ -3292,6 +3300,41 @@
         },
         "required": [
           "key"
+        ],
+        "type": "object"
+      },
+      "SmtpCredentialsDto": {
+        "properties": {
+          "host": {
+            "description": "SMTP host",
+            "example": "smtp.gmail.com",
+            "type": "string"
+          },
+          "pass": {
+            "description": "SMTP password or app password",
+            "type": "string"
+          },
+          "port": {
+            "description": "SMTP port",
+            "example": 587,
+            "type": "number"
+          },
+          "secure": {
+            "description": "Use TLS (true for port 465)",
+            "example": false,
+            "type": "boolean"
+          },
+          "user": {
+            "description": "SMTP username / email",
+            "example": "clinic@example.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "port",
+          "user",
+          "pass"
         ],
         "type": "object"
       },
@@ -3403,6 +3446,19 @@
         },
         "required": [
           "apiToken"
+        ],
+        "type": "object"
+      },
+      "TestEmailConfigDto": {
+        "properties": {
+          "toEmail": {
+            "description": "Email address to send the test message to",
+            "example": "owner@clinic.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "toEmail"
         ],
         "type": "object"
       },
@@ -3855,24 +3911,14 @@
             "example": true,
             "type": "boolean"
           },
-          "nameAr": {
-            "description": "Arabic display name",
+          "name": {
+            "description": "Display name (free-form, any language)",
             "example": "تأكيد الحجز",
             "type": "string"
           },
-          "nameEn": {
-            "description": "English display name",
-            "example": "Booking Confirmed",
-            "type": "string"
-          },
-          "subjectAr": {
-            "description": "Arabic email subject line",
+          "subject": {
+            "description": "Email subject line (free-form, any language)",
             "example": "تم تأكيد حجزك",
-            "type": "string"
-          },
-          "subjectEn": {
-            "description": "English email subject line",
-            "example": "Your booking is confirmed",
             "type": "string"
           }
         },
@@ -4014,6 +4060,26 @@
           "enabled",
           "reason"
         ],
+        "type": "object"
+      },
+      "UpdateMembershipProfileDto": {
+        "properties": {
+          "avatarUrl": {
+            "description": "Per-org avatar URL (MinIO).",
+            "example": "https://cdn.example.com/memberships/m-1/avatar.jpg",
+            "type": "string"
+          },
+          "displayName": {
+            "description": "Per-org display name (overrides User.name).",
+            "example": "د. أحمد المطيري",
+            "type": "string"
+          },
+          "jobTitle": {
+            "description": "Per-org job title.",
+            "example": "استشاري نفسي",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateOrganizationDto": {
@@ -4517,6 +4583,46 @@
           "publishableKey",
           "secretKey",
           "isLive"
+        ],
+        "type": "object"
+      },
+      "UpsertOrgEmailConfigDto": {
+        "properties": {
+          "mailchimp": {
+            "$ref": "#/components/schemas/MailchimpCredentialsDto"
+          },
+          "provider": {
+            "enum": [
+              "NONE",
+              "SMTP",
+              "RESEND",
+              "SENDGRID",
+              "MAILCHIMP"
+            ],
+            "type": "string"
+          },
+          "resend": {
+            "$ref": "#/components/schemas/ResendCredentialsDto"
+          },
+          "senderEmail": {
+            "description": "Sender email address",
+            "example": "noreply@clinic.com",
+            "type": "string"
+          },
+          "senderName": {
+            "description": "Sender display name",
+            "example": "عيادة الأمل",
+            "type": "string"
+          },
+          "sendgrid": {
+            "$ref": "#/components/schemas/SendGridCredentialsDto"
+          },
+          "smtp": {
+            "$ref": "#/components/schemas/SmtpCredentialsDto"
+          }
+        },
+        "required": [
+          "provider"
         ],
         "type": "object"
       },
@@ -5739,6 +5845,72 @@
         ]
       }
     },
+    "/api/v1/admin/notifications/delivery-log": {
+      "get": {
+        "operationId": "AdminNotificationsController_list",
+        "parameters": [
+          {
+            "description": "Filter by organization UUID",
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by delivery status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by delivery channel",
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number (default: 1)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Items per page (default: 50, max: 200)",
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List notification delivery log across all tenants",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/organizations": {
       "get": {
         "operationId": "AdminOrganizationsController_list",
@@ -6598,6 +6770,96 @@
           }
         ],
         "summary": "List organizations the current user belongs to",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/memberships/{id}/profile": {
+      "patch": {
+        "description": "Per-membership-profile — updates displayName / jobTitle / avatarUrl on the caller’s own Membership. Cross-user edits are blocked (403).",
+        "operationId": "AuthController_updateMembershipProfileEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMembershipProfileDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated MembershipSummary-shaped row"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid JWT"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Caller does not own the target membership"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Membership not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update the caller’s per-org display profile",
         "tags": [
           "Public / Auth"
         ]
@@ -11472,6 +11734,204 @@
           }
         ],
         "summary": "Get unread notification count for the current staff user",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/settings/email": {
+      "get": {
+        "operationId": "DashboardCommsController_getEmailConfigEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OrganizationEmailConfig view (no secrets)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get email provider configuration (owner-scoped)",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardCommsController_upsertEmailConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgEmailConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated OrganizationEmailConfig view"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upsert email provider configuration",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/settings/email/test": {
+      "post": {
+        "operationId": "DashboardCommsController_testEmailConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestEmailConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Test result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test email via the configured provider",
         "tags": [
           "Dashboard / Comms"
         ]
