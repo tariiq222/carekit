@@ -9,6 +9,8 @@ import {
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { CreateDepartmentHandler } from '../../modules/org-config/departments/create-department.handler';
 import { CreateDepartmentDto } from '../../modules/org-config/departments/create-department.dto';
 import { UpdateDepartmentHandler } from '../../modules/org-config/departments/update-department.handler';
@@ -31,6 +33,7 @@ export class DashboardOrganizationDepartmentsController {
   ) {}
 
   @Post('departments')
+  @RequireFeature(FeatureKey.DEPARTMENTS)
   @CheckPermissions({ action: 'create', subject: 'Department' })
   @ApiOperation({ summary: 'Create a department' })
   @ApiCreatedResponse({ description: 'Department created' })
@@ -51,6 +54,7 @@ export class DashboardOrganizationDepartmentsController {
   }
 
   @Patch('departments/:departmentId')
+  @RequireFeature(FeatureKey.DEPARTMENTS)
   @CheckPermissions({ action: 'update', subject: 'Department' })
   @ApiOperation({ summary: 'Update a department' })
   @ApiParam({ name: 'departmentId', description: 'Department UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -64,6 +68,7 @@ export class DashboardOrganizationDepartmentsController {
   }
 
   @Delete('departments/:departmentId')
+  @RequireFeature(FeatureKey.DEPARTMENTS)
   @CheckPermissions({ action: 'delete', subject: 'Department' })
   @ApiOperation({ summary: 'Delete a department' })
   @ApiParam({ name: 'departmentId', description: 'Department UUID', example: '00000000-0000-0000-0000-000000000000' })

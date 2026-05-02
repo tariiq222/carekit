@@ -1,4 +1,6 @@
 import { DashboardOrganizationBranchesController } from './organization-branches.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -75,5 +77,18 @@ describe('DashboardOrganizationBranchesController', () => {
     expect(unassignEmployee.execute).toHaveBeenCalledWith({
       branchId: 'br-1', employeeId: 'emp-1',
     });
+  });
+});
+
+describe('@RequireFeature metadata — MULTI_BRANCH', () => {
+  it.each([
+    'createBranchEndpoint',
+    'updateBranchEndpoint',
+  ])('annotates %s with FeatureKey.MULTI_BRANCH', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOrganizationBranchesController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.MULTI_BRANCH);
   });
 });
