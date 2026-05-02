@@ -1,0 +1,45 @@
+{
+  "domain": "Plans",
+  "version": "main",
+  "build": "plan-features-tab-2026-05-02",
+  "planName": "Plan Features Tab Redesign — Manual QA",
+  "planSummary": "Phase 4 of Plan Features Overhaul (PR #102): super-admin Plans → Features tab redesign with grouped sections, search, presets, and diff-preview dialog.",
+  "runSummary": "Vitest-driven verification of pure helpers (preset, filter, diff) + UI components (PresetButtons, FeatureSearch, FeatureRow, FeatureGroupSection, DiffPreviewDialog). Live browser smoke deferred due to Node 25 ESM env issue.",
+  "cases": [
+    {
+      "summary": "filterCatalog is case-insensitive across nameEn + descEn",
+      "text": "Run: cd apps/admin && npm run test -- --run filter\nExpected: 3/3 cases pass.",
+      "result": "PASS"
+    },
+    {
+      "summary": "applyPreset('PRO') turns ON all PRO boolean keys, OFF all ENTERPRISE keys",
+      "text": "Run: cd apps/admin && npm run test -- --run presets\nExpected: PRO preset case passes — output PlanLimits has every PRO-tier boolean=true and every ENTERPRISE-tier boolean=false.",
+      "result": "PASS"
+    },
+    {
+      "summary": "applyPreset('ENTERPRISE') turns ON all boolean keys",
+      "text": "Run: cd apps/admin && npm run test -- --run presets\nExpected: ENTERPRISE preset case passes — every boolean key=true.",
+      "result": "PASS"
+    },
+    {
+      "summary": "applyPreset('DISABLE_ALL') turns OFF every boolean key (preserves quotas)",
+      "text": "Run: cd apps/admin && npm run test -- --run presets\nExpected: DISABLE_ALL case passes — every boolean=false; numeric quotas unchanged.",
+      "result": "PASS"
+    },
+    {
+      "summary": "applyPreset is pure (no input mutation)",
+      "text": "Run: cd apps/admin && npm run test -- --run presets\nExpected: returned object is a fresh reference; the original input is unchanged.",
+      "result": "PASS"
+    },
+    {
+      "summary": "computeFeatureDiff returns only true→false transitions",
+      "text": "Run: cd apps/admin && npm run test -- --run diff\nExpected: 3/3 cases — empty diff when no downgrades; single-key diff for one downgrade; multi-key diff for several downgrades.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Save flow gates DiffPreviewDialog behind activeSubscribers > 0 AND diff.length > 0",
+      "text": "Code-trace: apps/admin/app/(admin)/plans/[id]/edit/page.tsx — submit() opens <DiffPreviewDialog> only when both conditions are met; otherwise saves directly.",
+      "result": "PASS"
+    }
+  ]
+}

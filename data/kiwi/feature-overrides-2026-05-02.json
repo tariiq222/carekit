@@ -1,0 +1,65 @@
+{
+  "domain": "Billing",
+  "version": "main",
+  "build": "feature-overrides-2026-05-02",
+  "planName": "Org-level Feature Overrides — Manual QA",
+  "planSummary": "Phase 6 of Plan Features Overhaul (PR #104): super-admin per-organization entitlement overrides with audit logging and event-driven cache invalidation.",
+  "runSummary": "Vitest unit suite (4 components) + 4 backend e2e suites prove the full loop. Live browser smoke deferred due to Node 25 ESM env issue.",
+  "cases": [
+    {
+      "summary": "useUpsertOverride invalidates entitlements + feature-flags queries on success",
+      "text": "Run: cd apps/admin && npm run test -- --run use-upsert-override\nExpected: hook spec passes — adminRequest mock called once; queryClient.invalidateQueries called for both keys.",
+      "result": "PASS"
+    },
+    {
+      "summary": "OverrideCell shows Modified badge when value !== initial",
+      "text": "Run: cd apps/admin && npm run test -- --run override-cell\nExpected: 3/3 cases — badge appears when value differs; badge absent when value matches initial; onChange fires correctly.",
+      "result": "PASS"
+    },
+    {
+      "summary": "EntitlementsTable renders all 5 catalog groups",
+      "text": "Run: cd apps/admin && npm run test -- --run entitlements-table\nExpected: each FeatureGroup section ('Booking & Scheduling', 'Client Engagement', 'Finance & Compliance', 'Operations', 'Platform') has a heading.",
+      "result": "PASS"
+    },
+    {
+      "summary": "EntitlementsTable Save button disabled when no dirty changes",
+      "text": "Same suite — initial render with empty currentOverrides has Save disabled (label 'Save 0 changes').",
+      "result": "PASS"
+    },
+    {
+      "summary": "SaveOverridesDialog Confirm disabled when reason < 10 chars",
+      "text": "Run: cd apps/admin && npm run test -- --run save-overrides-dialog\nExpected: with 'too short' typed, button remains disabled.",
+      "result": "PASS"
+    },
+    {
+      "summary": "SaveOverridesDialog Confirm enabled at ≥ 10 chars; click triggers onConfirm with trimmed reason",
+      "text": "Same suite — typing 'Pilot customer needs coupons enabled' enables the button; click invokes onConfirm with the trimmed string.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Full loop: BASIC plan → coupons disabled → guard rejects → super-admin FORCE_ON → guard accepts",
+      "text": "Run: cd apps/backend && npx jest --config test/jest-e2e.json test/e2e/billing/feature-full-loop.e2e-spec.ts\nExpected: 7-step e2e passes including SuperAdminActionLog write verification.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Per-org override on org A does NOT affect org B's view",
+      "text": "Run: cd apps/backend && npx jest --config test/jest-e2e.json test/e2e/billing/feature-flag-override-isolation.e2e-spec.ts\nExpected: 6/6 cases pass — org A FORCE_OFF leaves org B at plan default.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Quota enforcement: maxEmployees=5 — 5 succeed, 6th throws",
+      "text": "Run: cd apps/backend && npx jest --config test/jest-e2e.json test/e2e/billing/quota-enforcement.e2e-spec.ts\nExpected: 3/3 cases pass — guard.canActivate(EMPLOYEES) succeeds at 4/5, throws ForbiddenException at 5/5.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Cache invalidation event fires synchronously on plan or subscription change (no TTL wait)",
+      "text": "Run: cd apps/backend && npx jest --config test/jest-e2e.json test/e2e/billing/cache-invalidation.e2e-spec.ts\nExpected: 2/2 cases pass — limit change reflected immediately; plan switch reflected immediately.",
+      "result": "PASS"
+    },
+    {
+      "summary": "INHERIT mode deletes the org-scoped FeatureFlag row",
+      "text": "Run: cd apps/backend && npx jest upsert-feature-flag-override\nExpected: handler unit spec passes — mode=INHERIT triggers deleteMany; mode=FORCE_ON/FORCE_OFF triggers create-or-update.",
+      "result": "PASS"
+    }
+  ]
+}
