@@ -120,7 +120,10 @@ describe('UpsertFeatureFlagOverrideHandler', () => {
 
     expect(mocks.eventBusPublish).toHaveBeenCalledWith(
       SUBSCRIPTION_UPDATED_EVENT,
-      expect.objectContaining({ organizationId: ORG_ID }),
+      expect.objectContaining({
+        source: 'admin.upsert-feature-flag-override',
+        payload: expect.objectContaining({ organizationId: ORG_ID }),
+      }),
     );
   });
 
