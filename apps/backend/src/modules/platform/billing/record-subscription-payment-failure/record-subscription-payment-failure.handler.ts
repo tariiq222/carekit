@@ -80,7 +80,8 @@ export class RecordSubscriptionPaymentFailureHandler {
 
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
-      include: {
+      select: {
+        displayName: true,
         user: { select: { email: true, name: true } },
         organization: { select: { nameAr: true } },
       },
@@ -91,7 +92,7 @@ export class RecordSubscriptionPaymentFailureHandler {
         'https://app.webvue.pro/dashboard',
       );
       await this.mailer.sendSubscriptionPaymentFailed(owner.user.email, {
-        ownerName: owner.user.name ?? '',
+        ownerName: owner.displayName ?? owner.user.name ?? '',
         orgName: owner.organization.nameAr,
         amountSar: Number(invoice.amount).toFixed(2),
         reason: cmd.reason,

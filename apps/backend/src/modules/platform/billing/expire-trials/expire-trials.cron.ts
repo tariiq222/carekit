@@ -284,10 +284,16 @@ export class ExpireTrialsCron {
   ): Promise<{ email: string; name: string } | null> {
     const membership = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },
-      include: { user: { select: { email: true, name: true } } },
+      select: {
+        displayName: true,
+        user: { select: { email: true, name: true } },
+      },
     });
     if (!membership?.user) return null;
-    return { email: membership.user.email, name: membership.user.name ?? '' };
+    return {
+      email: membership.user.email,
+      name: membership.displayName ?? membership.user.name ?? '',
+    };
   }
 
   private billingUrl(): string {

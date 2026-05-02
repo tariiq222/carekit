@@ -216,7 +216,8 @@ export class DunningRetryService {
         role: 'OWNER',
         isActive: true,
       },
-      include: {
+      select: {
+        displayName: true,
         user: { select: { email: true, name: true } },
         organization: { select: { nameAr: true } },
       },
@@ -229,7 +230,7 @@ export class DunningRetryService {
     );
     try {
       await this.mailer.sendDunningRetry(owner.user.email, {
-        ownerName: owner.user.name ?? '',
+        ownerName: owner.displayName ?? owner.user.name ?? '',
         orgName: owner.organization.nameAr,
         amountSar: Number(params.invoice.amount).toFixed(2),
         attemptNumber: params.attemptNumber,

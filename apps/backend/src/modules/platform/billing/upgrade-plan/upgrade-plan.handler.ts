@@ -88,14 +88,15 @@ export class UpgradePlanHandler {
 
       const owner = await this.prisma.$allTenants.membership.findFirst({
         where: { organizationId, role: 'OWNER', isActive: true },
-        include: {
+        select: {
+          displayName: true,
           user: { select: { email: true, name: true } },
           organization: { select: { nameAr: true } },
         },
       });
       if (owner?.user) {
         await this.mailer.sendPlanChanged(owner.user.email, {
-          ownerName: owner.user.name ?? '',
+          ownerName: owner.displayName ?? owner.user.name ?? '',
           orgName: owner.organization.nameAr,
           fromPlanName: sub.plan.nameAr,
           toPlanName: targetPlan.nameAr,
@@ -198,14 +199,15 @@ export class UpgradePlanHandler {
 
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },
-      include: {
+      select: {
+        displayName: true,
         user: { select: { email: true, name: true } },
         organization: { select: { nameAr: true } },
       },
     });
     if (owner?.user) {
       await this.mailer.sendPlanChanged(owner.user.email, {
-        ownerName: owner.user.name ?? '',
+        ownerName: owner.displayName ?? owner.user.name ?? '',
         orgName: owner.organization.nameAr,
         fromPlanName: sub.plan.nameAr,
         toPlanName: targetPlan.nameAr,

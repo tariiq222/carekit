@@ -70,14 +70,15 @@ export class SuspendOrganizationHandler {
 
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId: cmd.organizationId, role: 'OWNER', isActive: true },
-      include: {
+      select: {
+        displayName: true,
         user: { select: { email: true, name: true } },
         organization: { select: { nameAr: true } },
       },
     });
     if (owner?.user) {
       await this.mailer.sendAccountStatusChanged(owner.user.email, {
-        ownerName: owner.user.name ?? '',
+        ownerName: owner.displayName ?? owner.user.name ?? '',
         orgName: owner.organization.nameAr,
         status: 'SUSPENDED',
         reason: cmd.reason,
