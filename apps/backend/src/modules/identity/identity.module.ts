@@ -46,9 +46,11 @@ import { PasswordHistoryService } from './client-auth/shared/password-history.se
 import { ListMembershipsHandler } from './list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from './switch-organization/switch-organization.handler';
 import { UpdateMembershipProfileHandler } from './update-membership-profile/update-membership-profile.handler';
+import { UploadMembershipAvatarHandler } from './update-membership-profile/upload-membership-avatar.handler';
 import { InviteUserHandler } from './invite-user/invite-user.handler';
 import { AcceptInvitationHandler } from './accept-invitation/accept-invitation.handler';
 import { MailModule } from '../../infrastructure/mail';
+import { StorageModule } from '../../infrastructure/storage';
 import { RequestPasswordResetHandler } from './user-password-reset/request-password-reset/request-password-reset.handler';
 import { PerformPasswordResetHandler } from './user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { CommsModule } from '../comms/comms.module';
@@ -79,6 +81,7 @@ const handlers = [
   ListMembershipsHandler,
   SwitchOrganizationHandler,
   UpdateMembershipProfileHandler,
+  UploadMembershipAvatarHandler,
   InviteUserHandler,
   AcceptInvitationHandler,
   RegisterMobileUserHandler,
@@ -93,6 +96,7 @@ const handlers = [
   imports: [
     DatabaseModule,
     MailModule,
+    StorageModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     NotificationChannelModule,
     CommsModule,

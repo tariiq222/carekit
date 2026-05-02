@@ -1,7 +1,9 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
-  Req, Res, Param,
+  Req, Res, Param, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
@@ -27,6 +29,7 @@ import { SwitchOrganizationHandler } from '../../modules/identity/switch-organiz
 import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
 import { UpdateMembershipProfileHandler } from '../../modules/identity/update-membership-profile/update-membership-profile.handler';
 import { UpdateMembershipProfileDto } from '../../modules/identity/update-membership-profile/update-membership-profile.dto';
+import { UploadMembershipAvatarHandler } from '../../modules/identity/update-membership-profile/upload-membership-avatar.handler';
 import { InviteUserHandler } from '../../modules/identity/invite-user/invite-user.handler';
 import { InviteUserDto } from '../../modules/identity/invite-user/invite-user.dto';
 import { AcceptInvitationHandler } from '../../modules/identity/accept-invitation/accept-invitation.handler';
@@ -74,6 +77,7 @@ export class AuthController {
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly performPasswordReset: PerformPasswordResetHandler,
     private readonly updateMembershipProfile: UpdateMembershipProfileHandler,
+    private readonly uploadMembershipAvatar: UploadMembershipAvatarHandler,
     private readonly inviteUser: InviteUserHandler,
     private readonly acceptInvitation: AcceptInvitationHandler,
     private readonly tenant: TenantContextService,
@@ -326,6 +330,47 @@ export class AuthController {
       displayName: body.displayName,
       jobTitle: body.jobTitle,
       avatarUrl: body.avatarUrl,
+    });
+  }
+
+  @Post('memberships/:id/avatar')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Avatar image for the caller’s membership',
+    schema: {
+      type: 'object',
+      required: ['avatar'],
+      properties: {
+        avatar: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Upload an avatar for the caller’s membership',
+    description:
+      'Per-membership-profile — stores at memberships/{id}/avatar-{ts}.{ext}. ' +
+      'Max 5MB, image/jpeg|png|webp only. Cross-user uploads return 403. The ' +
+      'previous avatar object is intentionally NOT deleted (audit trail).',
+  })
+  @ApiOkResponse({ description: 'Persisted avatar URL' })
+  @ApiResponse({ status: 400, description: 'Invalid mime/size or empty file', type: ApiErrorDto })
+  @ApiResponse({ status: 403, description: 'Caller does not own the membership', type: ApiErrorDto })
+  @ApiResponse({ status: 404, description: 'Membership not found', type: ApiErrorDto })
+  uploadMembershipAvatarEndpoint(
+    @UserId() userId: string,
+    @Param('id') membershipId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) throw new BadRequestException('avatar file is required');
+    return this.uploadMembershipAvatar.execute({
+      userId,
+      membershipId,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      buffer: file.buffer,
     });
   }
 
