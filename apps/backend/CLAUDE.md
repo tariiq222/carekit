@@ -169,6 +169,45 @@ Client auth (website users) is **fully isolated** from admin JWT auth:
 - **Password login** — primary path. Client submits phone + password → `POST /api/v1/public/auth/login`.
 - **OTP-only login** — escape hatch for clients who forgot password. Uses existing `CLIENT_LOGIN` purpose via `POST /api/v1/public/otp/request` + `verify`. No password required.
 
+## Role precedence — `Membership.role` is canonical for org-scoped checks
+
+The codebase carries two role columns:
+
+- **`Membership.role`** (`MembershipRole` enum) — the **per-organization** role.
+  This is the single source of truth for any authorization decision scoped to
+  a tenant: who may book, who may issue refunds, who may invite new users, etc.
+- **`User.role`** (`UserRole` enum) — global / legacy. Phase A of DB-08 left it
+  in place for backward compatibility but new code MUST NOT branch on it for
+  org-scoped permissions. DB-14 will eventually drop it.
+- **`User.isSuperAdmin`** (boolean) — the only canonical signal for platform-
+  wide super-admin checks. Never compare `user.role === 'SUPER_ADMIN'` — that
+  pattern was removed by DB-08 phase A.
+
+When fetching membership rows, prefer `select` (not `include`) and pull both
+`role` and any per-org display profile fields you need (`displayName`,
+`jobTitle`, `avatarUrl`) — the global `User.name` / `User.avatarUrl` should
+only be used as a fallback when the membership has no per-org override, and
+ONLY in account-level surfaces (login response, password reset email, super-
+admin audit log). Org-scoped surfaces (in-app activity log, billing emails,
+notifications) prefer `Membership.displayName ?? User.name`.
+
+JWT carries `membershipRole` in `TenantClaims` (phase-A dual-carry alongside
+the deprecated `role` claim). Phase-B readers should consume `membershipRole`.
+
+## Per-membership display profile
+
+`Membership` has three nullable per-org overrides — `displayName`, `jobTitle`,
+`avatarUrl` — set at invite time or via `PATCH /auth/memberships/:id/profile`
+(caller-owned only). Avatars upload via `POST /auth/memberships/:id/avatar`
+(multipart) and are stored at `memberships/{id}/avatar-{ts}.{ext}` in MinIO.
+Deleting a Membership does NOT delete the avatar object — that is intentional
+audit-trail behavior; cleanup is a separate offline concern.
+
+`User.lastActiveOrganizationId` is a soft reference (no FK) used by
+`LoginHandler` to resolve the active membership preferentially when the user
+belongs to multiple orgs. `SwitchOrganizationHandler` writes to it on every
+successful switch.
+
 ## API Documentation (Standard level)
 
 Every HTTP endpoint in `src/api/**` MUST have:
