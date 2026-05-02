@@ -1,4 +1,6 @@
 import { DashboardOrganizationSettingsController } from './organization-settings.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -119,5 +121,20 @@ describe('DashboardOrganizationSettingsController', () => {
     const { controller, upsertOrgSettings } = buildController();
     await controller.upsertOrgSettingsEndpoint({ companyNameAr: 'Company' } as never);
     expect(upsertOrgSettings.execute).toHaveBeenCalledWith(expect.objectContaining({ companyNameAr: 'Company' }));
+  });
+});
+
+describe('@RequireFeature metadata — INTAKE_FORMS', () => {
+  it.each([
+    'createIntakeFormEndpoint',
+    'listIntakeFormsEndpoint',
+    'getIntakeFormEndpoint',
+    'deleteIntakeFormEndpoint',
+  ])('annotates %s with FeatureKey.INTAKE_FORMS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOrganizationSettingsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.INTAKE_FORMS);
   });
 });
