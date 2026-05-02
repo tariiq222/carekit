@@ -8,6 +8,8 @@ import {
 } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { ListUsersHandler } from '../../modules/identity/users/list-users.handler';
 import { GetUserHandler } from '../../modules/identity/users/get-user.handler';
@@ -204,6 +206,7 @@ export class DashboardIdentityController {
   }
 
   @Post('roles')
+  @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @ApiOperation({ summary: 'Create a custom role' })
   @ApiCreatedResponse({ description: 'Role created' })
   async createRoleEndpoint(@Body() body: CreateRoleDto) {
@@ -211,6 +214,7 @@ export class DashboardIdentityController {
   }
 
   @Post('roles/:id/permissions')
+  @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Assign permissions to a role' })
   @ApiParam({ name: 'id', description: 'Role UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -231,6 +235,7 @@ export class DashboardIdentityController {
   }
 
   @Delete('roles/:id')
+  @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a custom role' })
   @ApiParam({ name: 'id', description: 'Role UUID', example: '00000000-0000-0000-0000-000000000000' })

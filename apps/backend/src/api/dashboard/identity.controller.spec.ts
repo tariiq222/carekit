@@ -1,4 +1,6 @@
 import { DashboardIdentityController } from './identity.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -96,5 +98,19 @@ describe('DashboardIdentityController', () => {
     const { controller, deleteRole } = buildController();
     await controller.deleteRoleEndpoint('r-1');
     expect(deleteRole.execute).toHaveBeenCalledWith({ customRoleId: 'r-1' });
+  });
+});
+
+describe('@RequireFeature metadata — CUSTOM_ROLES (writes)', () => {
+  it.each([
+    'createRoleEndpoint',
+    'assignPermissionsEndpoint',
+    'deleteRoleEndpoint',
+  ])('annotates %s with FeatureKey.CUSTOM_ROLES', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardIdentityController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.CUSTOM_ROLES);
   });
 });
