@@ -34,7 +34,7 @@ describe('DashboardOpsController', () => {
     const excelBuffer = Buffer.from('excel-data');
     const generateReport = fn({ reportId: 'r-1', format: ReportFormat.EXCEL, excelBuffer, status: 'COMPLETED' });
     const listActivity = fn();
-    const controller = new DashboardOpsController(generateReport as never, listActivity as never);
+    const controller = new DashboardOpsController(generateReport as never, listActivity as never, mockTenant as never);
     const res = buildRes();
     await controller.generateReportEndpoint(
       { type: 'REVENUE', from: '2026-01-01', to: '2026-01-31', requestedBy: 'u-1' } as never,
