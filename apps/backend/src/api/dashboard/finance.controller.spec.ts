@@ -1,4 +1,6 @@
 import { DashboardFinanceController } from './finance.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -91,5 +93,22 @@ describe('DashboardFinanceController', () => {
     expect(zatcaSubmit.execute).toHaveBeenCalledWith(
       expect.objectContaining({ invoiceId: 'inv-1' }),
     );
+  });
+});
+
+describe('@RequireFeature metadata — COUPONS', () => {
+  it.each([
+    'applyCouponEndpoint',
+    'listCouponsEndpoint',
+    'getCouponEndpoint',
+    'createCouponEndpoint',
+    'updateCouponEndpoint',
+    'deleteCouponEndpoint',
+  ])('annotates %s with FeatureKey.COUPONS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.COUPONS);
   });
 });

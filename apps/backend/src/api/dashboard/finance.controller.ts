@@ -42,6 +42,8 @@ import { VerifyPaymentHandler } from '../../modules/finance/verify-payment/verif
 import { VerifyPaymentDto } from '../../modules/finance/verify-payment/verify-payment.dto';
 import { BankTransferUploadHandler } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.handler';
 import { BankTransferUploadDto } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.dto';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
 import { GetMoyasarConfigHandler } from '../../modules/finance/moyasar-config/get-moyasar-config.handler';
 import { UpsertMoyasarConfigHandler } from '../../modules/finance/moyasar-config/upsert-moyasar-config.handler';
 import { TestMoyasarConfigHandler } from '../../modules/finance/moyasar-config/test-moyasar-config.handler';
@@ -189,6 +191,7 @@ export class DashboardFinanceController {
   // ── Coupons apply (existing) ───────────────────────────────────────────────
 
   @Post('coupons/apply')
+  @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Apply a coupon code to an invoice' })
   @ApiOkResponse({ description: 'Coupon applied; returns updated discount amount' })
   applyCouponEndpoint(@Body() body: ApplyCouponDto) {
@@ -198,6 +201,7 @@ export class DashboardFinanceController {
   // ── Coupons CRUD ──────────────────────────────────────────────────────────
 
   @Get('coupons')
+  @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'List coupons' })
   @ApiOkResponse({ description: 'Paginated coupon list' })
   listCouponsEndpoint(@Query() query: ListCouponsDto) {
@@ -205,6 +209,7 @@ export class DashboardFinanceController {
   }
 
   @Get('coupons/:id')
+  @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Get a coupon by id' })
   @ApiParam({ name: 'id', description: 'Coupon UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Coupon found' })
@@ -214,6 +219,7 @@ export class DashboardFinanceController {
   }
 
   @Post('coupons')
+  @RequireFeature(FeatureKey.COUPONS)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a coupon' })
   @ApiCreatedResponse({ description: 'Coupon created' })
@@ -222,6 +228,7 @@ export class DashboardFinanceController {
   }
 
   @Patch('coupons/:id')
+  @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Update a coupon' })
   @ApiParam({ name: 'id', description: 'Coupon UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Coupon updated' })
@@ -234,6 +241,7 @@ export class DashboardFinanceController {
   }
 
   @Delete('coupons/:id')
+  @RequireFeature(FeatureKey.COUPONS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a coupon' })
   @ApiParam({ name: 'id', description: 'Coupon UUID', example: '00000000-0000-0000-0000-000000000000' })
