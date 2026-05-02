@@ -8,7 +8,6 @@ import { useLocale } from "@/components/locale-provider"
 
 const SECTIONS: { href: string; titleKey: string; descKey: string; disabled?: boolean }[] = [
   { href: "/content/home", titleKey: "content.landing.section.home.title", descKey: "content.landing.section.home.desc" },
-  { href: "/content/legal", titleKey: "content.landing.section.legal.title", descKey: "content.landing.section.legal.desc" },
   { href: "/content/blog", titleKey: "content.landing.section.blog.title", descKey: "content.landing.section.blog.desc", disabled: true },
   { href: "/content/faq", titleKey: "content.landing.section.faq.title", descKey: "content.landing.section.faq.desc", disabled: true },
   { href: "/content/testimonials", titleKey: "content.landing.section.testimonials.title", descKey: "content.landing.section.testimonials.desc", disabled: true },
