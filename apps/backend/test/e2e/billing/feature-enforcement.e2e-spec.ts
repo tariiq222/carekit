@@ -180,11 +180,11 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     // Seed a test-local plan with recurring_bookings enabled — avoids mutating shared BASIC seed
     const customPlan = await h.prisma.plan.create({
       data: {
-        slug: `TEST-PRO-${ts}`,
+        slug: `TEST_PRO_${ts}`,
         nameAr: 'خطة اختبار',
         nameEn: 'Test Pro Plan',
         priceMonthly: 0,
-        priceYearly: 0,
+        priceAnnual: 0,
         currency: 'SAR',
         limits: {
           recurring_bookings: true,
@@ -229,7 +229,8 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
         expect(result).toBe(true);
       });
     } finally {
-      // Clean up the test-local plan + org
+      // Subscription FKs Plan, so delete the subscription before the plan.
+      await h.prisma.subscription.deleteMany({ where: { organizationId: proOrg.id } });
       await h.cleanupOrg(proOrg.id);
       await h.prisma.plan.delete({ where: { id: customPlan.id } });
     }
