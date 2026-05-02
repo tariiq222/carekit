@@ -13,7 +13,6 @@ import { Reflector } from '@nestjs/core';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 import { FeatureGuard } from '../../../src/modules/platform/billing/feature.guard';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
-import { TenantContextService } from '../../../src/common/tenant/tenant-context.service';
 import { REQUIRE_FEATURE_KEY } from '../../../src/modules/platform/billing/feature.decorator';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
@@ -118,7 +117,6 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
     guard = new FeatureGuard(
       h.app.get(Reflector),
       h.prisma,
-      h.app.get(TenantContextService),
       cacheService,
       counters,
     );
@@ -150,12 +148,15 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
     }
   });
 
-  function ctxFor(featureKey: FeatureKey): ExecutionContext {
+  function ctxFor(featureKey: FeatureKey, organizationId: string): ExecutionContext {
     const handler = function () {};
     Reflect.defineMetadata(REQUIRE_FEATURE_KEY, featureKey, handler);
     return {
       getHandler: () => handler,
       getClass: () => class {},
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { organizationId } }),
+      }),
     } as unknown as ExecutionContext;
   }
 
@@ -180,7 +181,7 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
 
   it('FeatureGuard throws ForbiddenException when employee count is at the limit (5/5)', async () => {
     await runAsGuardContext(org.id, async () => {
-      await expect(guard.canActivate(ctxFor(FeatureKey.EMPLOYEES))).rejects.toBeInstanceOf(
+      await expect(guard.canActivate(ctxFor(FeatureKey.EMPLOYEES, org.id))).rejects.toBeInstanceOf(
         ForbiddenException,
       );
     });
@@ -189,7 +190,7 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
   it('ForbiddenException message contains the feature limit format (employees: 5/5)', async () => {
     await runAsGuardContext(org.id, async () => {
       try {
-        await guard.canActivate(ctxFor(FeatureKey.EMPLOYEES));
+        await guard.canActivate(ctxFor(FeatureKey.EMPLOYEES, org.id));
         throw new Error('Expected ForbiddenException but guard passed');
       } catch (e: unknown) {
         expect(e).toBeInstanceOf(ForbiddenException);
@@ -222,7 +223,7 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
     );
 
     await runAsGuardContext(org.id, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.EMPLOYEES));
+      const result = await guard.canActivate(ctxFor(FeatureKey.EMPLOYEES, org.id));
       expect(result).toBe(true);
     });
   });

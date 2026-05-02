@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 import { PlanLimitsGuard } from '../../../src/modules/platform/billing/enforce-limits.guard';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
-import { TenantContextService } from '../../../src/common/tenant/tenant-context.service';
 import { ENFORCE_LIMIT_KEY, LimitKind } from '../../../src/modules/platform/billing/plan-limits.decorator';
 
 /**
@@ -35,7 +34,6 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
     guard = new PlanLimitsGuard(
       h.app.get(Reflector),
       h.prisma,
-      h.app.get(TenantContextService),
       h.app.get(SubscriptionCacheService),
     );
   });
@@ -44,12 +42,15 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
     if (h) await h.close();
   });
 
-  function ctxFor(kind: LimitKind): ExecutionContext {
+  function ctxFor(kind: LimitKind, organizationId: string): ExecutionContext {
     const handler = function () {}; // marker fn — reflector attaches metadata by reference
     Reflect.defineMetadata(ENFORCE_LIMIT_KEY, kind, handler);
     return {
       getHandler: () => handler,
       getClass: () => class {},
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { organizationId } }),
+      }),
     } as unknown as ExecutionContext;
   }
 
@@ -89,13 +90,13 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
 
     // 1st branch — usage count = 0, limit = 1 → allow
     await h.runAs({ organizationId: org.id }, async () => {
-      expect(await guard.canActivate(ctxFor('BRANCHES'))).toBe(true);
+      expect(await guard.canActivate(ctxFor('BRANCHES', org.id))).toBe(true);
       await seedBranch(org.id, `br-basic-1-${ts}`);
     });
 
     // 2nd — usage = 1, limit = 1 → reject
     await expect(
-      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('BRANCHES'))),
+      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('BRANCHES', org.id))),
     ).rejects.toThrow(ForbiddenException);
   });
 
@@ -109,7 +110,7 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
 
     for (let i = 0; i < 20; i++) {
       await h.runAs({ organizationId: org.id }, async () => {
-        expect(await guard.canActivate(ctxFor('BRANCHES'))).toBe(true);
+        expect(await guard.canActivate(ctxFor('BRANCHES', org.id))).toBe(true);
         await seedBranch(org.id, `br-ent-${ts}-${i}`);
       });
     }
@@ -124,11 +125,11 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
     cache.invalidate(org.id);
 
     await expect(
-      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('BRANCHES'))),
+      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('BRANCHES', org.id))),
     ).rejects.toThrow(/SUSPENDED/);
 
     await expect(
-      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('EMPLOYEES'))),
+      h.runAs({ organizationId: org.id }, () => guard.canActivate(ctxFor('EMPLOYEES', org.id))),
     ).rejects.toThrow(/SUSPENDED/);
   });
 
@@ -140,8 +141,8 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
     cache.invalidate(org.id);
 
     await h.runAs({ organizationId: org.id }, async () => {
-      expect(await guard.canActivate(ctxFor('BRANCHES'))).toBe(true);
-      expect(await guard.canActivate(ctxFor('EMPLOYEES'))).toBe(true);
+      expect(await guard.canActivate(ctxFor('BRANCHES', org.id))).toBe(true);
+      expect(await guard.canActivate(ctxFor('EMPLOYEES', org.id))).toBe(true);
     });
   });
 });

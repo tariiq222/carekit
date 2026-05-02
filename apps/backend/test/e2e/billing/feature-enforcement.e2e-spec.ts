@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 import { FeatureGuard } from '../../../src/modules/platform/billing/feature.guard';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
-import { TenantContextService } from '../../../src/common/tenant/tenant-context.service';
 import { REQUIRE_FEATURE_KEY } from '../../../src/modules/platform/billing/feature.decorator';
 import { FEATURE_KEY_MAP } from '../../../src/modules/platform/billing/feature-key-map';
 import { FeatureNotEnabledException } from '../../../src/modules/platform/billing/feature-not-enabled.exception';
@@ -72,7 +71,6 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     guard = new FeatureGuard(
       h.app.get(Reflector),
       h.prisma,
-      h.app.get(TenantContextService),
       h.app.get(SubscriptionCacheService),
       h.app.get(UsageCounterService),
     );
@@ -88,12 +86,15 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     }
   });
 
-  function ctxFor(featureKey: FeatureKey): ExecutionContext {
+  function ctxFor(featureKey: FeatureKey, organizationId: string): ExecutionContext {
     const handler = function () {}; // marker fn — reflector attaches metadata by reference
     Reflect.defineMetadata(REQUIRE_FEATURE_KEY, featureKey, handler);
     return {
       getHandler: () => handler,
       getClass: () => class {},
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { organizationId } }),
+      }),
     } as unknown as ExecutionContext;
   }
 
@@ -104,13 +105,13 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
 
     await h.runAs({ organizationId: org.id }, async () => {
       // 1. Confirms it rejects with FeatureNotEnabledException
-      await expect(guard.canActivate(ctxFor(featureKey))).rejects.toBeInstanceOf(
+      await expect(guard.canActivate(ctxFor(featureKey, org.id))).rejects.toBeInstanceOf(
         FeatureNotEnabledException,
       );
 
       // 2. Confirms the response body has the canonical shape
       try {
-        await guard.canActivate(ctxFor(featureKey));
+        await guard.canActivate(ctxFor(featureKey, org.id));
       } catch (e: unknown) {
         const err = e as FeatureNotEnabledException;
         expect(err.getResponse()).toMatchObject({
@@ -161,14 +162,14 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
 
   it('BASIC plan ALLOWS EMAIL_TEMPLATES (email_templates: true)', async () => {
     await h.runAs({ organizationId: org.id }, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.EMAIL_TEMPLATES));
+      const result = await guard.canActivate(ctxFor(FeatureKey.EMAIL_TEMPLATES, org.id));
       expect(result).toBe(true);
     });
   });
 
   it('BASIC plan ALLOWS INTAKE_FORMS (intake_forms: true)', async () => {
     await h.runAs({ organizationId: org.id }, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.INTAKE_FORMS));
+      const result = await guard.canActivate(ctxFor(FeatureKey.INTAKE_FORMS, org.id));
       expect(result).toBe(true);
     });
   });
@@ -227,7 +228,7 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
 
     try {
       await h.runAs({ organizationId: proOrg.id }, async () => {
-        const result = await guard.canActivate(ctxFor(FeatureKey.RECURRING_BOOKINGS));
+        const result = await guard.canActivate(ctxFor(FeatureKey.RECURRING_BOOKINGS, proOrg.id));
         expect(result).toBe(true);
       });
     } finally {
