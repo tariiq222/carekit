@@ -785,4 +785,60 @@ describe('GetMyFeaturesHandler', () => {
       expect(result.features['maxEmployees'].currentCount).toBe(4);
     });
   });
+
+  // ── 8. Org-override precedence: FORCE_ON / FORCE_OFF / INHERIT matrix ──────
+
+  describe('precedence — org override beats plan default', () => {
+    /**
+     * Full matrix: planDefault × overrideMode → effective enabled value.
+     *
+     * Handler logic (from source):
+     *   if (orgOverride) enabled = orgOverride.enabled
+     *   else if (platformFlag) enabled = platformFlag.enabled && allowedPlans check
+     *   else enabled = derived from plan limits
+     *
+     * INHERIT is represented as "no org-scoped row" (findMany returns nothing
+     * with organizationId matching current org).
+     */
+    const matrix: Array<[boolean, 'INHERIT' | 'FORCE_ON' | 'FORCE_OFF', boolean]> = [
+      [true,  'INHERIT',   true],
+      [true,  'FORCE_ON',  true],
+      [true,  'FORCE_OFF', false],
+      [false, 'INHERIT',   false],
+      [false, 'FORCE_ON',  true],
+      [false, 'FORCE_OFF', false],
+    ];
+
+    it.each(matrix)(
+      'plan=%s + override=%s → effective=%s',
+      async (planDefault, overrideMode, expectedEnabled) => {
+        const prisma = buildPrisma();
+
+        // Inject the override row (or absence of it) into findMany
+        if (overrideMode === 'INHERIT') {
+          // No org-scoped override row — findMany returns empty array
+          prisma.featureFlag.findMany.mockResolvedValue([]);
+        } else {
+          // Org-scoped override row pinning the value
+          prisma.featureFlag.findMany.mockResolvedValue([
+            makeOrgOverride('coupons', overrideMode === 'FORCE_ON'),
+          ]);
+        }
+
+        // Build plan limits with `coupons` matching planDefault
+        const limits = { ...BASIC_LIMITS, coupons: planDefault };
+
+        const handler = new GetMyFeaturesHandler(
+          prisma as never,
+          buildTenant() as never,
+          buildCache(makeCached('BASIC', limits)) as never,
+          buildCounters() as never,
+        );
+
+        const result = await handler.execute();
+
+        expect(result.features['coupons']).toMatchObject({ enabled: expectedEnabled });
+      },
+    );
+  });
 });
