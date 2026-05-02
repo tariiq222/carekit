@@ -21,8 +21,8 @@ const makeCtx = (method = 'POST', url = '/api/v1/dashboard/bookings') =>
         user: { id: 'user-1', email: 'test@example.com' },
       }),
     }),
-    getHandler: () => ({ name: 'handle' }),
-    getClass: () => ({ name: 'CreateBookingHandler' }),
+    getHandler: () => ({ name: 'CreateBookingHandler' }),
+    getClass: () => ({ name: 'DashboardBookingsController' }),
   }) as unknown as ExecutionContext;
 
 const makeHandler = (value: unknown = { id: 'entity-1' }, fail = false): CallHandler => ({
@@ -160,8 +160,8 @@ describe('AuditInterceptor', () => {
           socket: { remoteAddress: '127.0.0.1' },
         }),
       }),
-      getHandler: () => ({ name: 'handle' }),
-      getClass: () => ({ name: 'DeleteCouponHandler' }),
+      getHandler: () => ({ name: 'DeleteCouponHandler' }),
+      getClass: () => ({ name: 'DashboardFinanceController' }),
     } as unknown as ExecutionContext;
     interceptor.intercept(deleteCtx, makeHandler(null)).subscribe({
       next: () => {
@@ -190,8 +190,8 @@ describe('AuditInterceptor', () => {
           socket: { remoteAddress: '127.0.0.1' },
         }),
       }),
-      getHandler: () => ({ name: 'handle' }),
-      getClass: () => ({ name: 'UpdateUserHandler' }),
+      getHandler: () => ({ name: 'UpdateUserHandler' }),
+      getClass: () => ({ name: 'DashboardIdentityController' }),
     } as unknown as ExecutionContext;
     interceptor.intercept(ctx, makeHandler({ id: 'user-1' })).subscribe({
       next: () => {
@@ -218,7 +218,7 @@ describe('AuditInterceptor', () => {
               metadata: expect.objectContaining({
                 httpMethod: 'POST',
                 path: '/api/v1/dashboard/bookings',
-                handlerName: 'handle',
+                handlerName: 'CreateBookingHandler',
               }),
             }),
           }),

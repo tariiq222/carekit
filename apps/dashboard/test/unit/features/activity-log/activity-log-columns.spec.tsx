@@ -10,6 +10,7 @@ const t = (k: string) => k
 const baseLog: ActivityLog = {
   id: "log-1",
   userId: "u-1",
+  userEmail: "sara.ali@example.com",
   action: "updated",
   module: "bookings",
   resourceId: "bk-abcdef12345",

@@ -87,6 +87,7 @@ function normalizeActivityLog(log: BackendActivityLog): ActivityLog {
   return {
     id: log.id,
     userId: log.userId ?? null,
+    userEmail: log.userEmail ?? log.user?.email ?? null,
     action: normalizeActionForDashboard(log.action),
     module: log.module ?? log.entity ?? "",
     resourceId: log.resourceId ?? log.entityId ?? null,
