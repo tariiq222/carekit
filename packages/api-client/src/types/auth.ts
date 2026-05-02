@@ -29,6 +29,21 @@ export interface UserPayload {
   // Null until completed; the dashboard layout uses it to redirect new
   // tenants to /onboarding.
   onboardingCompletedAt: string | null
+  // Per-membership-profile: per-org display profile resolved from the
+  // active Membership row. UIs should prefer activeMembership.{displayName,
+  // jobTitle, avatarUrl} over the global User counterparts when present.
+  activeMembership: {
+    id: string
+    organizationId: string
+    role: string
+    verticalSlug: string | null
+    displayName: string | null
+    jobTitle: string | null
+    avatarUrl: string | null
+  } | null
+  // Sticky-org fallback: organizationId the user last operated under. Login
+  // resolves to this when it still maps to an active membership.
+  lastActiveOrganizationId?: string | null
   createdAt?: string
   updatedAt?: string
 }

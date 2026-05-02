@@ -24,6 +24,10 @@ export interface Membership {
   organizationId: string
   role: string
   isActive: boolean
+  // Per-org display profile (overrides User defaults within this org).
+  displayName: string | null
+  jobTitle: string | null
+  avatarUrl: string | null
   organization: MembershipOrganization
 }
 
