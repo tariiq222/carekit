@@ -287,3 +287,31 @@ The standalone `[employeeId]` index is therefore **logically redundant** regardl
 | SmsDelivery(status, createdAt) | YES | Replaces two single-col indexes, reduces filter waste |
 | NotificationDeliveryLog(status, createdAt) | YES | Same pattern as SmsDelivery |
 | DROP Booking(employeeId) | YES | Leading-prefix makes it logically redundant |
+
+---
+
+## Phase 3: Post-migration verification
+
+**Dev DB note:** The migration SQL uses `CREATE INDEX CONCURRENTLY` throughout. On this dev DB,
+the migration was registered with `prisma migrate resolve --applied` (the dev DB has drift from
+other in-flight branches). The DDL will execute on the next clean deploy via `prisma migrate deploy`.
+
+**booking_id_org** (DB-05 on Booking) was created manually on dev before the permission block,
+confirming the CONCURRENTLY syntax is valid on this PostgreSQL 16.13 instance.
+
+**Expected plan changes after full deploy:**
+
+| Query | Before | Expected After |
+|---|---|---|
+| Notification recipientId + isRead + createdAt | Bitmap Heap Scan, 34% filter waste | Index Scan on (recipientId, isRead, createdAt) |
+| Invoice organizationId + status IN + dueAt ORDER | Sort + Bitmap Heap Scan, 30ms | Index Scan on (organizationId, status, dueAt) |
+| ActivityLog organizationId + occurredAt range | Index Scan on (occurredAt) + filter | Index Scan on (organizationId, occurredAt) |
+| SmsDelivery status IN + ORDER BY createdAt | Index Scan on (createdAt) + filter | Index Scan on (status, createdAt) |
+| NotificationDeliveryLog status IN + ORDER BY createdAt | Index Scan on (createdAt) + filter | Index Scan on (status, createdAt) |
+
+**DB-07 verification:** Once the migration runs on a clean DB, confirm via:
+```sql
+SELECT indexrelname FROM pg_indexes WHERE tablename = 'Booking' ORDER BY indexrelname;
+```
+`Booking_employeeId_idx` must be absent; `Booking_employeeId_scheduledAt_idx` and
+`Booking_employeeId_endsAt_idx` must be present.
