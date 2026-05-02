@@ -1,6 +1,6 @@
 # Deqah Backend — Conventions
 
-This file provides guidance to Claude Code when working inside `apps/backend`. Read the root [CLAUDE.md](../../CLAUDE.md) first for stack-wide rules (single-organization mode, immutable migrations, golden rules).
+This file provides guidance to Claude Code when working inside `apps/backend`. Read the root [CLAUDE.md](../../CLAUDE.md) first for stack-wide rules (multi-tenancy, immutable migrations, golden rules).
 
 ## Architecture: Domain Clusters + Vertical Slices
 
@@ -39,7 +39,7 @@ src/
 | `org-config/` | branches, categories, departments, business-hours |
 | `org-experience/` | branding, intake-forms, ratings, services, org-settings |
 | `integrations/` | zoom (encrypted creds get/upsert/test), public branding |
-| `platform/` | admin (super-admin), billing, verticals, feature-flags, problem-reports |
+| `platform/` | admin (super-admin), billing, verticals, feature-flags, problem-reports, tenant-registration |
 | `dashboard/` | get-dashboard-stats |
 
 ### Vertical slice anatomy
@@ -98,6 +98,7 @@ npx jest -t "partial test name"      # By test name
 npm run prisma:migrate               # Apply pending migrations (never `db push`)
 npm run seed                         # Seed demo data
 npm run prisma:studio                # GUI
+npm run openapi:build-and-snapshot   # Rebuild openapi.json snapshot — commit alongside any endpoint change
 ```
 
 ## Comms cluster — SMS (SaaS-02g-sms)

@@ -29,4 +29,14 @@ describe('CaslAbilityFactory', () => {
     expect(ability.can('manage', 'Invoice')).toBe(true);
     expect(ability.can('manage', 'Payment')).toBe(true);
   });
+
+  it('grants full tenant-scoped permissions for OWNER (mirrors ADMIN)', () => {
+    const ability = factory.buildForUser({ role: 'OWNER', customRole: null });
+    expect(ability.can('manage', 'User')).toBe(true);
+    expect(ability.can('manage', 'Booking')).toBe(true);
+    expect(ability.can('manage', 'Setting')).toBe(true);
+    expect(ability.can('manage', 'Branding')).toBe(true);
+    // OWNER does NOT get platform-wide 'manage all' — that's SUPER_ADMIN only
+    expect(ability.can('manage', 'all')).toBe(false);
+  });
 });

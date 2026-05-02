@@ -33,12 +33,22 @@ export class RefreshTokenHandler {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
+    // Resolve current membership role for the org on the refresh token so
+    // the new JWT carries an up-to-date membershipRole claim.
+    const orgId = matched.organizationId ?? DEFAULT_ORGANIZATION_ID;
+    const membership = await this.prisma.membership.findUnique({
+      where: { userId_organizationId: { userId: cmd.userId, organizationId: orgId } },
+      select: { id: true, role: true },
+    });
+
     // Carry the tenant through the refresh cycle. DEFAULT_ORGANIZATION_ID is
     // the safety net for tokens issued before the SaaS-02a backfill — should
     // be zero in prod once the backfill migration runs.
     return this.tokens.issueTokenPair(user, {
-      organizationId: matched.organizationId ?? DEFAULT_ORGANIZATION_ID,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      organizationId: orgId,
+      membershipId: membership?.id,
+      membershipRole: membership?.role ?? undefined,
+      isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }
 }

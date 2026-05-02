@@ -16,20 +16,69 @@ import { TenantContextService } from '../tenant/tenant-context.service';
 const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
 /**
- * Derives the entity name from a handler class name.
- *
- * @example
- *   CreateBookingHandler  -> 'Booking'
- *   UpdateUserHandler    -> 'User'
- *   DeleteCouponHandler  -> 'Coupon'
- *   PatchEmployeeHandler  -> 'Employee'
+ * Derives the entity name from a handler class name (e.g. CreateBookingHandler).
  */
 export function deriveEntityFromHandler(handlerClassName: string): string {
   const match = handlerClassName.match(/^(Create|Update|Delete|Patch)(\w+)/);
   if (!match) return 'Unknown';
-  // Strip trailing 'Handler' suffix (e.g. 'BookingHandler' -> 'Booking')
   return match[2].replace(/Handler$/, '');
 }
+
+/**
+ * Derives the entity name from a controller class name by stripping common
+ * audience prefixes/suffixes (e.g. DashboardBookingsController -> 'Bookings').
+ */
+export function deriveEntityFromController(controllerClassName: string): string {
+  const stripped = controllerClassName
+    .replace(/Controller$/, '')
+    .replace(/^(Dashboard|Mobile|MobileClient|MobileEmployee|Public|Admin)/, '');
+  return stripped || 'Unknown';
+}
+
+/**
+ * Derives the entity name from a request path
+ * (e.g. /api/v1/dashboard/bookings/123 -> 'bookings').
+ */
+export function deriveEntityFromPath(path: string): string {
+  const cleaned = path.split('?')[0].replace(/^\/+|\/+$/g, '');
+  const segments = cleaned.split('/').filter(Boolean);
+  // Skip 'api', version (v1, v2…), and audience tokens to reach the resource.
+  const SKIP = new Set([
+    'api',
+    'dashboard',
+    'mobile',
+    'client',
+    'employee',
+    'public',
+    'admin',
+  ]);
+  for (const seg of segments) {
+    if (/^v\d+$/i.test(seg)) continue;
+    if (SKIP.has(seg.toLowerCase())) continue;
+    return seg;
+  }
+  return 'Unknown';
+}
+
+/** Resolves the most specific entity name available from controller/handler/path. */
+export function resolveEntity(
+  controllerName: string,
+  handlerName: string,
+  path: string,
+): string {
+  const fromHandler = deriveEntityFromHandler(handlerName);
+  if (fromHandler !== 'Unknown') return fromHandler;
+  const fromController = deriveEntityFromController(controllerName);
+  if (fromController && fromController !== 'Unknown') return fromController;
+  return deriveEntityFromPath(path);
+}
+
+const METHOD_VERBS: Record<string, string> = {
+  POST: 'Created',
+  PATCH: 'Updated',
+  PUT: 'Updated',
+  DELETE: 'Deleted',
+};
 
 /**
  * Maps HTTP method to ActivityAction.
@@ -129,10 +178,10 @@ export class AuditInterceptor implements NestInterceptor {
 
     const handlerName = ctx.getHandler().name;
     const controllerName = ctx.getClass().name;
-    const entity = deriveEntityFromHandler(controllerName);
+    const path = req.originalUrl ?? req.url;
+    const entity = resolveEntity(controllerName, handlerName, path);
     const action = mapMethodToAction(method);
     const { userId, userEmail } = extractUserFromContext(req);
-    const path = req.originalUrl ?? req.url;
     const ipAddress = req.ip ?? req.socket?.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
@@ -227,6 +276,8 @@ function extractEntityId(response: unknown): string | undefined {
 
 /** Human-readable description for the activity log. */
 function buildDescription(method: string, entity: string, entityId?: string): string {
-  const id = entityId ? ` (${entityId})` : '';
-  return `${method} ${entity}${id}`;
+  const verb = METHOD_VERBS[method] ?? method;
+  const noun = entity && entity !== 'Unknown' ? entity : 'resource';
+  const id = entityId ? ` #${entityId.slice(0, 8)}` : '';
+  return `${verb} ${noun}${id}`;
 }

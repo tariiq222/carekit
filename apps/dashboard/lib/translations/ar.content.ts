@@ -55,18 +55,6 @@ export const arContent: Record<string, string> = {
   "content.cards.iconPlaceholder": "اختر أيقونة",
   "content.cards.cardHeading": "البطاقة {index} من {total}",
 
-  // — Legal / Privacy Policy page —
-  "content.landing.section.legal.title": "سياسة الخصوصية",
-  "content.landing.section.legal.desc": "تعديل نص سياسة الخصوصية بالعربي والإنجليزي",
-  "content.legal.title": "سياسة الخصوصية",
-  "content.legal.description": "تعديل سياسة الخصوصية — التغييرات تنعكس على التطبيق والموقع فوراً",
-  "content.legal.tab.privacy": "سياسة الخصوصية",
-  "content.legal.privacy.arLabel": "النص العربي",
-  "content.legal.privacy.enLabel": "English Text",
-  "content.legal.privacy.lastUpdated": "آخر تحديث",
-  "content.legal.privacy.never": "لم يُحدَّث بعد",
-  "content.legal.privacy.resetToDefault": "استعادة النص الافتراضي",
-
   // — Section intros form —
   "content.intros.field.tag": "الوسم",
   "content.intros.field.titlePrefix": "بداية العنوان",

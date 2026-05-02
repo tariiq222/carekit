@@ -13,7 +13,6 @@ import { WorkingHoursTab } from "@/components/features/settings/working-hours-ta
 import { SettingsPaymentTab } from "@/components/features/settings/settings-payment-tab"
 import { SettingsIntegrationsTab } from "@/components/features/settings/settings-integrations-tab"
 import { EmailTemplatesTab } from "@/components/features/settings/email-templates-tab"
-import { EntityTab } from "@/components/features/settings/entity-tab"
 import { LegalContentTab } from "@/components/features/settings/legal-content-tab"
 
 export default function SettingsPage() {
@@ -28,7 +27,6 @@ export default function SettingsPage() {
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="general">{t("settings.tabs.general")}</TabsTrigger>
-            <TabsTrigger value="entity">{t("settings.tabs.entity")}</TabsTrigger>
             <TabsTrigger value="booking">{t("settings.tabs.booking")}</TabsTrigger>
             <TabsTrigger value="cancellation">{t("settings.tabs.cancellation")}</TabsTrigger>
             <TabsTrigger value="hours">{t("settings.tabs.hours")}</TabsTrigger>
@@ -42,9 +40,6 @@ export default function SettingsPage() {
 
         <TabsContent value="general" className="mt-4">
           <GeneralTab />
-        </TabsContent>
-        <TabsContent value="entity" className="mt-4">
-          <EntityTab />
         </TabsContent>
         <TabsContent value="booking" className="mt-4">
           <BookingTab t={t} />

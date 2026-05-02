@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest"
 
 import {
   overviewNav,
-  organizationNav,
+  operationsNav,
+  peopleNav,
   financeNav,
-  toolsNav,
-  adminNav,
+  catalogNav,
+  systemNav,
   navGroups,
 } from "@/components/sidebar-config"
 // Sidebar nav uses the tiered FeatureKey enum (single source of truth for
@@ -18,18 +19,14 @@ describe("SidebarConfig — groups added", () => {
   // Collect every nav item href from all nav groups
   const allNavItems = [
     ...overviewNav,
-    ...organizationNav,
+    ...operationsNav,
+    ...peopleNav,
     ...financeNav,
-    ...toolsNav,
-    ...adminNav,
+    ...catalogNav,
+    ...systemNav,
   ]
 
   const allHrefs = allNavItems.map((item) => item.href)
-
-  it("does not contain a /groups nav item (groups feature removed)", () => {
-    const groupsItem = organizationNav.find((item) => item.href === "/groups")
-    expect(groupsItem).toBeUndefined()
-  })
 
   it("each nav item with featureFlag uses a key from FeatureKey", () => {
     const itemsWithFlag = allNavItems.filter((item) => item.featureFlag !== undefined)
@@ -43,40 +40,48 @@ describe("SidebarConfig — groups added", () => {
     expect(duplicates).toHaveLength(0)
   })
 
-  it("navGroups has all 5 sections", () => {
-    expect(navGroups).toHaveLength(5)
+  it("navGroups has all 6 sections", () => {
+    expect(navGroups).toHaveLength(6)
     expect(navGroups.map((g) => g.labelKey)).toEqual([
       "nav.overview",
-      "nav.organization",
+      "nav.operations",
+      "nav.people",
       "nav.finance",
-      "nav.tools",
-      "nav.admin",
+      "nav.catalog",
+      "nav.system",
     ])
   })
 
-  it("organizationNav contains expected items", () => {
+  it("catalogNav contains expected items", () => {
     expect(allHrefs).toContain("/services")
+    expect(allHrefs).toContain("/categories")
+    expect(allHrefs).toContain("/departments")
+    expect(allHrefs).toContain("/branches")
+    expect(allHrefs).toContain("/intake-forms")
+  })
+
+  it("operationsNav contains expected items", () => {
     expect(allHrefs).toContain("/bookings")
     expect(allHrefs).toContain("/clients")
-    expect(allHrefs).toContain("/employees")
-    expect(allHrefs).toContain("/branches")
+    expect(allHrefs).toContain("/ratings")
+    expect(allHrefs).toContain("/contact-messages")
   })
 
   it("featureFlag keys are correct for all gated items", () => {
-    // branches → branches (FeatureKey.BRANCHES)
-    const branches = organizationNav.find((i) => i.href === "/branches")
+    // branches → FeatureKey.BRANCHES (now in catalogNav)
+    const branches = catalogNav.find((i) => i.href === "/branches")
     expect(branches?.featureFlag).toBe(FeatureKey.BRANCHES)
 
-    // intakeForms → intake_forms (FeatureKey.INTAKE_FORMS)
-    const intakeForms = organizationNav.find((i) => i.href === "/intake-forms")
+    // intakeForms → FeatureKey.INTAKE_FORMS (now in catalogNav)
+    const intakeForms = catalogNav.find((i) => i.href === "/intake-forms")
     expect(intakeForms?.featureFlag).toBe(FeatureKey.INTAKE_FORMS)
 
-    // coupons → coupons (FeatureKey.COUPONS)
+    // coupons → FeatureKey.COUPONS (financeNav)
     const coupons = financeNav.find((i) => i.href === "/coupons")
     expect(coupons?.featureFlag).toBe(FeatureKey.COUPONS)
 
-    // chatbot → ai_chatbot (FeatureKey.AI_CHATBOT)
-    const chatbot = toolsNav.find((i) => i.href === "/chatbot")
+    // chatbot → FeatureKey.AI_CHATBOT (now in systemNav)
+    const chatbot = systemNav.find((i) => i.href === "/chatbot")
     expect(chatbot?.featureFlag).toBe(FeatureKey.AI_CHATBOT)
   })
 })

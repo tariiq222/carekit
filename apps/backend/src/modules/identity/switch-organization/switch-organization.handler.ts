@@ -30,7 +30,7 @@ export class SwitchOrganizationHandler {
           organizationId: cmd.targetOrganizationId,
         },
       },
-      select: { id: true, organizationId: true, isActive: true },
+      select: { id: true, organizationId: true, isActive: true, role: true },
     });
 
     if (!membership) {
@@ -57,10 +57,18 @@ export class SwitchOrganizationHandler {
       data: { revokedAt: new Date() },
     });
 
+    // Sticky-org: remember this choice so future logins land on the same
+    // organization without forcing the user to re-pick.
+    await this.prisma.user.update({
+      where: { id: cmd.userId },
+      data: { lastActiveOrganizationId: membership.organizationId },
+    });
+
     return this.tokens.issueTokenPair(user, {
       organizationId: membership.organizationId,
       membershipId: membership.id,
-      isSuperAdmin: user.role === 'SUPER_ADMIN',
+      membershipRole: membership.role ?? undefined,
+      isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }
 }

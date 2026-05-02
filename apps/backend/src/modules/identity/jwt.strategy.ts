@@ -40,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       sub: user.id,
       email: user.email,
       role: user.role,
+      membershipRole: payload.membershipRole, // phase-A: now available on req.user
       customRoleId: user.customRoleId,
       permissions: ability.rules.flatMap((r) => {
         const actions = Array.isArray(r.action) ? r.action : [r.action];
@@ -49,7 +50,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // SaaS-01 — tenant claims passed through from JWT. Undefined in off/legacy tokens.
       organizationId: payload.organizationId,
       membershipId: payload.membershipId,
-      isSuperAdmin: payload.isSuperAdmin === true || user.role === 'SUPER_ADMIN',
+      isSuperAdmin: payload.isSuperAdmin === true || (user.isSuperAdmin ?? false),
       scope: payload.scope,
       impersonationSessionId: payload.impersonationSessionId,
     };

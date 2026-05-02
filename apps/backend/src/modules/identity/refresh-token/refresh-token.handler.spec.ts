@@ -23,6 +23,7 @@ describe('RefreshTokenHandler', () => {
           useValue: {
             refreshToken: { findMany: jest.fn(), update: jest.fn() },
             user: { findUnique: jest.fn() },
+            membership: { findUnique: jest.fn().mockResolvedValue({ id: 'mem-1', role: 'ADMIN' }) },
           },
         },
         { provide: TokenService, useValue: { issueTokenPair: jest.fn() } },
@@ -88,12 +89,12 @@ describe('RefreshTokenHandler', () => {
     );
   });
 
-  it('marks isSuperAdmin=true when user role is SUPER_ADMIN', async () => {
+  it('marks isSuperAdmin=true when user.isSuperAdmin is true', async () => {
     prisma.refreshToken.findMany.mockResolvedValue([
       { id: 'rt-1', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
     ]);
     jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'SUPER_ADMIN', customRoleId: null, customRole: null, isActive: true });
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'SUPER_ADMIN', isSuperAdmin: true, customRoleId: null, customRole: null, isActive: true });
     prisma.refreshToken.update.mockResolvedValue({});
     tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
 

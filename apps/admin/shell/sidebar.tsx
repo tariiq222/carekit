@@ -15,6 +15,7 @@ const ITEMS: Array<{ href: string; labelKey: string }> = [
   { href: '/metrics', labelKey: 'nav.metrics' },
   { href: '/audit-log', labelKey: 'nav.auditLog' },
   { href: '/impersonation-sessions', labelKey: 'nav.impersonation' },
+  { href: '/notifications', labelKey: 'nav.notifications' },
 ];
 
 export function Sidebar() {

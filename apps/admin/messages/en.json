@@ -9,7 +9,44 @@
     "billing": "Billing",
     "metrics": "Metrics",
     "auditLog": "Audit log",
-    "impersonation": "Impersonation sessions"
+    "impersonation": "Impersonation sessions",
+    "notifications": "Notification Delivery"
+  },
+  "notifications": {
+    "title": "Notification Delivery Log",
+    "description": "Monitor outbound notification delivery across all channels and organizations. Auto-refreshes every 30 seconds.",
+    "stats": {
+      "total": "Total",
+      "sent": "Sent (page)",
+      "failed": "Failed (page)",
+      "pending": "Pending (page)"
+    },
+    "filters": {
+      "organizationId": "Organization ID",
+      "status": "Status",
+      "channel": "Channel",
+      "reset": "Reset"
+    },
+    "error": "Failed to load delivery log.",
+    "pagination": {
+      "summary": "Page {page} of {totalPages} · {total} total",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "table": {
+      "type": "Type",
+      "channel": "Channel",
+      "status": "Status",
+      "priority": "Priority",
+      "organization": "Organization",
+      "recipient": "Recipient",
+      "address": "Address",
+      "attempts": "Attempts",
+      "sentAt": "Sent At",
+      "error": "Error",
+      "created": "Created",
+      "empty": "No delivery log entries match the current filters."
+    }
   },
   "organizations": {
     "title": "Organizations",

@@ -10,7 +10,7 @@ export class SmsChannelAdapter implements NotificationChannel {
 
   constructor(private readonly authentica: AuthenticaClient) {}
 
-  async send(identifier: string, code: string): Promise<void> {
+  async send(identifier: string, code: string, _organizationId?: string): Promise<void> {
     if (!this.authentica.isConfigured()) {
       this.logger.warn(`SmsChannelAdapter: Authentica not configured. OTP to ${identifier} will NOT be sent.`);
       return;
