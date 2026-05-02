@@ -1,5 +1,7 @@
 import { DashboardOpsController } from './ops.controller';
 import { ReportFormat } from '@prisma/client';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 const ORG_ID = 'org-00000000-0000-0000-0000-000000000001';
@@ -53,5 +55,29 @@ describe('DashboardOpsController', () => {
     expect(listActivity.execute).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, organizationId: ORG_ID }),
     );
+  });
+});
+
+describe('@RequireFeature metadata — ADVANCED_REPORTS', () => {
+  it.each([
+    'generateReportEndpoint',
+  ])('annotates %s with FeatureKey.ADVANCED_REPORTS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOpsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.ADVANCED_REPORTS);
+  });
+});
+
+describe('@RequireFeature metadata — ACTIVITY_LOG', () => {
+  it.each([
+    'listActivityEndpoint',
+  ])('annotates %s with FeatureKey.ACTIVITY_LOG', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOpsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.ACTIVITY_LOG);
   });
 });
