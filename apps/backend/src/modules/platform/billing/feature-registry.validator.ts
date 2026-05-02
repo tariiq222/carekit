@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FeatureKey } from "@deqah/shared/constants/feature-keys";
+import { FEATURE_CATALOG } from "@deqah/shared";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
 import { DEFAULT_PLAN_LIMITS } from "./plan-limits.zod";
 
@@ -37,6 +38,13 @@ export class FeatureRegistryValidator {
           `FeatureKey "${key}" maps to "${mapped}", which is not a key ` +
             "on DEFAULT_PLAN_LIMITS (plan-limits.zod.ts). Add it to the " +
             "schema or fix the mapping.",
+        );
+      }
+
+      if (!(FEATURE_CATALOG as Record<string, unknown>)[key]) {
+        errors.push(
+          `[boot-validator] Missing FEATURE_CATALOG entry for "${key}" ` +
+            "(packages/shared/constants/feature-catalog.ts).",
         );
       }
     }
