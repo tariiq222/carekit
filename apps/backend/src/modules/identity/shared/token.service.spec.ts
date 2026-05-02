@@ -104,6 +104,25 @@ describe('TokenService.issueTokenPair', () => {
     );
   });
 
+  it('should include membershipRole in JWT payload when membership is provided', async () => {
+    const jwt = buildJwt();
+    const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
+    await service.issueTokenPair(
+      { id: 'u1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null },
+      { organizationId: 'org1', membershipId: 'm1', membershipRole: 'ADMIN' },
+    );
+    const payload = jwt.sign.mock.calls[0][0] as { membershipRole?: string };
+    expect(payload.membershipRole).toBe('ADMIN');
+  });
+
+  it('membershipRole is undefined in JWT when not provided in tenantClaims', async () => {
+    const jwt = buildJwt();
+    const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);
+    await service.issueTokenPair(mockUser, { organizationId: 'org-1' });
+    const payload = jwt.sign.mock.calls[0][0] as { membershipRole?: string };
+    expect(payload.membershipRole).toBeUndefined();
+  });
+
   it('JWT payload permissions defaults to [] for users with no customRole', async () => {
     const jwt = buildJwt();
     const service = new TokenService(jwt as never, buildConfig() as never, buildPrisma() as never);

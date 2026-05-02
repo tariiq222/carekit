@@ -15,16 +15,19 @@ export class GetCurrentUserHandler {
     if (!user) throw new NotFoundException('User not found');
 
     // Resolve active membership so /auth/me carries organizationId without
-    // forcing the caller to decode the JWT. Same ordering as LoginHandler.
-    // Also expose the org's vertical slug so client UIs (dashboard, mobile)
-    // can drive useTerminology() without a second round-trip.
-    const membership = await this.prisma.membership.findFirst({
+    // forcing the caller to decode the JWT. Prefer lastActiveOrganizationId
+    // when it still maps to an active membership; otherwise fall back to the
+    // canonical ordering (role asc → createdAt asc) shared with LoginHandler.
+    const activeMemberships = await this.prisma.membership.findMany({
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
         organizationId: true,
         role: true,
+        displayName: true,
+        jobTitle: true,
+        avatarUrl: true,
         organization: {
           select: {
             onboardingCompletedAt: true,
@@ -33,6 +36,12 @@ export class GetCurrentUserHandler {
         },
       },
     });
+
+    const sticky =
+      user.lastActiveOrganizationId
+        ? activeMemberships.find((m) => m.organizationId === user.lastActiveOrganizationId) ?? null
+        : null;
+    const membership = sticky ?? activeMemberships[0] ?? null;
 
     const [fallbackFirstName = '', ...fallbackRest] = (user.name ?? '').trim().split(/\s+/);
     const firstName = user.firstName ?? fallbackFirstName;
@@ -51,6 +60,9 @@ export class GetCurrentUserHandler {
             organizationId: membership.organizationId,
             role: membership.role,
             verticalSlug: membership.organization?.vertical?.slug ?? null,
+            displayName: membership.displayName ?? null,
+            jobTitle: membership.jobTitle ?? null,
+            avatarUrl: membership.avatarUrl ?? null,
           }
         : null,
     };

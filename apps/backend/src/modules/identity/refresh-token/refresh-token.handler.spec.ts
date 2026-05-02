@@ -23,6 +23,7 @@ describe('RefreshTokenHandler', () => {
           useValue: {
             refreshToken: { findMany: jest.fn(), update: jest.fn() },
             user: { findUnique: jest.fn() },
+            membership: { findUnique: jest.fn().mockResolvedValue({ id: 'mem-1', role: 'ADMIN' }) },
           },
         },
         { provide: TokenService, useValue: { issueTokenPair: jest.fn() } },

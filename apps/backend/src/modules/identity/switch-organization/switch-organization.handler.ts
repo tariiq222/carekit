@@ -30,7 +30,7 @@ export class SwitchOrganizationHandler {
           organizationId: cmd.targetOrganizationId,
         },
       },
-      select: { id: true, organizationId: true, isActive: true },
+      select: { id: true, organizationId: true, isActive: true, role: true },
     });
 
     if (!membership) {
@@ -60,6 +60,7 @@ export class SwitchOrganizationHandler {
     return this.tokens.issueTokenPair(user, {
       organizationId: membership.organizationId,
       membershipId: membership.id,
+      membershipRole: membership.role ?? undefined,
       isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }

@@ -36,12 +36,13 @@ export class LoginHandler {
     const membership = await this.prisma.membership.findFirst({
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, organizationId: true },
+      select: { id: true, organizationId: true, role: true },
     });
 
     return this.tokens.issueTokenPair(user, {
       organizationId: membership?.organizationId ?? DEFAULT_ORGANIZATION_ID,
       membershipId: membership?.id,
+      membershipRole: membership?.role ?? undefined,
       isSuperAdmin: user.isSuperAdmin ?? false,
     });
   }

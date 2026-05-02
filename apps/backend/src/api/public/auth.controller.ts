@@ -105,6 +105,7 @@ export class AuthController {
         avatarUrl: true,
         isActive: true,
         role: true,
+        isSuperAdmin: true,
         customRoleId: true,
         customRole: { include: { permissions: true } },
         createdAt: true,
@@ -186,8 +187,16 @@ export class AuthController {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
+    const orgId = record.organizationId ?? DEFAULT_ORGANIZATION_ID;
+    const membership = await this.prisma.membership.findUnique({
+      where: { userId_organizationId: { userId: user.id, organizationId: orgId } },
+      select: { id: true, role: true },
+    });
+
     const tokens = await this.tokens.issueTokenPair(user, {
-      organizationId: record.organizationId ?? DEFAULT_ORGANIZATION_ID,
+      organizationId: orgId,
+      membershipId: membership?.id,
+      membershipRole: membership?.role ?? undefined,
       isSuperAdmin: user.isSuperAdmin,
     });
     this.setRefreshCookie(res, tokens.refreshToken);

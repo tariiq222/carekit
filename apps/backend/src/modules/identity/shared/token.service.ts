@@ -17,6 +17,8 @@ export interface TokenPair {
 export interface TenantClaims {
   organizationId: string;
   membershipId?: string;
+  /** Per-org role from Membership.role — authoritative for staff users in SaaS multi-tenancy. */
+  membershipRole?: string;
   isSuperAdmin?: boolean;
   scope?: string;
   impersonationSessionId?: string;
@@ -25,7 +27,10 @@ export interface TenantClaims {
 export interface JwtPayload {
   sub: string;
   email: string;
+  /** @deprecated — Use membershipRole for per-org authorization. Kept during Phase A/B rollout. */
   role: string;
+  /** Per-org role from Membership.role (phase-A dual-carry). Undefined in pre-rollout tokens. */
+  membershipRole?: string;
   customRoleId: string | null;
   permissions: Array<{ action: string; subject: string }>;
   features: string[];
@@ -61,7 +66,8 @@ export class TokenService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role,                              // kept for rollout backward compat
+      membershipRole: tenantClaims.membershipRole,  // phase-A dual-carry
       customRoleId: user.customRoleId,
       permissions,
       features: [],
