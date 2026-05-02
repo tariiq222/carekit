@@ -177,6 +177,32 @@ model SmsDelivery {
   @@index([createdAt])
 }
 
+// SaaS-email-provider — per-tenant email provider configuration.
+
+enum EmailProvider {
+  NONE
+  SMTP
+  RESEND
+  SENDGRID
+  MAILCHIMP
+}
+
+model OrganizationEmailConfig {
+  id                    String        @id @default(uuid())
+  organizationId        String        @unique // singleton per org
+  provider              EmailProvider @default(NONE)
+  senderName            String? // e.g. "عيادة الأمل"
+  senderEmail           String? // e.g. "noreply@clinic.com"
+  // Encrypted credential payload (AES-GCM). JSON-stringified provider-specific fields.
+  credentialsCiphertext String? // base64(nonce || tag || ciphertext)
+  lastTestAt            DateTime?
+  lastTestOk            Boolean?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
 model FcmToken {
   id             String   @id @default(uuid())
   organizationId String
@@ -189,4 +215,49 @@ model FcmToken {
   @@unique([clientId, token], name: "fcm_token_per_client")
   @@index([organizationId])
   @@index([clientId])
+}
+
+// Notification delivery log — resilient multi-channel dispatch tracking.
+
+enum DeliveryChannel {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum NotificationPriority {
+  CRITICAL
+  STANDARD
+}
+
+model NotificationDeliveryLog {
+  id             String               @id @default(uuid())
+  organizationId String
+  recipientId    String
+  type           NotificationType
+  priority       NotificationPriority @default(STANDARD)
+  channel        DeliveryChannel
+  status         DeliveryStatus       @default(PENDING)
+  toAddress      String?
+  providerName   String?
+  attempts       Int                  @default(0)
+  lastAttemptAt  DateTime?
+  sentAt         DateTime?
+  errorMessage   String?
+  jobId          String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, type])
+  @@index([createdAt])
 }
