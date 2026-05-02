@@ -28,7 +28,10 @@ describe('SwitchOrganizationHandler', () => {
           provide: PrismaService,
           useValue: {
             membership: { findUnique: jest.fn() },
-            user: { findUnique: jest.fn() },
+            user: {
+              findUnique: jest.fn(),
+              update: jest.fn().mockResolvedValue({}),
+            },
             refreshToken: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
           } as unknown as PrismaService,
         },
@@ -114,6 +117,22 @@ describe('SwitchOrganizationHandler', () => {
       data: { revokedAt: expect.any(Date) },
     });
     expect(tokens.issueTokenPair).toHaveBeenCalled();
+  });
+
+  it('persists target org as User.lastActiveOrganizationId (sticky-org)', async () => {
+    prisma.membership.findUnique.mockResolvedValue({
+      id: 'm-7',
+      organizationId: 'org-g',
+      isActive: true,
+    });
+    prisma.user.findUnique.mockResolvedValue(userBase);
+
+    await handler.execute({ userId: 'user-1', targetOrganizationId: 'org-g' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: { lastActiveOrganizationId: 'org-g' },
+    });
   });
 
   it('propagates SUPER_ADMIN flag', async () => {

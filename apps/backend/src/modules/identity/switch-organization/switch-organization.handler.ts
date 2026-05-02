@@ -57,6 +57,13 @@ export class SwitchOrganizationHandler {
       data: { revokedAt: new Date() },
     });
 
+    // Sticky-org: remember this choice so future logins land on the same
+    // organization without forcing the user to re-pick.
+    await this.prisma.user.update({
+      where: { id: cmd.userId },
+      data: { lastActiveOrganizationId: membership.organizationId },
+    });
+
     return this.tokens.issueTokenPair(user, {
       organizationId: membership.organizationId,
       membershipId: membership.id,
