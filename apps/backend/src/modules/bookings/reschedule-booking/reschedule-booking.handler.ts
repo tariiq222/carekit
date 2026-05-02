@@ -1,5 +1,17 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { BookingStatus, Prisma } from '@prisma/client';
+
+/** Re-map a Postgres exclusion violation (23P01) to a domain 409 conflict. */
+function mapDbConflict(err: unknown): never {
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    err.code === 'P2010' &&
+    (err.meta as Record<string, unknown> | undefined)?.['code'] === '23P01'
+  ) {
+    throw new ConflictException('Employee already has a booking in the new time slot');
+  }
+  throw err;
+}
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
@@ -83,7 +95,7 @@ export class RescheduleBookingHandler {
         ]);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    ).catch(mapDbConflict) as [Awaited<ReturnType<typeof this.prisma.booking.update>>, unknown];
 
     if (booking.zoomMeetingId) {
       // Best effort update
