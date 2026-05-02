@@ -48,12 +48,18 @@ function buildController() {
   const requestPasswordReset = fn({ ok: true });
   const performPasswordReset = fn({ ok: true });
   const updateMembershipProfile = fn({});
+  const uploadMembershipAvatar = fn({ membershipId: 'm-1', avatarUrl: 'https://m/avatar.jpg' });
+  const inviteUser = fn({ invitationId: 'inv-1', status: 'PENDING' as const, expiresAt: new Date() });
+  const acceptInvitation = fn({ membershipId: 'm-1', organizationId: 'org-1', userPreExisting: false });
+  const tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') } as never;
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
     listMemberships as never, switchOrganization as never, config,
     captcha as never, requestPasswordReset as never, performPasswordReset as never,
     updateMembershipProfile as never,
+    uploadMembershipAvatar as never,
+    inviteUser as never, acceptInvitation as never, tenant,
   );
   return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset };
 }

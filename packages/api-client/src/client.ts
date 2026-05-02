@@ -64,10 +64,16 @@ export async function apiRequest<T>(
   if (!config) throw new Error('api-client not initialized')
 
   const token = config.getAccessToken()
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  }
+  // FormData (multipart) MUST set its own Content-Type with the boundary —
+  // omit the JSON CT we'd otherwise default to.
+  const isMultipart =
+    typeof FormData !== 'undefined' && options.body instanceof FormData
+  const headers: Record<string, string> = isMultipart
+    ? { ...(options.headers as Record<string, string>) }
+    : {
+        'Content-Type': 'application/json',
+        ...(options.headers as Record<string, string>),
+      }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   const res = await fetch(`${config.baseUrl}${path}`, { ...options, headers })

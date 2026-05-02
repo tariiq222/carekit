@@ -1,7 +1,9 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
-  Req, Res, Param,
+  Req, Res, Param, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import * as bcrypt from 'bcryptjs';
@@ -27,6 +29,12 @@ import { SwitchOrganizationHandler } from '../../modules/identity/switch-organiz
 import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
 import { UpdateMembershipProfileHandler } from '../../modules/identity/update-membership-profile/update-membership-profile.handler';
 import { UpdateMembershipProfileDto } from '../../modules/identity/update-membership-profile/update-membership-profile.dto';
+import { UploadMembershipAvatarHandler } from '../../modules/identity/update-membership-profile/upload-membership-avatar.handler';
+import { InviteUserHandler } from '../../modules/identity/invite-user/invite-user.handler';
+import { InviteUserDto } from '../../modules/identity/invite-user/invite-user.dto';
+import { AcceptInvitationHandler } from '../../modules/identity/accept-invitation/accept-invitation.handler';
+import { AcceptInvitationDto } from '../../modules/identity/accept-invitation/accept-invitation.dto';
+import { TenantContextService } from '../../common/tenant/tenant-context.service';
 import { RequestPasswordResetHandler } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.handler';
 import { RequestPasswordResetDto } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.dto';
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
@@ -69,6 +77,10 @@ export class AuthController {
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly performPasswordReset: PerformPasswordResetHandler,
     private readonly updateMembershipProfile: UpdateMembershipProfileHandler,
+    private readonly uploadMembershipAvatar: UploadMembershipAvatarHandler,
+    private readonly inviteUser: InviteUserHandler,
+    private readonly acceptInvitation: AcceptInvitationHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   @Post('login')
@@ -318,6 +330,99 @@ export class AuthController {
       displayName: body.displayName,
       jobTitle: body.jobTitle,
       avatarUrl: body.avatarUrl,
+    });
+  }
+
+  @Post('memberships/:id/avatar')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Avatar image for the caller’s membership',
+    schema: {
+      type: 'object',
+      required: ['avatar'],
+      properties: {
+        avatar: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Upload an avatar for the caller’s membership',
+    description:
+      'Per-membership-profile — stores at memberships/{id}/avatar-{ts}.{ext}. ' +
+      'Max 5MB, image/jpeg|png|webp only. Cross-user uploads return 403. The ' +
+      'previous avatar object is intentionally NOT deleted (audit trail).',
+  })
+  @ApiOkResponse({ description: 'Persisted avatar URL' })
+  @ApiResponse({ status: 400, description: 'Invalid mime/size or empty file', type: ApiErrorDto })
+  @ApiResponse({ status: 403, description: 'Caller does not own the membership', type: ApiErrorDto })
+  @ApiResponse({ status: 404, description: 'Membership not found', type: ApiErrorDto })
+  uploadMembershipAvatarEndpoint(
+    @UserId() userId: string,
+    @Param('id') membershipId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) throw new BadRequestException('avatar file is required');
+    return this.uploadMembershipAvatar.execute({
+      userId,
+      membershipId,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      buffer: file.buffer,
+    });
+  }
+
+  @Post('invitations')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Invite a user to the active organization',
+    description:
+      'Privacy-safe — the response is identical regardless of whether the ' +
+      'invited email already has an account in the system. Only an active ' +
+      'membership conflict is surfaced (409). Optional displayName/jobTitle ' +
+      'are carried into the new Membership on accept.',
+  })
+  @ApiResponse({ status: 201, description: 'PENDING invitation row' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
+  @ApiResponse({ status: 409, description: 'Email already has an active membership in this org', type: ApiErrorDto })
+  async inviteUserEndpoint(
+    @UserId() userId: string,
+    @Body() body: InviteUserDto,
+  ) {
+    const organizationId = this.tenant.requireOrganizationId();
+    return this.inviteUser.execute({
+      invitedByUserId: userId,
+      organizationId,
+      email: body.email,
+      role: body.role,
+      displayName: body.displayName,
+      jobTitle: body.jobTitle,
+    });
+  }
+
+  @Post('invitations/accept')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Accept a pending invitation token',
+    description:
+      'Idempotent on the token. If the email already has an account, the new ' +
+      'Membership is linked silently. If not, password + name are required to ' +
+      'create the User. Expired or already-accepted tokens return 410 Gone.',
+  })
+  @ApiResponse({ status: 200, description: 'Active Membership info' })
+  @ApiResponse({ status: 400, description: 'Missing password/name for new account', type: ApiErrorDto })
+  @ApiResponse({ status: 404, description: 'Token not found', type: ApiErrorDto })
+  @ApiResponse({ status: 410, description: 'Token expired or already used', type: ApiErrorDto })
+  async acceptInvitationEndpoint(@Body() body: AcceptInvitationDto) {
+    return this.acceptInvitation.execute({
+      token: body.token,
+      password: body.password,
+      name: body.name,
     });
   }
 

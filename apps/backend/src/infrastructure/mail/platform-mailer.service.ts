@@ -150,6 +150,15 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  async sendMembershipInvitation(
+    to: string,
+    vars: import('./templates/membership-invitation.template').MembershipInvitationVars,
+  ): Promise<void> {
+    const { membershipInvitationTemplate } = await import('./templates/membership-invitation.template');
+    const t = membershipInvitationTemplate(vars);
+    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
   // ── Internals ──────────────────────────────────────────────────────────────
 
   private bilingualSubject(ar: string, en: string): string {
