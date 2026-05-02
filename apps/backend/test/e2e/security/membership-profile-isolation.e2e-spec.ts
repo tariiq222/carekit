@@ -29,72 +29,78 @@ describe('Per-membership-profile — tenant isolation', () => {
   it('round-trips per-org display profile for the same user (no cross-org bleed)', async () => {
     const { orgA, orgB } = await h.seedTwoOrgs('mem-profile-roundtrip');
 
-    // One real human, one User row, two Memberships.
-    const user = await h.prisma.$allTenants.user.create({
-      data: {
-        email: `multi-${Date.now()}@example.com`,
-        name: 'Ahmad',
-        passwordHash: 'x',
-        isActive: true,
-      },
-      select: { id: true },
+    // User + Memberships are platform-level — write under super-admin context
+    // so the strict-tenant Prisma extension permits the unscoped writes.
+    const result = await h.runAs({ isSuperAdmin: true }, async () => {
+      const user = await h.prisma.user.create({
+        data: {
+          email: `multi-${Date.now()}@example.com`,
+          name: 'Ahmad',
+          passwordHash: 'x',
+          isActive: true,
+        },
+        select: { id: true },
+      });
+
+      const memA = await h.prisma.membership.create({
+        data: {
+          userId: user.id,
+          organizationId: orgA.id,
+          role: 'ADMIN',
+          isActive: true,
+          displayName: 'د. أحمد المطيري',
+          jobTitle: 'استشاري',
+        },
+        select: { id: true },
+      });
+
+      const memB = await h.prisma.membership.create({
+        data: {
+          userId: user.id,
+          organizationId: orgB.id,
+          role: 'RECEPTIONIST',
+          isActive: true,
+          displayName: 'أحمد',
+          jobTitle: 'موظف استقبال',
+        },
+        select: { id: true },
+      });
+
+      const a = await h.prisma.membership.findUnique({
+        where: { id: memA.id },
+        select: { displayName: true, jobTitle: true, organizationId: true },
+      });
+      const b = await h.prisma.membership.findUnique({
+        where: { id: memB.id },
+        select: { displayName: true, jobTitle: true, organizationId: true },
+      });
+      return { a, b };
     });
 
-    const memA = await h.prisma.$allTenants.membership.create({
-      data: {
-        userId: user.id,
-        organizationId: orgA.id,
-        role: 'ADMIN',
-        isActive: true,
-        displayName: 'د. أحمد المطيري',
-        jobTitle: 'استشاري',
-      },
-      select: { id: true },
-    });
+    expect(result.a?.organizationId).toBe(orgA.id);
+    expect(result.a?.displayName).toBe('د. أحمد المطيري');
+    expect(result.a?.jobTitle).toBe('استشاري');
 
-    const memB = await h.prisma.$allTenants.membership.create({
-      data: {
-        userId: user.id,
-        organizationId: orgB.id,
-        role: 'RECEPTIONIST',
-        isActive: true,
-        displayName: 'أحمد',
-        jobTitle: 'موظف استقبال',
-      },
-      select: { id: true },
-    });
-
-    const a = await h.prisma.$allTenants.membership.findUnique({
-      where: { id: memA.id },
-      select: { displayName: true, jobTitle: true, organizationId: true },
-    });
-    const b = await h.prisma.$allTenants.membership.findUnique({
-      where: { id: memB.id },
-      select: { displayName: true, jobTitle: true, organizationId: true },
-    });
-
-    expect(a?.organizationId).toBe(orgA.id);
-    expect(a?.displayName).toBe('د. أحمد المطيري');
-    expect(a?.jobTitle).toBe('استشاري');
-
-    expect(b?.organizationId).toBe(orgB.id);
-    expect(b?.displayName).toBe('أحمد');
-    expect(b?.jobTitle).toBe('موظف استقبال');
+    expect(result.b?.organizationId).toBe(orgB.id);
+    expect(result.b?.displayName).toBe('أحمد');
+    expect(result.b?.jobTitle).toBe('موظف استقبال');
   });
 
   it('lastActiveOrganizationId on User is per-account, not org-scoped', async () => {
     const { orgA } = await h.seedTwoOrgs('last-active-scope');
 
-    const user = await h.prisma.$allTenants.user.create({
-      data: {
-        email: `sticky-${Date.now()}@example.com`,
-        name: 'Sara',
-        passwordHash: 'x',
-        isActive: true,
-        lastActiveOrganizationId: orgA.id,
-      },
-      select: { id: true, lastActiveOrganizationId: true },
-    });
+    const user = await h.runAs({ isSuperAdmin: true }, () =>
+      h.prisma.user.create({
+        data: {
+          email: `sticky-${Date.now()}@example.com`,
+          name: 'Sara',
+          passwordHash: 'x',
+          isActive: true,
+          lastActiveOrganizationId: orgA.id,
+        },
+        select: { id: true, lastActiveOrganizationId: true },
+      }),
+    );
 
     expect(user.lastActiveOrganizationId).toBe(orgA.id);
   });
