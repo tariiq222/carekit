@@ -135,3 +135,12 @@ export interface InvoiceListFilters {
 export interface DownloadInvoiceResponse {
   url: string
 }
+
+// Phase 5 — usage counters
+export interface UsageRow {
+  featureKey: string
+  current: number
+  limit: number
+  percentage: number
+  periodEnd: string | null
+}

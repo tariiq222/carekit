@@ -16,6 +16,7 @@ import type {
   RetryPaymentResponse,
   SavedCard,
   Subscription,
+  UsageRow,
 } from "@/lib/types/billing"
 
 export const billingApi = {
@@ -86,4 +87,8 @@ export const billingApi = {
 
   downloadInvoice: (id: string) =>
     api.get<DownloadInvoiceResponse>(`/dashboard/billing/invoices/${id}/download`),
+
+  // Phase 5 — usage counters
+  getUsage: () =>
+    api.get<UsageRow[]>('/dashboard/billing/usage'),
 }
