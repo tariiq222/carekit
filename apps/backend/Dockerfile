@@ -11,7 +11,7 @@ COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
@@ -33,13 +33,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=builder /app/apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
+# Ensure pnpm workspace symlinks resolve at runtime by linking @deqah/* to packages/
+RUN mkdir -p /app/node_modules/@deqah \
+ && rm -rf /app/node_modules/@deqah/shared /app/node_modules/@deqah/api-client \
+ && ln -sf /app/packages/shared /app/node_modules/@deqah/shared \
+ && ln -sf /app/packages/api-client /app/node_modules/@deqah/api-client
+
 WORKDIR /app/apps/backend
 EXPOSE 5100
 
-CMD ["sh", "-c", "pnpm run prisma:migrate:deploy && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node --import tsx dist/main.js"]
