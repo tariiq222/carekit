@@ -95,18 +95,24 @@ export function NotificationDropdown() {
 
   return (
     <Popover>
-      {/* Trigger — bell button */}
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="relative flex size-[42px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-all duration-300 hover:text-primary hover:bg-surface hover:shadow-sm"
-          aria-label={t("notifications.title")}
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Notifications"
+          data-testid="notifications-bell"
+          className="relative size-9 hover:text-primary hover:bg-primary/8"
         >
-          <HugeiconsIcon icon={Notification03Icon} size={20} />
+          <HugeiconsIcon icon={Notification03Icon} size={18} />
           {hasUnread && (
-            <span className="absolute top-2 start-2 size-2 rounded-full bg-error ring-2 ring-white" />
+            <span
+              data-testid="notifications-badge"
+              className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-error text-[9px] font-bold tabular-nums text-white ring-2 ring-background"
+            >
+              {unreadCount! > 9 ? "9+" : unreadCount}
+            </span>
           )}
-        </button>
+        </Button>
       </PopoverTrigger>
 
       {/* Dropdown content */}

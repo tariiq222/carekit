@@ -17,7 +17,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Moon02Icon,
   Sun03Icon,
-  Notification03Icon,
   Settings02Icon,
   UserCircle02Icon,
   Logout03Icon,
@@ -27,8 +26,8 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useUnreadCount } from "@/hooks/use-notifications"
 import { ChangePasswordDialog } from "@/components/features/change-password-dialog"
+import { NotificationDropdown } from "@/components/features/notifications/notification-dropdown"
 import { TenantSwitcher } from "@/components/tenant-switcher"
 import { cn } from "@/lib/utils"
 
@@ -44,7 +43,6 @@ export function Header() {
   const { resolvedTheme, setTheme } = useTheme()
   const { locale, dir, toggleLocale, t } = useLocale()
   const { user, logout } = useAuth()
-  const { data: unreadCount } = useUnreadCount()
   const [fontSize, setFontSize] = useState<FontSize>("S")
   const [passwordOpen, setPasswordOpen] = useState(false)
 
@@ -142,48 +140,7 @@ export function Header() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Notifications */}
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Notifications"
-            data-testid="notifications-bell"
-            className="relative size-9 hover:text-primary hover:bg-primary/8"
-          >
-            <HugeiconsIcon icon={Notification03Icon} size={18} />
-            {(unreadCount ?? 0) > 0 && (
-              <span
-                data-testid="notifications-badge"
-                className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-error text-[9px] font-bold tabular-nums text-white ring-2 ring-background"
-              >
-                {unreadCount! > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72">
-          <div dir={dir}>
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              {t("notifications.title")}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-3 text-center text-xs text-muted-foreground">
-              {(unreadCount ?? 0) > 0
-                ? `${unreadCount} ${t("notifications.unread")}`
-                : t("notifications.empty.description")}
-            </div>
-            <DropdownMenuSeparator />
-            <Link
-              href="/notifications"
-              className="flex items-center justify-center rounded-sm px-4 py-2 text-sm font-medium text-primary hover:bg-primary/8 transition-all duration-200"
-            >
-              {t("notifications.viewAll")}
-            </Link>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <NotificationDropdown />
 
       <Separator orientation="vertical" className="h-6" />
 
