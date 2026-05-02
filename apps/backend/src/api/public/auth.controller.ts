@@ -27,6 +27,11 @@ import { SwitchOrganizationHandler } from '../../modules/identity/switch-organiz
 import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
 import { UpdateMembershipProfileHandler } from '../../modules/identity/update-membership-profile/update-membership-profile.handler';
 import { UpdateMembershipProfileDto } from '../../modules/identity/update-membership-profile/update-membership-profile.dto';
+import { InviteUserHandler } from '../../modules/identity/invite-user/invite-user.handler';
+import { InviteUserDto } from '../../modules/identity/invite-user/invite-user.dto';
+import { AcceptInvitationHandler } from '../../modules/identity/accept-invitation/accept-invitation.handler';
+import { AcceptInvitationDto } from '../../modules/identity/accept-invitation/accept-invitation.dto';
+import { TenantContextService } from '../../common/tenant/tenant-context.service';
 import { RequestPasswordResetHandler } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.handler';
 import { RequestPasswordResetDto } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.dto';
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
@@ -69,6 +74,9 @@ export class AuthController {
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly performPasswordReset: PerformPasswordResetHandler,
     private readonly updateMembershipProfile: UpdateMembershipProfileHandler,
+    private readonly inviteUser: InviteUserHandler,
+    private readonly acceptInvitation: AcceptInvitationHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   @Post('login')
@@ -318,6 +326,58 @@ export class AuthController {
       displayName: body.displayName,
       jobTitle: body.jobTitle,
       avatarUrl: body.avatarUrl,
+    });
+  }
+
+  @Post('invitations')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Invite a user to the active organization',
+    description:
+      'Privacy-safe — the response is identical regardless of whether the ' +
+      'invited email already has an account in the system. Only an active ' +
+      'membership conflict is surfaced (409). Optional displayName/jobTitle ' +
+      'are carried into the new Membership on accept.',
+  })
+  @ApiResponse({ status: 201, description: 'PENDING invitation row' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
+  @ApiResponse({ status: 409, description: 'Email already has an active membership in this org', type: ApiErrorDto })
+  async inviteUserEndpoint(
+    @UserId() userId: string,
+    @Body() body: InviteUserDto,
+  ) {
+    const organizationId = this.tenant.requireOrganizationId();
+    return this.inviteUser.execute({
+      invitedByUserId: userId,
+      organizationId,
+      email: body.email,
+      role: body.role,
+      displayName: body.displayName,
+      jobTitle: body.jobTitle,
+    });
+  }
+
+  @Post('invitations/accept')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Accept a pending invitation token',
+    description:
+      'Idempotent on the token. If the email already has an account, the new ' +
+      'Membership is linked silently. If not, password + name are required to ' +
+      'create the User. Expired or already-accepted tokens return 410 Gone.',
+  })
+  @ApiResponse({ status: 200, description: 'Active Membership info' })
+  @ApiResponse({ status: 400, description: 'Missing password/name for new account', type: ApiErrorDto })
+  @ApiResponse({ status: 404, description: 'Token not found', type: ApiErrorDto })
+  @ApiResponse({ status: 410, description: 'Token expired or already used', type: ApiErrorDto })
+  async acceptInvitationEndpoint(@Body() body: AcceptInvitationDto) {
+    return this.acceptInvitation.execute({
+      token: body.token,
+      password: body.password,
+      name: body.name,
     });
   }
 

@@ -217,6 +217,10 @@ model Invitation {
   invitedByUserId String
   acceptedAt      DateTime?
   revokedAt       DateTime?
+  // Per-org display profile presets carried from invite into the Membership
+  // when accepted. The recipient may overwrite later via membership-profile.
+  displayName     String?
+  jobTitle        String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
