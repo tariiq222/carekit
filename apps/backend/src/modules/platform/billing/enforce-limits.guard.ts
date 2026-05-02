@@ -1,16 +1,24 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from './subscription-cache.service';
 import { ENFORCE_LIMIT_KEY, LimitKind } from './plan-limits.decorator';
+
+interface AuthenticatedRequest {
+  user?: { organizationId?: string };
+}
 
 @Injectable()
 export class PlanLimitsGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
-    private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
   ) {}
 
@@ -18,7 +26,14 @@ export class PlanLimitsGuard implements CanActivate {
     const kind = this.reflector.get<LimitKind>(ENFORCE_LIMIT_KEY, ctx.getHandler());
     if (!kind) return true;
 
-    const organizationId = this.tenant.requireOrganizationId();
+    const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      throw new UnauthorizedException(
+        'Authentication required for plan-limited route',
+      );
+    }
+
     const cached = await this.cache.get(organizationId);
 
     // No subscription → allow (dev/trial before billing goes live)

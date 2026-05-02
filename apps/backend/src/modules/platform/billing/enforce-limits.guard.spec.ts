@@ -1,55 +1,77 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { PlanLimitsGuard } from './enforce-limits.guard';
 
 describe('PlanLimitsGuard', () => {
   const mockReflector = { get: jest.fn() };
   const mockPrisma = { branch: { count: jest.fn() }, employee: { count: jest.fn() } };
-  const mockTenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') };
   const mockCache = { get: jest.fn() };
   const guard = new PlanLimitsGuard(
     mockReflector as never,
     mockPrisma as never,
-    mockTenant as never,
     mockCache as never,
   );
 
-  const mockCtx = { getHandler: () => ({}) } as ExecutionContext;
+  // Using a sentinel object avoids the JS default-param pitfall where
+  // buildCtx(undefined) still triggers the default.
+  // Callers use buildCtx() for happy-path, buildCtx(NO_USER) for missing-user,
+  // and buildCtx({}) for user-without-organizationId.
+  const NO_USER = { __noUser: true } as const;
+  const buildCtx = (
+    user: { organizationId?: string } | typeof NO_USER = { organizationId: 'org-1' },
+  ) => {
+    const resolved = (user as typeof NO_USER).__noUser === true ? undefined : user;
+    return {
+      getHandler: () => ({}),
+      switchToHttp: () => ({ getRequest: () => ({ user: resolved }) }),
+    } as unknown as ExecutionContext;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTenant.requireOrganizationId.mockReturnValue('org-1');
   });
 
   it('allows when no @EnforceLimit decorator (kind = undefined)', async () => {
     mockReflector.get.mockReturnValue(undefined);
-    await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
+    await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+    expect(mockCache.get).not.toHaveBeenCalled();
+  });
+
+  it('throws UnauthorizedException when req.user is missing', async () => {
+    mockReflector.get.mockReturnValue('BRANCHES');
+    await expect(guard.canActivate(buildCtx(NO_USER))).rejects.toThrow(UnauthorizedException);
+    expect(mockCache.get).not.toHaveBeenCalled();
+  });
+
+  it('throws UnauthorizedException when req.user has no organizationId', async () => {
+    mockReflector.get.mockReturnValue('BRANCHES');
+    await expect(guard.canActivate(buildCtx({}))).rejects.toThrow(UnauthorizedException);
     expect(mockCache.get).not.toHaveBeenCalled();
   });
 
   it('allows when no subscription cached (returns true)', async () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue(null);
-    await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
+    await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
   });
 
   it('throws ForbiddenException when subscription is CANCELED', async () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue({ status: 'CANCELED', limits: { maxBranches: 5 } });
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow(ForbiddenException);
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow('Subscription is CANCELED');
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow('Subscription is CANCELED');
   });
 
   it('throws ForbiddenException when subscription is SUSPENDED', async () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue({ status: 'SUSPENDED', limits: { maxBranches: 5 } });
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow(ForbiddenException);
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow('Subscription is SUSPENDED');
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow('Subscription is SUSPENDED');
   });
 
   it('allows when limit is -1 (unlimited)', async () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBranches: -1 } });
-    await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
+    await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
     expect(mockPrisma.branch.count).not.toHaveBeenCalled();
   });
 
@@ -57,15 +79,15 @@ describe('PlanLimitsGuard', () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBranches: 3 } });
     mockPrisma.branch.count.mockResolvedValue(2);
-    await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
+    await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
   });
 
   it('throws ForbiddenException when current >= limit (count = 3, maxBranches = 3)', async () => {
     mockReflector.get.mockReturnValue('BRANCHES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBranches: 3 } });
     mockPrisma.branch.count.mockResolvedValue(3);
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow(ForbiddenException);
-    await expect(guard.canActivate(mockCtx)).rejects.toThrow('Plan limit reached for BRANCHES: 3/3');
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(buildCtx())).rejects.toThrow('Plan limit reached for BRANCHES: 3/3');
   });
 
   it('returns structured metadata when a plan limit is reached', async () => {
@@ -74,7 +96,7 @@ describe('PlanLimitsGuard', () => {
     mockPrisma.branch.count.mockResolvedValue(3);
 
     try {
-      await guard.canActivate(mockCtx);
+      await guard.canActivate(buildCtx());
       throw new Error('Expected guard to throw');
     } catch (error) {
       expect(error).toBeInstanceOf(ForbiddenException);
@@ -92,7 +114,7 @@ describe('PlanLimitsGuard', () => {
     mockReflector.get.mockReturnValue('EMPLOYEES');
     mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxEmployees: 10 } });
     mockPrisma.employee.count.mockResolvedValue(5);
-    await expect(guard.canActivate(mockCtx)).resolves.toBe(true);
+    await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
     expect(mockPrisma.employee.count).toHaveBeenCalledWith({
       where: { organizationId: 'org-1', isActive: true },
     });
