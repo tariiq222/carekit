@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
-import { SetServiceBookingConfigsDto, type ServiceBookingTypeValue } from './set-service-booking-configs.dto';
+import { SetServiceBookingConfigsDto } from './set-service-booking-configs.dto';
 
 export type SetServiceBookingConfigsCommand = SetServiceBookingConfigsDto & {
   serviceId: string;

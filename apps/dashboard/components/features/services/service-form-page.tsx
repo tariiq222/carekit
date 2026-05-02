@@ -45,9 +45,10 @@ import { uploadServiceImage } from "@/lib/api/services"
 
 /* ─── Constants ─── */
 
+// DB-10: enum values are now uppercase
 const EMPTY_BOOKING_TYPES: DraftBookingType[] = [
-  { bookingType: "in_person", enabled: true, price: 0, durationMins: 30, durationOptions: [] },
-  { bookingType: "online", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
+  { bookingType: "IN_PERSON", enabled: true, price: 0, durationMins: 30, durationOptions: [] },
+  { bookingType: "ONLINE", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
 ]
 
 /* ─── Props ─── */

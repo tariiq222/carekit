@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { ServiceBookingMode } from '@prisma/client';
 import { CreateServiceHandler } from './create-service.handler';
 import { RecurringPatternDto } from './create-service.dto';
 import { UpdateServiceHandler } from './update-service.handler';
@@ -275,7 +276,7 @@ describe('SetServiceBookingConfigsHandler', () => {
   it('upserts configs with organizationId scoped by org', async () => {
     const prisma = buildConfigPrisma();
     const handler = new SetServiceBookingConfigsHandler(prisma as never, buildTenant());
-    await handler.execute({ serviceId: 'svc-1', types: [{ bookingType: 'in_person', price: 100, durationMins: 30 }] });
+    await handler.execute({ serviceId: 'svc-1', types: [{ bookingType: ServiceBookingMode.IN_PERSON, price: 100, durationMins: 30 }] });
     expect(prisma.service.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ organizationId: DEFAULT_ORG }) }),
     );

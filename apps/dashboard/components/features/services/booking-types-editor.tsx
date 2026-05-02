@@ -11,13 +11,14 @@ import {
 } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import { BookingTypeRow } from "./booking-type-row"
-import type { ServiceBookingType } from "@/lib/types/service"
+import type { ServiceBookingType, ServiceBookingMode } from "@/lib/types/service"
 
 /* ─── Constants ─── */
 
-const BOOKING_TYPES = [
-  { value: "in_person" as const, labelKey: "services.bookingTypes.clinic" },
-  { value: "online" as const, labelKey: "services.bookingTypes.online" },
+// DB-10: values are now uppercase enum strings ('IN_PERSON' | 'ONLINE').
+const BOOKING_TYPES: { value: ServiceBookingMode; labelKey: string }[] = [
+  { value: "IN_PERSON", labelKey: "services.bookingTypes.clinic" },
+  { value: "ONLINE", labelKey: "services.bookingTypes.online" },
 ]
 
 /* ─── Draft Types ─── */
@@ -33,7 +34,7 @@ export interface DraftDurationOption {
 }
 
 export interface DraftBookingType {
-  bookingType: "in_person" | "online"
+  bookingType: ServiceBookingMode
   enabled: boolean
   price: number // SAR display
   durationMins: number // minutes
@@ -180,9 +181,10 @@ export function BookingTypesEditor({ serviceId }: BookingTypesEditorProps) {
 /* ─── Helpers ─── */
 
 function buildEmptyDrafts(): DraftBookingType[] {
+  // DB-10: enum values are now uppercase
   return [
-    { bookingType: "in_person", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
-    { bookingType: "online", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
+    { bookingType: "IN_PERSON", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
+    { bookingType: "ONLINE", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
   ]
 }
 
@@ -190,7 +192,8 @@ export function mergeDraftsFromServer(
   serverTypes: ServiceBookingType[],
 ): DraftBookingType[] {
   const map = new Map(serverTypes.map((st) => [st.bookingType, st]))
-  return (["in_person", "online"] as const).map(
+  // DB-10: enum values are now uppercase
+  return (["IN_PERSON", "ONLINE"] as const).map(
     (bt) => {
       const server = map.get(bt)
       if (!server) {

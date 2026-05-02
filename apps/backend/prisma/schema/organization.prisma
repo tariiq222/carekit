@@ -143,23 +143,31 @@ model Service {
   @@index([organizationId])
 }
 
+// ─── Service Booking Mode ────────────────────────────────────────────────────
+
+// DB-10: dedicated enum for ServiceBookingConfig.bookingType.
+// Replaces the old plain String ('in_person' | 'online') with typed enum values.
+enum ServiceBookingMode {
+  IN_PERSON
+  ONLINE
+}
+
 // ─── Service Booking Config ──────────────────────────────────────────────────
 
-// Per-service booking type configuration (INDIVIDUAL in-person / online).
+// Per-service booking type configuration (IN_PERSON / ONLINE).
 // Each (serviceId, bookingType) pair is unique.
-// BookingType enum is defined in bookings.prisma.
 model ServiceBookingConfig {
-  id             String   @id @default(uuid())
+  id             String             @id @default(uuid())
   organizationId String // SaaS-02c (denormalized from Service)
   serviceId      String
-  service        Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  // bookingType stores dashboard values: 'in_person' | 'online'
-  bookingType    String
-  price          Decimal  @default(0) @db.Decimal(12, 2)
-  durationMins   Int      @default(30)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  service        Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  // DB-10: was String ('in_person' | 'online') — now typed enum
+  bookingType    ServiceBookingMode
+  price          Decimal            @default(0) @db.Decimal(12, 2)
+  durationMins   Int                @default(30)
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@unique([serviceId, bookingType])
   @@index([serviceId])
