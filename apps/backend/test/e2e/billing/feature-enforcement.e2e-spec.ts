@@ -8,6 +8,7 @@ import { REQUIRE_FEATURE_KEY } from '../../../src/modules/platform/billing/featu
 import { FEATURE_KEY_MAP } from '../../../src/modules/platform/billing/feature-key-map';
 import { FeatureNotEnabledException } from '../../../src/modules/platform/billing/feature-not-enabled.exception';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
+import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
 
 /**
  * Plan Features Phase 1 — Task 14: FeatureGuard enforcement e2e.
@@ -73,6 +74,7 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
       h.prisma,
       h.app.get(TenantContextService),
       h.app.get(SubscriptionCacheService),
+      h.app.get(UsageCounterService),
     );
 
     // Invalidate any pre-existing cache entry for this org

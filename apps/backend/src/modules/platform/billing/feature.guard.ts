@@ -24,8 +24,20 @@ interface CachedFeatures {
 
 @Injectable()
 export class FeatureGuard implements CanActivate {
-  private readonly cache = new Map<string, CachedFeatures>();
+  /** Static so external listeners can invalidate without holding a reference to the guard instance. */
+  private static readonly sharedCache = new Map<string, CachedFeatures>();
+  private readonly cache = FeatureGuard.sharedCache;
   private readonly ttlMs = 60_000;
+
+  /** Invalidate cached features for one organization. */
+  static invalidate(organizationId: string): void {
+    FeatureGuard.sharedCache.delete(organizationId);
+  }
+
+  /** Invalidate ALL cached entries (e.g. after a plan schema change). */
+  static invalidateAll(): void {
+    FeatureGuard.sharedCache.clear();
+  }
 
   constructor(
     private readonly reflector: Reflector,
