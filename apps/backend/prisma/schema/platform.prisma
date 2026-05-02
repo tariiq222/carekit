@@ -184,6 +184,11 @@ model Membership {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
+  // Per-membership display profile — overrides User defaults within this org.
+  displayName String?
+  jobTitle    String?
+  avatarUrl   String?
+
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
