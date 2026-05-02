@@ -1,4 +1,6 @@
 import { MobileClientChatController } from './chat.controller';
+import { REQUIRE_FEATURE_KEY } from '../../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const USER = { id: 'client-1', email: null, phone: null };
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
@@ -42,5 +44,19 @@ describe('MobileClientChatController', () => {
     const { controller, chatCompletion } = build();
     chatCompletion.execute.mockRejectedValueOnce(new Error('AI unavailable'));
     await expect(controller.chat(USER, { userMessage: 'hi' } as never)).rejects.toThrow('AI unavailable');
+  });
+});
+
+describe('@RequireFeature metadata — AI_CHATBOT', () => {
+  it.each([
+    'chat',
+    'listConversationsEndpoint',
+    'listMessagesEndpoint',
+  ])('annotates %s with FeatureKey.AI_CHATBOT', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (MobileClientChatController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.AI_CHATBOT);
   });
 });

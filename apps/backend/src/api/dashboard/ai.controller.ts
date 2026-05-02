@@ -19,6 +19,8 @@ import { ChatCompletionDto } from '../../modules/ai/chat-completion/chat-complet
 import { GetChatbotConfigHandler } from '../../modules/ai/chatbot-config/get-chatbot-config.handler';
 import { UpsertChatbotConfigHandler } from '../../modules/ai/chatbot-config/upsert-chatbot-config.handler';
 import { UpsertChatbotConfigDto } from '../../modules/ai/chatbot-config/upsert-chatbot-config.dto';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 @ApiTags('Dashboard / AI')
 @ApiBearerAuth()
@@ -35,6 +37,7 @@ export class DashboardAiController {
 
   // ── Knowledge Base ─────────────────────────────────────────────────────────
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Get('knowledge-base')
   @ApiOperation({ summary: 'List knowledge-base documents' })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by document status', example: 'ACTIVE' })
@@ -45,6 +48,7 @@ export class DashboardAiController {
     return this.knowledgeBase.listDocuments(query);
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Get('knowledge-base/:id')
   @ApiOperation({ summary: 'Get a knowledge-base document by ID' })
   @ApiParam({ name: 'id', description: 'Document UUID', example: '00000000-0000-0000-0000-000000000001' })
@@ -54,6 +58,7 @@ export class DashboardAiController {
     return this.knowledgeBase.getDocument({ documentId: id });
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Patch('knowledge-base/:id')
   @ApiOperation({ summary: 'Update a knowledge-base document' })
   @ApiParam({ name: 'id', description: 'Document UUID', example: '00000000-0000-0000-0000-000000000001' })
@@ -66,6 +71,7 @@ export class DashboardAiController {
     return this.knowledgeBase.updateDocument({ documentId: id, ...body });
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Delete('knowledge-base/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a knowledge-base document' })
@@ -78,6 +84,7 @@ export class DashboardAiController {
 
   // ── Chatbot Config ────────────────────────────────────────────────────────
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Get('chatbot-config')
   @ApiOperation({ summary: 'Get chatbot configuration (org-unique singleton)' })
   @ApiOkResponse({ description: 'Chatbot configuration for the current org (created on first read)' })
@@ -85,6 +92,7 @@ export class DashboardAiController {
     return this.getChatbotConfig.execute();
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Patch('chatbot-config')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Upsert chatbot configuration (org-unique singleton)' })
@@ -95,6 +103,7 @@ export class DashboardAiController {
 
   // ── Chat Completion ────────────────────────────────────────────────────────
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @Post('chat')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send a chat message and receive an AI reply (Server-Sent Events)' })

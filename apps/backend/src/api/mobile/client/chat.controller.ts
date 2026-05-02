@@ -21,6 +21,8 @@ import { ApiStandardResponses } from '../../../common/swagger';
 import { ChatCompletionHandler } from '../../../modules/ai/chat-completion/chat-completion.handler';
 import { ListConversationsHandler } from '../../../modules/comms/chat/list-conversations.handler';
 import { ListMessagesHandler } from '../../../modules/comms/chat/list-messages.handler';
+import { RequireFeature } from '../../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 export class MobileChatBody {
   @ApiProperty({ description: 'The message text sent by the client', example: 'What are your opening hours?' })
@@ -58,6 +60,7 @@ export class MobileClientChatController {
     private readonly listMessages: ListMessagesHandler,
   ) {}
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @ApiOperation({ summary: 'Send a message to the AI chatbot' })
   @ApiCreatedResponse({ description: 'AI response returned' })
   @Post()
@@ -72,6 +75,7 @@ export class MobileClientChatController {
     });
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @ApiOperation({ summary: 'List conversations for the current client' })
   @ApiOkResponse({ description: 'Paginated conversation list' })
   @Get('conversations')
@@ -86,6 +90,7 @@ export class MobileClientChatController {
     });
   }
 
+  @RequireFeature(FeatureKey.AI_CHATBOT)
   @ApiOperation({ summary: 'List messages in a conversation' })
   @ApiOkResponse({ description: 'Cursor-paginated message list' })
   @ApiParam({ name: 'id', description: 'Conversation UUID', example: '00000000-0000-0000-0000-000000000000' })
