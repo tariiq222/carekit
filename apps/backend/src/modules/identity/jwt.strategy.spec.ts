@@ -109,6 +109,21 @@ describe('JwtStrategy', () => {
     expect((result as { sub?: string }).sub).toBe('u-7');
   });
 
+  it('propagates membershipRole from JWT payload onto req.user', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, customRole: null, isActive: true,
+    } as never);
+
+    const result = await strategy.validate({
+      sub: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+      organizationId: 'org-1', membershipId: 'mem-1',
+      membershipRole: 'OWNER',
+    });
+    expect((result as { membershipRole?: string }).membershipRole).toBe('OWNER');
+  });
+
   it('marks isSuperAdmin true when the DB user has isSuperAdmin=true', async () => {
     prisma.user.findUnique.mockResolvedValue({
       id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN', isSuperAdmin: true,

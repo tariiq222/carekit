@@ -38,6 +38,9 @@ export class ListMembershipsHandler {
       organizationId: r.organizationId,
       role: r.role,
       isActive: r.isActive,
+      displayName: r.displayName,
+      jobTitle: r.jobTitle,
+      avatarUrl: r.avatarUrl,
       organization: {
         id: r.organization.id,
         slug: r.organization.slug,

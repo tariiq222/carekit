@@ -40,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       sub: user.id,
       email: user.email,
       role: user.role,
+      membershipRole: payload.membershipRole, // phase-A: now available on req.user
       customRoleId: user.customRoleId,
       permissions: ability.rules.flatMap((r) => {
         const actions = Array.isArray(r.action) ? r.action : [r.action];
