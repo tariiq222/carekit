@@ -9,7 +9,7 @@ const ORG_ID = 'org-test-1';
 const mockTemplate = {
   id: 'tpl-1',
   slug: 'welcome',
-  subjectAr: 'مرحباً',
+  subject: 'مرحباً',
   htmlBody: '<p>{{client_name}}</p>',
   isActive: true,
 };
@@ -109,7 +109,7 @@ describe('SendEmailHandler — interpolation', () => {
 
   it('skips when template is inactive', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
-    const prisma = { emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subjectAr: '' }) } };
+    const prisma = { emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subject: '' }) } };
     await new SendEmailHandler(
       smtp as unknown as SmtpService,
       prisma as unknown as PrismaService,
@@ -126,8 +126,7 @@ describe('SendEmailHandler — interpolation', () => {
         findFirst: jest.fn().mockResolvedValue({
           isActive: true,
           htmlBody: '<p>Hello {{name}}</p>',
-          subjectAr: 'مرحبا {{name}}',
-          subjectEn: 'Hello {{name}}',
+          subject: 'مرحبا {{name}}',
         }),
       },
     };
@@ -147,8 +146,7 @@ describe('SendEmailHandler — interpolation', () => {
         findFirst: jest.fn().mockResolvedValue({
           isActive: true,
           htmlBody: 'body',
-          subjectAr: 'subject',
-          subjectEn: '',
+          subject: 'subject',
         }),
       },
     };
@@ -174,7 +172,7 @@ describe('SendEmailHandler — interpolation', () => {
   it('does not throw when smtp.sendMail rejects', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn().mockRejectedValue(new Error('SMTP down')) };
     const prisma = {
-      emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subjectAr: 'subj', subjectEn: '' }) },
+      emailTemplate: { findFirst: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subject: 'subj' }) },
     };
     await expect(
       new SendEmailHandler(

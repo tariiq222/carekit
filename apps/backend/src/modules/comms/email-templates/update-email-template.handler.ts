@@ -21,10 +21,8 @@ export class UpdateEmailTemplateHandler {
     return this.prisma.emailTemplate.update({
       where: { id: cmd.id },
       data: {
-        ...(cmd.nameAr !== undefined ? { nameAr: cmd.nameAr } : {}),
-        ...(cmd.nameEn !== undefined ? { nameEn: cmd.nameEn } : {}),
-        ...(cmd.subjectAr !== undefined ? { subjectAr: cmd.subjectAr } : {}),
-        ...(cmd.subjectEn !== undefined ? { subjectEn: cmd.subjectEn } : {}),
+        ...(cmd.name !== undefined ? { name: cmd.name } : {}),
+        ...(cmd.subject !== undefined ? { subject: cmd.subject } : {}),
         ...(cmd.htmlBody !== undefined ? { htmlBody: cmd.htmlBody } : {}),
         ...(cmd.isActive !== undefined ? { isActive: cmd.isActive } : {}),
       },

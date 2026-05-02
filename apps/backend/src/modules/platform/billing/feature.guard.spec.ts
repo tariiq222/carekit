@@ -3,6 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { ExecutionContext } from "@nestjs/common";
 import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { FeatureGuard } from "./feature.guard";
+import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
@@ -21,18 +22,32 @@ function mockReflector(getValue: jest.Mock) {
   return { get: getValue } as unknown as Reflector;
 }
 
-function mockCacheService(limits: Record<string, number | boolean> | null) {
+type CacheArg =
+  | Record<string, number | boolean>
+  | { planSlug: string; limits: Record<string, number | boolean> }
+  | null;
+
+function mockCacheService(arg: CacheArg) {
+  if (arg === null) {
+    return {
+      get: jest.fn().mockResolvedValue(null),
+    } as unknown as SubscriptionCacheService;
+  }
+  const isShape = (
+    v: NonNullable<CacheArg>,
+  ): v is { planSlug: string; limits: Record<string, number | boolean> } =>
+    "planSlug" in v && "limits" in v;
+  const planSlug = isShape(arg) ? arg.planSlug : "pro";
+  const limits = isShape(arg)
+    ? arg.limits
+    : (arg as Record<string, number | boolean>);
   return {
-    get: jest.fn().mockResolvedValue(
-      limits
-        ? {
-            planSlug: "pro",
-            status: "ACTIVE",
-            limits,
-            expiresAt: Date.now() + 60_000,
-          }
-        : null,
-    ),
+    get: jest.fn().mockResolvedValue({
+      planSlug,
+      status: "ACTIVE",
+      limits,
+      expiresAt: Date.now() + 60_000,
+    }),
   } as unknown as SubscriptionCacheService;
 }
 
@@ -395,6 +410,35 @@ describe("FeatureGuard", () => {
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
+    });
+  });
+
+  describe("FeatureNotEnabledException shape", () => {
+    it("throws FeatureNotEnabledException with standard body when boolean feature off", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.COUPONS),
+      );
+      const guard = new FeatureGuard(
+        reflector,
+        mockPrisma({}),
+        mockTenant(),
+        mockCacheService({ planSlug: "basic", limits: { coupons: false } }),
+      );
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(
+        FeatureNotEnabledException,
+      );
+      try {
+        await guard.canActivate(ctx);
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual({
+          statusCode: 403,
+          code: "FEATURE_NOT_ENABLED",
+          featureKey: "coupons",
+          planSlug: "basic",
+          message: "Feature 'coupons' is not enabled for your plan",
+        });
+      }
     });
   });
 });

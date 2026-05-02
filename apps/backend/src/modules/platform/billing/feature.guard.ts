@@ -12,9 +12,11 @@ import { TenantContextService } from "../../../common/tenant/tenant-context.serv
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { REQUIRE_FEATURE_KEY } from "./feature.decorator";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
+import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 
 interface CachedFeatures {
   features: Record<string, number | boolean>;
+  planSlug: string;
   expiresAt: number;
 }
 
@@ -40,7 +42,7 @@ export class FeatureGuard implements CanActivate {
     if (!featureKey) return true;
 
     const organizationId = this.tenant.requireOrganizationId();
-    const features = await this.resolveFeatures(organizationId);
+    const { features, planSlug } = await this.resolveFeatures(organizationId);
 
     const jsonKey = FEATURE_KEY_MAP[featureKey];
     const value = features[jsonKey];
@@ -48,9 +50,7 @@ export class FeatureGuard implements CanActivate {
     // On/off boolean flag
     if (typeof value === "boolean") {
       if (value === false) {
-        throw new ForbiddenException(
-          `Feature '${featureKey}' is not enabled for your plan`,
-        );
+        throw new FeatureNotEnabledException(featureKey, planSlug);
       }
       return true;
     }
@@ -71,21 +71,22 @@ export class FeatureGuard implements CanActivate {
 
   private async resolveFeatures(
     organizationId: string,
-  ): Promise<Record<string, number | boolean>> {
+  ): Promise<{ features: Record<string, number | boolean>; planSlug: string }> {
     const cached = this.cache.get(organizationId);
     if (cached && cached.expiresAt > Date.now()) {
-      return cached.features;
+      return { features: cached.features, planSlug: cached.planSlug };
     }
 
     const sub = await this.cacheService.get(organizationId);
-    if (!sub) return {};
+    if (!sub) return { features: {}, planSlug: "" };
 
     const entry: CachedFeatures = {
       features: sub.limits,
+      planSlug: sub.planSlug,
       expiresAt: Date.now() + this.ttlMs,
     };
     this.cache.set(organizationId, entry);
-    return entry.features;
+    return { features: entry.features, planSlug: entry.planSlug };
   }
 
   private async currentUsage(

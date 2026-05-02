@@ -269,7 +269,6 @@ export class DashboardCommsController {
   ) {
     return this.previewEmailTemplate.execute({
       id,
-      lang: body.lang,
       context: body.context ?? {},
     });
   }

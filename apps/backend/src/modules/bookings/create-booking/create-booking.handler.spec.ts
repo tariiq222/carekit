@@ -1,4 +1,5 @@
 import { ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { CreateBookingHandler } from './create-booking.handler';
 import { DEFAULT_BOOKING_SETTINGS } from '../get-booking-settings/get-booking-settings.handler';
 
@@ -216,6 +217,28 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.employeeService.findUnique = jest.fn().mockResolvedValue(null);
     await expect(new CreateBookingHandler(prisma as never, mockTenant as never, buildPriceResolver() as never, buildSettingsHandler() as never, {} as never, mockEventBus as never).execute(dto)).rejects.toThrow(BadRequestException);
+  });
+});
+
+describe('CreateBookingHandler — DB exclusion constraint error mapping', () => {
+  it('maps Postgres 23P01 exclusion violation to ConflictException', async () => {
+    const exclusionError = new Prisma.PrismaClientKnownRequestError(
+      'exclusion constraint violation',
+      { code: 'P2010', clientVersion: '5.0.0', meta: { code: '23P01' } },
+    );
+    const prisma = buildPrisma();
+    prisma.$transaction = jest.fn().mockRejectedValueOnce(exclusionError);
+
+    await expect(
+      new CreateBookingHandler(
+        prisma as never,
+        mockTenant as never,
+        buildPriceResolver() as never,
+        buildSettingsHandler() as never,
+        {} as never,
+        mockEventBus as never,
+      ).execute(dto),
+    ).rejects.toThrow(ConflictException);
   });
 });
 

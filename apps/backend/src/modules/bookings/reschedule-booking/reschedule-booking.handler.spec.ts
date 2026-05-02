@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { BookingStatus } from '@prisma/client';
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BookingStatus, Prisma } from '@prisma/client';
 import { RescheduleBookingHandler } from './reschedule-booking.handler';
 import { buildPrisma, buildTenant, mockBooking } from '../testing/booking-test-helpers';
 
@@ -28,6 +28,30 @@ describe('RescheduleBookingHandler', () => {
         bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+});
+
+describe('RescheduleBookingHandler — DB exclusion constraint error mapping', () => {
+  it('maps Postgres 23P01 exclusion violation to ConflictException on reschedule', async () => {
+    const exclusionError = new Prisma.PrismaClientKnownRequestError(
+      'exclusion constraint violation',
+      { code: 'P2010', clientVersion: '5.0.0', meta: { code: '23P01' } },
+    );
+    const prisma = buildPrisma();
+    prisma.$transaction = jest.fn().mockRejectedValueOnce(exclusionError);
+
+    await expect(
+      new RescheduleBookingHandler(
+        prisma as never,
+        buildTenant() as never,
+        defaultRescheduleSettings as never,
+        { updateMeeting: jest.fn().mockResolvedValue(undefined) } as never,
+      ).execute({
+        bookingId: 'book-1',
+        newScheduledAt: new Date(Date.now() + 86_400_000),
+        changedBy: 'user-1',
+      }),
+    ).rejects.toThrow(ConflictException);
   });
 });
 

@@ -16,6 +16,18 @@ import { CreateBookingDto } from './create-booking.dto';
 
 const VAT_RATE = 0.15;
 
+/** Re-map a Postgres exclusion violation (23P01) to a domain 409 conflict. */
+function mapDbConflict(err: unknown): never {
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    err.code === 'P2010' &&
+    (err.meta as Record<string, unknown> | undefined)?.['code'] === '23P01'
+  ) {
+    throw new ConflictException('Employee already has a booking in this time slot');
+  }
+  throw err;
+}
+
 const roundMoney = (amount: number): number => Number(amount.toFixed(2));
 
 export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expiresAt'> & {
@@ -225,7 +237,7 @@ export class CreateBookingHandler {
         return { ...booking, invoiceId: invoice?.id ?? null };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
+    ).catch(mapDbConflict);
 
     // After insert: check if minParticipants is now reached for this slot
     if (isGroupService) {
