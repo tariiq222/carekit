@@ -35,9 +35,13 @@ import { UpdateContactMessageStatusHandler } from './contact-messages/update-con
 import { CAPTCHA_VERIFIER, createCaptchaVerifier } from './contact-messages/captcha.verifier';
 import { NotificationChannelModule } from './notification-channel/notification-channel.module';
 import { SmsModule } from '../../infrastructure/sms/sms.module';
+import { EmailModule } from '../../infrastructure/email/email.module';
 import { GetOrgSmsConfigHandler } from './org-sms-config/get-org-sms-config.handler';
 import { UpsertOrgSmsConfigHandler } from './org-sms-config/upsert-org-sms-config.handler';
 import { TestSmsConfigHandler } from './org-sms-config/test-sms-config.handler';
+import { GetOrgEmailConfigHandler } from './org-email-config/get-org-email-config.handler';
+import { UpsertOrgEmailConfigHandler } from './org-email-config/upsert-org-email-config.handler';
+import { TestEmailConfigHandler } from './org-email-config/test-email-config.handler';
 import { SmsDlrHandler } from './sms-dlr/sms-dlr.handler';
 import { RegisterFcmTokenHandler } from './fcm-tokens/register-fcm-token.handler';
 import { UnregisterFcmTokenHandler } from './fcm-tokens/unregister-fcm-token.handler';
@@ -47,6 +51,8 @@ import { OnBookingCreatedStaffHandler } from './events/on-booking-created-staff.
 import { OnBookingCancelledStaffHandler } from './events/on-booking-cancelled-staff.handler';
 import { OnPaymentCompletedStaffHandler } from './events/on-payment-completed-staff.handler';
 import { OnClientEnrolledStaffHandler } from './events/on-client-enrolled-staff.handler';
+import { ResilientNotificationDispatcher } from './resilient-notification-dispatcher/resilient-notification-dispatcher.service';
+import { NotificationRetryWorker } from './resilient-notification-dispatcher/notification-retry-worker';
 
 const handlers = [
   SendPushHandler,
@@ -55,6 +61,9 @@ const handlers = [
   GetOrgSmsConfigHandler,
   UpsertOrgSmsConfigHandler,
   TestSmsConfigHandler,
+  GetOrgEmailConfigHandler,
+  UpsertOrgEmailConfigHandler,
+  TestEmailConfigHandler,
   SmsDlrHandler,
   SendNotificationHandler,
   CreateNotificationHandler,
@@ -80,6 +89,8 @@ const handlers = [
   UnregisterFcmTokenHandler,
   GetClientPushTargetsHandler,
   GetStaffTargetsHandler,
+  ResilientNotificationDispatcher,
+  NotificationRetryWorker,
 ];
 
 const eventHandlers = [
@@ -95,7 +106,7 @@ const eventHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule, SmsModule],
+  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule, SmsModule, EmailModule],
   controllers: [DashboardCommsController],
   providers: [...handlers, ...eventHandlers, { provide: CAPTCHA_VERIFIER, useFactory: () => createCaptchaVerifier() }],
   exports: [...handlers, NotificationChannelModule],
