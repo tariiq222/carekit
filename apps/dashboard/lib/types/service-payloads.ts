@@ -100,8 +100,11 @@ export interface SetDurationOptionsPayload {
 
 /* ─── Booking Type Payloads ─── */
 
+// DB-10: bookingType is now the ServiceBookingMode enum.
+import type { ServiceBookingMode } from './service'
+
 export interface BookingTypeConfigPayload {
-  bookingType: 'in_person' | 'online'
+  bookingType: ServiceBookingMode
   price: number
   durationMins: number
   isActive?: boolean

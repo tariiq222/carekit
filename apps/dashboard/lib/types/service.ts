@@ -61,10 +61,13 @@ export interface Service {
   durationOptions?: ServiceDurationOption[]
 }
 
+// DB-10: bookingType is now the ServiceBookingMode enum ('IN_PERSON' | 'ONLINE').
+export type ServiceBookingMode = 'IN_PERSON' | 'ONLINE'
+
 export interface ServiceBookingType {
   id: string
   serviceId: string
-  bookingType: 'in_person' | 'online'
+  bookingType: ServiceBookingMode
   price: number
   durationMins: number
   isActive: boolean

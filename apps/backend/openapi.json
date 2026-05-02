@@ -287,12 +287,12 @@
       "BookingConfigInputDto": {
         "properties": {
           "bookingType": {
-            "description": "Booking delivery type",
+            "description": "Booking delivery mode for this service",
             "enum": [
-              "in_person",
-              "online"
+              "IN_PERSON",
+              "ONLINE"
             ],
-            "example": "in_person",
+            "example": "IN_PERSON",
             "type": "string"
           },
           "durationMins": {
@@ -2548,20 +2548,39 @@
       },
       "MoyasarWebhookDto": {
         "properties": {
+          "account_name": {
+            "description": "Name of the account associated with the payment",
+            "example": "My Account",
+            "type": "string"
+          },
           "amount": {
             "description": "Amount in the smallest currency unit (halalas)",
             "example": 10000,
             "type": "number"
+          },
+          "created_at": {
+            "description": "ISO 8601 timestamp when the payment was created",
+            "example": "2024-01-15T10:30:00Z",
+            "type": "string"
           },
           "currency": {
             "description": "ISO 4217 currency code",
             "example": "SAR",
             "type": "string"
           },
+          "data": {
+            "description": "Additional payment data",
+            "type": "object"
+          },
           "id": {
             "description": "Moyasar payment ID",
             "example": "pay_abc123",
             "type": "string"
+          },
+          "live": {
+            "description": "Indicates if the payment was made in live mode",
+            "example": true,
+            "type": "object"
           },
           "message": {
             "description": "Human-readable message from Moyasar (e.g. failure reason)",
@@ -2576,14 +2595,26 @@
             ],
             "description": "Metadata attached when the payment was initiated"
           },
+          "secret_token": {
+            "description": "Secret token for payment verification",
+            "type": "string"
+          },
           "status": {
             "description": "Payment status reported by Moyasar",
             "enum": [
               "paid",
               "failed",
-              "refunded"
+              "refunded",
+              "authorized",
+              "captured",
+              "voided"
             ],
             "example": "paid",
+            "type": "string"
+          },
+          "type": {
+            "description": "Payment type",
+            "example": "payment",
             "type": "string"
           }
         },

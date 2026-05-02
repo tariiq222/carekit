@@ -10,12 +10,14 @@ import {
 import { useLocale } from "@/components/locale-provider"
 import { BookingTypeRow } from "../booking-type-row"
 import type { DraftBookingType, DraftDurationOption } from "../booking-types-editor"
+import type { ServiceBookingMode } from "@/lib/types/service"
 
 /* ─── Constants ─── */
 
-const BOOKING_TYPES = [
-  { value: "in_person" as const, labelKey: "services.bookingTypes.clinic" },
-  { value: "online" as const, labelKey: "services.bookingTypes.online" },
+// DB-10: values are now uppercase enum strings
+const BOOKING_TYPES: { value: ServiceBookingMode; labelKey: string }[] = [
+  { value: "IN_PERSON", labelKey: "services.bookingTypes.clinic" },
+  { value: "ONLINE", labelKey: "services.bookingTypes.online" },
 ]
 
 /* ─── Props ─── */
