@@ -32,6 +32,25 @@ export const FeatureKey = {
   SERVICES: "services",
   MONTHLY_BOOKINGS: "monthly_bookings",
   STORAGE: "storage",
+
+  // ── On/Off — PRO (Phase 3) ────────────────────────────────────────
+  ZOOM_INTEGRATION: "zoom_integration",
+  WALK_IN_BOOKINGS: "walk_in_bookings",
+  BANK_TRANSFER_PAYMENTS: "bank_transfer_payments",
+  MULTI_BRANCH: "multi_branch",
+  DEPARTMENTS: "departments",
+  CLIENT_RATINGS: "client_ratings",
+  DATA_EXPORT: "data_export",
+
+  // ── On/Off — ENTERPRISE (Phase 3) ────────────────────────────────
+  SMS_PROVIDER_PER_TENANT: "sms_provider_per_tenant",
+  WHITE_LABEL_MOBILE: "white_label_mobile",
+  CUSTOM_DOMAIN: "custom_domain",
+  API_ACCESS: "api_access",
+  WEBHOOKS: "webhooks",
+  PRIORITY_SUPPORT: "priority_support",
+  AUDIT_EXPORT: "audit_export",
+  MULTI_CURRENCY: "multi_currency",
 } as const;
 
 export type FeatureKey = (typeof FeatureKey)[keyof typeof FeatureKey];
