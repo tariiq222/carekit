@@ -85,6 +85,7 @@ export class DashboardCommsController {
 
   // ── SMS Settings (SaaS-02g-sms) ────────────────────────────────────────────
 
+  @RequireFeature(FeatureKey.SMS_PROVIDER_PER_TENANT)
   @ApiOperation({ summary: 'Get SMS provider configuration (owner-scoped)' })
   @ApiOkResponse({ description: 'OrganizationSmsConfig view (no secrets)' })
   @Get('settings/sms')
@@ -92,6 +93,7 @@ export class DashboardCommsController {
     return this.getOrgSmsConfig.execute();
   }
 
+  @RequireFeature(FeatureKey.SMS_PROVIDER_PER_TENANT)
   @ApiOperation({ summary: 'Upsert SMS provider configuration' })
   @ApiOkResponse({ description: 'Updated OrganizationSmsConfig view' })
   @HttpCode(HttpStatus.OK)
@@ -100,6 +102,7 @@ export class DashboardCommsController {
     return this.upsertOrgSmsConfig.execute(dto);
   }
 
+  @RequireFeature(FeatureKey.SMS_PROVIDER_PER_TENANT)
   @ApiOperation({ summary: 'Send a test SMS via the configured provider' })
   @ApiOkResponse({ description: 'Test result' })
   @HttpCode(HttpStatus.OK)

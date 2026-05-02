@@ -242,6 +242,7 @@ export class DashboardOrganizationSettingsController {
   // ── Ratings ───────────────────────────────────────────────────────────────
 
   @Post('ratings')
+  @RequireFeature(FeatureKey.CLIENT_RATINGS)
   @ApiOperation({ summary: 'Submit a rating for a booking' })
   @ApiCreatedResponse({ description: 'Rating submitted' })
   submitRatingEndpoint(@Body() body: SubmitRatingDto) {
@@ -249,6 +250,7 @@ export class DashboardOrganizationSettingsController {
   }
 
   @Get('ratings')
+  @RequireFeature(FeatureKey.CLIENT_RATINGS)
   @ApiOperation({ summary: 'List ratings' })
   @ApiOkResponse({ description: 'Paginated list of ratings' })
   listRatingsEndpoint(@Query() query: ListRatingsDto) {

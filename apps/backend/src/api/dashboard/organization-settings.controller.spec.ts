@@ -138,3 +138,16 @@ describe('@RequireFeature metadata — INTAKE_FORMS', () => {
     expect(meta).toBe(FeatureKey.INTAKE_FORMS);
   });
 });
+
+describe('@RequireFeature metadata — CLIENT_RATINGS', () => {
+  it.each([
+    'submitRatingEndpoint',
+    'listRatingsEndpoint',
+  ])('annotates %s with FeatureKey.CLIENT_RATINGS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardOrganizationSettingsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.CLIENT_RATINGS);
+  });
+});
