@@ -29,8 +29,8 @@ describe('SaaS-02f — email-template isolation', () => {
         data: {
           organizationId: a.id,
           slug,
-          nameAr: 'ترحيب أ',
-          subjectAr: 'مرحباً أ',
+          name: 'ترحيب أ',
+          subject: 'مرحباً أ',
           htmlBody: '<p>A</p>',
         },
         select: { id: true, organizationId: true, slug: true },
@@ -42,8 +42,8 @@ describe('SaaS-02f — email-template isolation', () => {
         data: {
           organizationId: b.id,
           slug,
-          nameAr: 'ترحيب ب',
-          subjectAr: 'مرحباً ب',
+          name: 'ترحيب ب',
+          subject: 'مرحباً ب',
           htmlBody: '<p>B</p>',
         },
         select: { id: true, organizationId: true, slug: true },
@@ -75,8 +75,8 @@ describe('SaaS-02f — email-template isolation', () => {
         data: {
           organizationId: a.id,
           slug: `only-A-${ts}`,
-          nameAr: 'خاص بـ أ',
-          subjectAr: 'خاص',
+          name: 'خاص بـ أ',
+          subject: 'خاص',
           htmlBody: '<p></p>',
         },
         select: { id: true },

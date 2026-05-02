@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 export interface PreviewEmailTemplateCommand {
   id: string;
   context: Record<string, unknown>;
-  lang: 'ar' | 'en';
 }
 
 @Injectable()
@@ -20,17 +19,14 @@ export class PreviewEmailTemplateHandler {
       throw new NotFoundException('Email template not found');
     }
 
-    const rawSubject = (cmd.lang === 'ar' ? template.subjectAr : template.subjectEn) ?? '';
-    const rawBody = template.htmlBody;
-
     const interpolate = (str: string): string =>
       str.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
         String(cmd.context[key] ?? ''),
       );
 
     return {
-      subject: interpolate(rawSubject),
-      body: interpolate(rawBody),
+      subject: interpolate(template.subject),
+      body: interpolate(template.htmlBody),
     };
   }
 }

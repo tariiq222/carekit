@@ -33,15 +33,16 @@ describe('CreateEmailTemplateHandler', () => {
     );
     const result = await handler.execute({
       slug: 'welcome',
-      nameAr: 'ترحيب',
-      subjectAr: 'مرحباً',
+      name: 'ترحيب',
+      subject: 'مرحباً',
       htmlBody: '<p>{{client_name}}</p>',
     });
     expect(result.id).toBe('tpl-1');
     expect(prisma.emailTemplate.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         slug: 'welcome',
-        subjectAr: 'مرحباً',
+        subject: 'مرحباً',
+        name: 'ترحيب',
         organizationId: 'org-A',
       }),
     });
@@ -57,8 +58,8 @@ describe('CreateEmailTemplateHandler', () => {
     await expect(
       handler.execute({
         slug: 'welcome',
-        nameAr: 'ترحيب',
-        subjectAr: 'مرحباً',
+        name: 'ترحيب',
+        subject: 'مرحباً',
         htmlBody: '<p></p>',
       }),
     ).rejects.toThrow('already exists');
@@ -68,22 +69,22 @@ describe('CreateEmailTemplateHandler', () => {
 
 // ─── UpdateEmailTemplateHandler ──────────────────────────────────────────────
 describe('UpdateEmailTemplateHandler', () => {
-  it('updates subjectAr only when provided', async () => {
+  it('updates subject only when provided', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce({
       id: 'tpl-1',
       slug: 'welcome',
     });
-    prisma.emailTemplate.update.mockResolvedValueOnce({ id: 'tpl-1', subjectAr: 'Updated' });
+    prisma.emailTemplate.update.mockResolvedValueOnce({ id: 'tpl-1', subject: 'Updated' });
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
       id: 'tpl-1',
-      subjectAr: 'Updated',
+      subject: 'Updated',
     });
-    expect(result.subjectAr).toBe('Updated');
+    expect(result.subject).toBe('Updated');
     expect(prisma.emailTemplate.update).toHaveBeenCalledWith({
       where: { id: 'tpl-1' },
-      data: { subjectAr: 'Updated' },
+      data: { subject: 'Updated' },
     });
   });
 
@@ -92,7 +93,7 @@ describe('UpdateEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ id: 'missing', subjectAr: 'X' }),
+      handler.execute({ id: 'missing', subject: 'X' }),
     ).rejects.toThrow('not found');
   });
 
@@ -101,7 +102,7 @@ describe('UpdateEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ id: 'tpl-1', subjectAr: 'X' }),
+      handler.execute({ id: 'tpl-1', subject: 'X' }),
     ).rejects.toThrow('not found');
   });
 });
@@ -132,35 +133,20 @@ describe('GetEmailTemplateHandler', () => {
 describe('PreviewEmailTemplateHandler', () => {
   const mockTemplate = {
     id: 'tpl-1',
-    subjectAr: 'مرحباً {{client_name}}',
-    subjectEn: 'Hello {{client_name}}',
+    subject: 'مرحباً {{client_name}}',
     htmlBody: '<p>Hi {{client_name}}</p>',
   };
 
-  it('interpolates context into subject and body for Arabic', async () => {
+  it('interpolates context into subject and body', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
       id: 'tpl-1',
-      lang: 'ar',
       context: { client_name: 'أحمد' },
     });
     expect(result.subject).toBe('مرحباً أحمد');
     expect(result.body).toBe('<p>Hi أحمد</p>');
-  });
-
-  it('interpolates context into subject and body for English', async () => {
-    const prisma = buildPrisma();
-    prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
-    const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({
-      id: 'tpl-1',
-      lang: 'en',
-      context: { client_name: 'John' },
-    });
-    expect(result.subject).toBe('Hello John');
-    expect(result.body).toBe('<p>Hi John</p>');
   });
 
   it('replaces missing context keys with empty string', async () => {
@@ -169,10 +155,9 @@ describe('PreviewEmailTemplateHandler', () => {
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
       id: 'tpl-1',
-      lang: 'en',
       context: {},
     });
-    expect(result.subject).toBe('Hello ');
+    expect(result.subject).toBe('مرحباً ');
     expect(result.body).toBe('<p>Hi </p>');
   });
 
@@ -181,7 +166,7 @@ describe('PreviewEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ id: 'missing', lang: 'ar', context: {} }),
+      handler.execute({ id: 'missing', context: {} }),
     ).rejects.toThrow(NotFoundException);
   });
 });

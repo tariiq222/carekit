@@ -146,31 +146,90 @@ async function main() {
     });
   }
 
-  // 6. Email template for password reset (first seeded template)
-  await prisma.emailTemplate.upsert({
-    where: { organizationId_slug: { organizationId: DEFAULT_ORG_ID, slug: 'user_password_reset' } },
-    update: {},
-    create: {
-      organizationId: DEFAULT_ORG_ID,
+  // 6. Email templates — one row per slug the backend sends.
+  //    Free-form: owners rewrite name/subject/body in any language they want.
+  const layout = (heading: string, bodyHtml: string) => `<div style="font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; padding: 24px; max-width: 560px; direction: rtl;">
+  <h2 style="color: #354FD8; margin: 0 0 16px;">${heading}</h2>
+  ${bodyHtml}
+</div>`;
+
+  const button = (href: string, label: string) =>
+    `<p style="margin: 24px 0;"><a href="${href}" style="background:#354FD8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">${label}</a></p>`;
+
+  const TEMPLATES: Array<{ slug: string; name: string; subject: string; htmlBody: string }> = [
+    {
       slug: 'user_password_reset',
-      nameAr: 'إعادة تعيين كلمة المرور',
-      nameEn: 'Password Reset',
-      subjectAr: 'إعادة تعيين كلمة المرور — Deqah',
-      subjectEn: 'Reset your Deqah password',
-      htmlBody: `<div style="font-family: 'IBM Plex Sans Arabic', system-ui; padding: 24px; max-width: 560px;">
-  <h2 style="color: #354FD8;">Reset your Deqah password</h2>
-  <p>Hi {{userName}},</p>
-  <p>We received a request to reset your Deqah password. Click the button below to set a new one. This link expires in 30 minutes.</p>
-  <p style="margin: 24px 0;">
-    <a href="{{resetUrl}}" style="background:#354FD8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">
-      Reset password
-    </a>
-  </p>
-  <p style="color:#6b7280;font-size:14px;">If you didn't request this, you can safely ignore this email.</p>
-</div>`,
-      isActive: true,
+      name: 'إعادة تعيين كلمة المرور',
+      subject: 'إعادة تعيين كلمة المرور — Deqah',
+      htmlBody: layout(
+        'إعادة تعيين كلمة المرور',
+        `<p>مرحباً {{userName}}،</p>
+  <p>وصلنا طلب لإعادة تعيين كلمة مرورك في Deqah. اضغط الزر بالأسفل لتعيين كلمة جديدة. الرابط صالح لمدة 30 دقيقة.</p>
+  ${button('{{resetUrl}}', 'إعادة تعيين كلمة المرور')}
+  <p style="color:#6b7280;font-size:14px;">إذا لم تطلب هذا، يمكنك تجاهل الرسالة بأمان.</p>`,
+      ),
     },
-  });
+    {
+      slug: 'user_email_verification',
+      name: 'تأكيد البريد الإلكتروني',
+      subject: 'تأكيد بريدك الإلكتروني — Deqah',
+      htmlBody: layout(
+        'تأكيد البريد الإلكتروني',
+        `<p>مرحباً {{userName}}،</p>
+  <p>اضغط الزر بالأسفل لتأكيد بريدك الإلكتروني وتفعيل حسابك في Deqah.</p>
+  ${button('{{verifyUrl}}', 'تأكيد البريد')}
+  <p style="color:#6b7280;font-size:14px;">إذا لم تنشئ هذا الحساب، يمكنك تجاهل الرسالة.</p>`,
+      ),
+    },
+    {
+      slug: 'welcome',
+      name: 'رسالة ترحيب',
+      subject: 'أهلاً بك في Deqah',
+      htmlBody: layout(
+        'أهلاً بك',
+        `<p>مرحباً {{client_name}}،</p>
+  <p>سعداء بانضمامك إلينا. حسابك جاهز الآن، ويمكنك حجز موعدك الأول في أي وقت.</p>`,
+      ),
+    },
+    {
+      slug: 'booking-cancelled',
+      name: 'إلغاء حجز',
+      subject: 'تم إلغاء حجزك',
+      htmlBody: layout(
+        'تم إلغاء حجزك',
+        `<p>مرحباً {{client_name}}،</p>
+  <p>نأسف لإبلاغك بأنه تم إلغاء حجزك رقم <strong>{{booking_id}}</strong>.</p>
+  <p>السبب: {{reason}}</p>
+  <p>يمكنك إعادة الحجز في أي وقت من تطبيق Deqah.</p>`,
+      ),
+    },
+    {
+      slug: 'payment-failed',
+      name: 'فشل عملية دفع',
+      subject: 'تعذّر إتمام الدفع',
+      htmlBody: layout(
+        'تعذّر إتمام الدفع',
+        `<p>مرحباً {{client_name}}،</p>
+  <p>لم نتمكن من معالجة دفعتك بقيمة <strong>{{amount}} {{currency}}</strong>.</p>
+  <p>يرجى التحقق من بيانات بطاقتك أو تجربة وسيلة دفع أخرى.</p>`,
+      ),
+    },
+  ];
+
+  for (const tmpl of TEMPLATES) {
+    await prisma.emailTemplate.upsert({
+      where: { organizationId_slug: { organizationId: DEFAULT_ORG_ID, slug: tmpl.slug } },
+      update: {},
+      create: {
+        organizationId: DEFAULT_ORG_ID,
+        slug: tmpl.slug,
+        name: tmpl.name,
+        subject: tmpl.subject,
+        htmlBody: tmpl.htmlBody,
+        isActive: true,
+      },
+    });
+  }
 
   await prisma.$disconnect();
 
@@ -181,7 +240,7 @@ async function main() {
   console.log(`✔  OrganizationSettings singleton ready`);
   console.log(`✔  Main branch created`);
   console.log(`✔  BusinessHours seeded (Sun–Thu 09:00–17:00, Fri/Sat closed)`);
-  console.log(`✔  Email template "user_password_reset" upserted`);
+  console.log(`✔  Email templates upserted: ${TEMPLATES.map(t => t.slug).join(', ')}`);
   console.log('─────────────────────────────────────────────');
 }
 

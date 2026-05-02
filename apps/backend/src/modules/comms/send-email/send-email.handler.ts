@@ -31,8 +31,7 @@ export class SendEmailHandler {
     }
 
     const html = this.interpolate(template.htmlBody, dto.vars);
-    const rawSubject = template.subjectAr || template.subjectEn || '';
-    const subject = this.interpolate(rawSubject, dto.vars);
+    const subject = this.interpolate(template.subject, dto.vars);
 
     // Try per-tenant email provider first; fall back to platform SMTP.
     try {

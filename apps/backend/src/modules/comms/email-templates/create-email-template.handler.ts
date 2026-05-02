@@ -27,10 +27,8 @@ export class CreateEmailTemplateHandler {
       data: {
         organizationId, // SaaS-02f
         slug: cmd.slug,
-        nameAr: cmd.nameAr,
-        nameEn: cmd.nameEn,
-        subjectAr: cmd.subjectAr,
-        subjectEn: cmd.subjectEn,
+        name: cmd.name,
+        subject: cmd.subject,
         htmlBody: cmd.htmlBody,
       },
     });
