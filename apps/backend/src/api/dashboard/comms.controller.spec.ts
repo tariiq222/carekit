@@ -1,4 +1,6 @@
 import { DashboardCommsController } from './comms.controller';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -98,5 +100,21 @@ describe('DashboardCommsController', () => {
     expect(listMessages.execute).toHaveBeenCalledWith(
       expect.objectContaining({ conversationId: 'conv-1' }),
     );
+  });
+});
+
+describe('@RequireFeature metadata — EMAIL_TEMPLATES', () => {
+  it.each([
+    'listEmailTemplatesEndpoint',
+    'createEmailTemplateEndpoint',
+    'getEmailTemplateEndpoint',
+    'previewEmailTemplateEndpoint',
+    'updateEmailTemplateEndpoint',
+  ])('annotates %s with FeatureKey.EMAIL_TEMPLATES', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardCommsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.EMAIL_TEMPLATES);
   });
 });
