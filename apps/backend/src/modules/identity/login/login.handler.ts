@@ -31,13 +31,22 @@ export class LoginHandler {
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     // SaaS-01 — resolve active membership and forward as tenant claims.
-    // Fallback to DEFAULT_ORGANIZATION_ID keeps legacy users (no backfilled
-    // membership) able to log in without crashing.
-    const membership = await this.prisma.membership.findFirst({
+    // Sticky-org: prefer User.lastActiveOrganizationId when it still maps
+    // to an active membership, so multi-org users land on their last
+    // chosen tenant. Otherwise fall back to canonical ordering. Final
+    // fallback to DEFAULT_ORGANIZATION_ID keeps legacy users (no
+    // backfilled membership) able to log in without crashing.
+    const activeMemberships = await this.prisma.membership.findMany({
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, organizationId: true, role: true },
     });
+    const sticky = user.lastActiveOrganizationId
+      ? activeMemberships.find(
+          (m) => m.organizationId === user.lastActiveOrganizationId,
+        ) ?? null
+      : null;
+    const membership = sticky ?? activeMemberships[0] ?? null;
 
     return this.tokens.issueTokenPair(user, {
       organizationId: membership?.organizationId ?? DEFAULT_ORGANIZATION_ID,
