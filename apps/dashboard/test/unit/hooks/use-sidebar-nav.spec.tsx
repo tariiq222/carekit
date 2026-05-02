@@ -49,6 +49,10 @@ const { fetchFeatureFlagMap } = vi.hoisted(() => ({
   fetchFeatureFlagMap: vi.fn(),
 }))
 
+const { useBillingFeatures } = vi.hoisted(() => ({
+  useBillingFeatures: vi.fn(),
+}))
+
 vi.mock("next/navigation", () => ({ usePathname, useRouter }))
 vi.mock("@/components/providers/auth-provider", () => ({ useAuth }))
 vi.mock("@/lib/api/bookings", () => ({ fetchBookingStats }))
@@ -56,6 +60,7 @@ vi.mock("@/components/sidebar-config", () => ({ navGroups }))
 vi.mock("@/lib/route-prefetch", () => ({ prefetchRouteData }))
 vi.mock("@/lib/api/license", () => ({ fetchLicenseFeatures }))
 vi.mock("@/lib/api/feature-flags", () => ({ fetchFeatureFlagMap }))
+vi.mock("@/hooks/use-billing-features", () => ({ useBillingFeatures }))
 
 import { useSidebarNav } from "@/hooks/use-sidebar-nav"
 
@@ -85,6 +90,8 @@ describe("useSidebarNav", () => {
     fetchLicenseFeatures.mockResolvedValue([])
     fetchFeatureFlagMap.mockResolvedValue({})
     fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })
+    // Default: billing features still loading (no flash behavior — show all items)
+    useBillingFeatures.mockReturnValue({ data: undefined, isLoading: true })
   })
 
   it("item without featureFlag is not removed due to feature flag map", async () => {
@@ -241,5 +248,80 @@ describe("useSidebarNav", () => {
 
     expect(result.current.userInitials).toBe("??")
     expect(result.current.userName).toBe("—")
+  })
+})
+
+// ── Override-driven billing feature gating ────────────────────────────────────
+// Tests that the hook's feature-flag filtering via useBillingFeatures
+// correctly hides/shows items when an admin override changes coupons.enabled.
+// This block uses a navGroups mock with a real coupons featureFlag entry.
+
+// Override the navGroups mock to include a coupons item
+const navGroupsWithCoupons = [
+  {
+    labelKey: "nav.finance",
+    items: [
+      { titleKey: "nav.payments", href: "/payments", icon: {} },
+      { titleKey: "nav.coupons", href: "/coupons", icon: {}, featureFlag: "coupons" },
+    ],
+  },
+]
+
+describe("useSidebarNav — override-driven billing feature gating", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    usePathname.mockReturnValue("/")
+    useRouter.mockReturnValue({ prefetch: vi.fn(), push: vi.fn() })
+    useAuth.mockReturnValue({
+      user: { name: "Ali Hassan", email: "ali@clinic.com", role: "ADMIN", permissions: [] },
+    })
+    fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })
+    fetchLicenseFeatures.mockResolvedValue([])
+    fetchFeatureFlagMap.mockResolvedValue({})
+  })
+
+  it("hides /coupons when useBillingFeatures returns coupons.enabled=false (plan default, no override)", async () => {
+    // Simulate plan default: coupons disabled
+    useBillingFeatures.mockReturnValue({
+      data: { features: { coupons: { enabled: false } }, planSlug: "BASIC" },
+      isLoading: false,
+    })
+    // Use navGroups that includes /coupons with featureFlag: "coupons"
+    navGroups.splice(0, navGroups.length, ...navGroupsWithCoupons)
+
+    const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
+
+    await waitFor(() => expect(result.current.featuresLoading).toBe(false))
+    const financeItems = result.current.filteredGroups[0]?.items ?? []
+    expect(financeItems.some((i) => i.href === "/coupons")).toBe(false)
+  })
+
+  it("shows /coupons when useBillingFeatures returns coupons.enabled=true (admin FORCE_ON override)", async () => {
+    // Simulate admin FORCE_ON override: coupons enabled even on BASIC
+    useBillingFeatures.mockReturnValue({
+      data: { features: { coupons: { enabled: true } }, planSlug: "BASIC" },
+      isLoading: false,
+    })
+    navGroups.splice(0, navGroups.length, ...navGroupsWithCoupons)
+
+    const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
+
+    await waitFor(() => expect(result.current.featuresLoading).toBe(false))
+    const financeItems = result.current.filteredGroups[0]?.items ?? []
+    expect(financeItems.some((i) => i.href === "/coupons")).toBe(true)
+  })
+
+  it("shows all flagged items while useBillingFeatures is still loading (no flash)", () => {
+    useBillingFeatures.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    })
+    navGroups.splice(0, navGroups.length, ...navGroupsWithCoupons)
+
+    const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
+
+    // While loading, all items (including feature-flagged) should be shown
+    const financeItems = result.current.filteredGroups[0]?.items ?? []
+    expect(financeItems.some((i) => i.href === "/coupons")).toBe(true)
   })
 })

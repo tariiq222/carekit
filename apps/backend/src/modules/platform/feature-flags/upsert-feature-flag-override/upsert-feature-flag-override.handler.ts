@@ -58,21 +58,33 @@ export class UpsertFeatureFlagOverrideHandler {
         });
         if (!platformFlag) throw new NotFoundException('feature_flag_not_found');
 
-        await tx.featureFlag.upsert({
-          where: { organizationId_key: { organizationId, key } },
-          create: {
-            organizationId,
-            key,
-            enabled: mode === 'FORCE_ON',
-            allowedPlans: platformFlag.allowedPlans,
-            limitKind: platformFlag.limitKind,
-            nameAr: platformFlag.nameAr,
-            nameEn: platformFlag.nameEn,
-            descriptionAr: platformFlag.descriptionAr,
-            descriptionEn: platformFlag.descriptionEn,
-          },
-          update: { enabled: mode === 'FORCE_ON' },
+        // Use findFirst + create/update because the unique index on (organizationId, key)
+        // is a partial index (WHERE organizationId IS NOT NULL), which Prisma upsert's
+        // ON CONFLICT clause cannot target. Explicit find-then-write avoids the error.
+        const existingFlag = await tx.featureFlag.findFirst({
+          where: { organizationId, key },
+          select: { id: true },
         });
+        if (existingFlag) {
+          await tx.featureFlag.update({
+            where: { id: existingFlag.id },
+            data: { enabled: mode === 'FORCE_ON' },
+          });
+        } else {
+          await tx.featureFlag.create({
+            data: {
+              organizationId,
+              key,
+              enabled: mode === 'FORCE_ON',
+              allowedPlans: platformFlag.allowedPlans,
+              limitKind: platformFlag.limitKind,
+              nameAr: platformFlag.nameAr,
+              nameEn: platformFlag.nameEn,
+              descriptionAr: platformFlag.descriptionAr,
+              descriptionEn: platformFlag.descriptionEn,
+            },
+          });
+        }
       }
 
       // Audit log: one row per override operation

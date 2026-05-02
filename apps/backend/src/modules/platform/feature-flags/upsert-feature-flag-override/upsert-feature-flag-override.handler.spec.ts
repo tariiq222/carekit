@@ -20,15 +20,22 @@ const platformFlag = {
   descriptionEn: null,
 };
 
-function buildMocks() {
+function buildMocks({ existingFlag = null }: { existingFlag?: { id: string } | null } = {}) {
   const orgFindUnique = jest.fn().mockResolvedValue({ id: ORG_ID, subscriptionId: 'sub-1' });
-  const flagFindFirst = jest.fn().mockResolvedValue(platformFlag);
-  const flagUpsert = jest.fn().mockResolvedValue({ id: 'flag-1', organizationId: ORG_ID, key: KEY });
+  // flagFindFirst is called twice in FORCE_ON/FORCE_OFF paths:
+  //   1. to look up the platform catalog entry (returns platformFlag when organizationId=null)
+  //   2. to check for an existing org-scoped row (returns existingFlag or null)
+  const flagFindFirst = jest
+    .fn()
+    .mockResolvedValueOnce(platformFlag)   // catalog lookup
+    .mockResolvedValueOnce(existingFlag);  // existing-row check
+  const flagCreate = jest.fn().mockResolvedValue({ id: 'flag-1', organizationId: ORG_ID, key: KEY });
+  const flagUpdate = jest.fn().mockResolvedValue({ id: 'flag-1', organizationId: ORG_ID, key: KEY });
   const flagDeleteMany = jest.fn().mockResolvedValue({ count: 1 });
   const auditCreate = jest.fn().mockResolvedValue({ id: 'audit-1' });
 
   const txClient = {
-    featureFlag: { findFirst: flagFindFirst, upsert: flagUpsert, deleteMany: flagDeleteMany },
+    featureFlag: { findFirst: flagFindFirst, create: flagCreate, update: flagUpdate, deleteMany: flagDeleteMany },
     superAdminActionLog: { create: auditCreate },
   };
   const transaction = jest.fn((cb: (tx: typeof txClient) => Promise<unknown>) => cb(txClient));
@@ -43,7 +50,7 @@ function buildMocks() {
   const eventBusPublish = jest.fn().mockResolvedValue(undefined);
   const eventBusMock = { publish: eventBusPublish } as unknown as EventBusService;
 
-  return { prismaMock, eventBusMock, orgFindUnique, flagFindFirst, flagUpsert, flagDeleteMany, auditCreate, eventBusPublish };
+  return { prismaMock, eventBusMock, orgFindUnique, flagFindFirst, flagCreate, flagUpdate, flagDeleteMany, auditCreate, eventBusPublish };
 }
 
 async function buildHandler(mocks: ReturnType<typeof buildMocks>) {
@@ -58,7 +65,8 @@ async function buildHandler(mocks: ReturnType<typeof buildMocks>) {
 }
 
 describe('UpsertFeatureFlagOverrideHandler', () => {
-  it('INHERIT: deletes the org-scoped override row (no upsert)', async () => {
+  it('INHERIT: deletes the org-scoped override row (no create or update)', async () => {
+    // For INHERIT we only call deleteMany — no catalog lookup needed
     const mocks = buildMocks();
     const handler = await buildHandler(mocks);
 
@@ -66,32 +74,44 @@ describe('UpsertFeatureFlagOverrideHandler', () => {
 
     expect(result).toEqual({ success: true });
     expect(mocks.flagDeleteMany).toHaveBeenCalledWith({ where: { organizationId: ORG_ID, key: KEY } });
-    expect(mocks.flagUpsert).not.toHaveBeenCalled();
+    expect(mocks.flagCreate).not.toHaveBeenCalled();
+    expect(mocks.flagUpdate).not.toHaveBeenCalled();
   });
 
-  it('FORCE_ON: upserts feature flag with enabled=true', async () => {
-    const mocks = buildMocks();
+  it('FORCE_ON: creates a new org-scoped row with enabled=true when none exists', async () => {
+    const mocks = buildMocks({ existingFlag: null });
     const handler = await buildHandler(mocks);
 
     await handler.execute({ organizationId: ORG_ID, key: KEY, mode: 'FORCE_ON', reason: REASON, superAdminUserId: ADMIN_ID });
 
-    expect(mocks.flagUpsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { organizationId_key: { organizationId: ORG_ID, key: KEY } },
-      create: expect.objectContaining({ organizationId: ORG_ID, key: KEY, enabled: true }),
-      update: { enabled: true },
+    expect(mocks.flagCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ organizationId: ORG_ID, key: KEY, enabled: true }),
     }));
+    expect(mocks.flagUpdate).not.toHaveBeenCalled();
     expect(mocks.flagDeleteMany).not.toHaveBeenCalled();
   });
 
-  it('FORCE_OFF: upserts feature flag with enabled=false', async () => {
-    const mocks = buildMocks();
+  it('FORCE_ON: updates existing row with enabled=true when row already exists', async () => {
+    const mocks = buildMocks({ existingFlag: { id: 'flag-existing' } });
+    const handler = await buildHandler(mocks);
+
+    await handler.execute({ organizationId: ORG_ID, key: KEY, mode: 'FORCE_ON', reason: REASON, superAdminUserId: ADMIN_ID });
+
+    expect(mocks.flagUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'flag-existing' },
+      data: { enabled: true },
+    }));
+    expect(mocks.flagCreate).not.toHaveBeenCalled();
+  });
+
+  it('FORCE_OFF: creates a new org-scoped row with enabled=false when none exists', async () => {
+    const mocks = buildMocks({ existingFlag: null });
     const handler = await buildHandler(mocks);
 
     await handler.execute({ organizationId: ORG_ID, key: KEY, mode: 'FORCE_OFF', reason: REASON, superAdminUserId: ADMIN_ID });
 
-    expect(mocks.flagUpsert).toHaveBeenCalledWith(expect.objectContaining({
-      create: expect.objectContaining({ enabled: false }),
-      update: { enabled: false },
+    expect(mocks.flagCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ enabled: false }),
     }));
   });
 
