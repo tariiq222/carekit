@@ -1,5 +1,7 @@
 import { DashboardBookingsController } from './bookings.controller';
 import { CancellationReason } from '@prisma/client';
+import { REQUIRE_FEATURE_KEY } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 const USER = 'user-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
@@ -155,5 +157,31 @@ describe('DashboardBookingsController', () => {
         customDates: undefined,
       }),
     );
+  });
+});
+
+describe('@RequireFeature metadata — RECURRING_BOOKINGS', () => {
+  it.each([
+    'createRecurringBooking',
+  ])('annotates %s with FeatureKey.RECURRING_BOOKINGS', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.RECURRING_BOOKINGS);
+  });
+});
+
+describe('@RequireFeature metadata — WAITLIST', () => {
+  it.each([
+    'addToWaitlist',
+    'listWaitlist',
+    'removeWaitlistEntry',
+  ])('annotates %s with FeatureKey.WAITLIST', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.WAITLIST);
   });
 });

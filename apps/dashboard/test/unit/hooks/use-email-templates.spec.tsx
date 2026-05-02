@@ -103,13 +103,12 @@ describe("useEmailTemplateMutations", () => {
       result.current.previewMut.mutate({
         id: "t-1",
         context: {},
-        lang: "ar",
       })
     })
 
     await waitFor(() => expect(previewEmailTemplate).toHaveBeenCalledWith(
       "t-1",
-      expect.objectContaining({ context: {}, lang: "ar" }),
+      expect.objectContaining({ context: {} }),
     ))
   })
 })

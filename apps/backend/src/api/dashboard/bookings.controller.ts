@@ -38,6 +38,8 @@ import { CheckAvailabilityHandler } from '../../modules/bookings/check-availabil
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
 import { ListBookingStatusLogHandler } from '../../modules/bookings/list-booking-status-log/list-booking-status-log.handler';
 import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 @ApiTags('Dashboard / Bookings')
 @ApiBearerAuth()
@@ -79,6 +81,7 @@ export class DashboardBookingsController {
   }
 
   @Post('recurring')
+  @RequireFeature(FeatureKey.RECURRING_BOOKINGS)
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a recurring booking series' })
   @ApiCreatedResponse({ description: 'Recurring booking series created', schema: { type: 'object' } })
@@ -136,6 +139,7 @@ export class DashboardBookingsController {
   }
 
   @Post('waitlist')
+  @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'Add a client to the waitlist' })
   @ApiCreatedResponse({ description: 'Waitlist entry created', schema: { type: 'object' } })
   addToWaitlist(@Body() body: AddToWaitlistDto) {
@@ -147,6 +151,7 @@ export class DashboardBookingsController {
   }
 
   @Get('waitlist')
+  @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'List waitlist entries' })
   @ApiOkResponse({ description: 'List of waitlist entries', schema: { type: 'object' } })
   listWaitlist(@Query() query: ListWaitlistDto) {
@@ -154,6 +159,7 @@ export class DashboardBookingsController {
   }
 
   @Delete('waitlist/:id')
+  @RequireFeature(FeatureKey.WAITLIST)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a waitlist entry' })
   @ApiParam({ name: 'id', description: 'Waitlist entry ID', example: '00000000-0000-0000-0000-000000000000' })

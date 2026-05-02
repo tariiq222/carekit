@@ -46,6 +46,8 @@ import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-
 import { PrismaService } from '../../infrastructure/database';
 import { TenantContextService } from '../../common/tenant/tenant-context.service';
 import { SeedOrganizationFromVerticalHandler } from '../../modules/platform/verticals/seed-organization-from-vertical.handler';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -203,6 +205,7 @@ export class DashboardOrganizationSettingsController {
   @Post('intake-forms')
   @ApiOperation({ summary: 'Create an intake form' })
   @ApiCreatedResponse({ description: 'Intake form created' })
+  @RequireFeature(FeatureKey.INTAKE_FORMS)
   createIntakeFormEndpoint(@Body() body: CreateIntakeFormDto) {
     return this.createIntakeForm.execute(body);
   }
@@ -210,6 +213,7 @@ export class DashboardOrganizationSettingsController {
   @Get('intake-forms')
   @ApiOperation({ summary: 'List intake forms' })
   @ApiOkResponse({ description: 'List of intake forms' })
+  @RequireFeature(FeatureKey.INTAKE_FORMS)
   listIntakeFormsEndpoint(@Query() query: ListIntakeFormsDto) {
     return this.listIntakeForms.execute(query);
   }
@@ -219,6 +223,7 @@ export class DashboardOrganizationSettingsController {
   @ApiParam({ name: 'formId', description: 'Intake form UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Intake form detail' })
   @ApiResponse({ status: 404, description: 'Intake form not found' })
+  @RequireFeature(FeatureKey.INTAKE_FORMS)
   getIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
     return this.getIntakeForm.execute({ formId });
   }
@@ -229,6 +234,7 @@ export class DashboardOrganizationSettingsController {
   @ApiParam({ name: 'formId', description: 'Intake form UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiNoContentResponse({ description: 'Intake form deleted' })
   @ApiResponse({ status: 404, description: 'Intake form not found' })
+  @RequireFeature(FeatureKey.INTAKE_FORMS)
   deleteIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
     return this.deleteIntakeForm.execute({ formId });
   }

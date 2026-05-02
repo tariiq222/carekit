@@ -12,6 +12,8 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ApiStandardResponses } from '../../common/swagger';
 import { TenantContextService } from '../../common/tenant';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { GenerateReportHandler } from '../../modules/ops/generate-report/generate-report.handler';
 import { GenerateReportDto } from '../../modules/ops/generate-report/generate-report.dto';
 import { ListActivityHandler } from '../../modules/ops/log-activity/list-activity.handler';
@@ -30,6 +32,7 @@ export class DashboardOpsController {
   ) {}
 
   @Post('reports')
+  @RequireFeature(FeatureKey.ADVANCED_REPORTS)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate a clinic report' })
   @ApiOkResponse({
@@ -60,6 +63,7 @@ export class DashboardOpsController {
   }
 
   @Get('activity')
+  @RequireFeature(FeatureKey.ACTIVITY_LOG)
   @ApiOperation({ summary: 'List activity log entries' })
   @ApiOkResponse({ description: 'Paginated list of activity log entries' })
   @ApiQuery({ name: 'userId', required: false, description: 'Filter by staff user UUID' })

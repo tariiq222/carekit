@@ -35,9 +35,9 @@ describe("email-templates api", () => {
 
   it("updateEmailTemplate patches /email-templates/:id", async () => {
     patchMock.mockResolvedValueOnce({})
-    await updateEmailTemplate("tpl-1", { subjectAr: "موضوع", htmlBody: "<p>مرحبا</p>" })
+    await updateEmailTemplate("tpl-1", { subject: "موضوع", htmlBody: "<p>مرحبا</p>" })
     expect(patchMock).toHaveBeenCalledWith("/dashboard/comms/email-templates/tpl-1", {
-      subjectAr: "موضوع",
+      subject: "موضوع",
       htmlBody: "<p>مرحبا</p>",
     })
   })

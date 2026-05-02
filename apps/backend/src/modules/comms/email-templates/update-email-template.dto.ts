@@ -13,4 +13,7 @@ export class UpdateEmailTemplateDto {
 
   @ApiPropertyOptional({ description: 'Whether the template is active', example: true })
   @IsOptional() @IsBoolean() isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Block tree (source of truth — when present, htmlBody is rendered from this)', type: 'array', items: { type: 'object' } })
+  @IsOptional() blocks?: unknown[];
 }

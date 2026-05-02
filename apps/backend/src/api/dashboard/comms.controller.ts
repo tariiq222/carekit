@@ -48,6 +48,8 @@ import { TestEmailConfigHandler } from '../../modules/comms/org-email-config/tes
 import { TestEmailConfigDto } from '../../modules/comms/org-email-config/test-email-config.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TenantContextService } from '../../common/tenant';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 @ApiTags('Dashboard / Comms')
 @ApiBearerAuth()
@@ -229,6 +231,7 @@ export class DashboardCommsController {
   @ApiOperation({ summary: 'List email templates' })
   @ApiOkResponse({ description: 'Paginated email template list' })
   @Get('email-templates')
+  @RequireFeature(FeatureKey.EMAIL_TEMPLATES)
   listEmailTemplatesEndpoint(
     @Query() query: ListEmailTemplatesDto,
   ) {
@@ -242,6 +245,7 @@ export class DashboardCommsController {
   @ApiCreatedResponse({ description: 'Email template created' })
   @Post('email-templates')
   @HttpCode(HttpStatus.CREATED)
+  @RequireFeature(FeatureKey.EMAIL_TEMPLATES)
   createEmailTemplateEndpoint(
     @Body() body: CreateEmailTemplateDto,
   ) {
@@ -252,6 +256,7 @@ export class DashboardCommsController {
   @ApiOkResponse({ description: 'Email template details' })
   @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Get('email-templates/:id')
+  @RequireFeature(FeatureKey.EMAIL_TEMPLATES)
   getEmailTemplateEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
   ) {
@@ -263,6 +268,7 @@ export class DashboardCommsController {
   @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Post('email-templates/:id/preview')
   @HttpCode(HttpStatus.OK)
+  @RequireFeature(FeatureKey.EMAIL_TEMPLATES)
   previewEmailTemplateEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: PreviewEmailTemplateDto,
@@ -277,6 +283,7 @@ export class DashboardCommsController {
   @ApiOkResponse({ description: 'Updated email template' })
   @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Patch('email-templates/:id')
+  @RequireFeature(FeatureKey.EMAIL_TEMPLATES)
   updateEmailTemplateEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateEmailTemplateDto,
