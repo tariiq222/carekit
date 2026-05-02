@@ -21,6 +21,22 @@ export const FEATURE_KEY_MAP: Record<FeatureKey, string> = {
   [FeatureKey.SERVICES]: 'maxServices',
   [FeatureKey.MONTHLY_BOOKINGS]: 'maxBookingsPerMonth',
   [FeatureKey.STORAGE]: 'maxStorageMB',
+  // ── Phase 3: 15 new boolean keys ──────────────────────────────────
+  [FeatureKey.ZOOM_INTEGRATION]: 'zoom_integration',
+  [FeatureKey.WALK_IN_BOOKINGS]: 'walk_in_bookings',
+  [FeatureKey.BANK_TRANSFER_PAYMENTS]: 'bank_transfer_payments',
+  [FeatureKey.MULTI_BRANCH]: 'multi_branch',
+  [FeatureKey.DEPARTMENTS]: 'departments',
+  [FeatureKey.CLIENT_RATINGS]: 'client_ratings',
+  [FeatureKey.DATA_EXPORT]: 'data_export',
+  [FeatureKey.SMS_PROVIDER_PER_TENANT]: 'sms_provider_per_tenant',
+  [FeatureKey.WHITE_LABEL_MOBILE]: 'white_label_mobile',
+  [FeatureKey.CUSTOM_DOMAIN]: 'custom_domain',
+  [FeatureKey.API_ACCESS]: 'api_access',
+  [FeatureKey.WEBHOOKS]: 'webhooks',
+  [FeatureKey.PRIORITY_SUPPORT]: 'priority_support',
+  [FeatureKey.AUDIT_EXPORT]: 'audit_export',
+  [FeatureKey.MULTI_CURRENCY]: 'multi_currency',
 };
 
 export const ALL_FEATURE_KEYS = Object.keys(FEATURE_KEY_MAP) as FeatureKey[];
