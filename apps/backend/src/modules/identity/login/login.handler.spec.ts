@@ -36,7 +36,7 @@ describe('LoginHandler', () => {
           provide: PrismaService,
           useValue: {
             user: { findUnique: jest.fn() },
-            membership: { findFirst: jest.fn().mockResolvedValue(null) },
+            membership: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
           } as unknown as PrismaService,
         },
         { provide: PasswordService, useValue: { verify: jest.fn() } },
@@ -97,29 +97,31 @@ describe('LoginHandler', () => {
 
   describe('SaaS-01 tenant claims', () => {
     it('passes the active membership to TokenService.issueTokenPair', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockUser as never);
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findFirst.mockResolvedValue({
+      prisma.membership.findMany.mockResolvedValue([{
         id: 'mem-1',
         organizationId: '00000000-0000-0000-0000-000000000001',
-      });
+        role: 'ADMIN',
+      }]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
 
       expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
-        {
+        expect.objectContaining({
           organizationId: '00000000-0000-0000-0000-000000000001',
           membershipId: 'mem-1',
+          membershipRole: 'ADMIN',
           isSuperAdmin: false,
-        },
+        }),
       );
     });
 
     it('falls back to DEFAULT_ORGANIZATION_ID when user has no membership row', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockUser as never);
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findFirst.mockResolvedValue(null);
+      prisma.membership.findMany.mockResolvedValue([]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
 
@@ -133,9 +135,9 @@ describe('LoginHandler', () => {
     });
 
     it('marks isSuperAdmin true when user.isSuperAdmin is true', async () => {
-      prisma.user.findUnique.mockResolvedValue({ ...mockUser, isSuperAdmin: true } as never);
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, isSuperAdmin: true, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findFirst.mockResolvedValue(null);
+      prisma.membership.findMany.mockResolvedValue([]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
 

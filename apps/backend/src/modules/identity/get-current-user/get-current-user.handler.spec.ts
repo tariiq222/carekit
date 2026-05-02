@@ -16,7 +16,7 @@ describe('GetCurrentUserHandler', () => {
           provide: PrismaService,
           useValue: {
             user: { findUnique: jest.fn() },
-            membership: { findFirst: jest.fn().mockResolvedValue(null) },
+            membership: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
           },
         },
       ],
@@ -53,13 +53,14 @@ describe('GetCurrentUserHandler', () => {
   });
 
   it('returns activeMembership when user has one', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null });
-    prisma.membership.findFirst.mockResolvedValue({
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null, lastActiveOrganizationId: null });
+    prisma.membership.findMany.mockResolvedValue([{
       id: 'm1',
       organizationId: 'org_42',
       role: 'RECEPTIONIST',
+      displayName: null, jobTitle: null, avatarUrl: null,
       organization: { onboardingCompletedAt: null, vertical: { slug: 'clinic' } },
-    });
+    }]);
     const result = await handler.execute({ userId: 'u1' });
     expect(result.organizationId).toBe('org_42');
     expect(result.verticalSlug).toBe('clinic');
@@ -69,12 +70,15 @@ describe('GetCurrentUserHandler', () => {
       organizationId: 'org_42',
       role: 'RECEPTIONIST',
       verticalSlug: 'clinic',
+      displayName: null,
+      jobTitle: null,
+      avatarUrl: null,
     });
   });
 
   it('returns null activeMembership when user has no membership', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null });
-    prisma.membership.findFirst.mockResolvedValue(null);
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null, lastActiveOrganizationId: null });
+    prisma.membership.findMany.mockResolvedValue([]);
     const result = await handler.execute({ userId: 'u1' });
     expect(result.organizationId).toBeNull();
     expect(result.verticalSlug).toBeNull();
@@ -83,13 +87,14 @@ describe('GetCurrentUserHandler', () => {
   });
 
   it('returns verticalSlug from the active membership organization', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null });
-    prisma.membership.findFirst.mockResolvedValue({
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', firstName: 'A', lastName: 'B', customRole: null, lastActiveOrganizationId: null });
+    prisma.membership.findMany.mockResolvedValue([{
       id: 'm1',
       organizationId: 'org_42',
       role: 'ADMIN',
+      displayName: null, jobTitle: null, avatarUrl: null,
       organization: { onboardingCompletedAt: new Date('2026-04-29T00:00:00.000Z'), vertical: { slug: 'salon' } },
-    });
+    }]);
     const result = await handler.execute({ userId: 'u1' });
     expect(result.verticalSlug).toBe('salon');
     expect(result.activeMembership?.verticalSlug).toBe('salon');
