@@ -63,6 +63,8 @@ import { AdminCancelScheduledHandler } from './admin/admin-cancel-scheduled/admi
 import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/list-feature-flags-admin.handler';
 import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
+import { AdminNotificationsController } from '../../api/admin/notifications.controller';
+import { ListNotificationDeliveryLogHandler } from './admin/list-notification-delivery-log/list-notification-delivery-log.handler';
 import { FinanceModule } from '../finance/finance.module';
 import { RegisterTenantHandler } from './tenant-registration/register-tenant.handler';
 import { IdentityModule } from '../identity/identity.module';
@@ -105,6 +107,7 @@ const ADMIN_HANDLERS = [
   AdminCancelScheduledHandler,
   ListFeatureFlagsAdminHandler,
   UpdateFeatureFlagAdminHandler,
+  ListNotificationDeliveryLogHandler,
 ];
 
 @Module({
@@ -137,6 +140,7 @@ const ADMIN_HANDLERS = [
     AdminImpersonationController,
     AdminBillingController,
     AdminFeatureFlagsController,
+    AdminNotificationsController,
   ],
   providers: [
     SuperAdminContextInterceptor,
