@@ -45,7 +45,7 @@ model Notification {
   updatedAt      DateTime         @updatedAt
 
   @@index([recipientId])
-  @@index([recipientId, createdAt])
+  @@index([recipientId, isRead, createdAt]) // DB-06: replaces (recipientId, createdAt) — adds isRead to avoid heap filter
   @@index([organizationId])
 }
 
@@ -173,8 +173,7 @@ model SmsDelivery {
   updatedAt         DateTime          @updatedAt
 
   @@index([organizationId])
-  @@index([status])
-  @@index([createdAt])
+  @@index([status, createdAt]) // DB-06: replaces (status) + (createdAt) — composite for retry sweep
 }
 
 // SaaS-email-provider — per-tenant email provider configuration.
@@ -259,5 +258,5 @@ model NotificationDeliveryLog {
   @@index([organizationId])
   @@index([organizationId, status])
   @@index([organizationId, type])
-  @@index([createdAt])
+  @@index([status, createdAt]) // DB-06: composite for retry sweep — replaces standalone (createdAt)
 }
