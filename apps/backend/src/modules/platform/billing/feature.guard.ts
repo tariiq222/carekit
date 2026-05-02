@@ -10,6 +10,8 @@ import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { SubscriptionCacheService } from "./subscription-cache.service";
+import { UsageCounterService } from "./usage-counter/usage-counter.service";
+import { EPOCH, startOfMonthUTC } from "./usage-counter/period.util";
 import { REQUIRE_FEATURE_KEY } from "./feature.decorator";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
 import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
@@ -30,6 +32,7 @@ export class FeatureGuard implements CanActivate {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly cacheService: SubscriptionCacheService,
+    private readonly counters: UsageCounterService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -89,9 +92,37 @@ export class FeatureGuard implements CanActivate {
     return { features: entry.features, planSlug: entry.planSlug };
   }
 
+  /**
+   * Returns the current usage for a quantitative feature key.
+   *
+   * Strategy:
+   * 1. Read from materialized UsageCounter (fast, O(1) index lookup).
+   * 2. If no row exists yet, fall back to recomputing from source tables
+   *    and upsert the result (self-healing bootstrap).
+   */
   private async currentUsage(
     key: FeatureKey,
     organizationId: string,
+  ): Promise<number> {
+    const period = key === FeatureKey.MONTHLY_BOOKINGS ? startOfMonthUTC() : EPOCH;
+
+    const cached = await this.counters.read(organizationId, key, period);
+    if (cached !== null) return cached;
+
+    // Cache miss — recompute from source and write to counter (self-heal).
+    const computed = await this.recomputeFromSource(key, organizationId, period);
+    await this.counters.upsertExact(organizationId, key, period, computed);
+    return computed;
+  }
+
+  /**
+   * Recompute the ground-truth usage from the source tables.
+   * Kept separate so the self-heal path and reconciliation cron can share it.
+   */
+  private async recomputeFromSource(
+    key: FeatureKey,
+    organizationId: string,
+    _period: Date,
   ): Promise<number> {
     switch (key) {
       case FeatureKey.BRANCHES:
@@ -105,8 +136,7 @@ export class FeatureGuard implements CanActivate {
           where: { organizationId, isActive: true },
         });
       case FeatureKey.MONTHLY_BOOKINGS: {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfMonth = startOfMonthUTC();
         return this.prisma.booking.count({
           where: {
             organizationId,
@@ -114,6 +144,14 @@ export class FeatureGuard implements CanActivate {
             status: { not: BookingStatus.CANCELLED },
           },
         });
+      }
+      case FeatureKey.STORAGE: {
+        const result = await this.prisma.file.aggregate({
+          where: { organizationId, isDeleted: false },
+          _sum: { size: true },
+        });
+        const bytes = result._sum.size ?? 0;
+        return Math.ceil(bytes / (1024 * 1024));
       }
       default:
         return 0;
