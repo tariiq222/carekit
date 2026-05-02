@@ -66,9 +66,11 @@ model Invoice {
   zatcaSub       ZatcaSubmission?
   refundRequests RefundRequest[]
 
+  @@unique([id, organizationId], name: "invoice_id_org") // DB-05
   @@index([clientId])
   @@index([bookingId])
   @@index([organizationId])
+  @@index([organizationId, status, dueAt]) // DB-06: AR aging query (30ms→Index Scan)
 }
 
 // ─── Payment ──────────────────────────────────────────────────────────────────
