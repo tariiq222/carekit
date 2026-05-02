@@ -2,11 +2,9 @@ export * from "./modules";
 export * from "./roles";
 export * from "./config";
 
-// Legacy string-union type — kept for backward compatibility with
-// sidebar-config, mobile, and any existing imports of FeatureFlagKey.
-export { FEATURE_FLAG_KEYS, type FeatureFlagKey } from "./feature-flags";
-
-// New tiered feature-gating enum — use FeatureKey for all new code.
+// Tiered feature-gating enum — the single source of truth for billing-gated
+// features. Consumed by FeatureGuard (backend), GetMyFeaturesHandler,
+// useBillingFeatures + useSidebarNav (dashboard), and the admin Plans tab.
 export { FeatureKey } from "./feature-keys";
 
 export { PLATFORM_BRAND, LEGACY_BRAND_STRINGS } from "./brand";
