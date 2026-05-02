@@ -2,11 +2,13 @@ import { DashboardOpsController } from './ops.controller';
 import { ReportFormat } from '@prisma/client';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
+const ORG_ID = 'org-00000000-0000-0000-0000-000000000001';
+const mockTenant = { requireOrganizationId: jest.fn().mockReturnValue(ORG_ID) };
 
 function buildController() {
   const generateReport = fn({ reportId: 'r-1', format: ReportFormat.JSON, data: {}, status: 'COMPLETED' });
   const listActivity = fn({ data: [] });
-  const controller = new DashboardOpsController(generateReport as never, listActivity as never);
+  const controller = new DashboardOpsController(generateReport as never, listActivity as never, mockTenant as never);
   return { controller, generateReport, listActivity };
 }
 
@@ -45,9 +47,11 @@ describe('DashboardOpsController', () => {
     expect(res.send).toHaveBeenCalledWith(excelBuffer);
   });
 
-  it('listActivityEndpoint — calls handler with query', async () => {
+  it('listActivityEndpoint — calls handler with query and organizationId from tenant context', async () => {
     const { controller, listActivity } = buildController();
     await controller.listActivityEndpoint({ page: 1, limit: 10 } as never);
-    expect(listActivity.execute).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
+    expect(listActivity.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, organizationId: ORG_ID }),
+    );
   });
 });
