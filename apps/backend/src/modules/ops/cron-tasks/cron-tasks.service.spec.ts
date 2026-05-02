@@ -36,40 +36,42 @@ type CronDeps = [
   never,
   never,
   never,
+  never, // reconcileUsageCounters (Phase 5 / Task 11)
 ];
 
 /** Build cron mocks (all crons except BullMqService itself). */
 const buildAllMocks = () => [
-  buildCronMock(), // bookingAutocomplete
-  buildCronMock(), // bookingExpiry
-  buildCronMock(), // bookingNoShow
-  buildCronMock(), // appointmentReminders
-  buildCronMock(), // groupSessionAutomation
-  buildCronMock(), // refreshTokenCleanup
-  buildCronMock(), // meterUsage
-  buildCronMock(), // chargeDueSubscriptions
-  buildCronMock(), // computeOverage
-  buildCronMock(), // enforceGracePeriod
-  buildCronMock(), // expireImpersonationSessions (SaaS-05b)
-  buildCronMock(), // expireTrials
-  buildCronMock(), // usageWarnings
-  buildCronMock(), // processScheduledPlanChanges
-  buildCronMock(), // dunningRetry
-  buildCronMock(), // dbRowCount (DB-12)
-  buildCronMock(), // orphanAudit (DB-13)
+  buildCronMock(), // bookingAutocomplete       [0]
+  buildCronMock(), // bookingExpiry             [1]
+  buildCronMock(), // bookingNoShow             [2]
+  buildCronMock(), // appointmentReminders      [3]
+  buildCronMock(), // groupSessionAutomation    [4]
+  buildCronMock(), // refreshTokenCleanup       [5]
+  buildCronMock(), // meterUsage                [6]
+  buildCronMock(), // chargeDueSubscriptions    [7]
+  buildCronMock(), // computeOverage            [8]
+  buildCronMock(), // enforceGracePeriod        [9]
+  buildCronMock(), // expireImpersonationSessions [10]
+  buildCronMock(), // expireTrials              [11]
+  buildCronMock(), // usageWarnings             [12]
+  buildCronMock(), // processScheduledPlanChanges [13]
+  buildCronMock(), // dunningRetry              [14]
+  buildCronMock(), // dbRowCount (DB-12)        [15]
+  buildCronMock(), // orphanAudit (DB-13)       [16]
+  buildCronMock(), // reconcileUsageCounters    [17]
 ] as const;
 
 const buildService = (bullMq: ReturnType<typeof buildBullMq>, mocks: ReturnType<typeof buildAllMocks>) =>
   new CronTasksService(bullMq as never, ...(mocks.map((m) => m as never) as CronDeps));
 
 describe('CronTasksService', () => {
-  it('schedules all 14 cron jobs on module init', () => {
+  it('schedules all cron jobs on module init', () => {
     const bullMq = buildBullMq();
     const mocks = buildAllMocks();
     const service = buildService(bullMq, mocks);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(16);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(Object.keys(CRON_JOBS).length);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -87,6 +89,11 @@ describe('CronTasksService', () => {
       CRON_JOBS.DUNNING_RETRY,
       {},
       expect.objectContaining({ repeat: { pattern: '0 * * * *' } }),
+    );
+    expect(bullMq.queue.add).toHaveBeenCalledWith(
+      CRON_JOBS.RECONCILE_USAGE_COUNTERS,
+      {},
+      expect.objectContaining({ repeat: { pattern: '0 3 * * *' } }),
     );
   });
 
@@ -117,6 +124,7 @@ describe('CronTasksService', () => {
     [CRON_JOBS.DUNNING_RETRY, 14],
     [CRON_JOBS.DB_ROW_COUNT, 15],
     [CRON_JOBS.ORPHAN_AUDIT, 16],
+    [CRON_JOBS.RECONCILE_USAGE_COUNTERS, 17],
   ];
 
   it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {

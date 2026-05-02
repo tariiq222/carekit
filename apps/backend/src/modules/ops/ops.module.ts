@@ -30,6 +30,7 @@ import { RedisService } from '../../infrastructure/cache/redis.service';
 import { DbRowCountCron } from './cron-tasks/db-row-count.cron';
 import { DbMetricsService } from '../../infrastructure/telemetry/db-metrics.service';
 import { RunOrphanAuditHandler } from './orphan-audit/run-orphan-audit.handler';
+import { ReconcileUsageCountersHandler } from './cron-tasks/reconcile-usage-counters/reconcile-usage-counters.handler';
 
 const handlers = [
   LogActivityHandler,
@@ -58,6 +59,8 @@ const cronHandlers = [
   ExpireImpersonationSessionsCron,
   // DB-12/13
   DbRowCountCron,
+  // Phase 5 — usage counter reconciliation
+  ReconcileUsageCountersHandler,
 ];
 
 // Note: UsageAggregatorService, SubscriptionStateMachine and

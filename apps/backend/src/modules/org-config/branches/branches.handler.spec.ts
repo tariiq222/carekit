@@ -5,6 +5,8 @@ import { ListBranchesHandler } from './list-branches.handler';
 import { GetBranchHandler } from './get-branch.handler';
 import { TenantContextService } from '../../../common/tenant';
 
+const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
+
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
 const mockBranch = {
@@ -58,7 +60,7 @@ describe('CreateBranchHandler', () => {
   it('creates branch scoped by org when name is unique', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
-    const handler = new CreateBranchHandler(prisma as never, buildTenant());
+    const handler = new CreateBranchHandler(prisma as never, buildTenant(), buildEventBus() as never);
     const result = await handler.execute({ nameAr: 'الفرع الرئيسي' });
     expect(result.id).toBe('branch-1');
     expect(prisma.branch.create).toHaveBeenCalledWith(
@@ -69,7 +71,7 @@ describe('CreateBranchHandler', () => {
   it('throws ConflictException when name already exists in same org', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
-    const handler = new CreateBranchHandler(prisma as never, buildTenant());
+    const handler = new CreateBranchHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(handler.execute({ nameAr: 'الفرع الرئيسي' })).rejects.toThrow(ConflictException);
   });
 
@@ -78,8 +80,8 @@ describe('CreateBranchHandler', () => {
     prismaA.branch.findFirst = jest.fn().mockResolvedValue(null);
     const prismaB = buildPrisma();
     prismaB.branch.findFirst = jest.fn().mockResolvedValue(null);
-    const handlerA = new CreateBranchHandler(prismaA as never, buildTenant('org-A'));
-    const handlerB = new CreateBranchHandler(prismaB as never, buildTenant('org-B'));
+    const handlerA = new CreateBranchHandler(prismaA as never, buildTenant('org-A'), buildEventBus() as never);
+    const handlerB = new CreateBranchHandler(prismaB as never, buildTenant('org-B'), buildEventBus() as never);
     await expect(handlerA.execute({ nameAr: 'الفرع الرئيسي' })).resolves.toBeDefined();
     await expect(handlerB.execute({ nameAr: 'الفرع الرئيسي' })).resolves.toBeDefined();
   });
