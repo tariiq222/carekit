@@ -24,6 +24,7 @@ model Branch {
   businessHours BusinessHour[]
   holidays      Holiday[]
 
+  @@unique([id, organizationId], name: "branch_id_org") // DB-05
   @@index([organizationId])
 }
 
@@ -47,6 +48,7 @@ model Department {
   categories ServiceCategory[]
 
   @@unique([organizationId, nameAr], name: "dept_org_nameAr") // SaaS-02c
+  @@unique([id, organizationId], name: "department_id_org") // DB-05
   @@index([isActive])
   @@index([organizationId])
 }
@@ -68,6 +70,7 @@ model ServiceCategory {
 
   services Service[]
 
+  @@unique([id, organizationId], name: "service_category_id_org") // DB-05
   @@index([isActive])
   @@index([departmentId])
   @@index([organizationId])
@@ -137,6 +140,7 @@ model Service {
   durationOptions ServiceDurationOption[]
   bookingConfigs  ServiceBookingConfig[]
 
+  @@unique([id, organizationId], name: "service_id_org") // DB-05
   @@index([isActive])
   @@index([isHidden])
   @@index([categoryId])
@@ -334,6 +338,7 @@ model IntakeForm {
 
   fields IntakeField[]
 
+  @@unique([id, organizationId], name: "intake_form_id_org") // DB-05
   @@index([organizationId])
 }
 

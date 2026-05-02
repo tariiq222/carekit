@@ -91,8 +91,9 @@ model Booking {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
+  @@unique([id, organizationId], name: "booking_id_org") // DB-05: composite unique for future composite FK
   @@index([clientId])
-  @@index([employeeId])
+  // DB-07: @@index([employeeId]) dropped — redundant prefix of [employeeId, scheduledAt] and [employeeId, endsAt]
   @@index([scheduledAt])
   @@index([status])
   @@index([employeeId, scheduledAt])
@@ -162,6 +163,7 @@ model GroupSession {
   enrollments     GroupEnrollment[]
   waitlistEntries GroupSessionWaitlist[]
 
+  @@unique([id, organizationId], name: "group_session_id_org") // DB-05
   @@index([employeeId])
   @@index([scheduledAt])
   @@index([isPublic])

@@ -47,8 +47,7 @@ model ActivityLog {
   userAgent      String?
   occurredAt     DateTime       @default(now())
 
-  @@index([organizationId])
-  @@index([occurredAt])
+  @@index([organizationId, occurredAt]) // DB-06: replaces (organizationId) + (occurredAt) — composite for ListActivityHandler
   @@index([entity, entityId])
   @@index([userId])
 }
