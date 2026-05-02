@@ -21,7 +21,6 @@ import { Reflector } from '@nestjs/core';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 import { FeatureGuard } from '../../../src/modules/platform/billing/feature.guard';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
-import { TenantContextService } from '../../../src/common/tenant/tenant-context.service';
 import { REQUIRE_FEATURE_KEY } from '../../../src/modules/platform/billing/feature.decorator';
 import { FeatureNotEnabledException } from '../../../src/modules/platform/billing/feature-not-enabled.exception';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
@@ -72,7 +71,6 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
     guard = new FeatureGuard(
       h.app.get(Reflector),
       h.prisma,
-      h.app.get(TenantContextService),
       cacheService,
       h.app.get(UsageCounterService),
     );
@@ -115,12 +113,15 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
     });
   }
 
-  function ctxFor(featureKey: FeatureKey): ExecutionContext {
+  function ctxFor(featureKey: FeatureKey, organizationId: string): ExecutionContext {
     const handler = function () {};
     Reflect.defineMetadata(REQUIRE_FEATURE_KEY, featureKey, handler);
     return {
       getHandler: () => handler,
       getClass: () => class {},
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { organizationId } }),
+      }),
     } as unknown as ExecutionContext;
   }
 
@@ -128,7 +129,7 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
 
   it('Step 1: FeatureGuard throws FeatureNotEnabledException for COUPONS on BASIC', async () => {
     await runAsOrgWithSuperAdmin(org.id, async () => {
-      await expect(guard.canActivate(ctxFor(FeatureKey.COUPONS))).rejects.toBeInstanceOf(
+      await expect(guard.canActivate(ctxFor(FeatureKey.COUPONS, org.id))).rejects.toBeInstanceOf(
         FeatureNotEnabledException,
       );
     });

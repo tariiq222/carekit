@@ -5,17 +5,19 @@ import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { FeatureGuard } from "./feature.guard";
 import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 import { SubscriptionCacheService } from "./subscription-cache.service";
-import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 
 const ORG_ID = "org-123";
 
-function mockContext() {
+const MISSING_USER = Symbol("MISSING_USER");
+
+function mockContext(user: { organizationId?: string } | typeof MISSING_USER = { organizationId: ORG_ID }) {
+  const request: Record<string, unknown> = user === MISSING_USER ? {} : { user };
   return {
     getHandler: jest.fn(),
     getClass: jest.fn(),
-    switchToHttp: jest.fn().mockReturnValue({ getRequest: jest.fn() }),
+    switchToHttp: jest.fn().mockReturnValue({ getRequest: jest.fn().mockReturnValue(request) }),
   } as unknown as ExecutionContext;
 }
 
@@ -52,12 +54,6 @@ function mockCacheService(arg: CacheArg) {
   } as unknown as SubscriptionCacheService;
 }
 
-function mockTenant() {
-  return {
-    requireOrganizationId: jest.fn().mockReturnValue(ORG_ID),
-  } as unknown as TenantContextService;
-}
-
 function mockPrisma(counts: Partial<Record<string, number>>) {
   return {
     branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
@@ -89,13 +85,16 @@ function makeGuard(
   return new FeatureGuard(
     reflector,
     prisma,
-    mockTenant(),
     mockCacheService(cacheArg),
     counters ?? mockCounters(null),
   );
 }
 
 describe("FeatureGuard", () => {
+  beforeEach(() => {
+    FeatureGuard.invalidateAll();
+  });
+
   describe("no @RequireFeature decorator", () => {
     it("should allow when no RequireFeature metadata", async () => {
       const reflector = mockReflector(jest.fn().mockReturnValue(undefined));
@@ -325,7 +324,6 @@ describe("FeatureGuard", () => {
       const guard = new FeatureGuard(
         reflector,
         prisma,
-        mockTenant(),
         cacheService,
         counters,
       );
@@ -365,7 +363,6 @@ describe("FeatureGuard", () => {
       const guard = new FeatureGuard(
         reflector,
         prisma,
-        mockTenant(),
         cacheService,
         mockCounters(1),
       );
@@ -416,6 +413,26 @@ describe("FeatureGuard", () => {
           message: "Feature 'coupons' is not enabled for your plan",
         });
       }
+    });
+  });
+
+  describe("authentication preflight", () => {
+    it("throws UnauthorizedException when req.user is missing", async () => {
+      const reflector = mockReflector(jest.fn().mockReturnValue(FeatureKey.COUPONS));
+      const guard = makeGuard(reflector, mockPrisma({}), { coupons: true });
+      const ctx = mockContext(MISSING_USER);
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        "Authentication required for feature-gated route",
+      );
+    });
+
+    it("throws UnauthorizedException when req.user has no organizationId", async () => {
+      const reflector = mockReflector(jest.fn().mockReturnValue(FeatureKey.COUPONS));
+      const guard = makeGuard(reflector, mockPrisma({}), { coupons: true });
+      const ctx = mockContext({});
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        "Authentication required for feature-gated route",
+      );
     });
   });
 });

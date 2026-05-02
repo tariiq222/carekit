@@ -1,6 +1,6 @@
-import { Module, OnModuleInit } from "@nestjs/common";
+import { Global, Module, OnModuleInit } from "@nestjs/common";
 import { FeatureRegistryValidator } from "./feature-registry.validator";
-import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "../../../infrastructure/database/database.module";
 import { MailModule } from "../../../infrastructure/mail";
 import { MessagingModule } from "../../../infrastructure/messaging.module";
@@ -85,6 +85,7 @@ const HANDLERS = [
   GetInvoiceHandler,
 ];
 
+@Global()
 @Module({
   imports: [DatabaseModule, MailModule, MessagingModule],
   controllers: [BillingController],
@@ -106,8 +107,14 @@ const HANDLERS = [
     },
     ...HANDLERS,
     FeatureRegistryValidator,
-    { provide: APP_GUARD, useClass: PlanLimitsGuard },
-    { provide: APP_GUARD, useClass: FeatureGuard },
+    // FeatureGuard + PlanLimitsGuard are NO LONGER APP_GUARDs. They are
+    // attached at the method level via the @RequireFeature / @EnforceLimit
+    // decorators (see feature.decorator.ts / plan-limits.decorator.ts).
+    // Listed as plain providers + exported below so any importing module's
+    // controller can resolve them via DI when the bundled decorator's
+    // UseGuards() reference fires.
+    FeatureGuard,
+    PlanLimitsGuard,
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
     UsageCounterService,
     IncrementUsageListener,
@@ -115,6 +122,8 @@ const HANDLERS = [
     GetUsageHandler,
   ],
   exports: [
+    FeatureGuard,
+    PlanLimitsGuard,
     SubscriptionCacheService,
     UsageAggregatorService,
     SubscriptionStateMachine,
