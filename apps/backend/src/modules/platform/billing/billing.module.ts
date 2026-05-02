@@ -1,4 +1,5 @@
-import { Module } from "@nestjs/common";
+import { Module, OnModuleInit } from "@nestjs/common";
+import { FeatureRegistryValidator } from "./feature-registry.validator";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "../../../infrastructure/database/database.module";
 import { MailModule } from "../../../infrastructure/mail";
@@ -99,6 +100,7 @@ const HANDLERS = [
       useExisting: SubscriptionCacheService,
     },
     ...HANDLERS,
+    FeatureRegistryValidator,
     { provide: APP_GUARD, useClass: PlanLimitsGuard },
     { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
@@ -110,4 +112,11 @@ const HANDLERS = [
     ...HANDLERS,
   ],
 })
-export class BillingModule {}
+export class BillingModule implements OnModuleInit {
+  constructor(private readonly featureRegistry: FeatureRegistryValidator) {}
+
+  onModuleInit(): void {
+    // Fail fast on registry drift — see feature-registry.validator.ts.
+    this.featureRegistry.validate();
+  }
+}
