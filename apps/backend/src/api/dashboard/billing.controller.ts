@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
+import { ApiOkResponse } from "@nestjs/swagger";
 import { ApiOperation, ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtGuard } from "../../common/guards/jwt.guard";
 import { ApiStandardResponses } from "../../common/swagger";
@@ -40,6 +41,9 @@ import { ListInvoicesHandler } from "../../modules/platform/billing/list-invoice
 import { GetInvoiceHandler } from "../../modules/platform/billing/get-invoice/get-invoice.handler";
 import { DownloadInvoiceHandler } from "../../modules/platform/billing/generate-invoice-pdf/download-invoice.handler";
 import { ListInvoicesQueryDto } from "../../modules/platform/billing/dto/invoice.dto";
+import { GetUsageHandler } from "../../modules/platform/billing/get-usage/get-usage.handler";
+import { UsageRowDto } from "../../modules/platform/billing/get-usage/get-usage.dto";
+import { TenantContextService } from "../../common/tenant/tenant-context.service";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -68,6 +72,8 @@ export class BillingController {
     private readonly listInvoicesHandler: ListInvoicesHandler,
     private readonly getInvoiceHandler: GetInvoiceHandler,
     private readonly downloadInvoiceHandler: DownloadInvoiceHandler,
+    private readonly getUsage: GetUsageHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   @Get("plans")
@@ -86,6 +92,14 @@ export class BillingController {
   @ApiOperation({ summary: "Get my billing features with current usage" })
   myFeatures() {
     return this.getMyFeatures.execute();
+  }
+
+  @Get("usage")
+  @ApiOperation({ summary: "List quota usage for the current tenant" })
+  @ApiOkResponse({ type: [UsageRowDto] })
+  usage(): Promise<UsageRowDto[]> {
+    const organizationId = this.tenant.requireOrganizationId();
+    return this.getUsage.execute({ organizationId });
   }
 
   @Post("subscription/start")

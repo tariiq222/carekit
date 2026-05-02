@@ -2,23 +2,73 @@
 
 import Link from "next/link"
 import { useLocale } from "@/components/locale-provider"
-import { useBilling } from "@/lib/billing/billing-context"
 import { cn } from "@/lib/utils"
-import { getEmployeeUsageSummary, getLocalizedPlanName } from "@/lib/billing/utils"
+import { useUsage } from "@/hooks/use-usage"
+import type { UsageRow } from "@/lib/types/billing"
+
+/**
+ * Maps backend featureKey strings to i18n translation keys.
+ */
+const FEATURE_LABEL_KEY: Record<string, string> = {
+  MAX_BRANCHES: "billing.usage.branches",
+  MAX_EMPLOYEES: "billing.usage.employees",
+  MAX_SERVICES: "billing.usage.clients", // services ~ clients label
+  MAX_BOOKINGS_PER_MONTH: "billing.usage.bookings",
+  MAX_STORAGE_MB: "billing.usage.storage",
+  // canonical lowercase variants used by backend FeatureKey enum
+  branches: "billing.usage.branches",
+  employees: "billing.usage.employees",
+  services: "billing.usage.clients",
+  monthly_bookings: "billing.usage.bookings",
+  storage: "billing.usage.storage",
+}
+
+function UsageBar({ row, t }: { row: UsageRow; t: (k: string) => string }) {
+  const isUnlimited = row.limit < 0
+  const pct = isUnlimited ? 0 : Math.min(row.percentage, 100)
+  const isWarning = !isUnlimited && pct >= 80 && pct < 100
+  const isBlocked = !isUnlimited && pct >= 100
+
+  const label = FEATURE_LABEL_KEY[row.featureKey] ?? row.featureKey
+  const limitDisplay = isUnlimited ? t("billing.usage.unlimited") : String(row.limit)
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="text-muted-foreground">{t(label)}</span>
+        <span className="font-medium tabular-nums text-foreground">
+          {row.current} / {limitDisplay}
+        </span>
+      </div>
+      {!isUnlimited && (
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "h-full rounded-full transition-all",
+              isBlocked
+                ? "bg-destructive"
+                : isWarning
+                  ? "bg-warning"
+                  : "bg-success",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+      {isWarning && (
+        <p className="text-[10px] text-muted-foreground">{t("billing.usage.warning")}</p>
+      )}
+    </div>
+  )
+}
 
 export function BillingUsageWidget() {
-  const { t, locale } = useLocale()
-  const { subscription, isLoading } = useBilling()
+  const { t } = useLocale()
+  const { data: rows, isLoading } = useUsage()
 
-  if (isLoading || !subscription) return null
+  if (isLoading || !rows || rows.length === 0) return null
 
-  const usage = getEmployeeUsageSummary(subscription)
-  if (usage.current === null || usage.max === null) return null
-
-  const progress = Math.min(Math.round(usage.ratio * 100), 100)
-  const isWarning = progress >= 80 && progress < 100
-  const isExceeded = progress >= 100
-  const planName = getLocalizedPlanName(subscription.plan, locale)
+  const hasBlocked = rows.some((r) => r.limit >= 0 && r.percentage >= 100)
 
   return (
     <div className="hidden rounded-2xl border border-border/70 bg-background/60 p-3 backdrop-blur-sm md:block">
@@ -26,37 +76,25 @@ export function BillingUsageWidget() {
         <p className="text-[11px] font-medium text-muted-foreground">
           {t("billing.usage.title")}
         </p>
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">{t("billing.plan.label")}</p>
-          <p className="text-sm font-semibold text-foreground">{planName}</p>
+
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <UsageBar key={row.featureKey} row={row} t={t} />
+          ))}
         </div>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted-foreground">{t("billing.usage.employees")}</span>
-            <span className="font-medium tabular-nums text-foreground">
-              {usage.current} / {usage.max}
-            </span>
+
+        {hasBlocked && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-[11px] text-destructive">
+            {t("billing.usage.blocked")}
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all",
-                isExceeded
-                  ? "bg-error"
-                  : isWarning
-                    ? "bg-warning"
-                    : "bg-primary",
-              )}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-        {progress >= 80 && (
+        )}
+
+        {(hasBlocked || rows.some((r) => r.limit >= 0 && r.percentage >= 80)) && (
           <Link
             href="/settings/billing"
             className={cn(
               "inline-flex text-xs font-medium transition-colors hover:text-foreground",
-              isExceeded ? "text-error" : "text-warning",
+              hasBlocked ? "text-destructive" : "text-warning",
             )}
           >
             {t("billing.usage.upgradeCta")}

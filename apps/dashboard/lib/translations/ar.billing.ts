@@ -153,6 +153,8 @@ export const arBilling: Record<string, string> = {
   "billing.usage.stat.unlimited": "∞",
   "billing.usage.stat.na": "—",
   "billing.usage.warning": "اقتربت من الحد",
+  "billing.usage.blocked": "تجاوزت الحد — يُرجى ترقية الخطة",
+  "billing.usage.periodEndsOn": "تنتهي الفترة في {date}",
   "billing.usage.exceeded": "تجاوزت الحد",
   "billing.overview.stat.plan": "الخطة",
   "billing.overview.stat.employees": "الموظفون",

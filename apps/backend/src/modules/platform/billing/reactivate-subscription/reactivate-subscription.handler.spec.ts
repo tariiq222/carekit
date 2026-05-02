@@ -16,6 +16,10 @@ const buildCache = () => ({
   invalidate: jest.fn(),
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('ReactivateSubscriptionHandler', () => {
   it('throws NotFoundException when no subscription exists', async () => {
     const prisma = buildPrisma();
@@ -24,6 +28,7 @@ describe('ReactivateSubscriptionHandler', () => {
       prisma as never,
       buildTenant() as never,
       buildCache() as never,
+      buildEventBus() as never,
     );
 
     await expect(handler.execute()).rejects.toThrow(NotFoundException);
@@ -40,6 +45,7 @@ describe('ReactivateSubscriptionHandler', () => {
       prisma as never,
       buildTenant() as never,
       buildCache() as never,
+      buildEventBus() as never,
     );
 
     await expect(handler.execute()).rejects.toThrow(BadRequestException);
@@ -64,6 +70,7 @@ describe('ReactivateSubscriptionHandler', () => {
       prisma as never,
       buildTenant('org-A') as never,
       cache as never,
+      buildEventBus() as never,
     );
 
     const result = await handler.execute();
@@ -91,6 +98,7 @@ describe('ReactivateSubscriptionHandler', () => {
       prisma as never,
       buildTenant() as never,
       buildCache() as never,
+      buildEventBus() as never,
     );
 
     await expect(handler.execute()).rejects.toThrow('subscription_not_reactivatable');

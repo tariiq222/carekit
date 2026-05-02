@@ -7,6 +7,7 @@ import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
+import { UsageCounterService } from "./usage-counter/usage-counter.service";
 
 const ORG_ID = "org-123";
 
@@ -63,19 +64,42 @@ function mockPrisma(counts: Partial<Record<string, number>>) {
     employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
     service: { count: jest.fn().mockResolvedValue(counts.services ?? 0) },
     booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0) },
+    file: { aggregate: jest.fn().mockResolvedValue({ _sum: { size: counts.storageBytes ?? 0 } }) },
   } as unknown as PrismaService;
+}
+
+/**
+ * Creates a mock UsageCounterService.
+ * @param counterValue - value returned by read(); null = cache miss (triggers fallback).
+ */
+function mockCounters(counterValue: number | null = null): UsageCounterService {
+  return {
+    read: jest.fn().mockResolvedValue(counterValue),
+    upsertExact: jest.fn().mockResolvedValue(undefined),
+    increment: jest.fn().mockResolvedValue(undefined),
+  } as unknown as UsageCounterService;
+}
+
+function makeGuard(
+  reflector: Reflector,
+  prisma: PrismaService,
+  cacheArg: CacheArg,
+  counters?: UsageCounterService,
+) {
+  return new FeatureGuard(
+    reflector,
+    prisma,
+    mockTenant(),
+    mockCacheService(cacheArg),
+    counters ?? mockCounters(null),
+  );
 }
 
 describe("FeatureGuard", () => {
   describe("no @RequireFeature decorator", () => {
     it("should allow when no RequireFeature metadata", async () => {
       const reflector = mockReflector(jest.fn().mockReturnValue(undefined));
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService(null),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), null);
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
@@ -87,12 +111,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.AI_CHATBOT),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ ai_chatbot: false }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { ai_chatbot: false });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
       await expect(guard.canActivate(ctx)).rejects.toThrow(
@@ -104,61 +123,69 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.COUPONS),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ coupons: true }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { coupons: true });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
     });
   });
 
-  describe("quantitative limits", () => {
-    it("should allow when usage below limit", async () => {
+  describe("quantitative limits — UsageCounter hit path", () => {
+    it("should allow when counter row present and usage below limit", async () => {
+      const counters = mockCounters(5); // counter says 5 employees
+      const prisma = mockPrisma({ employees: 99 }); // source DB has 99 (should NOT be called)
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({ employees: 5 }),
-        mockTenant(),
-        mockCacheService({ maxEmployees: 10 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxEmployees: 10 }, counters);
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
+      // Counter hit → no DB count query
+      expect(prisma.employee.count).not.toHaveBeenCalled();
+      expect(counters.read).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw ForbiddenException when usage equals limit", async () => {
+    it("should throw when counter row present and usage equals limit", async () => {
+      const counters = mockCounters(10);
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({ employees: 10 }),
-        mockTenant(),
-        mockCacheService({ maxEmployees: 10 }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { maxEmployees: 10 }, counters);
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
-      await expect(guard.canActivate(ctx)).rejects.toThrow(
-        "Feature limit reached for 'employees': 10/10",
+    });
+  });
+
+  describe("quantitative limits — UsageCounter miss path (self-heal)", () => {
+    it("should fall back to count() and upsert when counter row absent", async () => {
+      const counters = mockCounters(null); // cache miss
+      const prisma = mockPrisma({ employees: 7 });
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
+      );
+      const guard = makeGuard(reflector, prisma, { maxEmployees: 10 }, counters);
+      const ctx = mockContext();
+      const result = await guard.canActivate(ctx);
+      expect(result).toBe(true);
+      // Fallback: DB count WAS called once
+      expect(prisma.employee.count).toHaveBeenCalledTimes(1);
+      // Self-heal: upsertExact called with computed value
+      expect(counters.upsertExact).toHaveBeenCalledWith(
+        ORG_ID,
+        FeatureKey.EMPLOYEES,
+        expect.any(Date),
+        7,
       );
     });
+  });
 
+  describe("quantitative limits — unlimited", () => {
     it("should allow when limit is -1 (unlimited)", async () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.BRANCHES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({ branches: 999 }),
-        mockTenant(),
-        mockCacheService({ maxBranches: -1 }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({ branches: 999 }), { maxBranches: -1 });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
@@ -166,18 +193,13 @@ describe("FeatureGuard", () => {
   });
 
   describe("FeatureKey branches", () => {
-    it("should count only active branches", async () => {
+    it("should count only active branches (self-heal path)", async () => {
       const prisma = mockPrisma({});
       prisma.branch.count = jest.fn().mockResolvedValue(3);
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.BRANCHES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        prisma,
-        mockTenant(),
-        mockCacheService({ maxBranches: 5 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxBranches: 5 });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(prisma.branch.count).toHaveBeenCalledWith({
@@ -192,30 +214,20 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.BRANCHES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        prisma,
-        mockTenant(),
-        mockCacheService({ maxBranches: 5 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxBranches: 5 });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe("FeatureKey services", () => {
-    it("should count only active services", async () => {
+    it("should count only active services (self-heal path)", async () => {
       const prisma = mockPrisma({});
       prisma.service.count = jest.fn().mockResolvedValue(7);
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.SERVICES),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        prisma,
-        mockTenant(),
-        mockCacheService({ maxServices: 10 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxServices: 10 });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(prisma.service.count).toHaveBeenCalledWith({
@@ -226,18 +238,13 @@ describe("FeatureGuard", () => {
   });
 
   describe("FeatureKey monthly_bookings", () => {
-    it("should count only non-cancelled bookings in current month", async () => {
+    it("should count only non-cancelled bookings in current month (self-heal path)", async () => {
       const prisma = mockPrisma({});
       prisma.booking.count = jest.fn().mockResolvedValue(42);
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.MONTHLY_BOOKINGS),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        prisma,
-        mockTenant(),
-        mockCacheService({ maxBookingsPerMonth: 100 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxBookingsPerMonth: 100 });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(prisma.booking.count).toHaveBeenCalledWith({
@@ -256,12 +263,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.MONTHLY_BOOKINGS),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        prisma,
-        mockTenant(),
-        mockCacheService({ maxBookingsPerMonth: 50 }),
-      );
+      const guard = makeGuard(reflector, prisma, { maxBookingsPerMonth: 50 });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
       await expect(guard.canActivate(ctx)).rejects.toThrow(
@@ -275,12 +277,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.RECURRING_BOOKINGS),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ recurring_bookings: true }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { recurring_bookings: true });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
@@ -290,12 +287,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.RECURRING_BOOKINGS),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ recurring_bookings: false }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { recurring_bookings: false });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
     });
@@ -306,12 +298,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.ZATCA),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ zatca: true }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { zatca: true });
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
@@ -321,12 +308,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.ZATCA),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ zatca: false }),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), { zatca: false });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
     });
@@ -339,11 +321,13 @@ describe("FeatureGuard", () => {
         jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
       );
       const prisma = mockPrisma({ employees: 1 });
+      const counters = mockCounters(1); // counter hit → no DB call
       const guard = new FeatureGuard(
         reflector,
         prisma,
         mockTenant(),
         cacheService,
+        counters,
       );
 
       const ctx = mockContext();
@@ -353,21 +337,19 @@ describe("FeatureGuard", () => {
       // FeatureGuard has its own internal 60s cache (Map) keyed by organizationId.
       // Second call hits internal cache → cacheService.get NOT called again.
       expect(cacheService.get).toHaveBeenCalledTimes(1);
-      // However prisma.employee.count is called on every canActivate (usage is not cached internally)
-      expect(prisma.employee.count).toHaveBeenCalledTimes(2);
+      // Counter hit → no DB count
+      expect(prisma.employee.count).not.toHaveBeenCalled();
     });
 
     it("should re-fetch when cache expires", async () => {
       const cacheService = mockCacheService({ maxEmployees: 10 });
-      // First call: expired entry → guard writes to its internal cache with new TTL
-      // Second call: internal cache hit → NO cacheService.get call
       cacheService.get = jest
         .fn()
         .mockResolvedValueOnce({
           planSlug: "pro",
           status: "ACTIVE",
           limits: { maxEmployees: 10 },
-          expiresAt: Date.now() - 10, // expired — guard re-fetches and re-caches
+          expiresAt: Date.now() - 10,
         })
         .mockResolvedValueOnce({
           planSlug: "pro",
@@ -385,13 +367,13 @@ describe("FeatureGuard", () => {
         prisma,
         mockTenant(),
         cacheService,
+        mockCounters(1),
       );
 
       const ctx = mockContext();
       await guard.canActivate(ctx);
       await guard.canActivate(ctx);
 
-      // First call triggers re-fetch (entry was expired). Second call hits the new cache entry.
       expect(cacheService.get).toHaveBeenCalledTimes(1);
     });
   });
@@ -401,12 +383,7 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.AI_CHATBOT),
       );
-      const guard = new FeatureGuard(
-        reflector,
-        mockPrisma({}),
-        mockTenant(),
-        mockCacheService(null),
-      );
+      const guard = makeGuard(reflector, mockPrisma({}), null);
       const ctx = mockContext();
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
@@ -418,11 +395,10 @@ describe("FeatureGuard", () => {
       const reflector = mockReflector(
         jest.fn().mockReturnValue(FeatureKey.COUPONS),
       );
-      const guard = new FeatureGuard(
+      const guard = makeGuard(
         reflector,
         mockPrisma({}),
-        mockTenant(),
-        mockCacheService({ planSlug: "basic", limits: { coupons: false } }),
+        { planSlug: "basic", limits: { coupons: false } },
       );
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(
@@ -430,8 +406,9 @@ describe("FeatureGuard", () => {
       );
       try {
         await guard.canActivate(ctx);
-      } catch (e: any) {
-        expect(e.getResponse()).toEqual({
+      } catch (e: unknown) {
+        const err = e as { getResponse: () => unknown };
+        expect(err.getResponse()).toEqual({
           statusCode: 403,
           code: "FEATURE_NOT_ENABLED",
           featureKey: "coupons",

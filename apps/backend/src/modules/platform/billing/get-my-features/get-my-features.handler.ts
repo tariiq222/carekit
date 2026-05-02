@@ -5,6 +5,8 @@ import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
 import { TenantContextService } from "../../../../common/tenant/tenant-context.service";
 import { SubscriptionCacheService } from "../subscription-cache.service";
+import { UsageCounterService } from "../usage-counter/usage-counter.service";
+import { EPOCH, startOfMonthUTC } from "../usage-counter/period.util";
 import { BillingFeaturesResponse, FeatureEntry } from "./get-my-features.dto";
 import { ALL_FEATURE_KEYS, FEATURE_KEY_MAP } from "../feature-key-map";
 
@@ -18,6 +20,7 @@ export class GetMyFeaturesHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
+    private readonly counters: UsageCounterService,
   ) {}
 
   async execute(): Promise<BillingFeaturesResponse> {
@@ -40,11 +43,6 @@ export class GetMyFeaturesHandler {
     const { planSlug, status, limits } = cached;
 
     // 2. Fetch all feature flags (platform catalog + org overrides) in one query.
-    // We load all flags for the relevant keys and split in JS because the
-    // Prisma client types for the nullable `organizationId` field may not yet
-    // be regenerated after the schema migration — a `{ equals: null }` filter
-    // causes a TS error on stale clients.  One round-trip is also cheaper than
-    // two parallel queries.
     const allFlagsForKeys = await this.prisma.featureFlag.findMany({
       where: { key: { in: ALL_FEATURE_KEYS } },
       select: {
@@ -93,10 +91,6 @@ export class GetMyFeaturesHandler {
       if (orgOverride) {
         enabled = orgOverride.enabled;
       } else if (platformFlag) {
-        // Check if the current plan is in allowedPlans.
-        // `allowedPlans` may not yet be in the generated Prisma client type
-        // (pending regeneration after schema migration), so we reach through
-        // `unknown` to avoid a hard TS error while preserving runtime safety.
         const rawFlag = platformFlag as unknown as { allowedPlans?: string[] };
         const allowedPlans: string[] = rawFlag.allowedPlans ?? [];
         enabled =
@@ -128,7 +122,30 @@ export class GetMyFeaturesHandler {
     };
   }
 
+  /**
+   * Returns the current usage for a quantitative feature key.
+   *
+   * Strategy:
+   * 1. Read from materialized UsageCounter (fast, O(1) index lookup).
+   * 2. If no row exists yet, fall back to recomputing from source tables
+   *    and upsert the result (self-healing bootstrap).
+   */
   private async currentUsage(
+    key: FeatureKey,
+    organizationId: string,
+  ): Promise<number> {
+    const period = key === FeatureKey.MONTHLY_BOOKINGS ? startOfMonthUTC() : EPOCH;
+
+    const cached = await this.counters.read(organizationId, key, period);
+    if (cached !== null) return cached;
+
+    // Cache miss — recompute from source and write to counter (self-heal).
+    const computed = await this.recomputeFromSource(key, organizationId);
+    await this.counters.upsertExact(organizationId, key, period, computed);
+    return computed;
+  }
+
+  private async recomputeFromSource(
     key: FeatureKey,
     organizationId: string,
   ): Promise<number> {
@@ -144,8 +161,7 @@ export class GetMyFeaturesHandler {
           where: { organizationId, isActive: true },
         });
       case FeatureKey.MONTHLY_BOOKINGS: {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfMonth = startOfMonthUTC();
         return this.prisma.booking.count({
           where: {
             organizationId,
@@ -159,7 +175,6 @@ export class GetMyFeaturesHandler {
           where: { organizationId, isDeleted: false },
           _sum: { size: true },
         });
-        // Convert bytes to MB (ceiling)
         const bytes = result._sum.size ?? 0;
         return Math.ceil(bytes / (1024 * 1024));
       }

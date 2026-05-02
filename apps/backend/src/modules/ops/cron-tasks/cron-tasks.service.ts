@@ -18,6 +18,7 @@ import { ProcessScheduledPlanChangesCron } from '../../platform/billing/process-
 import { DunningRetryCron } from '../../platform/billing/dunning-retry/dunning-retry.cron';
 import { DbRowCountCron } from './db-row-count.cron';
 import { RunOrphanAuditHandler } from '../orphan-audit/run-orphan-audit.handler';
+import { ReconcileUsageCountersHandler } from './reconcile-usage-counters/reconcile-usage-counters.handler';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -38,6 +39,7 @@ export const CRON_JOBS = {
   DUNNING_RETRY: 'dunning-retry',
   DB_ROW_COUNT: 'db-row-count',
   ORPHAN_AUDIT: 'orphan-audit',
+  RECONCILE_USAGE_COUNTERS: 'reconcile-usage-counters',
 } as const;
 
 @Injectable()
@@ -63,6 +65,7 @@ export class CronTasksService implements OnModuleInit {
     private readonly dunningRetry: DunningRetryCron,
     private readonly dbRowCount: DbRowCountCron,
     private readonly orphanAudit: RunOrphanAuditHandler,
+    private readonly reconcileUsageCounters: ReconcileUsageCountersHandler,
   ) {}
 
   onModuleInit(): void {
@@ -90,6 +93,7 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.DUNNING_RETRY, cron: '0 * * * *' }, // hourly
       { name: CRON_JOBS.DB_ROW_COUNT, cron: '0 1 * * 0' }, // weekly Sunday 01:00
       { name: CRON_JOBS.ORPHAN_AUDIT, cron: '0 2 * * 0' }, // weekly Sunday 02:00
+      { name: CRON_JOBS.RECONCILE_USAGE_COUNTERS, cron: '0 3 * * *' }, // daily at 03:00 KSA (= UTC+3)
     ];
 
     for (const { name, cron } of jobs) {
@@ -166,6 +170,9 @@ export class CronTasksService implements OnModuleInit {
             break;
           case CRON_JOBS.ORPHAN_AUDIT:
             await this.orphanAudit.execute();
+            break;
+          case CRON_JOBS.RECONCILE_USAGE_COUNTERS:
+            await this.reconcileUsageCounters.execute();
             break;
           default:
             this.logger.warn(`Unknown cron job: ${job.name}`);

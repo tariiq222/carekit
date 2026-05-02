@@ -153,6 +153,8 @@ export const enBilling: Record<string, string> = {
   "billing.usage.stat.unlimited": "∞",
   "billing.usage.stat.na": "—",
   "billing.usage.warning": "Approaching limit",
+  "billing.usage.blocked": "Limit exceeded — please upgrade your plan",
+  "billing.usage.periodEndsOn": "Period ends on {date}",
   "billing.usage.exceeded": "Limit exceeded",
   "billing.overview.stat.plan": "Plan",
   "billing.overview.stat.employees": "Employees",

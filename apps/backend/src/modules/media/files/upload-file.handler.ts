@@ -6,6 +6,8 @@ import { File, FileVisibility } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { FileUploadedEvent } from '../events/file-uploaded.event';
 import { UploadFileDto } from './upload-file.dto';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
@@ -36,6 +38,7 @@ export class UploadFileHandler {
     private readonly prisma: PrismaService,
     private readonly storage: MinioService,
     private readonly tenant: TenantContextService,
+    private readonly eventBus: EventBusService,
     config: ConfigService,
   ) {
     this.defaultBucket = config.getOrThrow<string>('MINIO_BUCKET');
@@ -75,6 +78,13 @@ export class UploadFileHandler {
         uploadedBy: cmd.uploadedBy,
       },
     });
+
+    const event = new FileUploadedEvent({
+      fileId: file.id,
+      organizationId,
+      sizeBytes: file.size,
+    });
+    this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => {});
 
     return Object.assign(file, { url });
   }

@@ -87,6 +87,10 @@ const activeSubscription = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 const buildHandler = (
   prisma: ReturnType<typeof buildPrisma>,
   cache = buildCache(),
@@ -101,6 +105,7 @@ const buildHandler = (
     mailer as never,
     moyasar as never,
     buildConfig() as never,
+    buildEventBus() as never,
   );
 
 describe('UpgradePlanHandler', () => {

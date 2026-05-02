@@ -23,6 +23,10 @@ const buildConfig = (trialDays = 14) => ({
   get: jest.fn().mockReturnValue(trialDays),
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 const basicPlan = { id: 'plan-1', slug: 'basic', isActive: true, priceMonthly: 299 };
 
 describe('StartSubscriptionHandler', () => {
@@ -35,6 +39,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       buildCache() as never,
       buildConfig() as never,
+      buildEventBus() as never,
     );
 
     await expect(
@@ -52,6 +57,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       buildCache() as never,
       buildConfig() as never,
+      buildEventBus() as never,
     );
 
     await expect(
@@ -70,6 +76,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       buildCache() as never,
       buildConfig() as never,
+      buildEventBus() as never,
     );
 
     const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
@@ -99,6 +106,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       buildCache() as never,
       buildConfig(7) as never,
+      buildEventBus() as never,
     );
 
     const before = Date.now();
@@ -125,6 +133,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       buildCache() as never,
       buildConfig() as never,
+      buildEventBus() as never,
     );
 
     const before = Date.now();
@@ -148,6 +157,7 @@ describe('StartSubscriptionHandler', () => {
       tenant as never,
       cache as never,
       buildConfig() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });

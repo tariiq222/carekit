@@ -117,6 +117,18 @@ function buildCache(result: unknown = null) {
 }
 
 /**
+ * Mock UsageCounterService — returns `counterValue` for read().
+ * Default: null (cache miss → triggers self-heal fallback to DB count).
+ */
+function buildCounters(counterValue: number | null = null) {
+  return {
+    read: jest.fn().mockResolvedValue(counterValue),
+    upsertExact: jest.fn().mockResolvedValue(undefined),
+    increment: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+/**
  * Convenience: creates a CachedPlanLimits-compatible object accepted by the
  * handler's cache.get() call.
  */
@@ -173,6 +185,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -186,6 +199,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -201,6 +215,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -220,6 +235,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -239,6 +255,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       await handler.execute();
@@ -266,6 +283,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -288,6 +306,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -307,6 +326,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant(ORG_ID) as never,
         buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -324,6 +344,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant() as never,
         buildCache(null) as never, // cache.get returns null → no subscription
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -342,6 +363,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(null) as never,
+        buildCounters() as never,
       );
 
       await handler.execute();
@@ -359,6 +381,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant('org-abc') as never,
         cache as never,
+        buildCounters() as never,
       );
 
       await handler.execute();
@@ -378,6 +401,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -396,6 +420,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       await handler.execute();
@@ -414,6 +439,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -434,6 +460,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -451,6 +478,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -475,6 +503,7 @@ describe('GetMyFeaturesHandler', () => {
         buildPrisma() as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -503,6 +532,7 @@ describe('GetMyFeaturesHandler', () => {
         buildTenant() as never,
         // BASIC is not in ['PRO', 'ENTERPRISE']
         buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -521,6 +551,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -541,6 +572,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -561,6 +593,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -578,6 +611,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const result = await handler.execute();
@@ -634,6 +668,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       const execPromise = handler.execute();
@@ -680,6 +715,7 @@ describe('GetMyFeaturesHandler', () => {
         prisma as never,
         buildTenant() as never,
         buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        buildCounters() as never,
       );
 
       await handler.execute();
@@ -701,6 +737,52 @@ describe('GetMyFeaturesHandler', () => {
           'storage',
         ]),
       );
+    });
+  });
+
+  // ── 7. UsageCounter hit/miss paths ────────────────────────────────────────────
+
+  describe('UsageCounter materialized cache paths', () => {
+    it('counter hit: should NOT call prisma.employee.count when counter row present', async () => {
+      const prisma = buildPrisma();
+      // Counter returns 7 for EMPLOYEES — DB should never be called
+      const counters = buildCounters(7);
+
+      const handler = new GetMyFeaturesHandler(
+        prisma as never,
+        buildTenant() as never,
+        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        counters as never,
+      );
+
+      const result = await handler.execute();
+
+      expect(prisma.employee.count).not.toHaveBeenCalled();
+      expect(result.features['maxEmployees'].currentCount).toBe(7);
+    });
+
+    it('counter miss: should call prisma.employee.count and then upsertExact (self-heal)', async () => {
+      const prisma = buildPrisma();
+      prisma.employee.count.mockResolvedValue(4);
+      const counters = buildCounters(null); // cache miss
+
+      const handler = new GetMyFeaturesHandler(
+        prisma as never,
+        buildTenant() as never,
+        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
+        counters as never,
+      );
+
+      const result = await handler.execute();
+
+      expect(prisma.employee.count).toHaveBeenCalledTimes(1);
+      expect(counters.upsertExact).toHaveBeenCalledWith(
+        ORG_ID,
+        'employees',
+        expect.any(Date),
+        4,
+      );
+      expect(result.features['maxEmployees'].currentCount).toBe(4);
     });
   });
 });

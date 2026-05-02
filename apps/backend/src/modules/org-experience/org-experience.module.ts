@@ -4,6 +4,7 @@ import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MediaModule } from '../media/media.module';
 import { TenantModule } from '../../common/tenant';
+import { MessagingModule } from '../../infrastructure/messaging.module';
 import { DashboardOrganizationSettingsController } from '../../api/dashboard/organization-settings.controller';
 import { UploadLogoHandler } from './branding/upload-logo/upload-logo.handler';
 import { CreateServiceHandler } from './services/create-service.handler';
@@ -40,7 +41,7 @@ const serviceHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MediaModule, TenantModule, VerticalsModule, MulterModule.register({ storage: memoryStorage() })],
+  imports: [DatabaseModule, MediaModule, TenantModule, VerticalsModule, MessagingModule, MulterModule.register({ storage: memoryStorage() })],
   controllers: [DashboardOrganizationSettingsController],
   providers: [
     ...serviceHandlers,

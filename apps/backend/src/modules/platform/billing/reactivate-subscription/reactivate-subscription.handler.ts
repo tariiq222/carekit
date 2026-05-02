@@ -2,6 +2,11 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { TenantContextService } from '../../../../common/tenant/tenant-context.service';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  type SubscriptionUpdatedPayload,
+} from '../events/subscription-updated.event';
 
 @Injectable()
 export class ReactivateSubscriptionHandler {
@@ -9,6 +14,7 @@ export class ReactivateSubscriptionHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute() {
@@ -38,6 +44,17 @@ export class ReactivateSubscriptionHandler {
       },
     });
     this.cache.invalidate(organizationId);
+
+    await this.eventBus
+      .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {
+        eventId: `${SUBSCRIPTION_UPDATED_EVENT}:${sub.id}:${Date.now()}`,
+        source: 'billing.reactivate-subscription',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { organizationId, subscriptionId: sub.id, reason: 'REACTIVATE' },
+      })
+      .catch(() => undefined);
+
     return updated;
   }
 }

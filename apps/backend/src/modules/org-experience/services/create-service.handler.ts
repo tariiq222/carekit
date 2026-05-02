@@ -1,6 +1,8 @@
 import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { ServiceCreatedEvent } from '../events/service-created.event';
 import { CreateServiceDto } from './create-service.dto';
 
 export type CreateServiceCommand = CreateServiceDto;
@@ -10,6 +12,7 @@ export class CreateServiceHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: CreateServiceCommand) {
@@ -21,7 +24,7 @@ export class CreateServiceHandler {
     });
     if (existing) throw new ConflictException('Service with this Arabic name already exists');
 
-    return this.prisma.service.create({
+    const service = await this.prisma.service.create({
       data: {
         organizationId,
         nameAr: dto.nameAr,
@@ -62,6 +65,11 @@ export class CreateServiceHandler {
         durationOptions: { orderBy: { sortOrder: 'asc' } },
       },
     });
+
+    const event = new ServiceCreatedEvent({ serviceId: service.id, organizationId });
+    this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => {});
+
+    return service;
   }
 
   private validateBusinessRules(dto: CreateServiceCommand): void {

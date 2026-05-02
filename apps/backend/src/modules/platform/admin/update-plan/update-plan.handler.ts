@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { parsePlanLimits } from '../../billing/plan-limits.zod';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  PLAN_UPDATED_EVENT,
+  type PlanUpdatedPayload,
+} from '../../billing/events/plan-updated.event';
 
 export interface UpdatePlanCommand {
   planId: string;
@@ -23,10 +28,13 @@ export interface UpdatePlanCommand {
 
 @Injectable()
 export class UpdatePlanHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   async execute(cmd: UpdatePlanCommand) {
-    return this.prisma.$allTenants.$transaction(async (tx) => {
+    const result = await this.prisma.$allTenants.$transaction(async (tx) => {
       const existing = await tx.plan.findUnique({ where: { id: cmd.planId } });
       if (!existing) throw new NotFoundException('plan_not_found');
 
@@ -56,5 +64,24 @@ export class UpdatePlanHandler {
 
       return updated;
     });
+
+    // Resolve orgs subscribed to this plan so the cache invalidator can target them.
+    const affectedSubs = await this.prisma.$allTenants.subscription.findMany({
+      where: { planId: cmd.planId },
+      select: { organizationId: true },
+    });
+    const affectedOrganizationIds = affectedSubs.map((s) => s.organizationId);
+
+    await this.eventBus
+      .publish<PlanUpdatedPayload>(PLAN_UPDATED_EVENT, {
+        eventId: `${PLAN_UPDATED_EVENT}:${cmd.planId}:${Date.now()}`,
+        source: 'admin.update-plan',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { planId: cmd.planId, affectedOrganizationIds },
+      })
+      .catch(() => undefined);
+
+    return result;
   }
 }

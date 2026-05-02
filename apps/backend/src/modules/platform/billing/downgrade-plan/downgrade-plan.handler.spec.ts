@@ -33,6 +33,10 @@ const buildConfig = () => ({
   get: jest.fn().mockImplementation((_key: string, def: unknown) => def),
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 const buildHandler = (
   prisma: ReturnType<typeof buildPrisma>,
   tenant = buildTenant(),
@@ -46,6 +50,7 @@ const buildHandler = (
     new SubscriptionStateMachine(),
     mailer as never,
     buildConfig() as never,
+    buildEventBus() as never,
   );
 
 const basicPlan = { id: 'plan-1', slug: 'basic', nameAr: 'أساسي', priceMonthly: 299, isActive: true };

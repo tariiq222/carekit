@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ServiceBookingMode } from '@prisma/client';
 import { CreateServiceHandler } from './create-service.handler';
+
+const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
 import { RecurringPatternDto } from './create-service.dto';
 import { UpdateServiceHandler } from './update-service.handler';
 import { ListServicesHandler } from './list-services.handler';
@@ -70,7 +72,7 @@ const buildTenant = (organizationId = DEFAULT_ORG) =>
 describe('CreateServiceHandler', () => {
   it('creates service scoped by org when name is unique', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     const result = await handler.execute({ nameAr: 'قص الشعر', durationMins: 30, price: 50 });
     expect(prisma.service.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ organizationId: DEFAULT_ORG }) }),
@@ -81,7 +83,7 @@ describe('CreateServiceHandler', () => {
   it('throws ConflictException when name already exists in same org', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(
       handler.execute({ nameAr: 'قص الشعر', durationMins: 30, price: 50 }),
     ).rejects.toThrow(ConflictException);
@@ -89,7 +91,7 @@ describe('CreateServiceHandler', () => {
 
   it('throws BadRequestException when depositAmount exceeds price', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(
       handler.execute({ nameAr: 'خدمة', durationMins: 30, price: 100, depositEnabled: true, depositAmount: 150 }),
     ).rejects.toThrow(BadRequestException);
@@ -97,7 +99,7 @@ describe('CreateServiceHandler', () => {
 
   it('throws BadRequestException when minParticipants > maxParticipants', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(
       handler.execute({ nameAr: 'جلسة', durationMins: 60, price: 100, minParticipants: 10, maxParticipants: 5 }),
     ).rejects.toThrow(BadRequestException);
@@ -105,7 +107,7 @@ describe('CreateServiceHandler', () => {
 
   it('throws BadRequestException when reserveWithoutPayment is true but maxParticipants = 1', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(
       handler.execute({ nameAr: 'خدمة فردية', durationMins: 30, price: 100, maxParticipants: 1, reserveWithoutPayment: true }),
     ).rejects.toThrow(BadRequestException);
@@ -113,7 +115,7 @@ describe('CreateServiceHandler', () => {
 
   it('creates group session service successfully', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     const result = await handler.execute({
       nameAr: 'يوغا جماعية', durationMins: 60, price: 100, minParticipants: 3, maxParticipants: 10, reserveWithoutPayment: true,
     });
@@ -122,7 +124,7 @@ describe('CreateServiceHandler', () => {
 
   it('creates recurring service successfully', async () => {
     const prisma = buildPrisma();
-    const handler = new CreateServiceHandler(prisma as never, buildTenant());
+    const handler = new CreateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     const result = await handler.execute({
       nameAr: 'علاج أسبوعي', durationMins: 45, price: 200, allowRecurring: true,
       allowedRecurringPatterns: [RecurringPatternDto.WEEKLY, RecurringPatternDto.BIWEEKLY], maxRecurrences: 12,

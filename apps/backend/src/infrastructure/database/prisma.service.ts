@@ -104,6 +104,8 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'Invitation',
   // ImpersonationSession deliberately NOT scoped — list-impersonation-sessions handler
   // must read across all organizations via $allTenants bypass.
+  // Phase 5 — materialized quota counters (tenant-scoped for RLS safety)
+  'UsageCounter',
 ]);
 
 /**
