@@ -1,31 +1,57 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@deqah/ui/primitives/input';
 import { Label } from '@deqah/ui/primitives/label';
-import { Switch } from '@deqah/ui/primitives/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@deqah/ui/primitives/tabs';
-import type { PlanLimits } from './plan-limits';
+import type { PlanLimits as FlatPlanLimits } from './plan-limits';
 import { FEATURE_FIELDS, OVERAGE_FIELDS, QUOTA_FIELDS } from './plan-limits';
+import { FeaturesTab } from './features-tab/features-tab';
+import type { PlanLimits as FeatureLimits } from './features-tab/presets';
+import type { FeatureKey } from '@deqah/shared';
 
 interface Props {
   general: React.ReactNode;
-  limits: PlanLimits;
-  onLimitsChange: (next: PlanLimits) => void;
+  limits: FlatPlanLimits;
+  onLimitsChange: (next: FlatPlanLimits) => void;
   idPrefix: string;
 }
 
+/** Extract boolean feature flags from the flat limits into the new {features, quotas} shape. */
+function toFeatureLimits(flat: FlatPlanLimits): FeatureLimits {
+  const features: Partial<Record<FeatureKey, boolean>> = {};
+  for (const f of FEATURE_FIELDS) {
+    features[f.key as FeatureKey] = flat[f.key] as boolean;
+  }
+  return { features, quotas: {} };
+}
+
+/** Merge updated feature booleans back into the flat limits. */
+function mergeFeatureLimits(flat: FlatPlanLimits, next: FeatureLimits): FlatPlanLimits {
+  const updated = { ...flat };
+  for (const [key, value] of Object.entries(next.features)) {
+    if (key in updated) {
+      (updated as Record<string, unknown>)[key] = value;
+    }
+  }
+  return updated;
+}
+
 export function PlanFormTabs({ general, limits, onLimitsChange, idPrefix }: Props) {
-  const setNumber = (key: keyof PlanLimits) => (value: string) => {
+  const [activeTab, setActiveTab] = useState('general');
+
+  const setNumber = (key: keyof FlatPlanLimits) => (value: string) => {
     const parsed = value === '' || value === '-' ? 0 : Number(value);
     if (Number.isNaN(parsed)) return;
     onLimitsChange({ ...limits, [key]: parsed });
   };
-  const setBool = (key: keyof PlanLimits) => (value: boolean) => {
-    onLimitsChange({ ...limits, [key]: value });
+
+  const handleFeaturesChange = (next: FeatureLimits) => {
+    onLimitsChange(mergeFeatureLimits(limits, next));
   };
 
   return (
-    <Tabs defaultValue="general" className="flex-col w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-col w-full">
       <TabsList>
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="quotas">Quotas</TabsTrigger>
@@ -76,22 +102,11 @@ export function PlanFormTabs({ general, limits, onLimitsChange, idPrefix }: Prop
       </TabsContent>
 
       <TabsContent value="features" className="mt-4">
-        <div className="grid grid-cols-2 gap-3">
-          {FEATURE_FIELDS.map((f) => (
-            <label
-              key={f.key}
-              htmlFor={`${idPrefix}-${f.key}`}
-              className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/50 px-3 py-2.5"
-            >
-              <span className="text-sm text-foreground">{f.label}</span>
-              <Switch
-                id={`${idPrefix}-${f.key}`}
-                checked={limits[f.key] as boolean}
-                onCheckedChange={setBool(f.key)}
-              />
-            </label>
-          ))}
-        </div>
+        <FeaturesTab
+          limits={toFeatureLimits(limits)}
+          onLimitsChange={handleFeaturesChange}
+          onJumpToQuotas={() => setActiveTab('quotas')}
+        />
       </TabsContent>
     </Tabs>
   );
