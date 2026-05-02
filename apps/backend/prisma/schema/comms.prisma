@@ -114,6 +114,7 @@ model EmailTemplate {
   name           String
   subject        String
   htmlBody       String
+  blocks         Json?       // SaaS — block-builder source of truth; htmlBody is rendered from this
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

@@ -2,6 +2,8 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { CreateEmailTemplateDto } from './create-email-template.dto';
+import { renderBlocksToHtml } from './render-blocks';
+import type { EmailBlock } from './email-block.types';
 
 export type CreateEmailTemplateCommand = CreateEmailTemplateDto;
 
@@ -23,13 +25,23 @@ export class CreateEmailTemplateHandler {
       throw new ConflictException(`Template "${cmd.slug}" already exists`);
     }
 
+    let htmlBody = cmd.htmlBody;
+    let blocks: EmailBlock[] | null = null;
+
+    if (cmd.blocks !== undefined) {
+      // Blocks is the source of truth — render htmlBody from blocks
+      blocks = cmd.blocks as EmailBlock[];
+      htmlBody = renderBlocksToHtml(blocks);
+    }
+
     return this.prisma.emailTemplate.create({
       data: {
         organizationId, // SaaS-02f
         slug: cmd.slug,
         name: cmd.name,
         subject: cmd.subject,
-        htmlBody: cmd.htmlBody,
+        htmlBody,
+        blocks: blocks ?? undefined,
       },
     });
   }
