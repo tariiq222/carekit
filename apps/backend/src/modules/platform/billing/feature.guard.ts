@@ -3,12 +3,12 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { BookingStatus } from "@prisma/client";
 import { FeatureKey } from "@deqah/shared/constants/feature-keys";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import { TenantContextService } from "../../../common/tenant/tenant-context.service";
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 import { EPOCH, startOfMonthUTC } from "./usage-counter/period.util";
@@ -20,6 +20,10 @@ interface CachedFeatures {
   features: Record<string, number | boolean>;
   planSlug: string;
   expiresAt: number;
+}
+
+interface AuthenticatedRequest {
+  user?: { organizationId?: string };
 }
 
 @Injectable()
@@ -42,7 +46,6 @@ export class FeatureGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
-    private readonly tenant: TenantContextService,
     private readonly cacheService: SubscriptionCacheService,
     private readonly counters: UsageCounterService,
   ) {}
@@ -56,7 +59,19 @@ export class FeatureGuard implements CanActivate {
     // No metadata → permissive
     if (!featureKey) return true;
 
-    const organizationId = this.tenant.requireOrganizationId();
+    const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      // Guard is method-level via @RequireFeature; the class is always
+      // protected by JwtGuard. If we get here without req.user it is a
+      // programming error (e.g. a future contributor put @RequireFeature
+      // on a @Public() route). Fail closed instead of silently reading a
+      // CLS fallback tenant.
+      throw new UnauthorizedException(
+        "Authentication required for feature-gated route",
+      );
+    }
+
     const { features, planSlug } = await this.resolveFeatures(organizationId);
 
     const jsonKey = FEATURE_KEY_MAP[featureKey];
