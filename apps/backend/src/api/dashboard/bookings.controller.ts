@@ -38,6 +38,8 @@ import { CheckAvailabilityHandler } from '../../modules/bookings/check-availabil
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
 import { ListBookingStatusLogHandler } from '../../modules/bookings/list-booking-status-log/list-booking-status-log.handler';
 import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
+import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 @ApiTags('Dashboard / Bookings')
 @ApiBearerAuth()
@@ -79,6 +81,7 @@ export class DashboardBookingsController {
   }
 
   @Post('recurring')
+  @RequireFeature(FeatureKey.RECURRING_BOOKINGS)
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a recurring booking series' })
   @ApiCreatedResponse({ description: 'Recurring booking series created', schema: { type: 'object' } })
