@@ -4,6 +4,11 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { TenantContextService } from '../../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { StartSubscriptionDto } from '../dto/start-subscription.dto';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  type SubscriptionUpdatedPayload,
+} from '../events/subscription-updated.event';
 
 @Injectable()
 export class StartSubscriptionHandler {
@@ -12,6 +17,7 @@ export class StartSubscriptionHandler {
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
     private readonly config: ConfigService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: StartSubscriptionDto) {
@@ -46,6 +52,17 @@ export class StartSubscriptionHandler {
     });
 
     this.cache.invalidate(organizationId);
+
+    await this.eventBus
+      .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {
+        eventId: `${SUBSCRIPTION_UPDATED_EVENT}:${sub.id}:${Date.now()}`,
+        source: 'billing.start-subscription',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { organizationId, subscriptionId: sub.id, reason: 'START' },
+      })
+      .catch(() => undefined);
+
     return sub;
   }
 }

@@ -17,6 +17,10 @@ const buildCache = () => ({
   invalidate: jest.fn(),
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('CancelSubscriptionHandler', () => {
   it('throws NotFoundException when no subscription exists', async () => {
     const prisma = buildPrisma();
@@ -26,6 +30,7 @@ describe('CancelSubscriptionHandler', () => {
       buildTenant() as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildEventBus() as never,
     );
 
     await expect(handler.execute({})).rejects.toThrow(NotFoundException);
@@ -39,6 +44,7 @@ describe('CancelSubscriptionHandler', () => {
       buildTenant() as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildEventBus() as never,
     );
 
     await expect(handler.execute({})).rejects.toThrow(
@@ -60,6 +66,7 @@ describe('CancelSubscriptionHandler', () => {
       buildTenant('org-A') as never,
       cache as never,
       new SubscriptionStateMachine(),
+      buildEventBus() as never,
     );
 
     await handler.execute({ reason: 'closing' });
@@ -99,6 +106,7 @@ describe('CancelSubscriptionHandler', () => {
       buildTenant() as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildEventBus() as never,
     );
 
     const result = await handler.execute({ reason: 'budget' });
@@ -129,6 +137,7 @@ describe('CancelSubscriptionHandler', () => {
       buildTenant() as never,
       buildCache() as never,
       new SubscriptionStateMachine(),
+      buildEventBus() as never,
     );
 
     await expect(handler.execute({})).rejects.toThrow(

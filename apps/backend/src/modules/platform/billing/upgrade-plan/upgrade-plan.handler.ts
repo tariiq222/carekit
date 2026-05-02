@@ -13,6 +13,11 @@ import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { ChangePlanDto } from '../dto/change-plan.dto';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { computeProrationAmountSar } from '../compute-proration/proration-calculator';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  type SubscriptionUpdatedPayload,
+} from '../events/subscription-updated.event';
 
 @Injectable()
 export class UpgradePlanHandler {
@@ -24,6 +29,7 @@ export class UpgradePlanHandler {
     private readonly mailer: PlatformMailerService,
     private readonly moyasar: MoyasarSubscriptionClient,
     private readonly config: ConfigService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: ChangePlanDto) {
@@ -85,6 +91,8 @@ export class UpgradePlanHandler {
         },
       });
       this.cache.invalidate(organizationId);
+
+      await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
 
       const owner = await this.prisma.$allTenants.membership.findFirst({
         where: { organizationId, role: 'OWNER', isActive: true },
@@ -197,6 +205,8 @@ export class UpgradePlanHandler {
     });
     this.cache.invalidate(organizationId);
 
+    await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
+
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },
       select: {
@@ -216,6 +226,22 @@ export class UpgradePlanHandler {
     }
 
     return updated;
+  }
+
+  private async emitSubscriptionUpdated(
+    organizationId: string,
+    subscriptionId: string,
+    reason: SubscriptionUpdatedPayload['reason'],
+  ): Promise<void> {
+    await this.eventBus
+      .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {
+        eventId: `${SUBSCRIPTION_UPDATED_EVENT}:${subscriptionId}:${Date.now()}`,
+        source: 'billing.upgrade-plan',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { organizationId, subscriptionId, reason },
+      })
+      .catch(() => undefined); // fire-and-forget; do not block response
   }
 
   private billingCallbackUrl(): string {

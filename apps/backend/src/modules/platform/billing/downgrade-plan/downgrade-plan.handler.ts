@@ -6,6 +6,11 @@ import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { ChangePlanDto } from '../dto/change-plan.dto';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  type SubscriptionUpdatedPayload,
+} from '../events/subscription-updated.event';
 
 @Injectable()
 export class DowngradePlanHandler {
@@ -16,6 +21,7 @@ export class DowngradePlanHandler {
     private readonly stateMachine: SubscriptionStateMachine,
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: ChangePlanDto) {
@@ -46,6 +52,16 @@ export class DowngradePlanHandler {
       data: { planId: targetPlan.id, billingCycle: dto.billingCycle, updatedAt: new Date() },
     });
     this.cache.invalidate(organizationId);
+
+    await this.eventBus
+      .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {
+        eventId: `${SUBSCRIPTION_UPDATED_EVENT}:${sub.id}:${Date.now()}`,
+        source: 'billing.downgrade-plan',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { organizationId, subscriptionId: sub.id, reason: 'DOWNGRADE' },
+      })
+      .catch(() => undefined);
 
     const owner = await this.prisma.$allTenants.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },

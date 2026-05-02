@@ -3,6 +3,11 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { TenantContextService } from '../../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
+import { EventBusService } from '../../../../infrastructure/events';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  type SubscriptionUpdatedPayload,
+} from '../events/subscription-updated.event';
 
 @Injectable()
 export class CancelSubscriptionHandler {
@@ -11,6 +16,7 @@ export class CancelSubscriptionHandler {
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
     private readonly stateMachine: SubscriptionStateMachine,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(cmd: { reason?: string }) {
@@ -41,6 +47,7 @@ export class CancelSubscriptionHandler {
         },
       });
       this.cache.invalidate(organizationId);
+      await this.emitCancelEvent(organizationId, sub.id);
       return updated;
     }
 
@@ -58,6 +65,19 @@ export class CancelSubscriptionHandler {
       },
     });
     this.cache.invalidate(organizationId);
+    await this.emitCancelEvent(organizationId, sub.id);
     return updated;
+  }
+
+  private async emitCancelEvent(organizationId: string, subscriptionId: string): Promise<void> {
+    await this.eventBus
+      .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {
+        eventId: `${SUBSCRIPTION_UPDATED_EVENT}:${subscriptionId}:${Date.now()}`,
+        source: 'billing.cancel-subscription',
+        version: 1,
+        occurredAt: new Date(),
+        payload: { organizationId, subscriptionId, reason: 'CANCEL' },
+      })
+      .catch(() => undefined);
   }
 }
