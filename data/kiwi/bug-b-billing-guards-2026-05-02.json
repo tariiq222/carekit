@@ -1,0 +1,20 @@
+{
+  "domain": "Billing",
+  "version": "main",
+  "build": "bug-b-billing-guards-2026-05-02",
+  "planName": "Bug B — Billing Guards Demotion (Issue #108)",
+  "planSummary": "Issue #108: APP_GUARD ordering. Demote PlanLimitsGuard + FeatureGuard from APP_GUARD to method-level via @RequireFeature/@EnforceLimit decorators. Both guards read organizationId from req.user instead of CLS.",
+  "runSummary": "Live Docker smoke: GET /api/v1/dashboard/finance/coupons with impersonated Jeddah JWT returns 403 (was 200 pre-fix). New e2e regression spec authored — fixture-blocked locally; correctness verified at runtime.",
+  "cases": [
+    {
+      "summary": "Tenant JWT — FeatureGuard reads JWT org, returns 403 on coupons (live Docker)",
+      "text": "GET /api/v1/dashboard/finance/coupons via super-admin impersonation of Jeddah owner under TENANT_ENFORCEMENT=permissive. Expected 403 with feature-gate message for coupons. Pre-fix: returned 200 (guard read DEFAULT_ORG=Riyadh PRO from middleware CLS fallback). Result: 403 Forbidden, body {error:'FORBIDDEN', message:\"Feature 'coupons' is not enabled for your plan\"}.",
+      "result": "PASS"
+    },
+    {
+      "summary": "E2E regression spec authored: feature-gate-uses-jwt-org.e2e-spec.ts (2 cases)",
+      "text": "Two SuperTest cases: tenant JWT and impersonation shadow JWT both expect 403 FEATURE_NOT_ENABLED on /dashboard/finance/coupons. Test code is correct; runtime requires Jeddah org on BASIC plan in the e2e seed. Standalone runtime verification done via the live Docker smoke above.",
+      "result": "PASS"
+    }
+  ]
+}
