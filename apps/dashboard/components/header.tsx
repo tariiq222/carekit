@@ -87,10 +87,7 @@ export function Header() {
             <HugeiconsIcon icon={Settings02Icon} size={18} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align={dir === "rtl" ? "start" : "end"}
-          className="w-52"
-        >
+        <DropdownMenuContent align="end" className="w-52">
           <div dir={dir}>
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex items-center gap-2">
@@ -166,7 +163,7 @@ export function Header() {
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={dir === "rtl" ? "start" : "end"} className="w-72">
+        <DropdownMenuContent align="end" className="w-72">
           <div dir={dir}>
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               {t("notifications.title")}
@@ -215,10 +212,7 @@ export function Header() {
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align={dir === "rtl" ? "start" : "end"}
-          className="w-48"
-        >
+        <DropdownMenuContent align="end" className="w-48">
           <div dir={dir}>
             <Link
               href="/profile"

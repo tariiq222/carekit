@@ -42,6 +42,31 @@ export class ListActivityHandler {
       this.prisma.activityLog.count({ where }),
     ]);
 
-    return toListResponse(items, total, page, limit);
+    const userIds = Array.from(
+      new Set(items.map((i) => i.userId).filter((v): v is string => !!v)),
+    );
+    const users = userIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, firstName: true, lastName: true, email: true },
+        })
+      : [];
+    const userById = new Map(users.map((u) => [u.id, u]));
+
+    const shaped = items.map((it) => ({
+      id: it.id,
+      userId: it.userId,
+      action: it.action,
+      module: it.entity,
+      resourceId: it.entityId,
+      description: it.description,
+      ipAddress: it.ipAddress,
+      userAgent: it.userAgent,
+      createdAt: it.occurredAt,
+      userEmail: it.userEmail,
+      user: it.userId ? (userById.get(it.userId) ?? null) : null,
+    }));
+
+    return toListResponse(shaped, total, page, limit);
   }
 }

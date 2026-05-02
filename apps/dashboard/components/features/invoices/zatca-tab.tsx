@@ -5,22 +5,12 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import {
-  CheckmarkCircle02Icon,
-  Cancel01Icon,
-  TimeQuarterPassIcon,
-  Alert02Icon,
-} from "@hugeicons/core-free-icons"
-
-import { StatsGrid } from "@/components/features/stats-grid"
-import { StatCard } from "@/components/features/stat-card"
 import { Card, CardContent } from "@deqah/ui"
 import { Badge } from "@deqah/ui"
 import { Button } from "@deqah/ui"
 import { Input } from "@deqah/ui"
 import { Label } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
-import { cn } from "@/lib/utils"
 import {
   Sheet,
   SheetContent,
@@ -42,8 +32,6 @@ import {
   type ZatcaOnboardFormData,
 } from "@/lib/schemas/invoice.schema"
 
-type TabId = "config" | "status"
-
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2 text-sm">
@@ -59,7 +47,6 @@ export function ZatcaTab() {
   const { data: status, isLoading: statusLoading } = useOnboardingStatus()
   const { onboardMut } = useZatcaMutations()
   const [onboardOpen, setOnboardOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<TabId>("config")
 
   const form = useForm<ZatcaOnboardFormData>({
     resolver: zodResolver(zatcaOnboardSchema),
@@ -79,200 +66,93 @@ export function ZatcaTab() {
 
   const isLoading = configLoading || statusLoading
 
-  const tabs: { id: TabId; label: string; desc: string }[] = [
-    { id: "config", label: t("zatca.config"), desc: t("zatca.configDesc") },
-    {
-      id: "status",
-      label: t("zatca.onboardingStatus"),
-      desc: t("zatca.onboardDesc"),
-    },
-  ]
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Stats */}
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
           ))}
         </div>
-      ) : config ? (
-        <StatsGrid>
-          <StatCard
-            title={t("zatca.environment")}
-            value={config.environment}
-            icon={TimeQuarterPassIcon}
-            iconColor="primary"
-          />
-          <StatCard
-            title={t("zatca.onboarded")}
-            value={config.isOnboarded ? t("common.yes") : t("common.no")}
-            icon={CheckmarkCircle02Icon}
-            iconColor={config.isOnboarded ? "success" : "warning"}
-          />
-          <StatCard
-            title={t("zatca.vatNumber")}
-            value={config.vatRegistrationNumber ?? "—"}
-            icon={Alert02Icon}
-            iconColor="warning"
-          />
-          <StatCard
-            title={t("zatca.seller")}
-            value={config.sellerName ?? "—"}
-            icon={Cancel01Icon}
-            iconColor="primary"
-          />
-        </StatsGrid>
-      ) : null}
+      )}
 
-      {/* Sidebar Layout */}
-      <Card className="overflow-hidden p-0">
-        <div className="flex min-h-[360px]">
-          {/* ── Sidebar ── */}
-          <div className="flex w-64 shrink-0 flex-col border-e border-border bg-surface-muted">
-            <div className="border-b border-border px-4 py-3">
-              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                {t("invoices.tabs.zatca")}
-              </p>
+      {/* Combined Configuration + Status Card */}
+      <Card>
+        <CardContent className="flex flex-col gap-5 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h4 className="text-base font-semibold text-foreground">{t("zatca.zakatLinkTitle")}</h4>
+              <p className="mt-0.5 text-sm text-muted-foreground">{t("zatca.zakatLinkDesc")}</p>
             </div>
-            <div role="tablist" className="flex-1 space-y-1.5 p-3">
-              {tabs.map((tab) => (
-                <div
-                  key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  tabIndex={0}
-                  onClick={() => setActiveTab(tab.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id)
-                  }}
-                  className={cn(
-                    "w-full cursor-pointer rounded-lg px-3 py-2.5 transition-all select-none",
-                    activeTab === tab.id
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
-                  )}
-                >
-                  <p className="truncate text-sm leading-tight font-medium">
-                    {tab.label}
-                  </p>
-                  {activeTab === tab.id && (
-                    <p className="mt-0.5 line-clamp-2 text-xs leading-tight opacity-80">
-                      {tab.desc}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
+            <Badge
+              variant="outline"
+              className={
+                status?.isOnboarded
+                  ? "border-success/30 bg-success/10 text-success"
+                  : "border-destructive/30 bg-destructive/10 text-destructive"
+              }
+            >
+              {status?.isOnboarded ? t("zatca.linkedStatus") : t("zatca.notLinkedStatus")}
+            </Badge>
           </div>
 
-          {/* ── Content ── */}
-          <div className="flex flex-1 flex-col overflow-y-auto bg-surface-muted/50 p-5">
-            {activeTab === "config" && (
-              <div className="flex h-full flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Card className="bg-surface shadow-sm">
-                    <CardContent className="pt-3 pb-3">
-                      <InfoRow
-                        label={t("zatca.vatNumber")}
-                        value={config?.vatRegistrationNumber ?? "—"}
-                      />
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-surface shadow-sm">
-                    <CardContent className="pt-3 pb-3">
-                      <InfoRow
-                        label={t("zatca.orgName")}
-                        value={config?.sellerName ?? "—"}
-                      />
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-surface shadow-sm">
-                    <CardContent className="pt-3 pb-3">
-                      <InfoRow
-                        label={t("zatca.environment")}
-                        value={
-                          <Badge
-                            variant="outline"
-                            className={
-                              config?.environment === "production"
-                                ? "border-success/30 bg-success/10 text-success"
-                                : "border-warning/30 bg-warning/10 text-warning"
-                            }
-                          >
-                            {config?.environment ?? "sandbox"}
-                          </Badge>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-                <div className="mt-auto flex justify-end pt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => setOnboardOpen(true)}
-                    disabled={config?.isOnboarded}
-                  >
-                    {config?.isOnboarded
-                      ? t("zatca.alreadyOnboarded")
-                      : t("zatca.startOnboarding")}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "status" && (
-              <div className="flex h-full flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Card className="bg-surface shadow-sm">
-                    <CardContent className="pt-3 pb-3">
-                      <InfoRow
-                        label={t("zatca.onboarded")}
-                        value={
-                          <Badge
-                            variant="outline"
-                            className={
-                              status?.isOnboarded
-                                ? "border-success/30 bg-success/10 text-success"
-                                : "border-destructive/30 bg-destructive/10 text-destructive"
-                            }
-                          >
-                            {status?.isOnboarded
-                              ? t("common.yes")
-                              : t("common.no")}
-                          </Badge>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
-                  {status?.onboardedAt && (
-                    <Card className="bg-surface shadow-sm">
-                      <CardContent className="pt-3 pb-3">
-                        <InfoRow
-                          label={t("zatca.onboardedAt")}
-                          value={formatLocaleDate(status.onboardedAt, locale, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-surface shadow-sm">
+              <CardContent className="pt-3 pb-3">
+                <InfoRow label={t("zatca.vatNumber")} value={config?.vatRegistrationNumber ?? "—"} />
+              </CardContent>
+            </Card>
+            <Card className="bg-surface shadow-sm">
+              <CardContent className="pt-3 pb-3">
+                <InfoRow label={t("zatca.orgName")} value={config?.sellerName ?? "—"} />
+              </CardContent>
+            </Card>
+            <Card className="bg-surface shadow-sm">
+              <CardContent className="pt-3 pb-3">
+                <InfoRow
+                  label={t("zatca.environment")}
+                  value={
+                    <Badge
+                      variant="outline"
+                      className={
+                        config?.environment === "production"
+                          ? "border-success/30 bg-success/10 text-success"
+                          : "border-warning/30 bg-warning/10 text-warning"
+                      }
+                    >
+                      {config?.environment ?? "sandbox"}
+                    </Badge>
+                  }
+                />
+              </CardContent>
+            </Card>
+            {status?.onboardedAt && (
+              <Card className="bg-surface shadow-sm">
+                <CardContent className="pt-3 pb-3">
+                  <InfoRow
+                    label={t("zatca.onboardedAt")}
+                    value={formatLocaleDate(status.onboardedAt, locale, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  />
+                </CardContent>
+              </Card>
             )}
           </div>
-        </div>
+
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setOnboardOpen(true)} disabled={config?.isOnboarded}>
+              {config?.isOnboarded ? t("zatca.alreadyOnboarded") : t("zatca.startOnboarding")}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Onboard Sheet */}
       <Sheet open={onboardOpen} onOpenChange={setOnboardOpen}>
-        <SheetContent
-          side="end"
-          className="w-full overflow-y-auto sm:max-w-[45vw]"
-        >
+        <SheetContent side="end" className="w-full overflow-y-auto sm:max-w-[45vw]">
           <SheetHeader>
             <SheetTitle>{t("zatca.onboardTitle")}</SheetTitle>
             <SheetDescription>{t("zatca.onboardDesc")}</SheetDescription>
@@ -280,41 +160,22 @@ export function ZatcaTab() {
           <form onSubmit={handleOnboard} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label>{t("zatca.vatNumber")} *</Label>
-              <Input
-                {...form.register("vatRegistrationNumber")}
-                placeholder={t("zatca.vatPlaceholder")}
-                className="tabular-nums"
-              />
+              <Input {...form.register("vatRegistrationNumber")} placeholder={t("zatca.vatPlaceholder")} className="tabular-nums" />
               {form.formState.errors.vatRegistrationNumber && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.vatRegistrationNumber.message}
-                </p>
+                <p className="text-xs text-destructive">{form.formState.errors.vatRegistrationNumber.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-2">
               <Label>{t("zatca.orgName")} *</Label>
-              <Input
-                {...form.register("sellerName")}
-                placeholder={t("zatca.sellerPlaceholder")}
-              />
+              <Input {...form.register("sellerName")} placeholder={t("zatca.sellerPlaceholder")} />
               {form.formState.errors.sellerName && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.sellerName.message}
-                </p>
+                <p className="text-xs text-destructive">{form.formState.errors.sellerName.message}</p>
               )}
             </div>
             <SheetFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOnboardOpen(false)}
-              >
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={() => setOnboardOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={onboardMut.isPending}>
-                {onboardMut.isPending
-                  ? "Processing..."
-                  : t("zatca.startOnboarding")}
+                {onboardMut.isPending ? "Processing..." : t("zatca.startOnboarding")}
               </Button>
             </SheetFooter>
           </form>

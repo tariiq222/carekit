@@ -88,7 +88,9 @@ export class RequestOtpHandler {
 
       try {
         const channel = this.channelRegistry.resolve(dto.channel);
-        await channel.send(dto.identifier, rawCode);
+        // Pass organizationId so the channel can use the tenant's configured
+        // provider (e.g. Resend) before falling back to platform transport.
+        await channel.send(dto.identifier, rawCode, orgId ?? undefined);
       } catch (err) {
         this.logger.error(`Failed to send OTP via ${dto.channel} to ${dto.identifier}`, err);
       }

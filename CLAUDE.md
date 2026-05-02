@@ -106,6 +106,12 @@ npm run kiwi:sync-manual data/kiwi/<domain>-<date>.json
 # Single test (backend)
 cd apps/backend && npx jest path/to/file.spec.ts
 cd apps/backend && npx jest -t "describes partial name"
+
+# OpenAPI sync (backend → dashboard typed client)
+npm run openapi:sync
+
+# Brand identity check
+npm run brand:check
 ```
 
 ## Structure

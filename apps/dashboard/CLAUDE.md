@@ -43,8 +43,9 @@ lib/utils.ts                           pure utilities
 `activity-log/`, `bookings/`, `branches/`, `branding/`, `categories/`,
 `chatbot/`, `clients/`, `contact-messages/`, `content/`, `coupons/`,
 `departments/`, `employees/`, `intake-forms/`, `invoices/`,
-`notifications/`, `payments/`, `ratings/`, `reports/`, `services/`,
-`settings/` (with `billing/` and `sms/` sub-routes), `users/`, `zatca/`
+`notifications/`, `payments/`, `profile/`, `ratings/`, `reports/`,
+`services/`, `settings/` (with `billing/` and `sms/` sub-routes),
+`users/`, `zatca/`
 
 Top-level layout/error/loading: `layout.tsx`, `error.tsx`, `loading.tsx`, `page.tsx`.
 

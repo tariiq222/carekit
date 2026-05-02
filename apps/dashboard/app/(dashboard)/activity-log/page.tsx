@@ -1,9 +1,12 @@
-import { redirect } from "next/navigation"
+import { ListPageShell } from "@/components/features/list-page-shell"
+import { Breadcrumbs } from "@/components/features/breadcrumbs"
+import { ActivityLogTab } from "@/components/features/users/activity-log-tab"
 
-/**
- * Activity Log moved to Users & Roles page (Activity Log tab).
- * Redirect any old bookmarks/links.
- */
-export default function ActivityLogRedirect() {
-  redirect("/users?tab=activityLog")
+export default function ActivityLogPage() {
+  return (
+    <ListPageShell>
+      <Breadcrumbs />
+      <ActivityLogTab />
+    </ListPageShell>
+  )
 }

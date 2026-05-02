@@ -18,6 +18,7 @@ export interface ActivityLog {
   ipAddress: string | null
   userAgent: string | null
   createdAt: string
+  userEmail: string | null
   user: {
     id: string
     firstName: string

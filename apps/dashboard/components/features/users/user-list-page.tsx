@@ -16,7 +16,6 @@ import { FilterBar } from "@/components/features/filter-bar"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { getUserColumns } from "@/components/features/users/user-columns"
 import { RolesTab } from "@/components/features/users/roles-tab"
-import { ActivityLogTab } from "@/components/features/users/activity-log-tab"
 import { DeleteUserDialog } from "@/components/features/users/delete-user-dialog"
 import { CreateRoleDialog } from "@/components/features/users/create-role-dialog"
 import { Button } from "@deqah/ui"
@@ -29,7 +28,7 @@ import type { User } from "@/lib/types/user"
 export function UserListPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const defaultTab = searchParams.get("tab") === "activityLog" ? "activityLog" : "users"
+  const defaultTab = searchParams.get("tab") === "roles" ? "roles" : "users"
   const { t, locale } = useLocale()
   const { users, meta, isLoading, error, search, setSearch } = useUsers()
   const { data: roles } = useRoles()
@@ -83,7 +82,6 @@ export function UserListPage() {
         <TabsList>
           <TabsTrigger value="users">{t("users.tabs.users")}</TabsTrigger>
           <TabsTrigger value="roles">{t("users.tabs.roles")}</TabsTrigger>
-          <TabsTrigger value="activityLog">{t("users.tabs.activityLog")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-6 flex flex-col gap-6">
@@ -119,7 +117,6 @@ export function UserListPage() {
         </TabsContent>
 
         <TabsContent value="roles" className="mt-6"><RolesTab /></TabsContent>
-        <TabsContent value="activityLog" className="mt-6"><ActivityLogTab /></TabsContent>
       </Tabs>
 
       <CreateRoleDialog open={createRoleOpen} onOpenChange={setCreateRoleOpen} />
