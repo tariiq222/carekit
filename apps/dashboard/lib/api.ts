@@ -105,6 +105,17 @@ export const api = {
       ...(options?.data !== undefined ? { body: JSON.stringify(options.data) } : {}),
     })
   },
+
+  /**
+   * Submit a multipart/form-data POST. apiRequest detects FormData and skips
+   * the JSON Content-Type so the browser can compute the boundary.
+   */
+  postForm<T>(endpoint: string, form: FormData): Promise<T> {
+    return apiRequest<T>(endpoint, {
+      method: "POST",
+      body: form,
+    })
+  },
 }
 
 /* ─── Helpers ─── */
