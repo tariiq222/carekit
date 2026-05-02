@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateEmailTemplateDto } from './update-email-template.dto';
+import { renderBlocksToHtml } from './render-blocks';
+import type { EmailBlock } from './email-block.types';
 
 export type UpdateEmailTemplateCommand = UpdateEmailTemplateDto & {
   id: string;
@@ -18,14 +20,22 @@ export class UpdateEmailTemplateHandler {
       throw new NotFoundException(`Email template ${cmd.id} not found`);
     }
 
-    return this.prisma.emailTemplate.update({
-      where: { id: cmd.id },
-      data: {
-        ...(cmd.name !== undefined ? { name: cmd.name } : {}),
-        ...(cmd.subject !== undefined ? { subject: cmd.subject } : {}),
-        ...(cmd.htmlBody !== undefined ? { htmlBody: cmd.htmlBody } : {}),
-        ...(cmd.isActive !== undefined ? { isActive: cmd.isActive } : {}),
-      },
-    });
+    const updates: Record<string, unknown> = {};
+    if (cmd.name !== undefined) updates.name = cmd.name;
+    if (cmd.subject !== undefined) updates.subject = cmd.subject;
+    if (cmd.isActive !== undefined) updates.isActive = cmd.isActive;
+
+    if (cmd.blocks !== undefined) {
+      // Blocks is the source of truth — render htmlBody from it
+      const blocks = cmd.blocks as EmailBlock[];
+      updates.blocks = blocks;
+      updates.htmlBody = renderBlocksToHtml(blocks);
+    } else if (cmd.htmlBody !== undefined) {
+      // Legacy raw-HTML edit — clear blocks since they no longer match
+      updates.htmlBody = cmd.htmlBody;
+      updates.blocks = null;
+    }
+
+    return this.prisma.emailTemplate.update({ where: { id: cmd.id }, data: updates });
   }
 }

@@ -12,6 +12,7 @@
  */
 
 import { toast } from "sonner"
+import { useIsMutating, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   DropdownMenu,
@@ -45,6 +46,13 @@ export function TenantSwitcher() {
   const { isAuthenticated, user } = useAuth()
   const { data: memberships, isLoading } = useMemberships()
   const switchOrg = useSwitchOrganization()
+  const queryClient = useQueryClient()
+  // In-flight mutation safety: while any TanStack mutation is pending, lock
+  // the switcher. Switching mid-flight risks the prior request resolving with
+  // the new tenant's JWT, leaking writes across orgs. The button stays visible
+  // but disabled, with a localized hint that work is in progress.
+  const pendingMutations = useIsMutating()
+  const hasPendingWrites = pendingMutations > 0
 
   // Hide entirely when unauthenticated, loading, or user has ≤1 org.
   if (!isAuthenticated) return null
@@ -60,6 +68,14 @@ export function TenantSwitcher() {
 
   const handleSelect = (target: Membership) => {
     if (target.organizationId === active?.organizationId) return
+    if (hasPendingWrites) {
+      toast.error(t("tenantSwitcher.pendingWrites"))
+      return
+    }
+    // Cancel any in-flight queries before clearing the cache so their
+    // resolutions cannot land in the new tenant's keyspace. The mutation
+    // itself triggers a queryClient.clear() + router.refresh() on success.
+    queryClient.cancelQueries()
     switchOrg.mutate(target.organizationId, {
       onError: () => toast.error(t("tenantSwitcher.switchFailed")),
     })
@@ -72,7 +88,8 @@ export function TenantSwitcher() {
           variant="ghost"
           size="sm"
           className="max-w-[12rem] truncate"
-          disabled={switchOrg.isPending}
+          disabled={switchOrg.isPending || hasPendingWrites}
+          title={hasPendingWrites ? t("tenantSwitcher.pendingWrites") : undefined}
         >
           {switchOrg.isPending
             ? t("tenantSwitcher.switching")

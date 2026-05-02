@@ -1058,6 +1058,13 @@
       },
       "CreateEmailTemplateDto": {
         "properties": {
+          "blocks": {
+            "description": "Block tree (source of truth — when present, htmlBody is rendered from this)",
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
           "htmlBody": {
             "description": "HTML body of the email (supports Handlebars variables)",
             "example": "<p>Hello {{name}}</p>",
@@ -3901,6 +3908,13 @@
       },
       "UpdateEmailTemplateDto": {
         "properties": {
+          "blocks": {
+            "description": "Block tree (source of truth — when present, htmlBody is rendered from this)",
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
           "htmlBody": {
             "description": "HTML body of the email (supports Handlebars variables)",
             "example": "<p>Hello {{name}}</p>",

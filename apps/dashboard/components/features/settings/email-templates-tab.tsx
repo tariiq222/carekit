@@ -10,16 +10,16 @@ import { useEmailTemplates } from "@/hooks/use-email-templates"
 import { useLocale } from "@/components/locale-provider"
 import { EmailLayoutForm } from "./email-layout-form"
 import { EmailTemplateInlineEditor } from "./email-template-inline-editor"
+import { BlockPreview } from "./email-builder/block-preview"
 import type { EmailTemplate } from "@/lib/types/email-template"
 
 const EMAIL_LAYOUT_ID = "__email-layout__"
 
 /* ─── Template View (read-only) ─── */
 
-function TemplateView({ template, t, locale, onEdit }: {
+function TemplateView({ template, t, onEdit }: {
   template: EmailTemplate
   t: (k: string) => string
-  locale: string
   onEdit: () => void
 }) {
   return (
@@ -27,9 +27,7 @@ function TemplateView({ template, t, locale, onEdit }: {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-foreground">
-            {locale === "ar" ? template.nameAr : (template.nameEn ?? template.nameAr)}
-          </p>
+          <p className="text-sm font-semibold text-foreground">{template.name}</p>
           <Badge
             variant="outline"
             className={cn(
@@ -48,28 +46,26 @@ function TemplateView({ template, t, locale, onEdit }: {
       </div>
 
       {/* Subject */}
-      <div className="grid grid-cols-2 gap-3 min-w-0">
-        <Card className="shadow-sm bg-surface min-w-0">
-          <CardContent className="space-y-1.5 pt-3 pb-3">
-            <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.subjectEn")}</p>
-            <p className="text-sm text-foreground truncate" dir="ltr">{template.subjectEn ?? "—"}</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm bg-surface min-w-0">
-          <CardContent className="space-y-1.5 pt-3 pb-3">
-            <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.subjectAr")}</p>
-            <p className="text-sm text-foreground truncate" dir="rtl">{template.subjectAr || "—"}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="shadow-sm bg-surface min-w-0">
+        <CardContent className="space-y-1.5 pt-3 pb-3">
+          <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.subject")}</p>
+          <p className="text-sm text-foreground truncate" dir="auto">{template.subject || "—"}</p>
+        </CardContent>
+      </Card>
 
       {/* Body */}
       <Card className="shadow-sm bg-surface min-w-0 overflow-hidden">
         <CardContent className="space-y-1.5 pt-3 pb-3">
-          <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.htmlBody")}</p>
-          <pre className="whitespace-pre-wrap break-words text-xs text-foreground leading-relaxed font-mono overflow-hidden" dir="ltr">
-            {template.htmlBody || "—"}
-          </pre>
+          <p className="text-xs text-muted-foreground">{t("settings.emailTemplates.preview")}</p>
+          {template.blocks != null ? (
+            <div className="max-h-64 overflow-auto">
+              <BlockPreview blocks={template.blocks} />
+            </div>
+          ) : (
+            <pre className="whitespace-pre-wrap break-words text-xs text-foreground leading-relaxed font-mono overflow-hidden" dir="ltr">
+              {template.htmlBody || "—"}
+            </pre>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -79,7 +75,7 @@ function TemplateView({ template, t, locale, onEdit }: {
 /* ─── Main Tab ─── */
 
 export function EmailTemplatesTab() {
-  const { t, locale } = useLocale()
+  const { t } = useLocale()
   const { data: templates, isLoading } = useEmailTemplates()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -151,7 +147,7 @@ export function EmailTemplatesTab() {
                   )}
                 >
                   <p className="text-sm font-medium truncate leading-tight">
-                    {locale === "ar" ? tmpl.nameAr : (tmpl.nameEn ?? tmpl.nameAr)}
+                    {tmpl.name}
                   </p>
                   {isActive && (
                     <p className="text-xs mt-0.5 line-clamp-1 leading-tight opacity-80 font-mono">
@@ -174,7 +170,6 @@ export function EmailTemplatesTab() {
                 key={`edit-${selectedTemplate.id}`}
                 template={selectedTemplate}
                 t={t}
-                locale={locale}
                 onSaved={() => setEditingId(null)}
                 onCancel={() => setEditingId(null)}
               />
@@ -183,7 +178,6 @@ export function EmailTemplatesTab() {
                 key={`view-${selectedTemplate.id}`}
                 template={selectedTemplate}
                 t={t}
-                locale={locale}
                 onEdit={() => setEditingId(selectedTemplate.id)}
               />
             )

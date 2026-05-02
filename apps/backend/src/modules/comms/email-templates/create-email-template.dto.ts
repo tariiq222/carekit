@@ -1,5 +1,5 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmailTemplateDto {
   @ApiProperty({ description: 'Unique slug identifier for the template', example: 'booking-confirmed' })
@@ -13,4 +13,7 @@ export class CreateEmailTemplateDto {
 
   @ApiProperty({ description: 'HTML body of the email (supports Handlebars variables)', example: '<p>Hello {{name}}</p>' })
   @IsString() htmlBody!: string;
+
+  @ApiPropertyOptional({ description: 'Block tree (source of truth — when present, htmlBody is rendered from this)', type: 'array', items: { type: 'object' } })
+  @IsOptional() blocks?: unknown[];
 }
