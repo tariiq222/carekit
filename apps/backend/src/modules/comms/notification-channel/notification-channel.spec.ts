@@ -1,10 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SmtpService } from '../../../infrastructure/mail';
 import { AuthenticaClient } from '../../../infrastructure/authentica';
+import { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
 import { EmailChannelAdapter } from './email-channel.adapter';
 import { SmsChannelAdapter } from './sms-channel.adapter';
 import { NotificationChannelRegistry } from './notification-channel-registry';
 import { OtpChannel } from '@prisma/client';
+
+const buildEmailFactoryMock = (): jest.Mocked<Partial<EmailProviderFactory>> => ({
+  forCurrentTenant: jest.fn().mockResolvedValue(null),
+});
 
 describe('EmailChannelAdapter', () => {
   let adapter: EmailChannelAdapter;
@@ -20,6 +25,7 @@ describe('EmailChannelAdapter', () => {
       providers: [
         EmailChannelAdapter,
         { provide: SmtpService, useValue: smtpMock },
+        { provide: EmailProviderFactory, useValue: buildEmailFactoryMock() },
       ],
     }).compile();
 
@@ -106,6 +112,7 @@ describe('NotificationChannelRegistry', () => {
         NotificationChannelRegistry,
         { provide: SmtpService, useValue: smtpMock },
         { provide: AuthenticaClient, useValue: authenticaMock },
+        { provide: EmailProviderFactory, useValue: buildEmailFactoryMock() },
       ],
     }).compile();
 
