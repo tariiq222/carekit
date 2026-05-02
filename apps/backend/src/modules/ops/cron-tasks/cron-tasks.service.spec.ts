@@ -34,6 +34,8 @@ type CronDeps = [
   never,
   never,
   never,
+  never,
+  never,
 ];
 
 /** Build cron mocks (all crons except BullMqService itself). */
@@ -53,6 +55,8 @@ const buildAllMocks = () => [
   buildCronMock(), // usageWarnings
   buildCronMock(), // processScheduledPlanChanges
   buildCronMock(), // dunningRetry
+  buildCronMock(), // dbRowCount (DB-12)
+  buildCronMock(), // orphanAudit (DB-13)
 ] as const;
 
 const buildService = (bullMq: ReturnType<typeof buildBullMq>, mocks: ReturnType<typeof buildAllMocks>) =>
@@ -65,7 +69,7 @@ describe('CronTasksService', () => {
     const service = buildService(bullMq, mocks);
     service.onModuleInit();
 
-    expect(bullMq.queue.add).toHaveBeenCalledTimes(14);
+    expect(bullMq.queue.add).toHaveBeenCalledTimes(16);
     Object.values(CRON_JOBS).forEach((name) => {
       expect(bullMq.queue.add).toHaveBeenCalledWith(name, {}, expect.objectContaining({ repeat: expect.anything() }));
     });
@@ -111,6 +115,8 @@ describe('CronTasksService', () => {
     [CRON_JOBS.USAGE_WARNINGS, 12],
     [CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES, 13],
     [CRON_JOBS.DUNNING_RETRY, 14],
+    [CRON_JOBS.DB_ROW_COUNT, 15],
+    [CRON_JOBS.ORPHAN_AUDIT, 16],
   ];
 
   it.each(ROUTED_JOBS)('worker routes %s job to correct cron handler', async (jobName, idx) => {

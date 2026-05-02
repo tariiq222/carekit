@@ -16,6 +16,8 @@ import { ExpireTrialsCron } from '../../platform/billing/expire-trials/expire-tr
 import { SendLimitWarningCron } from '../../platform/billing/send-limit-warning/send-limit-warning.cron';
 import { ProcessScheduledPlanChangesCron } from '../../platform/billing/process-scheduled-plan-changes/process-scheduled-plan-changes.cron';
 import { DunningRetryCron } from '../../platform/billing/dunning-retry/dunning-retry.cron';
+import { DbRowCountCron } from './db-row-count.cron';
+import { RunOrphanAuditHandler } from '../orphan-audit/run-orphan-audit.handler';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -34,6 +36,8 @@ export const CRON_JOBS = {
   USAGE_WARNINGS: 'usage-warnings',
   PROCESS_SCHEDULED_PLAN_CHANGES: 'process-scheduled-plan-changes',
   DUNNING_RETRY: 'dunning-retry',
+  DB_ROW_COUNT: 'db-row-count',
+  ORPHAN_AUDIT: 'orphan-audit',
 } as const;
 
 @Injectable()
@@ -57,6 +61,8 @@ export class CronTasksService implements OnModuleInit {
     private readonly usageWarnings: SendLimitWarningCron,
     private readonly processScheduledPlanChanges: ProcessScheduledPlanChangesCron,
     private readonly dunningRetry: DunningRetryCron,
+    private readonly dbRowCount: DbRowCountCron,
+    private readonly orphanAudit: RunOrphanAuditHandler,
   ) {}
 
   onModuleInit(): void {
@@ -82,6 +88,8 @@ export class CronTasksService implements OnModuleInit {
       { name: CRON_JOBS.USAGE_WARNINGS, cron: '0 9 * * *' }, // daily at 09:00 AST
       { name: CRON_JOBS.PROCESS_SCHEDULED_PLAN_CHANGES, cron: '0 2 * * *' }, // daily
       { name: CRON_JOBS.DUNNING_RETRY, cron: '0 * * * *' }, // hourly
+      { name: CRON_JOBS.DB_ROW_COUNT, cron: '0 1 * * 0' }, // weekly Sunday 01:00
+      { name: CRON_JOBS.ORPHAN_AUDIT, cron: '0 2 * * 0' }, // weekly Sunday 02:00
     ];
 
     for (const { name, cron } of jobs) {
@@ -152,6 +160,12 @@ export class CronTasksService implements OnModuleInit {
             break;
           case CRON_JOBS.DUNNING_RETRY:
             await this.dunningRetry.execute();
+            break;
+          case CRON_JOBS.DB_ROW_COUNT:
+            await this.dbRowCount.execute();
+            break;
+          case CRON_JOBS.ORPHAN_AUDIT:
+            await this.orphanAudit.execute();
             break;
           default:
             this.logger.warn(`Unknown cron job: ${job.name}`);

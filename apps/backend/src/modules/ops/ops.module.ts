@@ -27,6 +27,9 @@ import { SendLimitWarningCron } from '../platform/billing/send-limit-warning/sen
 import { ProcessScheduledPlanChangesCron } from '../platform/billing/process-scheduled-plan-changes/process-scheduled-plan-changes.cron';
 import { DunningRetryCron } from '../platform/billing/dunning-retry/dunning-retry.cron';
 import { RedisService } from '../../infrastructure/cache/redis.service';
+import { DbRowCountCron } from './cron-tasks/db-row-count.cron';
+import { DbMetricsService } from '../../infrastructure/telemetry/db-metrics.service';
+import { RunOrphanAuditHandler } from './orphan-audit/run-orphan-audit.handler';
 
 const handlers = [
   LogActivityHandler,
@@ -53,6 +56,8 @@ const cronHandlers = [
   DunningRetryCron,
   // Admin crons
   ExpireImpersonationSessionsCron,
+  // DB-12/13
+  DbRowCountCron,
 ];
 
 // Note: UsageAggregatorService, SubscriptionStateMachine and
@@ -63,8 +68,8 @@ const cronHandlers = [
 @Module({
   imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule, BillingModule],
   controllers: [DashboardOpsController],
-  providers: [...handlers, ...cronHandlers, RedisService, CronTasksService],
-  exports: [...handlers],
+  providers: [...handlers, ...cronHandlers, RedisService, CronTasksService, DbMetricsService, RunOrphanAuditHandler],
+  exports: [...handlers, RunOrphanAuditHandler],
 })
 export class OpsModule implements OnModuleInit {
   constructor(private readonly cronTasks: CronTasksService) {}
