@@ -229,6 +229,7 @@ export class DashboardBookingsController {
   }
 
   @Post(':id/zoom/retry')
+  @RequireFeature(FeatureKey.ZOOM_INTEGRATION)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Retry creating Zoom meeting for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })

@@ -160,6 +160,18 @@ describe('DashboardBookingsController', () => {
   });
 });
 
+describe('@RequireFeature metadata — ZOOM_INTEGRATION', () => {
+  it.each([
+    'retryZoomMeeting',
+  ])('annotates %s with FeatureKey.ZOOM_INTEGRATION', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.ZOOM_INTEGRATION);
+  });
+});
+
 describe('@RequireFeature metadata — RECURRING_BOOKINGS', () => {
   it.each([
     'createRecurringBooking',
