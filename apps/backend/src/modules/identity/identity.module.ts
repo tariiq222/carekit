@@ -45,6 +45,7 @@ import { ResetPasswordHandler } from './client-auth/reset-password/reset-passwor
 import { PasswordHistoryService } from './client-auth/shared/password-history.service';
 import { ListMembershipsHandler } from './list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from './switch-organization/switch-organization.handler';
+import { UpdateMembershipProfileHandler } from './update-membership-profile/update-membership-profile.handler';
 import { RequestPasswordResetHandler } from './user-password-reset/request-password-reset/request-password-reset.handler';
 import { PerformPasswordResetHandler } from './user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { CommsModule } from '../comms/comms.module';
@@ -74,6 +75,7 @@ const handlers = [
   ResetPasswordHandler,
   ListMembershipsHandler,
   SwitchOrganizationHandler,
+  UpdateMembershipProfileHandler,
   RegisterMobileUserHandler,
   RequestMobileLoginOtpHandler,
   VerifyMobileOtpHandler,

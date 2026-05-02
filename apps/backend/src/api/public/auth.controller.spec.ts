@@ -34,6 +34,7 @@ function buildController() {
     },
     membership: {
       findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
     },
   } as unknown as import('../../infrastructure/database').PrismaService;
   const tokens = {
@@ -46,11 +47,13 @@ function buildController() {
   const config = { get: jest.fn().mockReturnValue('15m'), getOrThrow: jest.fn().mockReturnValue('15m') } as never;
   const requestPasswordReset = fn({ ok: true });
   const performPasswordReset = fn({ ok: true });
+  const updateMembershipProfile = fn({});
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
     listMemberships as never, switchOrganization as never, config,
     captcha as never, requestPasswordReset as never, performPasswordReset as never,
+    updateMembershipProfile as never,
   );
   return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset };
 }
@@ -118,6 +121,7 @@ describe('AuthController', () => {
         gender: null,
         avatarUrl: null,
         isActive: true,
+        isSuperAdmin: false,
         role: 'OWNER',
         customRoleId: null,
         customRole: { permissions: [] },

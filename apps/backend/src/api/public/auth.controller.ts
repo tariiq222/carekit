@@ -1,6 +1,6 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
-  Req, Res,
+  Req, Res, Param,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
@@ -25,6 +25,8 @@ import { ChangePasswordHandler } from '../../modules/identity/users/change-passw
 import { ListMembershipsHandler } from '../../modules/identity/list-memberships/list-memberships.handler';
 import { SwitchOrganizationHandler } from '../../modules/identity/switch-organization/switch-organization.handler';
 import { SwitchOrganizationDto } from '../../modules/identity/switch-organization/switch-organization.dto';
+import { UpdateMembershipProfileHandler } from '../../modules/identity/update-membership-profile/update-membership-profile.handler';
+import { UpdateMembershipProfileDto } from '../../modules/identity/update-membership-profile/update-membership-profile.dto';
 import { RequestPasswordResetHandler } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.handler';
 import { RequestPasswordResetDto } from '../../modules/identity/user-password-reset/request-password-reset/request-password-reset.dto';
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
@@ -66,6 +68,7 @@ export class AuthController {
     @Inject(CAPTCHA_VERIFIER) private readonly captcha: CaptchaVerifier,
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly performPasswordReset: PerformPasswordResetHandler,
+    private readonly updateMembershipProfile: UpdateMembershipProfileHandler,
   ) {}
 
   @Post('login')
@@ -289,6 +292,33 @@ export class AuthController {
       ...tokens,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
+  }
+
+  @Patch('memberships/:id/profile')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update the caller’s per-org display profile',
+    description:
+      'Per-membership-profile — updates displayName / jobTitle / avatarUrl ' +
+      'on the caller’s own Membership. Cross-user edits are blocked (403).',
+  })
+  @ApiOkResponse({ description: 'Updated MembershipSummary-shaped row' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
+  @ApiResponse({ status: 403, description: 'Caller does not own the target membership', type: ApiErrorDto })
+  @ApiResponse({ status: 404, description: 'Membership not found', type: ApiErrorDto })
+  async updateMembershipProfileEndpoint(
+    @UserId() userId: string,
+    @Param('id') membershipId: string,
+    @Body() body: UpdateMembershipProfileDto,
+  ) {
+    return this.updateMembershipProfile.execute({
+      userId,
+      membershipId,
+      displayName: body.displayName,
+      jobTitle: body.jobTitle,
+      avatarUrl: body.avatarUrl,
+    });
   }
 
   @Patch('password/change')
