@@ -59,6 +59,8 @@ export async function bootHarness(): Promise<IsolationHarness> {
     process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ?? Buffer.alloc(32, 2).toString('base64');
   process.env.MOYASAR_TENANT_ENCRYPTION_KEY =
     process.env.MOYASAR_TENANT_ENCRYPTION_KEY ?? Buffer.alloc(32, 3).toString('base64');
+  process.env.EMAIL_PROVIDER_ENCRYPTION_KEY =
+    process.env.EMAIL_PROVIDER_ENCRYPTION_KEY ?? Buffer.alloc(32, 4).toString('base64');
   process.env.MOYASAR_PLATFORM_SECRET_KEY = 'test-moyasar-platform-key';
   process.env.MOYASAR_PLATFORM_WEBHOOK_SECRET = 'test-moyasar-webhook-secret';
   process.env.PLATFORM_VAT_NUMBER = '300000000000003';
