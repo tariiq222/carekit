@@ -28,6 +28,7 @@ import { ListIntegrationsHandler } from './integrations/list-integrations.handle
 import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
 import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
+import { UpsertFeatureFlagOverrideHandler } from './feature-flags/upsert-feature-flag-override/upsert-feature-flag-override.handler';
 import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from './admin/get-organization/get-organization.handler';
 import { CreateTenantHandler } from './admin/create-tenant/create-tenant.handler';
@@ -158,6 +159,7 @@ const ADMIN_HANDLERS = [
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
+    UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,
   ],
   exports: [
@@ -169,6 +171,7 @@ const ADMIN_HANDLERS = [
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
+    UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,
   ],
 })
