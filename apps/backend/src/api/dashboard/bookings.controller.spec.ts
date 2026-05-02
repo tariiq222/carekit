@@ -166,7 +166,7 @@ describe('@RequireFeature metadata — ZOOM_INTEGRATION', () => {
   ])('annotates %s with FeatureKey.ZOOM_INTEGRATION', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardBookingsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.ZOOM_INTEGRATION);
   });
@@ -178,7 +178,7 @@ describe('@RequireFeature metadata — RECURRING_BOOKINGS', () => {
   ])('annotates %s with FeatureKey.RECURRING_BOOKINGS', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardBookingsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.RECURRING_BOOKINGS);
   });
@@ -192,7 +192,7 @@ describe('@RequireFeature metadata — WAITLIST', () => {
   ])('annotates %s with FeatureKey.WAITLIST', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardBookingsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardBookingsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.WAITLIST);
   });

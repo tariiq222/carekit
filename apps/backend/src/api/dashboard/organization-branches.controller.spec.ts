@@ -87,7 +87,7 @@ describe('@RequireFeature metadata — MULTI_BRANCH', () => {
   ])('annotates %s with FeatureKey.MULTI_BRANCH', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardOrganizationBranchesController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardOrganizationBranchesController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.MULTI_BRANCH);
   });

@@ -64,7 +64,7 @@ describe('@RequireFeature metadata — ADVANCED_REPORTS', () => {
   ])('annotates %s with FeatureKey.ADVANCED_REPORTS', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardOpsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardOpsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.ADVANCED_REPORTS);
   });
@@ -76,7 +76,7 @@ describe('@RequireFeature metadata — ACTIVITY_LOG', () => {
   ])('annotates %s with FeatureKey.ACTIVITY_LOG', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (DashboardOpsController.prototype as Record<string, unknown>)[method] as object,
+      (DashboardOpsController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.ACTIVITY_LOG);
   });

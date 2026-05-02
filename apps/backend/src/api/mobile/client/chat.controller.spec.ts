@@ -55,7 +55,7 @@ describe('@RequireFeature metadata — AI_CHATBOT', () => {
   ])('annotates %s with FeatureKey.AI_CHATBOT', (method) => {
     const meta = Reflect.getMetadata(
       REQUIRE_FEATURE_KEY,
-      (MobileClientChatController.prototype as Record<string, unknown>)[method] as object,
+      (MobileClientChatController.prototype as unknown as Record<string, unknown>)[method] as object,
     );
     expect(meta).toBe(FeatureKey.AI_CHATBOT);
   });
