@@ -253,6 +253,7 @@ export class DashboardFinanceController {
 
   // ── ZATCA ─────────────────────────────────────────────────────────────────
 
+  @RequireFeature(FeatureKey.ZATCA)
   @Post('zatca/submit')
   @ApiOperation({ summary: 'Submit an invoice to ZATCA for e-invoicing compliance' })
   @ApiCreatedResponse({ description: 'Invoice submitted to ZATCA' })
@@ -260,6 +261,7 @@ export class DashboardFinanceController {
     return this.zatcaSubmit.execute({ ...body });
   }
 
+  @RequireFeature(FeatureKey.ZATCA)
   @Get('zatca/config')
   @ApiOperation({ summary: 'Get the ZATCA configuration' })
   @ApiOkResponse({ description: 'ZATCA configuration' })
@@ -267,6 +269,7 @@ export class DashboardFinanceController {
     return this.getZatcaConfig.execute();
   }
 
+  @RequireFeature(FeatureKey.ZATCA)
   @Patch('zatca/config')
   @ApiOperation({ summary: 'Create or update the ZATCA configuration' })
   @ApiOkResponse({ description: 'ZATCA configuration saved' })
@@ -274,6 +277,7 @@ export class DashboardFinanceController {
     return this.upsertZatcaConfig.execute(body);
   }
 
+  @RequireFeature(FeatureKey.ZATCA)
   @Post('zatca/onboard')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Onboard the clinic with ZATCA (certificate signing request)' })

@@ -112,3 +112,18 @@ describe('@RequireFeature metadata — COUPONS', () => {
     expect(meta).toBe(FeatureKey.COUPONS);
   });
 });
+
+describe('@RequireFeature metadata — ZATCA', () => {
+  it.each([
+    'zatca',
+    'getZatcaConfigEndpoint',
+    'upsertZatcaConfigEndpoint',
+    'onboardZatcaEndpoint',
+  ])('annotates %s with FeatureKey.ZATCA', (method) => {
+    const meta = Reflect.getMetadata(
+      REQUIRE_FEATURE_KEY,
+      (DashboardFinanceController.prototype as Record<string, unknown>)[method] as object,
+    );
+    expect(meta).toBe(FeatureKey.ZATCA);
+  });
+});
