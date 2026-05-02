@@ -112,11 +112,12 @@ model Organization {
   createdAt             DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  memberships  Membership[]
-  invitations  Invitation[]
-  subscription Subscription?
-  savedCards   SavedCard[]
+  memberships    Membership[]
+  invitations    Invitation[]
+  subscription   Subscription?
+  savedCards     SavedCard[]
   invoiceCounters OrganizationInvoiceCounter[]
+  usageCounters  UsageCounter[]
 
   @@index([status])
   @@index([verticalId])
@@ -565,4 +566,23 @@ model UsageRecord {
   @@index([organizationId])
   @@index([subscriptionId])
   @@index([metric])
+}
+
+// Phase 5 — materialized quota counters. One row per (org, featureKey, period).
+// monthly_bookings resets each calendar month (periodStart = 1st of month UTC).
+// All other quantitative keys use EPOCH (1970-01-01) as their periodStart
+// so they accumulate without resetting.
+model UsageCounter {
+  id             String   @id @default(uuid())
+  organizationId String
+  featureKey     String
+  periodStart    DateTime
+  value          Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureKey, periodStart])
+  @@index([organizationId])
+  @@index([featureKey])
 }
