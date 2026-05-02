@@ -111,10 +111,8 @@ model EmailTemplate {
   id             String   @id @default(uuid())
   organizationId String // SaaS-02f — slug namespace now per-org
   slug           String
-  nameAr         String
-  nameEn         String?
-  subjectAr      String
-  subjectEn      String?
+  name           String
+  subject        String
   htmlBody       String
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
