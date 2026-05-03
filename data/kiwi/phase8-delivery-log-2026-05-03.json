@@ -1,0 +1,92 @@
+{
+  "domain": "Comms",
+  "version": "main",
+  "build": "phase8-delivery-log-2026-05-03",
+  "planType": "Manual QA",
+  "isAutomated": false,
+  "planName": "Deqah / Comms / Phase 8 — Tenant Delivery Log",
+  "planSummary": "Manual QA test plan for the tenant email delivery log page and fallback quota banner added in Phase 8.",
+  "runSummary": "Phase 8 manual QA run — 2026-05-03",
+  "cases": [
+    {
+      "summary": "[comms/delivery-log] GET /dashboard/comms/delivery-logs returns paginated items scoped to org",
+      "text": "Steps:\n1. Authenticate as a dashboard user (JWT)\n2. GET /api/v1/dashboard/comms/delivery-logs\nExpected: 200 with { items: [...], meta: { page, perPage, total, totalPages } } containing only records for the authenticated org",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/delivery-log] status filter returns only matching records",
+      "text": "Steps:\n1. GET /api/v1/dashboard/comms/delivery-logs?status=SENT\nExpected: all returned items have status=SENT",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/delivery-log] channel filter returns only matching records",
+      "text": "Steps:\n1. GET /api/v1/dashboard/comms/delivery-logs?channel=EMAIL\nExpected: all returned items have channel=EMAIL",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/delivery-log] pagination works (page + perPage)",
+      "text": "Steps:\n1. GET /api/v1/dashboard/comms/delivery-logs?page=2&perPage=5\nExpected: meta.page=2, items.length<=5",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/delivery-log] cross-org isolation — org B cannot see org A records",
+      "text": "Steps:\n1. Authenticate as org A user\n2. Insert delivery log records for org A\n3. Authenticate as org B user\n4. GET /api/v1/dashboard/comms/delivery-logs\nExpected: org B sees 0 records from org A",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/email-fallback-quota] GET /dashboard/comms/email-fallback-quota returns quota shape",
+      "text": "Steps:\n1. Authenticate as dashboard user\n2. GET /api/v1/dashboard/comms/email-fallback-quota\nExpected: 200 with { used: number, limit: number, periodStart: ISO string }",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[comms/email-fallback-quota] limit=-1 returned when no subscription cached",
+      "text": "Steps:\n1. Ensure org has no active subscription cache entry\n2. GET /api/v1/dashboard/comms/email-fallback-quota\nExpected: limit=-1 (unlimited)",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] page renders at /settings/email-delivery-log",
+      "text": "Steps:\n1. Navigate to /settings/email-delivery-log in dashboard\nExpected: page loads, table header visible with Channel/Status/To/Provider/Attempts/Sent At columns",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] status filter dropdown works",
+      "text": "Steps:\n1. Open /settings/email-delivery-log\n2. Select a status from the filter dropdown\nExpected: table updates, only matching rows shown, Reset button appears",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] channel filter dropdown works",
+      "text": "Steps:\n1. Open /settings/email-delivery-log\n2. Select a channel from the filter dropdown\nExpected: table updates, only matching rows shown",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] Reset button clears filters",
+      "text": "Steps:\n1. Apply status or channel filter\n2. Click Reset\nExpected: filters cleared, full list shown, Reset button hidden",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] empty state shows no-records message",
+      "text": "Steps:\n1. Apply a filter that matches no records\nExpected: 'لا توجد سجلات إرسال' / 'No delivery records found' message shown",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/delivery-log] pagination controls appear when totalPages > 1",
+      "text": "Steps:\n1. Ensure >20 delivery log records exist\n2. Open /settings/email-delivery-log\nExpected: Prev/Next buttons visible, page indicator shows current/total",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/quota-banner] banner shows unlimited text when limit=-1",
+      "text": "Steps:\n1. Org has plan with email_fallback_monthly = -1 (unlimited)\n2. Open /settings (email templates tab)\nExpected: banner shows 'Unlimited emails this month' / 'إرسال غير محدود هذا الشهر'",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/quota-banner] banner shows progress bar and usage text when limit > 0",
+      "text": "Steps:\n1. Org has plan with email_fallback_monthly = 100\n2. Some emails sent (used > 0)\n3. Open email templates tab\nExpected: banner shows 'X of 100 emails used this month' + progress bar",
+      "result": "PASSED"
+    },
+    {
+      "summary": "[dashboard/quota-banner] banner shows destructive state when used >= limit",
+      "text": "Steps:\n1. Org has plan with email_fallback_monthly = 10\n2. used = 10 (at limit)\n3. Open email templates tab\nExpected: red/destructive banner with 'Monthly limit reached' message",
+      "result": "PASSED"
+    }
+  ]
+}
