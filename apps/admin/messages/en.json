@@ -329,6 +329,28 @@
         "failed": "Save failed"
       },
       "loadError": "Failed to load billing settings."
+    },
+    "security": {
+      "title": "Security Settings",
+      "description": "Super-admin session and access controls.",
+      "sessionTtl": {
+        "title": "Session TTL",
+        "label": "Session TTL (minutes)",
+        "hint": "JWT lifetime for super-admin sessions (15–1440 min)"
+      },
+      "twoFactor": {
+        "title": "Two-Factor Authentication",
+        "label": "Require 2FA for all super-admins"
+      },
+      "ipAllowlist": {
+        "title": "IP Allowlist",
+        "label": "IP Allowlist (one CIDR per line, empty = allow all)"
+      },
+      "save": "Save Security Settings",
+      "saving": "Saving…",
+      "saveSuccess": "Security settings saved successfully.",
+      "loadError": "Failed to load security settings.",
+      "saveError": "Failed to save security settings."
     }
   },
   "login": {
