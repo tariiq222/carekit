@@ -24,6 +24,7 @@ import {
 import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreateTenant } from './use-create-tenant';
 import { OwnerUserCombobox } from './owner-user-combobox';
+import { useListVerticals } from '@/features/verticals/list-verticals/use-list-verticals';
 
 interface Props {
   open: boolean;
@@ -51,6 +52,7 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
   const t = useTranslations('organizations.create');
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const mutation = useCreateTenant();
+  const { data: verticals } = useListVerticals();
 
   const trialDaysValue = form.trialDays.trim() === '' ? undefined : Number(form.trialDays);
   const trialDaysValid =
@@ -154,12 +156,22 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="tenant-vertical">{t('verticalSlug')}</Label>
-                <Input
-                  id="tenant-vertical"
-                  value={form.verticalSlug}
-                  onChange={(event) => set('verticalSlug')(event.target.value)}
-                  autoComplete="off"
-                />
+                <Select
+                  value={form.verticalSlug || '__none__'}
+                  onValueChange={(value) => set('verticalSlug')(value === '__none__' ? '' : value)}
+                >
+                  <SelectTrigger id="tenant-vertical">
+                    <SelectValue placeholder="Select vertical…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {verticals?.filter((v) => v.isActive).map((v) => (
+                      <SelectItem key={v.slug} value={v.slug}>
+                        {v.nameAr} ({v.slug})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
