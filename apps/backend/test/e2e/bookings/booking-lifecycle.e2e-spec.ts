@@ -31,6 +31,12 @@ import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.he
     await seedEmployeeAvailability(testPrisma as any, employeeId);
   });
 
+  afterEach(async () => {
+    // Clean bookings between tests to avoid booking_employee_no_overlap constraint
+    // violations when multiple tests seed bookings for the same employee/time slot.
+    await cleanTables(['BookingStatusLog', 'Booking']);
+  });
+
   afterAll(async () => {
     await cleanTables(['BookingStatusLog', 'Booking', 'Client', 'Employee', 'Service', 'Branch', 'EmployeeService']);
     await closeTestApp();
