@@ -37,13 +37,11 @@ const buildPrisma = () => ({
     create: jest.fn().mockResolvedValue({ id: 'inv-1' }),
     update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PAID' }),
   },
-  $allTenants: {
-    membership: {
-      findFirst: jest.fn().mockResolvedValue({
-        user: { email: 'owner@example.com', name: 'Owner' },
-        organization: { nameAr: 'Org AR' },
-      }),
-    },
+  membership: {
+    findFirst: jest.fn().mockResolvedValue({
+      user: { email: 'owner@example.com', name: 'Owner' },
+      organization: { nameAr: 'Org AR' },
+    }),
   },
 });
 

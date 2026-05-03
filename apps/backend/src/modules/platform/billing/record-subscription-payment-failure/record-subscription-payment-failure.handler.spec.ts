@@ -20,13 +20,11 @@ const buildPrisma = (txPrisma = buildTxPrisma()) => ({
   },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(txPrisma)),
   _txPrisma: txPrisma,
-  $allTenants: {
-    membership: {
-      findFirst: jest.fn().mockResolvedValue({
-        user: { email: 'owner@example.com', name: 'Owner' },
-        organization: { nameAr: 'Org AR' },
-      }),
-    },
+  membership: {
+    findFirst: jest.fn().mockResolvedValue({
+      user: { email: 'owner@example.com', name: 'Owner' },
+      organization: { nameAr: 'Org AR' },
+    }),
   },
 });
 

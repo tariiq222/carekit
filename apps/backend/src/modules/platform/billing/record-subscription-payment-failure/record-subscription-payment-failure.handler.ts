@@ -78,7 +78,7 @@ export class RecordSubscriptionPaymentFailureHandler {
 
     this.cache.invalidate(sub.organizationId);
 
-    const owner = await this.prisma.$allTenants.membership.findFirst({
+    const owner = await this.prisma.membership.findFirst({
       where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
       select: {
         displayName: true,

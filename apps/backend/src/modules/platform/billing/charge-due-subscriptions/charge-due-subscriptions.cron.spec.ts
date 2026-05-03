@@ -11,12 +11,19 @@ const buildConfig = (enabled: boolean) => ({
 const makeMonthlyPlan = () => ({ priceMonthly: 199, priceAnnual: 1990 });
 const makeAnnualPlan = () => ({ priceMonthly: 199, priceAnnual: 1990 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
+  set: jest.fn(),
+});
+
 const buildPrisma = (subs: unknown[] = []) => ({
-  subscription: {
-    findMany: jest.fn().mockResolvedValue(subs),
-  },
-  subscriptionInvoice: {
-    create: jest.fn().mockResolvedValue({ id: 'inv-1' }),
+  $allTenants: {
+    subscription: {
+      findMany: jest.fn().mockResolvedValue(subs),
+    },
+    subscriptionInvoice: {
+      create: jest.fn().mockResolvedValue({ id: 'inv-1' }),
+    },
   },
 });
 
@@ -36,10 +43,12 @@ const buildCron = (
   prisma: ReturnType<typeof buildPrisma>,
   config: ReturnType<typeof buildConfig>,
   deps = buildDeps(),
+  cls = buildCls(),
 ) =>
   new ChargeDueSubscriptionsCron(
     prisma as never,
     config as never,
+    cls as never,
     deps.moyasar as never,
     deps.recordPayment as never,
     deps.recordFailure as never,
@@ -53,8 +62,8 @@ describe('ChargeDueSubscriptionsCron', () => {
     const deps = buildDeps();
     const cron = buildCron(prisma, buildConfig(false), deps);
     await cron.execute();
-    expect(prisma.subscription.findMany).not.toHaveBeenCalled();
-    expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(prisma.$allTenants.subscription.findMany).not.toHaveBeenCalled();
+    expect(prisma.$allTenants.subscriptionInvoice.create).not.toHaveBeenCalled();
     expect(deps.moyasar.chargeWithToken).not.toHaveBeenCalled();
   });
 
@@ -62,7 +71,7 @@ describe('ChargeDueSubscriptionsCron', () => {
     const prisma = buildPrisma([]);
     const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
-    expect(prisma.subscription.findMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.subscription.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           currentPeriodEnd: expect.objectContaining({ lte: expect.any(Date) }),
@@ -70,7 +79,7 @@ describe('ChargeDueSubscriptionsCron', () => {
         }),
       }),
     );
-    expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(prisma.$allTenants.subscriptionInvoice.create).not.toHaveBeenCalled();
   });
 
   it('creates SubscriptionInvoice with DUE status for each due subscription', async () => {
@@ -88,8 +97,8 @@ describe('ChargeDueSubscriptionsCron', () => {
     const cron = buildCron(prisma, buildConfig(true), deps);
     await cron.execute();
 
-    expect(prisma.subscriptionInvoice.create).toHaveBeenCalledTimes(1);
-    expect(prisma.subscriptionInvoice.create).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledTimes(1);
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           subscriptionId: 'sub-1',
@@ -119,7 +128,7 @@ describe('ChargeDueSubscriptionsCron', () => {
     const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
 
-    expect(prisma.subscriptionInvoice.create).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           flatAmount: 1990,
@@ -144,7 +153,7 @@ describe('ChargeDueSubscriptionsCron', () => {
     const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
 
-    expect(prisma.subscriptionInvoice.create).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           flatAmount: 199,
@@ -216,7 +225,7 @@ describe('ChargeDueSubscriptionsCron', () => {
     const prisma = buildPrisma([]);
     const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
-    const whereArg = (prisma.subscription.findMany.mock.calls[0][0] as { where: unknown }).where;
+    const whereArg = (prisma.$allTenants.subscription.findMany.mock.calls[0][0] as { where: unknown }).where;
     expect(whereArg).toEqual(
       expect.objectContaining({
         OR: [
@@ -231,7 +240,7 @@ describe('ChargeDueSubscriptionsCron', () => {
     const prisma = buildPrisma([]);
     const cron = buildCron(prisma, buildConfig(true));
     await cron.execute();
-    expect(prisma.subscription.findMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.subscription.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: { currentPeriodEnd: 'asc' },
       }),
@@ -254,41 +263,43 @@ describe('ChargeDueSubscriptionsCron', () => {
       plan: makeMonthlyPlan(),
     };
     const prisma = {
-      subscription: {
-        findMany: jest.fn().mockImplementation(({ where }: { where: Record<string, unknown> }) => {
-          const periodEnd = where.currentPeriodEnd as { lte: Date };
-          const orClauses = where.OR as Array<Record<string, unknown>> | undefined;
-          const candidates = [justPaidSub];
-          return Promise.resolve(
-            candidates.filter((s) => {
-              if (s.currentPeriodEnd > periodEnd.lte) return false;
-              if (!orClauses) return true;
-              return orClauses.some((c) => {
-                if ('lastPaymentAt' in c && c.lastPaymentAt === null) {
-                  return s.lastPaymentAt === null;
-                }
-                if (
-                  'lastPaymentAt' in c &&
-                  typeof c.lastPaymentAt === 'object' &&
-                  c.lastPaymentAt !== null &&
-                  'lt' in (c.lastPaymentAt as Record<string, unknown>)
-                ) {
-                  const cutoff = (c.lastPaymentAt as { lt: Date }).lt;
-                  return s.lastPaymentAt !== null && s.lastPaymentAt < cutoff;
-                }
-                return false;
-              });
-            }),
-          );
-        }),
+      $allTenants: {
+        subscription: {
+          findMany: jest.fn().mockImplementation(({ where }: { where: Record<string, unknown> }) => {
+            const periodEnd = where.currentPeriodEnd as { lte: Date };
+            const orClauses = where.OR as Array<Record<string, unknown>> | undefined;
+            const candidates = [justPaidSub];
+            return Promise.resolve(
+              candidates.filter((s) => {
+                if (s.currentPeriodEnd > periodEnd.lte) return false;
+                if (!orClauses) return true;
+                return orClauses.some((c) => {
+                  if ('lastPaymentAt' in c && c.lastPaymentAt === null) {
+                    return s.lastPaymentAt === null;
+                  }
+                  if (
+                    'lastPaymentAt' in c &&
+                    typeof c.lastPaymentAt === 'object' &&
+                    c.lastPaymentAt !== null &&
+                    'lt' in (c.lastPaymentAt as Record<string, unknown>)
+                  ) {
+                    const cutoff = (c.lastPaymentAt as { lt: Date }).lt;
+                    return s.lastPaymentAt !== null && s.lastPaymentAt < cutoff;
+                  }
+                  return false;
+                });
+              }),
+            );
+          }),
+        },
+        subscriptionInvoice: { create: jest.fn() },
       },
-      subscriptionInvoice: { create: jest.fn() },
     };
     const deps = buildDeps();
     const cron = buildCron(prisma as never, buildConfig(true), deps);
     await cron.execute();
     // No invoice created, no Moyasar charge — the second cron tick is a no-op.
-    expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(prisma.$allTenants.subscriptionInvoice.create).not.toHaveBeenCalled();
     expect(deps.moyasar.chargeWithToken).not.toHaveBeenCalled();
     expect(deps.recordPayment.execute).not.toHaveBeenCalled();
   });

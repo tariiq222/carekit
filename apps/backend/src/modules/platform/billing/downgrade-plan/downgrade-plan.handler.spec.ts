@@ -12,10 +12,8 @@ const buildPrisma = () => ({
   plan: {
     findFirst: jest.fn(),
   },
-  $allTenants: {
-    membership: {
-      findFirst: jest.fn().mockResolvedValue(null),
-    },
+  membership: {
+    findFirst: jest.fn().mockResolvedValue(null),
   },
 });
 
@@ -156,7 +154,7 @@ describe('DowngradePlanHandler', () => {
     });
     prisma.plan.findFirst.mockResolvedValue(basicPlan);
     prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
-    prisma.$allTenants.membership.findFirst.mockResolvedValue({
+    prisma.membership.findFirst.mockResolvedValue({
       user: { email: 'owner@example.com', name: 'Owner' },
       organization: { nameAr: 'Org AR' },
     });
