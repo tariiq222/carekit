@@ -159,8 +159,7 @@ export class CreateBookingHandler {
     // because SubscriptionCacheService talks to its own connection.
     const subscription = await this.subscriptionCache.get(organizationId);
 
-    // Serialize the conflict check + insert so two concurrent requests for the
-    // same slot cannot both pass the overlap check.
+    // Serializable: prevents two concurrent group-session bookings from both reading slotCount=N-1 and overflowing capacity.
     const booking = await this.prisma.$transaction(
       async (tx) => {
         if (!isGroupService) {

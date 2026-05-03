@@ -19,6 +19,8 @@ const mockUser = {
   customRole: null,
   createdAt: new Date(),
   updatedAt: new Date(),
+  failedLoginAttempts: 0,
+  lockedUntil: null,
 };
 
 describe('LoginHandler', () => {
@@ -35,7 +37,7 @@ describe('LoginHandler', () => {
         {
           provide: PrismaService,
           useValue: {
-            user: { findUnique: jest.fn() },
+            user: { findUnique: jest.fn(), update: jest.fn().mockResolvedValue({}) },
             membership: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
           } as unknown as PrismaService,
         },
@@ -144,6 +146,86 @@ describe('LoginHandler', () => {
       expect(tokenService.issueTokenPair).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({ isSuperAdmin: true }),
+      );
+    });
+  });
+
+  describe('per-account login lockout', () => {
+    it('rejects login when account is locked', async () => {
+      const futureDate = new Date(Date.now() + 10 * 60 * 1000);
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        lockedUntil: futureDate,
+        failedLoginAttempts: 0,
+      } as never);
+
+      await expect(
+        handler.execute({ email: 'admin@clinic.sa', password: 'correct' }),
+      ).rejects.toThrow(new UnauthorizedException('Account locked. Try again later.'));
+
+      // Must NOT call password.verify — short-circuits before bcrypt
+      expect(passwordService.verify).not.toHaveBeenCalled();
+    });
+
+    it('increments failedLoginAttempts on bad password', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        failedLoginAttempts: 2,
+      } as never);
+      passwordService.verify.mockResolvedValue(false);
+
+      await expect(
+        handler.execute({ email: 'admin@clinic.sa', password: 'wrong' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-1' },
+          data: expect.objectContaining({ failedLoginAttempts: 3 }),
+        }),
+      );
+    });
+
+    it('locks account after 5 failed attempts and resets counter', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        failedLoginAttempts: 4,
+      } as never);
+      passwordService.verify.mockResolvedValue(false);
+
+      await expect(
+        handler.execute({ email: 'admin@clinic.sa', password: 'wrong' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      // Counter resets to 0 and lockedUntil is set
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-1' },
+          data: expect.objectContaining({
+            failedLoginAttempts: 0,
+            lockedUntil: expect.any(Date),
+          }),
+        }),
+      );
+    });
+
+    it('resets failedLoginAttempts and lockedUntil on successful login', async () => {
+      const pastDate = new Date(Date.now() - 1000); // expired lock
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        failedLoginAttempts: 3,
+        lockedUntil: pastDate,
+      } as never);
+      passwordService.verify.mockResolvedValue(true);
+      prisma.membership.findMany.mockResolvedValue([]);
+
+      await handler.execute({ email: 'admin@clinic.sa', password: 'correct' });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-1' },
+          data: { failedLoginAttempts: 0, lockedUntil: null },
+        }),
       );
     });
   });

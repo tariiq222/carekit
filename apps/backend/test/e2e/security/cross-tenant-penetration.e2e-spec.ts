@@ -208,6 +208,155 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
   });
 
   // ────────────────────────────────────────────────────────────────────────
+  // 3b. RefundRequest tenant isolation probes.
+  // ────────────────────────────────────────────────────────────────────────
+
+  it('direct-id probe: RefundRequest in Org A invisible from Org B', async () => {
+    const { orgA, orgB } = await h.seedTwoOrgs('direct-id-refund');
+
+    const bookingA = await h.withCls(orgA.id, () =>
+      h.prisma.booking.create({
+        data: {
+          organizationId: orgA.id,
+          branchId: 'branch-a',
+          clientId: 'client-a',
+          employeeId: 'emp-a',
+          serviceId: 'svc-a',
+          scheduledAt: new Date('2030-06-01T10:00:00Z'),
+          endsAt: new Date('2030-06-01T11:00:00Z'),
+          durationMins: 60,
+          price: 200,
+          currency: 'SAR',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const invoiceA = await h.withCls(orgA.id, () =>
+      h.prisma.invoice.create({
+        data: {
+          organizationId: orgA.id,
+          branchId: 'branch-a',
+          clientId: 'client-a',
+          employeeId: 'emp-a',
+          bookingId: bookingA.id,
+          subtotal: 200,
+          vatAmt: 30,
+          total: 230,
+          currency: 'SAR',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const paymentA = await h.withCls(orgA.id, () =>
+      h.prisma.payment.create({
+        data: {
+          organizationId: orgA.id,
+          invoiceId: invoiceA.id,
+          amount: 230,
+          currency: 'SAR',
+          method: 'ONLINE_CARD',
+          status: 'COMPLETED',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const refundA = await h.withCls(orgA.id, () =>
+      h.prisma.refundRequest.create({
+        data: {
+          organizationId: orgA.id,
+          invoiceId: invoiceA.id,
+          paymentId: paymentA.id,
+          clientId: 'client-a',
+          amount: 230,
+          reason: 'Test refund Org A',
+          status: 'PENDING_REVIEW',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const leak = await h.withCls(orgB.id, () =>
+      h.prisma.refundRequest.findFirst({ where: { id: refundA.id } }),
+    );
+    expect(leak).toBeNull();
+  });
+
+  it('bulk probe: findMany RefundRequests under Org B never returns Org A rows', async () => {
+    const { orgA, orgB } = await h.seedTwoOrgs('bulk-refunds');
+
+    const bookingA = await h.withCls(orgA.id, () =>
+      h.prisma.booking.create({
+        data: {
+          organizationId: orgA.id,
+          branchId: 'branch-a',
+          clientId: 'client-a',
+          employeeId: 'emp-a',
+          serviceId: 'svc-a',
+          scheduledAt: new Date('2030-07-01T10:00:00Z'),
+          endsAt: new Date('2030-07-01T11:00:00Z'),
+          durationMins: 60,
+          price: 300,
+          currency: 'SAR',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const invoiceA = await h.withCls(orgA.id, () =>
+      h.prisma.invoice.create({
+        data: {
+          organizationId: orgA.id,
+          branchId: 'branch-a',
+          clientId: 'client-a',
+          employeeId: 'emp-a',
+          bookingId: bookingA.id,
+          subtotal: 300,
+          vatAmt: 45,
+          total: 345,
+          currency: 'SAR',
+        },
+        select: { id: true },
+      }),
+    );
+
+    const paymentA = await h.withCls(orgA.id, () =>
+      h.prisma.payment.create({
+        data: {
+          organizationId: orgA.id,
+          invoiceId: invoiceA.id,
+          amount: 345,
+          currency: 'SAR',
+          method: 'ONLINE_CARD',
+          status: 'COMPLETED',
+        },
+        select: { id: true },
+      }),
+    );
+
+    await h.withCls(orgA.id, () =>
+      h.prisma.refundRequest.createMany({
+        data: Array.from({ length: 3 }).map((_, i) => ({
+          organizationId: orgA.id,
+          invoiceId: invoiceA.id,
+          paymentId: paymentA.id,
+          clientId: `client-a-${i}`,
+          amount: 100,
+          reason: `Bulk refund ${i}`,
+          status: 'PENDING_REVIEW' as const,
+        })),
+      }),
+    );
+
+    const rows = await h.withCls(orgB.id, () =>
+      h.prisma.refundRequest.findMany({ select: { id: true, organizationId: true } }),
+    );
+    expect(rows.every((r) => r.organizationId === orgB.id)).toBe(true);
+  });
+
+  // ────────────────────────────────────────────────────────────────────────
   // 4. Coupon code collision — MUST succeed (per-org namespace by 02e design).
   // ────────────────────────────────────────────────────────────────────────
 
