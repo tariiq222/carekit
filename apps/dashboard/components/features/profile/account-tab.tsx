@@ -12,7 +12,6 @@ import { useLocale } from "@/components/locale-provider"
 
 /**
  * Account tab — read-only summary of the **global** User account fields.
- * The per-organization display profile lives in MembershipTab.
  */
 export function AccountTab() {
   const { t } = useLocale()
