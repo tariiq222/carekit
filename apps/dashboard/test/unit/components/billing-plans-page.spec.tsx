@@ -26,6 +26,16 @@ vi.mock("@/hooks/use-current-subscription", () => ({
   useBillingMutations,
   useSavedCards: vi.fn(() => ({ data: [], isLoading: false })),
 }))
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() })),
+  usePathname: vi.fn(() => "/subscription/plans"),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}))
+
+vi.mock("@/hooks/use-usage", () => ({
+  useUsage: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 vi.mock("@/components/features/breadcrumbs", () => ({
   Breadcrumbs: () => <div>Breadcrumbs</div>,
 }))

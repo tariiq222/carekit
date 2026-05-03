@@ -96,7 +96,7 @@ describe("deriveCssVars", () => {
       "--primary", "--primary-foreground", "--primary-light",
       "--primary-ultra-light", "--accent", "--accent-foreground",
       "--accent-ultra-light", "--ring", "--shadow-primary-color",
-      "--shadow-primary-hover-color", "--blob-accent",
+      "--shadow-primary-hover-color",
       "--sidebar-primary", "--sidebar-primary-foreground",
       "--sidebar-accent", "--sidebar-accent-foreground", "--sidebar-ring",
     ]

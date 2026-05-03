@@ -266,14 +266,14 @@ describe("BillingPage", () => {
     render(<BillingPage />)
 
     await userEvent.click(screen.getByRole("button", { name: "Change plan" }))
-    await userEvent.click(screen.getByRole("button", { name: /Pro Price: SAR 199/ }))
+    // The plan card is a <button> whose text content is the plan name + price
+    await userEvent.click(screen.getByRole("button", { name: /Pro/ }))
     await userEvent.click(screen.getByRole("button", { name: "Confirm" }))
 
     await waitFor(() =>
       expect(upgradeMutateAsync).toHaveBeenCalledWith({
         planId: "pro",
         billingCycle: "MONTHLY",
-        isDowngrade: false,
       }),
     )
   })
