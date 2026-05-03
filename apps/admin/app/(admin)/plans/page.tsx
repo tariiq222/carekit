@@ -32,7 +32,7 @@ export default function PlansPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link href="/plans/compare">Edit Features & Limits</Link>
+            <Link href="/plans/edit">Edit Features & Limits</Link>
           </Button>
           <Button asChild>
             <Link href="/plans/new">+ Create Plan</Link>
