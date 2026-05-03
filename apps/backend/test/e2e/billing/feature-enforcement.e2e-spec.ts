@@ -26,7 +26,7 @@ import { UsageCounterService } from '../../../src/modules/platform/billing/usage
  *   email_templates:    true   ← ALLOWED on BASIC → sanity pass
  *   coupons:            false  ← gated
  *   advanced_reports:   false  ← gated
- *   intake_forms:       true   ← ALLOWED on BASIC
+ *   intake_forms:       false  ← gated (Phase 1 / Bug B3 corrected catalog tier=ENTERPRISE)
  *   zatca:              false  ← gated
  *   custom_roles:       false  ← gated
  *   activity_log:       false  ← gated
@@ -158,7 +158,13 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     await expectGated(FeatureKey.ACTIVITY_LOG);
   });
 
-  // ── Features BASIC plan ALLOWS (email_templates: true, intake_forms: true) ──
+  it('BASIC plan blocks INTAKE_FORMS (intake_forms: false — catalog tier=ENTERPRISE)', async () => {
+    // Phase 1 / Bug B3 — migration 20260503040000 corrected the BASIC seed
+    // which previously had intake_forms=true despite catalog tier=ENTERPRISE.
+    await expectGated(FeatureKey.INTAKE_FORMS);
+  });
+
+  // ── Features BASIC plan ALLOWS (email_templates: true) ─────────────────────
 
   it('BASIC plan ALLOWS EMAIL_TEMPLATES (email_templates: true)', async () => {
     await h.runAs({ organizationId: org.id }, async () => {
@@ -167,11 +173,18 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     });
   });
 
-  it('BASIC plan ALLOWS INTAKE_FORMS (intake_forms: true)', async () => {
-    await h.runAs({ organizationId: org.id }, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.INTAKE_FORMS, org.id));
-      expect(result).toBe(true);
-    });
+  // ── Phase 1 / Bug B3 — Phase-3 keys are now seeded into BASIC as false ─────
+
+  it('BASIC plan blocks ZOOM_INTEGRATION (zoom_integration: false)', async () => {
+    await expectGated(FeatureKey.ZOOM_INTEGRATION);
+  });
+
+  it('BASIC plan blocks MULTI_BRANCH (multi_branch: false)', async () => {
+    await expectGated(FeatureKey.MULTI_BRANCH);
+  });
+
+  it('BASIC plan blocks BANK_TRANSFER_PAYMENTS (bank_transfer_payments: false)', async () => {
+    await expectGated(FeatureKey.BANK_TRANSFER_PAYMENTS);
   });
 
   // ── Sanity: flag-driven, not always-deny ───────────────────────────────────

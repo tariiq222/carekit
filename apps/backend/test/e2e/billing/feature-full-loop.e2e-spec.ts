@@ -2,7 +2,7 @@
  * Phase 6 / Task 9 — Full-loop e2e: admin override → tenant features → guard.
  *
  * Tests the complete pipeline:
- * 1. FeatureGuard blocks COUPONS on BASIC plan (plan-limit gate).
+ * 1. FeatureGuard blocks ADVANCED_REPORTS on PRO plan (plan-limit gate; PRO has advanced_reports:false).
  * 2. UpsertFeatureFlagOverrideHandler sets zoom_integration=FORCE_OFF
  *    (zoom_integration is in the FeatureFlag catalog; no plan-limit entry).
  * 3. GetMyFeaturesHandler returns zoom_integration.enabled=false after FORCE_OFF.
@@ -36,7 +36,7 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
   let upsertOverrideHandler: UpsertFeatureFlagOverrideHandler;
   let cacheService: SubscriptionCacheService;
   let org: { id: string };
-  let BASIC_PLAN_ID: string;
+  let PRO_PLAN_ID: string;
   const SUPER_ADMIN_ID = '00000000-0000-0000-0000-000000000099';
 
   beforeAll(async () => {
@@ -45,9 +45,9 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
 
     h = await bootHarness();
 
-    const basicPlan = await h.prisma.plan.findFirst({ where: { slug: 'BASIC' } });
-    if (!basicPlan) throw new Error('BASIC plan not found — run migrations + seed first');
-    BASIC_PLAN_ID = basicPlan.id;
+    const proPlan = await h.prisma.plan.findFirst({ where: { slug: 'PRO' } });
+    if (!proPlan) throw new Error('PRO plan not found — run migrations + seed first');
+    PRO_PLAN_ID = proPlan.id;
 
     const ts = Date.now();
     org = await h.createOrg(`full-loop-${ts}`, 'منظمة اختبار حلقة كاملة');
@@ -56,7 +56,7 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
     await h.prisma.subscription.create({
       data: {
         organizationId: org.id,
-        planId: BASIC_PLAN_ID,
+        planId: PRO_PLAN_ID,
         status: 'ACTIVE',
         billingCycle: 'MONTHLY',
         currentPeriodStart: now,
@@ -125,11 +125,11 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
     } as unknown as ExecutionContext;
   }
 
-  // ── Step 1: FeatureGuard blocks COUPONS (plan-limit gate) ──────────────────
+  // ── Step 1: FeatureGuard blocks ADVANCED_REPORTS (plan-limit gate) ─────────
 
-  it('Step 1: FeatureGuard throws FeatureNotEnabledException for COUPONS on BASIC', async () => {
+  it('Step 1: FeatureGuard throws FeatureNotEnabledException for ADVANCED_REPORTS on PRO', async () => {
     await runAsOrgWithSuperAdmin(org.id, async () => {
-      await expect(guard.canActivate(ctxFor(FeatureKey.COUPONS, org.id))).rejects.toBeInstanceOf(
+      await expect(guard.canActivate(ctxFor(FeatureKey.ADVANCED_REPORTS, org.id))).rejects.toBeInstanceOf(
         FeatureNotEnabledException,
       );
     });
@@ -232,10 +232,10 @@ describe('Phase 6 / Task 9 — full-loop e2e (admin override → tenant features
     FeatureGuard.invalidate(org.id);
     cacheService.invalidate(org.id);
 
-    // After INHERIT, no org-specific row exists → handler falls to plan-limit absence → true
+    // After INHERIT, no org-specific row exists → handler falls to plan limit
+    // (PRO.zoom_integration=true by migration 20260503040000) → enabled=true
     await runAsOrgWithSuperAdmin(org.id, async () => {
       const result = await getFeaturesHandler.execute();
-      // zoom_integration not in plan limits → defaults to true (no plan limit restriction)
       expect(result.features['zoom_integration']?.enabled).toBe(true);
     });
   });

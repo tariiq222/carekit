@@ -1,8 +1,10 @@
 /**
  * Phase 6 / Task 10 — Tenant isolation e2e for feature-flag overrides.
  *
- * Seeds 2 orgs (A and B) on the same plan (BASIC).
- * zoom_integration is NOT in plan limits — defaults to enabled=true for both orgs.
+ * Seeds 2 orgs (A and B) on the same plan (PRO).
+ * zoom_integration is enabled=true on PRO (seeded by migration
+ * 20260503040000_seed_phase3_feature_keys_into_plans). Both orgs see
+ * enabled=true at baseline.
  * Sets zoom_integration=FORCE_OFF for org A only.
  * Asserts:
  *   - Tenant A: GetMyFeaturesHandler returns zoom_integration.enabled=false (override applied)
@@ -23,7 +25,7 @@ describe('Phase 6 / Task 10 — Override tenant isolation (org A override invisi
   let cacheService: SubscriptionCacheService;
   let orgA: { id: string };
   let orgB: { id: string };
-  let BASIC_PLAN_ID: string;
+  let PRO_PLAN_ID: string;
   const SUPER_ADMIN_ID = '00000000-0000-0000-0000-000000000099';
   const ts = Date.now();
 
@@ -33,9 +35,9 @@ describe('Phase 6 / Task 10 — Override tenant isolation (org A override invisi
 
     h = await bootHarness();
 
-    const basicPlan = await h.prisma.plan.findFirst({ where: { slug: 'BASIC' } });
-    if (!basicPlan) throw new Error('BASIC plan not found — run migrations + seed first');
-    BASIC_PLAN_ID = basicPlan.id;
+    const proPlan = await h.prisma.plan.findFirst({ where: { slug: 'PRO' } });
+    if (!proPlan) throw new Error('PRO plan not found — run migrations + seed first');
+    PRO_PLAN_ID = proPlan.id;
 
     orgA = await h.createOrg(`isolation-org-a-${ts}`, 'منظمة أ');
     orgB = await h.createOrg(`isolation-org-b-${ts}`, 'منظمة ب');
@@ -46,7 +48,7 @@ describe('Phase 6 / Task 10 — Override tenant isolation (org A override invisi
     await h.prisma.subscription.create({
       data: {
         organizationId: orgA.id,
-        planId: BASIC_PLAN_ID,
+        planId: PRO_PLAN_ID,
         status: 'ACTIVE',
         billingCycle: 'MONTHLY',
         currentPeriodStart: now,
@@ -57,7 +59,7 @@ describe('Phase 6 / Task 10 — Override tenant isolation (org A override invisi
     await h.prisma.subscription.create({
       data: {
         organizationId: orgB.id,
-        planId: BASIC_PLAN_ID,
+        planId: PRO_PLAN_ID,
         status: 'ACTIVE',
         billingCycle: 'MONTHLY',
         currentPeriodStart: now,
@@ -110,7 +112,7 @@ describe('Phase 6 / Task 10 — Override tenant isolation (org A override invisi
     });
   }
 
-  it('baseline: both orgs have zoom_integration.enabled=true (not in plan limits, defaults to true)', async () => {
+  it('baseline: both orgs have zoom_integration.enabled=true (PRO seeded with zoom_integration=true)', async () => {
     await runAsOrgWithSuperAdmin(orgA.id, async () => {
       const result = await getFeaturesHandler.execute();
       expect(result.features['zoom_integration']?.enabled).toBe(true);
