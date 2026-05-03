@@ -120,6 +120,8 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // a future bug from selecting another tenant's `lastSequence` and
   // colliding invoice numbers across orgs.
   'OrganizationInvoiceCounter',
+  // Phase 2 / Bug B11 — refund→usage decrement idempotency log
+  'RefundUsageRevertLog',
 ]);
 
 /**

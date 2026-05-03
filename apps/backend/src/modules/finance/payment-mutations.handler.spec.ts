@@ -14,6 +14,9 @@ const buildPrisma = () => {
       findFirst: jest.Mock;
       update: jest.Mock;
     };
+    refundRequest: {
+      create: jest.Mock;
+    };
     $transaction: jest.Mock;
   } = {
     payment: {
@@ -24,6 +27,9 @@ const buildPrisma = () => {
     invoice: {
       findFirst: jest.fn(),
       update: jest.fn(),
+    },
+    refundRequest: {
+      create: jest.fn().mockResolvedValue({ id: 'rr-1' }),
     },
     $transaction: jest.fn(async (fn) => fn(prisma)),
   };
@@ -38,40 +44,74 @@ const buildEventBus = () => ({
 const PAY_ID = 'pay-1';
 
 describe('RefundPaymentHandler', () => {
-  it('refunds a completed payment', async () => {
+  const PAYMENT_BASE = {
+    id: PAY_ID,
+    amount: 100,
+    invoice: {
+      id: 'inv-1',
+      bookingId: 'book-1',
+      clientId: 'client-1',
+      currency: 'SAR',
+      organizationId: 'org-1',
+    },
+  };
+
+  it('refunds a completed payment + creates RefundRequest + emits RefundCompletedEvent', async () => {
     const prisma = buildPrisma();
-    const completedPayment = { id: PAY_ID, status: PaymentStatus.COMPLETED };
+    const eventBus = buildEventBus();
+    const completedPayment = { ...PAYMENT_BASE, status: PaymentStatus.COMPLETED };
     const refunded = { ...completedPayment, status: PaymentStatus.REFUNDED, failureReason: 'client request' };
     prisma.payment.findFirst.mockResolvedValue(completedPayment);
     prisma.payment.update.mockResolvedValue(refunded);
+    prisma.invoice.update.mockResolvedValue({ id: 'inv-1' });
 
-    const handler = new RefundPaymentHandler(prisma as never);
+    const handler = new RefundPaymentHandler(prisma as never, eventBus as never);
     const result = await handler.execute({ paymentId: PAY_ID, reason: 'client request' });
 
     expect(result.status).toBe(PaymentStatus.REFUNDED);
+    expect(prisma.refundRequest.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          paymentId: PAY_ID,
+          status: 'COMPLETED',
+        }),
+      }),
+    );
     expect(prisma.payment.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: PAY_ID },
         data: expect.objectContaining({ status: PaymentStatus.REFUNDED, failureReason: 'client request' }),
       }),
     );
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      'finance.refund.completed',
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          paymentId: PAY_ID,
+          bookingId: 'book-1',
+          organizationId: 'org-1',
+        }),
+      }),
+    );
   });
 
   it('throws NotFoundException when payment not found', async () => {
     const prisma = buildPrisma();
+    const eventBus = buildEventBus();
     prisma.payment.findFirst.mockResolvedValue(null);
 
     await expect(
-      new RefundPaymentHandler(prisma as never).execute({ paymentId: 'bad', reason: 'x' }),
+      new RefundPaymentHandler(prisma as never, eventBus as never).execute({ paymentId: 'bad', reason: 'x' }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when payment is not COMPLETED', async () => {
     const prisma = buildPrisma();
-    prisma.payment.findFirst.mockResolvedValue({ id: PAY_ID, status: PaymentStatus.PENDING });
+    const eventBus = buildEventBus();
+    prisma.payment.findFirst.mockResolvedValue({ ...PAYMENT_BASE, status: PaymentStatus.PENDING });
 
     await expect(
-      new RefundPaymentHandler(prisma as never).execute({ paymentId: PAY_ID, reason: 'x' }),
+      new RefundPaymentHandler(prisma as never, eventBus as never).execute({ paymentId: PAY_ID, reason: 'x' }),
     ).rejects.toThrow(BadRequestException);
   });
 });
