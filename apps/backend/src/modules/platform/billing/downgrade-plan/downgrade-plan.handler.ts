@@ -76,7 +76,7 @@ export class DowngradePlanHandler {
       })
       .catch(() => undefined);
 
-    const owner = await this.prisma.$allTenants.membership.findFirst({
+    const owner = await this.prisma.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },
       select: {
         displayName: true,

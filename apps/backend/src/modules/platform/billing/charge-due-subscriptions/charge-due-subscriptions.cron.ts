@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
@@ -25,6 +27,7 @@ export class ChargeDueSubscriptionsCron {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly cls: ClsService,
     private readonly moyasar: MoyasarSubscriptionClient,
     private readonly recordPayment: RecordSubscriptionPaymentHandler,
     private readonly recordFailure: RecordSubscriptionPaymentFailureHandler,
@@ -33,6 +36,13 @@ export class ChargeDueSubscriptionsCron {
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this.runCharge();
+    });
+  }
+
+  private async runCharge(): Promise<void> {
     const now = new Date();
     // Belt-and-suspenders against Bug B2: even after
     // `record-subscription-payment` advances `currentPeriodEnd`, refuse
@@ -41,7 +51,7 @@ export class ChargeDueSubscriptionsCron {
     // payment) somehow misalign we still fail-safe to "do nothing".
     // Oldest-due first so a backlog drains in fair order.
     const recentPaymentCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const due = await this.prisma.subscription.findMany({
+    const due = await this.prisma.$allTenants.subscription.findMany({
       where: {
         currentPeriodEnd: { lte: now },
         status: { in: ['TRIALING', 'ACTIVE', 'PAST_DUE'] },
@@ -67,7 +77,7 @@ export class ChargeDueSubscriptionsCron {
         : Number(sub.plan.priceMonthly);
 
     // Create invoice
-    const invoice = await this.prisma.subscriptionInvoice.create({
+    const invoice = await this.prisma.$allTenants.subscriptionInvoice.create({
       data: {
         subscriptionId: sub.id,
         organizationId: sub.organizationId,

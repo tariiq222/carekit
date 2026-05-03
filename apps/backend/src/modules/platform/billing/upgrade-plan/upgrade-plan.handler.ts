@@ -94,7 +94,7 @@ export class UpgradePlanHandler {
 
       await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
 
-      const owner = await this.prisma.$allTenants.membership.findFirst({
+      const owner = await this.prisma.membership.findFirst({
         where: { organizationId, role: 'OWNER', isActive: true },
         select: {
           displayName: true,
@@ -147,7 +147,7 @@ export class UpgradePlanHandler {
       this.cache.invalidate(organizationId);
       await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
 
-      const owner = await this.prisma.$allTenants.membership.findFirst({
+      const owner = await this.prisma.membership.findFirst({
         where: { organizationId, role: 'OWNER', isActive: true },
         select: {
           displayName: true,
@@ -249,7 +249,7 @@ export class UpgradePlanHandler {
 
     await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
 
-    const owner = await this.prisma.$allTenants.membership.findFirst({
+    const owner = await this.prisma.membership.findFirst({
       where: { organizationId, role: 'OWNER', isActive: true },
       select: {
         displayName: true,
