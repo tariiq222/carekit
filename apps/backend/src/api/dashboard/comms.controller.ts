@@ -50,6 +50,10 @@ import { PrismaService } from '../../infrastructure/database';
 import { TenantContextService } from '../../common/tenant';
 import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
+import { ListTenantDeliveryLogsHandler } from '../../modules/comms/list-tenant-delivery-logs/list-tenant-delivery-logs.handler';
+import { ListTenantDeliveryLogsDto } from '../../modules/comms/list-tenant-delivery-logs/list-tenant-delivery-logs.dto';
+import { UsageCounterService } from '../../modules/platform/billing/usage-counter/usage-counter.service';
+import { SubscriptionCacheService } from '../../modules/platform/billing/subscription-cache.service';
 
 @ApiTags('Dashboard / Comms')
 @ApiBearerAuth()
@@ -81,6 +85,9 @@ export class DashboardCommsController {
     private readonly testEmailConfig: TestEmailConfigHandler,
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly listTenantDeliveryLogs: ListTenantDeliveryLogsHandler,
+    private readonly usageCounter: UsageCounterService,
+    private readonly subscriptionCache: SubscriptionCacheService,
   ) {}
 
   // ── SMS Settings (SaaS-02g-sms) ────────────────────────────────────────────
@@ -361,5 +368,33 @@ export class DashboardCommsController {
       staffId: user.sub,
       body: body.body,
     });
+  }
+
+  @Get('delivery-logs')
+  @ApiOperation({ summary: 'List email delivery logs for this organization' })
+  @ApiOkResponse({ description: 'Paginated delivery log' })
+  async listDeliveryLogs(
+    @Query() dto: ListTenantDeliveryLogsDto,
+  ): Promise<unknown> {
+    return this.listTenantDeliveryLogs.execute(dto);
+  }
+
+  @Get('email-fallback-quota')
+  @ApiOperation({ summary: 'Get platform email fallback quota usage for this billing period' })
+  @ApiOkResponse({ description: 'Current usage vs plan limit for email_fallback_monthly' })
+  async getEmailFallbackQuota(): Promise<{ used: number; limit: number; periodStart: string }> {
+    const orgId = this.tenant.requireOrganizationIdOrDefault();
+    const now = new Date();
+    const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+    const cached = await this.subscriptionCache.get(orgId).catch(() => null);
+    const limit = cached
+      ? ((cached.limits['email_fallback_monthly'] as number | undefined) ?? -1)
+      : -1;
+
+    const used =
+      (await this.usageCounter.read(orgId, FeatureKey.EMAIL_FALLBACK_MONTHLY, periodStart)) ?? 0;
+
+    return { used, limit, periodStart: periodStart.toISOString() };
   }
 }
