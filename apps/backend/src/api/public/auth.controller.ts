@@ -40,6 +40,7 @@ import { RequestPasswordResetDto } from '../../modules/identity/user-password-re
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { PerformPasswordResetDto } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.dto';
 import { Public } from '../../common/guards/jwt.guard';
+import { AllowDuringSuspension } from '../../common/guards/allow-during-suspension.decorator';
 import { IsString, MinLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
@@ -247,6 +248,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtGuard)
+  @AllowDuringSuspension()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   @ApiOkResponse({ description: 'Current user profile with role and permissions' })

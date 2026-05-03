@@ -13,6 +13,7 @@ import {
 import { ApiOkResponse } from "@nestjs/swagger";
 import { ApiOperation, ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtGuard } from "../../common/guards/jwt.guard";
+import { AllowDuringSuspension } from "../../common/guards/allow-during-suspension.decorator";
 import { ApiStandardResponses } from "../../common/swagger";
 import { ListPlansHandler } from "../../modules/platform/billing/list-plans/list-plans.handler";
 import { GetCurrentSubscriptionHandler } from "../../modules/platform/billing/get-current-subscription/get-current-subscription.handler";
@@ -83,6 +84,7 @@ export class BillingController {
   }
 
   @Get("subscription")
+  @AllowDuringSuspension()
   @ApiOperation({ summary: "Get current subscription" })
   subscription() {
     return this.getCurrentSub.execute();
@@ -166,6 +168,7 @@ export class BillingController {
   }
 
   @Post("subscription/retry-payment")
+  @AllowDuringSuspension()
   @HttpCode(200)
   @ApiOperation({ summary: "Retry failed subscription payment" })
   retryPayment() {
@@ -173,18 +176,21 @@ export class BillingController {
   }
 
   @Get("saved-cards")
+  @AllowDuringSuspension()
   @ApiOperation({ summary: "List saved billing cards" })
   savedCards() {
     return this.listSavedCards.execute();
   }
 
   @Post("saved-cards")
+  @AllowDuringSuspension()
   @ApiOperation({ summary: "Add a saved billing card" })
   addCard(@Body() dto: AddSavedCardDto) {
     return this.addSavedCard.execute(dto);
   }
 
   @Patch("saved-cards/:id/set-default")
+  @AllowDuringSuspension()
   @HttpCode(200)
   @ApiOperation({ summary: "Set saved billing card as default" })
   setDefaultCard(@Param("id") id: string) {
