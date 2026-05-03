@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
@@ -20,10 +20,6 @@ export class CreateInvoiceHandler {
 
   async execute(dto: CreateInvoiceCommand) {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
-    const existing = await this.prisma.invoice.findFirst({
-      where: { bookingId: dto.bookingId },
-    });
-    if (existing) throw new ConflictException(`Invoice already exists for booking ${dto.bookingId}`);
 
     const subtotal = dto.subtotal;
     const discountAmt = dto.discountAmt ?? 0;
@@ -32,8 +28,12 @@ export class CreateInvoiceHandler {
     const vatAmt = parseFloat((vatBase * vatRate).toFixed(2));
     const total = parseFloat((vatBase + vatAmt).toFixed(2));
 
-    const invoice = await this.prisma.invoice.create({
-      data: {
+    // The DB has a UNIQUE constraint on bookingId — upsert is idempotent:
+    // on re-delivery of the same bookingId we find the existing row without
+    // writing, and the update clause is empty so nothing changes.
+    const invoice = await this.prisma.invoice.upsert({
+      where: { bookingId: dto.bookingId ?? '' },
+      create: {
         organizationId,
         branchId: dto.branchId,
         clientId: dto.clientId,
@@ -49,6 +49,7 @@ export class CreateInvoiceHandler {
         status: 'ISSUED',
         issuedAt: new Date(),
       },
+      update: {},
     });
 
     await this.eventBus.publish('finance.invoice.created', {
