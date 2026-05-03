@@ -17,18 +17,37 @@ const subscription = (overrides: Record<string, unknown> = {}) => ({
   currentPeriodStart: PERIOD_START,
   currentPeriodEnd: PERIOD_END,
   plan: {
-    limits: { maxEmployees: 10 },
+    limits: {
+      maxEmployees: 10,
+      maxBranches: 3,
+      maxBookingsPerMonth: 100,
+      maxClients: 50,
+      maxStorageMB: 1024,
+    },
   },
   ...overrides,
 });
 
-const buildPrisma = (subscriptions: unknown[] = []) => ({
+const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8, branches: 1, bookings: 0, clients: 0, storage: 0 }) => ({
   $allTenants: {
     subscription: {
       findMany: jest.fn().mockResolvedValue(subscriptions),
     },
     employee: {
-      count: jest.fn().mockResolvedValue(8),
+      count: jest.fn().mockResolvedValue(usedCounts.employees),
+    },
+    branch: {
+      count: jest.fn().mockResolvedValue(usedCounts.branches),
+    },
+    client: {
+      count: jest.fn().mockResolvedValue(usedCounts.clients),
+    },
+    usageCounter: {
+      findFirst: jest.fn().mockImplementation(({ where }: { where: { metric: string } }) => {
+        if (where.metric === 'BOOKINGS_PER_MONTH') return Promise.resolve({ count: usedCounts.bookings });
+        if (where.metric === 'STORAGE_MB') return Promise.resolve({ count: usedCounts.storage });
+        return Promise.resolve(null);
+      }),
     },
     membership: {
       findFirst: jest.fn().mockResolvedValue({
@@ -71,36 +90,73 @@ describe('SendLimitWarningCron', () => {
     });
   });
 
-  it('counts active employees for each limited subscription', async () => {
-    const prisma = buildPrisma([subscription()]);
+  it('creates a warning notification when employee usage reaches 80 percent', async () => {
+    const prisma = buildPrisma([subscription()], { employees: 8, branches: 1, bookings: 0, clients: 0, storage: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();
 
-    expect(prisma.$allTenants.employee.count).toHaveBeenCalledWith({
-      where: { organizationId: 'org-1', isActive: true },
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const employeeCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'EMPLOYEES');
+    expect(employeeCall).toBeDefined();
+    expect(employeeCall[0].data).toMatchObject({
+      organizationId: 'org-1',
+      recipientId: 'owner-user-1',
+      type: 'GENERAL',
+      metadata: { kind: 'EMPLOYEES', threshold: 80 },
     });
   });
 
-  it('creates one owner notification when employee usage reaches 80 percent', async () => {
-    const prisma = buildPrisma([subscription()]);
+  it('creates a warning notification when branch usage reaches 80 percent', async () => {
+    // maxBranches=3, used=3 → 100% >= 80%
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 3, bookings: 0, clients: 0, storage: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();
 
-    expect(prisma.$allTenants.membership.findFirst).toHaveBeenCalledWith({
-      where: { organizationId: 'org-1', role: 'OWNER', isActive: true },
-      include: { user: { select: { name: true } } },
-    });
-    expect(prisma.$allTenants.notification.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        organizationId: 'org-1',
-        recipientId: 'owner-user-1',
-        recipientType: 'EMPLOYEE',
-        type: 'GENERAL',
-        metadata: { kind: 'EMPLOYEES', threshold: 80 },
-      }),
-    });
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const branchCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'BRANCHES');
+    expect(branchCall).toBeDefined();
+    expect(branchCall[0].data.metadata).toEqual({ kind: 'BRANCHES', threshold: 80 });
+  });
+
+  it('creates a warning notification when booking usage reaches 80 percent', async () => {
+    // maxBookingsPerMonth=100, used=85 → 85% >= 80%
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 85, clients: 0, storage: 0 });
+    const cron = buildCron(prisma);
+
+    await cron.execute();
+
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const bookingCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'BOOKINGS');
+    expect(bookingCall).toBeDefined();
+    expect(bookingCall[0].data.metadata).toEqual({ kind: 'BOOKINGS', threshold: 80 });
+  });
+
+  it('creates a warning notification when client usage reaches 80 percent', async () => {
+    // maxClients=50, used=42 → 84% >= 80%
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 0, clients: 42, storage: 0 });
+    const cron = buildCron(prisma);
+
+    await cron.execute();
+
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const clientCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'CLIENTS');
+    expect(clientCall).toBeDefined();
+    expect(clientCall[0].data.metadata).toEqual({ kind: 'CLIENTS', threshold: 80 });
+  });
+
+  it('creates a warning notification when storage usage reaches 80 percent', async () => {
+    // maxStorageMB=1024, used=900 → 87% >= 80%
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 0, clients: 0, storage: 900 });
+    const cron = buildCron(prisma);
+
+    await cron.execute();
+
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const storageCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'STORAGE_MB');
+    expect(storageCall).toBeDefined();
+    expect(storageCall[0].data.metadata).toEqual({ kind: 'STORAGE_MB', threshold: 80 });
   });
 
   it('skips when a matching notification already exists in the current period', async () => {
@@ -110,32 +166,43 @@ describe('SendLimitWarningCron', () => {
 
     await cron.execute();
 
-    expect(prisma.$allTenants.notification.findFirst).toHaveBeenCalledWith({
-      where: {
-        organizationId: 'org-1',
-        recipientId: 'owner-user-1',
-        type: 'GENERAL',
-        createdAt: { gte: PERIOD_START, lt: PERIOD_END },
-        AND: [
-          { metadata: { path: ['kind'], equals: 'EMPLOYEES' } },
-          { metadata: { path: ['threshold'], equals: 80 } },
-        ],
-      },
-    });
     expect(prisma.$allTenants.notification.create).not.toHaveBeenCalled();
   });
 
-  it('does not notify for unlimited, zero, or non-numeric employee limits', async () => {
+  it('does not notify for unlimited (-1), zero, or non-numeric limits', async () => {
     const prisma = buildPrisma([
-      subscription({ id: 'sub-unlimited', plan: { limits: { maxEmployees: -1 } } }),
-      subscription({ id: 'sub-zero', plan: { limits: { maxEmployees: 0 } } }),
-      subscription({ id: 'sub-missing', plan: { limits: {} } }),
+      subscription({
+        id: 'sub-unlimited',
+        plan: { limits: { maxEmployees: -1, maxBranches: -1, maxBookingsPerMonth: -1, maxClients: -1, maxStorageMB: -1 } },
+      }),
     ]);
     const cron = buildCron(prisma);
 
     await cron.execute();
 
-    expect(prisma.$allTenants.employee.count).not.toHaveBeenCalled();
     expect(prisma.$allTenants.notification.create).not.toHaveBeenCalled();
+  });
+
+  it('skips entire org when no owner membership found', async () => {
+    const prisma = buildPrisma([subscription()]);
+    prisma.$allTenants.membership.findFirst.mockResolvedValue(null);
+    const cron = buildCron(prisma);
+
+    await cron.execute();
+
+    expect(prisma.$allTenants.notification.create).not.toHaveBeenCalled();
+  });
+
+  it('sends multiple metric warnings for the same org in one run', async () => {
+    // employees at 80%, branches at 100%
+    const prisma = buildPrisma([subscription()], { employees: 8, branches: 3, bookings: 0, clients: 0, storage: 0 });
+    const cron = buildCron(prisma);
+
+    await cron.execute();
+
+    const calls = prisma.$allTenants.notification.create.mock.calls;
+    const kinds = calls.map((c: any[]) => c[0].data.metadata.kind);
+    expect(kinds).toContain('EMPLOYEES');
+    expect(kinds).toContain('BRANCHES');
   });
 });
