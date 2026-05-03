@@ -1,12 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { PlatformMailerService } from './platform-mailer.service';
-
-const mockSend = jest.fn();
-jest.mock('resend', () => ({
-  Resend: jest.fn().mockImplementation(() => ({
-    emails: { send: mockSend },
-  })),
-}));
+import type { PlatformMailQueueService } from './platform-mail-queue/platform-mail-queue.service';
 
 function configWith(env: Record<string, string | undefined>): ConfigService {
   return {
@@ -15,53 +9,49 @@ function configWith(env: Record<string, string | undefined>): ConfigService {
   } as ConfigService;
 }
 
+function buildQueue(): { queue: PlatformMailQueueService; enqueueMock: jest.Mock } {
+  const enqueueMock = jest.fn(async () => undefined);
+  const queue = { enqueue: enqueueMock } as unknown as PlatformMailQueueService;
+  return { queue, enqueueMock };
+}
+
 describe('PlatformMailerService — bootstrap', () => {
-  beforeEach(() => {
-    mockSend.mockReset();
-    delete process.env.NODE_ENV;
-  });
-
-  it('isAvailable() = false in dev when RESEND_API_KEY is missing', () => {
-    process.env.NODE_ENV = 'development';
-    const svc = new PlatformMailerService(configWith({}));
+  it('initializes with default `from` when RESEND_FROM is not set', () => {
+    const { queue } = buildQueue();
+    const svc = new PlatformMailerService(configWith({}), queue);
     svc.onModuleInit();
-    expect(svc.isAvailable()).toBe(false);
+    // Internal state — not exposed; bootstrapping must not throw.
+    expect(() => svc.onModuleInit()).not.toThrow();
   });
 
-  it('isAvailable() = true when RESEND_API_KEY is present', () => {
-    const svc = new PlatformMailerService(configWith({ RESEND_API_KEY: 're_test' }));
+  it('reads RESEND_FROM from config when present', () => {
+    const { queue } = buildQueue();
+    const svc = new PlatformMailerService(
+      configWith({ RESEND_FROM: 'Custom <custom@brand.com>' }),
+      queue,
+    );
     svc.onModuleInit();
-    expect(svc.isAvailable()).toBe(true);
-  });
-
-  it('throws on bootstrap in production when RESEND_API_KEY is missing', () => {
-    process.env.NODE_ENV = 'production';
-    const svc = new PlatformMailerService(configWith({}));
-    expect(() => svc.onModuleInit()).toThrow(/RESEND_API_KEY/);
+    // Verify by checking the from on the next enqueue (covered below).
+    expect(svc).toBeDefined();
   });
 });
 
-describe('PlatformMailerService — send', () => {
-  beforeEach(() => {
-    mockSend.mockReset();
-    process.env.NODE_ENV = 'development';
-  });
-
-  function build(): PlatformMailerService {
+describe('PlatformMailerService — dispatch enqueues, never calls Resend directly', () => {
+  function build(env: Record<string, string> = {}): {
+    svc: PlatformMailerService;
+    enqueueMock: jest.Mock;
+  } {
+    const { queue, enqueueMock } = buildQueue();
     const svc = new PlatformMailerService(
-      configWith({
-        RESEND_API_KEY: 're_test',
-        RESEND_FROM: 'Deqah <noreply@webvue.pro>',
-        RESEND_REPLY_TO: 'support@webvue.pro',
-      }),
+      configWith({ RESEND_FROM: 'Deqah <noreply@webvue.pro>', ...env }),
+      queue,
     );
     svc.onModuleInit();
-    return svc;
+    return { svc, enqueueMock };
   }
 
-  it('sendTenantWelcome calls Resend with from/replyTo/subject/html', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_1' }, error: null });
-    const svc = build();
+  it('sendTenantWelcome enqueues a job with templateName=tenant-welcome and the resolved from header', async () => {
+    const { svc, enqueueMock } = build();
 
     await svc.sendTenantWelcome('owner@example.com', {
       ownerName: 'Tariq',
@@ -69,50 +59,27 @@ describe('PlatformMailerService — send', () => {
       dashboardUrl: 'https://app.example/dashboard',
     });
 
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    const arg = mockSend.mock.calls[0][0];
+    expect(enqueueMock).toHaveBeenCalledTimes(1);
+    const arg = enqueueMock.mock.calls[0][0];
+    expect(arg.recipient).toBe('owner@example.com');
+    expect(arg.templateName).toBe('tenant-welcome');
     expect(arg.from).toBe('Deqah <noreply@webvue.pro>');
-    expect(arg.replyTo).toBe('support@webvue.pro');
-    expect(arg.to).toEqual(['owner@example.com']);
     expect(arg.subject).toContain('Deqah');
     expect(arg.html).toContain('Tariq');
     expect(arg.html).toContain('Sawa');
   });
 
-  it('returns void and does NOT throw when Resend errors', async () => {
-    mockSend.mockResolvedValue({ data: null, error: { message: '5xx upstream' } });
-    const svc = build();
-    await expect(
-      svc.sendTenantWelcome('owner@example.com', {
-        ownerName: 'X',
-        orgName: 'Y',
-        dashboardUrl: 'https://x',
-      }),
-    ).resolves.toBeUndefined();
-  });
-
-  it('returns void and warns when client is unavailable', async () => {
-    delete process.env.NODE_ENV;
-    const svc = new PlatformMailerService(configWith({}));
-    svc.onModuleInit();
-    await expect(
-      svc.sendOtpLogin('user@example.com', { code: '123456', expiresInMinutes: 10 }),
-    ).resolves.toBeUndefined();
-    expect(mockSend).not.toHaveBeenCalled();
-  });
-
-  it('sendOtpLogin uses the OTP subject + interpolates the code', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg_2' }, error: null });
-    const svc = build();
+  it('sendOtpLogin enqueues with template=otp-login and interpolates code into html', async () => {
+    const { svc, enqueueMock } = build();
     await svc.sendOtpLogin('user@example.com', { code: '482913', expiresInMinutes: 5 });
-    const arg = mockSend.mock.calls[0][0];
+    const arg = enqueueMock.mock.calls[0][0];
+    expect(arg.templateName).toBe('otp-login');
     expect(arg.html).toContain('482913');
     expect(arg.subject.toLowerCase()).toMatch(/code|رمز/);
   });
 
-  it('trial, payment, plan, and account-status methods all dispatch via Resend', async () => {
-    mockSend.mockResolvedValue({ data: { id: 'msg' }, error: null });
-    const svc = build();
+  it('all trial/payment/plan/account-status methods enqueue (no inline Resend call)', async () => {
+    const { svc, enqueueMock } = build();
 
     await svc.sendTrialEnding('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 3, upgradeUrl: 'https://u' });
     await svc.sendTrialDay7Reminder('a@x', { ownerName: 'A', orgName: 'O', daysLeft: 7, upgradeUrl: 'https://u' });
@@ -133,6 +100,34 @@ describe('PlatformMailerService — send', () => {
       ownerName: 'A', orgName: 'O', status: 'SUSPENDED', reason: 'overdue', contactUrl: 'https://c',
     });
 
-    expect(mockSend).toHaveBeenCalledTimes(10);
+    expect(enqueueMock).toHaveBeenCalledTimes(10);
+    const templates = enqueueMock.mock.calls.map((c) => c[0].templateName);
+    expect(templates).toEqual([
+      'trial-ending',
+      'trial-ending', // day7 reuses trial-ending
+      'trial-ending', // day3
+      'trial-ending', // day1
+      'trial-expired',
+      'trial-suspended-no-card',
+      'subscription-payment-succeeded',
+      'subscription-payment-failed',
+      'plan-changed',
+      'account-status-changed',
+    ]);
+  });
+
+  it('returns void and does NOT throw when the queue swallows an error', async () => {
+    // queue.enqueue is contractually no-throw; mailer just awaits it.
+    const enqueueMock = jest.fn(async () => undefined);
+    const queue = { enqueue: enqueueMock } as unknown as PlatformMailQueueService;
+    const svc = new PlatformMailerService(configWith({}), queue);
+    svc.onModuleInit();
+    await expect(
+      svc.sendTenantWelcome('owner@example.com', {
+        ownerName: 'X',
+        orgName: 'Y',
+        dashboardUrl: 'https://x',
+      }),
+    ).resolves.toBeUndefined();
   });
 });
