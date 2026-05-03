@@ -1,47 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { AbilityBuilder, createMongoAbility, MongoAbility } from '@casl/ability';
+import type {
+  PermissionSubject,
+  PermissionAction,
+} from '@deqah/shared/constants';
 
 export type AppAbility = MongoAbility;
 
-// TODO(P1): differentiate OWNER (billing/plan) from ADMIN (day-to-day). Today
-// the two role keys carry identical permission sets; consolidating them — or
-// splitting OWNER off so it gains plan/billing scopes ADMIN cannot touch —
-// is tracked separately and intentionally out of scope for this P0 fix.
-const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
+/**
+ * Built-in role → permission-rule map.
+ *
+ * Subjects come from `@deqah/shared/constants` (`PERMISSION_SUBJECTS`).
+ * Actions come from `@deqah/shared/constants` (`PERMISSION_ACTIONS`),
+ * with the additional CASL-only literal `'all'` reserved for SUPER_ADMIN.
+ *
+ * OWNER is the per-org top-level role (`MembershipRole.OWNER`). It carries
+ * everything ADMIN does, PLUS exclusive control over `Billing`, `Plan`, and
+ * `Subscription` — the three subjects that govern subscription state and
+ * platform billing. ADMIN handles day-to-day clinic ops but cannot change
+ * the plan, refund a platform invoice, or cancel the subscription.
+ *
+ * Super-admin platform access is gated by `User.isSuperAdmin` (boolean),
+ * NOT by this map. The `SUPER_ADMIN` row here is a transitional fallback
+ * for in-flight tokens that still carry the legacy `role` claim.
+ */
+type Rule = { action: PermissionAction | 'manage'; subject: PermissionSubject | 'all' };
+
+const ADMIN_RULES: readonly Rule[] = [
+  { action: 'manage', subject: 'User' },
+  { action: 'manage', subject: 'Booking' },
+  { action: 'manage', subject: 'Client' },
+  { action: 'manage', subject: 'Employee' },
+  { action: 'manage', subject: 'Invoice' },
+  { action: 'manage', subject: 'Payment' },
+  { action: 'manage', subject: 'Report' },
+  { action: 'manage', subject: 'Setting' },
+  { action: 'manage', subject: 'Department' },
+  { action: 'manage', subject: 'Category' },
+  { action: 'manage', subject: 'Service' },
+  { action: 'manage', subject: 'Branch' },
+  { action: 'manage', subject: 'Branding' },
+];
+
+const BUILT_IN: Record<string, readonly Rule[]> = {
   SUPER_ADMIN: [{ action: 'manage', subject: 'all' }],
-  // OWNER is the per-org top-level role (MembershipRole). It has the same
-  // tenant-scoped permissions as ADMIN — full control over all tenant resources.
-  // Super-admin platform access is gated by isSuperAdmin boolean, not this map.
-  OWNER: [
-    { action: 'manage', subject: 'User' },
-    { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Client' },
-    { action: 'manage', subject: 'Employee' },
-    { action: 'manage', subject: 'Invoice' },
-    { action: 'manage', subject: 'Payment' },
-    { action: 'manage', subject: 'Report' },
-    { action: 'manage', subject: 'Setting' },
-    { action: 'manage', subject: 'Department' },
-    { action: 'manage', subject: 'Category' },
-    { action: 'manage', subject: 'Service' },
-    { action: 'manage', subject: 'Branch' },
-    { action: 'manage', subject: 'Branding' },
-  ],
-  ADMIN: [
-    { action: 'manage', subject: 'User' },
-    { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Client' },
-    { action: 'manage', subject: 'Employee' },
-    { action: 'manage', subject: 'Invoice' },
-    { action: 'manage', subject: 'Payment' },
-    { action: 'manage', subject: 'Report' },
-    { action: 'manage', subject: 'Setting' },
-    { action: 'manage', subject: 'Department' },
-    { action: 'manage', subject: 'Category' },
-    { action: 'manage', subject: 'Service' },
-    { action: 'manage', subject: 'Branch' },
-    { action: 'manage', subject: 'Branding' },
-  ],
+  // OWNER intentionally identical to ADMIN in this commit — Task 5 adds
+  // the Billing/Plan/Subscription rules.
+  OWNER: ADMIN_RULES,
+  ADMIN: ADMIN_RULES,
   RECEPTIONIST: [
     { action: 'manage', subject: 'Booking' },
     { action: 'manage', subject: 'Client' },
