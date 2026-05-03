@@ -28,7 +28,7 @@ describe('Mobile auth E2E', () => {
     expect(reg.body.userId).toBeDefined();
     expect(reg.body.maskedPhone).toBeDefined();
 
-    const knownCode = '1234';
+    const knownCode = '123456';
     const codeHash = await bcrypt.hash(knownCode, 10);
     await (testPrisma as any).otpCode.create({
       data: {

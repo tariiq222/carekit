@@ -33,7 +33,7 @@ describe('OTP expiry race conditions and replay protection', () => {
     });
   }
 
-  async function seedOtp(phone: string, expiresAt: Date, code = '1234'): Promise<void> {
+  async function seedOtp(phone: string, expiresAt: Date, code = '123456'): Promise<void> {
     const codeHash = await bcrypt.hash(code, 10);
     await (testPrisma as any).otpCode.create({
       data: {
@@ -55,7 +55,7 @@ describe('OTP expiry race conditions and replay protection', () => {
 
     await req
       .post('/api/v1/mobile/auth/verify-otp')
-      .send({ identifier: phone, code: '1234', purpose: 'login' })
+      .send({ identifier: phone, code: '123456', purpose: 'login' })
       .expect(400);
   });
 
@@ -67,7 +67,7 @@ describe('OTP expiry race conditions and replay protection', () => {
 
     const res = await req
       .post('/api/v1/mobile/auth/verify-otp')
-      .send({ identifier: phone, code: '1234', purpose: 'login' })
+      .send({ identifier: phone, code: '123456', purpose: 'login' })
       .expect(200);
 
     expect(res.body.tokens.accessToken).toBeDefined();
@@ -82,12 +82,12 @@ describe('OTP expiry race conditions and replay protection', () => {
 
     await req
       .post('/api/v1/mobile/auth/verify-otp')
-      .send({ identifier: phone, code: '1234', purpose: 'login' })
+      .send({ identifier: phone, code: '123456', purpose: 'login' })
       .expect(200);
 
     await req
       .post('/api/v1/mobile/auth/verify-otp')
-      .send({ identifier: phone, code: '1234', purpose: 'login' })
+      .send({ identifier: phone, code: '123456', purpose: 'login' })
       .expect(400);
   });
 
@@ -99,7 +99,7 @@ describe('OTP expiry race conditions and replay protection', () => {
 
     const res = await req
       .post('/api/v1/mobile/auth/verify-otp')
-      .send({ identifier: phone, code: '9999', purpose: 'login' });
+      .send({ identifier: phone, code: '999999', purpose: 'login' });
 
     expect([400, 401]).toContain(res.status);
   });

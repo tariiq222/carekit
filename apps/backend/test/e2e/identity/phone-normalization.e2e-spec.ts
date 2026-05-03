@@ -93,7 +93,7 @@ describe('Phone E.164 normalization E2E', () => {
     }
 
     // Step 5 — verify-otp with the local form must also find the active code.
-    const knownCode = '4321';
+    const knownCode = '432100';
     await (testPrisma as any).otpCode.updateMany({
       where: { identifier: canonicalPhone, purpose: OtpPurpose.MOBILE_LOGIN, consumedAt: null },
       data: { consumedAt: new Date() },
