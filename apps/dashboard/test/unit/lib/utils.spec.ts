@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { cn, formatCurrency } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+import { halalasToSar, sarToHalalas, formatPrice } from "@/lib/money"
 
 describe("cn", () => {
   it("merges class names", () => {
@@ -20,20 +21,37 @@ describe("cn", () => {
   })
 })
 
-describe("formatCurrency", () => {
-  it("converts halalat to SAR (divides by 100)", () => {
-    expect(formatCurrency(10000, "ar")).toBe("100")
+describe("halalasToSar", () => {
+  it("converts halalas to SAR", () => {
+    expect(halalasToSar(10000)).toBe(100)
   })
 
-  it("returns zero for 0 halalat", () => {
-    expect(formatCurrency(0, "en")).toBe("0")
+  it("returns 0 for null/undefined", () => {
+    expect(halalasToSar(null)).toBe(0)
+    expect(halalasToSar(undefined)).toBe(0)
+  })
+})
+
+describe("sarToHalalas", () => {
+  it("converts SAR to halalas", () => {
+    expect(sarToHalalas(100)).toBe(10000)
   })
 
-  it("respects decimal places parameter", () => {
-    expect(formatCurrency(1050, "ar", 2)).toBe("10.50")
+  it("rounds to nearest halala", () => {
+    expect(sarToHalalas(10.505)).toBe(1051)
+  })
+})
+
+describe("formatPrice", () => {
+  it("returns dash for null", () => {
+    expect(formatPrice(null)).toBe("—")
   })
 
-  it("rounds to specified decimals", () => {
-    expect(formatCurrency(1055, "ar", 1)).toBe("10.6")
+  it("returns dash for undefined", () => {
+    expect(formatPrice(undefined)).toBe("—")
+  })
+
+  it("converts halalas to SAR numeric value", () => {
+    expect(halalasToSar(10000)).toBe(100)
   })
 })

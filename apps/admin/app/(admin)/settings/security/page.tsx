@@ -1,26 +1,25 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { adminRequest } from '@/lib/api-client';
 
-interface SecuritySettings {
-  sessionTtlMinutes: number;
-  require2fa: boolean;
-  ipAllowlist: string[];
-}
+import { useEffect, useState } from 'react';
+import {
+  getSecuritySettings,
+  updateSecuritySettings,
+  type SecuritySettings,
+} from '@/features/security-settings/security-settings.api';
 
 export default function SecuritySettingsPage() {
   const [settings, setSettings] = useState<SecuritySettings | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    adminRequest<SecuritySettings>('/admin/settings/security').then(setSettings).catch(console.error);
+    getSecuritySettings().then(setSettings).catch(console.error);
   }, []);
 
   const save = async () => {
     if (!settings) return;
     setSaving(true);
     try {
-      await adminRequest('/admin/settings/security', { method: 'PUT', body: JSON.stringify(settings) });
+      await updateSecuritySettings(settings);
     } finally {
       setSaving(false);
     }

@@ -6,20 +6,6 @@ import type { CSSProperties } from "react"
 export { cn } from "@deqah/ui/lib/cn"
 
 /**
- * Returns the numeric value only (no symbol).
- * Use <FormattedCurrency> for display with the official SAR symbol.
- * Safely handles null/undefined amounts.
- */
-export function formatCurrency(
-  amountInHalalat: number | null | undefined,
-  _locale: "ar" | "en",
-  decimals = 0,
-): string {
-  if (amountInHalalat == null) return "—"
-  return (amountInHalalat / 100).toFixed(decimals)
-}
-
-/**
  * Safely joins first and last name, filtering out null/undefined/empty parts.
  * Returns a fallback dash when both are missing.
  */

@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { cn, formatName, formatCurrency } from "@/lib/utils"
+import { cn, formatName } from "@/lib/utils"
+import { formatPrice } from "@/lib/money"
 import { Card } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
@@ -126,7 +127,7 @@ export function RecentPayments() {
                 const clientName = client
                   ? formatName(client.firstName, client.lastName, unknown)
                   : unknown
-                const amountDisplay = formatCurrency(p.amount, locale, 2)
+                const amountDisplay = formatPrice(p.amount, { locale, decimals: 2 })
 
                 return (
                   <tr

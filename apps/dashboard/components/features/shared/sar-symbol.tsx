@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/utils"
+import { formatPrice } from "@/lib/money"
 
 const RIYAL = "⃁"
 
@@ -28,7 +28,7 @@ export function FormattedCurrency({
   decimals = 0,
   className,
 }: FormattedCurrencyProps) {
-  const value = formatCurrency(amount, locale, decimals)
+  const value = formatPrice(amount, { locale, decimals })
   return (
     <span className={`inline-flex items-center gap-1 ${className ?? ""}`}>
       <span>{value}</span>

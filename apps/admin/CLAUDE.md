@@ -28,8 +28,10 @@ dashboard — that lives in `apps/dashboard`. Super-admins:
    shared with the tenant dashboard. Admin-only widgets live here in
    the owning feature slice.
 3. **LTR only.** The tenant dashboard is Arabic-first / RTL. This panel
-   is staff-only and English-first; do not import `next-intl` or add
-   locale providers.
+   is staff-only and English-first. `next-intl` is used for i18n
+   (messages in `messages/en.json` + `messages/ar.json`) but the
+   default locale is `en` and no RTL layout is applied. Do not add
+   RTL-specific layout or `dir="rtl"` anywhere in this app.
 4. **No tenant context ever.** Admin code never sets
    `X-Organization-Id` — the backend resolves via `SuperAdminGuard` +
    `SuperAdminContextInterceptor` which unlocks `$allTenants`. If you

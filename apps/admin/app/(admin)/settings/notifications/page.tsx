@@ -1,28 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminRequest } from '@/lib/api-client';
 import { ApiError } from '@/lib/api-client';
-
-type NotificationChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'INAPP';
-
-interface QuietHours {
-  startHour: number;
-  endHour: number;
-  timezone: string;
-}
-
-interface FcmCredentials {
-  serverKey: string;
-  projectId: string;
-  clientEmail: string;
-}
-
-interface NotificationDefaults {
-  defaultChannels: NotificationChannel[];
-  quietHours: QuietHours;
-  fcm: FcmCredentials;
-}
+import {
+  getNotificationsConfig,
+  updateNotificationsConfig,
+  type NotificationChannel,
+  type QuietHours,
+  type FcmCredentials,
+  type NotificationDefaults,
+} from '@/features/notifications-settings/notifications-settings.api';
 
 const ALL_CHANNELS: NotificationChannel[] = ['EMAIL', 'SMS', 'PUSH', 'INAPP'];
 
@@ -41,7 +28,6 @@ export default function NotificationsSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form state
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [quietHours, setQuietHours] = useState<QuietHours>({ startHour: 22, endHour: 8, timezone: 'Asia/Riyadh' });
   const [fcm, setFcm] = useState<FcmCredentials>({ serverKey: '', projectId: '', clientEmail: '' });
@@ -49,7 +35,7 @@ export default function NotificationsSettingsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const result = await adminRequest<NotificationDefaults>('/notifications-config');
+        const result = await getNotificationsConfig();
         setData(result);
         setChannels(result.defaultChannels);
         setQuietHours(result.quietHours);
@@ -75,18 +61,14 @@ export default function NotificationsSettingsPage() {
     setError(null);
     setSuccess(false);
     try {
-      await adminRequest('/notifications-config', {
-        method: 'PUT',
-        body: JSON.stringify({
-          defaultChannels: channels,
-          quietHours,
-          fcm: {
-            projectId: fcm.projectId || undefined,
-            clientEmail: fcm.clientEmail || undefined,
-            serverKey: fcm.serverKey && fcm.serverKey !== '***' ? fcm.serverKey : undefined,
-          },
-        }),
-        headers: { 'Content-Type': 'application/json' },
+      await updateNotificationsConfig({
+        defaultChannels: channels,
+        quietHours,
+        fcm: {
+          projectId: fcm.projectId || undefined,
+          clientEmail: fcm.clientEmail || undefined,
+          serverKey: fcm.serverKey && fcm.serverKey !== '***' ? fcm.serverKey : undefined,
+        },
       });
       setSuccess(true);
     } catch (err) {
@@ -123,7 +105,6 @@ export default function NotificationsSettingsPage() {
         </p>
       </div>
 
-      {/* Default Channels */}
       <div className="rounded-lg border border-border p-6 space-y-4">
         <h3 className="font-medium">Default Channels</h3>
         <p className="text-sm text-muted-foreground">
@@ -144,7 +125,6 @@ export default function NotificationsSettingsPage() {
         </div>
       </div>
 
-      {/* Quiet Hours */}
       <div className="rounded-lg border border-border p-6 space-y-4">
         <h3 className="font-medium">Quiet Hours</h3>
         <p className="text-sm text-muted-foreground">
@@ -188,7 +168,6 @@ export default function NotificationsSettingsPage() {
         </div>
       </div>
 
-      {/* FCM Credentials */}
       <div className="rounded-lg border border-border p-6 space-y-4">
         <h3 className="font-medium">FCM Credentials</h3>
         <p className="text-sm text-muted-foreground">
