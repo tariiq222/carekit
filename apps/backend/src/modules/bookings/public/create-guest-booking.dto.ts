@@ -1,6 +1,7 @@
 import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClientGender } from '@prisma/client';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 export class GuestClientInfoDto {
   @ApiProperty({ description: 'Client full name', example: 'أحمد محمد' })
@@ -8,9 +9,10 @@ export class GuestClientInfoDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ description: 'Phone number in E.164 format', example: '+966501234567' })
+  @ApiProperty({ description: 'Phone number (any common format; normalized to E.164)', example: '+966501234567' })
   @IsString()
   @IsNotEmpty()
+  @NormalizePhone()
   phone!: string;
 
   @ApiProperty({ description: 'Email address', example: 'client@example.com' })

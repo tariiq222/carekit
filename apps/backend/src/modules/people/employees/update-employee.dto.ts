@@ -1,6 +1,7 @@
 import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, IsUrl, Matches, MaxLength, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EmployeeGender, EmploymentType } from '@prisma/client';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 export class UpdateEmployeeDto {
   @ApiPropertyOptional({ description: 'Professional title (e.g. Dr.)', example: 'Dr.' })
@@ -15,8 +16,8 @@ export class UpdateEmployeeDto {
   @ApiPropertyOptional({ description: 'Email address', example: 'user@example.com' })
   @IsOptional() @IsEmail() email?: string;
 
-  @ApiPropertyOptional({ description: 'Phone number (international format)', example: '+966501234567' })
-  @IsOptional() @IsString() @Matches(/^\+?[0-9\s-]{7,20}$/) phone?: string;
+  @ApiPropertyOptional({ description: 'Phone number (any common format; normalized to E.164)', example: '+966501234567' })
+  @IsOptional() @IsString() @NormalizePhone() @Matches(/^\+[1-9][0-9]{6,14}$/) phone?: string;
 
   @ApiPropertyOptional({ description: 'Gender', enum: EmployeeGender, enumName: 'EmployeeGender', example: EmployeeGender.MALE })
   @IsOptional() @IsEnum(EmployeeGender) gender?: EmployeeGender;

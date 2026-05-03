@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 export class RegisterTenantDto {
   @ApiProperty({ description: 'Full name of the owner', example: 'علي محمد' })
@@ -8,8 +9,8 @@ export class RegisterTenantDto {
   @ApiProperty({ description: 'Email address (used as login)', example: 'ali@clinic.com' })
   @IsEmail() email!: string;
 
-  @ApiProperty({ description: 'Mobile phone number', example: '0501234567' })
-  @IsString() @IsNotEmpty() phone!: string;
+  @ApiProperty({ description: 'Mobile phone number (any common format; normalized to E.164)', example: '0501234567' })
+  @IsString() @IsNotEmpty() @NormalizePhone() phone!: string;
 
   @ApiProperty({ description: 'Password — min 8 chars, ≥1 uppercase, ≥1 digit', example: 'Pass@1234' })
   @IsString()
