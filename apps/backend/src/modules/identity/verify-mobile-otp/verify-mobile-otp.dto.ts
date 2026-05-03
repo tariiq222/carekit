@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString, Length, MinLength } from 'class-validator';
+import { NormalizePhoneOrEmail } from '../shared/normalize-phone.transform';
 
 export enum MobileOtpPurposeDto {
   REGISTER = 'register',
@@ -10,6 +11,7 @@ export class VerifyMobileOtpDto {
   @ApiProperty({ description: 'Phone or email used to request the OTP' })
   @IsString()
   @MinLength(3)
+  @NormalizePhoneOrEmail()
   identifier!: string;
 
   @ApiProperty({ description: '4-digit OTP code', example: '1234' })
