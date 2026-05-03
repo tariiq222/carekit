@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, startTransition } from 'react';
 import {
   listLogs,
   PlatformEmailLogRow,
@@ -59,7 +59,7 @@ export default function EmailLogsPage() {
   };
 
   useEffect(() => {
-    load();
+    startTransition(() => { load(); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, slugFilter, orgFilter]);
 

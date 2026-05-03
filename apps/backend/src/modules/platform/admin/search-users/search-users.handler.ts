@@ -40,6 +40,15 @@ export class SearchUsersHandler {
           isActive: true,
           isSuperAdmin: true,
           createdAt: true,
+          memberships: {
+            where: { isActive: true },
+            select: {
+              role: true,
+              organization: {
+                select: { id: true, nameAr: true, nameEn: true, slug: true },
+              },
+            },
+          },
         },
       }),
       this.prisma.$allTenants.user.count({ where }),

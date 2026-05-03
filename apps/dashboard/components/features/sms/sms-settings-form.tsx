@@ -2,7 +2,7 @@
 
 // SaaS-02g-sms — provider picker + credential form for /settings/sms.
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, startTransition } from "react"
 import {
   Button,
   Card,
@@ -42,8 +42,10 @@ export function SmsSettingsForm() {
 
   useEffect(() => {
     if (config) {
-      setProvider(config.provider)
-      setSenderId(config.senderId ?? "")
+      startTransition(() => {
+        setProvider(config.provider)
+        setSenderId(config.senderId ?? "")
+      })
     }
   }, [config])
 

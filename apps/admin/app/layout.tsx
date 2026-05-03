@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="min-h-screen bg-background text-foreground antialiased">
         <PostHogProvider>
           <NextIntlClientProvider messages={messages}>
-            <Providers>{children}</Providers>
+            <Providers dir={locale === 'ar' ? 'rtl' : 'ltr'}>{children}</Providers>
           </NextIntlClientProvider>
         </PostHogProvider>
       </body>

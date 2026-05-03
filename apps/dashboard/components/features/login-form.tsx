@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, startTransition } from "react"
 import type HCaptcha from "@hcaptcha/react-hcaptcha"
 import { Button } from "@deqah/ui"
 import { Input } from "@deqah/ui"
@@ -26,7 +26,7 @@ export function LoginForm() {
   useEffect(() => {
     const reason = sessionStorage.getItem("deqah_auth_reason")
     if (reason === "ORG_SUSPENDED") {
-      setNotice(t("login.orgSuspended"))
+      startTransition(() => setNotice(t("login.orgSuspended")))
       sessionStorage.removeItem("deqah_auth_reason")
     }
   }, [t])

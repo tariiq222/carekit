@@ -8,8 +8,8 @@ describe("FeatureRegistryValidator", () => {
     expect(() => validator.validate()).not.toThrow();
   });
 
-  it("covers 31 FeatureKey values (16 existing + 15 from Phase 3)", () => {
-    expect(Object.values(FeatureKey)).toHaveLength(31);
+  it("covers 33 FeatureKey values", () => {
+    expect(Object.values(FeatureKey)).toHaveLength(33);
   });
 
   it("throws if a key is missing from FEATURE_CATALOG", () => {

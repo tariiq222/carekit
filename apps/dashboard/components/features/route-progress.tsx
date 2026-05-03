@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, startTransition } from "react"
 import { usePathname } from "next/navigation"
 import { onNavStart } from "@/lib/navigation-events"
 
@@ -59,8 +59,10 @@ export function RouteProgress() {
     prevPathname.current = pathname
     if (state === "loading") {
       clear()
-      setWidth(100)
-      setState("done")
+      startTransition(() => {
+        setWidth(100)
+        setState("done")
+      })
       timers.current = [
         setTimeout(() => {
           setState("idle")

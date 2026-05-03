@@ -32,9 +32,11 @@ import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 import { VerticalsModule } from '../../modules/platform/verticals/verticals.module';
 import { PublicTenantsController } from './tenants.controller';
 import { PlatformModule } from '../../modules/platform/platform.module';
+import { OpsModule } from '../../modules/ops/ops.module';
+import { PublicHealthController } from './health.controller';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule, PlatformModule],
-  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController, PublicVerifyEmailController, PublicTenantsController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule, PlatformModule, OpsModule],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController, PublicVerifyEmailController, PublicTenantsController, PublicHealthController],
 })
 export class PublicModule {}

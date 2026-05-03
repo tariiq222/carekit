@@ -26,6 +26,7 @@ export function UsersTable({ items, isLoading }: Props) {
           <TableHead>Email</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Role</TableHead>
+          <TableHead>Organization</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>User ID</TableHead>
           <TableHead className="text-right">Actions</TableHead>
@@ -35,7 +36,7 @@ export function UsersTable({ items, isLoading }: Props) {
         {isLoading && !items
           ? Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <Skeleton className="h-6" />
                 </TableCell>
               </TableRow>
@@ -52,6 +53,11 @@ export function UsersTable({ items, isLoading }: Props) {
                 </TableCell>
                 <TableCell>{u.name}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{u.role}</TableCell>
+                <TableCell className="text-sm">
+                  {u.memberships.length > 0
+                    ? u.memberships.map((m) => m.organization.nameAr).join('، ')
+                    : <span className="text-muted-foreground">—</span>}
+                </TableCell>
                 <TableCell>
                   {u.isActive ? (
                     <Badge variant="outline" className="border-success/40 bg-success/10 text-success">
@@ -71,7 +77,7 @@ export function UsersTable({ items, isLoading }: Props) {
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
               No users match the current filters.
             </TableCell>
           </TableRow>

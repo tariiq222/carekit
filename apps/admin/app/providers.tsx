@@ -4,8 +4,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { useState, type ReactNode } from 'react';
+import { DirectionProvider } from '@radix-ui/react-direction';
 
-export function Providers({ children }: { children: ReactNode }) {
+interface ProvidersProps {
+  children: ReactNode;
+  dir?: 'ltr' | 'rtl';
+}
+
+export function Providers({ children, dir = 'ltr' }: ProvidersProps) {
   const [client] = useState(
     () =>
       new QueryClient({
@@ -16,10 +22,12 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={client}>
-      {children}
-      <Toaster richColors position="top-right" />
-      {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
-    </QueryClientProvider>
+    <DirectionProvider dir={dir}>
+      <QueryClientProvider client={client}>
+        {children}
+        <Toaster richColors position="top-right" />
+        {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+      </QueryClientProvider>
+    </DirectionProvider>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import { getSystemHealth, type SystemHealthResult } from '@/features/system-health/system-health.api';
 
 const STATUS_COLOR = {
@@ -17,7 +17,7 @@ export default function SystemHealthPage() {
     try { setHealth(await getSystemHealth()); } finally { setLoading(false); }
   };
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => { startTransition(() => { void refresh(); }); }, []);
 
   return (
     <div className="space-y-6">

@@ -44,6 +44,7 @@ describe('CancelScheduledDowngradeHandler', () => {
         scheduledPlanId: null,
         scheduledBillingCycle: null,
         scheduledPlanChangeAt: null,
+        scheduledChangeBlockedReason: null,
       },
     });
     expect(cache.invalidate).toHaveBeenCalledWith('org-A');

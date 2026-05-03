@@ -45,8 +45,7 @@ export function CurrentPlanCard({
   const [planDialogOpen, setPlanDialogOpen] = useState(false)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
   const {
-    upgradeMut,
-    downgradeMut,
+    changePlanMut,
     cancelMut,
     resumeMut,
     startMut,
@@ -80,8 +79,7 @@ export function CurrentPlanCard({
 
   const currentSubscription = subscription
   const pending =
-    upgradeMut.isPending ||
-    downgradeMut.isPending ||
+    changePlanMut.isPending ||
     cancelMut.isPending ||
     resumeMut.isPending ||
     startMut.isPending ||
@@ -98,16 +96,8 @@ export function CurrentPlanCard({
   async function submitPlanChange(payload: {
     planId: string
     billingCycle: Subscription["billingCycle"]
-    isDowngrade: boolean
   }) {
-    if (currentSubscription.status === "CANCELED") {
-      await startMut.mutateAsync(payload)
-    } else if (payload.isDowngrade) {
-      await downgradeMut.mutateAsync(payload)
-    } else {
-      await upgradeMut.mutateAsync(payload)
-    }
-
+    await changePlanMut.mutateAsync(payload)
     setPlanDialogOpen(false)
   }
 

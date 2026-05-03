@@ -115,15 +115,57 @@ export class UpgradePlanHandler {
       return updated;
     }
 
+    const currentPrice = priceForCycle(sub.plan, sub.billingCycle);
+    const targetPrice = priceForCycle(targetPlan, dto.billingCycle);
+    if (Number(targetPrice) <= Number(currentPrice)) {
+      throw new BadRequestException('Target plan is not an upgrade');
+    }
+
     const proration = computeProrationAmountSar({
-      currentPriceSar: priceForCycle(sub.plan, sub.billingCycle),
-      targetPriceSar: priceForCycle(targetPlan, dto.billingCycle),
+      currentPriceSar: currentPrice,
+      targetPriceSar: targetPrice,
       periodStart: sub.currentPeriodStart,
       periodEnd: sub.currentPeriodEnd,
       now: new Date(Date.now()),
     });
-    if (!proration.isUpgrade || proration.amountHalalas <= 0) {
-      throw new BadRequestException('Target plan is not an upgrade');
+    if (proration.amountHalalas <= 0) {
+      // Upgrade is valid but proration rounds to zero (e.g. near period end).
+      // Apply the plan change immediately without charging.
+      const updated = await this.prisma.subscription.update({
+        where: { id: sub.id },
+        data: {
+          planId: targetPlan.id,
+          billingCycle: dto.billingCycle,
+          cancelAtPeriodEnd: false,
+          scheduledCancellationDate: null,
+          scheduledPlanId: null,
+          scheduledBillingCycle: null,
+          scheduledPlanChangeAt: null,
+          updatedAt: new Date(Date.now()),
+        },
+      });
+      this.cache.invalidate(organizationId);
+      await this.emitSubscriptionUpdated(organizationId, sub.id, 'UPGRADE');
+
+      const owner = await this.prisma.$allTenants.membership.findFirst({
+        where: { organizationId, role: 'OWNER', isActive: true },
+        select: {
+          displayName: true,
+          user: { select: { email: true, name: true } },
+          organization: { select: { nameAr: true } },
+        },
+      });
+      if (owner?.user) {
+        await this.mailer.sendPlanChanged(owner.user.email, {
+          ownerName: owner.displayName ?? owner.user.name ?? '',
+          orgName: owner.organization.nameAr,
+          fromPlanName: sub.plan.nameAr,
+          toPlanName: targetPlan.nameAr,
+          effectiveDate: new Date().toISOString(),
+        });
+      }
+
+      return updated;
     }
 
     const token = sub.defaultSavedCard?.moyasarTokenId ?? sub.moyasarCardTokenRef;

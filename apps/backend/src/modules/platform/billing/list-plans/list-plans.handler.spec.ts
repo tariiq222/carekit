@@ -19,13 +19,13 @@ describe('ListPlansHandler', () => {
     const result = await handler.execute();
 
     expect(prisma.plan.findMany).toHaveBeenCalledWith({
-      where: { isActive: true },
+      where: { isActive: true, isVisible: true },
       orderBy: { sortOrder: 'asc' },
     });
     expect(result).toEqual(plans);
   });
 
-  it('excludes inactive plans', async () => {
+  it('excludes inactive and hidden plans', async () => {
     const prisma = buildPrisma();
     const activePlans = [{ id: 'plan-1', slug: 'basic', isActive: true, sortOrder: 1 }];
     prisma.plan.findMany.mockResolvedValue(activePlans);
@@ -34,7 +34,7 @@ describe('ListPlansHandler', () => {
     const result = await handler.execute();
 
     expect(prisma.plan.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { isActive: true } }),
+      expect.objectContaining({ where: { isActive: true, isVisible: true } }),
     );
     expect(result).toEqual(activePlans);
   });

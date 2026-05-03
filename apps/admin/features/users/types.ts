@@ -7,4 +7,13 @@ export interface UserRow {
   isActive: boolean;
   isSuperAdmin: boolean;
   createdAt: string;
+  memberships: Array<{
+    role: string;
+    organization: {
+      id: string;
+      nameAr: string;
+      nameEn: string | null;
+      slug: string;
+    };
+  }>;
 }

@@ -59,6 +59,12 @@ export function useBillingMutations() {
     onSuccess: invalidate,
   })
 
+  const changePlanMut = useMutation({
+    mutationFn: (dto: ChangePlanInput) =>
+      billingApi.changePlan(dto),
+    onSuccess: invalidate,
+  })
+
   const upgradeMut = useMutation({
     mutationFn: (dto: ChangePlanInput) =>
       billingApi.upgrade(dto),
@@ -127,6 +133,7 @@ export function useBillingMutations() {
 
   return {
     startMut,
+    changePlanMut,
     upgradeMut,
     downgradeMut,
     scheduleDowngradeMut,

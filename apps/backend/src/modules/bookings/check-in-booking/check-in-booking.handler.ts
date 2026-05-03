@@ -26,7 +26,7 @@ export class CheckInBookingHandler {
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
-        where: { id: cmd.bookingId },
+        where: { id: cmd.bookingId, organizationId },
         data: { checkedInAt: new Date() },
       }),
       this.prisma.bookingStatusLog.create({

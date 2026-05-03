@@ -27,7 +27,7 @@ export class ExpireBookingHandler {
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
-        where: { id: cmd.bookingId },
+        where: { id: cmd.bookingId, organizationId },
         data: { status: BookingStatus.EXPIRED, expiresAt: new Date() },
       }),
       this.prisma.bookingStatusLog.create({

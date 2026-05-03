@@ -23,6 +23,11 @@ const SCOPED_OPERATIONS = new Set([
   'deleteMany',
 ]);
 
+// NOTE: $transaction(async tx => ...) and $transaction([...]) bypass this extension —
+// the `tx` client is raw Prisma, not the scoped proxy. Any update/delete inside a
+// transaction MUST include `organizationId` explicitly in the where clause.
+// See: https://www.prisma.io/docs/concepts/components/prisma-client/transactions
+
 /**
  * The hook argument shape Prisma 7 passes to `$allOperations`. We don't import
  * `Prisma.Extension` from `@prisma/client` because Prisma 7's public type for

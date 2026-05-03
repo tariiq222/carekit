@@ -45,6 +45,7 @@ import { ListInvoicesQueryDto } from "../../modules/platform/billing/dto/invoice
 import { GetUsageHandler } from "../../modules/platform/billing/get-usage/get-usage.handler";
 import { UsageRowDto } from "../../modules/platform/billing/get-usage/get-usage.dto";
 import { TenantContextService } from "../../common/tenant/tenant-context.service";
+import { ChangePlanHandler } from "../../modules/platform/billing/change-plan/change-plan.handler";
 
 @ApiTags("Dashboard / Billing")
 @ApiBearerAuth()
@@ -75,6 +76,7 @@ export class BillingController {
     private readonly downloadInvoiceHandler: DownloadInvoiceHandler,
     private readonly getUsage: GetUsageHandler,
     private readonly tenant: TenantContextService,
+    private readonly changePlan: ChangePlanHandler,
   ) {}
 
   @Get("plans")
@@ -114,6 +116,12 @@ export class BillingController {
   @ApiOperation({ summary: "Upgrade subscription plan" })
   upgradePlan(@Body() dto: ChangePlanDto) {
     return this.upgrade.execute(dto);
+  }
+
+  @Post("subscription/change-plan")
+  @ApiOperation({ summary: "Change subscription plan (upgrade or downgrade)" })
+  changePlanRoute(@Body() dto: ChangePlanDto) {
+    return this.changePlan.execute(dto);
   }
 
   @Get("subscription/proration-preview")

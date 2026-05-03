@@ -51,6 +51,7 @@ import { PlanLimitsGuard } from "./enforce-limits.guard";
 import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
 import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
+import { ChangePlanHandler } from "./change-plan/change-plan.handler";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -61,6 +62,7 @@ const HANDLERS = [
   UpgradePlanHandler,
   DowngradePlanHandler,
   ScheduleDowngradeHandler,
+  ChangePlanHandler,
   CancelScheduledDowngradeHandler,
   CancelSubscriptionHandler,
   ProcessScheduledCancellationsCron,

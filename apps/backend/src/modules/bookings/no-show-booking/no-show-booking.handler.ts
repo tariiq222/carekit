@@ -22,7 +22,7 @@ export class NoShowBookingHandler {
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
-        where: { id: cmd.bookingId },
+        where: { id: cmd.bookingId, organizationId },
         data: { status: BookingStatus.NO_SHOW, noShowAt: new Date() },
       }),
       this.prisma.bookingStatusLog.create({

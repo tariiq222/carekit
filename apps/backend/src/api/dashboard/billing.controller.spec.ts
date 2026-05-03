@@ -33,6 +33,7 @@ describe('BillingController saved-card routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.savedCards()).resolves.toEqual([{ id: 'card-1' }]);
@@ -81,6 +82,7 @@ describe('BillingController cancellation routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
 
     await controller.scheduleCancelSub({ reason: 'budget' });
@@ -117,6 +119,7 @@ describe('BillingController proration routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
 
     await expect(
@@ -156,6 +159,7 @@ describe('BillingController scheduled downgrade routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
     const dto = { planId: 'plan-basic', billingCycle: 'MONTHLY' as const };
 
@@ -195,6 +199,7 @@ describe('BillingController dunning routes', () => {
       buildHandler(null) as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.retryPayment()).resolves.toEqual({ ok: true, status: 'PAID' });
@@ -231,6 +236,7 @@ describe('BillingController invoice routes', () => {
       downloadInvoice as never,
       buildHandler(null) as never,
       { requireOrganizationId: jest.fn().mockReturnValue('org-test') } as never,
+      buildHandler(null) as never,
     );
 
     await expect(controller.listInvoices({ limit: 10 })).resolves.toEqual({

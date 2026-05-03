@@ -23,7 +23,7 @@ export class CompleteBookingHandler {
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
-        where: { id: cmd.bookingId },
+        where: { id: cmd.bookingId, organizationId },
         data: {
           status: BookingStatus.COMPLETED,
           completedAt: new Date(),

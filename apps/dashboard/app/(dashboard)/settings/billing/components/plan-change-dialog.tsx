@@ -24,7 +24,7 @@ interface PlanChangeDialogProps {
   currentPlanSortOrder: number
   currentCycle: BillingCycle
   pending: boolean
-  onSubmit: (payload: { planId: string; billingCycle: BillingCycle; isDowngrade: boolean }) => Promise<void>
+  onSubmit: (payload: { planId: string; billingCycle: BillingCycle }) => Promise<void>
 }
 
 export function PlanChangeDialog(props: PlanChangeDialogProps) {
@@ -33,7 +33,6 @@ export function PlanChangeDialog(props: PlanChangeDialogProps) {
     onOpenChange,
     plans,
     currentPlanId,
-    currentPlanSortOrder,
     currentCycle,
     pending,
     onSubmit,
@@ -55,7 +54,6 @@ export function PlanChangeDialog(props: PlanChangeDialogProps) {
     await onSubmit({
       planId: selectedPlan.id,
       billingCycle,
-      isDowngrade: selectedPlan.sortOrder < currentPlanSortOrder,
     })
   }
 

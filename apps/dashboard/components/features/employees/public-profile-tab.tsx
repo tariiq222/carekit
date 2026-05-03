@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, startTransition } from "react"
 import { useEmployeeMutations } from "@/hooks/use-employee-mutations"
 import { Card, CardContent } from "@deqah/ui"
 import { Label } from "@deqah/ui"
@@ -39,7 +39,7 @@ export function PublicProfileTab({ employee }: Props) {
 
   useEffect(() => {
     const seed = `${employee.user.firstName} ${employee.user.lastName}`.trim()
-    if (!form.slug && seed) setForm((f) => ({ ...f, slug: slugify(seed) }))
+    if (!form.slug && seed) startTransition(() => setForm((f) => ({ ...f, slug: slugify(seed) })))
   }, [employee.user.firstName, employee.user.lastName, form.slug])
 
   const save = async () => {

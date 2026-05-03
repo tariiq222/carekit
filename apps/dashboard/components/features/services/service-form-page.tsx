@@ -1,7 +1,7 @@
 // EXCEPTION: service create/edit form with tightly coupled tab state; all tabs mutate the same draft, approved 2026-04-24
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, startTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -127,7 +127,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
   /* ── Populate booking types on edit ── */
   useEffect(() => {
     if (!existingBookingTypes || bookingTypesDirty || !isEdit) return
-    setBookingTypes(mergeDraftsFromServer(existingBookingTypes))
+    startTransition(() => setBookingTypes(mergeDraftsFromServer(existingBookingTypes)))
   }, [existingBookingTypes, bookingTypesDirty, isEdit])
 
   const handleBookingTypesChange = (types: DraftBookingType[]) => {
@@ -185,6 +185,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
     }
   }
 
+  // eslint-disable-next-line react-hooks/refs
   const onSubmit = form.handleSubmit(handleSubmit, (errors) => {
     const firstError = Object.values(errors)[0] as { message?: string } | undefined
     toast.error(firstError?.message ?? t("services.formError"))
