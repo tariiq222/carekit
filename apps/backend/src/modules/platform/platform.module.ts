@@ -12,7 +12,6 @@ import { AdminVerticalsController } from '../../api/admin/verticals.controller';
 import { AdminMetricsController } from '../../api/admin/metrics.controller';
 import { AdminAuditLogController } from '../../api/admin/audit-log.controller';
 import { AdminImpersonationController } from '../../api/admin/impersonation.controller';
-import { AdminFeatureFlagsController } from '../../api/admin/feature-flags.controller';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { AdminHostGuard, SuperAdminGuard } from '../../common/guards';
 import { DatabaseModule } from '../../infrastructure/database';
@@ -27,8 +26,6 @@ import { UpsertIntegrationHandler } from './integrations/upsert-integration.hand
 import { ListIntegrationsHandler } from './integrations/list-integrations.handler';
 import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
-import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
-import { UpsertFeatureFlagOverrideHandler } from './feature-flags/upsert-feature-flag-override/upsert-feature-flag-override.handler';
 import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from './admin/get-organization/get-organization.handler';
 import { CreateTenantHandler } from './admin/create-tenant/create-tenant.handler';
@@ -62,8 +59,6 @@ import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/
 import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
 import { AdminForceChargeHandler } from './admin/admin-force-charge/admin-force-charge.handler';
 import { AdminCancelScheduledHandler } from './admin/admin-cancel-scheduled/admin-cancel-scheduled.handler';
-import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/list-feature-flags-admin.handler';
-import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 import { AdminNotificationsController } from '../../api/admin/notifications.controller';
 import { ListNotificationDeliveryLogHandler } from './admin/list-notification-delivery-log/list-notification-delivery-log.handler';
@@ -80,6 +75,7 @@ import { BillingSettingsController } from '../../api/admin/billing-settings.cont
 import { BrandingSettingsController } from '../../api/admin/branding-settings.controller';
 import { SystemHealthController } from '../../api/admin/system-health.controller';
 import { SecuritySettingsController } from '../../api/admin/security-settings.controller';
+import { AdminSettingsController } from '../../api/admin/settings.controller';
 import { SystemHealthModule } from './system-health/system-health.module';
 
 const ADMIN_HANDLERS = [
@@ -117,8 +113,6 @@ const ADMIN_HANDLERS = [
   AdminRefundInvoiceHandler,
   AdminForceChargeHandler,
   AdminCancelScheduledHandler,
-  ListFeatureFlagsAdminHandler,
-  UpdateFeatureFlagAdminHandler,
   ListNotificationDeliveryLogHandler,
 ];
 
@@ -156,7 +150,6 @@ const ADMIN_HANDLERS = [
     AdminAuditLogController,
     AdminImpersonationController,
     AdminBillingController,
-    AdminFeatureFlagsController,
     AdminNotificationsController,
     PlatformEmailController,
     AdminNotificationsConfigController,
@@ -164,6 +157,7 @@ const ADMIN_HANDLERS = [
     BrandingSettingsController,
     SystemHealthController,
     SecuritySettingsController,
+    AdminSettingsController,
   ],
   providers: [
     SuperAdminContextInterceptor,
@@ -178,8 +172,6 @@ const ADMIN_HANDLERS = [
     ListIntegrationsHandler,
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
-    UpdateFeatureFlagHandler,
-    UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,
   ],
   exports: [
@@ -190,8 +182,6 @@ const ADMIN_HANDLERS = [
     ListIntegrationsHandler,
     ListFeatureFlagsHandler,
     GetFeatureFlagMapHandler,
-    UpdateFeatureFlagHandler,
-    UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,
   ],
 })
