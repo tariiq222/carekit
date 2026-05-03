@@ -34,3 +34,6 @@ Dashboard TypeScript: 0 errors
 ## Test cases
 
 16 manual QA test cases filed in Kiwi TCMS — see `data/kiwi/phase8-delivery-log-2026-05-03.json`.
+
+- Plan: https://localhost:6443/plan/23/
+- Run: https://localhost:6443/runs/34/
