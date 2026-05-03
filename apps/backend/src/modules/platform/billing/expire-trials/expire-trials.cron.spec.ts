@@ -86,6 +86,10 @@ const buildPrisma = ({
         user: { email: 'owner@example.com', name: 'Owner' },
       }),
     },
+    cronHeartbeat: {
+      upsert: jest.fn().mockResolvedValue({}),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     $transaction: jest.fn().mockImplementation(
       async (
         fn: (tx: {

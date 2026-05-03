@@ -12,6 +12,12 @@ const TRIAL_REMINDER_MILESTONES = [7, 3, 1] as const;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const TRIAL_EXPIRED_NO_CARD_REASON = 'Trial ended without a saved payment method';
 
+/** Name stored in CronHeartbeat table for this cron. */
+const HEARTBEAT_CRON_NAME = 'expire-trials';
+
+/** Alert if the cron has not run for more than this many ms (25 hours). */
+const HEARTBEAT_MISS_THRESHOLD_MS = 25 * 60 * 60 * 1000;
+
 type TrialReminderMilestone = (typeof TRIAL_REMINDER_MILESTONES)[number];
 
 interface TrialSubscription {
@@ -52,6 +58,36 @@ export class ExpireTrialsCron {
 
     await this.notifyTrialMilestones(now, billingUrl);
     await this.processExpiredTrials(now, billingUrl);
+
+    // Write heartbeat — upsert so the row is created on first run.
+    await this.prisma.$allTenants.cronHeartbeat.upsert({
+      where: { cronName: HEARTBEAT_CRON_NAME },
+      create: { cronName: HEARTBEAT_CRON_NAME, lastRunAt: now },
+      update: { lastRunAt: now },
+    });
+  }
+
+  /**
+   * Watchdog: called on a separate schedule (e.g. every 1h).
+   * If the heartbeat row is missing or stale (> 25h), logs an error.
+   * Wire this into a @Cron('@hourly') in the NestJS scheduler or
+   * call it from a separate cron handler.
+   */
+  async checkHeartbeat(): Promise<void> {
+    const beat = await this.prisma.$allTenants.cronHeartbeat.findUnique({
+      where: { cronName: HEARTBEAT_CRON_NAME },
+    });
+
+    const now = Date.now();
+    const stale =
+      !beat || now - beat.lastRunAt.getTime() > HEARTBEAT_MISS_THRESHOLD_MS;
+
+    if (stale) {
+      this.logger.error(
+        `[heartbeat-miss] expire-trials cron has not run in > 25h. ` +
+          `Last run: ${beat?.lastRunAt.toISOString() ?? 'never'}`,
+      );
+    }
   }
 
   private async notifyTrialMilestones(now: Date, billingUrl: string): Promise<void> {
