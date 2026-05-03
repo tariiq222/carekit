@@ -11,6 +11,8 @@ import {
   SUBSCRIPTION_UPDATED_EVENT,
   type SubscriptionUpdatedPayload,
 } from '../events/subscription-updated.event';
+import { DowngradeSafetyService } from '../downgrade-safety/downgrade-safety.service';
+import { DowngradePrecheckFailedException } from '../downgrade-safety/downgrade-precheck.exception';
 
 @Injectable()
 export class DowngradePlanHandler {
@@ -22,6 +24,7 @@ export class DowngradePlanHandler {
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
     private readonly eventBus: EventBusService,
+    private readonly downgradeSafety: DowngradeSafetyService,
   ) {}
 
   async execute(dto: ChangePlanDto) {
@@ -42,6 +45,16 @@ export class DowngradePlanHandler {
     if (!targetPlan) throw new NotFoundException('Target plan not found');
     if (Number(targetPlan.priceMonthly) >= Number(sub.plan.priceMonthly)) {
       throw new BadRequestException('Target plan is not a downgrade');
+    }
+
+    // Bug B8 — block downgrade if current usage exceeds target plan limits.
+    const safety = await this.downgradeSafety.checkDowngrade(
+      sub.plan,
+      targetPlan,
+      organizationId,
+    );
+    if (!safety.ok) {
+      throw new DowngradePrecheckFailedException(safety.violations);
     }
 
     // Fire downgrade event through state machine (stays ACTIVE)

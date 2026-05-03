@@ -27,6 +27,7 @@ export class CancelScheduledDowngradeHandler {
         scheduledPlanId: null,
         scheduledBillingCycle: null,
         scheduledPlanChangeAt: null,
+        scheduledChangeBlockedReason: null,
       },
     });
     this.cache.invalidate(organizationId);
