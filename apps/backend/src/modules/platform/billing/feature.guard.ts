@@ -17,14 +17,9 @@ import { REQUIRE_FEATURE_KEY } from "./feature.decorator";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
 import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 
-/** Per-org override decision: FORCE_ON (true) / FORCE_OFF (false) / INHERIT (null). */
-type OverrideDecision = boolean | null;
-
 interface CachedFeatures {
   features: Record<string, number | boolean>;
   planSlug: string;
-  /** featureKey → override decision; absent key means "not yet looked up". */
-  overrides: Map<string, OverrideDecision>;
   expiresAt: number;
 }
 
@@ -79,21 +74,6 @@ export class FeatureGuard implements CanActivate {
     }
 
     const { features, planSlug } = await this.resolveFeatures(organizationId);
-
-    // ── Per-tenant override (Phase 6) ───────────────────────────────────
-    // FeatureFlag rows scoped by (organizationId, key) act as overrides:
-    //   enabled=true  → FORCE_ON  (allow regardless of plan)
-    //   enabled=false → FORCE_OFF (deny regardless of plan)
-    //   row absent    → INHERIT   (fall through to Plan.limits)
-    // Override rows are written via UpsertFeatureFlagOverrideHandler, which
-    // emits SUBSCRIPTION_UPDATED_EVENT — CacheInvalidatorListener clears
-    // this guard's per-org cache on that event, so override changes
-    // propagate within one event-delivery cycle.
-    const override = await this.resolveOverride(organizationId, featureKey);
-    if (override === true) return true;
-    if (override === false) {
-      throw new FeatureNotEnabledException(featureKey, planSlug);
-    }
 
     const jsonKey = FEATURE_KEY_MAP[featureKey];
     const value = features[jsonKey];
@@ -158,12 +138,10 @@ export class FeatureGuard implements CanActivate {
 
     const sub = await this.cacheService.get(organizationId);
     if (!sub) {
-      // No subscription found — cache an empty shell so the override map
-      // benefits from per-org cache reuse within the TTL.
+      // No subscription found — cache an empty shell so the TTL is respected.
       const emptyEntry: CachedFeatures = {
         features: {},
         planSlug: "",
-        overrides: new Map(),
         expiresAt: Date.now() + this.ttlMs,
       };
       this.cache.set(organizationId, emptyEntry);
@@ -173,50 +151,10 @@ export class FeatureGuard implements CanActivate {
     const entry: CachedFeatures = {
       features: sub.limits,
       planSlug: sub.planSlug,
-      overrides: new Map(),
       expiresAt: Date.now() + this.ttlMs,
     };
     this.cache.set(organizationId, entry);
     return { features: entry.features, planSlug: entry.planSlug };
-  }
-
-  /**
-   * Returns the override decision for (organizationId, featureKey):
-   *   true   → FORCE_ON  (allow)
-   *   false  → FORCE_OFF (deny)
-   *   null   → INHERIT   (no override; defer to Plan.limits)
-   *
-   * Memoized inside the existing per-org cache entry. The whole entry is
-   * dropped by FeatureGuard.invalidate(orgId) on
-   * SUBSCRIPTION_UPDATED_EVENT — UpsertFeatureFlagOverrideHandler emits
-   * that event after every write, so override changes propagate within
-   * a single event-delivery cycle.
-   */
-  private async resolveOverride(
-    organizationId: string,
-    featureKey: FeatureKey,
-  ): Promise<OverrideDecision> {
-    const entry = this.cache.get(organizationId);
-    if (entry) {
-      const cached = entry.overrides.get(featureKey);
-      if (cached !== undefined) return cached;
-    }
-
-    // Use the scoped Prisma client — the tenant-scoping extension will
-    // verify the organizationId we filter on matches the CLS tenant
-    // context set by JwtGuard / TenantResolverMiddleware. Cross-tenant
-    // leak is impossible: any mismatch throws UnauthorizedTenantAccessError.
-    const row = await this.prisma.featureFlag.findFirst({
-      where: { organizationId, key: featureKey },
-      select: { enabled: true },
-    });
-
-    const decision: OverrideDecision = row ? row.enabled : null;
-
-    if (entry) {
-      entry.overrides.set(featureKey, decision);
-    }
-    return decision;
   }
 
   /**
