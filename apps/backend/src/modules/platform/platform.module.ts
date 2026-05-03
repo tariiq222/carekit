@@ -12,7 +12,6 @@ import { AdminVerticalsController } from '../../api/admin/verticals.controller';
 import { AdminMetricsController } from '../../api/admin/metrics.controller';
 import { AdminAuditLogController } from '../../api/admin/audit-log.controller';
 import { AdminImpersonationController } from '../../api/admin/impersonation.controller';
-import { AdminFeatureFlagsController } from '../../api/admin/feature-flags.controller';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { AdminHostGuard, SuperAdminGuard } from '../../common/guards';
 import { DatabaseModule } from '../../infrastructure/database';
@@ -58,8 +57,6 @@ import { AdminChangePlanForOrgHandler } from './admin/admin-change-plan-for-org/
 import { AdminRefundInvoiceHandler } from './admin/admin-refund-invoice/admin-refund-invoice.handler';
 import { AdminForceChargeHandler } from './admin/admin-force-charge/admin-force-charge.handler';
 import { AdminCancelScheduledHandler } from './admin/admin-cancel-scheduled/admin-cancel-scheduled.handler';
-import { ListFeatureFlagsAdminHandler } from './admin/list-feature-flags-admin/list-feature-flags-admin.handler';
-import { UpdateFeatureFlagAdminHandler } from './admin/update-feature-flag-admin/update-feature-flag-admin.handler';
 import { AdminBillingController } from '../../api/admin/billing.controller';
 import { AdminNotificationsController } from '../../api/admin/notifications.controller';
 import { ListNotificationDeliveryLogHandler } from './admin/list-notification-delivery-log/list-notification-delivery-log.handler';
@@ -113,8 +110,6 @@ const ADMIN_HANDLERS = [
   AdminRefundInvoiceHandler,
   AdminForceChargeHandler,
   AdminCancelScheduledHandler,
-  ListFeatureFlagsAdminHandler,
-  UpdateFeatureFlagAdminHandler,
   ListNotificationDeliveryLogHandler,
 ];
 
@@ -152,7 +147,6 @@ const ADMIN_HANDLERS = [
     AdminAuditLogController,
     AdminImpersonationController,
     AdminBillingController,
-    AdminFeatureFlagsController,
     AdminNotificationsController,
     PlatformEmailController,
     AdminNotificationsConfigController,

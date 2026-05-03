@@ -15,7 +15,6 @@ import { ImpersonateDialog } from '@/features/impersonation/start-impersonation/
 import { ChangePlanDialog } from '@/features/organizations/change-plan/change-plan-dialog';
 import { ArchiveDialog } from '@/features/organizations/archive-organization/archive-dialog';
 import { UpdateOrganizationDialog } from '@/features/organizations/update-organization/update-organization-dialog';
-import { EntitlementsPanel } from '@/features/organizations/entitlements/entitlements-panel';
 
 export default function OrganizationDetailPage({
   params,
@@ -159,7 +158,6 @@ export default function OrganizationDetailPage({
           )}
         </CardContent>
       </Card>
-      <EntitlementsPanel organizationId={id} />
       <UpdateOrganizationDialog open={updateOpen} onOpenChange={setUpdateOpen} organization={data} />
       <ArchiveDialog
         open={archiveOpen}

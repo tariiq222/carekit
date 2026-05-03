@@ -170,24 +170,6 @@
       "success": "Organization archived.",
       "errorFallback": "Failed to archive organization"
     },
-    "entitlements": {
-      "title": "Entitlements",
-      "description": "Plan-derived access and organization overrides.",
-      "reason": "Audit reason",
-      "reasonPlaceholder": "Reason for changing entitlements",
-      "plan": "Plan",
-      "override": "Override",
-      "final": "Final",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "none": "None",
-      "source": "Source",
-      "updated": "Updated {date}",
-      "toggleLabel": "Toggle {key}",
-      "empty": "No entitlements found.",
-      "success": "Entitlement updated.",
-      "errorFallback": "Failed to update entitlement"
-    },
     "error": {
       "loadFailed": "Failed to load: {message}"
     }
