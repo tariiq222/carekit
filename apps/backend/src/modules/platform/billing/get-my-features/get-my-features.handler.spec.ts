@@ -151,7 +151,7 @@ function makeCached(
 describe('GetMyFeaturesHandler', () => {
   // ── 1. Happy path — Active PRO subscription ────────────────────────────────
 
-  describe('happy path — PRO subscription, no DB flag overrides', () => {
+  describe('happy path — PRO subscription', () => {
     it('should return correct planSlug and status', async () => {
       const handler = new GetMyFeaturesHandler(
         buildPrisma() as never,

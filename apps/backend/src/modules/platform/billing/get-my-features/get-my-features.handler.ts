@@ -53,7 +53,7 @@ export class GetMyFeaturesHandler {
       quantitativeKeys.map((key, i) => [key, counts[i]]),
     );
 
-    // 4. Build features map
+    // 3. Build features map
     const features: Record<string, FeatureEntry> = {};
 
     for (const featureKey of ALL_FEATURE_KEYS) {
@@ -61,8 +61,7 @@ export class GetMyFeaturesHandler {
       const planLimitValue = (limits as PlanLimits)[jsonKey];
 
       // Determine enabled status from Plan.limits only
-      let enabled: boolean;
-      enabled =
+      const enabled: boolean =
         typeof planLimitValue === "boolean"
           ? planLimitValue
           : planLimitValue !== 0;
