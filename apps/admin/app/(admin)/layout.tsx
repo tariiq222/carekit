@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <LogoutButton />
         </div>
       </aside>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 h-screen overflow-y-auto">
         <div className="mx-auto max-w-7xl px-8 py-8">{children}</div>
       </main>
     </div>

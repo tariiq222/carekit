@@ -5,11 +5,11 @@ import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { ComparePlansMatrix } from '@/features/plans/compare-plans/compare-plans-matrix';
 
-export default function PlansComparePage() {
+export default function PlansEditPage() {
   const { data, isLoading, error } = useListPlans();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4 h-full">
       <div>
         <Link
           href="/plans"
@@ -17,7 +17,7 @@ export default function PlansComparePage() {
         >
           ← Back to plans
         </Link>
-        <h2 className="mt-2 text-2xl font-semibold">Edit plans</h2>
+        <h2 className="mt-2 text-2xl font-semibold">Edit Plans</h2>
         <p className="text-sm text-muted-foreground">
           Configure features and limits across every plan from one screen.
         </p>
