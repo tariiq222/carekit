@@ -51,6 +51,9 @@ import { CreateEmployeeExceptionDto } from '../../modules/people/employees/creat
 import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
+import { GetEmployeeBreaksHandler } from '../../modules/people/employees/get-employee-breaks/get-employee-breaks.handler';
+import { SetEmployeeBreaksHandler } from '../../modules/people/employees/set-employee-breaks/set-employee-breaks.handler';
+import { SetEmployeeBreaksDto } from '../../modules/people/employees/set-employee-breaks/set-employee-breaks.dto';
 import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
 import { AttachMembershipHandler } from '../../modules/identity/attach-membership/attach-membership.handler';
 import { AttachMembershipDto } from '../../modules/identity/attach-membership/attach-membership.dto';
@@ -101,6 +104,8 @@ export class DashboardPeopleController {
     private readonly employeeStats: EmployeeStatsHandler,
     private readonly uploadAvatar: UploadAvatarHandler,
     private readonly attachMembership: AttachMembershipHandler,
+    private readonly getEmployeeBreaks: GetEmployeeBreaksHandler,
+    private readonly setEmployeeBreaks: SetEmployeeBreaksHandler,
   ) {}
   // ── Clients ────────────────────────────────────────────────────────────────
   @Post('clients')
@@ -275,26 +280,23 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/breaks')
-  @ApiOperation({ summary: "Get an employee's break schedule (placeholder)" })
+  @ApiOperation({ summary: "Get an employee's break schedule" })
   @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Break list (always empty until schedule-splitting migration)' })
-  getBreaksEndpoint(@Param('id', ParseUUIDPipe) _id: string) {
-    return [];
+  @ApiOkResponse({ description: 'Break windows for the employee' })
+  getBreaksEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getEmployeeBreaks.execute({ employeeId: id });
   }
 
   @Put('employees/:id/breaks')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Update an employee's break schedule (placeholder)" })
+  @ApiOperation({ summary: "Set an employee's break schedule" })
   @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Accepted (no-op until schedule-splitting migration)' })
+  @ApiOkResponse({ description: 'Updated break windows' })
   putBreaksEndpoint(
-    @Param('id', ParseUUIDPipe) _id: string,
-    @Body() _body: unknown,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: SetEmployeeBreaksDto,
   ) {
-    // Breaks are stored as gaps in split-shift EmployeeAvailability rows,
-    // not as a separate resource. Accept payload but no-op until the
-    // schedule-splitting migration lands.
-    return [];
+    return this.setEmployeeBreaks.execute({ employeeId: id, ...body });
   }
 
   @Get('employees/:id/vacations')
