@@ -53,9 +53,17 @@ interface MoyasarErrorResponse {
   status: number;
 }
 
+const KEY_CACHE_TTL_MS = 300_000; // 5 minutes
+
+interface KeyCacheEntry {
+  key: string;
+  expiresAt: number;
+}
+
 @Injectable()
 export class MoyasarApiClient {
   private readonly baseUrl = 'https://api.moyasar.com/v1';
+  private readonly keyCache = new Map<string, KeyCacheEntry>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -63,11 +71,26 @@ export class MoyasarApiClient {
   ) {}
 
   /**
+   * Invalidates the cached decrypted API key for one organization.
+   * Call this after updating `OrganizationPaymentConfig.secretKeyEnc`.
+   */
+  invalidate(organizationId: string): void {
+    this.keyCache.delete(organizationId);
+  }
+
+  /**
    * Resolves the tenant's Moyasar secret key from `OrganizationPaymentConfig`.
+   * Result is cached in-process for 5 minutes to avoid a DB + decrypt round-trip
+   * on every payment request.
    * Throws BadRequest (not InternalServerError) — missing config is a tenant
    * configuration problem, not a platform bug; the dashboard surfaces it.
    */
   private async getApiKeyForOrg(organizationId: string): Promise<string> {
+    const cached = this.keyCache.get(organizationId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.key;
+    }
+
     const cfg = await this.prisma.organizationPaymentConfig.findUnique({
       where: { organizationId },
     });
@@ -81,7 +104,9 @@ export class MoyasarApiClient {
       cfg.secretKeyEnc,
       organizationId,
     );
-    return decrypted.secretKey;
+    const key = decrypted.secretKey;
+    this.keyCache.set(organizationId, { key, expiresAt: Date.now() + KEY_CACHE_TTL_MS });
+    return key;
   }
 
   private async request<T>(

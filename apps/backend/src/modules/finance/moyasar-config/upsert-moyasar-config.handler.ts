@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { MoyasarCredentialsService } from '../../../infrastructure/payments/moyasar-credentials.service';
+import { MoyasarApiClient } from '../moyasar-api/moyasar-api.client';
 
 export interface UpsertMoyasarConfigCommand {
   publishableKey: string;
@@ -23,6 +24,7 @@ export class UpsertMoyasarConfigHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly creds: MoyasarCredentialsService,
+    private readonly moyasarClient: MoyasarApiClient,
   ) {}
 
   async execute(cmd: UpsertMoyasarConfigCommand): Promise<UpsertMoyasarConfigResult> {
@@ -51,6 +53,10 @@ export class UpsertMoyasarConfigHandler {
         lastVerifiedStatus: null,
       },
     });
+
+    // Invalidate the in-process key cache so the next payment request
+    // picks up the newly written credentials instead of the stale copy.
+    this.moyasarClient.invalidate(organizationId);
 
     return {
       organizationId: row.organizationId,

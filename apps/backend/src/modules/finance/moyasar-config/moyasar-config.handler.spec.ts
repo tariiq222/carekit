@@ -47,12 +47,14 @@ const buildPrismaStore = () => {
   };
 };
 
+const mockMoyasarClient = () => ({ invalidate: jest.fn() });
+
 describe('UpsertMoyasarConfigHandler', () => {
   it('encrypts the secret with org-bound AAD, stores publishableKey plain', async () => {
     const key = randomBytes(32).toString('base64');
     const creds = new MoyasarCredentialsService(cfg(key));
     const prisma = buildPrismaStore();
-    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds);
+    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds, mockMoyasarClient() as never);
 
     const result = await handler.execute({
       publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
@@ -83,7 +85,7 @@ describe('UpsertMoyasarConfigHandler', () => {
       createdAt: new Date('2026-03-01'),
       updatedAt: new Date('2026-04-01'),
     });
-    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds);
+    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds, mockMoyasarClient() as never);
 
     await handler.execute({
       publishableKey: 'pk_test_new00000000000000000000',
@@ -100,7 +102,7 @@ describe('UpsertMoyasarConfigHandler', () => {
     const key = randomBytes(32).toString('base64');
     const creds = new MoyasarCredentialsService(cfg(key));
     const prisma = buildPrismaStore();
-    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds);
+    const handler = new UpsertMoyasarConfigHandler(prisma as never, tenant() as never, creds, mockMoyasarClient() as never);
 
     await handler.execute({
       publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
