@@ -167,6 +167,15 @@ export const arEmployees: Record<string, string> = {
   "employees.tabs.vacations": "الإجازات",
   "employees.breaks.title": "فترات الاستراحة",
 
+  // — Breaks Section —
+  "breaks.editTitle": "تعديل الاستراحات",
+  "breaks.editDesc": "أضف أو احذف فترات الاستراحة لكل يوم عمل.",
+  "breaks.noBreaks": "لا توجد استراحات لهذا اليوم.",
+  "breaks.loading": "جاري التحميل...",
+  "breaks.noBreaksConfigured": "لا توجد استراحات محددة.",
+  "breaks.editButton": "تعديل الاستراحات",
+  "breaks.sectionTitle": "الاستراحات",
+
   // — Services (extended) —
   "employees.services.availableTypes": "أنواع الحجز المتاحة",
   "employees.services.bufferMinutes": "الفاصل الزمني (دقيقة)",
