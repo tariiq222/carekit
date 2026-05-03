@@ -7,3 +7,4 @@ packages:
   - "packages/shared"
   - "packages/api-client"
   - "packages/ui"
+  - "packages/*"
