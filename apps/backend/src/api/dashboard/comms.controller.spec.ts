@@ -28,6 +28,9 @@ function buildController() {
   const testEmailConfig = fn({ ok: true });
   const prisma = { smsDelivery: { findMany: jest.fn().mockResolvedValue([]) } };
   const tenant = { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') };
+  const listTenantDeliveryLogs = fn({ data: [], meta: {} });
+  const usageCounter = { read: jest.fn().mockResolvedValue(0) };
+  const subscriptionCache = { get: jest.fn().mockResolvedValue({ limits: {} }) };
   const controller = new DashboardCommsController(
     listNotifications as never, getUnreadCount as never, markRead as never,
     listEmailTemplates as never, getEmailTemplate as never, createEmailTemplate as never,
@@ -38,6 +41,7 @@ function buildController() {
     getOrgSmsConfig as never, upsertOrgSmsConfig as never, testSmsConfig as never,
     getOrgEmailConfig as never, upsertOrgEmailConfig as never, testEmailConfig as never,
     prisma as never, tenant as never,
+    listTenantDeliveryLogs as never, usageCounter as never, subscriptionCache as never,
   );
   return {
     controller, listNotifications, getUnreadCount, markRead,
