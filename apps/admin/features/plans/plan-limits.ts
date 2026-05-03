@@ -52,6 +52,19 @@ export const OVERAGE_FIELDS = [
   { key: 'overageRateStorageGB', label: 'Overage — per GB storage (⃁)' },
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string }>;
 
+/**
+ * Maps catalog quantitative FeatureKey values to their corresponding flat
+ * PlanLimits numeric field. Used by FeatureRow and FeatureGroupSection to
+ * render inline quota inputs for quantitative catalog entries.
+ */
+export const QUANT_FIELD_MAP = {
+  branches: 'maxBranches',
+  employees: 'maxEmployees',
+  services: 'maxServices',
+  monthly_bookings: 'maxBookingsPerMonth',
+  storage: 'maxStorageMB',
+} as const satisfies Partial<Record<string, keyof PlanLimits>>;
+
 export const FEATURE_FIELDS = [
   { key: 'recurring_bookings', label: 'Recurring bookings' },
   { key: 'waitlist', label: 'Waitlist' },

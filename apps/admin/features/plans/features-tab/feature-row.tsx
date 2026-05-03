@@ -1,29 +1,41 @@
 'use client';
 import { Badge } from '@deqah/ui/primitives/badge';
+import { Input } from '@deqah/ui/primitives/input';
 import { Switch } from '@deqah/ui/primitives/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@deqah/ui/primitives/tooltip';
 import type { FeatureKey } from '@deqah/shared';
 import type { CatalogEntry } from './filter';
 
-const QUOTA_LINKED: Partial<Record<FeatureKey, string>> = {
-  multi_branch: 'maxBranches',
-  employees: 'maxEmployees',
-  services: 'maxServices',
-  monthly_bookings: 'maxMonthlyBookings',
-  storage: 'maxStorageMb',
-} as Partial<Record<FeatureKey, string>>;
+function parseInputNumber(s: string): number {
+  if (s === '' || s === '-') return 0;
+  const n = Number(s);
+  return Number.isNaN(n) ? 0 : n;
+}
 
 type Props = {
   featureKey: FeatureKey;
   entry: CatalogEntry;
-  enabled: boolean;
-  quota?: number;
-  onToggle: (next: boolean) => void;
-  onJumpToQuotas: () => void;
+  idPrefix: string;
+  // boolean entries
+  enabled?: boolean;
+  onToggle?: (next: boolean) => void;
+  // quantitative entries
+  kind: 'boolean' | 'quantitative';
+  quotaValue?: number;
+  onQuotaChange?: (next: number) => void;
+  quotaHint?: string;
 };
 
-export function FeatureRow({ featureKey, entry, enabled, quota, onToggle, onJumpToQuotas }: Props) {
-  const quotaField = QUOTA_LINKED[featureKey];
+export function FeatureRow({
+  featureKey,
+  entry,
+  idPrefix,
+  enabled,
+  onToggle,
+  kind,
+  quotaValue,
+  onQuotaChange,
+  quotaHint,
+}: Props) {
   return (
     <div className="flex items-start justify-between gap-4 py-3 border-b border-border/50 last:border-b-0">
       <div className="min-w-0 flex-1 space-y-1">
@@ -35,24 +47,29 @@ export function FeatureRow({ featureKey, entry, enabled, quota, onToggle, onJump
           >
             {entry.tier}
           </Badge>
-          {quotaField && quota !== undefined && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={onJumpToQuotas}
-                  className="rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/70"
-                >
-                  Quota: {quota === -1 ? 'unlimited' : quota}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Configure in Quotas tab</TooltipContent>
-            </Tooltip>
-          )}
         </div>
         <p className="text-xs text-muted-foreground">{entry.descEn}</p>
       </div>
-      <Switch checked={enabled} onCheckedChange={onToggle} aria-label={entry.nameEn} />
+      {kind === 'quantitative' ? (
+        <div className="flex items-center gap-2">
+          <Input
+            id={`${idPrefix}-${featureKey}`}
+            type="number"
+            className="w-28 text-right"
+            value={String(quotaValue ?? 0)}
+            onChange={(e) => onQuotaChange?.(parseInputNumber(e.target.value))}
+          />
+          {quotaHint ? (
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{quotaHint}</span>
+          ) : null}
+        </div>
+      ) : (
+        <Switch
+          checked={enabled ?? false}
+          onCheckedChange={onToggle}
+          aria-label={entry.nameEn}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@deqah/ui/primitives/button';
-import { applyPreset, type PlanLimits, type PresetKind } from './presets';
+import { applyPresetFlat, type PresetKind } from './presets';
+import type { PlanLimits } from '../plan-limits';
 
 type Props = {
   limits: PlanLimits;
@@ -22,7 +23,7 @@ export function PresetButtons({ limits, onLimitsChange }: Props) {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => onLimitsChange(applyPreset(limits, p.kind))}
+          onClick={() => onLimitsChange(applyPresetFlat(limits, p.kind))}
         >
           {p.label}
         </Button>
