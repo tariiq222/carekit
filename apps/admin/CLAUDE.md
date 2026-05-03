@@ -138,3 +138,33 @@ Mirrors the backend-only rollout:
   endpoints.
 
 Full reference: `docs/superpowers/plans/2026-04-21-saas-05b-super-admin-app.md`.
+
+## Settings Hub Routes
+
+Each `/settings/*` page in the super-admin app maps to a backend slice:
+
+| Route | Backend endpoint(s) | Powers |
+|-------|---------------------|--------|
+| `/settings` | — | Hub landing page; links to sub-pages |
+| `/settings/email` | `GET/PATCH /admin/settings/email` | Resend API key (encrypted), from address, platform SMTP fallback toggle |
+| `/settings/email/templates` | `GET/PATCH /admin/settings/email/templates` | Per-key bilingual email templates; locked keys highlighted |
+| `/settings/email/logs` | `GET /admin/settings/email/logs` | `PlatformEmailLog` with delivery status, actor, provider |
+| `/settings/notifications` | `GET/PATCH /admin/settings/notifications` | Default notification channels, quiet-hours window |
+| `/settings/billing` | `GET/PATCH /admin/settings/billing` | Moyasar platform key (encrypted), trial days, overage model |
+| `/settings/feature-flags` | `GET/PATCH /admin/settings/feature-flags`, `POST/DELETE /admin/settings/feature-flags/overrides` | Global feature defaults + per-org overrides |
+| `/settings/branding` | `GET/PATCH /admin/settings/branding` | Admin logo + primary color; served to shell at runtime |
+| `/settings/system` | `GET /admin/settings/system/health`, `POST .../health/run`, `POST .../cache/clear` | Postgres/Redis/MinIO health, backend version, top fallback consumers, external links |
+| `/settings/security` | `GET/PATCH /admin/settings/security`, 2FA endpoints, `GET .../failed-logins` | Session TTL, TOTP 2FA enrollment, IP allowlist, failed-login log |
+
+## Accountability surfaces
+
+All write actions on settings pages produce a `SuperAdminActionLog` row with `actionType: 'PLATFORM_SETTING_UPDATED'`.
+
+| Surface | Who sees it | Data source |
+|---------|-------------|-------------|
+| Super-admin audit log (`/audit-log`) | Platform team | `SuperAdminActionLog` |
+| Email delivery log (`/settings/email/logs`) | Platform team | `PlatformEmailLog` |
+| Tenant delivery log (`/settings/email-delivery-log` in dashboard) | Clinic admin | `NotificationDeliveryLog` + `SmsDelivery` union |
+| Failed-login log (`/settings/security`) | Platform team | `FailedLoginAttempt` |
+| `senderActor` field on every `NotificationDeliveryLog` row | Platform team + clinic admin | `NotificationSenderActor` enum: PLATFORM / TENANT / PLATFORM_FALLBACK |
+| System health page (`/settings/system`) | Platform team | Live Postgres/Redis/MinIO probes + `UsageCounter` aggregate |
