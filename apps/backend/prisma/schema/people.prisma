@@ -131,6 +131,7 @@ model Employee {
   services     EmployeeService[]
   availability EmployeeAvailability[]
   exceptions   EmployeeAvailabilityException[]
+  breaks       EmployeeBreak[]
 
   @@unique([id, organizationId], name: "employee_id_org") // DB-05
   @@unique([organizationId, email], name: "employee_org_email")
@@ -198,6 +199,21 @@ model EmployeeAvailabilityException {
   createdAt      DateTime  @default(now())
 
   @@index([employeeId, startDate, endDate])
+  @@index([organizationId])
+}
+
+model EmployeeBreak {
+  id             String   @id @default(uuid())
+  organizationId String
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([employeeId, dayOfWeek])
   @@index([organizationId])
 }
 

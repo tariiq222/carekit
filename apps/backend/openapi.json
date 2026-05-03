@@ -889,7 +889,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Saudi mobile number",
+            "description": "Saudi mobile number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           },
@@ -1215,7 +1215,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Phone number (international format)",
+            "description": "Phone number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           },
@@ -1884,7 +1884,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Mobile phone number",
+            "description": "Mobile phone number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           },
@@ -2236,7 +2236,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Phone number in E.164 format",
+            "description": "Phone number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           }
@@ -3031,7 +3031,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "E.164 phone",
+            "description": "Phone (any common Saudi-flavoured format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           }
@@ -3072,7 +3072,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Mobile phone number",
+            "description": "Mobile phone number (any common format; normalized to E.164)",
             "example": "0501234567",
             "type": "string"
           }
@@ -3275,6 +3275,10 @@
         "required": [
           "body"
         ],
+        "type": "object"
+      },
+      "SendTestEmailDto": {
+        "properties": {},
         "type": "object"
       },
       "SetBusinessHoursDto": {
@@ -3788,7 +3792,7 @@
             "type": "object"
           },
           "phone": {
-            "description": "Saudi mobile number",
+            "description": "Saudi mobile number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "nullable": true,
             "type": "object"
@@ -4070,7 +4074,7 @@
             "type": "string"
           },
           "phone": {
-            "description": "Phone number (international format)",
+            "description": "Phone number (any common format; normalized to E.164)",
             "example": "+966501234567",
             "type": "string"
           },
@@ -4151,6 +4155,10 @@
         },
         "type": "object"
       },
+      "UpdateNotificationDefaultsDto": {
+        "properties": {},
+        "type": "object"
+      },
       "UpdateOrganizationDto": {
         "properties": {
           "nameAr": {
@@ -4217,6 +4225,10 @@
         "required": [
           "reason"
         ],
+        "type": "object"
+      },
+      "UpdatePlatformEmailTemplateDto": {
+        "properties": {},
         "type": "object"
       },
       "UpdateProblemReportStatusDto": {
@@ -4961,6 +4973,10 @@
         ],
         "type": "object"
       },
+      "UpsertPlatformSettingDto": {
+        "properties": {},
+        "type": "object"
+      },
       "UpsertSeedDepartmentDto": {
         "properties": {
           "nameAr": {
@@ -5118,7 +5134,9 @@
               "webhooks",
               "priority_support",
               "audit_export",
-              "multi_currency"
+              "multi_currency",
+              "email_fallback_monthly",
+              "sms_fallback_monthly"
             ],
             "type": "string"
           },
@@ -5169,8 +5187,8 @@
       "VerifyMobileOtpDto": {
         "properties": {
           "code": {
-            "description": "4-digit OTP code",
-            "example": "1234",
+            "description": "6-digit OTP code",
+            "example": "123456",
             "type": "string"
           },
           "identifier": {
@@ -5205,8 +5223,8 @@
             "type": "string"
           },
           "code": {
-            "description": "4-digit OTP code",
-            "example": "1234",
+            "description": "6-digit OTP code",
+            "example": "123456",
             "type": "string"
           },
           "identifier": {
@@ -6053,6 +6071,42 @@
         ]
       }
     },
+    "/api/v1/admin/notifications-config": {
+      "get": {
+        "operationId": "AdminNotificationsConfigController_getDefaults",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminNotificationsConfig"
+        ]
+      },
+      "put": {
+        "operationId": "AdminNotificationsConfigController_updateDefaults",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationDefaultsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminNotificationsConfig"
+        ]
+      }
+    },
     "/api/v1/admin/notifications/delivery-log": {
       "get": {
         "operationId": "AdminNotificationsController_list",
@@ -6528,6 +6582,346 @@
         "summary": "Update a plan (audited)",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-email/logs": {
+      "get": {
+        "operationId": "PlatformEmailController_logs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "templateSlug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List platform email delivery logs (cursor-based pagination)",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-email/templates": {
+      "get": {
+        "operationId": "PlatformEmailController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all platform email templates",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-email/templates/{slug}": {
+      "get": {
+        "operationId": "PlatformEmailController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get a platform email template by slug",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      },
+      "patch": {
+        "operationId": "PlatformEmailController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update a platform email template",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-email/templates/{slug}/preview": {
+      "post": {
+        "operationId": "PlatformEmailController_preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Preview a platform email template with interpolated vars",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-email/test-send": {
+      "post": {
+        "operationId": "PlatformEmailController_testSend",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTestEmailDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Send a test email from a platform template",
+        "tags": [
+          "Admin / Platform Email"
+        ]
+      }
+    },
+    "/api/v1/admin/settings": {
+      "put": {
+        "operationId": "AdminSettingsController_upsertSettingValue",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPlatformSettingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/billing": {
+      "get": {
+        "operationId": "BillingSettingsController_getAllSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "BillingSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/billing/test-connection": {
+      "post": {
+        "operationId": "BillingSettingsController_testMoyasarConnection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "BillingSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/billing/{key}": {
+      "patch": {
+        "operationId": "BillingSettingsController_updateSetting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "BillingSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/brand": {
+      "get": {
+        "operationId": "BrandingSettingsController_getBrand",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "BrandingSettings"
+        ]
+      },
+      "put": {
+        "operationId": "BrandingSettingsController_updateBrand",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "BrandingSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/security": {
+      "get": {
+        "operationId": "SecuritySettingsController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecuritySettings"
+        ]
+      },
+      "put": {
+        "operationId": "SecuritySettingsController_updateSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecuritySettings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/{key}": {
+      "get": {
+        "operationId": "AdminSettingsController_getSettingByKey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/system-health": {
+      "get": {
+        "operationId": "SystemHealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SystemHealth"
         ]
       }
     },
@@ -8903,6 +9297,76 @@
           }
         ],
         "summary": "Cancel a scheduled subscription downgrade",
+        "tags": [
+          "Dashboard / Billing"
+        ]
+      }
+    },
+    "/api/v1/dashboard/billing/subscription/change-plan": {
+      "post": {
+        "operationId": "BillingController_changePlanRoute",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change subscription plan (upgrade or downgrade)",
         "tags": [
           "Dashboard / Billing"
         ]
@@ -11679,6 +12143,179 @@
           }
         ],
         "summary": "Update contact message status",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/delivery-logs": {
+      "get": {
+        "operationId": "DashboardCommsController_listDeliveryLogs",
+        "parameters": [
+          {
+            "description": "Filter by delivery status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "PENDING",
+                "SENT",
+                "FAILED",
+                "SKIPPED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by channel",
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "enum": [
+                "EMAIL",
+                "SMS",
+                "PUSH",
+                "IN_APP"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Items per page",
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated delivery log"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List email delivery logs for this organization",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/email-fallback-quota": {
+      "get": {
+        "operationId": "DashboardCommsController_getEmailFallbackQuota",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current usage vs plan limit for email_fallback_monthly"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get platform email fallback quota usage for this billing period",
         "tags": [
           "Dashboard / Comms"
         ]
@@ -21146,7 +21783,7 @@
             "bearer": []
           }
         ],
-        "summary": "Get an employee's break schedule (placeholder)",
+        "summary": "Get an employee's break schedule",
         "tags": [
           "Dashboard / People"
         ]
@@ -21215,7 +21852,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update an employee's break schedule (placeholder)",
+        "summary": "Set an employee's break schedule",
         "tags": [
           "Dashboard / People"
         ]

@@ -167,6 +167,15 @@ export const enEmployees: Record<string, string> = {
   "employees.tabs.vacations": "Vacations",
   "employees.breaks.title": "Breaks",
 
+  // — Breaks Section —
+  "breaks.editTitle": "Edit Breaks",
+  "breaks.editDesc": "Add or remove break windows for each working day.",
+  "breaks.noBreaks": "No breaks for this day.",
+  "breaks.loading": "Loading...",
+  "breaks.noBreaksConfigured": "No breaks configured.",
+  "breaks.editButton": "Edit Breaks",
+  "breaks.sectionTitle": "Breaks",
+
   // — Services (extended) —
   "employees.services.availableTypes": "Available Booking Types",
   "employees.services.bufferMinutes": "Buffer (min)",

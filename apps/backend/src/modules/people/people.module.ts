@@ -30,6 +30,8 @@ import { CreateEmployeeExceptionHandler } from './employees/create-employee-exce
 import { DeleteEmployeeExceptionHandler } from './employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from './employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from './employees/employee-stats.handler';
+import { GetEmployeeBreaksHandler } from './employees/get-employee-breaks/get-employee-breaks.handler';
+import { SetEmployeeBreaksHandler } from './employees/set-employee-breaks/set-employee-breaks.handler';
 import { ListPublicEmployeesHandler } from './employees/public/list-public-employees.handler';
 import { GetPublicEmployeeHandler } from './employees/public/get-public-employee.handler';
 import { SetClientActiveHandler } from './clients/set-client-active/set-client-active.handler';
@@ -46,6 +48,7 @@ const handlers = [
   DeleteEmployeeExceptionHandler, ListEmployeeRatingsHandler, EmployeeStatsHandler,
   UploadAvatarHandler,
   ListPublicEmployeesHandler, GetPublicEmployeeHandler,
+  GetEmployeeBreaksHandler, SetEmployeeBreaksHandler,
 ];
 
 @Module({

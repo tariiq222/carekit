@@ -1,40 +1,26 @@
 "use client"
 
 import { useState } from "react"
-
 import { Button } from "@deqah/ui"
+import { useLocale } from "@/components/locale-provider"
 import { useEmployeeBreaks } from "@/hooks/use-employees"
+import { DAY_NAME_KEYS } from "@/components/features/employees/create/schedule-types"
 import { BreaksEditor } from "./breaks-editor"
-
-/* ─── Constants ─── */
-
-const DAY_NAMES = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-] as const
-
-/* ─── Props ─── */
 
 interface BreaksSectionProps {
   employeeId: string
 }
 
-/* ─── Component ─── */
-
 export function BreaksSection({ employeeId }: BreaksSectionProps) {
   const [editorOpen, setEditorOpen] = useState(false)
+  const { t } = useLocale()
   const { data: breaks, isLoading } = useEmployeeBreaks(employeeId)
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Breaks
+          {t("breaks.sectionTitle")}
         </h4>
         <Button
           variant="outline"
@@ -42,15 +28,15 @@ export function BreaksSection({ employeeId }: BreaksSectionProps) {
           className="h-7 text-xs"
           onClick={() => setEditorOpen(true)}
         >
-          Edit Breaks
+          {t("breaks.editButton")}
         </Button>
       </div>
 
       {isLoading ? (
-        <p className="text-xs text-muted-foreground">Loading...</p>
+        <p className="text-xs text-muted-foreground">{t("breaks.loading")}</p>
       ) : !breaks || breaks.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No breaks configured.
+          {t("breaks.noBreaksConfigured")}
         </p>
       ) : (
         <div className="flex flex-col gap-1">
@@ -60,7 +46,7 @@ export function BreaksSection({ employeeId }: BreaksSectionProps) {
               className="flex items-center justify-between text-sm"
             >
               <span className="text-muted-foreground">
-                {DAY_NAMES[b.dayOfWeek]}
+                {t(DAY_NAME_KEYS[b.dayOfWeek])}
               </span>
               <span className="tabular-nums font-medium text-foreground">
                 {b.startTime} — {b.endTime}

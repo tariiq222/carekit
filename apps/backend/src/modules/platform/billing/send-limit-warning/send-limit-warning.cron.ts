@@ -67,9 +67,9 @@ export class SendLimitWarningCron {
         limitKey: 'maxBookingsPerMonth',
         getUsed: async (orgId, periodStart) => {
           const counter = await this.prisma.$allTenants.usageCounter.findFirst({
-            where: { organizationId: orgId, metric: 'BOOKINGS_PER_MONTH', periodStart },
+            where: { organizationId: orgId, featureKey: 'BOOKINGS_PER_MONTH', periodStart },
           });
-          return counter?.count ?? 0;
+          return counter?.value ?? 0;
         },
         formatBody: (used, max) => `Monthly bookings are at ${used}/${max} for this plan.`,
       },
@@ -89,9 +89,9 @@ export class SendLimitWarningCron {
         limitKey: 'maxStorageMB',
         getUsed: async (orgId, periodStart) => {
           const counter = await this.prisma.$allTenants.usageCounter.findFirst({
-            where: { organizationId: orgId, metric: 'STORAGE_MB', periodStart },
+            where: { organizationId: orgId, featureKey: 'STORAGE_MB', periodStart },
           });
-          return counter?.count ?? 0;
+          return counter?.value ?? 0;
         },
         formatBody: (used, max) => `Storage usage is at ${used}/${max} MB for this plan.`,
       },

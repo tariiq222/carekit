@@ -31,6 +31,8 @@ function buildController() {
   const employeeStats = fn({});
   const uploadAvatar = fn({ fileId: 'f-1', url: 'https://example.com/avatar.png' });
   const attachMembership = fn({ id: 'membership-1' });
+  const getEmployeeBreaks = fn([]);
+  const setEmployeeBreaks = fn([]);
   const controller = new DashboardPeopleController(
     createClient as never, updateClient as never, listClients as never, getClient as never,
     deleteClient as never,
@@ -42,6 +44,7 @@ function buildController() {
     removeEmployeeService as never, listEmployeeExceptions as never, createEmployeeException as never,
     deleteEmployeeException as never, listEmployeeRatings as never,
     employeeStats as never, uploadAvatar as never, attachMembership as never,
+    getEmployeeBreaks as never, setEmployeeBreaks as never,
   );
   return {
     controller,
