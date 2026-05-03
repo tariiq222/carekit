@@ -53,6 +53,7 @@ import { OnPaymentCompletedStaffHandler } from './events/on-payment-completed-st
 import { OnClientEnrolledStaffHandler } from './events/on-client-enrolled-staff.handler';
 import { ResilientNotificationDispatcher } from './resilient-notification-dispatcher/resilient-notification-dispatcher.service';
 import { NotificationRetryWorker } from './resilient-notification-dispatcher/notification-retry-worker';
+import { ListTenantDeliveryLogsHandler } from './list-tenant-delivery-logs/list-tenant-delivery-logs.handler';
 
 const handlers = [
   SendPushHandler,
@@ -91,6 +92,7 @@ const handlers = [
   GetStaffTargetsHandler,
   ResilientNotificationDispatcher,
   NotificationRetryWorker,
+  ListTenantDeliveryLogsHandler,
 ];
 
 const eventHandlers = [
