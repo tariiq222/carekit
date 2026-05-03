@@ -49,6 +49,7 @@ import { MoyasarSubscriptionClient } from "../../finance/moyasar-api/moyasar-sub
 import { PlanLimitsGuard } from "./enforce-limits.guard";
 import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
+import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -120,6 +121,7 @@ const HANDLERS = [
     IncrementUsageListener,
     CacheInvalidatorListener,
     GetUsageHandler,
+    DowngradeSafetyService,
   ],
   exports: [
     FeatureGuard,
@@ -129,6 +131,7 @@ const HANDLERS = [
     SubscriptionStateMachine,
     UsageCounterService,
     GetUsageHandler,
+    DowngradeSafetyService,
     ...HANDLERS,
   ],
 })
