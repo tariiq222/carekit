@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, HttpException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
 import { RequestOtpHandler } from './request-otp.handler';
@@ -13,6 +17,7 @@ describe('RequestOtpHandler', () => {
   let channelRegistry: jest.Mocked<NotificationChannelRegistry>;
   let captchaVerifyMock: jest.Mock;
   let otpCountMock: jest.Mock;
+  let otpDeleteMock: jest.Mock;
   let prismaMock: any;
 
   const mockChannel = {
@@ -23,6 +28,8 @@ describe('RequestOtpHandler', () => {
   beforeEach(async () => {
     captchaVerifyMock = jest.fn().mockResolvedValue(true);
     otpCountMock = jest.fn().mockResolvedValue(0);
+    otpDeleteMock = jest.fn().mockResolvedValue({ id: 'test-id' });
+    mockChannel.send.mockReset().mockResolvedValue(undefined);
 
     prismaMock = {
       $transaction: jest.fn().mockImplementation(async (fn) => fn({
@@ -31,7 +38,7 @@ describe('RequestOtpHandler', () => {
           create: jest.fn().mockResolvedValue({ id: 'test-id' }),
         },
       })),
-      otpCode: { count: otpCountMock },
+      otpCode: { count: otpCountMock, delete: otpDeleteMock },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -152,5 +159,56 @@ describe('RequestOtpHandler', () => {
       hCaptchaToken: 'valid-token',
       organizationId: 'org-A',
     })).rejects.toThrow(HttpException);
+  });
+
+  it('generates a 6-digit numeric code via CSPRNG (no longer Math.random / 4-digit)', async () => {
+    mockChannel.send.mockClear();
+
+    // Run the handler 25 times and assert every code is a 6-digit string in
+    // [100000, 999999]. This proves: (a) format is 6 digits, (b) min bound is
+    // applied (no 4-digit codes leak through padding), (c) max bound is exclusive.
+    for (let i = 0; i < 25; i++) {
+      await handler.execute({
+        channel: OtpChannel.EMAIL,
+        identifier: 'test@example.com',
+        purpose: OtpPurpose.GUEST_BOOKING,
+        hCaptchaToken: 'valid-token',
+      });
+    }
+
+    expect(mockChannel.send).toHaveBeenCalledTimes(25);
+    for (const call of mockChannel.send.mock.calls) {
+      const sentCode = call[1] as string;
+      expect(sentCode).toMatch(/^\d{6}$/);
+      const n = Number(sentCode);
+      expect(n).toBeGreaterThanOrEqual(100_000);
+      expect(n).toBeLessThanOrEqual(999_999);
+    }
+  });
+
+  it('throws ServiceUnavailableException and deletes OtpCode row when SMS send fails', async () => {
+    const txCreateMock = jest.fn().mockResolvedValue({ id: 'created-otp-id' });
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) =>
+      fn({
+        otpCode: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          create: txCreateMock,
+        },
+      }),
+    );
+    mockChannel.send.mockRejectedValueOnce(new Error('SMS provider down'));
+
+    await expect(
+      handler.execute({
+        channel: OtpChannel.SMS,
+        identifier: '+966500000000',
+        purpose: OtpPurpose.MOBILE_LOGIN,
+        hCaptchaToken: 'valid-token',
+      }),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+
+    // Row created, then deleted on send failure.
+    expect(txCreateMock).toHaveBeenCalledTimes(1);
+    expect(otpDeleteMock).toHaveBeenCalledWith({ where: { id: 'created-otp-id' } });
   });
 });

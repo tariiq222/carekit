@@ -5,6 +5,7 @@ import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { IssueInvoiceHandler } from '../issue-invoice/issue-invoice.handler';
+import { advanceBillingPeriodEnd } from '../billing-period.util';
 
 export interface RecordSubscriptionPaymentCommand {
   invoiceId: string;
@@ -31,19 +32,33 @@ export class RecordSubscriptionPaymentHandler {
 
     const sub = invoice.subscription;
     const newStatus = this.stateMachine.transition(sub.status, { type: 'chargeSuccess' });
+    const now = new Date();
+    // Bug B2 fix — advance the billing period off the current period end
+    // (or off `now` if the period already lapsed) so the due-charge cron
+    // does not re-select the same subscription on its next tick and
+    // double-bill the tenant.
+    const nextPeriodEnd = advanceBillingPeriodEnd(
+      sub.currentPeriodEnd,
+      sub.billingCycle,
+      now,
+    );
+    const nextPeriodStart =
+      sub.currentPeriodEnd.getTime() < now.getTime() ? now : sub.currentPeriodEnd;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.subscriptionInvoice.update({
         where: { id: invoice.id },
-        data: { status: 'PAID', paidAt: new Date(), moyasarPaymentId: cmd.moyasarPaymentId },
+        data: { status: 'PAID', paidAt: now, moyasarPaymentId: cmd.moyasarPaymentId },
       });
       await tx.subscription.update({
         where: { id: sub.id },
         data: {
           organizationId: sub.organizationId, // explicit — Lesson 8
           status: newStatus,
+          currentPeriodStart: nextPeriodStart,
+          currentPeriodEnd: nextPeriodEnd,
           pastDueSince: null,
-          lastPaymentAt: new Date(),
+          lastPaymentAt: now,
           retryCount: 0,
           dunningRetryCount: 0,
           nextRetryAt: null,

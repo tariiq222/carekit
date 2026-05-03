@@ -39,6 +39,7 @@ import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/
 import { ListBookingStatusLogHandler } from '../../modules/bookings/list-booking-status-log/list-booking-status-log.handler';
 import { TrackUsage } from '../../modules/platform/billing/track-usage.decorator';
 import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
+import { EnforceLimit } from '../../modules/platform/billing/plan-limits.decorator';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
 @ApiTags('Dashboard / Bookings')
@@ -68,6 +69,7 @@ export class DashboardBookingsController {
   ) {}
 
   @Post()
+  @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
   @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
@@ -82,6 +84,7 @@ export class DashboardBookingsController {
 
   @Post('recurring')
   @RequireFeature(FeatureKey.RECURRING_BOOKINGS)
+  @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a recurring booking series' })
   @ApiCreatedResponse({ description: 'Recurring booking series created', schema: { type: 'object' } })

@@ -7,6 +7,8 @@ import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import { assertLimitNotExceeded } from '../../platform/billing/assert-limit-not-exceeded';
 import { FileUploadedEvent } from '../events/file-uploaded.event';
 import { UploadFileDto } from './upload-file.dto';
 
@@ -39,6 +41,7 @@ export class UploadFileHandler {
     private readonly storage: MinioService,
     private readonly tenant: TenantContextService,
     private readonly eventBus: EventBusService,
+    private readonly subscriptionCache: SubscriptionCacheService,
     config: ConfigService,
   ) {
     this.defaultBucket = config.getOrThrow<string>('MINIO_BUCKET');
@@ -61,23 +64,50 @@ export class UploadFileHandler {
     const ext = extname(cmd.filename).toLowerCase();
     const storageKey = `${randomUUID()}${ext}`;
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const subscription = await this.subscriptionCache.get(organizationId);
 
     const url = await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
 
-    const file = await this.prisma.file.create({
-      data: {
-        organizationId,
-        bucket: this.defaultBucket,
-        storageKey,
-        filename: cmd.filename,
-        mimetype: cmd.mimetype,
-        size: cmd.size,
-        visibility: cmd.visibility ?? FileVisibility.PRIVATE,
-        ownerType: cmd.ownerType,
-        ownerId: cmd.ownerId,
-        uploadedBy: cmd.uploadedBy,
-      },
-    });
+    let file: File;
+    try {
+      file = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.file.create({
+          data: {
+            organizationId,
+            bucket: this.defaultBucket,
+            storageKey,
+            filename: cmd.filename,
+            mimetype: cmd.mimetype,
+            size: cmd.size,
+            visibility: cmd.visibility ?? FileVisibility.PRIVATE,
+            ownerType: cmd.ownerType,
+            ownerId: cmd.ownerId,
+            uploadedBy: cmd.uploadedBy,
+          },
+        });
+
+        // Post-create plan-limit recheck — closes TOCTOU on STORAGE_MB.
+        // Aggregates `File.size` across the org INSIDE the same tx so the
+        // just-inserted row is counted; throwing rolls back the DB insert
+        // (the orphan MinIO object is best-effort cleaned up below).
+        await assertLimitNotExceeded(
+          tx,
+          organizationId,
+          'STORAGE_MB',
+          subscription?.limits,
+        );
+
+        return created;
+      });
+    } catch (err) {
+      // The DB row was rolled back by the limit recheck, but the MinIO
+      // object is still there. Best-effort delete; don't shadow the
+      // original error if cleanup fails.
+      await this.storage
+        .deleteFile(this.defaultBucket, storageKey)
+        .catch(() => undefined);
+      throw err;
+    }
 
     const event = new FileUploadedEvent({
       fileId: file.id,

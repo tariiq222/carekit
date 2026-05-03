@@ -399,6 +399,7 @@ model Subscription {
   scheduledPlan          Plan?              @relation("SubscriptionScheduledPlan", fields: [scheduledPlanId], references: [id], onDelete: SetNull)
   scheduledBillingCycle  BillingCycle?
   scheduledPlanChangeAt  DateTime?
+  scheduledChangeBlockedReason String?      // Set by cron when downgrade-safety check fails at swap-time
   pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
   retryCount             Int                @default(0) // analytics only; not used for state decisions
   maxRetries             Int                @default(3) // charging attempts within grace window
@@ -501,8 +502,10 @@ model SubscriptionInvoice {
 }
 
 // Phase 7 — per-organization invoice number sequence (yearly reset).
-// Intentionally NOT in SCOPED_MODELS — write path is server-side only via
-// the issue-invoice handler.
+// Bug B5 (2026-05-03): this model IS in SCOPED_MODELS — even though writes
+// happen only via the issue-invoice handler today, defense-in-depth requires
+// the Prisma extension to inject the org filter so a future caller cannot
+// accidentally read or update another tenant's `lastSequence`.
 model OrganizationInvoiceCounter {
   organizationId String
   year           Int
@@ -569,6 +572,21 @@ model UsageRecord {
   @@index([metric])
 }
 
+// Platform-level webhook dedup. Intentionally NOT in SCOPED_MODELS — Moyasar webhooks belong to Deqah, not a tenant.
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String // 'MOYASAR_PLATFORM' | 'MOYASAR_TENANT'
+  eventId     String
+  eventType   String
+  receivedAt  DateTime  @default(now())
+  payloadHash String
+  processedAt DateTime?
+  result      String? // 'processed' | 'skipped_duplicate' | 'error'
+
+  @@unique([provider, eventId])
+  @@index([receivedAt])
+}
+
 // Phase 5 — materialized quota counters. One row per (org, featureKey, period).
 // monthly_bookings resets each calendar month (periodStart = 1st of month UTC).
 // All other quantitative keys use EPOCH (1970-01-01) as their periodStart
@@ -586,4 +604,26 @@ model UsageCounter {
   @@unique([organizationId, featureKey, periodStart])
   @@index([organizationId])
   @@index([featureKey])
+}
+
+// ─── RefundUsageRevertLog ─────────────────────────────────────────────────────
+// Idempotency log for usage-counter decrements triggered by refunds. Each row
+// records that a (refundRequestId, metric) pair has already been reverted, so
+// re-firing the RefundCompletedEvent does NOT double-decrement the counter.
+//
+// One row per (refundRequestId, metric) is the unique constraint that guards
+// against replays. The cluster owns this model because the decrement listener
+// lives in `platform/billing/usage-counter/decrement-on-refund/`.
+
+model RefundUsageRevertLog {
+  id              String   @id @default(uuid())
+  organizationId  String
+  refundRequestId String
+  metric          String
+  amount          Int
+  createdAt       DateTime @default(now())
+
+  @@unique([refundRequestId, metric])
+  @@index([organizationId])
+  @@index([refundRequestId])
 }

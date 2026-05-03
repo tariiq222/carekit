@@ -1,40 +1,32 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import { PlatformMailQueueService } from './platform-mail-queue/platform-mail-queue.service';
 
 const DEFAULT_FROM = 'Deqah <noreply@webvue.pro>';
-const DEFAULT_REPLY_TO = 'support@webvue.pro';
 
+/**
+ * Public façade for platform-level transactional emails (welcome, trial,
+ * billing, suspension, etc.). All sends are enqueued via BullMQ —
+ * Resend is called by the worker (see PlatformMailProcessor), NOT inline.
+ *
+ * This service no longer holds a Resend client; queuing-only keeps cron
+ * jobs and billing handlers fast and resilient to transient Resend
+ * outages — failed sends are retried with exponential backoff and
+ * audited in `PlatformMailDeliveryLog`.
+ */
 @Injectable()
 export class PlatformMailerService implements OnModuleInit {
   private readonly logger = new Logger(PlatformMailerService.name);
-  private client: Resend | null = null;
   private from = DEFAULT_FROM;
-  private replyTo = DEFAULT_REPLY_TO;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly queue: PlatformMailQueueService,
+  ) {}
 
   onModuleInit(): void {
-    const apiKey = this.config.get<string>('RESEND_API_KEY');
     this.from = this.config.get<string>('RESEND_FROM') ?? DEFAULT_FROM;
-    this.replyTo = this.config.get<string>('RESEND_REPLY_TO') ?? DEFAULT_REPLY_TO;
-
-    if (!apiKey) {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('RESEND_API_KEY is required in production');
-      }
-      this.logger.warn(
-        'RESEND_API_KEY not set — platform mail disabled (dev/test mode).',
-      );
-      return;
-    }
-
-    this.client = new Resend(apiKey);
-    this.logger.log('PlatformMailerService initialized');
-  }
-
-  isAvailable(): boolean {
-    return this.client !== null;
+    this.logger.log('PlatformMailerService initialized (queue-backed)');
   }
 
   // ── Public send API ────────────────────────────────────────────────────────
@@ -45,7 +37,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { tenantWelcomeTemplate } = await import('./templates/tenant-welcome.template');
     const t = tenantWelcomeTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('tenant-welcome', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendOtpLogin(
@@ -54,7 +46,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { otpLoginTemplate } = await import('./templates/otp-login.template');
     const t = otpLoginTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('otp-login', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendTrialEnding(
@@ -63,7 +55,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialEndingTemplate } = await import('./templates/trial-ending.template');
     const t = trialEndingTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('trial-ending', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendTrialDay7Reminder(
@@ -93,7 +85,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialExpiredTemplate } = await import('./templates/trial-expired.template');
     const t = trialExpiredTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('trial-expired', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendTrialSuspendedNoCard(
@@ -102,7 +94,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialSuspendedNoCardTemplate } = await import('./templates/trial-suspended-no-card.template');
     const t = trialSuspendedNoCardTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('trial-suspended-no-card', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendSubscriptionPaymentSucceeded(
@@ -111,7 +103,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { subscriptionPaymentSucceededTemplate } = await import('./templates/subscription-payment-succeeded.template');
     const t = subscriptionPaymentSucceededTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('subscription-payment-succeeded', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendSubscriptionPaymentFailed(
@@ -120,7 +112,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { subscriptionPaymentFailedTemplate } = await import('./templates/subscription-payment-failed.template');
     const t = subscriptionPaymentFailedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('subscription-payment-failed', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendDunningRetry(
@@ -129,7 +121,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { dunningRetryTemplate } = await import('./templates/dunning-retry.template');
     const t = dunningRetryTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('dunning-retry', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendPlanChanged(
@@ -138,7 +130,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { planChangedTemplate } = await import('./templates/plan-changed.template');
     const t = planChangedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('plan-changed', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendAccountStatusChanged(
@@ -147,7 +139,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { accountStatusChangedTemplate } = await import('./templates/account-status-changed.template');
     const t = accountStatusChangedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('account-status-changed', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   async sendMembershipInvitation(
@@ -156,7 +148,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { membershipInvitationTemplate } = await import('./templates/membership-invitation.template');
     const t = membershipInvitationTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch('membership-invitation', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
   // ── Internals ──────────────────────────────────────────────────────────────
@@ -165,24 +157,18 @@ export class PlatformMailerService implements OnModuleInit {
     return `${ar} · ${en}`;
   }
 
-  private async dispatch(to: string, subject: string, html: string): Promise<void> {
-    if (!this.client) {
-      this.logger.warn(`PlatformMailer unavailable — skipping email to ${to}`);
-      return;
-    }
-    try {
-      const res = await this.client.emails.send({
-        from: this.from,
-        replyTo: this.replyTo,
-        to: [to],
-        subject,
-        html,
-      });
-      if (res.error) {
-        this.logger.error(`Resend send error for ${to}: ${res.error.message}`);
-      }
-    } catch (err) {
-      this.logger.error(`Resend dispatch threw for ${to}`, err as Error);
-    }
+  private async dispatch(
+    templateName: string,
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
+    await this.queue.enqueue({
+      recipient: to,
+      templateName,
+      subject,
+      html,
+      from: this.from,
+    });
   }
 }

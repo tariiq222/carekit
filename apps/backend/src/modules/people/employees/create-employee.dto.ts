@@ -1,13 +1,14 @@
 import { ArrayUnique, IsArray, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EmployeeGender, EmploymentType } from '@prisma/client';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 export class CreateEmployeeDto {
   @ApiProperty({ description: 'Full display name', example: 'Dr. Khalid Al-Otaibi' })
   @IsString() @MaxLength(200) name!: string;
 
-  @ApiPropertyOptional({ description: 'Phone number (international format)', example: '+966501234567' })
-  @IsOptional() @IsString() @Matches(/^\+?[0-9]{9,15}$/) phone?: string;
+  @ApiPropertyOptional({ description: 'Phone number (any common format; normalized to E.164)', example: '+966501234567' })
+  @IsOptional() @IsString() @NormalizePhone() @Matches(/^\+[1-9][0-9]{6,14}$/) phone?: string;
 
   @ApiPropertyOptional({ description: 'Email address', example: 'user@example.com' })
   @IsOptional() @IsEmail() email?: string;

@@ -1,6 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { DowngradePlanHandler } from './downgrade-plan.handler';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
+import { DowngradePrecheckFailedException } from '../downgrade-safety/downgrade-precheck.exception';
 
 const buildPrisma = () => ({
   subscription: {
@@ -37,11 +39,18 @@ const buildEventBus = () => ({
   publish: jest.fn().mockResolvedValue(undefined),
 });
 
+const buildSafety = (
+  result: { ok: boolean; violations: Array<{ kind: string; current: number; targetMax: number }> } = { ok: true, violations: [] },
+) => ({
+  checkDowngrade: jest.fn().mockResolvedValue(result),
+});
+
 const buildHandler = (
   prisma: ReturnType<typeof buildPrisma>,
   tenant = buildTenant(),
   cache = buildCache(),
   mailer = buildMailer(),
+  safety: ReturnType<typeof buildSafety> = buildSafety(),
 ) =>
   new DowngradePlanHandler(
     prisma as never,
@@ -51,6 +60,7 @@ const buildHandler = (
     mailer as never,
     buildConfig() as never,
     buildEventBus() as never,
+    safety as never,
   );
 
 const basicPlan = { id: 'plan-1', slug: 'basic', nameAr: 'أساسي', priceMonthly: 299, isActive: true };
@@ -162,5 +172,42 @@ describe('DowngradePlanHandler', () => {
         effectiveDate: expect.any(String),
       }),
     );
+  });
+
+  it('throws DowngradePrecheckFailedException when employees exceed target plan', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: proPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    const safety = buildSafety({
+      ok: false,
+      violations: [{ kind: FeatureKey.EMPLOYEES, current: 12, targetMax: 5 }],
+    });
+    const handler = buildHandler(prisma, buildTenant(), buildCache(), buildMailer(), safety);
+
+    await expect(
+      handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' }),
+    ).rejects.toBeInstanceOf(DowngradePrecheckFailedException);
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+  });
+
+  it('succeeds when usage fits target plan', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: proPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
+    const safety = buildSafety({ ok: true, violations: [] });
+    const handler = buildHandler(prisma, buildTenant(), buildCache(), buildMailer(), safety);
+
+    const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+    expect(safety.checkDowngrade).toHaveBeenCalled();
+    expect(result).toEqual({ id: 'sub-1', planId: 'plan-1' });
   });
 });

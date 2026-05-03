@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClientAccountType, ClientBloodType, ClientGender, ClientSource } from '@prisma/client';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 const toUpper = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.toUpperCase() : value;
@@ -30,8 +31,8 @@ export class CreateClientDto {
   @ApiProperty({ description: "Client's last name", example: 'Al-Harbi' })
   @IsString() @IsNotEmpty() @MaxLength(255) lastName!: string;
 
-  @ApiProperty({ description: 'Saudi mobile number', example: '+966501234567' })
-  @IsString() @Matches(PHONE_REGEX, { message: 'phone must be a Saudi number +9665XXXXXXXX' }) phone!: string;
+  @ApiProperty({ description: 'Saudi mobile number (any common format; normalized to E.164)', example: '+966501234567' })
+  @IsString() @NormalizePhone() @Matches(PHONE_REGEX, { message: 'phone must be a Saudi number +9665XXXXXXXX' }) phone!: string;
 
   @ApiPropertyOptional({ description: 'Email address', example: 'user@example.com' })
   @IsOptional() @IsEmail() email?: string;
@@ -52,7 +53,7 @@ export class CreateClientDto {
   @IsOptional() @IsString() @MaxLength(255) emergencyName?: string;
 
   @ApiPropertyOptional({ description: 'Emergency contact Saudi mobile number', example: '+966501234567' })
-  @IsOptional() @IsString() @Matches(PHONE_REGEX, { message: 'emergencyPhone must be a Saudi number +9665XXXXXXXX' }) emergencyPhone?: string;
+  @IsOptional() @IsString() @NormalizePhone() @Matches(PHONE_REGEX, { message: 'emergencyPhone must be a Saudi number +9665XXXXXXXX' }) emergencyPhone?: string;
 
   @ApiPropertyOptional({ description: 'Blood type', enum: ClientBloodType, enumName: 'ClientBloodType', example: ClientBloodType.A_POS })
   @IsOptional() @Transform(toUpper) @IsEnum(ClientBloodType) bloodType?: ClientBloodType;

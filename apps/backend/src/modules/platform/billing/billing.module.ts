@@ -6,6 +6,7 @@ import { MailModule } from "../../../infrastructure/mail";
 import { MessagingModule } from "../../../infrastructure/messaging.module";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 import { IncrementUsageListener } from "./usage-counter/increment-usage.listener";
+import { DecrementOnRefundListener } from "./usage-counter/decrement-on-refund/decrement-on-refund.listener";
 import { CacheInvalidatorListener } from "./cache-invalidator.listener";
 import { GetUsageHandler } from "./get-usage/get-usage.handler";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
@@ -49,6 +50,7 @@ import { MoyasarSubscriptionClient } from "../../finance/moyasar-api/moyasar-sub
 import { PlanLimitsGuard } from "./enforce-limits.guard";
 import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
+import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -118,8 +120,10 @@ const HANDLERS = [
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
     UsageCounterService,
     IncrementUsageListener,
+    DecrementOnRefundListener,
     CacheInvalidatorListener,
     GetUsageHandler,
+    DowngradeSafetyService,
   ],
   exports: [
     FeatureGuard,
@@ -129,6 +133,7 @@ const HANDLERS = [
     SubscriptionStateMachine,
     UsageCounterService,
     GetUsageHandler,
+    DowngradeSafetyService,
     ...HANDLERS,
   ],
 })

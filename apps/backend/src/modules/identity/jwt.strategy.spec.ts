@@ -124,6 +124,40 @@ describe('JwtStrategy', () => {
     expect((result as { membershipRole?: string }).membershipRole).toBe('OWNER');
   });
 
+  it('Bug B5: passes membershipRole (not legacy User.role) to CaslAbilityFactory', async () => {
+    // Legacy global role says ADMIN; per-org role says RECEPTIONIST.
+    // The strategy MUST hand the per-org role to the factory, otherwise a
+    // demoted user keeps admin abilities until JWT TTL expiry.
+    const module = await Test.createTestingModule({
+      providers: [
+        JwtStrategy,
+        { provide: ConfigService, useValue: { getOrThrow: jest.fn().mockReturnValue('secret-key') } },
+        { provide: PrismaService, useValue: { user: { findUnique: jest.fn().mockResolvedValue({
+          id: 'u1', email: 'a@b.com', role: 'ADMIN',
+          customRoleId: null, customRole: null, isActive: true,
+        }) } } },
+        {
+          provide: CaslAbilityFactory,
+          useValue: { buildForUser: jest.fn().mockReturnValue({ rules: [] }) },
+        },
+      ],
+    }).compile();
+
+    const localStrategy = module.get(JwtStrategy);
+    const casl = module.get(CaslAbilityFactory) as unknown as { buildForUser: jest.Mock };
+
+    await localStrategy.validate({
+      sub: 'u1', email: 'a@b.com', role: 'ADMIN',
+      customRoleId: null, permissions: [], features: [],
+      organizationId: 'org-1', membershipId: 'mem-1',
+      membershipRole: 'RECEPTIONIST',
+    });
+
+    expect(casl.buildForUser).toHaveBeenCalledWith(
+      expect.objectContaining({ membershipRole: 'RECEPTIONIST', role: 'ADMIN' }),
+    );
+  });
+
   it('marks isSuperAdmin true when the DB user has isSuperAdmin=true', async () => {
     prisma.user.findUnique.mockResolvedValue({
       id: 'u1', email: 'sa@b.com', role: 'SUPER_ADMIN', isSuperAdmin: true,

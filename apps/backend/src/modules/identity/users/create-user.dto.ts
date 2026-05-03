@@ -1,6 +1,7 @@
 import { IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import { UserRole, UserGender } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { NormalizePhone } from '../shared/normalize-phone.transform';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
@@ -15,8 +16,8 @@ export class CreateUserDto {
   @ApiProperty({ description: 'System role', enum: UserRole, enumName: 'UserRole', example: UserRole.RECEPTIONIST })
   @IsEnum(UserRole) role!: UserRole;
 
-  @ApiPropertyOptional({ description: 'Mobile phone number', example: '+966501234567' })
-  @IsOptional() @IsString() phone?: string;
+  @ApiPropertyOptional({ description: 'Mobile phone number (any common format; normalized to E.164)', example: '+966501234567' })
+  @IsOptional() @IsString() @NormalizePhone() phone?: string;
 
   @ApiPropertyOptional({ description: 'Gender', enum: UserGender, enumName: 'UserGender', example: UserGender.FEMALE })
   @IsOptional() @IsEnum(UserGender) gender?: UserGender;

@@ -1,7 +1,17 @@
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 import { PlanLimitsGuard } from './enforce-limits.guard';
 
-export type LimitKind = 'BRANCHES' | 'EMPLOYEES';
+/**
+ * Hard-cap LimitKinds — these block the creation of more rows when the plan
+ * limit is reached. PRE-CREATE check via `@EnforceLimit` (this decorator) +
+ * POST-CREATE check via `@PostCreateLimitCheck` close the TOCTOU race.
+ */
+export type LimitKind =
+  | 'BRANCHES'
+  | 'EMPLOYEES'
+  | 'BOOKINGS_PER_MONTH'
+  | 'STORAGE_MB';
+
 export const ENFORCE_LIMIT_KEY = 'plan-limits:enforce';
 
 export const EnforceLimit = (kind: LimitKind) =>
