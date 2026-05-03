@@ -7,13 +7,11 @@ const fn = <T = unknown>(val: T = { success: true } as T) => ({
 function buildController() {
   const listHandler = fn();
   const updateHandler = fn();
-  const upsertOverrideHandler = fn();
   const controller = new AdminFeatureFlagsController(
     listHandler as never,
     updateHandler as never,
-    upsertOverrideHandler as never,
   );
-  return { controller, listHandler, updateHandler, upsertOverrideHandler };
+  return { controller, listHandler, updateHandler };
 }
 
 describe('AdminFeatureFlagsController', () => {
@@ -25,50 +23,23 @@ describe('AdminFeatureFlagsController', () => {
     expect(listHandler.execute).toHaveBeenCalledWith({ organizationId: 'org-1' });
   });
 
-  it('upsertOverride — calls handler with correct args from dto and user', async () => {
-    const { controller, upsertOverrideHandler } = buildController();
+  it('update — delegates to updateHandler with correct args', async () => {
+    const { controller, updateHandler } = buildController();
     const dto = {
       organizationId: 'org-1',
-      key: 'coupons',
-      mode: 'FORCE_ON' as const,
-      reason: 'Pilot customer requires coupons on Basic plan',
+      enabled: true,
+      reason: 'Pilot customer requires feature enabled on Basic plan',
     };
-    const result = await controller.upsertOverride(dto as never, user);
-    expect(upsertOverrideHandler.execute).toHaveBeenCalledWith({
+    const req = { ip: '127.0.0.1', headers: { 'user-agent': 'test-agent' } } as never;
+    await controller.update('some_feature', dto as never, user, req);
+    expect(updateHandler.execute).toHaveBeenCalledWith({
       organizationId: 'org-1',
-      key: 'coupons',
-      mode: 'FORCE_ON',
-      reason: 'Pilot customer requires coupons on Basic plan',
+      key: 'some_feature',
+      enabled: true,
       superAdminUserId: 'admin-1',
+      reason: 'Pilot customer requires feature enabled on Basic plan',
+      ipAddress: '127.0.0.1',
+      userAgent: 'test-agent',
     });
-    expect(result).toEqual({ success: true });
-  });
-
-  it('upsertOverride — uses user.id when sub is absent', async () => {
-    const { controller, upsertOverrideHandler } = buildController();
-    const dto = {
-      organizationId: 'org-1',
-      key: 'coupons',
-      mode: 'INHERIT' as const,
-      reason: 'Reverting pilot override after trial ended',
-    };
-    await controller.upsertOverride(dto as never, { id: 'admin-2' } as never);
-    expect(upsertOverrideHandler.execute).toHaveBeenCalledWith(expect.objectContaining({
-      superAdminUserId: 'admin-2',
-    }));
-  });
-
-  it('upsertOverride — FORCE_OFF passes mode correctly', async () => {
-    const { controller, upsertOverrideHandler } = buildController();
-    const dto = {
-      organizationId: 'org-1',
-      key: 'waitlist',
-      mode: 'FORCE_OFF' as const,
-      reason: 'Compliance review requires disabling waitlist',
-    };
-    await controller.upsertOverride(dto as never, user);
-    expect(upsertOverrideHandler.execute).toHaveBeenCalledWith(expect.objectContaining({
-      mode: 'FORCE_OFF',
-    }));
   });
 });

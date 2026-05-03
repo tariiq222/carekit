@@ -2,13 +2,13 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { ClsModule } from 'nestjs-cls';
 import { PlatformModule } from './platform.module';
-import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
+import { ListSubscriptionsHandler } from './admin/list-subscriptions/list-subscriptions.handler';
 import { DatabaseModule } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { MailModule } from '../../infrastructure/mail';
 
 describe('PlatformModule', () => {
-  it('resolves UpdateFeatureFlagHandler', async () => {
+  it('resolves ListSubscriptionsHandler', async () => {
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -46,6 +46,6 @@ describe('PlatformModule', () => {
       .overrideProvider(RedisService)
       .useValue({ getClient: () => ({ del: jest.fn() }) })
       .compile();
-    expect(module.get(UpdateFeatureFlagHandler)).toBeDefined();
+    expect(module.get(ListSubscriptionsHandler)).toBeDefined();
   });
 });
