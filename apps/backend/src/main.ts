@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
@@ -16,7 +17,9 @@ async function bootstrap(): Promise<void> {
   // required by webhook handlers (Moyasar, etc.) for HMAC signature verification.
   // Without this the body is JSON-parsed before the handler sees it and the
   // signature computed over the raw bytes would never match.
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  // Honor X-Forwarded-For from the upstream Nginx so req.ip is the real client IP (throttler + audit logs depend on this).
+  app.set('trust proxy', 1);
 
   app.use(helmet());
   app.use(cookieParser());

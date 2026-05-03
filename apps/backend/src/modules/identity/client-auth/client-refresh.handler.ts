@@ -36,10 +36,14 @@ export class ClientRefreshHandler {
 
     if (!matched) throw new UnauthorizedException('Invalid or expired refresh token');
 
-    await this.prisma.clientRefreshToken.update({
-      where: { id: matched.id },
+    const revoked = await this.prisma.clientRefreshToken.updateMany({
+      where: { id: matched.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+    if (revoked.count === 0) {
+      // Lost the rotation race — another request consumed this refresh token first.
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
 
     const client = await this.prisma.client.findFirst({
       where: { id: clientId, organizationId },

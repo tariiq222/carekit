@@ -59,7 +59,7 @@ export const envValidationSchema = Joi.object({
 
   // Client JWT — separate namespace for website clients
   JWT_CLIENT_ACCESS_SECRET: Joi.string().min(16).required(),
-  JWT_CLIENT_ACCESS_TTL: Joi.string().default('7d'),
+  JWT_CLIENT_ACCESS_TTL: Joi.string().default('15m'),
 
   // License Server (Platform BC) — optional until Phase 3
   LICENSE_SERVER_URL: Joi.string().uri().allow('').optional(),
@@ -129,9 +129,9 @@ export const envValidationSchema = Joi.object({
   // warning; production REQUIRES a distinct secret so a leaked OTP token
   // cannot forge an access token.
   JWT_OTP_SECRET: Joi.when('NODE_ENV', {
-    is: 'production',
-    then: Joi.string().min(16).required(),
-    otherwise: Joi.string().min(16).allow('').optional(),
+    is: Joi.string().valid('development', 'test'),
+    then: Joi.string().min(16).allow('').optional(),
+    otherwise: Joi.string().min(16).required(),
   }),
 
   // Client refresh-token TTL (mobile + website). String like '7d' / '30d'.
