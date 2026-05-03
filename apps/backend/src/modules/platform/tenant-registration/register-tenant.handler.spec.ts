@@ -20,6 +20,7 @@ const txMock = {
   membership: { create: jest.fn().mockResolvedValue({ id: 'mem-1', organizationId: 'org-1' }) },
   brandingConfig: { create: jest.fn().mockResolvedValue({}) },
   organizationSettings: { create: jest.fn().mockResolvedValue({}) },
+  subscription: { create: jest.fn().mockResolvedValue({ id: 'sub-1', organizationId: 'org-1' }) },
 };
 
 const makePassword = () => ({ hash: jest.fn().mockResolvedValue('hashed') });
@@ -33,14 +34,12 @@ const makeConfig = (slug = 'BASIC', trialDays = 14) => ({
 });
 const makeTenant = () => ({ set: jest.fn(), requireOrganizationId: jest.fn().mockReturnValue('org-1') });
 const makeCache = () => ({ invalidate: jest.fn() });
-const makeStartSub = () => ({ execute: jest.fn().mockResolvedValue({ id: 'sub-1' }) });
 const makeMailer = () => ({ sendTenantWelcome: jest.fn().mockResolvedValue(undefined) });
 
 describe('RegisterTenantHandler', () => {
   let handler: RegisterTenantHandler;
   let prisma: ReturnType<typeof makePrisma>;
   let tokens: ReturnType<typeof makeTokens>;
-  let startSub: ReturnType<typeof makeStartSub>;
   let tenant: ReturnType<typeof makeTenant>;
   let mailer: ReturnType<typeof makeMailer>;
 
@@ -48,7 +47,6 @@ describe('RegisterTenantHandler', () => {
     jest.clearAllMocks();
     prisma = makePrisma();
     tokens = makeTokens();
-    startSub = makeStartSub();
     tenant = makeTenant();
     mailer = makeMailer();
     handler = new RegisterTenantHandler(
@@ -58,7 +56,6 @@ describe('RegisterTenantHandler', () => {
       makeConfig() as never,
       tenant as never,
       makeCache() as never,
-      startSub as never,
       mailer as never,
     );
   });
@@ -76,7 +73,7 @@ describe('RegisterTenantHandler', () => {
       .rejects.toThrow(NotFoundException);
   });
 
-  it('creates org + user + membership + branding + settings inside one transaction', async () => {
+  it('creates org + user + membership + branding + settings + subscription inside one transaction', async () => {
     await handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة علي' });
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(txMock.organization.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -87,11 +84,29 @@ describe('RegisterTenantHandler', () => {
     }));
     expect(txMock.brandingConfig.create).toHaveBeenCalled();
     expect(txMock.organizationSettings.create).toHaveBeenCalled();
+    expect(txMock.subscription.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'TRIALING', billingCycle: 'MONTHLY' }),
+    }));
   });
 
-  it('calls StartSubscriptionHandler.execute after transaction', async () => {
-    await handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' });
-    expect(startSub.execute).toHaveBeenCalledWith(expect.objectContaining({ billingCycle: 'MONTHLY' }));
+  it('subscription.create failure rolls back the organization (atomic tx)', async () => {
+    // When subscription.create throws inside the tx, the entire tx is aborted.
+    // The handler should propagate the error — the caller (controller) sees a 500
+    // and no orphan org row exists (Prisma tx guarantees).
+    const txFailing = {
+      ...txMock,
+      subscription: {
+        create: jest.fn().mockRejectedValue(new Error('subscription_create_failed')),
+      },
+    };
+    prisma.$transaction = jest.fn(async (cb: (tx: unknown) => Promise<unknown>) => cb(txFailing));
+
+    await expect(
+      handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }),
+    ).rejects.toThrow('subscription_create_failed');
+
+    // Organization should NOT have been returned (tx rolled back)
+    // — verified by the error propagating before result is set
   });
 
   it('returns accessToken, refreshToken, and userId', async () => {
