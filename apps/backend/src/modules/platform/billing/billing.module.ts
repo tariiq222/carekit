@@ -6,6 +6,7 @@ import { MailModule } from "../../../infrastructure/mail";
 import { MessagingModule } from "../../../infrastructure/messaging.module";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 import { IncrementUsageListener } from "./usage-counter/increment-usage.listener";
+import { DecrementOnRefundListener } from "./usage-counter/decrement-on-refund/decrement-on-refund.listener";
 import { CacheInvalidatorListener } from "./cache-invalidator.listener";
 import { GetUsageHandler } from "./get-usage/get-usage.handler";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
@@ -119,6 +120,7 @@ const HANDLERS = [
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
     UsageCounterService,
     IncrementUsageListener,
+    DecrementOnRefundListener,
     CacheInvalidatorListener,
     GetUsageHandler,
     DowngradeSafetyService,

@@ -604,3 +604,25 @@ model UsageCounter {
   @@index([organizationId])
   @@index([featureKey])
 }
+
+// ─── RefundUsageRevertLog ─────────────────────────────────────────────────────
+// Idempotency log for usage-counter decrements triggered by refunds. Each row
+// records that a (refundRequestId, metric) pair has already been reverted, so
+// re-firing the RefundCompletedEvent does NOT double-decrement the counter.
+//
+// One row per (refundRequestId, metric) is the unique constraint that guards
+// against replays. The cluster owns this model because the decrement listener
+// lives in `platform/billing/usage-counter/decrement-on-refund/`.
+
+model RefundUsageRevertLog {
+  id              String   @id @default(uuid())
+  organizationId  String
+  refundRequestId String
+  metric          String
+  amount          Int
+  createdAt       DateTime @default(now())
+
+  @@unique([refundRequestId, metric])
+  @@index([organizationId])
+  @@index([refundRequestId])
+}
