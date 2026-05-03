@@ -1,0 +1,90 @@
+{
+  "domain": "Settings",
+  "version": "main",
+  "build": "super-admin-settings-2026-05-03",
+  "planName": "Super-admin Settings hub QA",
+  "planSummary": "Validates all 7 super-admin Settings pages + tenant dashboard fallback flows",
+  "runSummary": "Initial QA run for settings hub (phases 0-9). All cases run against local Docker dev stack.",
+  "cases": [
+    {
+      "summary": "Email — Rotate Resend API key and verify masked display",
+      "text": "1. Log in to admin at http://localhost:5104.\n2. Navigate to /settings/email.\n3. Enter a new Resend sandbox key (re_test_xxx) and click Save.\n4. Verify success toast appears.\n5. Refresh page — key field shows masked value (not plaintext).\n6. Check /audit-log — new PLATFORM_SETTING_UPDATED row for email.apiKey.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Email — Send test email to sandbox address and verify SENT status",
+      "text": "1. On /settings/email, click 'Send test email'.\n2. Enter tariq+test@webvue.pro as recipient.\n3. Click Send.\n4. Verify response shows status SENT (or FAILED with clear error if sandbox key is invalid).\n5. Navigate to /settings/email/logs — new row appears with correct toAddress and status.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Email Templates — Edit an unlocked template and verify persistence",
+      "text": "1. Navigate to /settings/email/templates.\n2. Click on a template that is NOT locked (e.g., BOOKING_CONFIRMED).\n3. Edit the English body field with a minor change.\n4. Click Save.\n5. Refresh the page — edited content persists.\n6. Check /audit-log for the update row.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Email Templates — Locked template fields are disabled",
+      "text": "1. Navigate to /settings/email/templates.\n2. Click on a locked template (e.g., OTP).\n3. Verify all input fields are disabled (greyed out).\n4. Verify Save button is disabled or hidden for that template.\n5. No network call fires when attempting to interact with disabled fields.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Email Logs — Filter by FAILED status returns matching rows",
+      "text": "1. Navigate to /settings/email/logs.\n2. Select Status = FAILED in the filter bar.\n3. Table updates to show only FAILED rows.\n4. Verify row count matches the badge count on the stat card 'Failed today'.\n5. Reset filters — all rows reappear.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Notifications — Toggle default channel and verify new tenant inherits setting",
+      "text": "1. Navigate to /settings/notifications.\n2. Disable the EMAIL channel for BOOKING_CONFIRMED type.\n3. Click Save — success toast.\n4. Create a new tenant organization via /organizations/new.\n5. Inspect the new tenant's notification defaults via GET /admin/settings/notifications — BOOKING_CONFIRMED.channels should NOT include EMAIL.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Notifications — Quiet hours validation rejects invalid time range",
+      "text": "1. Navigate to /settings/notifications.\n2. Enter quiet hours: start = 22:00, end = 08:00 (crosses midnight — this may be valid depending on spec) OR enter start = 10:00 and end = 08:00 (end before start on same day).\n3. Attempt to save.\n4. Verify inline validation error appears.\n5. Verify no network call fires (or the API returns a 422 with a descriptive error).",
+      "result": "PASS"
+    },
+    {
+      "summary": "Billing — Rotate Moyasar platform key and test connection",
+      "text": "1. Navigate to /settings/billing.\n2. Enter a test Moyasar public + secret key pair.\n3. Click 'Test connection'.\n4. Response shows {ok: true, mode: 'test'} for sandbox keys.\n5. Click Save — success toast.\n6. Key field shows masked value on refresh.\n7. /audit-log has new row for billing key update.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Billing — Change trial days and verify new tenant receives correct trial period",
+      "text": "1. Navigate to /settings/billing.\n2. Change default trial days from 14 to 7 and save.\n3. Register a new test tenant organization.\n4. Navigate to the new tenant's billing page in /organizations/<id>/billing.\n5. Verify trial expires in 7 days from creation, not 14.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Feature flags — Toggle global default",
+      "text": "1. Navigate to /settings/feature-flags.\n2. Choose a non-critical feature (e.g., 'ai.chatbot.enabled') and toggle its global default to disabled.\n3. Click Save — success toast + audit row.\n4. Log in to a tenant dashboard that has no per-org override for this feature.\n5. Verify the feature UI is hidden or shows an upgrade prompt.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Feature flags — Add per-org override that wins over global default",
+      "text": "1. With global default for a feature set to disabled (from previous case),\n2. Navigate to /settings/feature-flags.\n3. Find the feature row and click 'Add override'.\n4. Select Org A and set value = enabled.\n5. Save.\n6. Log in to Org A's dashboard — feature is enabled.\n7. Log in to Org B (no override) — feature is still disabled.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Branding — Upload new admin logo and verify it appears in sidebar",
+      "text": "1. Navigate to /settings/branding.\n2. Click the logo upload area and select a PNG file (< 2 MB).\n3. A preview renders in the form.\n4. Click Save — success toast.\n5. Hard-refresh the admin app (Ctrl+Shift+R).\n6. Verify the new logo appears in the top-left of the admin sidebar.",
+      "result": "PASS"
+    },
+    {
+      "summary": "System health — Health page shows all 6 stat cards and subsystem states",
+      "text": "1. Navigate to /settings/system.\n2. Wait for page to load (skeletons → data).\n3. Verify all 6 data points are present: backendVersion, gitSha, postgres (with latencyMs), redis (with latencyMs), minio (ok/fail), latestMigration (name + date).\n4. Verify 'Top fallback consumers' card is visible (may be empty if no usage).\n5. Verify external links card shows 3 URL inputs (Sentry, Prometheus, Kiwi).",
+      "result": "PASS"
+    },
+    {
+      "summary": "Security — Enroll TOTP 2FA and verify login requires code",
+      "text": "1. Navigate to /settings/security.\n2. Click 'Enroll 2FA'.\n3. Dialog opens with QR code image.\n4. Scan QR code with Google Authenticator or Authy.\n5. Enter the 6-digit code and click 'Verify and activate'.\n6. Dialog closes; 2FA status badge shows 'Enabled'.\n7. Log out.\n8. Log in with correct credentials — a 2FA code prompt appears.\n9. Enter correct 6-digit code.\n10. Access granted; home page renders.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Tenant — Email delivery log page renders with tenant-scoped rows",
+      "text": "1. Log in to tenant dashboard at http://localhost:5103.\n2. Navigate to Settings → Email & SMS Delivery Log.\n3. Page renders with 4 stat cards (Sent/Failed/Bounced/Pending today).\n4. Table shows delivery rows for the current organization only.\n5. Filter by Channel = SMS — only SMS rows appear.\n6. Verify senderActor badge is present on each row (PLATFORM, TENANT, or PLATFORM_FALLBACK).\n7. Log out; log in as a different tenant — verify first tenant's rows are NOT visible.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Tenant — Hitting fallback email quota shows limit-reached dialog",
+      "text": "1. As super-admin, set the email fallback limit to 2 for the test tenant's plan via /settings/feature-flags.\n2. Log in to tenant dashboard; navigate to Settings → Email → provider = NONE.\n3. Verify fallback usage banner appears.\n4. Trigger 2 outbound emails (e.g., send booking confirmations).\n5. Verify second email triggers the limit-reached dialog with title 'Platform email limit reached'.\n6. Verify the dialog shows two CTAs: 'Configure your own provider' and 'Upgrade your plan'.\n7. Reset the limit to a higher value after the test.",
+      "result": "PASS"
+    }
+  ]
+}
