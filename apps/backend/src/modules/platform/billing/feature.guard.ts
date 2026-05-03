@@ -8,6 +8,7 @@ import {
 import { Reflector } from "@nestjs/core";
 import { BookingStatus } from "@prisma/client";
 import { FeatureKey } from "@deqah/shared/constants/feature-keys";
+import { FEATURE_CATALOG } from "@deqah/shared";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SubscriptionCacheService } from "./subscription-cache.service";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
@@ -16,9 +17,14 @@ import { REQUIRE_FEATURE_KEY } from "./feature.decorator";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
 import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 
+/** Per-org override decision: FORCE_ON (true) / FORCE_OFF (false) / INHERIT (null). */
+type OverrideDecision = boolean | null;
+
 interface CachedFeatures {
   features: Record<string, number | boolean>;
   planSlug: string;
+  /** featureKey → override decision; absent key means "not yet looked up". */
+  overrides: Map<string, OverrideDecision>;
   expiresAt: number;
 }
 
@@ -74,6 +80,21 @@ export class FeatureGuard implements CanActivate {
 
     const { features, planSlug } = await this.resolveFeatures(organizationId);
 
+    // ── Per-tenant override (Phase 6) ───────────────────────────────────
+    // FeatureFlag rows scoped by (organizationId, key) act as overrides:
+    //   enabled=true  → FORCE_ON  (allow regardless of plan)
+    //   enabled=false → FORCE_OFF (deny regardless of plan)
+    //   row absent    → INHERIT   (fall through to Plan.limits)
+    // Override rows are written via UpsertFeatureFlagOverrideHandler, which
+    // emits SUBSCRIPTION_UPDATED_EVENT — CacheInvalidatorListener clears
+    // this guard's per-org cache on that event, so override changes
+    // propagate within one event-delivery cycle.
+    const override = await this.resolveOverride(organizationId, featureKey);
+    if (override === true) return true;
+    if (override === false) {
+      throw new FeatureNotEnabledException(featureKey, planSlug);
+    }
+
     const jsonKey = FEATURE_KEY_MAP[featureKey];
     const value = features[jsonKey];
 
@@ -94,6 +115,34 @@ export class FeatureGuard implements CanActivate {
           `Feature limit reached for '${featureKey}': ${current}/${value}`,
         );
       }
+      return true;
+    }
+
+    // ── Default DENY for missing boolean keys (Phase 1 / Bug B3) ────────
+    // We reach here when features[jsonKey] is undefined (key not in the
+    // plan's seeded limits). Historically the guard fell through to
+    // `return true`, silently exposing PRO/ENTERPRISE features on plans
+    // that hadn't been seeded with the new key. For boolean-kind catalog
+    // entries we now fail closed.
+    //
+    // Exceptions to fail-closed:
+    //   • No subscription found at all (planSlug === "" + empty features
+    //     map): keep the existing fail-open posture so unauthenticated
+    //     fixtures and orgs without billing data are not blanket-blocked.
+    //     Callers in production always have a Subscription via trial/seed.
+    //   • Quantitative-kind keys missing from limits: keep permissive
+    //     (legacy behavior) — seeds always include the maxX keys, so this
+    //     branch is effectively dead code in production.
+    //   • Unknown feature keys (not in FEATURE_CATALOG): treat as allow
+    //     so a future caller writing @RequireFeature with a custom key
+    //     does not silently crash.
+    if (planSlug === "" && Object.keys(features).length === 0) {
+      return true;
+    }
+
+    const catalogEntry = FEATURE_CATALOG[featureKey];
+    if (catalogEntry && catalogEntry.kind === "boolean") {
+      throw new FeatureNotEnabledException(featureKey, planSlug);
     }
 
     return true;
@@ -108,15 +157,66 @@ export class FeatureGuard implements CanActivate {
     }
 
     const sub = await this.cacheService.get(organizationId);
-    if (!sub) return { features: {}, planSlug: "" };
+    if (!sub) {
+      // No subscription found — cache an empty shell so the override map
+      // benefits from per-org cache reuse within the TTL.
+      const emptyEntry: CachedFeatures = {
+        features: {},
+        planSlug: "",
+        overrides: new Map(),
+        expiresAt: Date.now() + this.ttlMs,
+      };
+      this.cache.set(organizationId, emptyEntry);
+      return { features: {}, planSlug: "" };
+    }
 
     const entry: CachedFeatures = {
       features: sub.limits,
       planSlug: sub.planSlug,
+      overrides: new Map(),
       expiresAt: Date.now() + this.ttlMs,
     };
     this.cache.set(organizationId, entry);
     return { features: entry.features, planSlug: entry.planSlug };
+  }
+
+  /**
+   * Returns the override decision for (organizationId, featureKey):
+   *   true   → FORCE_ON  (allow)
+   *   false  → FORCE_OFF (deny)
+   *   null   → INHERIT   (no override; defer to Plan.limits)
+   *
+   * Memoized inside the existing per-org cache entry. The whole entry is
+   * dropped by FeatureGuard.invalidate(orgId) on
+   * SUBSCRIPTION_UPDATED_EVENT — UpsertFeatureFlagOverrideHandler emits
+   * that event after every write, so override changes propagate within
+   * a single event-delivery cycle.
+   */
+  private async resolveOverride(
+    organizationId: string,
+    featureKey: FeatureKey,
+  ): Promise<OverrideDecision> {
+    const entry = this.cache.get(organizationId);
+    if (entry) {
+      const cached = entry.overrides.get(featureKey);
+      if (cached !== undefined) return cached;
+    }
+
+    // Use the scoped Prisma client — the tenant-scoping extension will
+    // verify the organizationId we filter on matches the CLS tenant
+    // context set by JwtGuard / TenantResolverMiddleware. Cross-tenant
+    // leak is impossible: any mismatch throws UnauthorizedTenantAccessError.
+    const row = await this.prisma.featureFlag.findFirst({
+      where: { organizationId, key: featureKey },
+      select: { enabled: true },
+    });
+
+    const decision: OverrideDecision = row ? row.enabled : null;
+
+    if (entry) {
+      entry.overrides.set(featureKey, decision);
+    }
+    return decision;
   }
 
   /**
