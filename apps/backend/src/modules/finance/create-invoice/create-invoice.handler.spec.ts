@@ -1,3 +1,5 @@
+import { ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { CreateInvoiceHandler } from './create-invoice.handler';
 
 const mockInvoice = {
@@ -24,7 +26,8 @@ const mockInvoice = {
 
 const buildPrisma = () => ({
   invoice: {
-    upsert: jest.fn().mockResolvedValue(mockInvoice),
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue(mockInvoice),
   },
 });
 
@@ -48,17 +51,19 @@ describe('CreateInvoiceHandler', () => {
       subtotal: 200,
     });
 
-    expect(prisma.invoice.upsert).toHaveBeenCalledWith(
+    expect(prisma.invoice.findUnique).toHaveBeenCalledWith({
+      where: { bookingId: 'booking-1' },
+      select: { id: true },
+    });
+    expect(prisma.invoice.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { bookingId: 'booking-1' },
-        create: expect.objectContaining({
+        data: expect.objectContaining({
           subtotal: 200,
           vatRate: 0.15,
           vatAmt: 30,
           total: 230,
           status: 'ISSUED',
         }),
-        update: {},
       }),
     );
     expect(eventBus.publish).toHaveBeenCalledWith(
@@ -70,7 +75,7 @@ describe('CreateInvoiceHandler', () => {
 
   it('applies discount before VAT', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.upsert = jest.fn().mockResolvedValue({ ...mockInvoice, discountAmt: 50, vatAmt: 22.5, total: 172.5 });
+    prisma.invoice.create = jest.fn().mockResolvedValue({ ...mockInvoice, discountAmt: 50, vatAmt: 22.5, total: 172.5 });
     const handler = new CreateInvoiceHandler(prisma as never, buildEventBus() as never, buildTenant() as never);
 
     await handler.execute({
@@ -82,21 +87,39 @@ describe('CreateInvoiceHandler', () => {
       discountAmt: 50,
     });
 
-    expect(prisma.invoice.upsert).toHaveBeenCalledWith(
+    expect(prisma.invoice.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        create: expect.objectContaining({ discountAmt: 50, vatAmt: 22.5, total: 172.5 }),
-        update: {},
+        data: expect.objectContaining({ discountAmt: 50, vatAmt: 22.5, total: 172.5 }),
       }),
     );
   });
 
-  it('is idempotent on re-delivery — upsert returns existing invoice without error', async () => {
+  it('throws ConflictException on duplicate bookingId (findUnique returns existing)', async () => {
     const prisma = buildPrisma();
-    // Simulate the DB returning the existing row on upsert (idempotent behavior)
-    prisma.invoice.upsert = jest.fn().mockResolvedValue(mockInvoice);
-    const handler = new CreateInvoiceHandler(prisma as never, buildEventBus() as never, buildTenant() as never);
+    prisma.invoice.findUnique = jest.fn().mockResolvedValue({ id: 'inv-1' });
+    const eventBus = buildEventBus();
+    const handler = new CreateInvoiceHandler(prisma as never, eventBus as never, buildTenant() as never);
 
-    const result = await handler.execute({
+    await expect(
+      handler.execute({
+        branchId: 'branch-1',
+        clientId: 'client-1',
+        employeeId: 'emp-1',
+        bookingId: 'booking-1',
+        subtotal: 200,
+      }),
+    ).rejects.toThrow(ConflictException);
+
+    expect(prisma.invoice.create).not.toHaveBeenCalled();
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it('publishes finance.invoice.created exactly once per booking', async () => {
+    const prisma = buildPrisma();
+    const eventBus = buildEventBus();
+    const handler = new CreateInvoiceHandler(prisma as never, eventBus as never, buildTenant() as never);
+
+    await handler.execute({
       branchId: 'branch-1',
       clientId: 'client-1',
       employeeId: 'emp-1',
@@ -104,7 +127,33 @@ describe('CreateInvoiceHandler', () => {
       subtotal: 200,
     });
 
-    expect(result.id).toBe('inv-1');
-    expect(prisma.invoice.upsert).toHaveBeenCalledTimes(1);
+    expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    expect(eventBus.publish).toHaveBeenCalledWith('finance.invoice.created', expect.anything());
+  });
+
+  it('throws ConflictException on P2002 race-condition backstop', async () => {
+    const prisma = buildPrisma();
+    // findUnique returns null (both concurrent callers pass the read)
+    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+    // create rejects with P2002 (second insert hits unique constraint)
+    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: '5.0.0',
+    });
+    prisma.invoice.create = jest.fn().mockRejectedValue(p2002);
+    const eventBus = buildEventBus();
+    const handler = new CreateInvoiceHandler(prisma as never, eventBus as never, buildTenant() as never);
+
+    await expect(
+      handler.execute({
+        branchId: 'branch-1',
+        clientId: 'client-1',
+        employeeId: 'emp-1',
+        bookingId: 'booking-1',
+        subtotal: 200,
+      }),
+    ).rejects.toThrow(ConflictException);
+
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 });

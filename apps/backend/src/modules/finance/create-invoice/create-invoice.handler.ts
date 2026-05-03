@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
@@ -28,29 +29,47 @@ export class CreateInvoiceHandler {
     const vatAmt = parseFloat((vatBase * vatRate).toFixed(2));
     const total = parseFloat((vatBase + vatAmt).toFixed(2));
 
-    // The DB has a UNIQUE constraint on bookingId — upsert is idempotent:
-    // on re-delivery of the same bookingId we find the existing row without
-    // writing, and the update clause is empty so nothing changes.
-    const invoice = await this.prisma.invoice.upsert({
+    const existing = await this.prisma.invoice.findUnique({
       where: { bookingId: dto.bookingId ?? '' },
-      create: {
-        organizationId,
-        branchId: dto.branchId,
-        clientId: dto.clientId,
-        employeeId: dto.employeeId,
-        bookingId: dto.bookingId,
-        subtotal,
-        discountAmt,
-        vatRate,
-        vatAmt,
-        total,
-        notes: dto.notes,
-        dueAt: dto.dueAt,
-        status: 'ISSUED',
-        issuedAt: new Date(),
-      },
-      update: {},
+      select: { id: true },
     });
+    if (existing) {
+      throw new ConflictException({
+        code: 'INVOICE_ALREADY_EXISTS',
+        bookingId: dto.bookingId,
+        invoiceId: existing.id,
+      });
+    }
+
+    let invoice;
+    try {
+      invoice = await this.prisma.invoice.create({
+        data: {
+          organizationId,
+          branchId: dto.branchId,
+          clientId: dto.clientId,
+          employeeId: dto.employeeId,
+          bookingId: dto.bookingId,
+          subtotal,
+          discountAmt,
+          vatRate,
+          vatAmt,
+          total,
+          notes: dto.notes,
+          dueAt: dto.dueAt,
+          status: 'ISSUED',
+          issuedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictException({
+          code: 'INVOICE_ALREADY_EXISTS',
+          bookingId: dto.bookingId,
+        });
+      }
+      throw err;
+    }
 
     await this.eventBus.publish('finance.invoice.created', {
       eventId: invoice.id,
