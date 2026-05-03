@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Fragment } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
@@ -166,7 +166,8 @@ export function ComparePlansMatrix({ plans }: Props) {
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -211,8 +212,8 @@ export function ComparePlansMatrix({ plans }: Props) {
               const entries = grouped[g.id] ?? [];
               if (entries.length === 0) return null;
               return (
-                <>
-                  <TableRow key={`group-${g.id}`}>
+                <Fragment key={g.id}>
+                  <TableRow>
                     <TableCell
                       colSpan={sorted.length + 1}
                       className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground py-2 px-3"
@@ -278,11 +279,12 @@ export function ComparePlansMatrix({ plans }: Props) {
                       })}
                     </TableRow>
                   ))}
-                </>
+                </Fragment>
               );
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Sticky footer */}

@@ -27,6 +27,7 @@ export default function CreatePlanPage() {
   const router = useRouter();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [limits, setLimits] = useState<PlanLimits>(DEFAULT_PLAN_LIMITS);
+  const [activeTab, setActiveTab] = useState('general');
   const mutation = useCreatePlan();
 
   const slugIsValid = SLUG_REGEX.test(form.slug);
@@ -164,10 +165,9 @@ export default function CreatePlanPage() {
 
       <div className="rounded-lg border border-border bg-card p-6">
         <PlanFormTabs
-          idPrefix="cp"
           general={general}
-          limits={limits}
-          onLimitsChange={setLimits}
+          activeTab={activeTab}
+          onActiveTabChange={setActiveTab}
         />
       </div>
 

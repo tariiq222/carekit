@@ -365,6 +365,7 @@ model Plan {
   //     websiteEnabled, customDomainEnabled, chatbotEnabled, zatcaEnabled, ratingsEnabled }
   limits           Json
   isActive         Boolean  @default(true)
+  isVisible        Boolean  @default(true)
   sortOrder        Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

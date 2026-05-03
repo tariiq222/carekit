@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { Switch } from '@deqah/ui/primitives/switch';
 import {
   Table,
   TableBody,
@@ -18,9 +18,10 @@ interface Props {
   items: PlanRow[] | undefined;
   isLoading: boolean;
   onDelete: (plan: PlanRow) => void;
+  onToggleVisible: (plan: PlanRow, visible: boolean) => void;
 }
 
-export function PlansTable({ items, isLoading, onDelete }: Props) {
+export function PlansTable({ items, isLoading, onDelete, onToggleVisible }: Props) {
   return (
     <Table>
       <TableHeader>
@@ -31,6 +32,7 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
           <TableHead className="text-right">Monthly</TableHead>
           <TableHead className="text-right">Annual</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Visible</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -38,7 +40,7 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
         {isLoading && !items
           ? Array.from({ length: 3 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <Skeleton className="h-6" />
                 </TableCell>
               </TableRow>
@@ -90,26 +92,28 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/plans/${plan.id}/edit`}>Edit</Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => onDelete(plan)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                    <Switch
+                      checked={plan.isVisible}
+                      onCheckedChange={(v) => onToggleVisible(plan, v)}
+                      aria-label={`Toggle visibility for ${plan.slug}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => onDelete(plan)}
+                    >
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
             })}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
               No plans defined. Create one using the button above.
             </TableCell>
           </TableRow>

@@ -22,6 +22,7 @@ export interface UpdatePlanCommand {
     currency?: string;
     limits?: Record<string, unknown>;
     isActive?: boolean;
+    isVisible?: boolean;
     sortOrder?: number;
   };
 }
@@ -46,6 +47,7 @@ export class UpdatePlanHandler {
       if (cmd.data.currency !== undefined) updateData.currency = cmd.data.currency;
       if (cmd.data.limits !== undefined) updateData.limits = parsePlanLimits(cmd.data.limits) as Prisma.InputJsonValue;
       if (cmd.data.isActive !== undefined) updateData.isActive = cmd.data.isActive;
+      if (cmd.data.isVisible !== undefined) updateData.isVisible = cmd.data.isVisible;
       if (cmd.data.sortOrder !== undefined) updateData.sortOrder = cmd.data.sortOrder;
 
       const updated = await tx.plan.update({ where: { id: cmd.planId }, data: updateData });

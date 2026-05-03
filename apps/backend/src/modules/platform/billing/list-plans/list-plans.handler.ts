@@ -7,7 +7,7 @@ export class ListPlansHandler {
 
   async execute() {
     return this.prisma.plan.findMany({
-      where: { isActive: true },
+      where: { isActive: true, isVisible: true },
       orderBy: { sortOrder: 'asc' },
     });
   }

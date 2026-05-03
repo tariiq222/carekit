@@ -7,6 +7,7 @@ export interface PlanRow {
   priceAnnual: string | number;
   currency: string;
   isActive: boolean;
+  isVisible: boolean;
   sortOrder: number;
   limits: Record<string, unknown>;
   createdAt: string;
