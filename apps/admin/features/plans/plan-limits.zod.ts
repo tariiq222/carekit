@@ -43,6 +43,8 @@ export const planLimitsSchema = z.object({
   priority_support: z.boolean(),
   audit_export: z.boolean(),
   multi_currency: z.boolean(),
+  email_fallback_monthly: z.number().int().min(-1),
+  sms_fallback_monthly: z.number().int().min(-1),
 }) satisfies z.ZodType<PlanLimits>;
 
 export type PlanLimitsInput = z.input<typeof planLimitsSchema>;

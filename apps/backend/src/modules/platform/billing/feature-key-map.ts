@@ -54,6 +54,8 @@ export const FEATURE_KEY_MAP: Record<FeatureKey, string> = {
   [FeatureKey.PRIORITY_SUPPORT]: 'priority_support',
   [FeatureKey.AUDIT_EXPORT]: 'audit_export',
   [FeatureKey.MULTI_CURRENCY]: 'multi_currency',
+  [FeatureKey.EMAIL_FALLBACK_MONTHLY]: 'email_fallback_monthly',
+  [FeatureKey.SMS_FALLBACK_MONTHLY]: 'sms_fallback_monthly',
 };
 
 export const ALL_FEATURE_KEYS = Object.keys(FEATURE_KEY_MAP) as FeatureKey[];

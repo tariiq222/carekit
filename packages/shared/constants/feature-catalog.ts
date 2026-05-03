@@ -239,4 +239,18 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureCatalogEntry> = {
     descAr: "إصدار فواتير ومدفوعات بأكثر من عملة",
     descEn: "Issue invoices and payments in multiple currencies",
   },
+  [FeatureKey.EMAIL_FALLBACK_MONTHLY]: {
+    key: FeatureKey.EMAIL_FALLBACK_MONTHLY,
+    kind: 'quantitative', tier: 'PRO', group: 'Operations',
+    nameAr: 'حصة البريد الاحتياطي الشهرية', nameEn: 'Monthly Fallback Email Quota',
+    descAr: 'عدد الرسائل الإلكترونية التي ترسلها المنصة نيابةً عن المستأجر شهرياً',
+    descEn: 'Platform emails sent on tenant behalf per month when no provider configured',
+  },
+  [FeatureKey.SMS_FALLBACK_MONTHLY]: {
+    key: FeatureKey.SMS_FALLBACK_MONTHLY,
+    kind: 'quantitative', tier: 'PRO', group: 'Operations',
+    nameAr: 'حصة الرسائل الاحتياطية الشهرية', nameEn: 'Monthly Fallback SMS Quota',
+    descAr: 'عدد رسائل SMS التي ترسلها المنصة نيابةً عن المستأجر شهرياً',
+    descEn: 'Platform SMS sent on tenant behalf per month when no provider configured',
+  },
 };

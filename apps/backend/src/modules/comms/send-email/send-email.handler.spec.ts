@@ -3,6 +3,8 @@ import type { SmtpService } from '../../../infrastructure/mail';
 import type { PrismaService } from '../../../infrastructure/database';
 import type { TenantContextService } from '../../../common/tenant';
 import type { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
+import type { UsageCounterService } from '../../platform/billing/usage-counter/usage-counter.service';
+import type { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 
 const ORG_ID = 'org-test-1';
 
@@ -30,6 +32,19 @@ const buildNoOpFactory = () =>
     forCurrentTenant: jest.fn().mockResolvedValue({ isAvailable: () => false }),
   }) as unknown as EmailProviderFactory;
 
+/** UsageCounterService mock — unlimited by default (null = no usage) */
+const buildUsageCounter = () =>
+  ({
+    read: jest.fn().mockResolvedValue(null),
+    increment: jest.fn().mockResolvedValue(undefined),
+  }) as unknown as UsageCounterService;
+
+/** SubscriptionCacheService mock — no limits (returns null → no enforcement) */
+const buildSubscriptionCache = () =>
+  ({
+    get: jest.fn().mockResolvedValue(null),
+  }) as unknown as SubscriptionCacheService;
+
 describe('SendEmailHandler', () => {
   it('substitutes template variables and sends email via platform SMTP when no tenant provider', async () => {
     const prisma = buildPrisma();
@@ -42,6 +57,8 @@ describe('SendEmailHandler', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -65,6 +82,8 @@ describe('SendEmailHandler', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -85,6 +104,8 @@ describe('SendEmailHandler', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'missing',
@@ -103,6 +124,8 @@ describe('SendEmailHandler — interpolation', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({ to: 'a@b.com', templateSlug: 'missing', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -115,6 +138,8 @@ describe('SendEmailHandler — interpolation', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -135,6 +160,8 @@ describe('SendEmailHandler — interpolation', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: { name: 'Ahmad' } });
     expect(smtp.sendMail).toHaveBeenCalledWith('a@b.com', 'مرحبا Ahmad', '<p>Hello Ahmad</p>');
   });
@@ -163,6 +190,8 @@ describe('SendEmailHandler — interpolation', () => {
       prisma as unknown as PrismaService,
       buildTenant(),
       tenantFactory,
+      buildUsageCounter(),
+      buildSubscriptionCache(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
 
     expect(tenantSendMail).toHaveBeenCalled();
@@ -180,6 +209,8 @@ describe('SendEmailHandler — interpolation', () => {
         prisma as unknown as PrismaService,
         buildTenant(),
         buildNoOpFactory(),
+        buildUsageCounter(),
+        buildSubscriptionCache(),
       ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} }),
     ).resolves.not.toThrow();
   });

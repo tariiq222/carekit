@@ -95,6 +95,7 @@ enum SuperAdminActionType {
   BILLING_GRANT_CREDIT
   BILLING_CHANGE_PLAN
   BILLING_FORCE_CHARGE
+  PLATFORM_SETTING_UPDATED
 }
 
 model Organization {
@@ -604,6 +605,15 @@ model UsageCounter {
   @@unique([organizationId, featureKey, periodStart])
   @@index([organizationId])
   @@index([featureKey])
+}
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  isSecret  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 }
 
 // ─── RefundUsageRevertLog ─────────────────────────────────────────────────────

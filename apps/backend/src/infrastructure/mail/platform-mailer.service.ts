@@ -151,6 +151,14 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch('membership-invitation', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  /**
+   * Send a raw email with full control over to/subject/html.
+   * Used by the platform email test-send endpoint.
+   */
+  async sendRaw(opts: { to: string; subject: string; html: string; templateSlug: string }): Promise<void> {
+    await this.dispatch(opts.templateSlug, opts.to, opts.subject, opts.html);
+  }
+
   // ── Internals ──────────────────────────────────────────────────────────────
 
   private bilingualSubject(ar: string, en: string): string {

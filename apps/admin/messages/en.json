@@ -10,7 +10,8 @@
     "metrics": "Metrics",
     "auditLog": "Audit log",
     "impersonation": "Impersonation sessions",
-    "notifications": "Notification Delivery"
+    "notifications": "Notification Delivery",
+    "settings": "Settings"
   },
   "notifications": {
     "title": "Notification Delivery Log",
@@ -205,6 +206,111 @@
       "PAID": "Paid",
       "FAILED": "Failed",
       "VOID": "Void"
+    }
+  },
+  "settings": {
+    "email": {
+      "title": "Email Settings",
+      "description": "Configure platform email delivery via Resend.",
+      "testSend": {
+        "title": "Test Email Send",
+        "slug": "Template Slug",
+        "to": "Recipient Email",
+        "submit": "Send test email",
+        "submitting": "Sending...",
+        "success": "Email sent successfully.",
+        "failedPrefix": "Failed: "
+      },
+      "templates": {
+        "title": "Platform Email Templates",
+        "description": "Manage bilingual platform email templates (AR/EN).",
+        "viewAll": "View all templates →",
+        "empty": "No platform email templates found.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "locked": "Locked"
+      },
+      "logs": {
+        "title": "Delivery Logs",
+        "description": "Inspect recent platform email delivery events.",
+        "viewLogs": "View logs →",
+        "empty": "No delivery log entries match the current filters.",
+        "loadMore": "Load more",
+        "filters": {
+          "status": "All statuses",
+          "slug": "Filter by template slug",
+          "org": "Filter by org ID",
+          "reset": "Reset"
+        },
+        "table": {
+          "template": "Template",
+          "to": "To",
+          "status": "Status",
+          "org": "Org",
+          "created": "Created",
+          "error": "Error"
+        }
+      }
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Configure platform-wide notification defaults and FCM push credentials.",
+      "defaultChannels": {
+        "title": "Default Channels",
+        "description": "Select which notification channels are enabled by default for all tenants."
+      },
+      "quietHours": {
+        "title": "Quiet Hours",
+        "description": "Suppress non-urgent push notifications during these hours.",
+        "startHour": "Start Hour (0-23)",
+        "endHour": "End Hour (0-23)",
+        "timezone": "Timezone"
+      },
+      "fcm": {
+        "title": "FCM Credentials",
+        "description": "Firebase Cloud Messaging credentials for push notifications. Values are encrypted at rest.",
+        "projectId": "Project ID",
+        "clientEmail": "Client Email",
+        "serverKey": "Server Key (Private Key)",
+        "serverKeyPlaceholder": "Leave blank to keep existing"
+      },
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saveSuccess": "Notification settings saved successfully.",
+      "loadError": "Failed to load notification settings."
+    },
+    "billing": {
+      "title": "Billing Settings",
+      "description": "Configure platform Moyasar credentials and billing defaults.",
+      "moyasar": {
+        "title": "Moyasar Credentials",
+        "description": "Platform Moyasar account keys used for collecting tenant subscription fees.",
+        "platformSecretKey": "Platform Secret Key",
+        "platformWebhookSecret": "Platform Webhook Secret",
+        "publicKey": "Public Key",
+        "secretPlaceholder": "Leave blank to keep existing",
+        "save": "Save Moyasar credentials",
+        "saving": "Saving...",
+        "testConnection": "Test Connection",
+        "testing": "Testing...",
+        "connectedOk": "Connected successfully ({latency}ms, HTTP {status})",
+        "connectedFail": "Connection failed: {error} ({latency}ms)"
+      },
+      "defaults": {
+        "title": "Billing Defaults",
+        "description": "Default currency, tax rate, and trial duration applied to new subscriptions.",
+        "currency": "Currency",
+        "taxPercent": "Tax Percent",
+        "trialDays": "Trial Days",
+        "save": "Save billing defaults",
+        "saving": "Saving..."
+      },
+      "saveResult": {
+        "saved": "Saved",
+        "skipped": "Skipped (no change)",
+        "failed": "Save failed"
+      },
+      "loadError": "Failed to load billing settings."
     }
   },
   "login": {
