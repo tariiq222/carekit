@@ -549,4 +549,46 @@ describe('GetMyFeaturesHandler', () => {
       expect(result.features['maxEmployees'].currentCount).toBe(4);
     });
   });
+
+  // ── 6. Fail-closed: missing Plan.limits key → enabled=false ───────────────
+
+  describe('fail-closed behavior — missing Plan.limits keys', () => {
+    it('returns enabled=false for keys absent from Plan.limits (aligns with FeatureGuard)', async () => {
+      // Build limits that include every PRO key EXCEPT zoom_integration,
+      // so planLimitValue for ZOOM_INTEGRATION is `undefined`.
+      const limitsWithoutZoom: Record<string, number | boolean> = {
+        recurring_bookings: true,
+        waitlist: true,
+        group_sessions: true,
+        ai_chatbot: false,
+        email_templates: true,
+        coupons: true,
+        advanced_reports: false,
+        intake_forms: false,
+        zatca: false,
+        custom_roles: false,
+        activity_log: false,
+        maxBranches: 3,
+        maxEmployees: 20,
+        maxServices: 50,
+        maxBookingsPerMonth: 500,
+        maxStorageMB: 5120,
+        // zoom_integration intentionally omitted → undefined → fail-closed
+      };
+
+      const handler = new GetMyFeaturesHandler(
+        buildPrisma() as never,
+        buildTenant() as never,
+        buildCache(makeCached('PRO', limitsWithoutZoom)) as never,
+        buildCounters() as never,
+      );
+
+      const result = await handler.execute();
+
+      // 'zoom_integration' key is absent from limits → handler must return false
+      expect(result.features['zoom_integration']).toMatchObject({ enabled: false });
+      // Sanity: a key that IS present still works correctly
+      expect(result.features['recurring_bookings']).toMatchObject({ enabled: true });
+    });
+  });
 });

@@ -60,11 +60,17 @@ export class GetMyFeaturesHandler {
       const jsonKey = FEATURE_KEY_MAP[featureKey];
       const planLimitValue = (limits as PlanLimits)[jsonKey];
 
-      // Determine enabled status from Plan.limits only
+      // Determine enabled status from Plan.limits only.
+      // Plan.limits is the SoT for feature access. Match FeatureGuard's
+      // fail-closed posture: missing keys → false (the guard would reject
+      // the call anyway via FEATURE_CATALOG; aligning the response prevents
+      // UI/guard mismatch).
       const enabled: boolean =
         typeof planLimitValue === "boolean"
           ? planLimitValue
-          : planLimitValue !== 0;
+          : typeof planLimitValue === "number"
+            ? planLimitValue !== 0
+            : false;
 
       const entry: FeatureEntry = { enabled };
 
