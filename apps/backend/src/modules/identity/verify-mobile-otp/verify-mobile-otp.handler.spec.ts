@@ -20,7 +20,7 @@ const clsMock = {
 
 describe('VerifyMobileOtpHandler', () => {
   let handler: VerifyMobileOtpHandler;
-  const goodCode = '1234';
+  const goodCode = '123456';
   let goodCodeHash: string;
 
   beforeAll(async () => {
@@ -108,7 +108,7 @@ describe('VerifyMobileOtpHandler', () => {
     prismaMock.otpCode.update.mockResolvedValue({});
 
     await expect(
-      handler.execute({ identifier: '+966500000000', code: '9999', purpose: MobileOtpPurposeDto.REGISTER }),
+      handler.execute({ identifier: '+966500000000', code: '999999', purpose: MobileOtpPurposeDto.REGISTER }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
     expect(prismaMock.otpCode.update).toHaveBeenCalledWith(

@@ -1,6 +1,15 @@
-import { Injectable, BadRequestException, HttpException, HttpStatus, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Inject,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
+import { randomInt } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../infrastructure/database';
 import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
@@ -8,8 +17,9 @@ import { NotificationChannelRegistry } from '../../comms/notification-channel/no
 import { CAPTCHA_VERIFIER, type CaptchaVerifier } from '../../comms/contact-messages/captcha.verifier';
 import { RequestOtpDto } from './request-otp.dto';
 
-const OTP_EXPIRY_MINUTES = 10;
-const MAX_OTP_CODE = 9999;
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_MIN = 100_000;
+const OTP_MAX = 1_000_000; // exclusive upper bound for randomInt → yields 6 digits
 const MAX_REQUESTS_PER_IDENTIFIER_PER_HOUR = 5;
 
 export type RequestOtpCommand = RequestOtpDto;
@@ -58,11 +68,14 @@ export class RequestOtpHandler {
         throw new HttpException('Too many OTP requests for this identifier', HttpStatus.TOO_MANY_REQUESTS);
       }
 
-      const rawCode = Math.floor(Math.random() * MAX_OTP_CODE).toString().padStart(4, '0');
+      // Use crypto.randomInt (CSPRNG) — OTP codes must not be predictable.
+      // randomInt(min, max) returns an int in [min, max); with [100000, 1000000)
+      // every result is exactly 6 digits, so no zero-padding is needed.
+      const rawCode = randomInt(OTP_MIN, OTP_MAX).toString();
       const codeHash = await bcrypt.hash(rawCode, 10);
       const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-      await this.prisma.$transaction(async (tx) => {
+      const created = await this.prisma.$transaction(async (tx) => {
         await tx.otpCode.updateMany({
           where: {
             organizationId: orgId,
@@ -74,7 +87,7 @@ export class RequestOtpHandler {
           data: { consumedAt: new Date() },
         });
 
-        await tx.otpCode.create({
+        return tx.otpCode.create({
           data: {
             organizationId: orgId,
             channel: dto.channel,
@@ -83,6 +96,7 @@ export class RequestOtpHandler {
             purpose: dto.purpose,
             expiresAt,
           },
+          select: { id: true },
         });
       });
 
@@ -92,7 +106,23 @@ export class RequestOtpHandler {
         // provider (e.g. Resend) before falling back to platform transport.
         await channel.send(dto.identifier, rawCode, orgId ?? undefined);
       } catch (err) {
-        this.logger.error(`Failed to send OTP via ${dto.channel} to ${dto.identifier}`, err);
+        // Surface send failures: roll back the persisted OTP row so the user
+        // can retry without burning their per-hour quota, then bubble up a
+        // 503 so the mobile client shows a real error instead of a silent
+        // "OTP sent" toast.
+        this.logger.error(
+          `Failed to send OTP via ${dto.channel} to ${dto.identifier}`,
+          err,
+        );
+        try {
+          await this.prisma.otpCode.delete({ where: { id: created.id } });
+        } catch (cleanupErr) {
+          this.logger.error(
+            `Failed to clean up OTP row ${created.id} after send failure`,
+            cleanupErr,
+          );
+        }
+        throw new ServiceUnavailableException('Failed to send OTP. Please try again.');
       }
 
       return { success: true };
