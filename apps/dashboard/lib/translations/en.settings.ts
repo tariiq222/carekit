@@ -356,4 +356,22 @@ export const enSettings: Record<string, string> = {
   "emailConfig.testSend": "Send Test",
   "emailConfig.testOk": "Test email sent successfully ✓",
   "emailConfig.testFailed": "Test failed",
+  // Delivery Log page
+  "settings.deliveryLog.title": "Email Delivery Log",
+  "settings.deliveryLog.description": "Track all outgoing emails sent on behalf of your organization",
+  "settings.deliveryLog.filterStatus": "Status",
+  "settings.deliveryLog.filterChannel": "Channel",
+  "settings.deliveryLog.colChannel": "Channel",
+  "settings.deliveryLog.colStatus": "Status",
+  "settings.deliveryLog.colTo": "To",
+  "settings.deliveryLog.colProvider": "Provider",
+  "settings.deliveryLog.colSentAt": "Sent At",
+  "settings.deliveryLog.colAttempts": "Attempts",
+  "settings.deliveryLog.noLogs": "No delivery records found",
+  // Fallback quota banner
+  "settings.emailFallbackQuota.title": "Platform Email Fallback",
+  "settings.emailFallbackQuota.desc": "Emails sent via Deqah's platform mailer (used when your own provider is not configured).",
+  "settings.emailFallbackQuota.usage": "{used} of {limit} emails used this month",
+  "settings.emailFallbackQuota.unlimited": "Unlimited emails this month",
+  "settings.emailFallbackQuota.limitReached": "Monthly limit reached — configure your own email provider to continue sending.",
 }

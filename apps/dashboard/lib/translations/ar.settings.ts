@@ -356,4 +356,22 @@ export const arSettings: Record<string, string> = {
   "emailConfig.testSend": "إرسال اختبار",
   "emailConfig.testOk": "تم إرسال رسالة الاختبار بنجاح ✓",
   "emailConfig.testFailed": "فشل الاختبار",
+  // Delivery Log page
+  "settings.deliveryLog.title": "سجل إرسال البريد",
+  "settings.deliveryLog.description": "تتبع جميع رسائل البريد الصادرة باسم مؤسستك",
+  "settings.deliveryLog.filterStatus": "الحالة",
+  "settings.deliveryLog.filterChannel": "القناة",
+  "settings.deliveryLog.colChannel": "القناة",
+  "settings.deliveryLog.colStatus": "الحالة",
+  "settings.deliveryLog.colTo": "المستلم",
+  "settings.deliveryLog.colProvider": "المزوّد",
+  "settings.deliveryLog.colSentAt": "وقت الإرسال",
+  "settings.deliveryLog.colAttempts": "المحاولات",
+  "settings.deliveryLog.noLogs": "لا توجد سجلات إرسال",
+  // Fallback quota banner
+  "settings.emailFallbackQuota.title": "بريد المنصة الاحتياطي",
+  "settings.emailFallbackQuota.desc": "رسائل مُرسَلة عبر خادم بريد ديقة (تُستخدم عند عدم ضبط مزوّد البريد الخاص بك).",
+  "settings.emailFallbackQuota.usage": "تم استخدام {used} من أصل {limit} رسالة هذا الشهر",
+  "settings.emailFallbackQuota.unlimited": "إرسال غير محدود هذا الشهر",
+  "settings.emailFallbackQuota.limitReached": "تم الوصول إلى الحد الشهري — يرجى ضبط مزوّد بريد خاص بك للمتابعة.",
 }
