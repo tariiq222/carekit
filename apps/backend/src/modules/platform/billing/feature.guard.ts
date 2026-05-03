@@ -20,6 +20,7 @@ import { FeatureNotEnabledException } from "./feature-not-enabled.exception";
 interface CachedFeatures {
   features: Record<string, number | boolean>;
   planSlug: string;
+  status: string;
   expiresAt: number;
 }
 
@@ -73,7 +74,12 @@ export class FeatureGuard implements CanActivate {
       );
     }
 
-    const { features, planSlug } = await this.resolveFeatures(organizationId);
+    const { features, planSlug, status } = await this.resolveFeatures(organizationId);
+
+    // Suspended subscriptions are blocked before feature-key resolution.
+    if (status === 'SUSPENDED') {
+      throw new ForbiddenException('subscription_suspended');
+    }
 
     const jsonKey = FEATURE_KEY_MAP[featureKey];
     const value = features[jsonKey];
@@ -130,10 +136,10 @@ export class FeatureGuard implements CanActivate {
 
   private async resolveFeatures(
     organizationId: string,
-  ): Promise<{ features: Record<string, number | boolean>; planSlug: string }> {
+  ): Promise<{ features: Record<string, number | boolean>; planSlug: string; status: string }> {
     const cached = this.cache.get(organizationId);
     if (cached && cached.expiresAt > Date.now()) {
-      return { features: cached.features, planSlug: cached.planSlug };
+      return { features: cached.features, planSlug: cached.planSlug, status: cached.status };
     }
 
     const sub = await this.cacheService.get(organizationId);
@@ -142,19 +148,21 @@ export class FeatureGuard implements CanActivate {
       const emptyEntry: CachedFeatures = {
         features: {},
         planSlug: "",
+        status: "",
         expiresAt: Date.now() + this.ttlMs,
       };
       this.cache.set(organizationId, emptyEntry);
-      return { features: {}, planSlug: "" };
+      return { features: {}, planSlug: "", status: "" };
     }
 
     const entry: CachedFeatures = {
       features: sub.limits,
       planSlug: sub.planSlug,
+      status: sub.status,
       expiresAt: Date.now() + this.ttlMs,
     };
     this.cache.set(organizationId, entry);
-    return { features: entry.features, planSlug: entry.planSlug };
+    return { features: entry.features, planSlug: entry.planSlug, status: entry.status };
   }
 
   /**

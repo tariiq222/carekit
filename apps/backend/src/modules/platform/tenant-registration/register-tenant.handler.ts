@@ -1,12 +1,11 @@
 import { randomBytes } from 'crypto';
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { PasswordService } from '../../identity/shared/password.service';
 import { TokenService } from '../../identity/shared/token.service';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../billing/subscription-cache.service';
-import { StartSubscriptionHandler } from '../billing/start-subscription/start-subscription.handler';
 import { PlatformMailerService } from '../../../infrastructure/mail';
 import type { RegisterTenantDto } from './register-tenant.dto';
 
@@ -28,8 +27,12 @@ function isPrismaUniqueOn(err: unknown, target: string): boolean {
   return Array.isArray(t) ? t.some((x) => x.includes(target)) : t.includes(target);
 }
 
+const DAY_MS = 86_400_000;
+
 @Injectable()
 export class RegisterTenantHandler {
+  private readonly logger = new Logger(RegisterTenantHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly password: PasswordService,
@@ -37,7 +40,6 @@ export class RegisterTenantHandler {
     private readonly config: ConfigService,
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
-    private readonly startSubscription: StartSubscriptionHandler,
     private readonly mailer: PlatformMailerService,
   ) {}
 
@@ -47,16 +49,25 @@ export class RegisterTenantHandler {
     if (!plan) throw new NotFoundException(`Default plan '${planSlug}' not found — run the seed script`);
 
     const trialDays = this.config.get<number>('SAAS_TRIAL_DAYS', 14);
-    const trialEndsAt = new Date(Date.now() + trialDays * 86_400_000);
+    const now = new Date();
+    const trialEndsAt = new Date(now.getTime() + trialDays * DAY_MS);
     const passwordHash = await this.password.hash(dto.password);
     const baseSlug = slugify(dto.businessNameAr) || 'org';
+
+    // Resolve billing cycle period
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+    // Resolve the vertical to seed: prefer the DTO field; fall back to the first
+    // active vertical in the DB. Failure to find a vertical is non-fatal — we
+    // log a warning and proceed without seeding.
+    const vertical = await this.resolveVertical(dto.verticalSlug);
 
     // Generate a slug with a 6-hex random suffix to avoid races on the
     // unique constraint. We retry up to 3 times on slug-only collisions
     // before giving up. Email collisions surface as the proper 409.
     const maxAttempts = 3;
     let attempt = 0;
-    let result: { orgId: string; userId: string; membershipId: string } | undefined;
+    let result: { orgId: string; userId: string; membershipId: string; subscriptionId: string } | undefined;
 
     while (attempt < maxAttempts) {
       attempt += 1;
@@ -70,6 +81,7 @@ export class RegisterTenantHandler {
               nameEn: dto.businessNameEn ?? null,
               status: 'TRIALING',
               trialEndsAt,
+              verticalId: vertical?.id ?? null,
             },
           });
 
@@ -110,7 +122,47 @@ export class RegisterTenantHandler {
             },
           });
 
-          return { orgId: org.id, userId: user.id, membershipId: membership.id };
+          // Create subscription inside the same tx so org + subscription are
+          // atomic — no orphan org without a subscription on failure.
+          const sub = await tx.subscription.create({
+            data: {
+              organizationId: org.id,
+              planId: plan.id,
+              status: 'TRIALING',
+              billingCycle: 'MONTHLY',
+              trialStartedAt: now,
+              trialEndsAt,
+              currentPeriodStart: now,
+              currentPeriodEnd: periodEnd,
+              moyasarCardTokenRef: null,
+            },
+          });
+
+          // Seed vertical departments and service categories if a vertical was resolved.
+          if (vertical) {
+            for (const seed of vertical.seedDepartments) {
+              await tx.department.create({
+                data: {
+                  organizationId: org.id,
+                  nameAr: seed.nameAr,
+                  nameEn: seed.nameEn ?? undefined,
+                  sortOrder: seed.sortOrder,
+                },
+              });
+            }
+            for (const seed of vertical.seedServiceCategories) {
+              await tx.serviceCategory.create({
+                data: {
+                  organizationId: org.id,
+                  nameAr: seed.nameAr,
+                  nameEn: seed.nameEn ?? undefined,
+                  sortOrder: seed.sortOrder,
+                },
+              });
+            }
+          }
+
+          return { orgId: org.id, userId: user.id, membershipId: membership.id, subscriptionId: sub.id };
         });
         break;
       } catch (err: unknown) {
@@ -128,7 +180,7 @@ export class RegisterTenantHandler {
       throw new ConflictException('Could not allocate a unique organization slug — please retry');
     }
 
-    // Set CLS tenant context so StartSubscriptionHandler.execute() can call requireOrganizationId()
+    // Set CLS tenant context for any post-tx operations that require it.
     this.tenant.set({
       organizationId: result.orgId,
       membershipId: result.membershipId,
@@ -136,8 +188,6 @@ export class RegisterTenantHandler {
       role: 'ADMIN',
       isSuperAdmin: false,
     });
-
-    await this.startSubscription.execute({ planId: plan.id, billingCycle: 'MONTHLY' });
 
     this.cache.invalidate(result.orgId);
 
@@ -163,5 +213,45 @@ export class RegisterTenantHandler {
     });
 
     return { ...tokenPair, userId: result.userId };
+  }
+
+  /**
+   * Resolve which vertical to seed for a new self-serve tenant.
+   *
+   * Priority:
+   * 1. If dto.verticalSlug is provided, look it up (throws if not found).
+   * 2. Otherwise, use the first active vertical (by createdAt) as the platform default.
+   * 3. If the DB has no verticals at all, log a warning and return null — signup
+   *    proceeds without seeding (non-fatal).
+   */
+  private async resolveVertical(verticalSlug?: string) {
+    if (verticalSlug) {
+      const v = await this.prisma.vertical.findFirst({
+        where: { slug: verticalSlug, isActive: true },
+        include: {
+          seedDepartments: { select: { nameAr: true, nameEn: true, sortOrder: true } },
+          seedServiceCategories: { select: { nameAr: true, nameEn: true, sortOrder: true } },
+        },
+      });
+      if (!v) throw new NotFoundException(`Vertical '${verticalSlug}' not found or inactive`);
+      return v;
+    }
+
+    // Fall back to the first active vertical ordered by createdAt
+    const defaultVertical = await this.prisma.vertical.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        seedDepartments: { select: { nameAr: true, nameEn: true, sortOrder: true } },
+        seedServiceCategories: { select: { nameAr: true, nameEn: true, sortOrder: true } },
+      },
+    });
+
+    if (!defaultVertical) {
+      this.logger.warn('No active vertical found in DB — skipping vertical seed for new tenant');
+      return null;
+    }
+
+    return defaultVertical;
   }
 }

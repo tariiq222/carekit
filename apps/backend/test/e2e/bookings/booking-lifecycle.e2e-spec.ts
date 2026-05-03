@@ -1,7 +1,7 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { seedClient, seedEmployee, seedService, seedBranch, seedBooking, seedEmployeeService } from '../../setup/seed.helper';
+import { seedClient, seedEmployee, seedService, seedBranch, seedBooking, seedEmployeeService, seedEmployeeAvailability } from '../../setup/seed.helper';
 import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.helper';describe('Booking Lifecycle (e2e)', () => {
   let req: SuperTest.Agent;
   let clientId: string;
@@ -28,6 +28,13 @@ import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.he
     branchId = branch.id;
 
     await seedEmployeeService(testPrisma as any, employeeId, serviceId);
+    await seedEmployeeAvailability(testPrisma as any, employeeId);
+  });
+
+  afterEach(async () => {
+    // Clean bookings between tests to avoid booking_employee_no_overlap constraint
+    // violations when multiple tests seed bookings for the same employee/time slot.
+    await cleanTables(['BookingStatusLog', 'Booking']);
   });
 
   afterAll(async () => {

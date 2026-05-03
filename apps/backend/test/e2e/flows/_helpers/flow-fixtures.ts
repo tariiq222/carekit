@@ -7,6 +7,7 @@ import {
   seedService,
   seedBranch,
   seedEmployeeService,
+  seedEmployeeAvailability,
 } from '../../../setup/seed.helper';
 import {
   createTestToken,
@@ -55,6 +56,7 @@ export async function setupFlowFixtures(): Promise<FlowFixtures> {
   ]);
 
   await seedEmployeeService(testPrisma as never, employee.id, service.id);
+  await seedEmployeeAvailability(testPrisma as never, employee.id);
 
   return {
     req: request,

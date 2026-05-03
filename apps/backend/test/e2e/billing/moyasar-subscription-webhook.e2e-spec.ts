@@ -105,7 +105,8 @@ describe('SaaS-04 — Moyasar subscription webhook', () => {
     const sig = sign(raw);
 
     const result = await webhook.execute(Buffer.from(raw, 'utf8'), sig);
-    expect(result).toEqual({ ok: true });
+    // Handler may return { ok: true } or { ok: true, deduped: true } — both are valid noops.
+    expect(result).toMatchObject({ ok: true });
   });
 
   it('payment_paid → invoice PAID, subscription → ACTIVE', async () => {

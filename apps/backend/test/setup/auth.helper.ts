@@ -4,12 +4,15 @@ import * as bcrypt from 'bcryptjs';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
 
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
 export interface TestUser {
   id: string;
   email: string;
   role: string;
   customRoleId: string | null;
   permissions: Array<{ action: string; subject: string }>;
+  organizationId?: string;
 }
 
 export function createTestToken(user: TestUser): string {
@@ -21,6 +24,10 @@ export function createTestToken(user: TestUser): string {
       customRoleId: user.customRoleId,
       permissions: user.permissions,
       features: [],
+      // Include organizationId so FeatureGuard and PlanLimitsGuard can read
+      // the tenant context without throwing UnauthorizedException.
+      organizationId: user.organizationId ?? DEFAULT_ORG_ID,
+      membershipRole: user.role,
     },
     ACCESS_SECRET,
     { expiresIn: '1h' },
@@ -33,6 +40,7 @@ export const adminUser: TestUser = {
   role: 'ADMIN',
   customRoleId: null,
   permissions: [],
+  organizationId: DEFAULT_ORG_ID,
 };
 
 export const receptionistUser: TestUser = {
@@ -41,6 +49,7 @@ export const receptionistUser: TestUser = {
   role: 'RECEPTIONIST',
   customRoleId: null,
   permissions: [],
+  organizationId: DEFAULT_ORG_ID,
 };
 
 /**

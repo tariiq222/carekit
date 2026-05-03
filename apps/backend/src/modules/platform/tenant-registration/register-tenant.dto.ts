@@ -23,4 +23,7 @@ export class RegisterTenantDto {
 
   @ApiPropertyOptional({ description: 'Business name in English', example: 'Deqah Clinic' })
   @IsOptional() @IsString() businessNameEn?: string;
+
+  @ApiPropertyOptional({ description: 'Vertical slug to seed departments and service categories (uses platform default if omitted)', example: 'general-clinic' })
+  @IsOptional() @IsString() verticalSlug?: string;
 }

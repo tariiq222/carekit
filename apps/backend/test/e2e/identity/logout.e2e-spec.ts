@@ -1,11 +1,12 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 import { seedUser } from '../../setup/seed.helper';describe('POST /auth/logout (e2e)', () => {
   let req: SuperTest.Agent;
   let refreshToken: string;
 
   beforeAll(async () => {
+    await flushTestRedis();
     ({ request: req } = await createTestApp());
     await cleanTables(['RefreshToken', 'User']);
     await seedUser(testPrisma as any, {

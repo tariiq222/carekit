@@ -3100,6 +3100,11 @@
             "description": "Mobile phone number (any common format; normalized to E.164)",
             "example": "0501234567",
             "type": "string"
+          },
+          "verticalSlug": {
+            "description": "Vertical slug to seed departments and service categories (uses platform default if omitted)",
+            "example": "general-clinic",
+            "type": "string"
           }
         },
         "required": [

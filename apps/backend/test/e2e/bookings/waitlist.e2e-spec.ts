@@ -1,7 +1,7 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { seedClient, seedEmployee, seedService, seedBranch } from '../../setup/seed.helper';
+import { seedClient, seedEmployee, seedService, seedBranch, seedEmployeeAvailability } from '../../setup/seed.helper';
 import { createTestToken, adminUser } from '../../setup/auth.helper';describe('Waitlist API (e2e)', () => {
   let req: SuperTest.Agent;
   let clientId: string;
@@ -25,6 +25,7 @@ import { createTestToken, adminUser } from '../../setup/auth.helper';describe('
     employeeId = employee.id;
     serviceId = service.id;
     branchId = branch.id;
+    await seedEmployeeAvailability(testPrisma as any, employeeId);
   });
 
   afterAll(async () => {

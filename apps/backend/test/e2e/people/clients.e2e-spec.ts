@@ -87,12 +87,15 @@ describe('Clients API (e2e)', () => {
       expect(second.status).toBe(409);
     });
 
-    it('[CL-004][Clients/create-client][P1-High] رفض جوال بدون +966', async () => {
+    it('[CL-004][Clients/create-client][P1-High] جوال 05XXXXXXXX يُطبَّع إلى E.164 ويُقبل', async () => {
+      // Phone normalization converts local 0501234567 → +966501234567 at DTO ingress.
+      // The normalized form is valid, so the client is created successfully.
       const res = await req
         .post('/dashboard/people/clients')
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Bad', lastName: 'Phone', phone: '0501234567' });
-      expect(res.status).toBe(400);
+      // May be 201 (created) or 409 (conflict if this number already exists from a prior run).
+      expect([201, 409]).toContain(res.status);
     });
 
     it('[CL-005][Clients/create-client][P2-Medium] رفض جوال +966 بدون 5', async () => {
@@ -204,12 +207,13 @@ describe('Clients API (e2e)', () => {
       expect(res.status).toBe(400);
     });
 
-    it('[CL-018][Clients/create-client][P2-Medium] رفض emergencyPhone خاطئ', async () => {
+    it('[CL-018][Clients/create-client][P2-Medium] emergencyPhone بالتنسيق المحلي يُطبَّع ويُقبل', async () => {
+      // Phone normalization converts local 0501234567 → +966501234567 at DTO ingress.
       const res = await req
         .post('/dashboard/people/clients')
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), emergencyPhone: '0501234567' });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(201);
     });
 
     it('[CL-019][Clients/create-client][P1-High] رفض بلا JWT → 401', async () => {
@@ -332,12 +336,24 @@ describe('Clients API (e2e)', () => {
       expect(res.status).toBe(409);
     });
 
-    it('[CL-029][Clients/update-client][P2-Medium] phone regex خاطئ في PATCH → 400', async () => {
+    it('[CL-029][Clients/update-client][P2-Medium] phone بالتنسيق المحلي في PATCH يُطبَّع ويُقبل أو يُثير 409', async () => {
+      // Phone normalization converts local 0501234567 → +966501234567 at DTO ingress.
+      // Result is 200 (accepted, normalized) or 409 (conflict — that number already exists).
       const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ phone: '0501234567' });
+      expect([200, 409]).toContain(res.status);
+    });
+
+    it('[CL-029b][Clients/update-client][P2-Medium] phone حرفي خاطئ في PATCH → 400', async () => {
+      // A completely invalid phone (not parseable as a phone number) still returns 400.
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ phone: 'not-a-phone' });
       expect(res.status).toBe(400);
     });
 

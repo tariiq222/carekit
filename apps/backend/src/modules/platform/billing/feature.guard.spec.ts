@@ -391,6 +391,53 @@ describe("FeatureGuard", () => {
     });
   });
 
+  describe("suspended subscription", () => {
+    function mockCacheServiceWithStatus(
+      status: string,
+      limits: Record<string, number | boolean> = {},
+    ) {
+      return {
+        get: jest.fn().mockResolvedValue({
+          planSlug: "pro",
+          status,
+          limits,
+          expiresAt: Date.now() + 60_000,
+        }),
+      } as unknown as SubscriptionCacheService;
+    }
+
+    it("throws ForbiddenException('subscription_suspended') for SUSPENDED subscriptions", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.AI_CHATBOT),
+      );
+      const cacheService = mockCacheServiceWithStatus("SUSPENDED", { ai_chatbot: true });
+      const guard = new FeatureGuard(reflector, mockPrisma({}), cacheService, mockCounters(null));
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toThrow("subscription_suspended");
+    });
+
+    it("allows ACTIVE subscription with feature enabled", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.COUPONS),
+      );
+      const cacheService = mockCacheServiceWithStatus("ACTIVE", { coupons: true });
+      const guard = new FeatureGuard(reflector, mockPrisma({}), cacheService, mockCounters(null));
+      const ctx = mockContext();
+      const result = await guard.canActivate(ctx);
+      expect(result).toBe(true);
+    });
+
+    it("throws FeatureNotEnabledException for ACTIVE subscription without feature", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.COUPONS),
+      );
+      const cacheService = mockCacheServiceWithStatus("ACTIVE", { coupons: false });
+      const guard = new FeatureGuard(reflector, mockPrisma({}), cacheService, mockCounters(null));
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(FeatureNotEnabledException);
+    });
+  });
+
   describe("FeatureNotEnabledException shape", () => {
     it("throws FeatureNotEnabledException with standard body when boolean feature off", async () => {
       const reflector = mockReflector(

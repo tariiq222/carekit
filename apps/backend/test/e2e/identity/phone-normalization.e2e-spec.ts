@@ -2,7 +2,7 @@ import SuperTest from 'supertest';
 import * as bcrypt from 'bcryptjs';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 
 /**
  * Phase 2 / Bug B9 — Phone numbers must normalize to E.164 at DTO ingress.
@@ -23,6 +23,7 @@ describe('Phone E.164 normalization E2E', () => {
   const email = `phone-norm-e2e-${Date.now()}@example.com`;
 
   beforeAll(async () => {
+    await flushTestRedis();
     ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['OtpCode', 'RefreshToken', 'EmailVerificationToken', 'User']);
   });
@@ -92,7 +93,7 @@ describe('Phone E.164 normalization E2E', () => {
     }
 
     // Step 5 — verify-otp with the local form must also find the active code.
-    const knownCode = '4321';
+    const knownCode = '432100';
     await (testPrisma as any).otpCode.updateMany({
       where: { identifier: canonicalPhone, purpose: OtpPurpose.MOBILE_LOGIN, consumedAt: null },
       data: { consumedAt: new Date() },
