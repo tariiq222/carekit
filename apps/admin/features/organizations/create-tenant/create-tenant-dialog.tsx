@@ -25,6 +25,7 @@ import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreateTenant } from './use-create-tenant';
 import { OwnerUserCombobox } from './owner-user-combobox';
 import { useListVerticals } from '@/features/verticals/list-verticals/use-list-verticals';
+import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 
 interface Props {
   open: boolean;
@@ -53,6 +54,7 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const mutation = useCreateTenant();
   const { data: verticals } = useListVerticals();
+  const { data: plans } = useListPlans();
 
   const trialDaysValue = form.trialDays.trim() === '' ? undefined : Number(form.trialDays);
   const trialDaysValid =
@@ -176,12 +178,22 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="tenant-plan">{t('planId')}</Label>
-                <Input
-                  id="tenant-plan"
-                  value={form.planId}
-                  onChange={(event) => set('planId')(event.target.value)}
-                  autoComplete="off"
-                />
+                <Select
+                  value={form.planId || '__none__'}
+                  onValueChange={(value) => set('planId')(value === '__none__' ? '' : value)}
+                >
+                  <SelectTrigger id="tenant-plan">
+                    <SelectValue placeholder="Select plan…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {plans?.filter((p) => p.isActive).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nameAr} — {p.slug}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
