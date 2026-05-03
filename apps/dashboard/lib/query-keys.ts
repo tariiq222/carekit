@@ -259,4 +259,15 @@ export const queryKeys = {
     all: ["dashboard"] as const,
     stats: () => ["dashboard", "stats"] as const,
   },
+
+  /* ─── Delivery Logs ─── */
+  deliveryLogs: {
+    all: ["delivery-logs"] as const,
+    list: (filters?: object) => ["delivery-logs", "list", filters] as const,
+  },
+
+  /* ─── Email Fallback Quota ─── */
+  emailFallbackQuota: {
+    current: () => ["email-fallback-quota"] as const,
+  },
 } as const
