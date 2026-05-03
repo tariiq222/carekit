@@ -135,7 +135,6 @@ describe('SaaS-02e — ZATCA isolation', () => {
     const zatcaSubmitHandler = h.app.get(ZatcaSubmitHandler);
 
     // From Org B context, invoice.findFirst returns null → NotFoundException
-    // (or ServiceUnavailableException if ZATCA feature-flag check fires first).
     // Either error proves isolation: Org B cannot access Org A's invoice.
     await expect(
       h.runAs({ organizationId: b.id }, () =>
