@@ -12,8 +12,12 @@
  *      (e.g. FeatureKey.BRANCHES → "maxBranches").
  *  - The `features` map in the response is keyed by the JSON key (right-hand
  *    side of FEATURE_KEY_MAP), NOT the FeatureKey enum value.
- *  - Priority: orgOverride > platformFlag > plan limits derivation.
- *  - allowedPlans: empty array means "unrestricted" (all plans).
+ *  - Enabled is derived solely from Plan.limits:
+ *      boolean true  → enabled
+ *      boolean false → disabled
+ *      number > 0    → enabled
+ *      number === 0  → disabled
+ *      missing key   → false (planLimitValue is undefined → !0 = true is wrong, undefined !== 0 → enabled=true... see handler)
  *  - Quantitative currentUsage calls are fired in a single Promise.all.
  */
 
@@ -79,9 +83,6 @@ const BASIC_LIMITS: Record<string, number | boolean> = {
  */
 function buildPrisma() {
   return {
-    featureFlag: {
-      findMany: jest.fn().mockResolvedValue([]),
-    },
     branch: {
       count: jest.fn().mockResolvedValue(0),
     },
@@ -145,39 +146,10 @@ function makeCached(
   };
 }
 
-/**
- * Minimal FeatureFlag DB record shape — mirrors the Prisma select in the handler.
- */
-function makePlatformFlag(
-  key: string,
-  enabled: boolean,
-  allowedPlans: string[] = [],
-) {
-  return {
-    id: `flag-${key}`,
-    organizationId: null, // platform-level flag
-    key,
-    enabled,
-    allowedPlans,
-    limitKind: null,
-  };
-}
-
-function makeOrgOverride(key: string, enabled: boolean, orgId = ORG_ID) {
-  return {
-    id: `override-${key}`,
-    organizationId: orgId,
-    key,
-    enabled,
-    allowedPlans: [],
-    limitKind: null,
-  };
-}
-
 // ─── Test suite ───────────────────────────────────────────────────────────────
 
 describe('GetMyFeaturesHandler', () => {
-  // ── 1. Happy path — Active PRO subscription, no DB feature-flag overrides ──
+  // ── 1. Happy path — Active PRO subscription ────────────────────────────────
 
   describe('happy path — PRO subscription, no DB flag overrides', () => {
     it('should return correct planSlug and status', async () => {
@@ -204,7 +176,7 @@ describe('GetMyFeaturesHandler', () => {
 
       const result = await handler.execute();
 
-      // PRO_LIMITS.recurring_bookings = true → no DB flag → derived from limits
+      // PRO_LIMITS.recurring_bookings = true → derived from plan limits
       expect(result.features['recurring_bookings']).toMatchObject({
         enabled: true,
       });
@@ -266,77 +238,7 @@ describe('GetMyFeaturesHandler', () => {
     });
   });
 
-  // ── 2. Org override wins over platform flag ─────────────────────────────────
-
-  describe('org override wins over platform flag', () => {
-    it('should enable feature when org override is true, even on BASIC plan', async () => {
-      const prisma = buildPrisma();
-
-      // Platform flag says ai_chatbot is off (no allowedPlans, enabled: false)
-      const platformFlag = makePlatformFlag('ai_chatbot', false);
-      // Org override explicitly enables it for this org
-      const orgOverride = makeOrgOverride('ai_chatbot', true);
-
-      prisma.featureFlag.findMany.mockResolvedValue([platformFlag, orgOverride]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // Org override takes precedence over platform flag
-      expect(result.features['ai_chatbot']).toMatchObject({ enabled: true });
-    });
-
-    it('should disable feature when org override is false, even if platform flag is enabled', async () => {
-      const prisma = buildPrisma();
-
-      // Platform flag: waitlist enabled for all plans
-      const platformFlag = makePlatformFlag('waitlist', true, []);
-      // Org override: waitlist disabled for this specific org
-      const orgOverride = makeOrgOverride('waitlist', false);
-
-      prisma.featureFlag.findMany.mockResolvedValue([platformFlag, orgOverride]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // Org override wins: disabled regardless of platform flag
-      expect(result.features['waitlist']).toMatchObject({ enabled: false });
-    });
-
-    it('should not use another org override — only matches current organizationId', async () => {
-      const prisma = buildPrisma();
-
-      // Override belongs to a DIFFERENT org
-      const foreignOverride = makeOrgOverride('ai_chatbot', true, 'org-other-999');
-      prisma.featureFlag.findMany.mockResolvedValue([foreignOverride]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant(ORG_ID) as never,
-        buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // Foreign override filtered out → falls back to plan limits (BASIC: false)
-      expect(result.features['ai_chatbot']).toMatchObject({ enabled: false });
-    });
-  });
-
-  // ── 3. No subscription → BASIC/TRIALING fallback ───────────────────────────
+  // ── 2. No subscription → BASIC/TRIALING fallback ───────────────────────────
 
   describe('no subscription found in cache', () => {
     it('should return BASIC/TRIALING with empty features map', async () => {
@@ -356,7 +258,7 @@ describe('GetMyFeaturesHandler', () => {
       });
     });
 
-    it('should short-circuit and not call featureFlag.findMany when cache is null', async () => {
+    it('should short-circuit and not call any DB count when cache is null', async () => {
       const prisma = buildPrisma();
 
       const handler = new GetMyFeaturesHandler(
@@ -369,7 +271,6 @@ describe('GetMyFeaturesHandler', () => {
       await handler.execute();
 
       // Handler returns early before any DB queries
-      expect(prisma.featureFlag.findMany).not.toHaveBeenCalled();
       expect(prisma.branch.count).not.toHaveBeenCalled();
       expect(prisma.employee.count).not.toHaveBeenCalled();
     });
@@ -390,7 +291,7 @@ describe('GetMyFeaturesHandler', () => {
     });
   });
 
-  // ── 4. Quantitative features include currentCount ──────────────────────────
+  // ── 3. Quantitative features include currentCount ──────────────────────────
 
   describe('quantitative features — currentCount accuracy', () => {
     it('should attach limit and currentCount for maxEmployees', async () => {
@@ -516,112 +417,7 @@ describe('GetMyFeaturesHandler', () => {
     });
   });
 
-  // ── 5. allowedPlans filtering ───────────────────────────────────────────────
-
-  describe('allowedPlans filtering on platform flags', () => {
-    it('should disable feature when current plan is NOT in allowedPlans', async () => {
-      const prisma = buildPrisma();
-
-      // Platform flag: enabled=true but restricted to PRO and ENTERPRISE
-      prisma.featureFlag.findMany.mockResolvedValue([
-        makePlatformFlag('advanced_reports', true, ['PRO', 'ENTERPRISE']),
-      ]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        // BASIC is not in ['PRO', 'ENTERPRISE']
-        buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      expect(result.features['advanced_reports']).toMatchObject({ enabled: false });
-    });
-
-    it('should enable feature when current plan IS in allowedPlans', async () => {
-      const prisma = buildPrisma();
-
-      prisma.featureFlag.findMany.mockResolvedValue([
-        makePlatformFlag('advanced_reports', true, ['PRO', 'ENTERPRISE']),
-      ]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // PRO ∈ ['PRO', 'ENTERPRISE'] → enabled
-      expect(result.features['advanced_reports']).toMatchObject({ enabled: true });
-    });
-
-    it('should enable feature when allowedPlans is empty (unrestricted to all plans)', async () => {
-      const prisma = buildPrisma();
-
-      // Empty allowedPlans = no restriction — all plans get the feature
-      prisma.featureFlag.findMany.mockResolvedValue([
-        makePlatformFlag('recurring_bookings', true, []),
-      ]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('BASIC', BASIC_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // BASIC is allowed because allowedPlans is empty (length === 0 → pass)
-      expect(result.features['recurring_bookings']).toMatchObject({ enabled: true });
-    });
-
-    it('should disable when platform flag enabled=false regardless of allowedPlans', async () => {
-      const prisma = buildPrisma();
-
-      // Platform flag: enabled=false, allowedPlans is unrestricted — but still off
-      prisma.featureFlag.findMany.mockResolvedValue([
-        makePlatformFlag('coupons', false, []),
-      ]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // enabled=false in DB → disabled even if plan has it
-      expect(result.features['coupons']).toMatchObject({ enabled: false });
-    });
-
-    it('should fall back to plan limits derivation when no platform flag exists for a key', async () => {
-      const prisma = buildPrisma();
-      // findMany returns nothing — no platform flags, no org overrides
-      prisma.featureFlag.findMany.mockResolvedValue([]);
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      // No flag → derived from limits: PRO_LIMITS.email_templates = true
-      expect(result.features['email_templates']).toMatchObject({ enabled: true });
-    });
-  });
-
-  // ── 6. Promise.all parallelism — no N+1 on quantitative counts ─────────────
+  // ── 4. Promise.all parallelism — no N+1 on quantitative counts ─────────────
 
   describe('Promise.all parallelism — currentUsage runs in parallel (no N+1)', () => {
     it('should initiate all usage-count calls before any of them resolve', async () => {
@@ -674,15 +470,14 @@ describe('GetMyFeaturesHandler', () => {
       const execPromise = handler.execute();
 
       /**
-       * Flush microtask queue through the two async steps that precede Promise.all:
-       *   Tick 1 → cache.get (mockResolvedValue) resolves; handler advances to findMany.
-       *   Tick 2 → featureFlag.findMany resolves; handler enters the Promise.all block
-       *            and calls all five currentUsage() callbacks synchronously via map().
-       *   Tick 3 → safety buffer for any extra microtask wrapping.
+       * Flush microtask queue through the async steps that precede Promise.all:
+       *   Tick 1 → cache.get (mockResolvedValue) resolves; handler advances to
+       *            the Promise.all block and calls all five currentUsage()
+       *            callbacks synchronously via map().
+       *   Tick 2 → safety buffer for any extra microtask wrapping.
        */
       await Promise.resolve(); // tick 1
-      await Promise.resolve(); // tick 2
-      await Promise.resolve(); // tick 3 (safety)
+      await Promise.resolve(); // tick 2 (safety)
 
       // ── All five usage calls must already be in-flight ───────────────────────
       expect(callOrder).toHaveLength(5);
@@ -707,40 +502,9 @@ describe('GetMyFeaturesHandler', () => {
       expect(result.features['maxServices'].currentCount).toBe(10);
       expect(result.features['maxBookingsPerMonth'].currentCount).toBe(50);
     });
-
-    it('should call featureFlag.findMany with all feature keys at once (single round-trip)', async () => {
-      const prisma = buildPrisma();
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      await handler.execute();
-
-      // One single findMany call — not one per feature key
-      expect(prisma.featureFlag.findMany).toHaveBeenCalledTimes(1);
-
-      const [call] = prisma.featureFlag.findMany.mock.calls;
-      const where = call[0]?.where;
-
-      // The `in` list must include all feature keys (spot-check key members)
-      expect(where.key.in).toEqual(
-        expect.arrayContaining([
-          'recurring_bookings',
-          'ai_chatbot',
-          'advanced_reports',
-          'branches',
-          'employees',
-          'storage',
-        ]),
-      );
-    });
   });
 
-  // ── 7. UsageCounter hit/miss paths ────────────────────────────────────────────
+  // ── 5. UsageCounter hit/miss paths ────────────────────────────────────────────
 
   describe('UsageCounter materialized cache paths', () => {
     it('counter hit: should NOT call prisma.employee.count when counter row present', async () => {
@@ -784,61 +548,5 @@ describe('GetMyFeaturesHandler', () => {
       );
       expect(result.features['maxEmployees'].currentCount).toBe(4);
     });
-  });
-
-  // ── 8. Org-override precedence: FORCE_ON / FORCE_OFF / INHERIT matrix ──────
-
-  describe('precedence — org override beats plan default', () => {
-    /**
-     * Full matrix: planDefault × overrideMode → effective enabled value.
-     *
-     * Handler logic (from source):
-     *   if (orgOverride) enabled = orgOverride.enabled
-     *   else if (platformFlag) enabled = platformFlag.enabled && allowedPlans check
-     *   else enabled = derived from plan limits
-     *
-     * INHERIT is represented as "no org-scoped row" (findMany returns nothing
-     * with organizationId matching current org).
-     */
-    const matrix: Array<[boolean, 'INHERIT' | 'FORCE_ON' | 'FORCE_OFF', boolean]> = [
-      [true,  'INHERIT',   true],
-      [true,  'FORCE_ON',  true],
-      [true,  'FORCE_OFF', false],
-      [false, 'INHERIT',   false],
-      [false, 'FORCE_ON',  true],
-      [false, 'FORCE_OFF', false],
-    ];
-
-    it.each(matrix)(
-      'plan=%s + override=%s → effective=%s',
-      async (planDefault, overrideMode, expectedEnabled) => {
-        const prisma = buildPrisma();
-
-        // Inject the override row (or absence of it) into findMany
-        if (overrideMode === 'INHERIT') {
-          // No org-scoped override row — findMany returns empty array
-          prisma.featureFlag.findMany.mockResolvedValue([]);
-        } else {
-          // Org-scoped override row pinning the value
-          prisma.featureFlag.findMany.mockResolvedValue([
-            makeOrgOverride('coupons', overrideMode === 'FORCE_ON'),
-          ]);
-        }
-
-        // Build plan limits with `coupons` matching planDefault
-        const limits = { ...BASIC_LIMITS, coupons: planDefault };
-
-        const handler = new GetMyFeaturesHandler(
-          prisma as never,
-          buildTenant() as never,
-          buildCache(makeCached('BASIC', limits)) as never,
-          buildCounters() as never,
-        );
-
-        const result = await handler.execute();
-
-        expect(result.features['coupons']).toMatchObject({ enabled: expectedEnabled });
-      },
-    );
   });
 });
