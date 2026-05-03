@@ -32,6 +32,10 @@ vi.mock("@/hooks/use-current-subscription", () => ({
   useSavedCards: vi.fn(() => ({ data: [], isLoading: false })),
 }))
 
+vi.mock("@/hooks/use-usage", () => ({
+  useUsage: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 vi.mock("@/components/features/breadcrumbs", () => ({
   Breadcrumbs: () => <div>Breadcrumbs</div>,
 }))
@@ -141,14 +145,20 @@ describe("BillingPage", () => {
     })
 
     useBillingMutations.mockReturnValue({
+      changePlanMut: { isPending: false, mutateAsync: upgradeMutateAsync },
       upgradeMut: { isPending: false, mutateAsync: upgradeMutateAsync },
       downgradeMut: { isPending: false, mutateAsync: downgradeMutateAsync },
+      scheduleDowngradeMut: { isPending: false, mutateAsync: downgradeMutateAsync },
+      cancelScheduledDowngradeMut: { isPending: false, mutateAsync: vi.fn() },
       cancelMut: { isPending: false, mutateAsync: cancelMutateAsync },
       scheduleCancelMut: { isPending: false, mutateAsync: scheduleCancelMutateAsync },
       resumeMut: { isPending: false, mutate: resumeMutate },
       reactivateMut: { isPending: false, mutate: reactivateMutate },
       startMut: { isPending: false, mutateAsync: startMutateAsync },
       retryPaymentMut: { isPending: false, mutate: retryPaymentMutate },
+      addSavedCardMut: { isPending: false, mutateAsync: vi.fn() },
+      setDefaultSavedCardMut: { isPending: false, mutateAsync: vi.fn() },
+      removeSavedCardMut: { isPending: false, mutateAsync: vi.fn() },
     })
 
     usePlans.mockReturnValue({
