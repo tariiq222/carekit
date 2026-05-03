@@ -7,10 +7,10 @@ export class BreakWindowDto {
   @IsInt() @Min(0) @Max(6) dayOfWeek!: number;
 
   @ApiProperty({ description: 'Break start time (HH:MM)', example: '12:00' })
-  @IsString() @Matches(/^\d{2}:\d{2}$/) startTime!: string;
+  @IsString() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/) startTime!: string;
 
   @ApiProperty({ description: 'Break end time (HH:MM)', example: '13:00' })
-  @IsString() @Matches(/^\d{2}:\d{2}$/) endTime!: string;
+  @IsString() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/) endTime!: string;
 }
 
 export class SetEmployeeBreaksDto {

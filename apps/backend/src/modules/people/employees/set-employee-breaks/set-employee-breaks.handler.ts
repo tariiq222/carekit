@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SetEmployeeBreaksDto } from './set-employee-breaks.dto';
 
@@ -53,7 +54,7 @@ export class SetEmployeeBreaksHandler {
     }
 
     const result = await this.prisma.$transaction(
-      async (tx: Parameters<Parameters<typeof this.prisma.$transaction>[0]>[0]) => {
+      async (tx: Prisma.TransactionClient) => {
         await tx.employeeBreak.deleteMany({ where: { employeeId } });
 
         if (breaks.length > 0) {
