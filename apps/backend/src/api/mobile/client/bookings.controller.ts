@@ -32,6 +32,7 @@ import { IsBoolean, Max, MaxLength } from 'class-validator';
 import { PrismaService } from '../../../infrastructure/database';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { TrackUsage } from '../../../modules/platform/billing/track-usage.decorator';
+import { EnforceLimit } from '../../../modules/platform/billing/plan-limits.decorator';
 
 export class MobileRateBookingDto {
   @ApiProperty({ description: 'Rating score from 1 to 5', example: 5 })
@@ -101,6 +102,7 @@ export class MobileClientBookingsController {
   ) {}
 
   @Post()
+  @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
   @ApiCreatedResponse({

@@ -2,6 +2,8 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import { assertLimitNotExceeded } from '../../platform/billing/assert-limit-not-exceeded';
 import { BranchCreatedEvent } from '../events/branch-created.event';
 import { CreateBranchDto } from './create-branch.dto';
 
@@ -13,10 +15,12 @@ export class CreateBranchHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly eventBus: EventBusService,
+    private readonly subscriptionCache: SubscriptionCacheService,
   ) {}
 
   async execute(dto: CreateBranchCommand) {
     const organizationId = this.tenant.requireOrganizationId();
+    const subscription = await this.subscriptionCache.get(organizationId);
     const branch = await this.prisma.$transaction(
       async (tx) => {
         const existing = await tx.branch.findFirst({
@@ -31,7 +35,7 @@ export class CreateBranchHandler {
           });
         }
 
-        return tx.branch.create({
+        const created = await tx.branch.create({
           data: {
             organizationId,
             nameAr: dto.nameAr,
@@ -48,6 +52,18 @@ export class CreateBranchHandler {
             timezone: dto.timezone,
           },
         });
+
+        // Post-create plan-limit recheck — closes the TOCTOU race where two
+        // concurrent requests at limit-1 both passed the pre-create guard.
+        // Throws ForbiddenException → tx rolls back the insert above.
+        await assertLimitNotExceeded(
+          tx,
+          organizationId,
+          'BRANCHES',
+          subscription?.limits,
+        );
+
+        return created;
       },
       { isolationLevel: 'Serializable' },
     );

@@ -10,6 +10,7 @@ import { PriceResolverService } from '../../org-experience/services/price-resolv
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 import { ClientGender } from '@prisma/client';
 
 const FUTURE_DATE = new Date(Date.now() + 86400000).toISOString();
@@ -63,6 +64,7 @@ describe('CreateGuestBookingHandler', () => {
         { provide: TenantContextService, useValue: mockTenant },
         { provide: PriceResolverService, useValue: mockPriceResolver },
         { provide: GetBookingSettingsHandler, useValue: mockSettingsHandler },
+        { provide: SubscriptionCacheService, useValue: { get: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 
