@@ -51,6 +51,9 @@ export const FeatureKey = {
   PRIORITY_SUPPORT: "priority_support",
   AUDIT_EXPORT: "audit_export",
   MULTI_CURRENCY: "multi_currency",
+  // ── Quantitative — email/SMS fallback quotas (Phase settings-hub) ─────
+  EMAIL_FALLBACK_MONTHLY: 'email_fallback_monthly',
+  SMS_FALLBACK_MONTHLY: 'sms_fallback_monthly',
 } as const;
 
 export type FeatureKey = (typeof FeatureKey)[keyof typeof FeatureKey];

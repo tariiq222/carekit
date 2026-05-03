@@ -236,6 +236,13 @@ enum NotificationPriority {
   STANDARD
 }
 
+
+enum NotificationSenderActor {
+  PLATFORM
+  TENANT
+  PLATFORM_FALLBACK
+}
+
 model NotificationDeliveryLog {
   id             String               @id @default(uuid())
   organizationId String
@@ -246,6 +253,7 @@ model NotificationDeliveryLog {
   status         DeliveryStatus       @default(PENDING)
   toAddress      String?
   providerName   String?
+  senderActor    NotificationSenderActor @default(TENANT)
   attempts       Int                  @default(0)
   lastAttemptAt  DateTime?
   sentAt         DateTime?
@@ -258,4 +266,43 @@ model NotificationDeliveryLog {
   @@index([organizationId, status])
   @@index([organizationId, type])
   @@index([status, createdAt]) // DB-06: composite for retry sweep — replaces standalone (createdAt)
+}
+
+model PlatformEmailTemplate {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  subjectAr   String
+  subjectEn   String
+  htmlBody    String   @db.Text
+  blocks      Json?
+  isActive    Boolean  @default(true)
+  isLocked    Boolean  @default(false)
+  version     Int      @default(1)
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum PlatformEmailLogStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED_NOT_CONFIGURED
+}
+
+model PlatformEmailLog {
+  id                String                 @id @default(cuid())
+  organizationId    String?
+  templateSlug      String
+  toAddress         String
+  status            PlatformEmailLogStatus @default(QUEUED)
+  providerMessageId String?
+  errorMessage      String?
+  createdAt         DateTime               @default(now())
+  sentAt            DateTime?
+
+  @@index([organizationId])
+  @@index([templateSlug])
+  @@index([status, createdAt])
 }

@@ -1,9 +1,17 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { PrismaService } from '../database/prisma.service';
 
 const DEFAULT_FROM = 'Deqah <noreply@webvue.pro>';
 const DEFAULT_REPLY_TO = 'support@webvue.pro';
+
+type PlatformEmailLogClient = {
+  platformEmailLog: {
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<void>;
+  };
+};
 
 @Injectable()
 export class PlatformMailerService implements OnModuleInit {
@@ -12,7 +20,10 @@ export class PlatformMailerService implements OnModuleInit {
   private from = DEFAULT_FROM;
   private replyTo = DEFAULT_REPLY_TO;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly prisma: PrismaService | null = null,
+  ) {}
 
   onModuleInit(): void {
     const apiKey = this.config.get<string>('RESEND_API_KEY');
@@ -45,7 +56,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { tenantWelcomeTemplate } = await import('./templates/tenant-welcome.template');
     const t = tenantWelcomeTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'tenant-welcome' });
   }
 
   async sendOtpLogin(
@@ -54,7 +65,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { otpLoginTemplate } = await import('./templates/otp-login.template');
     const t = otpLoginTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'otp-login' });
   }
 
   async sendTrialEnding(
@@ -63,7 +74,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialEndingTemplate } = await import('./templates/trial-ending.template');
     const t = trialEndingTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'trial-ending' });
   }
 
   async sendTrialDay7Reminder(
@@ -93,7 +104,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialExpiredTemplate } = await import('./templates/trial-expired.template');
     const t = trialExpiredTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'trial-expired' });
   }
 
   async sendTrialSuspendedNoCard(
@@ -102,7 +113,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { trialSuspendedNoCardTemplate } = await import('./templates/trial-suspended-no-card.template');
     const t = trialSuspendedNoCardTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'trial-suspended-no-card' });
   }
 
   async sendSubscriptionPaymentSucceeded(
@@ -111,7 +122,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { subscriptionPaymentSucceededTemplate } = await import('./templates/subscription-payment-succeeded.template');
     const t = subscriptionPaymentSucceededTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'subscription-payment-succeeded' });
   }
 
   async sendSubscriptionPaymentFailed(
@@ -120,7 +131,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { subscriptionPaymentFailedTemplate } = await import('./templates/subscription-payment-failed.template');
     const t = subscriptionPaymentFailedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'subscription-payment-failed' });
   }
 
   async sendDunningRetry(
@@ -129,7 +140,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { dunningRetryTemplate } = await import('./templates/dunning-retry.template');
     const t = dunningRetryTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'dunning-retry' });
   }
 
   async sendPlanChanged(
@@ -138,7 +149,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { planChangedTemplate } = await import('./templates/plan-changed.template');
     const t = planChangedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'plan-changed' });
   }
 
   async sendAccountStatusChanged(
@@ -147,7 +158,7 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { accountStatusChangedTemplate } = await import('./templates/account-status-changed.template');
     const t = accountStatusChangedTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'account-status-changed' });
   }
 
   async sendMembershipInvitation(
@@ -156,7 +167,15 @@ export class PlatformMailerService implements OnModuleInit {
   ): Promise<void> {
     const { membershipInvitationTemplate } = await import('./templates/membership-invitation.template');
     const t = membershipInvitationTemplate(vars);
-    await this.dispatch(to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+    await this.dispatch({ to, subject: this.bilingualSubject(t.subjectAr, t.subjectEn), html: t.html, templateSlug: 'membership-invitation' });
+  }
+
+  /**
+   * Send a raw email with full control over to/subject/html.
+   * Used by the platform email test-send endpoint.
+   */
+  async sendRaw(opts: { to: string; subject: string; html: string; templateSlug: string }): Promise<void> {
+    await this.dispatch(opts);
   }
 
   // ── Internals ──────────────────────────────────────────────────────────────
@@ -165,11 +184,42 @@ export class PlatformMailerService implements OnModuleInit {
     return `${ar} · ${en}`;
   }
 
-  private async dispatch(to: string, subject: string, html: string): Promise<void> {
+  private async dispatch(opts: {
+    to: string;
+    subject: string;
+    html: string;
+    templateSlug: string;
+    organizationId?: string;
+  }): Promise<void> {
+    const { to, subject, html, templateSlug, organizationId } = opts;
+
+    // Write QUEUED log row if prisma is available
+    let logId: string | undefined;
+    if (this.prisma) {
+      try {
+        const logClient = this.prisma as unknown as PlatformEmailLogClient;
+        const row = await logClient.platformEmailLog.create({
+          data: {
+            templateSlug,
+            toAddress: to,
+            status: 'QUEUED',
+            ...(organizationId ? { organizationId } : {}),
+          },
+        });
+        logId = row.id;
+      } catch (err) {
+        this.logger.warn(`Failed to write PlatformEmailLog QUEUED row: ${String(err)}`);
+      }
+    }
+
     if (!this.client) {
       this.logger.warn(`PlatformMailer unavailable — skipping email to ${to}`);
+      if (logId && this.prisma) {
+        await this.updateLog(logId, 'SKIPPED_NOT_CONFIGURED', undefined, 'No Resend client configured').catch(() => {/* ignore */});
+      }
       return;
     }
+
     try {
       const res = await this.client.emails.send({
         from: this.from,
@@ -180,9 +230,38 @@ export class PlatformMailerService implements OnModuleInit {
       });
       if (res.error) {
         this.logger.error(`Resend send error for ${to}: ${res.error.message}`);
+        if (logId) {
+          await this.updateLog(logId, 'FAILED', undefined, res.error.message).catch(() => {/* ignore */});
+        }
+      } else {
+        if (logId) {
+          await this.updateLog(logId, 'SENT', res.data?.id, undefined).catch(() => {/* ignore */});
+        }
       }
     } catch (err) {
       this.logger.error(`Resend dispatch threw for ${to}`, err as Error);
+      if (logId) {
+        await this.updateLog(logId, 'FAILED', undefined, String(err)).catch(() => {/* ignore */});
+      }
     }
+  }
+
+  private async updateLog(
+    id: string,
+    status: 'SENT' | 'FAILED' | 'SKIPPED_NOT_CONFIGURED',
+    providerMessageId: string | undefined,
+    errorMessage: string | undefined,
+  ): Promise<void> {
+    if (!this.prisma) return;
+    const logClient = this.prisma as unknown as PlatformEmailLogClient;
+    await logClient.platformEmailLog.update({
+      where: { id },
+      data: {
+        status,
+        ...(providerMessageId ? { providerMessageId } : {}),
+        ...(errorMessage ? { errorMessage } : {}),
+        ...(status === 'SENT' ? { sentAt: new Date() } : {}),
+      },
+    });
   }
 }

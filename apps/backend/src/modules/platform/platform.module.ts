@@ -71,6 +71,16 @@ import { FinanceModule } from '../finance/finance.module';
 import { RegisterTenantHandler } from './tenant-registration/register-tenant.handler';
 import { IdentityModule } from '../identity/identity.module';
 import { BillingModule } from './billing/billing.module';
+import { PlatformSettingsModule } from './settings/platform-settings.module';
+import { PlatformEmailModule } from './email/platform-email.module';
+import { PlatformEmailController } from '../../api/admin/platform-email.controller';
+import { NotificationsConfigModule } from './notifications-config/notifications-config.module';
+import { AdminNotificationsConfigController } from '../../api/admin/notifications-config.controller';
+import { BillingSettingsController } from '../../api/admin/billing-settings.controller';
+import { BrandingSettingsController } from '../../api/admin/branding-settings.controller';
+import { SystemHealthController } from '../../api/admin/system-health.controller';
+import { SecuritySettingsController } from '../../api/admin/security-settings.controller';
+import { SystemHealthModule } from './system-health/system-health.module';
 
 const ADMIN_HANDLERS = [
   RegisterTenantHandler,
@@ -120,6 +130,10 @@ const ADMIN_HANDLERS = [
     FinanceModule,
     IdentityModule,
     BillingModule,
+    PlatformSettingsModule,
+    PlatformEmailModule,
+    NotificationsConfigModule,
+    SystemHealthModule,
     MailModule,
     MessagingModule,
     JwtModule.registerAsync({
@@ -144,6 +158,12 @@ const ADMIN_HANDLERS = [
     AdminBillingController,
     AdminFeatureFlagsController,
     AdminNotificationsController,
+    PlatformEmailController,
+    AdminNotificationsConfigController,
+    BillingSettingsController,
+    BrandingSettingsController,
+    SystemHealthController,
+    SecuritySettingsController,
   ],
   providers: [
     SuperAdminContextInterceptor,

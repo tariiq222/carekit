@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
+import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
 
 export interface IFcmService {
   sendPush(token: string, title: string, body: string, data?: Record<string, string>): Promise<string>;
@@ -13,17 +14,44 @@ export class FcmService implements IFcmService, OnModuleInit {
   private readonly logger = new Logger(FcmService.name);
   private initialized = false;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly platformSettings?: PlatformSettingsService,
+  ) {}
 
-  onModuleInit(): void {
-    const projectId = this.config.get<string>('FCM_PROJECT_ID');
+  async onModuleInit(): Promise<void> {
+    let projectId: string | undefined;
+    let clientEmail: string | undefined;
+    let privateKey: string | undefined;
+
+    // Try DB first via PlatformSettingsService
+    if (this.platformSettings) {
+      try {
+        const [dbProjectId, dbClientEmail, dbServerKey] = await Promise.all([
+          this.platformSettings.get<string>('notifications.fcm.projectId'),
+          this.platformSettings.get<string>('notifications.fcm.clientEmail'),
+          this.platformSettings.get<string>('notifications.fcm.serverKey'),
+        ]);
+        if (dbProjectId) projectId = dbProjectId;
+        if (dbClientEmail) clientEmail = dbClientEmail;
+        if (dbServerKey) privateKey = dbServerKey.replace(/\\n/g, '\n');
+      } catch (err) {
+        this.logger.warn('Could not read FCM credentials from DB, falling back to env vars', err);
+      }
+    }
+
+    // Fall back to env vars for any missing values
+    if (!projectId) projectId = this.config.get<string>('FCM_PROJECT_ID');
+    if (!clientEmail) clientEmail = this.config.get<string>('FCM_CLIENT_EMAIL');
+    if (!privateKey) {
+      const envKey = this.config.get<string>('FCM_PRIVATE_KEY');
+      if (envKey) privateKey = envKey.replace(/\\n/g, '\n');
+    }
+
     if (!projectId) {
       this.logger.warn('FCM_PROJECT_ID not set — push notifications disabled');
       return;
     }
-
-    const clientEmail = this.config.get<string>('FCM_CLIENT_EMAIL');
-    const privateKey = this.config.get<string>('FCM_PRIVATE_KEY')?.replace(/\\n/g, '\n');
 
     admin.initializeApp({
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),

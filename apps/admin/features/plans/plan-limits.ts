@@ -35,6 +35,8 @@ export interface PlanLimits {
   priority_support: boolean;
   audit_export: boolean;
   multi_currency: boolean;
+  email_fallback_monthly: number;
+  sms_fallback_monthly: number;
 }
 
 export const QUOTA_FIELDS = [
@@ -132,6 +134,8 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   priority_support: false,
   audit_export: false,
   multi_currency: false,
+  email_fallback_monthly: 500,
+  sms_fallback_monthly: 100,
 };
 
 /**
