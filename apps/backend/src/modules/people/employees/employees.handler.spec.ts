@@ -4,6 +4,8 @@ import { EmployeeGender, EmploymentType } from '@prisma/client';
 import { CreateEmployeeHandler } from './create-employee.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 
 const mockEmployee = {
   id: 'e1',
@@ -33,13 +35,27 @@ describe('Employees handlers', () => {
         CreateEmployeeHandler,
         {
           provide: PrismaService,
-          useValue: {
-            employee: { findFirst: jest.fn(), create: jest.fn() },
-          },
+          useValue: (() => {
+            const employee = { findFirst: jest.fn(), create: jest.fn() };
+            return {
+              employee,
+              $transaction: jest.fn(async (fn: (tx: unknown) => unknown) =>
+                fn({ employee }),
+              ),
+            };
+          })(),
         },
         {
           provide: TenantContextService,
           useValue: { requireOrganizationIdOrDefault: () => 'org-test' },
+        },
+        {
+          provide: EventBusService,
+          useValue: { publish: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: SubscriptionCacheService,
+          useValue: { get: jest.fn().mockResolvedValue(null) },
         },
       ],
     }).compile();

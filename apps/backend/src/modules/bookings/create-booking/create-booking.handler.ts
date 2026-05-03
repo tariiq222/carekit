@@ -11,6 +11,8 @@ import { PriceResolverService } from '../../org-experience/services/price-resolv
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { GroupSessionMinReachedHandler } from '../group-session-min-reached/group-session-min-reached.handler';
 import { EventBusService } from '../../../infrastructure/events';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import { assertLimitNotExceeded } from '../../platform/billing/assert-limit-not-exceeded';
 import { BookingCreatedEvent } from '../events/booking-created.event';
 import { CreateBookingDto } from './create-booking.dto';
 
@@ -44,6 +46,7 @@ export class CreateBookingHandler {
     private readonly settingsHandler: GetBookingSettingsHandler,
     private readonly groupMinReachedHandler: GroupSessionMinReachedHandler,
     private readonly eventBus: EventBusService,
+    private readonly subscriptionCache: SubscriptionCacheService,
   ) {}
 
   async execute(dto: CreateBookingCommand) {
@@ -150,6 +153,12 @@ export class CreateBookingHandler {
     // For group services, use PENDING_GROUP_FILL until minParticipants is reached.
     const initialStatus = isGroupService ? 'PENDING_GROUP_FILL' : 'PENDING';
 
+    // Plan-limit recheck inside the tx closes the TOCTOU race where two
+    // concurrent booking creates at maxBookingsPerMonth-1 both pass the
+    // pre-create guard. Pull the cached subscription once, before the tx,
+    // because SubscriptionCacheService talks to its own connection.
+    const subscription = await this.subscriptionCache.get(organizationId);
+
     // Serialize the conflict check + insert so two concurrent requests for the
     // same slot cannot both pass the overlap check.
     const booking = await this.prisma.$transaction(
@@ -233,6 +242,16 @@ export class CreateBookingHandler {
             select: { id: true },
           });
         }
+
+        // Post-create plan-limit recheck — closes TOCTOU on
+        // BOOKINGS_PER_MONTH. Cancelled bookings are excluded both here and in
+        // the pre-create guard, so they cannot push the count past the cap.
+        await assertLimitNotExceeded(
+          tx,
+          organizationId,
+          'BOOKINGS_PER_MONTH',
+          subscription?.limits,
+        );
 
         return { ...booking, invoiceId: invoice?.id ?? null };
       },

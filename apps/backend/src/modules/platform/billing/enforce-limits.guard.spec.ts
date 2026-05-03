@@ -1,14 +1,23 @@
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { PlanLimitsGuard } from './enforce-limits.guard';
+import { EPOCH, startOfMonthUTC } from './usage-counter/period.util';
 
 describe('PlanLimitsGuard', () => {
   const mockReflector = { get: jest.fn() };
-  const mockPrisma = { branch: { count: jest.fn() }, employee: { count: jest.fn() } };
+  const mockPrisma = {
+    branch: { count: jest.fn() },
+    employee: { count: jest.fn() },
+    booking: { count: jest.fn() },
+    file: { aggregate: jest.fn() },
+  };
   const mockCache = { get: jest.fn() };
+  const mockCounters = { read: jest.fn(), upsertExact: jest.fn() };
   const guard = new PlanLimitsGuard(
     mockReflector as never,
     mockPrisma as never,
     mockCache as never,
+    mockCounters as never,
   );
 
   // Using a sentinel object avoids the JS default-param pitfall where
@@ -119,5 +128,69 @@ describe('PlanLimitsGuard', () => {
       where: { organizationId: 'org-1', isActive: true },
     });
     expect(mockPrisma.branch.count).not.toHaveBeenCalled();
+  });
+
+  describe('BOOKINGS_PER_MONTH', () => {
+    it('allows when monthly bookings counter is below the limit', async () => {
+      mockReflector.get.mockReturnValue('BOOKINGS_PER_MONTH');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBookingsPerMonth: 100 } });
+      mockCounters.read.mockResolvedValue(50);
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+      expect(mockCounters.read).toHaveBeenCalledWith('org-1', FeatureKey.MONTHLY_BOOKINGS, startOfMonthUTC());
+    });
+
+    it('throws ForbiddenException when monthly bookings counter equals the limit', async () => {
+      mockReflector.get.mockReturnValue('BOOKINGS_PER_MONTH');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBookingsPerMonth: 100 } });
+      mockCounters.read.mockResolvedValue(100);
+      await expect(guard.canActivate(buildCtx())).rejects.toThrow('Plan limit reached for BOOKINGS_PER_MONTH: 100/100');
+    });
+
+    it('self-heals from source when counter row is missing', async () => {
+      mockReflector.get.mockReturnValue('BOOKINGS_PER_MONTH');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBookingsPerMonth: 100 } });
+      mockCounters.read.mockResolvedValue(null);
+      mockPrisma.booking.count.mockResolvedValue(7);
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+      expect(mockCounters.upsertExact).toHaveBeenCalledWith(
+        'org-1',
+        FeatureKey.MONTHLY_BOOKINGS,
+        startOfMonthUTC(),
+        7,
+      );
+    });
+
+    it('allows when maxBookingsPerMonth is -1 (unlimited)', async () => {
+      mockReflector.get.mockReturnValue('BOOKINGS_PER_MONTH');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBookingsPerMonth: -1 } });
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+      expect(mockCounters.read).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('STORAGE_MB', () => {
+    it('allows when current storage is below the limit', async () => {
+      mockReflector.get.mockReturnValue('STORAGE_MB');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
+      mockCounters.read.mockResolvedValue(500);
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+      expect(mockCounters.read).toHaveBeenCalledWith('org-1', FeatureKey.STORAGE, EPOCH);
+    });
+
+    it('throws ForbiddenException when storage usage equals the limit', async () => {
+      mockReflector.get.mockReturnValue('STORAGE_MB');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
+      mockCounters.read.mockResolvedValue(1024);
+      await expect(guard.canActivate(buildCtx())).rejects.toThrow('Plan limit reached for STORAGE_MB: 1024/1024');
+    });
+
+    it('self-heals from File aggregate when counter row is missing', async () => {
+      mockReflector.get.mockReturnValue('STORAGE_MB');
+      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
+      mockCounters.read.mockResolvedValue(null);
+      mockPrisma.file.aggregate.mockResolvedValue({ _sum: { size: 5 * 1024 * 1024 } }); // 5MB
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
+      expect(mockCounters.upsertExact).toHaveBeenCalledWith('org-1', FeatureKey.STORAGE, EPOCH, 5);
+    });
   });
 });
