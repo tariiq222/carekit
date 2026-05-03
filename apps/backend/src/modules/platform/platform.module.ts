@@ -25,8 +25,6 @@ import { ListProblemReportsHandler } from './problem-reports/list-problem-report
 import { UpdateProblemReportStatusHandler } from './problem-reports/update-problem-report-status.handler';
 import { UpsertIntegrationHandler } from './integrations/upsert-integration.handler';
 import { ListIntegrationsHandler } from './integrations/list-integrations.handler';
-import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
-import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
 import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
 import { UpsertFeatureFlagOverrideHandler } from './feature-flags/upsert-feature-flag-override/upsert-feature-flag-override.handler';
 import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
@@ -176,8 +174,6 @@ const ADMIN_HANDLERS = [
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
-    ListFeatureFlagsHandler,
-    GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
     UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,
@@ -188,8 +184,6 @@ const ADMIN_HANDLERS = [
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
-    ListFeatureFlagsHandler,
-    GetFeatureFlagMapHandler,
     UpdateFeatureFlagHandler,
     UpsertFeatureFlagOverrideHandler,
     ...ADMIN_HANDLERS,

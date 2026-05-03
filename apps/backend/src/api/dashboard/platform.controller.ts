@@ -18,9 +18,6 @@ import { UpdateProblemReportStatusDto } from '../../modules/platform/problem-rep
 import { UpsertIntegrationHandler } from '../../modules/platform/integrations/upsert-integration.handler';
 import { UpsertIntegrationDto } from '../../modules/platform/integrations/upsert-integration.dto';
 import { ListIntegrationsHandler } from '../../modules/platform/integrations/list-integrations.handler';
-import { ListFeatureFlagsHandler } from '../../modules/platform/feature-flags/list-feature-flags.handler';
-import { GetFeatureFlagMapHandler } from '../../modules/platform/feature-flags/get-feature-flag-map.handler';
-
 @ApiTags('Dashboard / Platform')
 @ApiBearerAuth()
 @ApiStandardResponses()
@@ -33,8 +30,6 @@ export class DashboardPlatformController {
     private readonly updateProblemReportStatus: UpdateProblemReportStatusHandler,
     private readonly upsertIntegration: UpsertIntegrationHandler,
     private readonly listIntegrations: ListIntegrationsHandler,
-    private readonly listFeatureFlags: ListFeatureFlagsHandler,
-    private readonly getFeatureFlagMap: GetFeatureFlagMapHandler,
   ) {}
 
   // ── Problem Reports ──────────────────────────────────────────────────────────
@@ -83,20 +78,5 @@ export class DashboardPlatformController {
     return this.listIntegrations.execute();
   }
 
-  // ── Feature Flags ──────────────────────────────────────────────────────────
-
-  @Get('feature-flags')
-  @ApiOperation({ summary: 'List all feature flags with their current state' })
-  @ApiOkResponse({ description: 'Array of feature flag records' })
-  async listFeatureFlagsEndpoint() {
-    return this.listFeatureFlags.execute();
-  }
-
-  @Get('feature-flags/map')
-  @ApiOperation({ summary: 'Get a key→enabled map of all feature flags' })
-  @ApiOkResponse({ description: 'Object mapping flag keys to boolean values' })
-  async featureFlagMapEndpoint() {
-    return this.getFeatureFlagMap.execute();
-  }
-
 }
+
