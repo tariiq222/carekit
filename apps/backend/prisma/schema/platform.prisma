@@ -500,8 +500,10 @@ model SubscriptionInvoice {
 }
 
 // Phase 7 — per-organization invoice number sequence (yearly reset).
-// Intentionally NOT in SCOPED_MODELS — write path is server-side only via
-// the issue-invoice handler.
+// Bug B5 (2026-05-03): this model IS in SCOPED_MODELS — even though writes
+// happen only via the issue-invoice handler today, defense-in-depth requires
+// the Prisma extension to inject the org filter so a future caller cannot
+// accidentally read or update another tenant's `lastSequence`.
 model OrganizationInvoiceCounter {
   organizationId String
   year           Int

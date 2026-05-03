@@ -28,7 +28,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
-    const ability = this.casl.buildForUser(user);
+    // Build CASL ability against the canonical per-org role from the JWT.
+    // `user.role` (the global User.role) is legacy and must NOT drive tenant
+    // authz — see Role precedence in apps/backend/CLAUDE.md. The factory
+    // falls back to `user.role` only when `membershipRole` is absent (pre-
+    // rollout tokens / platform surfaces with no tenant context).
+    const ability = this.casl.buildForUser({
+      membershipRole: payload.membershipRole,
+      role: user.role,
+      customRole: user.customRole,
+    });
 
     return {
       // Both `id` and `sub` carry the same User.id. The codebase has historic

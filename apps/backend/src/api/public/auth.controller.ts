@@ -139,10 +139,12 @@ export class AuthController {
     // SaaS-04 alignment: surface the active membership's organizationId on
     // the login response so mobile/dashboard consumers don't need to decode
     // the JWT to find their tenant. Mirrors LoginHandler's resolution order.
+    // Bug B5: also pull the per-org role so the response `permissions` array
+    // reflects `Membership.role`, not the legacy `User.role`.
     const membership = await this.prisma.membership.findFirst({
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
-      select: { organizationId: true },
+      select: { organizationId: true, role: true },
     });
 
     // Match GetCurrentUserHandler: derive firstName/lastName from `name`
@@ -158,7 +160,11 @@ export class AuthController {
         lastName: rest.join(' '),
         isSuperAdmin: user.isSuperAdmin,
         organizationId: membership?.organizationId ?? null,
-        permissions: flattenPermissions(user),
+        permissions: flattenPermissions({
+          membershipRole: membership?.role ?? null,
+          role: user.role,
+          customRole: user.customRole,
+        }),
       },
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };

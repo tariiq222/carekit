@@ -1,9 +1,14 @@
-import { CaslAbilityFactory, type AppAbility } from './casl-ability.factory';
+import { CaslAbilityFactory, type AppAbility, type AbilitySubjectUser } from './casl-ability.factory';
 
-export interface PermissionSourceUser {
-  role: string;
-  customRole: { permissions: Array<{ action: string; subject: string }> } | null;
-}
+/**
+ * Caller-supplied input for `flattenPermissions`.
+ *
+ * Pass `membershipRole` whenever the caller has resolved an active membership
+ * (login, refresh, organization-switch). For platform-level surfaces with no
+ * tenant context (super-admin /auth/me, /tenants/register) the legacy `role`
+ * is acceptable as a fallback.
+ */
+export type PermissionSourceUser = AbilitySubjectUser;
 
 /**
  * Converts CASL rules into the flat `module:action` strings the dashboard's

@@ -72,6 +72,13 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'ContactMessage',
   'ChatbotConfig',
   'FcmToken',
+  // Bug B5 (2026-05-03) — comms tenant models that were silently unscoped.
+  // OrganizationEmailConfig holds per-tenant SMTP credentials (encrypted but
+  // still tenant-secret); a `findFirst()` without an explicit where would
+  // otherwise return any tenant's config.
+  'OrganizationEmailConfig',
+  // NotificationDeliveryLog is per-tenant audit data — must not bleed across orgs.
+  'NotificationDeliveryLog',
   // 02g — AI + media + ops + platform + content
   'KnowledgeDocument',
   'DocumentChunk',
@@ -106,6 +113,12 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   // must read across all organizations via $allTenants bypass.
   // Phase 5 — materialized quota counters (tenant-scoped for RLS safety)
   'UsageCounter',
+  // Bug B5 (2026-05-03) — per-tenant invoice numbering counter. The schema
+  // comment used to claim "intentionally not scoped" because writes are
+  // server-side, but a Prisma extension scope is the only thing preventing
+  // a future bug from selecting another tenant's `lastSequence` and
+  // colliding invoice numbers across orgs.
+  'OrganizationInvoiceCounter',
 ]);
 
 /**
