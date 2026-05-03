@@ -21,7 +21,7 @@ export interface NotificationDefaults {
 }
 
 export async function getNotificationsConfig(): Promise<NotificationDefaults> {
-  return adminRequest<NotificationDefaults>('/admin/notifications-config');
+  return adminRequest<NotificationDefaults>('/notifications-config');
 }
 
 export async function updateNotificationsConfig(body: {
@@ -29,7 +29,7 @@ export async function updateNotificationsConfig(body: {
   quietHours: QuietHours;
   fcm: Partial<FcmCredentials>;
 }): Promise<void> {
-  return adminRequest<void>('/admin/notifications-config', {
+  return adminRequest<void>('/notifications-config', {
     method: 'PUT',
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },

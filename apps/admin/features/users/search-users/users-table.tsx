@@ -23,12 +23,12 @@ export function UsersTable({ items, isLoading }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>#</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Organization</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>User ID</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -41,8 +41,9 @@ export function UsersTable({ items, isLoading }: Props) {
                 </TableCell>
               </TableRow>
             ))
-          : items?.map((u) => (
+          : items?.map((u, i) => (
               <TableRow key={u.id}>
+                <TableCell className="text-sm text-muted-foreground">{i + 1}</TableCell>
                 <TableCell>
                   <div className="font-medium">{u.email}</div>
                   {u.isSuperAdmin ? (
@@ -69,7 +70,6 @@ export function UsersTable({ items, isLoading }: Props) {
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{u.id}</TableCell>
                 <TableCell className="text-right">
                   <ResetPasswordDialog userId={u.id} userEmail={u.email} />
                 </TableCell>

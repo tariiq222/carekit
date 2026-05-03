@@ -1,5 +1,14 @@
 # Deqah — Multi-Tenant SaaS Clinic Platform
 
+## HIGHEST PRIORITY — No Uninstructed Features
+
+**لا تضف أي ميزة جديدة أو تحسين جديد أو refactor لم يطلبه المستخدم صراحةً في أول رسالة في المحادثة.**
+
+هذه القاعدة مطلقة:
+- نفّذ فقط ما طُلب بالضبط — لا إضافات، لا "بما أننا هنا"، لا تحسينات جانبية
+- إذا لاحظت شيئاً يستحق التحسين → اذكره للمستخدم فقط، لا تنفّذه
+- الاستثناء الوحيد: إصلاح bug واضح يمنع الشيء المطلوب من العمل
+
 Deqah is a **multi-tenant SaaS** for clinics. One deployment serves many clinics (organizations), each with its own branding, vertical configuration, billing plan, and data — isolated by `organizationId` scoping and Postgres RLS. A super-admin control plane (`apps/admin`) operates the platform; each tenant uses the per-tenant clinic dashboard (`apps/dashboard`) and the client/employee mobile app (`apps/mobile`).
 
 ## Orchestration
