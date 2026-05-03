@@ -18,7 +18,10 @@ export default function PlansPage() {
         <div>
           <h2 className="text-2xl font-semibold">Plans</h2>
           <p className="text-sm text-muted-foreground">
-            Subscription plans available to tenants.
+            Subscription plans available to tenants.{' '}
+            <Link href="/plans/compare" className="text-sm text-primary hover:underline">
+              Compare plans →
+            </Link>
           </p>
         </div>
         <Button asChild>

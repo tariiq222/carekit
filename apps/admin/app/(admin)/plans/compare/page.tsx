@@ -1,0 +1,39 @@
+'use client';
+
+import Link from 'next/link';
+import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
+import { ComparePlansMatrix } from '@/features/plans/compare-plans/compare-plans-matrix';
+
+export default function PlansComparePage() {
+  const { data, isLoading, error } = useListPlans();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Link
+          href="/plans"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← Back to plans
+        </Link>
+        <h2 className="mt-2 text-2xl font-semibold">Compare plans</h2>
+        <p className="text-sm text-muted-foreground">
+          Side-by-side feature matrix across all subscription plans.
+        </p>
+      </div>
+
+      {error ? (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+          Failed to load: {(error as Error).message}
+        </div>
+      ) : null}
+
+      {isLoading && !data ? (
+        <Skeleton className="h-96" />
+      ) : data ? (
+        <ComparePlansMatrix plans={data} />
+      ) : null}
+    </div>
+  );
+}
