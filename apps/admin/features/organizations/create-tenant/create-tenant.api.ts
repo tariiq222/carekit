@@ -5,7 +5,12 @@ export interface CreateTenantCommand {
   slug: string;
   nameAr: string;
   nameEn?: string;
-  ownerUserId: string;
+  // exactly one of the two owner groups must be present
+  ownerUserId?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  ownerPassword?: string;
   verticalSlug?: string;
   planId?: string;
   billingCycle?: 'MONTHLY' | 'ANNUAL';

@@ -12,66 +12,69 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@deqah/ui/primitives/dialog';
-import { Input } from '@deqah/ui/primitives/input';
-import { Label } from '@deqah/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@deqah/ui/primitives/select';
-import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreateTenant } from './use-create-tenant';
-import { OwnerUserCombobox } from './owner-user-combobox';
-import { useListVerticals } from '@/features/verticals/list-verticals/use-list-verticals';
-import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
+import { OwnerStep, isOwnerStepValid } from './steps/owner-step';
+import { OrgStep, isOrgStepValid } from './steps/org-step';
+import { PlanStep, isPlanStepValid } from './steps/plan-step';
+import { ReviewStep, isReviewStepValid } from './steps/review-step';
+
+export type OwnerMode = 'existing' | 'new';
+
+export interface WizardForm {
+  ownerMode: OwnerMode;
+  ownerUserId: string;
+  ownerLabel: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  ownerPassword: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  verticalSlug: string;
+  planId: string;
+  billingCycle: 'MONTHLY' | 'ANNUAL';
+  trialDays: string;
+  reason: string;
+}
+
+const DEFAULT_FORM: WizardForm = {
+  ownerMode: 'existing',
+  ownerUserId: '',
+  ownerLabel: '',
+  ownerName: '',
+  ownerEmail: '',
+  ownerPhone: '',
+  ownerPassword: '',
+  slug: '',
+  nameAr: '',
+  nameEn: '',
+  verticalSlug: '',
+  planId: '',
+  billingCycle: 'MONTHLY',
+  trialDays: '14',
+  reason: '',
+};
+
+const STEP_LABELS = ['step1', 'step2', 'step3', 'step4'] as const;
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const DEFAULT_FORM = {
-  slug: '',
-  nameAr: '',
-  nameEn: '',
-  ownerUserId: '',
-  verticalSlug: '',
-  planId: '',
-  billingCycle: 'MONTHLY' as 'MONTHLY' | 'ANNUAL',
-  trialDays: '14',
-  reason: '',
-};
-
-type FormState = typeof DEFAULT_FORM;
-
 export function CreateTenantDialog({ open, onOpenChange }: Props) {
   const t = useTranslations('organizations.create');
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const [form, setForm] = useState<WizardForm>(DEFAULT_FORM);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const mutation = useCreateTenant();
-  const { data: verticals } = useListVerticals();
-  const { data: plans } = useListPlans();
 
-  const trialDaysValue = form.trialDays.trim() === '' ? undefined : Number(form.trialDays);
-  const trialDaysValid =
-    trialDaysValue === undefined ||
-    (Number.isInteger(trialDaysValue) && trialDaysValue >= 0 && trialDaysValue <= 90);
-  const canSubmit =
-    SLUG_REGEX.test(form.slug.trim()) &&
-    form.nameAr.trim().length >= 2 &&
-    UUID_REGEX.test(form.ownerUserId.trim()) &&
-    form.reason.trim().length >= 10 &&
-    trialDaysValid;
-
-  const set = (field: keyof FormState) => (value: string) =>
+  const set = (field: keyof WizardForm) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const reset = () => {
     setForm(DEFAULT_FORM);
+    setStep(1);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -82,26 +85,48 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
     onOpenChange(next);
   };
 
+  const canAdvance =
+    step === 1 ? isOwnerStepValid(form) :
+    step === 2 ? isOrgStepValid(form) :
+    step === 3 ? isPlanStepValid(form) :
+    isReviewStepValid(form);
+
+  const handleNext = () => {
+    if (step < 4) setStep((s) => (s + 1) as 1 | 2 | 3 | 4);
+  };
+
+  const handleBack = () => {
+    if (step > 1) setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
+  };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit || mutation.isPending) return;
+    if (!canAdvance || mutation.isPending) return;
+
+    const trialDaysValue =
+      form.trialDays.trim() === '' ? undefined : Number(form.trialDays);
 
     mutation.mutate(
       {
         slug: form.slug.trim(),
         nameAr: form.nameAr.trim(),
         nameEn: form.nameEn.trim() || undefined,
-        ownerUserId: form.ownerUserId.trim(),
+        ...(form.ownerMode === 'existing'
+          ? { ownerUserId: form.ownerUserId.trim() }
+          : {
+              ownerName: form.ownerName.trim(),
+              ownerEmail: form.ownerEmail.trim(),
+              ownerPhone: form.ownerPhone.trim() || undefined,
+              ownerPassword: form.ownerPassword,
+            }),
         verticalSlug: form.verticalSlug.trim() || undefined,
         planId: form.planId.trim() || undefined,
-        billingCycle: form.billingCycle,
+        ...(form.planId.trim() ? { billingCycle: form.billingCycle } : {}),
         trialDays: trialDaysValue,
         reason: form.reason.trim(),
       },
       {
-        onSuccess: () => {
-          handleOpenChange(false);
-        },
+        onSuccess: () => handleOpenChange(false),
       },
     );
   };
@@ -117,143 +142,51 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
             <DialogDescription>{t('description')}</DialogDescription>
           </DialogHeader>
 
+          {/* Progress indicator */}
+          <div className="flex gap-1 px-6 pt-2">
+            {STEP_LABELS.map((label, i) => (
+              <div key={label} className="flex flex-1 flex-col items-center gap-1">
+                <div
+                  className={`h-1.5 w-full rounded-full ${i + 1 <= step ? 'bg-primary' : 'bg-muted'}`}
+                />
+                <span className="text-xs text-muted-foreground">{t(label)}</span>
+              </div>
+            ))}
+          </div>
+
           <DialogBody>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-slug">{t('slug')}</Label>
-                <Input
-                  id="tenant-slug"
-                  value={form.slug}
-                  onChange={(event) => set('slug')(event.target.value)}
-                  placeholder={t('slugPlaceholder')}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>{t('ownerUserId')}</Label>
-                <OwnerUserCombobox
-                  value={form.ownerUserId}
-                  onSelect={(userId) => set('ownerUserId')(userId)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-name-ar">{t('nameAr')}</Label>
-                <Input
-                  id="tenant-name-ar"
-                  value={form.nameAr}
-                  onChange={(event) => set('nameAr')(event.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-name-en">{t('nameEn')}</Label>
-                <Input
-                  id="tenant-name-en"
-                  value={form.nameEn}
-                  onChange={(event) => set('nameEn')(event.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-vertical">{t('verticalSlug')}</Label>
-                <Select
-                  value={form.verticalSlug || '__none__'}
-                  onValueChange={(value) => set('verticalSlug')(value === '__none__' ? '' : value)}
-                >
-                  <SelectTrigger id="tenant-vertical">
-                    <SelectValue placeholder="Select vertical…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">— None —</SelectItem>
-                    {verticals?.filter((v) => v.isActive).map((v) => (
-                      <SelectItem key={v.slug} value={v.slug}>
-                        {v.nameAr} ({v.slug})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-plan">{t('planId')}</Label>
-                <Select
-                  value={form.planId || '__none__'}
-                  onValueChange={(value) => set('planId')(value === '__none__' ? '' : value)}
-                >
-                  <SelectTrigger id="tenant-plan">
-                    <SelectValue placeholder="Select plan…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">— None —</SelectItem>
-                    {plans?.filter((p) => p.isActive).map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.nameAr} — {p.slug}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-billing-cycle">{t('billingCycle')}</Label>
-                <Select
-                  value={form.billingCycle}
-                  onValueChange={(value) => set('billingCycle')(value)}
-                >
-                  <SelectTrigger id="tenant-billing-cycle">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MONTHLY">{t('monthly')}</SelectItem>
-                    <SelectItem value="ANNUAL">{t('annual')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="tenant-trial-days">{t('trialDays')}</Label>
-                <Input
-                  id="tenant-trial-days"
-                  min={0}
-                  max={90}
-                  type="number"
-                  value={form.trialDays}
-                  onChange={(event) => set('trialDays')(event.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="tenant-reason">{t('reason')}</Label>
-                <Textarea
-                  id="tenant-reason"
-                  rows={3}
-                  value={form.reason}
-                  onChange={(event) => set('reason')(event.target.value)}
-                />
-              </div>
-            </div>
-
-            {errorMessage ? (
-              <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                {errorMessage}
-              </div>
-            ) : null}
+            {step === 1 && <OwnerStep form={form} set={set} />}
+            {step === 2 && <OrgStep form={form} set={set} />}
+            {step === 3 && <PlanStep form={form} set={set} />}
+            {step === 4 && (
+              <ReviewStep
+                form={form}
+                set={set}
+                onEditStep={(s) => setStep(s)}
+                errorMessage={errorMessage}
+              />
+            )}
           </DialogBody>
 
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={step === 1 ? () => handleOpenChange(false) : handleBack}
               disabled={mutation.isPending}
             >
-              {t('cancel')}
+              {step === 1 ? t('cancel') : t('back')}
             </Button>
-            <Button type="submit" disabled={mutation.isPending || !canSubmit}>
-              {mutation.isPending ? t('submitting') : t('submit')}
-            </Button>
+
+            {step < 4 ? (
+              <Button type="button" onClick={handleNext} disabled={!canAdvance}>
+                {t('next')}
+              </Button>
+            ) : (
+              <Button type="submit" disabled={mutation.isPending || !canAdvance}>
+                {mutation.isPending ? t('submitting') : t('submit')}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
