@@ -38,6 +38,7 @@ function probeTcpPort(host: string, port: number): Promise<boolean> {
 export default async function globalSetup() {
   process.env.TENANT_ENFORCEMENT ??= 'permissive';
   process.env.DEFAULT_ORGANIZATION_ID ??= DEFAULT_ORG_ID;
+  process.env.EMAIL_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 4).toString('base64');
 
   process.env.TEST_DATABASE_URL =
     process.env.TEST_DATABASE_URL ??

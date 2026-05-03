@@ -20,11 +20,13 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { JwtService } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
+import { Pool } from 'pg';
 import { AppModule } from '../../../src/app.module';
 import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
 
 const JEDDAH_ORG_ID = '11111111-1111-4111-8111-111111111111';
+const JEDDAH_OWNER_USER_ID = 'user-jeddah-owner-e2e';
 
 describe('Feature gate uses JWT org (Bug B / Issue #108)', () => {
   let app: INestApplication;
@@ -34,6 +36,56 @@ describe('Feature gate uses JWT org (Bug B / Issue #108)', () => {
 
   beforeAll(async () => {
     process.env.TENANT_ENFORCEMENT = 'permissive';
+
+    // Re-seed Jeddah org fixtures in case a sibling suite (e.g. verticals)
+    // ran TRUNCATE Organization CASCADE and wiped them. This spec owns its
+    // own preconditions rather than relying on global-setup state surviving
+    // the full test batch.
+    const pool = new Pool({
+      connectionString:
+        process.env.TEST_DATABASE_URL ??
+        'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public',
+    });
+    try {
+      await pool.query(
+        `INSERT INTO "Organization" (id, slug, "nameAr", "nameEn", status, "createdAt", "updatedAt")
+         VALUES ($1, 'jeddah-test', 'منظمة جدة للاختبار', 'Jeddah Test Org', 'ACTIVE', NOW(), NOW())
+         ON CONFLICT (id) DO NOTHING`,
+        [JEDDAH_ORG_ID],
+      );
+      await pool.query(
+        `INSERT INTO "User" (id, email, name, "passwordHash", role, "isSuperAdmin", "isActive", "createdAt", "updatedAt")
+         VALUES ($1, 'jeddah-owner-e2e@deqah.test', 'Jeddah Owner E2E', '$2b$10$dummy_hash_jeddah_owner', 'ADMIN', FALSE, TRUE, NOW(), NOW())
+         ON CONFLICT (id) DO NOTHING`,
+        [JEDDAH_OWNER_USER_ID],
+      );
+      await pool.query(
+        `INSERT INTO "Membership" (id, "userId", "organizationId", role, "isActive", "acceptedAt", "createdAt", "updatedAt")
+         VALUES (gen_random_uuid(), $1, $2, 'OWNER'::"MembershipRole", TRUE, NOW(), NOW(), NOW())
+         ON CONFLICT ("userId", "organizationId") DO NOTHING`,
+        [JEDDAH_OWNER_USER_ID, JEDDAH_ORG_ID],
+      );
+      const basicPlanRow = await pool.query(
+        `SELECT id FROM "Plan" WHERE slug = 'BASIC' LIMIT 1`,
+      );
+      if (basicPlanRow.rows.length > 0) {
+        const basicPlanId = basicPlanRow.rows[0].id as string;
+        await pool.query(
+          `INSERT INTO "Subscription" (id, "organizationId", "planId", status, "billingCycle", "currentPeriodStart", "currentPeriodEnd", "createdAt", "updatedAt")
+           SELECT gen_random_uuid(), $1, $2,
+             'ACTIVE'::"SubscriptionStatus",
+             'MONTHLY'::"BillingCycle",
+             NOW(), NOW() + INTERVAL '30 days',
+             NOW(), NOW()
+           WHERE NOT EXISTS (
+             SELECT 1 FROM "Subscription" WHERE "organizationId" = $1
+           )`,
+          [JEDDAH_ORG_ID, basicPlanId],
+        );
+      }
+    } finally {
+      await pool.end();
+    }
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],

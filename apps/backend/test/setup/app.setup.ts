@@ -63,6 +63,9 @@ export async function createTestApp(
   process.env.MOYASAR_TENANT_ENCRYPTION_KEY =
     process.env.MOYASAR_TENANT_ENCRYPTION_KEY ??
     Buffer.alloc(32, 3).toString('base64');
+  process.env.EMAIL_PROVIDER_ENCRYPTION_KEY =
+    process.env.EMAIL_PROVIDER_ENCRYPTION_KEY ??
+    Buffer.alloc(32, 4).toString('base64');
 
   await ensureTestUsers();
 

@@ -58,6 +58,7 @@ const CONFIG_MAP: Record<string, string | number> = {
   SMS_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
   ZOOM_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 2).toString('base64'),
   MOYASAR_TENANT_ENCRYPTION_KEY: Buffer.alloc(32, 3).toString('base64'),
+  EMAIL_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 4).toString('base64'),
   MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
   MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
   PLATFORM_VAT_NUMBER: '300000000000003',
@@ -106,6 +107,9 @@ export async function createVerticalsTestApp(): Promise<VerticalsTestApp> {
   process.env.SMS_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
   process.env.ZOOM_PROVIDER_ENCRYPTION_KEY = Buffer.alloc(32, 2).toString('base64');
   process.env.MOYASAR_TENANT_ENCRYPTION_KEY = Buffer.alloc(32, 3).toString('base64');
+  process.env.EMAIL_PROVIDER_ENCRYPTION_KEY =
+    process.env.EMAIL_PROVIDER_ENCRYPTION_KEY ??
+    Buffer.alloc(32, 4).toString('base64');
 
   // Ensure the baseline admin user exists (JwtStrategy looks up user in DB)
   const passwordHash = await bcrypt.hash('Test@1234', 10);
