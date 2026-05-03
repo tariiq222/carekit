@@ -127,17 +127,7 @@ export function ComparePlansMatrix({ plans }: Props) {
                   <TableRow key={catalogKey}>
                     <TableCell className="sticky left-0 z-10 bg-card">
                       <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{entry.nameEn}</span>
-                          <Badge
-                            variant={entry.tier === 'ENTERPRISE' ? 'default' : 'secondary'}
-                            className={
-                              entry.tier === 'ENTERPRISE' ? 'bg-primary/15 text-primary' : undefined
-                            }
-                          >
-                            {entry.tier}
-                          </Badge>
-                        </div>
+                        <span className="text-sm font-medium">{entry.nameEn}</span>
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {entry.descEn}
                         </p>
