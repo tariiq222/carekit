@@ -18,7 +18,7 @@ interface Props {
 
 export function OnboardingStep1Business({ data, onChange, onNext }: Props) {
   const { t } = useLocale()
-  const { data: verticals = [], isLoading } = useVerticals()
+  const { data: verticals = [], isLoading, error } = useVerticals()
 
   const isValid = data.businessNameAr.trim().length >= 2 && data.verticalSlug.length > 0
 
@@ -46,20 +46,30 @@ export function OnboardingStep1Business({ data, onChange, onNext }: Props) {
 
       <div className="space-y-1">
         <Label htmlFor="ob-vertical">{t("onboarding.step1.vertical")}</Label>
-        <select
-          id="ob-vertical"
-          value={data.verticalSlug}
-          onChange={(e) => onChange({ ...data, verticalSlug: e.target.value })}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-          disabled={isLoading}
-        >
-          <option value="">{t("onboarding.step1.verticalPlaceholder")}</option>
-          {verticals.map((v) => (
-            <option key={v.slug} value={v.slug}>
-              {v.nameAr}
-            </option>
-          ))}
-        </select>
+        {error && !isLoading ? (
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-sm text-error"
+          >
+            {t("onboarding.step1.verticalError")}
+          </button>
+        ) : (
+          <select
+            id="ob-vertical"
+            value={data.verticalSlug}
+            onChange={(e) => onChange({ ...data, verticalSlug: e.target.value })}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+            disabled={isLoading}
+          >
+            <option value="">{t("onboarding.step1.verticalPlaceholder")}</option>
+            {verticals.map((v) => (
+              <option key={v.slug} value={v.slug}>
+                {v.nameAr}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <Button className="w-full" onClick={onNext} disabled={!isValid}>

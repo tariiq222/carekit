@@ -62,7 +62,8 @@ export default function BillingSettingsPage() {
         setValues(initial);
       })
       .catch((err) => {
-        setLoadError(err instanceof ApiError ? err.message : 'Failed to load billing settings.');
+        const msg = err instanceof Error ? err.message : String(err);
+        setLoadError(msg || 'Failed to load billing settings.');
       });
   }, []);
 

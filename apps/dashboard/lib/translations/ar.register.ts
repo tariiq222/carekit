@@ -21,6 +21,7 @@ export const arRegister: Record<string, string> = {
   "onboarding.step1.businessNameEn": "اسم النشاط بالإنجليزي (اختياري)",
   "onboarding.step1.vertical": "نوع النشاط (القطاع)",
   "onboarding.step1.verticalPlaceholder": "اختر نوع نشاطك",
+  "onboarding.step1.verticalError": "تعذّر تحميل الأنشطة — اضغط للمحاولة مجدداً",
   "onboarding.step2.title": "الهوية البصرية",
   "onboarding.step2.primaryColor": "اللون الرئيسي",
   "onboarding.step2.logo": "شعار النشاط",

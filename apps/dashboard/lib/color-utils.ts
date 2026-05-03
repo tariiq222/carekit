@@ -182,8 +182,6 @@ function buildVarMap(primary: string, accent: string): CSSVarMap {
     "--ring": `rgba(${r}, ${g}, ${b}, 0.4)`,
     "--shadow-primary-color": `rgba(${r}, ${g}, ${b}, 0.25)`,
     "--shadow-primary-hover-color": `rgba(${r}, ${g}, ${b}, 0.4)`,
-    "--blob-primary": primary,
-    "--blob-accent": accent,
     "--sidebar-primary": primary,
     "--sidebar-primary-foreground": primaryFg,
     "--sidebar-accent": accent,

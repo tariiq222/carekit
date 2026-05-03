@@ -14,5 +14,5 @@ export interface SystemHealthResult {
 }
 
 export function getSystemHealth(): Promise<SystemHealthResult> {
-  return adminRequest<SystemHealthResult>('/admin/system-health');
+  return adminRequest<SystemHealthResult>('/system-health');
 }

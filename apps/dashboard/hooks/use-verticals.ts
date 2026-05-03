@@ -10,9 +10,7 @@ interface VerticalOption {
 }
 
 async function fetchVerticals(): Promise<VerticalOption[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/verticals`, {
-    credentials: "include",
-  })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/verticals`)
   if (!res.ok) throw new Error("Failed to fetch verticals")
   return res.json() as Promise<VerticalOption[]>
 }
@@ -22,5 +20,6 @@ export function useVerticals() {
     queryKey: ["verticals"],
     queryFn: fetchVerticals,
     staleTime: 60 * 60 * 1000, // 1 hour — verticals rarely change
+    retry: 2,
   })
 }
