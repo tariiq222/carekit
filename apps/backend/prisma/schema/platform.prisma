@@ -133,7 +133,7 @@ model SuperAdminActionLog {
   actionType             SuperAdminActionType
   organizationId         String?
   impersonationSessionId String?
-  reason                 String               @db.Text
+  reason                 String?              @db.Text
   metadata               Json
   ipAddress              String
   userAgent              String               @db.Text

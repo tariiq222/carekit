@@ -36,7 +36,7 @@ const messages = {
     create: {
       button: 'Create tenant',
       title: 'Create tenant',
-      description: 'Create an organization, owner membership, tenant defaults, and audit entry.',
+      description: 'Create an organization, owner membership, and tenant defaults.',
       step1: 'Owner',
       step2: 'Organization',
       step3: 'Plan & Billing',
@@ -52,13 +52,13 @@ const messages = {
       ownerEmail: 'Email address',
       ownerPhone: 'Phone (optional)',
       ownerPassword: 'Temporary password',
+      ownerPasswordHint: 'Leave blank to auto-generate and email a password.',
       verticalSlug: 'Vertical slug',
       planId: 'Plan ID',
       billingCycle: 'Billing cycle',
       monthly: 'Monthly',
       annual: 'Annual',
       trialDays: 'Trial days',
-      reason: 'Audit reason',
       editStep: 'Edit',
       reviewOwner: 'Owner',
       reviewOrg: 'Organization',
@@ -141,7 +141,7 @@ describe('CreateTenantDialog wizard', () => {
     expect(screen.getByLabelText('Trial days')).toBeInTheDocument();
     await completeStep3(user);
 
-    expect(screen.getByLabelText('Audit reason')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create tenant' })).toBeInTheDocument();
   });
 
   it('Back button returns to previous step without losing data', async () => {
@@ -184,7 +184,6 @@ describe('CreateTenantDialog wizard', () => {
     await completeStep2(user);
     await completeStep3(user);
 
-    await user.type(screen.getByLabelText('Audit reason'), 'Create tenant for onboarding');
     await user.click(screen.getByRole('button', { name: 'Create tenant' }));
 
     await waitFor(() => {
@@ -195,7 +194,6 @@ describe('CreateTenantDialog wizard', () => {
           nameAr: 'عيادة الرياض',
           ownerUserId: '11111111-1111-4111-8111-111111111111',
           trialDays: 14,
-          reason: 'Create tenant for onboarding',
         }),
       });
     });
@@ -223,7 +221,6 @@ describe('CreateTenantDialog wizard', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
-    await user.type(screen.getByLabelText('Audit reason'), 'Onboarding new clinic owner');
     await user.click(screen.getByRole('button', { name: 'Create tenant' }));
 
     await waitFor(() => {
@@ -236,7 +233,6 @@ describe('CreateTenantDialog wizard', () => {
           ownerEmail: 'ahmed@example.com',
           ownerPassword: 'Password123!',
           trialDays: 14,
-          reason: 'Onboarding new clinic owner',
         }),
       });
     });
@@ -250,10 +246,21 @@ describe('CreateTenantDialog wizard', () => {
     await completeStep1Existing(user);
     await completeStep2(user);
     await completeStep3(user);
-    await user.type(screen.getByLabelText('Audit reason'), 'Create tenant for onboarding');
     await user.click(screen.getByRole('button', { name: 'Create tenant' }));
 
     expect(await screen.findByText('email_already_exists')).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('password field is optional — form valid with empty password', async () => {
+    renderDialog();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'New user' }));
+    await user.type(screen.getByLabelText('Full name'), 'أحمد محمد');
+    await user.type(screen.getByLabelText('Email address'), 'ahmed@example.com');
+    // do NOT fill in password
+
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
   });
 });

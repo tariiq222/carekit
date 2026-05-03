@@ -20,10 +20,14 @@ export function isOwnerStepValid(form: WizardForm): boolean {
       form.ownerUserId.trim(),
     );
   }
+  const pw = form.ownerPassword;
+  const passwordOk =
+    pw === '' ||
+    (pw.length >= 8 && /(?=.*[A-Z])(?=.*\d)/.test(pw));
   return (
     form.ownerName.trim().length >= 1 &&
     EMAIL_REGEX.test(form.ownerEmail.trim()) &&
-    form.ownerPassword.trim().length >= 8
+    passwordOk
   );
 }
 
@@ -101,6 +105,7 @@ export function OwnerStep({ form, set }: Props) {
               onChange={(e) => set('ownerPassword')(e.target.value)}
               autoComplete="new-password"
             />
+            <p className="text-xs text-muted-foreground">{t('ownerPasswordHint')}</p>
           </div>
         </div>
       )}

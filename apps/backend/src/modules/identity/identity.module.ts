@@ -60,6 +60,7 @@ import { VerifyMobileOtpHandler } from './verify-mobile-otp/verify-mobile-otp.ha
 import { RequestEmailVerificationHandler } from './request-email-verification/request-email-verification.handler';
 import { VerifyEmailHandler } from './verify-email/verify-email.handler';
 import { AttachMembershipHandler } from './attach-membership/attach-membership.handler';
+import { OwnerProvisioningService } from './owner-provisioning/owner-provisioning.service';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -124,6 +125,7 @@ const handlers = [
     ...handlers,
     OtpSessionService,
     OtpSessionGuard,
+    OwnerProvisioningService,
   ],
   exports: [
     CaslAbilityFactory,
@@ -138,6 +140,7 @@ const handlers = [
     OtpSessionGuard,
     RegisterHandler,
     CAPTCHA_VERIFIER,
+    OwnerProvisioningService,
     ...handlers,
   ],
 })

@@ -37,9 +37,11 @@ dashboard — that lives in `apps/dashboard`. Super-admins:
    `SuperAdminContextInterceptor` which unlocks `$allTenants`. If you
    find yourself needing an org slug in the URL, you're building the
    wrong thing — that's the dashboard.
-5. **Every destructive action collects a `reason` (min 10 chars)** in a
-   Dialog and passes it to the backend, which writes it to
-   `SuperAdminActionLog`. No shortcuts.
+5. **Every destructive action except tenant creation collects a `reason`
+   (min 10 chars)** in a Dialog and passes it to the backend, which
+   writes it to `SuperAdminActionLog`. Tenant creation is recorded in
+   `SuperAdminActionLog` without a free-text reason — the action itself
+   is the audit trail. No shortcuts on the other actions.
 6. **Session storage is `localStorage.admin.accessToken` + cookie
    marker `admin.authenticated=1`.** Middleware uses the cookie to
    redirect unauthenticated users; the JWT in localStorage is what the

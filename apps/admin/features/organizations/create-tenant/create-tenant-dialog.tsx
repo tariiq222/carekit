@@ -35,7 +35,6 @@ export interface WizardForm {
   planId: string;
   billingCycle: 'MONTHLY' | 'ANNUAL';
   trialDays: string;
-  reason: string;
 }
 
 const DEFAULT_FORM: WizardForm = {
@@ -53,7 +52,6 @@ const DEFAULT_FORM: WizardForm = {
   planId: '',
   billingCycle: 'MONTHLY',
   trialDays: '14',
-  reason: '',
 };
 
 const STEP_LABELS = ['step1', 'step2', 'step3', 'step4'] as const;
@@ -123,7 +121,6 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
         planId: form.planId.trim() || undefined,
         ...(form.planId.trim() ? { billingCycle: form.billingCycle } : {}),
         trialDays: trialDaysValue,
-        reason: form.reason.trim(),
       },
       {
         onSuccess: () => handleOpenChange(false),
@@ -161,7 +158,6 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
             {step === 4 && (
               <ReviewStep
                 form={form}
-                set={set}
                 onEditStep={(s) => setStep(s)}
                 errorMessage={errorMessage}
               />

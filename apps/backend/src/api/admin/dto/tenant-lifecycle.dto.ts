@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
+  IsEmail,
   IsIn,
   IsInt,
   IsOptional,
@@ -36,9 +37,51 @@ export class CreateTenantDto {
   @MaxLength(120)
   nameEn?: string;
 
-  @ApiProperty({ format: 'uuid' })
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'UUID of an existing active user to make owner. Mutually exclusive with ownerEmail.',
+  })
+  @IsOptional()
   @IsUUID()
-  ownerUserId!: string;
+  ownerUserId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Full name of the new owner to create. Required when ownerEmail is provided and no existing user matches.',
+    example: 'Ahmed Al-Zahrani',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  ownerName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Email of the owner. If an existing active user matches, they are linked; otherwise a new user is created.',
+    example: 'ahmed@example.com',
+  })
+  @IsOptional()
+  @IsEmail()
+  ownerEmail?: string;
+
+  @ApiPropertyOptional({
+    description: 'Phone number of the new owner. Required when creating a new user via ownerEmail.',
+    example: '+966501234567',
+  })
+  @IsOptional()
+  @IsString()
+  ownerPhone?: string;
+
+  @ApiPropertyOptional({
+    description: 'Password for the new owner. If omitted, a strong password is auto-generated and emailed.',
+    example: 'SecurePass1',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  @Matches(/(?=.*[A-Z])(?=.*\d)/, {
+    message: 'password must have at least one uppercase letter and one digit',
+  })
+  ownerPassword?: string;
 
   @ApiPropertyOptional({ description: 'Active vertical slug to seed into the tenant' })
   @IsOptional()
@@ -63,12 +106,6 @@ export class CreateTenantDto {
   @Min(0)
   @Max(90)
   trialDays?: number;
-
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
 }
 
 export class UpdateOrganizationDto {
