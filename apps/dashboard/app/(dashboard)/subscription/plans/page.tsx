@@ -11,21 +11,25 @@ import {
   useBillingMutations,
   usePlans,
   useProrationPreview,
+  useSavedCards,
 } from "@/hooks/use-current-subscription"
 import { formatBillingDate } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
 import type { BillingCycle } from "@/lib/types/billing"
 import { PlanComparisonGrid } from "./components/plan-comparison-grid"
 import { FeatureMatrix } from "./components/feature-matrix"
+import { CardRequiredDialog } from "./components/card-required-dialog"
 
 export default function BillingPlansPage() {
   const { t, locale } = useLocale()
   const { subscription, isLoading: subscriptionLoading } = useBilling()
   const { data: plans = [], isLoading: plansLoading } = usePlans()
+  const { data: savedCards } = useSavedCards()
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     subscription?.billingCycle ?? "MONTHLY",
   )
   const [selectedPlanId, setSelectedPlanId] = useState("")
+  const [cardRequiredOpen, setCardRequiredOpen] = useState(false)
   const {
     upgradeMut,
     scheduleDowngradeMut,
@@ -58,7 +62,34 @@ export default function BillingPlansPage() {
     if (preview?.action === "SCHEDULE_DOWNGRADE") {
       await scheduleDowngradeMut.mutateAsync(dto)
     } else {
-      await upgradeMut.mutateAsync(dto)
+      // Pre-flight: ACTIVE subscription with immediate proration requires a saved card
+      const amountSar = preview?.amountSar
+      const proratedAmount = amountSar !== undefined ? parseFloat(amountSar) : 0
+      if (
+        subscription?.status === "ACTIVE" &&
+        preview?.action === "UPGRADE_NOW" &&
+        proratedAmount > 0 &&
+        (savedCards?.length ?? 0) === 0
+      ) {
+        setCardRequiredOpen(true)
+        return
+      }
+      try {
+        await upgradeMut.mutateAsync(dto)
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : typeof (err as { response?: { data?: { message?: string } } })?.response?.data
+                ?.message === "string"
+            ? (err as { response: { data: { message: string } } }).response.data.message
+            : ""
+        if (message.includes("billing_default_card_required")) {
+          setCardRequiredOpen(true)
+        } else {
+          throw err
+        }
+      }
     }
   }
 
@@ -148,6 +179,11 @@ export default function BillingPlansPage() {
           </>
         )}
       </div>
+
+      <CardRequiredDialog
+        open={cardRequiredOpen}
+        onOpenChange={setCardRequiredOpen}
+      />
     </ListPageShell>
   )
 }

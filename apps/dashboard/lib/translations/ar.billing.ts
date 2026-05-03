@@ -167,4 +167,7 @@ export const arBilling: Record<string, string> = {
   "billing.banner.trial.endsOn": "تنتهي التجربة في",
   "billing.banner.trial.addCard": "أضف بطاقة الدفع",
   "billing.overview.stat.cycle": "دورة الفوترة",
+  "billing.plans.cardRequiredTitle": "أضف بطاقة قبل ترقية الباقة",
+  "billing.plans.cardRequiredDescription": "نحتاج بطاقة دفع محفوظة لخصم الفرق المُتناسب فوراً.",
+  "billing.plans.goToPaymentMethods": "إضافة بطاقة",
 }

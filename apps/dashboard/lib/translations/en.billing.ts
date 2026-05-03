@@ -167,4 +167,7 @@ export const enBilling: Record<string, string> = {
   "billing.banner.trial.endsOn": "Trial ends on",
   "billing.banner.trial.addCard": "Add payment card",
   "billing.overview.stat.cycle": "Billing cycle",
+  "billing.plans.cardRequiredTitle": "Add a card before upgrading",
+  "billing.plans.cardRequiredDescription": "We need a saved card to charge the prorated difference immediately.",
+  "billing.plans.goToPaymentMethods": "Add card",
 }
