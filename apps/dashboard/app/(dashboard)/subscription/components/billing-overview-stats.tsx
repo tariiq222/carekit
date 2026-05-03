@@ -4,13 +4,13 @@ import {
   CreditCardIcon,
   UserMultiple02Icon,
   Calendar03Icon,
-  Invoice03Icon,
 } from "@hugeicons/core-free-icons"
 import { Skeleton } from "@deqah/ui"
 import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
 import { useLocale } from "@/components/locale-provider"
 import { formatLocaleDate } from "@/lib/date"
+import { getBillingCycleLabel, getLocalizedPlanName } from "@/lib/billing/utils"
 import type { Subscription } from "@/lib/types/billing"
 
 interface BillingOverviewStatsProps {
@@ -50,7 +50,7 @@ export function BillingOverviewStats({ subscription, isLoading }: BillingOvervie
 
   const status = subscription.status
   const statusKey = `billing.status.${status.toLowerCase().replace("_", "")}` as const
-  const planName = locale === "ar" ? subscription.plan.nameAr : subscription.plan.nameEn
+  const planName = getLocalizedPlanName(subscription.plan, locale as "ar" | "en")
 
   const employees = readUsageVal(subscription.usage, ["EMPLOYEES", "employees"])
   const empMax = subscription.plan.limits["maxEmployees"]
@@ -65,8 +65,6 @@ export function BillingOverviewStats({ subscription, isLoading }: BillingOvervie
   const nextDateLabel = subscription.trialEndsAt
     ? t("billing.summary.trialEnds")
     : t("billing.summary.nextBilling")
-
-  const invoiceCount = subscription.invoices?.length ?? 0
 
   return (
     <StatsGrid>
@@ -89,9 +87,9 @@ export function BillingOverviewStats({ subscription, isLoading }: BillingOvervie
         iconColor="warning"
       />
       <StatCard
-        title={t("billing.overview.stat.invoices")}
-        value={invoiceCount}
-        icon={Invoice03Icon}
+        title={t("billing.overview.stat.cycle")}
+        value={getBillingCycleLabel(subscription.billingCycle, locale as "ar" | "en")}
+        icon={Calendar03Icon}
         iconColor="accent"
       />
     </StatsGrid>

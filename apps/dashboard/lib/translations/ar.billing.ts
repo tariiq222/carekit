@@ -64,6 +64,8 @@ export const arBilling: Record<string, string> = {
   "billing.plan.monthly": "شهري",
   "billing.plan.annual": "سنوي",
   "billing.plan.current": "الخطة الحالية",
+  "billing.plan.selectPlan": "اختر الباقة",
+  "billing.plan.selectToSeeFeatures": "اختر باقة لعرض مميزاتها",
   "billing.plan.recommended": "موصى بها",
   "billing.plan.targetPrice": "السعر",
   "billing.plans.title": "الخطط",
@@ -160,4 +162,9 @@ export const arBilling: Record<string, string> = {
   "billing.overview.stat.employees": "الموظفون",
   "billing.overview.stat.nextBilling": "الفاتورة القادمة",
   "billing.overview.stat.invoices": "الفواتير",
+  "billing.banner.trial.title": "أنت في فترة التجربة المجانية",
+  "billing.banner.trial.description": "أضف بطاقة الدفع الآن لضمان استمرارية الخدمة بعد انتهاء التجربة.",
+  "billing.banner.trial.endsOn": "تنتهي التجربة في",
+  "billing.banner.trial.addCard": "أضف بطاقة الدفع",
+  "billing.overview.stat.cycle": "دورة الفوترة",
 }

@@ -1,8 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { Button, Card } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
-import { useBillingMutations } from "@/hooks/use-current-subscription"
+import { useBillingMutations, useSavedCards } from "@/hooks/use-current-subscription"
 import { useBilling } from "@/lib/billing/billing-context"
 import { formatBillingDate, getEmployeeUsageSummary } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,35 @@ export function BillingStatusBanner() {
   const { t, locale } = useLocale()
   const { status, subscription } = useBilling()
   const { retryPaymentMut } = useBillingMutations()
+  const { data: savedCards = [] } = useSavedCards()
+
+  if (status === "TRIALING" && savedCards.length === 0) {
+    const trialEndsAt = subscription?.trialEndsAt
+      ? formatBillingDate(subscription.trialEndsAt, locale)
+      : null
+
+    return (
+      <Card className="border border-primary/30 bg-primary/10 p-4 text-primary">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <p className="font-semibold">{t("billing.banner.trial.title")}</p>
+            <p className="text-sm opacity-90">{t("billing.banner.trial.description")}</p>
+            {trialEndsAt && (
+              <p className="text-xs opacity-80">
+                {t("billing.banner.trial.endsOn")}: {trialEndsAt}
+              </p>
+            )}
+          </div>
+          <Link
+            href="/subscription/payment-methods"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-primary/40 bg-background px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            {t("billing.banner.trial.addCard")}
+          </Link>
+        </div>
+      </Card>
+    )
+  }
 
   if (status === "PAST_DUE") {
     const nextRetryAt = subscription?.nextRetryAt

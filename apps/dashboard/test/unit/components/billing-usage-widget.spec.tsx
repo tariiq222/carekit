@@ -62,7 +62,7 @@ describe("BillingUsageWidget", () => {
     expect(screen.getByText("8 / 10")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
-      "/settings/billing",
+      "/subscription",
     )
   })
 })

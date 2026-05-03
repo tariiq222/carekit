@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi, beforeEach } from "vitest"
-import BillingUsagePage from "@/app/(dashboard)/settings/billing/usage/page"
+import BillingUsagePage from "@/app/(dashboard)/subscription/usage/page"
 
 const { useLocale, useBilling } = vi.hoisted(() => ({
   useLocale: vi.fn(),

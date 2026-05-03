@@ -64,6 +64,8 @@ export const enBilling: Record<string, string> = {
   "billing.plan.monthly": "Monthly",
   "billing.plan.annual": "Annual",
   "billing.plan.current": "Current plan",
+  "billing.plan.selectPlan": "Select plan",
+  "billing.plan.selectToSeeFeatures": "Select a plan to see its features",
   "billing.plan.recommended": "Recommended",
   "billing.plan.targetPrice": "Price",
   "billing.plans.title": "Plans",
@@ -160,4 +162,9 @@ export const enBilling: Record<string, string> = {
   "billing.overview.stat.employees": "Employees",
   "billing.overview.stat.nextBilling": "Next invoice",
   "billing.overview.stat.invoices": "Invoices",
+  "billing.banner.trial.title": "You're on a free trial",
+  "billing.banner.trial.description": "Add a payment card now to keep your access after the trial ends.",
+  "billing.banner.trial.endsOn": "Trial ends on",
+  "billing.banner.trial.addCard": "Add payment card",
+  "billing.overview.stat.cycle": "Billing cycle",
 }

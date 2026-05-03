@@ -91,7 +91,7 @@ export function BillingUsageWidget() {
 
         {(hasBlocked || rows.some((r) => r.limit >= 0 && r.percentage >= 80)) && (
           <Link
-            href="/settings/billing"
+            href="/subscription"
             className={cn(
               "inline-flex text-xs font-medium transition-colors hover:text-foreground",
               hasBlocked ? "text-destructive" : "text-warning",

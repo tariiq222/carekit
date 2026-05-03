@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import BillingPlansPage from "@/app/(dashboard)/settings/billing/plans/page"
+import BillingPlansPage from "@/app/(dashboard)/subscription/plans/page"
 import type { BillingCycle } from "@/lib/types/billing"
 
 const {

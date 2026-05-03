@@ -7,7 +7,6 @@ import { LimitReachedDialog } from "@/components/features/billing/limit-reached-
 import { BillingOverviewStats } from "../billing-overview-stats"
 import { CurrentPlanCard } from "../current-plan-card"
 import { UsageBars } from "../usage-bars"
-import { InvoicesTable } from "../invoices-table"
 
 export function OverviewTab() {
   const { subscription, isLoading } = useBilling()
@@ -22,12 +21,11 @@ export function OverviewTab() {
         plans={plans}
         isLoading={isLoading}
       />
-      <UsageBars subscription={subscription} isLoading={isLoading} />
-      <InvoicesTable invoices={subscription?.invoices?.slice(0, 5)} isLoading={isLoading} />
+      <UsageBars />
       <LimitReachedDialog
         subscription={subscription}
         onUpgrade={() => {
-          router.replace("/settings/billing?tab=plans", { scroll: false })
+          router.replace("/subscription?tab=plans", { scroll: false })
         }}
       />
     </div>

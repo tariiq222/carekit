@@ -32,7 +32,7 @@ export function FeatureDisabledState({
         description={t("featureGate.locked.description")}
         action={{
           label: t("featureGate.locked.upgrade"),
-          onClick: () => router.push("/settings/billing"),
+          onClick: () => router.push("/subscription"),
         }}
       />
     </ListPageShell>

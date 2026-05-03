@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import PaymentMethodsPage from "@/app/(dashboard)/settings/billing/payment-methods/page"
+import PaymentMethodsPage from "@/app/(dashboard)/subscription/payment-methods/page"
 
 const { useLocale, useSavedCards, useBillingMutations } = vi.hoisted(() => ({
   useLocale: vi.fn(),

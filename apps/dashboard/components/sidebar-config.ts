@@ -20,6 +20,7 @@ import {
   Location01Icon,
   Briefcase01Icon,
   InboxIcon,
+  CreditCardIcon,
 } from "@hugeicons/core-free-icons"
 import { FeatureKey } from "@deqah/shared/constants"
 
@@ -69,6 +70,7 @@ export const catalogNav: NavItem[] = [
 ]
 
 export const systemNav: NavItem[] = [
+  { titleKey: "nav.subscription", href: "/subscription", icon: CreditCardIcon },
   { titleKey: "nav.chatbot", href: "/chatbot", icon: AiChat02Icon, featureFlag: FeatureKey.AI_CHATBOT },
   { titleKey: "nav.notifications", href: "/notifications", icon: Notification03Icon },
   { titleKey: "nav.branding", href: "/branding", icon: PaintBrush01Icon, permission: "branding:edit" },

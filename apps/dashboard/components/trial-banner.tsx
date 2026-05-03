@@ -46,7 +46,7 @@ export function TrialBanner() {
       <div className={`border-b px-4 py-2 text-center text-sm ${toneClassNames[tone]}`}>
         {message}
         {" · "}
-        <Link href="/settings/billing" className="font-medium underline underline-offset-4">
+        <Link href="/subscription" className="font-medium underline underline-offset-4">
           {t("trialBanner.subscribe")}
         </Link>
       </div>
@@ -59,7 +59,7 @@ export function TrialBanner() {
       <div className={`border-b px-4 py-2 text-center text-sm ${toneClassNames.blocking}`}>
         {message}
         {" · "}
-        <Link href="/settings/billing" className="font-medium underline underline-offset-4">
+        <Link href="/subscription" className="font-medium underline underline-offset-4">
           {t("trialBanner.subscribe")}
         </Link>
       </div>

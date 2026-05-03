@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
-import { InvoicesTable } from "@/app/(dashboard)/settings/billing/invoices/components/invoices-table"
+import { InvoicesTable } from "@/app/(dashboard)/subscription/invoices/components/invoices-table"
 import type { Invoice } from "@/lib/types/billing"
 
 const { useLocale, useDownloadBillingInvoice } = vi.hoisted(() => ({

@@ -20,16 +20,17 @@ import {
   Settings02Icon,
   UserCircle02Icon,
   Logout03Icon,
-  LockPasswordIcon,
+  CreditCardIcon,
 } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { useLocale } from "@/components/locale-provider"
 import { useAuth } from "@/components/providers/auth-provider"
-import { ChangePasswordDialog } from "@/components/features/change-password-dialog"
 import { NotificationDropdown } from "@/components/features/notifications/notification-dropdown"
 import { TenantSwitcher } from "@/components/tenant-switcher"
 import { cn } from "@/lib/utils"
+import { useBilling } from "@/lib/billing/billing-context"
+import { useSavedCards } from "@/hooks/use-current-subscription"
 
 type FontSize = "S" | "M" | "L"
 
@@ -43,8 +44,10 @@ export function Header() {
   const { resolvedTheme, setTheme } = useTheme()
   const { locale, dir, toggleLocale, t } = useLocale()
   const { user, logout } = useAuth()
+  const { status } = useBilling()
+  const { data: savedCards = [] } = useSavedCards()
+  const showCardCta = status === "TRIALING" && savedCards.length === 0
   const [fontSize, setFontSize] = useState<FontSize>("S")
-  const [passwordOpen, setPasswordOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.style.fontSize = fontSizeConfig[fontSize]
@@ -178,13 +181,18 @@ export function Header() {
               <HugeiconsIcon icon={UserCircle02Icon} size={16} className="text-muted-foreground" />
               {t("header.myProfile")}
             </Link>
-            <button
-              onClick={() => setPasswordOpen(true)}
+            <Link
+              href="/subscription"
               className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
             >
-              <HugeiconsIcon icon={LockPasswordIcon} size={16} className="text-muted-foreground" />
-              {t("header.changePassword")}
-            </button>
+              <HugeiconsIcon icon={CreditCardIcon} size={16} className="text-muted-foreground" />
+              {t("header.subscription")}
+              {showCardCta && (
+                <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 bg-warning/15 text-warning border border-warning/30">
+                  {t("header.subscriptionAddCard")}
+                </span>
+              )}
+            </Link>
             <DropdownMenuSeparator />
             <button
               onClick={logout}
@@ -198,7 +206,6 @@ export function Header() {
 
       </DropdownMenu>
 
-      <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
     </header>
   )
 }

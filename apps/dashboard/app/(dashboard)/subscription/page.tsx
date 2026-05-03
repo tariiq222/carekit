@@ -10,7 +10,6 @@ import { useBilling } from "@/lib/billing/billing-context"
 import { usePlans } from "@/hooks/use-current-subscription"
 import { CurrentPlanCard } from "./components/current-plan-card"
 import { UsageBars } from "./components/usage-bars"
-import { InvoicesTable } from "./components/invoices-table"
 import { BillingOverviewStats } from "./components/billing-overview-stats"
 
 export default function BillingPage() {
@@ -35,12 +34,11 @@ export default function BillingPage() {
           plans={plans}
           isLoading={isLoading}
         />
-        <UsageBars subscription={subscription} isLoading={isLoading} />
-        <InvoicesTable invoices={subscription?.invoices} isLoading={isLoading} />
+        <UsageBars />
         <LimitReachedDialog
           subscription={subscription}
           onUpgrade={() => {
-            window.location.href = "/settings/billing/plans"
+            window.location.href = "/subscription/plans"
           }}
         />
       </div>

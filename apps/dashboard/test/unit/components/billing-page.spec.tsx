@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi, beforeEach } from "vitest"
-import BillingPage from "@/app/(dashboard)/settings/billing/page"
+import BillingPage from "@/app/(dashboard)/subscription/page"
 
 const {
   useLocale,

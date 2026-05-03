@@ -1,215 +1,223 @@
 /**
- * Color Derivation Utility — Deqah White Label
- *
- * From 2 hex colors (primary + accent), derives all CSS variables
- * needed by the Design System: light shades, ultra-light, foreground,
- * shadows, ring, sidebar variants, etc.
+ * color-utils.ts
+ * Pure color manipulation utilities for per-tenant branding.
+ * No external dependencies — all math is self-contained.
  */
 
-/* ─── Hex ↔ RGB helpers ─── */
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-interface RGB { r: number; g: number; b: number }
+export type BrandingColors = {
+  primary: string
+  accent: string
+  background?: string
+  fontFamily?: string
+  fontUrl?: string
+}
+export type CSSVarMap = Record<string, string>
 
-function hexToRgb(hex: string): RGB {
-  const clean = hex.replace("#", "")
+// ---------------------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------------------
+
+/** Accepts only #rrggbb (exactly 6 hex digits, case-insensitive). */
+export function isValidHex(value: string): boolean {
+  return /^#[0-9A-Fa-f]{6}$/.test(value)
+}
+
+// ---------------------------------------------------------------------------
+// Hex ↔ RGB helpers
+// ---------------------------------------------------------------------------
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const h = hex.replace("#", "")
   return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
   }
 }
 
-function rgbToHex({ r, g, b }: RGB): string {
-  const toHex = (n: number) =>
-    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0")
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, "0")
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-function rgba({ r, g, b }: RGB, alpha: number): string {
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
+// ---------------------------------------------------------------------------
+// hexToHsl / hslToHex
+// ---------------------------------------------------------------------------
 
-/* ─── HSL helpers ─── */
-
-interface HSL { h: number; s: number; l: number }
-
-export function hexToHsl(hex: string): HSL {
+/** h in degrees 0–360, s and l as fractions 0–1. */
+export function hexToHsl(hex: string): { h: number; s: number; l: number } {
   const { r, g, b } = hexToRgb(hex)
-  const rn = r / 255, gn = g / 255, bn = b / 255
+  const rn = r / 255
+  const gn = g / 255
+  const bn = b / 255
+
   const max = Math.max(rn, gn, bn)
   const min = Math.min(rn, gn, bn)
+  const delta = max - min
+
   const l = (max + min) / 2
-  if (max === min) return { h: 0, s: 0, l }
 
-  const d = max - min
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-  let h = 0
-  if (max === rn)      h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6
-  else if (max === gn) h = ((bn - rn) / d + 2) / 6
-  else                 h = ((rn - gn) / d + 4) / 6
-
-  return { h: h * 360, s: Math.max(0, Math.min(1, s)), l: Math.max(0, Math.min(1, l)) }
-}
-
-export function hslToHex({ h, s, l }: HSL): string {
-  const hn = ((h % 360) + 360) % 360 / 360
-  const hue2rgb = (p: number, q: number, t: number) => {
-    const tn = t < 0 ? t + 1 : t > 1 ? t - 1 : t
-    if (tn < 1 / 6) return p + (q - p) * 6 * tn
-    if (tn < 1 / 2) return q
-    if (tn < 2 / 3) return p + (q - p) * (2 / 3 - tn) * 6
-    return p
+  let s = 0
+  if (delta !== 0) {
+    s = delta / (1 - Math.abs(2 * l - 1))
   }
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-  const p = 2 * l - q
-  return rgbToHex({
-    r: Math.round(hue2rgb(p, q, hn + 1 / 3) * 255),
-    g: Math.round(hue2rgb(p, q, hn) * 255),
-    b: Math.round(hue2rgb(p, q, hn - 1 / 3) * 255),
-  })
+
+  let h = 0
+  if (delta !== 0) {
+    if (max === rn) {
+      h = 60 * (((gn - bn) / delta) % 6)
+    } else if (max === gn) {
+      h = 60 * ((bn - rn) / delta + 2)
+    } else {
+      h = 60 * ((rn - gn) / delta + 4)
+    }
+  }
+
+  if (h < 0) h += 360
+
+  return { h, s, l }
 }
+
+/** Returns lowercase #rrggbb. h in degrees 0–360, s/l as 0–1. */
+export function hslToHex({ h, s, l }: { h: number; s: number; l: number }): string {
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = l - c / 2
+
+  let r = 0, g = 0, b = 0
+  if (h < 60)       { r = c; g = x; b = 0 }
+  else if (h < 120) { r = x; g = c; b = 0 }
+  else if (h < 180) { r = 0; g = c; b = x }
+  else if (h < 240) { r = 0; g = x; b = c }
+  else if (h < 300) { r = x; g = 0; b = c }
+  else              { r = c; g = 0; b = x }
+
+  return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255)
+}
+
+// ---------------------------------------------------------------------------
+// darkVariant
+// ---------------------------------------------------------------------------
 
 /**
- * Derive a dark-mode variant of a color.
- * - Forces lightness to targetL for readability on dark backgrounds.
- * - If the color is already light (l > 0.6), reduces saturation by 15%
- *   instead of pushing lightness further (prevents washed-out neon effect).
+ * Returns a variant of `hex` suitable for dark mode.
+ * - If the color is already light (l >= targetL), keeps the same hue and
+ *   targetL lightness, but reduces saturation so it reads well on dark surfaces.
+ * - Otherwise, sets lightness to targetL directly (boosts it for dark mode).
  */
-export function darkVariant(hex: string, targetL = 0.68): string {
-  const hsl = hexToHsl(hex)
-  if (hsl.l > 0.6) {
-    return hslToHex({ ...hsl, s: Math.max(0, hsl.s - 0.15) })
-  }
-  return hslToHex({ ...hsl, l: targetL })
-}
+export function darkVariant(hex: string, targetL: number): string {
+  const { h, s, l } = hexToHsl(hex)
 
-/** Lighten a color by mixing with white */
-function lighten(color: RGB, amount: number): RGB {
-  return {
-    r: color.r + (255 - color.r) * amount,
-    g: color.g + (255 - color.g) * amount,
-    b: color.b + (255 - color.b) * amount,
-  }
-}
-
-/** Relative luminance (WCAG) */
-function luminance({ r, g, b }: RGB): number {
-  const [rs, gs, bs] = [r / 255, g / 255, b / 255].map((c) =>
-    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4),
-  )
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
-}
-
-/** Pick white or dark foreground based on contrast */
-function contrastForeground(bg: RGB): string {
-  return luminance(bg) > 0.4 ? "#1B2026" : "#FFFFFF"
-}
-
-/* ─── Derive all CSS variables from 2 colors ─── */
-
-export interface BrandingColors {
-  primary:     string        // hex
-  accent:      string        // hex
-  background?: string | null
-  fontFamily?: string | null
-  fontUrl?:    string | null
-}
-
-export type CSSVarMap = Record<string, string>
-
-export interface DerivedVars {
-  light: CSSVarMap
-  dark: CSSVarMap
-}
-
-export function deriveCssVars({ primary, accent }: BrandingColors): DerivedVars {
-  const p = hexToRgb(primary)
-  const a = hexToRgb(accent)
-  const pLight = lighten(p, 0.15)
-  const pFg = contrastForeground(p)
-  const aFg = contrastForeground(a)
-
-  // Dark variants
-  const darkPrimary = darkVariant(primary, 0.68)
-  const darkAccent = darkVariant(accent, 0.62)
-  const dp = hexToRgb(darkPrimary)
-  const da = hexToRgb(darkAccent)
-  const dpFg = contrastForeground(dp)
-  const daFg = contrastForeground(da)
-  const dpLight = darkVariant(primary, 0.75)
-
-  const light: CSSVarMap = {
-    "--primary": primary,
-    "--primary-foreground": pFg,
-    "--primary-light": rgbToHex(pLight),
-    "--primary-ultra-light": rgba(p, 0.08),
-    "--accent": accent,
-    "--accent-foreground": aFg,
-    "--accent-ultra-light": rgba(a, 0.1),
-    "--blob-primary": rgba(p, 0.18),
-    "--blob-accent": rgba(a, 0.14),
-    "--ring": rgba(p, 0.28),
-    "--shadow-primary-color": rgba(p, 0.25),
-    "--shadow-primary-hover-color": rgba(p, 0.3),
-    "--sidebar-primary": primary,
-    "--sidebar-primary-foreground": pFg,
-    "--sidebar-accent": rgba(p, 0.08),
-    "--sidebar-accent-foreground": primary,
-    "--sidebar-ring": rgba(p, 0.28),
-    "--avatar-1-from": primary,
-    "--avatar-1-to": rgbToHex(pLight),
+  if (l >= targetL) {
+    // Already light — reduce saturation instead of further boosting lightness
+    const newS = Math.max(0, s * 0.6)
+    return hslToHex({ h, s: newS, l: targetL })
   }
 
-  const dark: CSSVarMap = {
-    "--primary": darkPrimary,
-    "--primary-foreground": dpFg,
-    "--primary-light": dpLight,
-    "--primary-ultra-light": rgba(dp, 0.10),
-    "--accent": darkAccent,
-    "--accent-foreground": daFg,
-    "--accent-ultra-light": rgba(da, 0.08),
-    "--ring": rgba(dp, 0.35),
-    "--shadow-primary-color": rgba(dp, 0.25),
-    "--shadow-primary-hover-color": rgba(dp, 0.30),
-    "--blob-primary": rgba(dp, 0.14),
-    "--blob-accent": rgba(da, 0.10),
-    "--sidebar-primary": darkPrimary,
-    "--sidebar-primary-foreground": dpFg,
-    "--sidebar-accent": rgba(dp, 0.10),
-    "--sidebar-accent-foreground": darkPrimary,
-    "--sidebar-ring": rgba(dp, 0.35),
-  }
-
-  return { light, dark }
+  // Dark color — boost lightness to targetL for visibility on dark bg
+  return hslToHex({ h, s, l: targetL })
 }
 
-/** Build inline style object from CSS var map */
-export function buildStyleFromVars(vars: CSSVarMap): React.CSSProperties {
-  const style: Record<string, string> = {}
-  for (const [key, value] of Object.entries(vars)) {
-    style[key] = value
-  }
-  return style as React.CSSProperties
+// ---------------------------------------------------------------------------
+// WCAG contrast
+// ---------------------------------------------------------------------------
+
+function linearize(c: number): number {
+  const v = c / 255
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
 }
 
-/** Validate hex color */
-export function isValidHex(color: string): boolean {
-  return /^#[0-9a-fA-F]{6}$/.test(color)
+function relativeLuminance(hex: string): number {
+  const { r, g, b } = hexToRgb(hex)
+  const R = linearize(r)
+  const G = linearize(g)
+  const B = linearize(b)
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B
 }
 
-/** Export hexToRgb for external contrast calculations */
-export { hexToRgb }
-
-/** WCAG contrast ratio between two hex colors (higher = more contrast) */
+/** WCAG 2.1 contrast ratio. Returns a value like 4.5, 21, etc. */
 export function contrastRatio(hex1: string, hex2: string): number {
-  const l1 = luminance(hexToRgb(hex1))
-  const l2 = luminance(hexToRgb(hex2))
+  const l1 = relativeLuminance(hex1)
+  const l2 = relativeLuminance(hex2)
   const lighter = Math.max(l1, l2)
   const darker = Math.min(l1, l2)
   return (lighter + 0.05) / (darker + 0.05)
 }
 
-/** Returns white or dark text color that passes WCAG AA on the given background */
+/** Returns "#FFFFFF" for dark backgrounds, "#1B2026" for light backgrounds. */
 export function pickForeground(bg: string): string {
-  return contrastForeground(hexToRgb(bg))
+  const white = "#FFFFFF"
+  const dark = "#1B2026"
+  const contrastWhite = contrastRatio(bg, white)
+  const contrastDark = contrastRatio(bg, dark)
+  return contrastWhite >= contrastDark ? white : dark
+}
+
+// ---------------------------------------------------------------------------
+// CSS variable derivation
+// ---------------------------------------------------------------------------
+
+function tintHex(hex: string, targetL: number): string {
+  const { h, s } = hexToHsl(hex)
+  return hslToHex({ h, s: s * 0.3, l: targetL })
+}
+
+function buildVarMap(primary: string, accent: string): CSSVarMap {
+  const { r, g, b } = hexToRgb(primary)
+  const primaryFg = pickForeground(primary)
+  const accentFg = pickForeground(accent)
+
+  return {
+    "--primary": primary,
+    "--primary-foreground": primaryFg,
+    "--primary-light": tintHex(primary, 0.85),
+    "--primary-ultra-light": tintHex(primary, 0.95),
+    "--accent": accent,
+    "--accent-foreground": accentFg,
+    "--accent-ultra-light": tintHex(accent, 0.95),
+    "--ring": `rgba(${r}, ${g}, ${b}, 0.4)`,
+    "--shadow-primary-color": `rgba(${r}, ${g}, ${b}, 0.25)`,
+    "--shadow-primary-hover-color": `rgba(${r}, ${g}, ${b}, 0.4)`,
+    "--blob-primary": primary,
+    "--blob-accent": accent,
+    "--sidebar-primary": primary,
+    "--sidebar-primary-foreground": primaryFg,
+    "--sidebar-accent": accent,
+    "--sidebar-accent-foreground": accentFg,
+    "--sidebar-ring": `rgba(${r}, ${g}, ${b}, 0.4)`,
+  }
+}
+
+/**
+ * Derives a full set of CSS custom properties for both light and dark mode
+ * from the two brand colors.
+ */
+export function deriveCssVars(colors: BrandingColors): { light: CSSVarMap; dark: CSSVarMap } {
+  const light = buildVarMap(colors.primary, colors.accent)
+
+  const darkPrimary = darkVariant(colors.primary, 0.68)
+  const darkAccent = darkVariant(colors.accent, 0.62)
+  const dark = buildVarMap(darkPrimary, darkAccent)
+
+  // In dark mode, lightened primary sits on a dark surface → dark fg
+  dark["--primary-foreground"] = "#1B2026"
+  dark["--sidebar-primary-foreground"] = "#1B2026"
+
+  return { light, dark }
+}
+
+// ---------------------------------------------------------------------------
+// Style object builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Converts a CSS var map into a React-compatible style object.
+ * Currently an identity function — the keys are already CSS custom property names.
+ */
+export function buildStyleFromVars(vars: CSSVarMap): Record<string, string> {
+  return { ...vars }
 }
