@@ -1,11 +1,36 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
+import * as net from 'net';
 import { Pool } from 'pg';
 
 const execFileAsync = promisify(execFile);
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+/**
+ * Probes a TCP port with a 2-second timeout.
+ * Resolves true if connectable, false otherwise.
+ * Uses only Node built-ins (net) — no new npm deps.
+ */
+function probeTcpPort(host: string, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port });
+    const timer = setTimeout(() => {
+      socket.destroy();
+      resolve(false);
+    }, 2000);
+    socket.once('connect', () => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('error', () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+  });
+}
 
 export default async function globalSetup() {
   process.env.TENANT_ENFORCEMENT ??= 'permissive';
@@ -14,6 +39,25 @@ export default async function globalSetup() {
   process.env.TEST_DATABASE_URL =
     process.env.TEST_DATABASE_URL ??
     'postgresql://deqah:deqah_dev_password@127.0.0.1:5999/deqah_test?schema=public';
+
+  // --- Infra probes (warn-only, never throw) ---
+  const redisHost = process.env.REDIS_HOST ?? '127.0.0.1';
+  const redisPort = parseInt(process.env.REDIS_PORT ?? '5380', 10);
+  const redisOk = await probeTcpPort(redisHost, redisPort);
+  if (!redisOk) {
+    console.warn(
+      `[e2e] Redis unreachable at ${redisHost}:${redisPort} — OTP suites will fail. Start with: npm run docker:up`,
+    );
+  }
+
+  const minioHost = process.env.MINIO_ENDPOINT ?? 'localhost';
+  const minioPort = parseInt(process.env.MINIO_PORT ?? '9000', 10);
+  const minioOk = await probeTcpPort(minioHost, minioPort);
+  if (!minioOk) {
+    console.warn(
+      `[e2e] MinIO unreachable at ${minioHost}:${minioPort} — upload suites will fail. Start with: npm run docker:up`,
+    );
+  }
 
   const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
@@ -41,6 +85,37 @@ export default async function globalSetup() {
       `INSERT INTO "Organization" (id, slug, "nameAr", "nameEn", status, "createdAt", "updatedAt")
        VALUES ($1, 'default', 'Default', 'Default', 'ACTIVE', NOW(), NOW())
        ON CONFLICT (id) DO NOTHING`,
+      [DEFAULT_ORG_ID],
+    );
+
+    // Backfill Memberships for any non-CLIENT staff users that were created by
+    // test suites after the SaaS-01 migration ran. Mirrors the logic in
+    // 20260421112140_saas01_backfill_memberships/migration.sql.
+    // Idempotent — ON CONFLICT DO NOTHING on (userId, organizationId) unique.
+    await pool.query(
+      `INSERT INTO "Membership" (id, "userId", "organizationId", role, "isActive", "acceptedAt", "createdAt", "updatedAt")
+       SELECT
+         gen_random_uuid(),
+         u.id,
+         $1,
+         CASE u.role::text
+           WHEN 'SUPER_ADMIN'  THEN 'OWNER'::"MembershipRole"
+           WHEN 'ADMIN'        THEN 'ADMIN'::"MembershipRole"
+           WHEN 'RECEPTIONIST' THEN 'RECEPTIONIST'::"MembershipRole"
+           WHEN 'ACCOUNTANT'   THEN 'ACCOUNTANT'::"MembershipRole"
+           WHEN 'EMPLOYEE'     THEN 'EMPLOYEE'::"MembershipRole"
+           ELSE 'RECEPTIONIST'::"MembershipRole"
+         END,
+         TRUE,
+         u."createdAt",
+         NOW(),
+         NOW()
+       FROM "User" u
+       WHERE u.role::text <> 'CLIENT'
+         AND NOT EXISTS (
+           SELECT 1 FROM "Membership" m
+           WHERE m."userId" = u.id AND m."organizationId" = $1
+         )`,
       [DEFAULT_ORG_ID],
     );
   } finally {

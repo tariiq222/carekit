@@ -69,6 +69,7 @@ export async function ensureTestUsers(): Promise<void> {
   await ensureDefaultOrganization();
 
   const passwordHash = await bcrypt.hash('Test@1234', 10);
+  const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
   await testPrisma.user.upsert({
     where: { email: 'admin@e2e.test' },
@@ -78,6 +79,20 @@ export async function ensureTestUsers(): Promise<void> {
       email: 'admin@e2e.test',
       name: 'Admin E2E',
       passwordHash,
+      role: 'ADMIN',
+      isActive: true,
+    },
+  });
+
+  // Every non-CLIENT user must have at least one active Membership in the
+  // default org — asserted by the foundation isolation test. Create it here
+  // so the invariant holds from the moment the test user row exists.
+  await testPrisma.membership.upsert({
+    where: { userId_organizationId: { userId: adminUser.id, organizationId: DEFAULT_ORG_ID } },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      organizationId: DEFAULT_ORG_ID,
       role: 'ADMIN',
       isActive: true,
     },

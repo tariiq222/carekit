@@ -3,11 +3,15 @@
   "rootDir": "..",
   "testEnvironment": "node",
   "testRegex": "test/e2e/security/.*\\.e2e-spec\\.ts$",
-  "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "test/tsconfig-e2e.json", "isolatedModules": false, "diagnostics": false }]
+  },
+  "transformIgnorePatterns": ["node_modules/(?!(uuid)/)"],
   "globalSetup": "<rootDir>/test/setup/global-setup.ts",
   "testTimeout": 60000,
   "maxWorkers": 1,
   "moduleNameMapper": {
-    "^@deqah/shared$": "<rootDir>/../../packages/shared/src/index.ts"
+    "^@deqah/shared$": "<rootDir>/../../packages/shared/index.ts",
+    "^@deqah/shared/(.*)$": "<rootDir>/../../packages/shared/$1"
   }
 }
