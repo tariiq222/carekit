@@ -20,7 +20,7 @@ export default function PlansPage() {
           <p className="text-sm text-muted-foreground">
             Subscription plans available to tenants.{' '}
             <Link href="/plans/compare" className="text-sm text-primary hover:underline">
-              Compare plans →
+              Edit all plans →
             </Link>
           </p>
         </div>

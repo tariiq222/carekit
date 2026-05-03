@@ -17,9 +17,9 @@ export default function PlansComparePage() {
         >
           ← Back to plans
         </Link>
-        <h2 className="mt-2 text-2xl font-semibold">Compare plans</h2>
+        <h2 className="mt-2 text-2xl font-semibold">Edit plans</h2>
         <p className="text-sm text-muted-foreground">
-          Side-by-side feature matrix across all subscription plans.
+          Configure features and limits across every plan from one screen.
         </p>
       </div>
 
