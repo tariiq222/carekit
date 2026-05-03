@@ -23,6 +23,7 @@ import {
 } from '@deqah/ui/primitives/select';
 import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreateTenant } from './use-create-tenant';
+import { OwnerUserCombobox } from './owner-user-combobox';
 
 interface Props {
   open: boolean;
@@ -126,12 +127,10 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="tenant-owner">{t('ownerUserId')}</Label>
-                <Input
-                  id="tenant-owner"
+                <Label>{t('ownerUserId')}</Label>
+                <OwnerUserCombobox
                   value={form.ownerUserId}
-                  onChange={(event) => set('ownerUserId')(event.target.value)}
-                  autoComplete="off"
+                  onSelect={(userId) => set('ownerUserId')(userId)}
                 />
               </div>
 
