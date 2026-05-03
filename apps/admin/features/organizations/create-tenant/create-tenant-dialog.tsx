@@ -23,6 +23,9 @@ import {
 } from '@deqah/ui/primitives/select';
 import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreateTenant } from './use-create-tenant';
+import { OwnerUserCombobox } from './owner-user-combobox';
+import { useListVerticals } from '@/features/verticals/list-verticals/use-list-verticals';
+import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 
 interface Props {
   open: boolean;
@@ -50,6 +53,8 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
   const t = useTranslations('organizations.create');
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const mutation = useCreateTenant();
+  const { data: verticals } = useListVerticals();
+  const { data: plans } = useListPlans();
 
   const trialDaysValue = form.trialDays.trim() === '' ? undefined : Number(form.trialDays);
   const trialDaysValid =
@@ -126,12 +131,10 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="tenant-owner">{t('ownerUserId')}</Label>
-                <Input
-                  id="tenant-owner"
+                <Label>{t('ownerUserId')}</Label>
+                <OwnerUserCombobox
                   value={form.ownerUserId}
-                  onChange={(event) => set('ownerUserId')(event.target.value)}
-                  autoComplete="off"
+                  onSelect={(userId) => set('ownerUserId')(userId)}
                 />
               </div>
 
@@ -155,22 +158,42 @@ export function CreateTenantDialog({ open, onOpenChange }: Props) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="tenant-vertical">{t('verticalSlug')}</Label>
-                <Input
-                  id="tenant-vertical"
-                  value={form.verticalSlug}
-                  onChange={(event) => set('verticalSlug')(event.target.value)}
-                  autoComplete="off"
-                />
+                <Select
+                  value={form.verticalSlug || '__none__'}
+                  onValueChange={(value) => set('verticalSlug')(value === '__none__' ? '' : value)}
+                >
+                  <SelectTrigger id="tenant-vertical">
+                    <SelectValue placeholder="Select vertical…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {verticals?.filter((v) => v.isActive).map((v) => (
+                      <SelectItem key={v.slug} value={v.slug}>
+                        {v.nameAr} ({v.slug})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="tenant-plan">{t('planId')}</Label>
-                <Input
-                  id="tenant-plan"
-                  value={form.planId}
-                  onChange={(event) => set('planId')(event.target.value)}
-                  autoComplete="off"
-                />
+                <Select
+                  value={form.planId || '__none__'}
+                  onValueChange={(value) => set('planId')(value === '__none__' ? '' : value)}
+                >
+                  <SelectTrigger id="tenant-plan">
+                    <SelectValue placeholder="Select plan…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {plans?.filter((p) => p.isActive).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nameAr} — {p.slug}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">

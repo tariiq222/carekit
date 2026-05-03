@@ -17,6 +17,28 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('@/features/verticals/list-verticals/use-list-verticals', () => ({
+  useListVerticals: () => ({
+    data: [{ slug: 'general', nameAr: 'عام', nameEn: 'General', isActive: true }],
+  }),
+}));
+
+vi.mock('@/features/plans/list-plans/use-list-plans', () => ({
+  useListPlans: () => ({
+    data: [{ id: 'plan-uuid-1', slug: 'basic', nameAr: 'الأساسية', isActive: true }],
+  }),
+}));
+
+vi.mock('@/features/users/search-users/use-search-users', () => ({
+  useSearchUsers: () => ({
+    data: {
+      items: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Test User', email: 'test@example.com' }],
+      meta: { total: 1, page: 1, perPage: 10, totalPages: 1 },
+    },
+    isFetching: false,
+  }),
+}));
+
 const messages = {
   organizations: {
     create: {
@@ -65,6 +87,13 @@ function renderDialog() {
   return { invalidateSpy, onOpenChange };
 }
 
+async function selectOwnerUser(user: ReturnType<typeof userEvent.setup>) {
+  const ownerInput = screen.getByPlaceholderText('Search by email or name…');
+  await user.type(ownerInput, 'test');
+  const listItem = await screen.findByText('Test User');
+  await user.click(listItem);
+}
+
 describe('CreateTenantDialog', () => {
   beforeEach(() => {
     vi.mocked(adminRequest).mockReset();
@@ -79,7 +108,7 @@ describe('CreateTenantDialog', () => {
 
     await user.type(screen.getByLabelText('Slug'), 'riyadh-clinic');
     await user.type(screen.getByLabelText('Arabic name'), 'عيادة الرياض');
-    await user.type(screen.getByLabelText('Owner user ID'), '11111111-1111-4111-8111-111111111111');
+    await selectOwnerUser(user);
     await user.type(screen.getByLabelText('Audit reason'), 'Create tenant for onboarding');
 
     expect(submit).toBeEnabled();
@@ -101,9 +130,7 @@ describe('CreateTenantDialog', () => {
     await user.type(screen.getByLabelText('Slug'), '  riyadh-clinic  ');
     await user.type(screen.getByLabelText('Arabic name'), '  عيادة الرياض  ');
     await user.type(screen.getByLabelText('English name'), '  Riyadh Clinic  ');
-    await user.type(screen.getByLabelText('Owner user ID'), '11111111-1111-4111-8111-111111111111');
-    await user.type(screen.getByLabelText('Vertical slug'), ' medical ');
-    await user.type(screen.getByLabelText('Plan ID'), '22222222-2222-4222-8222-222222222222');
+    await selectOwnerUser(user);
     await user.clear(screen.getByLabelText('Trial days'));
     await user.type(screen.getByLabelText('Trial days'), '21');
     await user.type(screen.getByLabelText('Audit reason'), 'Create tenant for onboarding');
@@ -117,8 +144,6 @@ describe('CreateTenantDialog', () => {
           nameAr: 'عيادة الرياض',
           nameEn: 'Riyadh Clinic',
           ownerUserId: '11111111-1111-4111-8111-111111111111',
-          verticalSlug: 'medical',
-          planId: '22222222-2222-4222-8222-222222222222',
           billingCycle: 'MONTHLY',
           trialDays: 21,
           reason: 'Create tenant for onboarding',
@@ -136,7 +161,7 @@ describe('CreateTenantDialog', () => {
 
     await user.type(screen.getByLabelText('Slug'), 'riyadh-clinic');
     await user.type(screen.getByLabelText('Arabic name'), 'عيادة الرياض');
-    await user.type(screen.getByLabelText('Owner user ID'), '11111111-1111-4111-8111-111111111111');
+    await selectOwnerUser(user);
     await user.type(screen.getByLabelText('Audit reason'), 'Create tenant for onboarding');
     await user.click(screen.getByRole('button', { name: 'Create tenant' }));
 
