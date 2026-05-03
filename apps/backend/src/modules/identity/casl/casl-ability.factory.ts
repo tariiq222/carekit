@@ -44,9 +44,18 @@ const ADMIN_RULES: readonly Rule[] = [
 
 const BUILT_IN: Record<string, readonly Rule[]> = {
   SUPER_ADMIN: [{ action: 'manage', subject: 'all' }],
-  // OWNER intentionally identical to ADMIN in this commit — Task 5 adds
-  // the Billing/Plan/Subscription rules.
-  OWNER: ADMIN_RULES,
+  // OWNER inherits everything ADMIN can do AND adds platform-billing
+  // control: subscription state, plan changes, platform-invoice oversight.
+  // ADMIN stays out of these three subjects so a clinic operator cannot
+  // accidentally cancel or upgrade the subscription, refund a platform
+  // invoice, or reassign the plan. OWNER is typically the founder /
+  // financial decision maker; ADMIN is the day-to-day operations lead.
+  OWNER: [
+    ...ADMIN_RULES,
+    { action: 'manage', subject: 'Billing' },
+    { action: 'manage', subject: 'Plan' },
+    { action: 'manage', subject: 'Subscription' },
+  ],
   ADMIN: ADMIN_RULES,
   RECEPTIONIST: [
     { action: 'manage', subject: 'Booking' },

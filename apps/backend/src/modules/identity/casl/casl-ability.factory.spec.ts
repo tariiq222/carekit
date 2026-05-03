@@ -30,14 +30,34 @@ describe('CaslAbilityFactory', () => {
     expect(ability.can('manage', 'Payment')).toBe(true);
   });
 
-  it('grants full tenant-scoped permissions for OWNER (mirrors ADMIN)', () => {
-    const ability = factory.buildForUser({ role: 'OWNER', customRole: null });
+  it('grants OWNER full tenant-scoped permissions plus Billing/Plan/Subscription', () => {
+    const ability = factory.buildForUser({ membershipRole: 'OWNER', customRole: null });
+    // Everything ADMIN gets:
     expect(ability.can('manage', 'User')).toBe(true);
     expect(ability.can('manage', 'Booking')).toBe(true);
     expect(ability.can('manage', 'Setting')).toBe(true);
     expect(ability.can('manage', 'Branding')).toBe(true);
-    // OWNER does NOT get platform-wide 'manage all' — that's SUPER_ADMIN only
+    // Plus the OWNER-only trio:
+    expect(ability.can('manage', 'Billing')).toBe(true);
+    expect(ability.can('manage', 'Plan')).toBe(true);
+    expect(ability.can('manage', 'Subscription')).toBe(true);
+    // OWNER does NOT get platform-wide 'manage all' — that's SUPER_ADMIN only.
     expect(ability.can('manage', 'all')).toBe(false);
+  });
+
+  it('denies ADMIN access to Billing, Plan, and Subscription (OWNER-only)', () => {
+    const ability = factory.buildForUser({ membershipRole: 'ADMIN', customRole: null });
+    // ADMIN keeps day-to-day clinic ops:
+    expect(ability.can('manage', 'User')).toBe(true);
+    expect(ability.can('manage', 'Setting')).toBe(true);
+    expect(ability.can('manage', 'Branding')).toBe(true);
+    // ADMIN explicitly LOSES the OWNER-only subjects:
+    expect(ability.can('manage', 'Billing')).toBe(false);
+    expect(ability.can('read', 'Billing')).toBe(false);
+    expect(ability.can('manage', 'Plan')).toBe(false);
+    expect(ability.can('read', 'Plan')).toBe(false);
+    expect(ability.can('manage', 'Subscription')).toBe(false);
+    expect(ability.can('read', 'Subscription')).toBe(false);
   });
 
   // ── Bug B5: canonical role is Membership.role (membershipRole), not User.role ──
