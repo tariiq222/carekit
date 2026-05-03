@@ -40,9 +40,22 @@ const { useLocale } = vi.hoisted(() => ({
 }))
 
 vi.mock("@/hooks/use-waitlist", () => ({ useWaitlist, useWaitlistMutations }))
-vi.mock("@/hooks/use-feature-flags", () => ({ useFeatureFlagMap }))
+vi.mock("@/hooks/use-billing-features", () => ({ useFeatureFlagMap }))
 vi.mock("@/components/locale-provider", () => ({ useLocale }))
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock("@deqah/ui", () => ({
+  Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectValue: () => null,
+  Button: ({ children }: { children: ReactNode }) => <button>{children}</button>,
+  Badge: ({ children }: { children: ReactNode }) => <span>{children}</span>,
+  Skeleton: () => <div data-testid="skeleton" />,
+}))
+vi.mock("@/components/features/error-banner", () => ({ ErrorBanner: () => null }))
+vi.mock("@/components/features/empty-state", () => ({ EmptyState: () => <div data-testid="empty-state" /> }))
+vi.mock("@hugeicons/core-free-icons", () => ({ Clock01Icon: () => null }))
 
 import { WaitlistTab } from "@/components/features/bookings/waitlist-tab"
 

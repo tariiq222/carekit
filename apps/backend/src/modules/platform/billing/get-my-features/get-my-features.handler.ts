@@ -42,31 +42,7 @@ export class GetMyFeaturesHandler {
 
     const { planSlug, status, limits } = cached;
 
-    // 2. Fetch all feature flags (platform catalog + org overrides) in one query.
-    const allFlagsForKeys = await this.prisma.featureFlag.findMany({
-      where: { key: { in: ALL_FEATURE_KEYS } },
-      select: {
-        id: true,
-        organizationId: true,
-        key: true,
-        enabled: true,
-        allowedPlans: true,
-        limitKind: true,
-      },
-    });
-    const platformFlags = allFlagsForKeys.filter(
-      (f) => f.organizationId === null,
-    );
-    const orgOverrides = allFlagsForKeys.filter(
-      (f) => f.organizationId === organizationId,
-    );
-
-    // Index org overrides by key for O(1) lookup
-    const orgOverrideMap = new Map(orgOverrides.map((f) => [f.key, f]));
-    // Index platform catalog by key
-    const platformFlagMap = new Map(platformFlags.map((f) => [f.key, f]));
-
-    // 3. Resolve quantitative features with Promise.all to avoid N+1
+    // 2. Resolve quantitative features with Promise.all to avoid N+1
     const quantitativeKeys = ALL_FEATURE_KEYS.filter(
       (key) => typeof (limits as PlanLimits)[FEATURE_KEY_MAP[key]] === "number",
     );
@@ -77,32 +53,24 @@ export class GetMyFeaturesHandler {
       quantitativeKeys.map((key, i) => [key, counts[i]]),
     );
 
-    // 4. Build features map
+    // 3. Build features map
     const features: Record<string, FeatureEntry> = {};
 
     for (const featureKey of ALL_FEATURE_KEYS) {
       const jsonKey = FEATURE_KEY_MAP[featureKey];
       const planLimitValue = (limits as PlanLimits)[jsonKey];
-      const orgOverride = orgOverrideMap.get(featureKey);
-      const platformFlag = platformFlagMap.get(featureKey);
 
-      // Determine enabled status
-      let enabled: boolean;
-      if (orgOverride) {
-        enabled = orgOverride.enabled;
-      } else if (platformFlag) {
-        const rawFlag = platformFlag as unknown as { allowedPlans?: string[] };
-        const allowedPlans: string[] = rawFlag.allowedPlans ?? [];
-        enabled =
-          platformFlag.enabled &&
-          (allowedPlans.length === 0 || allowedPlans.includes(planSlug));
-      } else {
-        // No feature flag record → derive from plan limits
-        enabled =
-          typeof planLimitValue === "boolean"
-            ? planLimitValue
-            : planLimitValue !== 0;
-      }
+      // Determine enabled status from Plan.limits only.
+      // Plan.limits is the SoT for feature access. Match FeatureGuard's
+      // fail-closed posture: missing keys → false (the guard would reject
+      // the call anyway via FEATURE_CATALOG; aligning the response prevents
+      // UI/guard mismatch).
+      const enabled: boolean =
+        typeof planLimitValue === "boolean"
+          ? planLimitValue
+          : typeof planLimitValue === "number"
+            ? planLimitValue !== 0
+            : false;
 
       const entry: FeatureEntry = { enabled };
 

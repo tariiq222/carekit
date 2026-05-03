@@ -28,11 +28,6 @@ import {
   removeWaitlistEntry,
 } from "@/lib/api/waitlist"
 
-import {
-  fetchFeatureFlags,
-  fetchFeatureFlagMap,
-} from "@/lib/api/feature-flags"
-
 describe("zatca api", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
@@ -88,19 +83,3 @@ describe("waitlist api", () => {
   })
 })
 
-describe("feature-flags api", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetchFeatureFlags calls /feature-flags", async () => {
-    getMock.mockResolvedValueOnce([])
-    await fetchFeatureFlags()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags")
-  })
-
-  it("fetchFeatureFlagMap calls /feature-flags/map", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchFeatureFlagMap()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/map")
-  })
-
-})

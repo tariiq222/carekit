@@ -9,7 +9,7 @@ import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { fetchBookingSettings } from "@/lib/api/booking-settings"
 
 import { OverrideField, SwitchField } from "./booking-settings-fields"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateServiceFormData } from "./create/form-schema"
@@ -128,7 +128,7 @@ export function ServiceBookingSettings({ form, locale: _locale }: Props) {
             onDisable={() => form.setValue("maxParticipants", 1)}
             onChange={(v) => form.setValue("maxParticipants", v ?? 1)}
           />
-          {isEnabled("recurring") && (
+          {isEnabled("recurring_bookings") && (
             <SwitchField
               id="sbs-recurring"
               label={t("services.booking.recurring.label")}

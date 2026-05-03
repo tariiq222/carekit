@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import type { Booking, RefundType } from "@/lib/types/booking"
 
 interface BookingsTabContentProps {
@@ -120,7 +120,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
               { value: "in_person", label: t("bookings.filters.inPerson") },
               { value: "online", label: t("bookings.filters.online") },
               { value: "group", label: t("bookings.filters.group") },
-              ...(isEnabled("walk_in")
+              ...(isEnabled("walk_in_bookings")
                 ? [{ value: "walk_in", label: t("bookings.filters.walkIn") }]
                 : []),
             ],

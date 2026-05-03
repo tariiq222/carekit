@@ -191,40 +191,6 @@ export interface paths {
         patch: operations["AdminBillingController_changePlan"];
         trace?: never;
     };
-    "/api/v1/admin/feature-flags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List feature flags and organization overrides */
-        get: operations["AdminFeatureFlagsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/feature-flags/{key}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Create or update a feature flag override for an organization */
-        patch: operations["AdminFeatureFlagsController_update"];
-        trace?: never;
-    };
     "/api/v1/admin/impersonation": {
         parameters: {
             query?: never;
@@ -285,6 +251,39 @@ export interface paths {
         };
         /** Platform-wide metrics across all tenants */
         get: operations["AdminMetricsController_platform"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notifications-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminNotificationsConfigController_getDefaults"];
+        put: operations["AdminNotificationsConfigController_updateDefaults"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notifications/delivery-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List notification delivery log across all tenants */
+        get: operations["AdminNotificationsController_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -416,6 +415,220 @@ export interface paths {
         patch: operations["AdminPlansController_update"];
         trace?: never;
     };
+    "/api/v1/admin/platform-email/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List platform email delivery logs (cursor-based pagination) */
+        get: operations["PlatformEmailController_logs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform-email/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all platform email templates */
+        get: operations["PlatformEmailController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform-email/templates/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a platform email template by slug */
+        get: operations["PlatformEmailController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a platform email template */
+        patch: operations["PlatformEmailController_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/platform-email/templates/{slug}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview a platform email template with interpolated vars */
+        post: operations["PlatformEmailController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform-email/test-send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test email from a platform template */
+        post: operations["PlatformEmailController_testSend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["AdminSettingsController_upsertSettingValue"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingSettingsController_getAllSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/billing/test-connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BillingSettingsController_testMoyasarConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/billing/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["BillingSettingsController_updateSetting"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings/brand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BrandingSettingsController_getBrand"];
+        put: operations["BrandingSettingsController_updateBrand"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SecuritySettingsController_getSettings"];
+        put: operations["SecuritySettingsController_updateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminSettingsController_getSettingByKey"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/system-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SystemHealthController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -484,6 +697,46 @@ export interface paths {
         head?: never;
         /** Update a vertical (audited) */
         patch: operations["AdminVerticalsController_update"];
+        trace?: never;
+    };
+    "/api/v1/auth/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite a user to the active organization
+         * @description Privacy-safe — the response is identical regardless of whether the invited email already has an account in the system. Only an active membership conflict is surfaced (409). Optional displayName/jobTitle are carried into the new Membership on accept.
+         */
+        post: operations["AuthController_inviteUserEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a pending invitation token
+         * @description Idempotent on the token. If the email already has an account, the new Membership is linked silently. If not, password + name are required to create the User. Expired or already-accepted tokens return 410 Gone.
+         */
+        post: operations["AuthController_acceptInvitationEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/auth/login": {
@@ -555,6 +808,46 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/memberships/{id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload an avatar for the caller’s membership
+         * @description Per-membership-profile — stores at memberships/{id}/avatar-{ts}.{ext}. Max 5MB, image/jpeg|png|webp only. Cross-user uploads return 403. The previous avatar object is intentionally NOT deleted (audit trail).
+         */
+        post: operations["AuthController_uploadMembershipAvatarEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/memberships/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update the caller’s per-org display profile
+         * @description Per-membership-profile — updates displayName / jobTitle / avatarUrl on the caller’s own Membership. Cross-user edits are blocked (403).
+         */
+        patch: operations["AuthController_updateMembershipProfileEndpoint"];
         trace?: never;
     };
     "/api/v1/auth/password/change": {
@@ -904,6 +1197,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/billing/subscription/change-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change subscription plan (upgrade or downgrade) */
+        post: operations["BillingController_changePlanRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/billing/subscription/downgrade": {
         parameters: {
             query?: never;
@@ -1051,6 +1361,23 @@ export interface paths {
         put?: never;
         /** Upgrade subscription plan */
         post: operations["BillingController_upgradePlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/billing/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List quota usage for the current tenant */
+        get: operations["BillingController_usage"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1417,6 +1744,40 @@ export interface paths {
         patch: operations["DashboardCommsController_updateContactMessageStatusEndpoint"];
         trace?: never;
     };
+    "/api/v1/dashboard/comms/delivery-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List email delivery logs for this organization */
+        get: operations["DashboardCommsController_listDeliveryLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/comms/email-fallback-quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get platform email fallback quota usage for this billing period */
+        get: operations["DashboardCommsController_getEmailFallbackQuota"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/comms/email-templates": {
         parameters: {
             query?: never;
@@ -1515,6 +1876,41 @@ export interface paths {
         get: operations["DashboardCommsController_getUnreadCountEndpoint"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/comms/settings/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get email provider configuration (owner-scoped) */
+        get: operations["DashboardCommsController_getEmailConfigEndpoint"];
+        put?: never;
+        /** Upsert email provider configuration */
+        post: operations["DashboardCommsController_upsertEmailConfigEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/comms/settings/email/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test email via the configured provider */
+        post: operations["DashboardCommsController_testEmailConfigEndpoint"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2778,9 +3174,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get an employee's break schedule (placeholder) */
+        /** Get an employee's break schedule */
         get: operations["DashboardPeopleController_getBreaksEndpoint"];
-        /** Update an employee's break schedule (placeholder) */
+        /** Set an employee's break schedule */
         put: operations["DashboardPeopleController_putBreaksEndpoint"];
         post?: never;
         delete?: never;
@@ -2962,40 +3358,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/dashboard/platform/feature-flags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all feature flags with their current state */
-        get: operations["DashboardPlatformController_listFeatureFlagsEndpoint"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/platform/feature-flags/map": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a key→enabled map of all feature flags */
-        get: operations["DashboardPlatformController_featureFlagMapEndpoint"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/dashboard/platform/integrations": {
         parameters: {
             query?: never;
@@ -3145,6 +3507,23 @@ export interface paths {
         get?: never;
         /** Upsert a terminology override for a vertical */
         put: operations["DashboardVerticalsController_upsertOverride"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform health check (DB, Redis, BullMQ) */
+        get: operations["PublicHealthController_check"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -4489,6 +4868,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AcceptInvitationDto: {
+            /** @description Name for new account creation (ignored if account exists). */
+            name?: string;
+            /** @description Password for new account creation (min 8 chars, must contain uppercase + digit). Ignored if the email already has an account. */
+            password?: string;
+            /** @description Invitation token sent by email. */
+            token: string;
+        };
         AddHolidayDto: {
             /**
              * @description ID of the branch this holiday applies to
@@ -4696,6 +5083,23 @@ export interface components {
          * @enum {string}
          */
         BookingType: "INDIVIDUAL" | "WALK_IN" | "GROUP" | "ONLINE";
+        BreakWindowDto: {
+            /**
+             * @description Day of week (0 = Sunday, 6 = Saturday)
+             * @example 1
+             */
+            dayOfWeek: number;
+            /**
+             * @description Break end time (HH:MM)
+             * @example 13:00
+             */
+            endTime: string;
+            /**
+             * @description Break start time (HH:MM)
+             * @example 12:00
+             */
+            startTime: string;
+        };
         BulkUpsertSiteSettingsDto: {
             /** @description List of settings to upsert */
             entries: components["schemas"]["SiteSettingEntryDto"][];
@@ -5072,7 +5476,7 @@ export interface components {
              */
             notes?: string;
             /**
-             * @description Saudi mobile number
+             * @description Saudi mobile number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone: string;
@@ -5222,36 +5626,28 @@ export interface components {
             sortOrder?: number;
         };
         CreateEmailTemplateDto: {
+            /** @description Block tree (source of truth — when present, htmlBody is rendered from this) */
+            blocks?: Record<string, never>[];
             /**
              * @description HTML body of the email (supports Handlebars variables)
              * @example <p>Hello {{name}}</p>
              */
             htmlBody: string;
             /**
-             * @description Arabic display name
+             * @description Display name (free-form, any language)
              * @example تأكيد الحجز
              */
-            nameAr: string;
-            /**
-             * @description English display name
-             * @example Booking Confirmed
-             */
-            nameEn?: string;
+            name: string;
             /**
              * @description Unique slug identifier for the template
              * @example booking-confirmed
              */
             slug: string;
             /**
-             * @description Arabic email subject line
+             * @description Email subject line (free-form, any language)
              * @example تم تأكيد حجزك
              */
-            subjectAr: string;
-            /**
-             * @description English email subject line
-             * @example Your booking is confirmed
-             */
-            subjectEn?: string;
+            subject: string;
         };
         CreateEmployeeBookingDto: {
             /**
@@ -5329,7 +5725,7 @@ export interface components {
              */
             name: string;
             /**
-             * @description Phone number (international format)
+             * @description Phone number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone?: string;
@@ -5787,7 +6183,7 @@ export interface components {
              */
             password: string;
             /**
-             * @description Mobile phone number
+             * @description Mobile phone number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone?: string;
@@ -5979,7 +6375,7 @@ export interface components {
              */
             notes?: string;
             /**
-             * @description Phone number in E.164 format
+             * @description Phone number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone: string;
@@ -6040,6 +6436,28 @@ export interface components {
              */
             position?: number;
         };
+        InviteUserDto: {
+            /**
+             * @description Per-org display name carried into the new Membership.
+             * @example د. أحمد المطيري
+             */
+            displayName?: string;
+            /**
+             * @description Email address of the invitee.
+             * @example ahmad@clinic.sa
+             */
+            email: string;
+            /**
+             * @description Per-org job title carried into the new Membership.
+             * @example استشاري نفسي
+             */
+            jobTitle?: string;
+            /**
+             * @description Role within the inviting organization.
+             * @enum {string}
+             */
+            role: "OWNER" | "ADMIN" | "RECEPTIONIST" | "ACCOUNTANT" | "EMPLOYEE";
+        };
         LoginDto: {
             /**
              * @description User email address
@@ -6061,6 +6479,10 @@ export interface components {
              * @example a1b2c3d4-...
              */
             refreshToken: string;
+        };
+        MailchimpCredentialsDto: {
+            /** @description Mailchimp Transactional (Mandrill) API key */
+            apiKey: string;
         };
         MarkReadDto: {
             /**
@@ -6375,17 +6797,7 @@ export interface components {
              *     }
              */
             context?: Record<string, never>;
-            /**
-             * @description Language to render the template in
-             * @example ar
-             */
-            lang: components["schemas"]["PreviewLang"];
         };
-        /**
-         * @description Language to render the template in
-         * @enum {string}
-         */
-        PreviewLang: "ar" | "en";
         ProcessPaymentDto: {
             /**
              * @description Amount to charge
@@ -6481,7 +6893,7 @@ export interface components {
              */
             lastName: string;
             /**
-             * @description E.164 phone
+             * @description Phone (any common Saudi-flavoured format; normalized to E.164)
              * @example +966501234567
              */
             phone: string;
@@ -6513,7 +6925,7 @@ export interface components {
              */
             password: string;
             /**
-             * @description Mobile phone number
+             * @description Mobile phone number (any common format; normalized to E.164)
              * @example 0501234567
              */
             phone: string;
@@ -6575,6 +6987,13 @@ export interface components {
              */
             newScheduledAt: string;
         };
+        ResendCredentialsDto: {
+            /**
+             * @description Resend API key
+             * @example re_...
+             */
+            apiKey: string;
+        };
         ResetPasswordDto: {
             /**
              * @description New password (min 8 chars, at least 1 uppercase letter, at least 1 digit)
@@ -6597,6 +7016,13 @@ export interface components {
              */
             verticalSlug: string;
         };
+        SendGridCredentialsDto: {
+            /**
+             * @description SendGrid API key
+             * @example SG...
+             */
+            apiKey: string;
+        };
         SendStaffMessageDto: {
             /**
              * @description Message body text
@@ -6604,6 +7030,7 @@ export interface components {
              */
             body: string;
         };
+        SendTestEmailDto: Record<string, never>;
         SetBusinessHoursDto: {
             /**
              * @description ID of the branch to configure
@@ -6625,6 +7052,10 @@ export interface components {
              */
             reason?: string;
         };
+        SetEmployeeBreaksDto: {
+            /** @description Break windows to set */
+            breaks: components["schemas"]["BreakWindowDto"][];
+        };
         SetServiceBookingConfigsDto: {
             /** @description Booking type configurations (must include at least one) */
             types: components["schemas"]["BookingConfigInputDto"][];
@@ -6645,6 +7076,30 @@ export interface components {
             valueMedia?: Record<string, never>;
             /** @description Plain text value (lang-neutral) */
             valueText?: Record<string, never>;
+        };
+        SmtpCredentialsDto: {
+            /**
+             * @description SMTP host
+             * @example smtp.gmail.com
+             */
+            host: string;
+            /** @description SMTP password or app password */
+            pass: string;
+            /**
+             * @description SMTP port
+             * @example 587
+             */
+            port: number;
+            /**
+             * @description Use TLS (true for port 465)
+             * @example false
+             */
+            secure?: boolean;
+            /**
+             * @description SMTP username / email
+             * @example clinic@example.com
+             */
+            user: string;
         };
         StartImpersonationDto: {
             /** Format: uuid */
@@ -6703,6 +7158,13 @@ export interface components {
         TaqnyatCredentialsDto: {
             /** @description Taqnyat API token (Bearer) */
             apiToken: string;
+        };
+        TestEmailConfigDto: {
+            /**
+             * @description Email address to send the test message to
+             * @example owner@clinic.com
+             */
+            toEmail: string;
         };
         TestSmsConfigDto: {
             /** @description Phone number to send the test SMS to (E.164) */
@@ -6897,7 +7359,7 @@ export interface components {
              */
             notes?: Record<string, never> | null;
             /**
-             * @description Saudi mobile number
+             * @description Saudi mobile number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone?: Record<string, never> | null;
@@ -7037,6 +7499,8 @@ export interface components {
             title?: string;
         };
         UpdateEmailTemplateDto: {
+            /** @description Block tree (source of truth — when present, htmlBody is rendered from this) */
+            blocks?: Record<string, never>[];
             /**
              * @description HTML body of the email (supports Handlebars variables)
              * @example <p>Hello {{name}}</p>
@@ -7048,25 +7512,15 @@ export interface components {
              */
             isActive?: boolean;
             /**
-             * @description Arabic display name
+             * @description Display name (free-form, any language)
              * @example تأكيد الحجز
              */
-            nameAr?: string;
+            name?: string;
             /**
-             * @description English display name
-             * @example Booking Confirmed
-             */
-            nameEn?: string;
-            /**
-             * @description Arabic email subject line
+             * @description Email subject line (free-form, any language)
              * @example تم تأكيد حجزك
              */
-            subjectAr?: string;
-            /**
-             * @description English email subject line
-             * @example Your booking is confirmed
-             */
-            subjectEn?: string;
+            subject?: string;
         };
         UpdateEmployeeDto: {
             /**
@@ -7135,7 +7589,7 @@ export interface components {
              */
             nameEn?: string;
             /**
-             * @description Phone number (international format)
+             * @description Phone number (any common format; normalized to E.164)
              * @example +966501234567
              */
             phone?: string;
@@ -7166,12 +7620,24 @@ export interface components {
              */
             title?: string;
         };
-        UpdateFeatureFlagAdminDto: {
-            enabled: boolean;
-            /** Format: uuid */
-            organizationId: string;
-            reason: string;
+        UpdateMembershipProfileDto: {
+            /**
+             * @description Per-org avatar URL (MinIO).
+             * @example https://cdn.example.com/memberships/m-1/avatar.jpg
+             */
+            avatarUrl?: string;
+            /**
+             * @description Per-org display name (overrides User.name).
+             * @example د. أحمد المطيري
+             */
+            displayName?: string;
+            /**
+             * @description Per-org job title.
+             * @example استشاري نفسي
+             */
+            jobTitle?: string;
         };
+        UpdateNotificationDefaultsDto: Record<string, never>;
         UpdateOrganizationDto: {
             nameAr?: string;
             nameEn?: Record<string, never> | null;
@@ -7191,6 +7657,7 @@ export interface components {
             reason: string;
             sortOrder?: number;
         };
+        UpdatePlatformEmailTemplateDto: Record<string, never>;
         UpdateProblemReportStatusDto: {
             /**
              * @description Optional resolution note explaining how the problem was addressed
@@ -7527,6 +7994,24 @@ export interface components {
             /** @description Optional Moyasar webhook signing secret. Stored AES-256-GCM encrypted. */
             webhookSecret?: string;
         };
+        UpsertOrgEmailConfigDto: {
+            mailchimp?: components["schemas"]["MailchimpCredentialsDto"];
+            /** @enum {string} */
+            provider: "NONE" | "SMTP" | "RESEND" | "SENDGRID" | "MAILCHIMP";
+            resend?: components["schemas"]["ResendCredentialsDto"];
+            /**
+             * @description Sender email address
+             * @example noreply@clinic.com
+             */
+            senderEmail?: string;
+            /**
+             * @description Sender display name
+             * @example عيادة الأمل
+             */
+            senderName?: string;
+            sendgrid?: components["schemas"]["SendGridCredentialsDto"];
+            smtp?: components["schemas"]["SmtpCredentialsDto"];
+        };
         UpsertOrgSettingsDto: {
             /** @description About text in Arabic */
             aboutAr?: string;
@@ -7716,6 +8201,7 @@ export interface components {
             taqnyat?: components["schemas"]["TaqnyatCredentialsDto"];
             unifonic?: components["schemas"]["UnifonicCredentialsDto"];
         };
+        UpsertPlatformSettingDto: Record<string, never>;
         UpsertSeedDepartmentDto: {
             /**
              * @description اسم القسم بالعربية
@@ -7793,6 +8279,24 @@ export interface components {
             /** @example your_client_secret */
             zoomClientSecret: string;
         };
+        UsageRowDto: {
+            /** @description Current usage value */
+            current: number;
+            /**
+             * @description The feature key for this quota row
+             * @enum {string}
+             */
+            featureKey: "recurring_bookings" | "waitlist" | "group_sessions" | "ai_chatbot" | "email_templates" | "coupons" | "advanced_reports" | "intake_forms" | "zatca" | "custom_roles" | "activity_log" | "branches" | "employees" | "services" | "monthly_bookings" | "storage" | "zoom_integration" | "walk_in_bookings" | "bank_transfer_payments" | "multi_branch" | "departments" | "client_ratings" | "data_export" | "sms_provider_per_tenant" | "white_label_mobile" | "custom_domain" | "api_access" | "webhooks" | "priority_support" | "audit_export" | "multi_currency" | "email_fallback_monthly" | "sms_fallback_monthly";
+            /** @description Plan limit; -1 means unlimited */
+            limit: number;
+            /** @description 0–100; 0 if limit is unlimited */
+            percentage: number;
+            /**
+             * Format: date-time
+             * @description End of the metering period; null for lifetime counters
+             */
+            periodEnd: string | null;
+        };
         /**
          * @description Gender
          * @enum {string}
@@ -7805,8 +8309,8 @@ export interface components {
         UserRole: "SUPER_ADMIN" | "ADMIN" | "RECEPTIONIST" | "ACCOUNTANT" | "EMPLOYEE" | "CLIENT";
         VerifyMobileOtpDto: {
             /**
-             * @description 4-digit OTP code
-             * @example 1234
+             * @description 6-digit OTP code
+             * @example 123456
              */
             code: string;
             /** @description Phone or email used to request the OTP */
@@ -7825,8 +8329,8 @@ export interface components {
              */
             channel: "EMAIL" | "SMS";
             /**
-             * @description 4-digit OTP code
-             * @example 1234
+             * @description 6-digit OTP code
+             * @example 123456
              */
             code: string;
             /**
@@ -8113,48 +8617,6 @@ export interface operations {
             };
         };
     };
-    AdminFeatureFlagsController_list: {
-        parameters: {
-            query: {
-                organizationId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminFeatureFlagsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateFeatureFlagAdminDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AdminImpersonationController_start: {
         parameters: {
             query?: never;
@@ -8221,6 +8683,72 @@ export interface operations {
     AdminMetricsController_platform: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminNotificationsConfigController_getDefaults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminNotificationsConfigController_updateDefaults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationDefaultsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminNotificationsController_list: {
+        parameters: {
+            query?: {
+                /** @description Filter by organization UUID */
+                organizationId?: string;
+                /** @description Filter by delivery status */
+                status?: string;
+                /** @description Filter by delivery channel */
+                channel?: string;
+                /** @description Page number (default: 1) */
+                page?: string;
+                /** @description Items per page (default: 50, max: 200) */
+                perPage?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -8476,6 +9004,306 @@ export interface operations {
             };
         };
     };
+    PlatformEmailController_logs: {
+        parameters: {
+            query: {
+                status: string;
+                templateSlug: string;
+                organizationId: string;
+                cursor: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformEmailController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformEmailController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformEmailController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlatformEmailTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformEmailController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformEmailController_testSend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendTestEmailDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSettingsController_upsertSettingValue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertPlatformSettingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BillingSettingsController_getAllSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BillingSettingsController_testMoyasarConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BillingSettingsController_updateSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandingSettingsController_getBrand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandingSettingsController_updateBrand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SecuritySettingsController_getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SecuritySettingsController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSettingsController_getSettingByKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SystemHealthController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminUsersController_search: {
         parameters: {
             query: {
@@ -8602,6 +9430,122 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AuthController_inviteUserEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteUserDto"];
+            };
+        };
+        responses: {
+            /** @description PENDING invitation row */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid JWT */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Email already has an active membership in this org */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_acceptInvitationEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationDto"];
+            };
+        };
+        responses: {
+            /** @description Active Membership info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing password/name for new account */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Token not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Token expired or already used */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
         };
     };
@@ -8786,6 +9730,139 @@ export interface operations {
             };
             /** @description Missing or invalid JWT */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_uploadMembershipAvatarEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Avatar image for the caller’s membership */
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    avatar: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Persisted avatar URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid mime/size or empty file */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Caller does not own the membership */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Membership not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_updateMembershipProfileEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMembershipProfileDto"];
+            };
+        };
+        responses: {
+            /** @description Updated MembershipSummary-shaped row */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid JWT */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Caller does not own the target membership */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Membership not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10131,6 +11208,63 @@ export interface operations {
             };
         };
     };
+    BillingController_changePlanRoute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePlanDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
     BillingController_downgradePlan: {
         parameters: {
             query?: never;
@@ -10585,6 +11719,61 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    BillingController_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageRowDto"][];
+                };
             };
             /** @description Validation failed */
             400: {
@@ -12164,6 +13353,123 @@ export interface operations {
             };
         };
     };
+    DashboardCommsController_listDeliveryLogs: {
+        parameters: {
+            query?: {
+                /** @description Filter by delivery status */
+                status?: "PENDING" | "SENT" | "FAILED" | "SKIPPED";
+                /** @description Filter by channel */
+                channel?: "EMAIL" | "SMS" | "PUSH" | "IN_APP";
+                /** @description Page number */
+                page?: number;
+                /** @description Items per page */
+                perPage?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated delivery log */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    DashboardCommsController_getEmailFallbackQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current usage vs plan limit for email_fallback_monthly */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
     DashboardCommsController_listEmailTemplatesEndpoint: {
         parameters: {
             query?: never;
@@ -12580,6 +13886,176 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Unread count value */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    DashboardCommsController_getEmailConfigEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OrganizationEmailConfig view (no secrets) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    DashboardCommsController_upsertEmailConfigEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertOrgEmailConfigDto"];
+            };
+        };
+        responses: {
+            /** @description Updated OrganizationEmailConfig view */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Action denied by permission policy */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Unhandled server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    DashboardCommsController_testEmailConfigEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestEmailConfigDto"];
+            };
+        };
+        responses: {
+            /** @description Test result */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19473,7 +20949,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Break list (always empty until schedule-splitting migration) */
+            /** @description Break windows for the employee */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19528,9 +21004,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetEmployeeBreaksDto"];
+            };
+        };
         responses: {
-            /** @description Accepted (no-op until schedule-splitting migration) */
+            /** @description Updated break windows */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -20341,114 +21821,6 @@ export interface operations {
             };
         };
     };
-    DashboardPlatformController_listFeatureFlagsEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Array of feature flag records */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Missing or invalid authentication */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Action denied by permission policy */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Unhandled server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    DashboardPlatformController_featureFlagMapEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Object mapping flag keys to boolean values */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Missing or invalid authentication */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Action denied by permission policy */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Unhandled server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
     DashboardPlatformController_listIntegrationsEndpoint: {
         parameters: {
             query?: never;
@@ -21108,6 +22480,23 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiErrorDto"];
                 };
+            };
+        };
+    };
+    PublicHealthController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

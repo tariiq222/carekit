@@ -24,8 +24,6 @@ import { ListProblemReportsHandler } from './problem-reports/list-problem-report
 import { UpdateProblemReportStatusHandler } from './problem-reports/update-problem-report-status.handler';
 import { UpsertIntegrationHandler } from './integrations/upsert-integration.handler';
 import { ListIntegrationsHandler } from './integrations/list-integrations.handler';
-import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
-import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
 import { ListOrganizationsHandler } from './admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from './admin/get-organization/get-organization.handler';
 import { CreateTenantHandler } from './admin/create-tenant/create-tenant.handler';
@@ -75,7 +73,6 @@ import { BillingSettingsController } from '../../api/admin/billing-settings.cont
 import { BrandingSettingsController } from '../../api/admin/branding-settings.controller';
 import { SystemHealthController } from '../../api/admin/system-health.controller';
 import { SecuritySettingsController } from '../../api/admin/security-settings.controller';
-import { AdminSettingsController } from '../../api/admin/settings.controller';
 import { SystemHealthModule } from './system-health/system-health.module';
 
 const ADMIN_HANDLERS = [
@@ -157,7 +154,6 @@ const ADMIN_HANDLERS = [
     BrandingSettingsController,
     SystemHealthController,
     SecuritySettingsController,
-    AdminSettingsController,
   ],
   providers: [
     SuperAdminContextInterceptor,
@@ -170,8 +166,6 @@ const ADMIN_HANDLERS = [
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
-    ListFeatureFlagsHandler,
-    GetFeatureFlagMapHandler,
     ...ADMIN_HANDLERS,
   ],
   exports: [
@@ -180,8 +174,6 @@ const ADMIN_HANDLERS = [
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
-    ListFeatureFlagsHandler,
-    GetFeatureFlagMapHandler,
     ...ADMIN_HANDLERS,
   ],
 })

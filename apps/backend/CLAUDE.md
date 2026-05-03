@@ -39,7 +39,7 @@ src/
 | `org-config/` | branches, categories, departments, business-hours |
 | `org-experience/` | branding, intake-forms, ratings, services, org-settings |
 | `integrations/` | zoom (encrypted creds get/upsert/test), public branding |
-| `platform/` | admin (super-admin), billing, verticals, feature-flags, problem-reports, tenant-registration |
+| `platform/` | admin (super-admin), billing, verticals, problem-reports, tenant-registration |
 | `dashboard/` | get-dashboard-stats |
 
 ### Vertical slice anatomy

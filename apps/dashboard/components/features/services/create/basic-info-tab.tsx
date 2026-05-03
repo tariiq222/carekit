@@ -21,7 +21,7 @@ import {
 } from "@deqah/ui"
 import { useCategories } from "@/hooks/use-services"
 import { useDepartmentOptions } from "@/hooks/use-departments"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
 import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"

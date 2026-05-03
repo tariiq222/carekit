@@ -19,7 +19,7 @@ import { testPrisma } from "../../setup/db.setup";
  * Isolation
  * ---------
  * Each test creates a unique org slug (`tc<N>-<role>-<ts>`) so subscription /
- * feature-flag state never bleeds between cases, and SubscriptionCacheService
+ * subscription state never bleeds between cases, and SubscriptionCacheService
  * in-process entries stay completely independent.
  */
 
@@ -168,8 +168,8 @@ describe("GET /dashboard/billing/my-features (e2e)", () => {
   // ──────────────────────────────────────────────────────────────────────────
   /**
    * The BASIC plan limits JSON sets `recurring_bookings: false`.
-   * No FeatureFlag override exists for this org, so the handler falls back to
-   * the plan limit value → enabled must be false.
+   * No override exists for this org; the handler derives `enabled` directly
+   * from the plan limit value → enabled must be false.
    */
   it("[TC-2] BASIC plan → recurring_bookings.enabled === false", async () => {
     const ts = Date.now();
@@ -199,8 +199,7 @@ describe("GET /dashboard/billing/my-features (e2e)", () => {
    * ENTERPRISE plan seeds all four gated features as `true` in limits JSON:
    *   advanced_reports, zatca, custom_roles, activity_log.
    *
-   * No FeatureFlag override is required — the handler derives `enabled` from
-   * the plan limits when no flag row exists.
+   * The handler derives `enabled` directly from the plan limits JSON.
    */
   it("[TC-3] ENTERPRISE plan → advanced_reports, zatca, custom_roles, activity_log all enabled", async () => {
     const ts = Date.now();

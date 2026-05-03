@@ -114,8 +114,11 @@ Top-level layout/error/loading: `layout.tsx`, `error.tsx`, `loading.tsx`, `page.
 - **Subscription-aware page gating** is done with
   `<FeatureGate feature={FeatureKey.AI_CHATBOT}>...</FeatureGate>`
   (`components/feature-gate.tsx`) or the `useFeatureEnabled(feature)`
-  hook (`hooks/use-feature-enabled.ts`). This is separate from the legacy
-  sidebar `featureFlag` config.
+  hook (`hooks/use-feature-enabled.ts`). This reads from `Plan.limits`
+  via `useBillingFeatures` — there is no separate FeatureFlag table.
+  The sidebar `featureFlag` field in `components/sidebar-config.ts` is a
+  `FeatureKey` enum value that gets resolved through the same
+  `useBillingFeatures` path at runtime.
 - **Quantitative limits** (e.g. employees, bookings/month) check via
   `useQuantitativeLimit()` (`hooks/use-quantitative-limit.ts`).
 - **Sidebar billing summary** lives in `components/billing-usage-widget.tsx`

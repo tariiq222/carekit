@@ -9,8 +9,6 @@ export type {
   UpdateUserPayload,
 } from './user'
 export type { BrandingConfig, UpdateBrandingPayload } from './branding'
-export type { FeatureFlags } from './feature-flags'
-export { DEFAULT_FEATURE_FLAGS } from './feature-flags'
 export type { PaginationMeta, PaginatedResponse, PaginationParams } from './api'
 export { buildQueryString } from './api'
 export type {

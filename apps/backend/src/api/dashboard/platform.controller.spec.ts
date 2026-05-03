@@ -8,16 +8,12 @@ function buildController() {
   const updateProblemReportStatus = fn({ id: 'pr-1' });
   const upsertIntegration = fn({ id: 'int-1' });
   const listIntegrations = fn([]);
-  const listFeatureFlags = fn([]);
-  const getFeatureFlagMap = fn({});
   const controller = new DashboardPlatformController(
     createProblemReport as never,
     listProblemReports as never,
     updateProblemReportStatus as never,
     upsertIntegration as never,
     listIntegrations as never,
-    listFeatureFlags as never,
-    getFeatureFlagMap as never,
   );
   return {
     controller,
@@ -26,8 +22,6 @@ function buildController() {
     updateProblemReportStatus,
     upsertIntegration,
     listIntegrations,
-    listFeatureFlags,
-    getFeatureFlagMap,
   };
 }
 
@@ -62,18 +56,6 @@ describe('DashboardPlatformController', () => {
     const { controller, listIntegrations } = buildController();
     await controller.listIntegrationsEndpoint();
     expect(listIntegrations.execute).toHaveBeenCalledWith();
-  });
-
-  it('listFeatureFlagsEndpoint — calls execute with no args', async () => {
-    const { controller, listFeatureFlags } = buildController();
-    await controller.listFeatureFlagsEndpoint();
-    expect(listFeatureFlags.execute).toHaveBeenCalledWith();
-  });
-
-  it('featureFlagMapEndpoint — calls execute with no args', async () => {
-    const { controller, getFeatureFlagMap } = buildController();
-    await controller.featureFlagMapEndpoint();
-    expect(getFeatureFlagMap.execute).toHaveBeenCalledWith();
   });
 
   it('does not expose tenant-side feature flag mutation', () => {

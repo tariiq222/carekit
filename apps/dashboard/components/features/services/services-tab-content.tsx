@@ -23,7 +23,7 @@ import { ServiceDetailSheet } from "./service-detail-sheet"
 
 import { useServices, useServicesListStats, useCategories, useServiceMutations } from "@/hooks/use-services"
 import { useBranches } from "@/hooks/use-branches"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import { useLocale } from "@/components/locale-provider"
 import type { Service } from "@/lib/types/service"
 

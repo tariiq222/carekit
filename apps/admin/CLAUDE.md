@@ -151,7 +151,6 @@ Each `/settings/*` page in the super-admin app maps to a backend slice:
 | `/settings/email/logs` | `GET /admin/settings/email/logs` | `PlatformEmailLog` with delivery status, actor, provider |
 | `/settings/notifications` | `GET/PATCH /admin/settings/notifications` | Default notification channels, quiet-hours window |
 | `/settings/billing` | `GET/PATCH /admin/settings/billing` | Moyasar platform key (encrypted), trial days, overage model |
-| `/settings/feature-flags` | `GET/PATCH /admin/settings/feature-flags`, `POST/DELETE /admin/settings/feature-flags/overrides` | Global feature defaults + per-org overrides |
 | `/settings/branding` | `GET/PATCH /admin/settings/branding` | Admin logo + primary color; served to shell at runtime |
 | `/settings/system` | `GET /admin/settings/system/health`, `POST .../health/run`, `POST .../cache/clear` | Postgres/Redis/MinIO health, backend version, top fallback consumers, external links |
 | `/settings/security` | `GET/PATCH /admin/settings/security`, 2FA endpoints, `GET .../failed-logins` | Session TTL, TOTP 2FA enrollment, IP allowlist, failed-login log |

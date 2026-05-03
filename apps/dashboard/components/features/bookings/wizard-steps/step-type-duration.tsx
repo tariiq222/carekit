@@ -12,7 +12,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 
 import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchEmployeeServiceTypes } from "@/lib/api/employees-schedule"
 import type { EmployeeServiceType, EmployeeDurationOption } from "@/lib/types/employee"
@@ -161,8 +161,8 @@ export function StepTypeDuration({
 
   const activeTypes = serviceTypes.filter((st) => {
     if (!st.isActive) return false
-    if (st.bookingType === "walk_in" && !isEnabled("walk_in")) return false
-    if (st.bookingType === "online" && !isEnabled("zoom")) return false
+    if (st.bookingType === "walk_in" && !isEnabled("walk_in_bookings")) return false
+    if (st.bookingType === "online" && !isEnabled("zoom_integration")) return false
     return true
   })
 

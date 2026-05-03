@@ -45,10 +45,6 @@ const { fetchLicenseFeatures } = vi.hoisted(() => ({
   fetchLicenseFeatures: vi.fn(),
 }))
 
-const { fetchFeatureFlagMap } = vi.hoisted(() => ({
-  fetchFeatureFlagMap: vi.fn(),
-}))
-
 const { useBillingFeatures } = vi.hoisted(() => ({
   useBillingFeatures: vi.fn(),
 }))
@@ -59,7 +55,6 @@ vi.mock("@/lib/api/bookings", () => ({ fetchBookingStats }))
 vi.mock("@/components/sidebar-config", () => ({ navGroups }))
 vi.mock("@/lib/route-prefetch", () => ({ prefetchRouteData }))
 vi.mock("@/lib/api/license", () => ({ fetchLicenseFeatures }))
-vi.mock("@/lib/api/feature-flags", () => ({ fetchFeatureFlagMap }))
 vi.mock("@/hooks/use-billing-features", () => ({ useBillingFeatures }))
 
 import { useSidebarNav } from "@/hooks/use-sidebar-nav"
@@ -88,15 +83,12 @@ describe("useSidebarNav", () => {
     })
     // Default: all features enabled/licensed
     fetchLicenseFeatures.mockResolvedValue([])
-    fetchFeatureFlagMap.mockResolvedValue({})
     fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })
     // Default: billing features still loading (no flash behavior — show all items)
     useBillingFeatures.mockReturnValue({ data: undefined, isLoading: true })
   })
 
   it("item without featureFlag is not removed due to feature flag map", async () => {
-    fetchFeatureFlagMap.mockResolvedValue({ groups: false })
-
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.filteredGroups).toBeDefined())
@@ -107,7 +99,6 @@ describe("useSidebarNav", () => {
 
   // ── regression: /groups shows when groups=true ──────────────────────
   it("shows /groups when featureFlagMap[groups] = true", async () => {
-    fetchFeatureFlagMap.mockResolvedValue({ groups: true })
     fetchLicenseFeatures.mockResolvedValue([])
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
@@ -127,7 +118,6 @@ describe("useSidebarNav", () => {
 
   it("license filtering removed from hook — item with featureFlag still shows", async () => {
     fetchLicenseFeatures.mockResolvedValue([{ key: "groups", licensed: false }])
-    fetchFeatureFlagMap.mockResolvedValue({})
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
@@ -136,7 +126,6 @@ describe("useSidebarNav", () => {
   })
 
   it("hides /coupons when featureFlagMap[coupons] = false", async () => {
-    fetchFeatureFlagMap.mockResolvedValue({ coupons: false })
     fetchLicenseFeatures.mockResolvedValue([{ key: "coupons", licensed: true }])
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
@@ -148,7 +137,6 @@ describe("useSidebarNav", () => {
   })
 
   it("hides /branches when featureFlagMap[multi_branch] = false", async () => {
-    fetchFeatureFlagMap.mockResolvedValue({ multi_branch: false })
     fetchLicenseFeatures.mockResolvedValue([{ key: "multi_branch", licensed: true }])
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
@@ -277,7 +265,6 @@ describe("useSidebarNav — override-driven billing feature gating", () => {
     })
     fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })
     fetchLicenseFeatures.mockResolvedValue([])
-    fetchFeatureFlagMap.mockResolvedValue({})
   })
 
   it("hides /coupons when useBillingFeatures returns coupons.enabled=false (plan default, no override)", async () => {
