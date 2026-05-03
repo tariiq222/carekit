@@ -16,7 +16,7 @@
  */
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import SuperTest from 'supertest';
 import { JwtService } from '@nestjs/jwt';
 import { ClsService } from 'nestjs-cls';
 import { AppModule } from '../../../src/app.module';
@@ -177,7 +177,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('OWNER can read GET /dashboard/billing/subscription on a suspended org', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/dashboard/billing/subscription')
       .set('Authorization', `Bearer ${forge(owner)}`);
 
@@ -187,7 +187,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('OWNER can read GET /auth/me on a suspended org', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${forge(owner)}`);
 
@@ -196,7 +196,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('OWNER can read GET /dashboard/billing/saved-cards on a suspended org', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/dashboard/billing/saved-cards')
       .set('Authorization', `Bearer ${forge(owner)}`);
 
@@ -205,7 +205,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('OWNER STILL gets 401 ORG_SUSPENDED on a non-recovery route (GET /dashboard/people/clients)', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/dashboard/people/clients')
       .set('Authorization', `Bearer ${forge(owner)}`);
 
@@ -219,7 +219,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('RECEPTIONIST on a suspended org gets 401 even on a recovery route (GET /dashboard/billing/subscription)', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/dashboard/billing/subscription')
       .set('Authorization', `Bearer ${forge(receptionist)}`);
 
@@ -228,7 +228,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
   });
 
   it('RECEPTIONIST on a suspended org gets 401 on /auth/me too', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${forge(receptionist)}`);
 
@@ -245,7 +245,7 @@ describe('Suspended-org recovery (Bug B10)', () => {
     );
     await flushSuspensionCache();
 
-    const res = await request(app.getHttpServer())
+    const res = await SuperTest(app.getHttpServer())
       .get('/api/v1/dashboard/people/clients')
       .set('Authorization', `Bearer ${forge(owner)}`);
 
