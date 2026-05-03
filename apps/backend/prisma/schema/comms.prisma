@@ -306,3 +306,20 @@ model PlatformEmailLog {
   @@index([templateSlug])
   @@index([status, createdAt])
 }
+
+// Platform-level mail delivery audit. Intentionally NOT in SCOPED_MODELS — these are Deqah-side mails (welcome, trial, suspension), not tenant data.
+model PlatformMailDeliveryLog {
+  id           String    @id @default(cuid())
+  recipient    String
+  templateName String
+  attempt      Int       @default(0)
+  status       String // 'QUEUED' | 'SENT' | 'FAILED'
+  errorMessage String?
+  jobId        String?
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([recipient])
+}

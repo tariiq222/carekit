@@ -34,12 +34,21 @@ export class ChargeDueSubscriptionsCron {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
     const now = new Date();
+    // Belt-and-suspenders against Bug B2: even after
+    // `record-subscription-payment` advances `currentPeriodEnd`, refuse
+    // to re-charge any subscription whose `lastPaymentAt` is within
+    // the last 24h. If both signals (period end advanced AND recent
+    // payment) somehow misalign we still fail-safe to "do nothing".
+    // Oldest-due first so a backlog drains in fair order.
+    const recentPaymentCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const due = await this.prisma.subscription.findMany({
       where: {
         currentPeriodEnd: { lte: now },
         status: { in: ['TRIALING', 'ACTIVE', 'PAST_DUE'] },
+        OR: [{ lastPaymentAt: null }, { lastPaymentAt: { lt: recentPaymentCutoff } }],
       },
       include: { plan: true },
+      orderBy: { currentPeriodEnd: 'asc' },
     });
 
     for (const sub of due) {

@@ -9,6 +9,8 @@ import { GeneratePresignedUrlHandler } from './generate-presigned-url.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 
 const mockFile = {
   id: 'f1',
@@ -45,13 +47,18 @@ describe('Media files handlers', () => {
         GeneratePresignedUrlHandler,
         {
           provide: PrismaService,
-          useValue: {
-            file: {
+          useValue: (() => {
+            const file = {
               create: jest.fn().mockResolvedValue(mockFile),
               findFirst: jest.fn().mockResolvedValue(mockFile),
               update: jest.fn().mockResolvedValue({ ...mockFile, isDeleted: true }),
-            },
-          },
+              aggregate: jest.fn().mockResolvedValue({ _sum: { size: 0 } }),
+            };
+            return {
+              file,
+              $transaction: jest.fn(async (fn: (tx: unknown) => unknown) => fn({ file })),
+            };
+          })(),
         },
         {
           provide: MinioService,
@@ -68,6 +75,14 @@ describe('Media files handlers', () => {
         {
           provide: TenantContextService,
           useValue: { requireOrganizationIdOrDefault: jest.fn().mockReturnValue('org-A') },
+        },
+        {
+          provide: EventBusService,
+          useValue: { publish: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: SubscriptionCacheService,
+          useValue: { get: jest.fn().mockResolvedValue(null) },
         },
       ],
     }).compile();

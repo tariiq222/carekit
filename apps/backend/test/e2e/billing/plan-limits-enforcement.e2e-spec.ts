@@ -35,6 +35,7 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
       h.app.get(Reflector),
       h.prisma,
       h.app.get(SubscriptionCacheService),
+      { read: jest.fn().mockResolvedValue(null) } as any,
     );
   });
 

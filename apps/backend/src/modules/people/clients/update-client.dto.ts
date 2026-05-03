@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ClientAccountType, ClientBloodType, ClientGender, ClientSource } from '@prisma/client';
+import { NormalizePhone } from '../../identity/shared/normalize-phone.transform';
 
 const toUpper = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.toUpperCase() : value;
@@ -28,8 +29,8 @@ export class UpdateClientDto {
   @ApiPropertyOptional({ description: "Client's last name", example: 'Al-Harbi' })
   @IsOptional() @IsString() @MaxLength(255) lastName?: string;
 
-  @ApiPropertyOptional({ description: 'Saudi mobile number', example: '+966501234567', nullable: true })
-  @IsOptional() @IsString() @Matches(PHONE_REGEX, { message: 'phone must be a Saudi number +9665XXXXXXXX' }) phone?: string | null;
+  @ApiPropertyOptional({ description: 'Saudi mobile number (any common format; normalized to E.164)', example: '+966501234567', nullable: true })
+  @IsOptional() @IsString() @NormalizePhone() @Matches(PHONE_REGEX, { message: 'phone must be a Saudi number +9665XXXXXXXX' }) phone?: string | null;
 
   @ApiPropertyOptional({ description: 'Email address', example: 'user@example.com', nullable: true })
   @IsOptional() @IsEmail() email?: string | null;
@@ -50,7 +51,7 @@ export class UpdateClientDto {
   @IsOptional() @IsString() @MaxLength(255) emergencyName?: string | null;
 
   @ApiPropertyOptional({ description: 'Emergency contact Saudi mobile number', example: '+966501234567', nullable: true })
-  @IsOptional() @IsString() @Matches(PHONE_REGEX, { message: 'emergencyPhone must be a Saudi number +9665XXXXXXXX' }) emergencyPhone?: string | null;
+  @IsOptional() @IsString() @NormalizePhone() @Matches(PHONE_REGEX, { message: 'emergencyPhone must be a Saudi number +9665XXXXXXXX' }) emergencyPhone?: string | null;
 
   @ApiPropertyOptional({ description: 'Blood type', enum: ClientBloodType, enumName: 'ClientBloodType', example: ClientBloodType.A_POS, nullable: true })
   @IsOptional() @Transform(toUpper) @IsEnum(ClientBloodType) bloodType?: ClientBloodType | null;

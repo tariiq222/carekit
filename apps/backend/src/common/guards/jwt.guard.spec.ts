@@ -112,7 +112,7 @@ describe('JwtGuard', () => {
     redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
 
     await expect(guard.assertOrganizationIsActive('org-1')).rejects.toThrow(
-      new UnauthorizedException('ORG_SUSPENDED'),
+      'ORG_SUSPENDED',
     );
   });
 
@@ -134,7 +134,7 @@ describe('JwtGuard', () => {
     prisma.organization.findUnique.mockResolvedValue({ suspendedAt });
 
     await expect(guard.assertOrganizationIsActive('org-1')).rejects.toThrow(
-      new UnauthorizedException('ORG_SUSPENDED'),
+      'ORG_SUSPENDED',
     );
     expect(redisClient.set).toHaveBeenCalledWith(
       'org-suspension:org-1',
@@ -142,5 +142,84 @@ describe('JwtGuard', () => {
       'EX',
       30,
     );
+  });
+
+  // ─── Bug B10 — @AllowDuringSuspension recovery decorator ─────────────────
+  describe('Bug B10: @AllowDuringSuspension recovery exemption', () => {
+    it('rejects suspended org by default (no decorator)', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1'),
+      ).rejects.toThrow('ORG_SUSPENDED');
+    });
+
+    it('allows suspended org when @AllowDuringSuspension AND user is OWNER', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1', {
+          allowDuringSuspension: true,
+          membershipRole: 'OWNER',
+        }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('rejects suspended org when @AllowDuringSuspension but user is not OWNER (e.g. RECEPTIONIST)', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1', {
+          allowDuringSuspension: true,
+          membershipRole: 'RECEPTIONIST',
+        }),
+      ).rejects.toThrow('ORG_SUSPENDED');
+    });
+
+    it('rejects suspended org when @AllowDuringSuspension but membershipRole missing', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1', {
+          allowDuringSuspension: true,
+        }),
+      ).rejects.toThrow('ORG_SUSPENDED');
+    });
+
+    it('rejects suspended org for OWNER when decorator absent', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1', {
+          allowDuringSuspension: false,
+          membershipRole: 'OWNER',
+        }),
+      ).rejects.toThrow('ORG_SUSPENDED');
+    });
+
+    it('rejection includes bilingual recovery hint', async () => {
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      try {
+        await guard.assertOrganizationIsActive('org-1');
+        fail('expected to throw');
+      } catch (err) {
+        const ex = err as UnauthorizedException;
+        const body = ex.getResponse() as {
+          code?: string;
+          recoveryHint?: { ar?: string; en?: string };
+        };
+        expect(body.code).toBe('ORG_SUSPENDED');
+        expect(body.recoveryHint?.ar).toContain('معلّق');
+        expect(body.recoveryHint?.en).toContain('suspended');
+      }
+    });
+
+    it('cached-suspension path also honors recovery exemption', async () => {
+      // Cache is hot with a suspendedAt timestamp; verify the decorator path
+      // still bypasses for OWNER without re-querying Postgres.
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z');
+      await expect(
+        guard.assertOrganizationIsActive('org-1', {
+          allowDuringSuspension: true,
+          membershipRole: 'OWNER',
+        }),
+      ).resolves.toBeUndefined();
+      expect(prisma.organization.findUnique).not.toHaveBeenCalled();
+    });
   });
 });

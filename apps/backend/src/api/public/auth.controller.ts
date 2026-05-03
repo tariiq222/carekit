@@ -40,6 +40,7 @@ import { RequestPasswordResetDto } from '../../modules/identity/user-password-re
 import { PerformPasswordResetHandler } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.handler';
 import { PerformPasswordResetDto } from '../../modules/identity/user-password-reset/perform-password-reset/perform-password-reset.dto';
 import { Public } from '../../common/guards/jwt.guard';
+import { AllowDuringSuspension } from '../../common/guards/allow-during-suspension.decorator';
 import { IsString, MinLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
@@ -139,10 +140,12 @@ export class AuthController {
     // SaaS-04 alignment: surface the active membership's organizationId on
     // the login response so mobile/dashboard consumers don't need to decode
     // the JWT to find their tenant. Mirrors LoginHandler's resolution order.
+    // Bug B5: also pull the per-org role so the response `permissions` array
+    // reflects `Membership.role`, not the legacy `User.role`.
     const membership = await this.prisma.membership.findFirst({
       where: { userId: user.id, isActive: true },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
-      select: { organizationId: true },
+      select: { organizationId: true, role: true },
     });
 
     // Match GetCurrentUserHandler: derive firstName/lastName from `name`
@@ -158,7 +161,11 @@ export class AuthController {
         lastName: rest.join(' '),
         isSuperAdmin: user.isSuperAdmin,
         organizationId: membership?.organizationId ?? null,
-        permissions: flattenPermissions(user),
+        permissions: flattenPermissions({
+          membershipRole: membership?.role ?? null,
+          role: user.role,
+          customRole: user.customRole,
+        }),
       },
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
@@ -241,6 +248,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtGuard)
+  @AllowDuringSuspension()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   @ApiOkResponse({ description: 'Current user profile with role and permissions' })

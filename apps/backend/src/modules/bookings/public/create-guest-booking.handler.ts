@@ -9,6 +9,8 @@ import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
+import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import { assertLimitNotExceeded } from '../../platform/billing/assert-limit-not-exceeded';
 import { CreateGuestBookingDto } from './create-guest-booking.dto';
 import type { OtpChannel } from '@prisma/client';
 
@@ -28,6 +30,7 @@ export class CreateGuestBookingHandler {
     private readonly tenant: TenantContextService,
     private readonly priceResolver: PriceResolverService,
     private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly subscriptionCache: SubscriptionCacheService,
   ) {}
 
   async execute(cmd: CreateGuestBookingCommand) {
@@ -91,6 +94,9 @@ export class CreateGuestBookingHandler {
     const price = resolved.price;
     const currency = resolved.currency;
     const endsAt = new Date(scheduledAt.getTime() + durationMins * 60_000);
+
+    // Pull cached plan limits BEFORE the tx (cache uses its own connection).
+    const subscription = await this.subscriptionCache.get(organizationId);
 
     const result = await this.prisma.$transaction(async (tx) => {
       // Fix A — enforce single-use: insert UsedOtpSession or throw if already exists
@@ -191,6 +197,14 @@ export class CreateGuestBookingHandler {
           issuedAt: now,
         },
       });
+
+      // Post-create plan-limit recheck — closes TOCTOU on BOOKINGS_PER_MONTH.
+      await assertLimitNotExceeded(
+        tx,
+        organizationId,
+        'BOOKINGS_PER_MONTH',
+        subscription?.limits,
+      );
 
       return { bookingId: booking.id, invoiceId: invoice.id, totalHalalat: Math.round(total * 100) };
     });

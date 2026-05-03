@@ -10,6 +10,7 @@ export interface UpdatePlanCommand {
   currency?: string;
   limits?: Record<string, unknown>;
   isActive?: boolean;
+  isVisible?: boolean;
   sortOrder?: number;
   reason: string;
 }

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
+import { DowngradeSafetyService } from '../downgrade-safety/downgrade-safety.service';
 
 @Injectable()
 export class ProcessScheduledPlanChangesCron {
@@ -11,6 +12,7 @@ export class ProcessScheduledPlanChangesCron {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
+    private readonly downgradeSafety: DowngradeSafetyService,
   ) {}
 
   async execute(): Promise<void> {
@@ -29,11 +31,46 @@ export class ProcessScheduledPlanChangesCron {
         organizationId: true,
         scheduledPlanId: true,
         scheduledBillingCycle: true,
+        plan: { select: { priceMonthly: true, limits: true } },
+        scheduledPlan: { select: { priceMonthly: true, limits: true } },
       },
     });
 
+    let blocked = 0;
+
     for (const sub of due) {
-      if (!sub.scheduledPlanId || !sub.scheduledBillingCycle) continue;
+      if (!sub.scheduledPlanId || !sub.scheduledBillingCycle || !sub.scheduledPlan) {
+        continue;
+      }
+
+      // Bug B8 — only re-check downgrades. If the scheduled plan is priced
+      // higher than (or equal to) the current plan it's an upgrade or sidegrade
+      // and is always safe.
+      const isDowngrade =
+        Number(sub.scheduledPlan.priceMonthly) < Number(sub.plan.priceMonthly);
+
+      if (isDowngrade) {
+        const safety = await this.downgradeSafety.checkDowngrade(
+          sub.plan,
+          sub.scheduledPlan,
+          sub.organizationId,
+        );
+        if (!safety.ok) {
+          await this.prisma.$allTenants.subscription.update({
+            where: { id: sub.id },
+            data: {
+              scheduledChangeBlockedReason: 'BLOCKED_BY_USAGE',
+            },
+          });
+          this.cache.invalidate(sub.organizationId);
+          blocked += 1;
+          this.logger.warn(
+            `Blocked scheduled downgrade for org=${sub.organizationId} sub=${sub.id}: ${JSON.stringify(safety.violations)}`,
+          );
+          continue;
+        }
+      }
+
       await this.prisma.$allTenants.subscription.update({
         where: { id: sub.id },
         data: {
@@ -42,13 +79,16 @@ export class ProcessScheduledPlanChangesCron {
           scheduledPlanId: null,
           scheduledBillingCycle: null,
           scheduledPlanChangeAt: null,
+          scheduledChangeBlockedReason: null,
         },
       });
       this.cache.invalidate(sub.organizationId);
     }
 
     if (due.length > 0) {
-      this.logger.log(`Processed ${due.length} scheduled subscription plan changes`);
+      this.logger.log(
+        `Processed ${due.length - blocked} scheduled plan changes (blocked=${blocked})`,
+      );
     }
   }
 }

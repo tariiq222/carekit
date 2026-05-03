@@ -54,13 +54,33 @@ function mockCacheService(arg: CacheArg) {
   } as unknown as SubscriptionCacheService;
 }
 
-function mockPrisma(counts: Partial<Record<string, number>>) {
-  return {
+/**
+ * @param counts - source-table counts injected for self-heal recompute paths
+ * @param overrideRow - what `prisma.$allTenants.featureFlag.findFirst` should
+ *                     return for the per-tenant override lookup. `null` (the
+ *                     default) means "no override row" → INHERIT.
+ */
+function mockPrisma(
+  counts: Partial<Record<string, number>>,
+  overrideRow: { enabled: boolean } | null = null,
+) {
+  const featureFlag = {
+    findFirst: jest.fn().mockResolvedValue(overrideRow),
+  };
+  const base = {
     branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
     employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
     service: { count: jest.fn().mockResolvedValue(counts.services ?? 0) },
     booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0) },
     file: { aggregate: jest.fn().mockResolvedValue({ _sum: { size: counts.storageBytes ?? 0 } }) },
+    featureFlag,
+  };
+  // FeatureGuard reads overrides through `prisma.$allTenants.featureFlag` —
+  // expose the same shape via the bypass accessor so the unit test mirrors
+  // production behavior.
+  return {
+    ...base,
+    $allTenants: base,
   } as unknown as PrismaService;
 }
 
@@ -413,6 +433,100 @@ describe("FeatureGuard", () => {
           message: "Feature 'coupons' is not enabled for your plan",
         });
       }
+    });
+  });
+
+  describe("Phase 1 / Bug B3 — DENY default for missing boolean keys", () => {
+    it("denies BASIC plan on Phase-3 key (zoom_integration) when key absent from limits", async () => {
+      // BASIC plans pre-Phase-3 had no zoom_integration key. With the new
+      // DENY default, missing boolean keys throw FeatureNotEnabledException
+      // instead of silently allowing.
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.ZOOM_INTEGRATION),
+      );
+      const guard = makeGuard(reflector, mockPrisma({}), {
+        planSlug: "basic",
+        // intentionally omit zoom_integration — pre-migration BASIC shape
+        limits: { recurring_bookings: false, intake_forms: false },
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(
+        FeatureNotEnabledException,
+      );
+    });
+
+    it("allows PRO plan on a Phase-3 key it has (zoom_integration: true)", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.ZOOM_INTEGRATION),
+      );
+      const guard = makeGuard(reflector, mockPrisma({}), {
+        planSlug: "pro",
+        limits: { zoom_integration: true },
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    });
+
+    it("missing key in Plan.limits defaults to DENY for boolean catalog entries", async () => {
+      // Audit gap: any boolean catalog key NOT seeded into the plan must
+      // fail closed — the historical bug was a silent ALLOW fall-through.
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.MULTI_BRANCH),
+      );
+      const guard = makeGuard(reflector, mockPrisma({}), {
+        planSlug: "basic",
+        limits: {},
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(
+        FeatureNotEnabledException,
+      );
+    });
+  });
+
+  describe("Phase 6 — FeatureFlagOverride merge", () => {
+    it("FORCE_OFF override blocks even if Plan.limits says true", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.AI_CHATBOT),
+      );
+      // Plan says ai_chatbot=true, but override row says enabled=false → DENY.
+      const prisma = mockPrisma({}, { enabled: false });
+      const guard = makeGuard(reflector, prisma, {
+        planSlug: "pro",
+        limits: { ai_chatbot: true },
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).rejects.toBeInstanceOf(
+        FeatureNotEnabledException,
+      );
+    });
+
+    it("FORCE_ON override allows even if Plan.limits says false", async () => {
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.AI_CHATBOT),
+      );
+      // Plan says ai_chatbot=false, but override row says enabled=true → ALLOW.
+      const prisma = mockPrisma({}, { enabled: true });
+      const guard = makeGuard(reflector, prisma, {
+        planSlug: "basic",
+        limits: { ai_chatbot: false },
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    });
+
+    it("FORCE_ON override unblocks a Phase-3 key missing from plan limits", async () => {
+      // Combines override + missing-key fail-closed: override should win.
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.ZOOM_INTEGRATION),
+      );
+      const prisma = mockPrisma({}, { enabled: true });
+      const guard = makeGuard(reflector, prisma, {
+        planSlug: "basic",
+        limits: {}, // no zoom_integration key
+      });
+      const ctx = mockContext();
+      await expect(guard.canActivate(ctx)).resolves.toBe(true);
     });
   });
 
