@@ -39,4 +39,64 @@ describe('CaslAbilityFactory', () => {
     // OWNER does NOT get platform-wide 'manage all' — that's SUPER_ADMIN only
     expect(ability.can('manage', 'all')).toBe(false);
   });
+
+  // ── Bug B5: canonical role is Membership.role (membershipRole), not User.role ──
+
+  it('prefers membershipRole over legacy role when both are present', () => {
+    // Legacy global role says ADMIN (full access). Per-org role says
+    // RECEPTIONIST. The factory MUST use the per-org role.
+    const ability = factory.buildForUser({
+      membershipRole: 'RECEPTIONIST',
+      role: 'ADMIN',
+      customRole: null,
+    });
+    expect(ability.can('manage', 'Booking')).toBe(true); // RECEPTIONIST keeps booking
+    expect(ability.can('manage', 'User')).toBe(false); // RECEPTIONIST cannot manage users
+    expect(ability.can('manage', 'Setting')).toBe(false); // ADMIN-only — must be denied
+  });
+
+  it('demotes a legacy-OWNER user when their membership is RECEPTIONIST', () => {
+    const ability = factory.buildForUser({
+      membershipRole: 'RECEPTIONIST',
+      role: 'OWNER',
+      customRole: null,
+    });
+    expect(ability.can('manage', 'Branding')).toBe(false);
+    expect(ability.can('manage', 'User')).toBe(false);
+  });
+
+  it('falls back to legacy role only when membershipRole is absent', () => {
+    const ability = factory.buildForUser({
+      membershipRole: undefined,
+      role: 'ADMIN',
+      customRole: null,
+    });
+    expect(ability.can('manage', 'User')).toBe(true);
+  });
+
+  it('null membershipRole still triggers the legacy-role fallback', () => {
+    const ability = factory.buildForUser({
+      membershipRole: null,
+      role: 'ADMIN',
+      customRole: null,
+    });
+    expect(ability.can('manage', 'User')).toBe(true);
+  });
+
+  it('grants no built-in abilities when neither membershipRole nor role is set', () => {
+    const ability = factory.buildForUser({ customRole: null });
+    expect(ability.can('read', 'Booking')).toBe(false);
+    expect(ability.can('manage', 'all')).toBe(false);
+  });
+
+  it('custom role wins over membershipRole/role (custom role overrides built-ins)', () => {
+    const ability = factory.buildForUser({
+      membershipRole: 'OWNER',
+      role: 'OWNER',
+      customRole: { permissions: [{ action: 'read', subject: 'Booking' }] },
+    });
+    expect(ability.can('read', 'Booking')).toBe(true);
+    // Custom role has no User permission, so OWNER's `manage User` must NOT leak through.
+    expect(ability.can('manage', 'User')).toBe(false);
+  });
 });
