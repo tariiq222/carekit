@@ -9,19 +9,20 @@ import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
 
 /**
- * UI-only feature keys — no backend @RequireFeature guard exists for these.
+ * Feature key enforcement states on the BASIC plan.
  *
  * Documented "UI-only" in feature-key-map.ts:
  *   white_label_mobile, custom_domain, api_access, webhooks, priority_support,
  *   audit_export, multi_currency, walk_in_bookings, data_export
  *
  * This suite locks in the current enforcement state:
- *  - UI-only keys pass the FeatureGuard (guard cannot block what has no @RequireFeature metadata).
- *  - Backend-enforced keys (ADVANCED_REPORTS, ACTIVITY_LOG) DO block on BASIC.
+ *  - WALK_IN_BOOKINGS and DATA_EXPORT: BASIC plan has these set to false in its
+ *    limits JSON — the guard correctly throws FeatureNotEnabledException when
+ *    @RequireFeature metadata is present (even if there is no backend surface yet).
+ *  - Backend-enforced keys (ADVANCED_REPORTS, ACTIVITY_LOG) also block on BASIC.
  *
  * If a UI-only key gains a backend surface, it MUST be paired with @RequireFeature —
- * and a test in feature-enforcement.e2e-spec.ts must be added. The passing test here
- * would then need to be removed (or converted to an expectGated test).
+ * and a test in feature-enforcement.e2e-spec.ts must be added.
  */
 describe('UI-only feature keys — guard pass-through vs enforced keys on BASIC', () => {
   let h: IsolationHarness;
@@ -81,17 +82,19 @@ describe('UI-only feature keys — guard pass-through vs enforced keys on BASIC'
     } as unknown as ExecutionContext;
   }
 
-  it('WALK_IN_BOOKINGS passes FeatureGuard on BASIC (UI-only: no backend surface yet)', async () => {
+  it('WALK_IN_BOOKINGS is gated on BASIC (plan limits walk_in_bookings:false)', async () => {
     await h.runAs({ organizationId: org.id }, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.WALK_IN_BOOKINGS, org.id));
-      expect(result).toBe(true);
+      await expect(
+        guard.canActivate(ctxFor(FeatureKey.WALK_IN_BOOKINGS, org.id)),
+      ).rejects.toBeInstanceOf(FeatureNotEnabledException);
     });
   });
 
-  it('DATA_EXPORT passes FeatureGuard on BASIC (UI-only: no backend surface yet)', async () => {
+  it('DATA_EXPORT is gated on BASIC (plan limits data_export:false)', async () => {
     await h.runAs({ organizationId: org.id }, async () => {
-      const result = await guard.canActivate(ctxFor(FeatureKey.DATA_EXPORT, org.id));
-      expect(result).toBe(true);
+      await expect(
+        guard.canActivate(ctxFor(FeatureKey.DATA_EXPORT, org.id)),
+      ).rejects.toBeInstanceOf(FeatureNotEnabledException);
     });
   });
 

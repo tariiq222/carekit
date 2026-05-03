@@ -1,12 +1,18 @@
 import request from 'supertest';
 import { bootHarness, IsolationHarness } from './isolation-harness';
+import { flushTestRedis } from '../setup/db.setup';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 
 describe('OTP cross-org scoping isolation', () => {
   let h: IsolationHarness;
 
   beforeAll(async () => {
+    await flushTestRedis();
     h = await bootHarness();
+  });
+
+  beforeEach(async () => {
+    await flushTestRedis();
   });
 
   afterAll(async () => {

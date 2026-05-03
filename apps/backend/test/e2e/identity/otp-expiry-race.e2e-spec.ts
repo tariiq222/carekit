@@ -2,12 +2,13 @@ import SuperTest from 'supertest';
 import * as bcrypt from 'bcryptjs';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 
 describe('OTP expiry race conditions and replay protection', () => {
   let req: SuperTest.Agent;
 
   beforeAll(async () => {
+    await flushTestRedis();
     ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['OtpCode', 'User']);
   });

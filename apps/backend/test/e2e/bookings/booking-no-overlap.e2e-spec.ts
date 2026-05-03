@@ -7,6 +7,7 @@ import {
   seedService,
   seedBranch,
   seedEmployeeService,
+  seedEmployeeAvailability,
 } from '../../setup/seed.helper';
 import { createTestToken, adminUser } from '../../setup/auth.helper';
 
@@ -47,6 +48,7 @@ describe('Booking no-overlap constraint (DB-02)', () => {
     serviceId = service.id;
     branchId = branch.id;
     await seedEmployeeService(testPrisma as never, employeeId, serviceId);
+    await seedEmployeeAvailability(testPrisma as never, employeeId);
   });
 
   afterAll(async () => {

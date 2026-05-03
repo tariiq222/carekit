@@ -1,7 +1,7 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { seedClient, seedEmployee, seedService, seedBranch, seedEmployeeService } from '../../setup/seed.helper';
+import { seedClient, seedEmployee, seedService, seedBranch, seedEmployeeService, seedEmployeeAvailability } from '../../setup/seed.helper';
 import { createTestToken, adminUser } from '../../setup/auth.helper';describe('POST /dashboard/bookings (e2e)', () => {
   let req: SuperTest.Agent;
   let clientId: string;
@@ -27,6 +27,7 @@ import { createTestToken, adminUser } from '../../setup/auth.helper';describe('
     branchId = branch.id;
 
     await seedEmployeeService(testPrisma as any, employeeId, serviceId);
+    await seedEmployeeAvailability(testPrisma as any, employeeId);
   });
 
   afterAll(async () => {

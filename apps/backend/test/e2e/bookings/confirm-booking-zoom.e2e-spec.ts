@@ -7,6 +7,7 @@ import {
   seedService,
   seedBranch,
   seedEmployeeService,
+  seedEmployeeAvailability,
 } from '../../setup/seed.helper';
 import { adminUser, createTestToken, ensureTestUsers } from '../../setup/auth.helper';
 import { ZoomMeetingStatus } from '@prisma/client';
@@ -53,6 +54,7 @@ describe('Confirm Booking Zoom (e2e)', () => {
     serviceId = service.id;
     branchId = branch.id;
     await seedEmployeeService(testPrisma as never, employeeId, serviceId);
+    await seedEmployeeAvailability(testPrisma as never, employeeId);
 
     // Seed encrypted Zoom integration directly into DB.
     const creds = new ZoomCredentialsService({
