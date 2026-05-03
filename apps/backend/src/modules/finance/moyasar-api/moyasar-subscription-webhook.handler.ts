@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { createHash } from 'crypto';
 import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY, SYSTEM_CONTEXT_CLS_KEY, TENANT_CLS_KEY } from '../../../common/tenant/tenant.constants';
@@ -6,7 +8,9 @@ import { MoyasarSubscriptionClient } from './moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../../platform/billing/record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../../platform/billing/record-subscription-payment-failure/record-subscription-payment-failure.handler';
 
-interface WebhookEvent {
+interface WebhookEventPayload {
+  /** Moyasar's outer event id — unique per webhook delivery, used for dedup. */
+  id?: string;
   type: string;
   data: {
     id: string;
@@ -14,6 +18,8 @@ interface WebhookEvent {
     source?: { message?: string };
   };
 }
+
+const PROVIDER = 'MOYASAR_PLATFORM';
 
 @Injectable()
 export class MoyasarSubscriptionWebhookHandler {
@@ -27,7 +33,7 @@ export class MoyasarSubscriptionWebhookHandler {
     private readonly recordFailure: RecordSubscriptionPaymentFailureHandler,
   ) {}
 
-  async execute(rawBody: Buffer, signature: string): Promise<{ ok: true }> {
+  async execute(rawBody: Buffer, signature: string): Promise<{ ok: true; deduped?: true }> {
     const rawStr = rawBody.toString('utf8');
 
     // Stage 1: verify signature
@@ -35,9 +41,9 @@ export class MoyasarSubscriptionWebhookHandler {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
-    let event: WebhookEvent;
+    let event: WebhookEventPayload;
     try {
-      event = JSON.parse(rawStr) as WebhookEvent;
+      event = JSON.parse(rawStr) as WebhookEventPayload;
     } catch {
       throw new BadRequestException('Malformed webhook payload');
     }
@@ -46,7 +52,60 @@ export class MoyasarSubscriptionWebhookHandler {
       throw new BadRequestException('Malformed webhook payload');
     }
 
-    // Stage 2: platform-level lookup (system context — no tenant filter)
+    // Stage 2: idempotency guard.
+    // Moyasar redelivers webhooks on receipt failure — without this dedup the
+    // RecordSubscriptionPaymentHandler runs twice, double-emails, double-counts.
+    // We use the outer event.id when present; fall back to data.id (payment id)
+    // for older payloads that don't carry one.
+    const eventId = event.id ?? event.data.id;
+    const payloadHash = createHash('sha256').update(rawStr).digest('hex');
+
+    let webhookEventRowId: string;
+    try {
+      const created = await this.prisma.webhookEvent.create({
+        data: {
+          provider: PROVIDER,
+          eventId,
+          eventType: event.type,
+          payloadHash,
+        },
+        select: { id: true },
+      });
+      webhookEventRowId = created.id;
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        this.logger.log(
+          `Subscription webhook: skipped_duplicate provider=${PROVIDER} eventId=${eventId}`,
+        );
+        return { ok: true, deduped: true };
+      }
+      throw err;
+    }
+
+    try {
+      const result = await this.process(event);
+      await this.prisma.webhookEvent.update({
+        where: { id: webhookEventRowId },
+        data: { processedAt: new Date(), result: 'processed' },
+      });
+      return result;
+    } catch (err) {
+      await this.prisma.webhookEvent
+        .update({
+          where: { id: webhookEventRowId },
+          data: { processedAt: new Date(), result: 'error' },
+        })
+        .catch((updateErr) => {
+          this.logger.error(
+            `Failed to mark webhook event as error (${webhookEventRowId}): ${String(updateErr)}`,
+          );
+        });
+      throw err;
+    }
+  }
+
+  private async process(event: WebhookEventPayload): Promise<{ ok: true }> {
+    // Stage 3: platform-level lookup (system context — no tenant filter)
     const invoice = await this.cls.run(async () => {
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.subscriptionInvoice.findFirst({
@@ -61,7 +120,7 @@ export class MoyasarSubscriptionWebhookHandler {
       return { ok: true };
     }
 
-    // Stage 3: enter tenant context for scoped writes.
+    // Stage 4: enter tenant context for scoped writes.
     // Also set SUPER_ADMIN_CONTEXT_CLS_KEY so that billing handlers can call
     // prisma.$allTenants for cross-tenant owner email lookup without throwing.
     return this.cls.run(async () => {
