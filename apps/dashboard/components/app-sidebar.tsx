@@ -28,7 +28,6 @@ import {
 } from "@deqah/ui"
 import { Separator } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
-import { BillingUsageWidget } from "@/components/billing-usage-widget"
 import { cn } from "@/lib/utils"
 import { useSidebarNav } from "@/hooks/use-sidebar-nav"
 
@@ -111,7 +110,6 @@ export function AppSidebar() {
         <div className="px-4"><Separator /></div>
 
         <SidebarFooter className="px-4 pt-2 pb-4">
-          <BillingUsageWidget />
           <div className="flex items-center justify-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>

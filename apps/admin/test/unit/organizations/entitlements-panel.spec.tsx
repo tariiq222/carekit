@@ -17,6 +17,25 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('@deqah/shared', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@deqah/shared')>();
+  return {
+    ...actual,
+    FEATURE_CATALOG: {
+      waitlist: {
+        key: 'waitlist',
+        kind: 'boolean',
+        tier: 'PRO',
+        group: 'Booking & Scheduling',
+        nameAr: 'قائمة الانتظار',
+        nameEn: 'Waitlist',
+        descAr: 'إدارة قائمة عملاء بانتظار شواغر في الجدول',
+        descEn: 'Manage a queue of clients waiting for openings',
+      },
+    },
+  };
+});
+
 const messages = {
   organizations: {
     entitlements: {
@@ -52,7 +71,7 @@ const entitlement = {
   planDerivedEnabled: true,
   overrideEnabled: null,
   enabled: true,
-  source: 'PLAN',
+  source: 'PLAN' as const,
   overrideUpdatedAt: null,
 };
 
@@ -76,6 +95,23 @@ function renderPanel() {
   return { invalidateSpy };
 }
 
+// Radix UI Select requires pointer capture and scroll APIs not available in jsdom.
+// Polyfill them globally so that SelectContent opens in tests.
+beforeEach(() => {
+  if (!window.HTMLElement.prototype.hasPointerCapture) {
+    window.HTMLElement.prototype.hasPointerCapture = () => false;
+  }
+  if (!window.HTMLElement.prototype.releasePointerCapture) {
+    window.HTMLElement.prototype.releasePointerCapture = () => {};
+  }
+  if (!window.HTMLElement.prototype.setPointerCapture) {
+    window.HTMLElement.prototype.setPointerCapture = () => {};
+  }
+  if (!window.HTMLElement.prototype.scrollIntoView) {
+    window.HTMLElement.prototype.scrollIntoView = () => {};
+  }
+});
+
 describe('EntitlementsPanel', () => {
   beforeEach(() => {
     vi.mocked(adminRequest).mockReset();
@@ -87,45 +123,103 @@ describe('EntitlementsPanel', () => {
     renderPanel();
 
     expect(await screen.findByText('Waitlist')).toBeInTheDocument();
-    expect(screen.getByText('Plan-derived access and organization overrides.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Override plan defaults for this organization. Changes take effect immediately.'),
+    ).toBeInTheDocument();
     expect(adminRequest).toHaveBeenCalledWith('/feature-flags?organizationId=org-1');
   });
 
-  it('requires an audit reason before toggling', async () => {
+  it('Save button is disabled when no changes are pending', async () => {
     vi.mocked(adminRequest).mockResolvedValue([entitlement]);
+
     renderPanel();
 
-    const toggle = await screen.findByRole('switch', { name: 'Toggle waitlist' });
-    expect(toggle).toBeDisabled();
+    await screen.findByText('Waitlist');
 
-    await userEvent.type(screen.getByLabelText('Audit reason'), 'Disable for review');
-    expect(toggle).toBeEnabled();
+    const saveButton = screen.getByRole('button', { name: /save 0 changes/i });
+    expect(saveButton).toBeDisabled();
   });
 
-  it('updates an override and invalidates entitlements plus audit log', async () => {
+  it('opens confirmation dialog when Save is clicked after a change', async () => {
+    vi.mocked(adminRequest).mockResolvedValue([entitlement]);
+
+    renderPanel();
+    const user = userEvent.setup();
+
+    await screen.findByText('Waitlist');
+
+    // Change the override select from INHERIT to FORCE_OFF
+    const overrideSelect = screen.getByRole('combobox');
+    await user.click(overrideSelect);
+    await user.click(await screen.findByRole('option', { name: 'Force OFF' }));
+
+    const saveButton = screen.getByRole('button', { name: /save 1 change/i });
+    expect(saveButton).toBeEnabled();
+    await user.click(saveButton);
+
+    // Confirmation dialog should open
+    expect(await screen.findByText('Save entitlement overrides')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reason')).toBeInTheDocument();
+  });
+
+  it('Confirm button requires a reason of at least 10 characters', async () => {
+    vi.mocked(adminRequest).mockResolvedValue([entitlement]);
+
+    renderPanel();
+    const user = userEvent.setup();
+
+    await screen.findByText('Waitlist');
+
+    // Change override and open dialog
+    const overrideSelect = screen.getByRole('combobox');
+    await user.click(overrideSelect);
+    await user.click(await screen.findByRole('option', { name: 'Force OFF' }));
+    await user.click(screen.getByRole('button', { name: /save 1 change/i }));
+
+    const confirmButton = await screen.findByRole('button', { name: 'Confirm' });
+    expect(confirmButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Reason'), 'Short');
+    expect(confirmButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Reason'), ' enough reason here');
+    expect(confirmButton).toBeEnabled();
+  });
+
+  it('calls upsertOverride API and invalidates queries on confirm', async () => {
     vi.mocked(adminRequest).mockImplementation((path, init) => {
-      if (init?.method === 'PATCH') return Promise.resolve({ ...entitlement, enabled: false });
+      if (init?.method === 'PUT') return Promise.resolve({ success: true });
       return Promise.resolve([entitlement]);
     });
+
     const { invalidateSpy } = renderPanel();
     const user = userEvent.setup();
 
-    await user.type(await screen.findByLabelText('Audit reason'), 'Disable for review');
-    await user.click(screen.getByRole('switch', { name: 'Toggle waitlist' }));
+    await screen.findByText('Waitlist');
+
+    // Change override and open dialog
+    const overrideSelect = screen.getByRole('combobox');
+    await user.click(overrideSelect);
+    await user.click(await screen.findByRole('option', { name: 'Force OFF' }));
+    await user.click(screen.getByRole('button', { name: /save 1 change/i }));
+
+    await user.type(await screen.findByLabelText('Reason'), 'Disabling for compliance review');
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
     await waitFor(() => {
-      expect(adminRequest).toHaveBeenCalledWith('/feature-flags/waitlist', {
-        method: 'PATCH',
+      expect(adminRequest).toHaveBeenCalledWith('/feature-flags/override', {
+        method: 'PUT',
         body: JSON.stringify({
           organizationId: 'org-1',
-          enabled: false,
-          reason: 'Disable for review',
+          key: 'waitlist',
+          mode: 'FORCE_OFF',
+          reason: 'Disabling for compliance review',
         }),
       });
     });
+
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['organizations', 'entitlements', 'org-1'],
+      queryKey: ['admin', 'org', 'org-1', 'entitlements'],
     });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['audit-log', 'list'] });
   });
 });
