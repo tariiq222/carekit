@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 
@@ -12,9 +12,10 @@ export class VerifyOtpDto {
   @IsNotEmpty()
   identifier!: string;
 
-  @ApiProperty({ description: '4-digit OTP code', example: '1234' })
+  @ApiProperty({ description: '6-digit OTP code', example: '123456' })
   @IsString()
   @IsNotEmpty()
+  @Length(6, 6)
   code!: string;
 
   @ApiProperty({ enum: OtpPurpose, description: 'Purpose of the OTP', example: 'GUEST_BOOKING' })
