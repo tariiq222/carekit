@@ -223,12 +223,6 @@ export const queryKeys = {
     payment: () => ["organization-settings", "payment"] as const,
   },
 
-  /* ─── Feature Flags ─── */
-  featureFlags: {
-    all: ["feature-flags"] as const,
-    map: () => ["feature-flag-map"] as const,
-  },
-
   /* ─── Organization Public Settings ─── */
   organizationPublic: {
     settings: () => ["organization-settings", "public"] as const,

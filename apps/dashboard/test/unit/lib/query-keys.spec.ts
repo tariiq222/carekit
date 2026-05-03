@@ -130,14 +130,4 @@ describe("queryKeys", () => {
     })
   })
 
-  describe("featureFlags", () => {
-    it("all returns base key", () => {
-      expect(queryKeys.featureFlags.all).toEqual(["feature-flags"])
-    })
-
-    it("map returns feature-flag-map key", () => {
-      expect(queryKeys.featureFlags.map()).toEqual(["feature-flag-map"])
-    })
-  })
-
 })

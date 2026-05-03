@@ -13,7 +13,7 @@ import {
 import { Clock01Icon } from "@hugeicons/core-free-icons"
 import { useWaitlist } from "@/hooks/use-waitlist"
 import { useWaitlistMutations } from "@/hooks/use-waitlist"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import { useLocale } from "@/components/locale-provider"
 import type { WaitlistEntry, WaitlistStatus } from "@/lib/types/waitlist"
 

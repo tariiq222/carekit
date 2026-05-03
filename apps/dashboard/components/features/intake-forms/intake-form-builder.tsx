@@ -19,7 +19,7 @@ import { FormInfoTab } from "@/components/features/intake-forms/form-info-tab"
 import { useServices } from "@/hooks/use-services"
 import { useEmployees } from "@/hooks/use-employees"
 import { useBranches } from "@/hooks/use-branches"
-import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
+import { useFeatureFlagMap } from "@/hooks/use-billing-features"
 import type {
   IntakeForm,
   IntakeFormDraft,

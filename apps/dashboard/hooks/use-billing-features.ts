@@ -50,3 +50,26 @@ export function useBillingFeatures() {
     retry: false,
   })
 }
+
+/**
+ * Compatibility shim — provides the same `isEnabled(key)` interface that
+ * components previously got from `useFeatureFlagMap()` in `use-feature-flags.ts`.
+ *
+ * Reads from `useBillingFeatures()` (Plan.limits via GET /dashboard/billing/my-features)
+ * instead of the removed FeatureFlag table endpoints.
+ *
+ * The `key` argument must match the JSON key in `Plan.limits` exactly
+ * (e.g. `"walk_in_bookings"`, not `"walk_in"`).
+ */
+export function useFeatureFlagMap() {
+  const { data } = useBillingFeatures()
+  const features = data?.features ?? {}
+
+  function isEnabled(key: string): boolean {
+    const entry = features[key]
+    if (!entry) return false
+    return entry.enabled === true
+  }
+
+  return { isEnabled }
+}
