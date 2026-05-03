@@ -1,5 +1,5 @@
-// Platform BC — license validation, feature flags, problem reports, integrations.
-// SaaS-02g: ProblemReport, Integration, FeatureFlag scoped (NOT Organization/Membership/Vertical*).
+// Platform BC — license validation, problem reports, integrations.
+// SaaS-02g: ProblemReport, Integration scoped (NOT Organization/Membership/Vertical*).
 
 enum ProblemReportStatus {
   OPEN
@@ -40,24 +40,6 @@ model Integration {
   updatedAt      DateTime @updatedAt
 
   @@unique([organizationId, provider])
-  @@index([organizationId])
-}
-
-model FeatureFlag {
-  id             String   @id @default(uuid())
-  organizationId String? // SaaS-02g — nullable for global flags
-  key            String // now composite-unique per (orgId, key)
-  enabled        Boolean  @default(true)
-  allowedPlans   String[] // plan IDs allowed to use this flag
-  limitKind      String? // e.g. "count", "percentage"
-  nameAr         String
-  nameEn         String
-  descriptionAr  String?
-  descriptionEn  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@unique([organizationId, key])
   @@index([organizationId])
 }
 

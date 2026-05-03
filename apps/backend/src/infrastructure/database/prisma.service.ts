@@ -88,7 +88,6 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'Report',
   'ProblemReport',
   'Integration',
-  'FeatureFlag',
   'SiteSetting',
   // 02g-sms — per-tenant SMS provider
   'OrganizationSmsConfig',
