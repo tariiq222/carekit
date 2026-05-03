@@ -1,6 +1,6 @@
-export * from "./modules";
 export * from "./roles";
 export * from "./config";
+export * from "./permissions-catalog";
 
 // Tiered feature-gating enum — the single source of truth for billing-gated
 // features. Consumed by FeatureGuard (backend), GetMyFeaturesHandler,

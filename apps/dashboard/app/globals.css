@@ -169,8 +169,8 @@
     --sidebar-ring: rgba(53, 79, 216, 0.28);
     --shadow-primary-color: rgba(53, 79, 216, 0.25);
     --shadow-primary-hover-color: rgba(53, 79, 216, 0.3);
-    --blob-primary: color-mix(in srgb, var(--primary) 12%, transparent);
-    --blob-accent: color-mix(in srgb, var(--accent) 10%, transparent);
+    --blob-primary: transparent;
+    --blob-accent: transparent;
 
     /* Decorative avatar gradient pairs (from → to) */
     --avatar-1-from: #354FD8;

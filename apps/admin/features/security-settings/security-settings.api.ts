@@ -7,11 +7,11 @@ export interface SecuritySettings {
 }
 
 export async function getSecuritySettings(): Promise<SecuritySettings> {
-  return adminRequest<SecuritySettings>('/admin/settings/security');
+  return adminRequest<SecuritySettings>('/settings/security');
 }
 
 export async function updateSecuritySettings(body: SecuritySettings): Promise<void> {
-  return adminRequest<void>('/admin/settings/security', {
+  return adminRequest<void>('/settings/security', {
     method: 'PUT',
     body: JSON.stringify(body),
   });

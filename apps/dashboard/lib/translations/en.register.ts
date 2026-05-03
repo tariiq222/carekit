@@ -21,6 +21,7 @@ export const enRegister: Record<string, string> = {
   "onboarding.step1.businessNameEn": "Business name in English (optional)",
   "onboarding.step1.vertical": "Business type (vertical)",
   "onboarding.step1.verticalPlaceholder": "Choose your business type",
+  "onboarding.step1.verticalError": "Failed to load activity types — click to retry",
   "onboarding.step2.title": "Visual identity",
   "onboarding.step2.primaryColor": "Primary color",
   "onboarding.step2.logo": "Business logo",

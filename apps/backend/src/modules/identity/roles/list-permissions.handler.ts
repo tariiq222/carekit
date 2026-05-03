@@ -1,33 +1,23 @@
 import { Injectable } from '@nestjs/common';
+import {
+  PERMISSION_SUBJECTS,
+  PERMISSION_ACTIONS,
+  type PermissionSubject,
+  type PermissionAction,
+} from '@deqah/shared/constants';
 
 export interface PermissionDto {
   id: string;
-  module: string;
-  action: string;
+  module: PermissionSubject;
+  action: PermissionAction;
 }
-
-const ACTIONS = ['manage', 'create', 'read', 'update', 'delete'] as const;
-const SUBJECTS = [
-  'User',
-  'Booking',
-  'Client',
-  'Employee',
-  'Invoice',
-  'Payment',
-  'Report',
-  'Setting',
-  'Service',
-  'Branch',
-  'Coupon',
-  'Role',
-];
 
 @Injectable()
 export class ListPermissionsHandler {
   async execute(): Promise<PermissionDto[]> {
     const out: PermissionDto[] = [];
-    for (const subject of SUBJECTS) {
-      for (const action of ACTIONS) {
+    for (const subject of PERMISSION_SUBJECTS) {
+      for (const action of PERMISSION_ACTIONS) {
         out.push({
           id: `${subject}:${action}`,
           module: subject,
