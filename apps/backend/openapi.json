@@ -4153,28 +4153,6 @@
         },
         "type": "object"
       },
-      "UpdateFeatureFlagAdminDto": {
-        "properties": {
-          "enabled": {
-            "type": "boolean"
-          },
-          "organizationId": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "organizationId",
-          "enabled",
-          "reason"
-        ],
-        "type": "object"
-      },
       "UpdateMembershipProfileDto": {
         "properties": {
           "avatarUrl": {
@@ -4649,42 +4627,6 @@
             "type": "string"
           }
         },
-        "type": "object"
-      },
-      "UpsertFeatureFlagOverrideDto": {
-        "properties": {
-          "key": {
-            "description": "Feature key from FeatureKey enum",
-            "example": "coupons",
-            "type": "string"
-          },
-          "mode": {
-            "description": "INHERIT removes the override; FORCE_ON/FORCE_OFF pin the value",
-            "enum": [
-              "INHERIT",
-              "FORCE_ON",
-              "FORCE_OFF"
-            ],
-            "type": "string"
-          },
-          "organizationId": {
-            "description": "Organization to override for",
-            "format": "uuid",
-            "type": "string"
-          },
-          "reason": {
-            "description": "Reason for the override (audit trail)",
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "organizationId",
-          "key",
-          "mode",
-          "reason"
-        ],
         "type": "object"
       },
       "UpsertIntegrationDto": {
@@ -5867,110 +5809,6 @@
         ]
       }
     },
-    "/api/v1/admin/feature-flags": {
-      "get": {
-        "operationId": "AdminFeatureFlagsController_list",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "organizationId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List feature flags and organization overrides",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
-    "/api/v1/admin/feature-flags/override": {
-      "put": {
-        "operationId": "AdminFeatureFlagsController_upsertOverride",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertFeatureFlagOverrideDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Override applied"
-          },
-          "400": {
-            "description": "Validation error (e.g. reason < 10 chars, unknown key)"
-          },
-          "404": {
-            "description": "Organization or platform flag not found"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upsert or remove a per-org feature flag override (INHERIT / FORCE_ON / FORCE_OFF)",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
-    "/api/v1/admin/feature-flags/{key}": {
-      "patch": {
-        "operationId": "AdminFeatureFlagsController_update",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "key",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFeatureFlagAdminDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create or update a feature flag override for an organization",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
     "/api/v1/admin/impersonation": {
       "post": {
         "operationId": "AdminImpersonationController_start",
@@ -6801,7 +6639,7 @@
         ]
       }
     },
-    "/api/v1/admin/settings": {
+    "/api/v1/admin/platform-settings": {
       "put": {
         "operationId": "AdminSettingsController_upsertSettingValue",
         "parameters": [],
@@ -6815,6 +6653,29 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminSettings"
+        ]
+      }
+    },
+    "/api/v1/admin/platform-settings/{key}": {
+      "get": {
+        "operationId": "AdminSettingsController_getSettingByKey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -6925,29 +6786,6 @@
         },
         "tags": [
           "SecuritySettings"
-        ]
-      }
-    },
-    "/api/v1/admin/settings/{key}": {
-      "get": {
-        "operationId": "AdminSettingsController_getSettingByKey",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "key",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "AdminSettings"
         ]
       }
     },
