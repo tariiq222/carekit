@@ -1,6 +1,8 @@
 import { CreateRoleHandler } from './create-role.handler';
 import { AssignPermissionsHandler } from './assign-permissions.handler';
 import { ListRolesHandler } from './list-roles.handler';
+import { ListPermissionsHandler } from './list-permissions.handler';
+import { PERMISSION_SUBJECTS, PERMISSION_ACTIONS } from '@deqah/shared/constants';
 
 const buildRolesPrisma = () => ({
   customRole: {
@@ -117,5 +119,36 @@ describe('ListRolesHandler', () => {
       expect.objectContaining({ where: { organizationId: 'org-A' } }),
     );
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe('ListPermissionsHandler (catalog-driven)', () => {
+  it('emits one descriptor per (subject, action) pair from the shared catalog', async () => {
+    const handler = new ListPermissionsHandler();
+    const result = await handler.execute();
+
+    // Every catalog subject × every catalog action must be present.
+    expect(result).toHaveLength(
+      PERMISSION_SUBJECTS.length * PERMISSION_ACTIONS.length,
+    );
+
+    for (const subject of PERMISSION_SUBJECTS) {
+      for (const action of PERMISSION_ACTIONS) {
+        expect(result).toContainEqual({
+          id: `${subject}:${action}`,
+          module: subject,
+          action,
+        });
+      }
+    }
+  });
+
+  it('includes the new Billing/Plan/Subscription subjects', async () => {
+    const handler = new ListPermissionsHandler();
+    const result = await handler.execute();
+    const ids = result.map((r) => r.id);
+    expect(ids).toContain('Billing:manage');
+    expect(ids).toContain('Plan:manage');
+    expect(ids).toContain('Subscription:manage');
   });
 });
