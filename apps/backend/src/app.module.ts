@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_GUARD } from "@nestjs/core";
 import { ClsModule } from "nestjs-cls";
 import { envValidationSchema } from "./config/env.validation";
@@ -47,8 +48,19 @@ import { PublicModule } from "./api/public/public.module";
       middleware: { mount: true },
     }),
     TenantModule,
-    // TODO(M5): switch to ThrottlerStorageRedisService (@nestjs-throttler/storage-redis) for multi-pod rate limit sharing
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        throttlers: [{ ttl: 60_000, limit: 300 }],
+        storage: new ThrottlerStorageRedisService({
+          host: config.getOrThrow<string>('REDIS_HOST'),
+          port: config.getOrThrow<number>('REDIS_PORT'),
+          db: config.get<number>('REDIS_DB') ?? 0,
+          password: config.get<string>('REDIS_PASSWORD') || undefined,
+        }),
+      }),
+    }),
     DatabaseModule,
     MessagingModule,
     AiInfraModule,
