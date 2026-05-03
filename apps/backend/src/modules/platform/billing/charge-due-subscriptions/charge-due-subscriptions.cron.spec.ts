@@ -210,6 +210,89 @@ describe('ChargeDueSubscriptionsCron', () => {
     });
   });
 
+  // Bug B2 — belt-and-suspenders: even if `currentPeriodEnd` somehow stayed
+  // stale, the cron must skip subscriptions that just paid in the last 24h.
+  it('skips subscriptions whose lastPaymentAt is within the last 24 hours', async () => {
+    const prisma = buildPrisma([]);
+    const cron = buildCron(prisma, buildConfig(true));
+    await cron.execute();
+    const whereArg = (prisma.subscription.findMany.mock.calls[0][0] as { where: unknown }).where;
+    expect(whereArg).toEqual(
+      expect.objectContaining({
+        OR: [
+          { lastPaymentAt: null },
+          { lastPaymentAt: { lt: expect.any(Date) } },
+        ],
+      }),
+    );
+  });
+
+  it('orders due subscriptions by currentPeriodEnd ascending (oldest first)', async () => {
+    const prisma = buildPrisma([]);
+    const cron = buildCron(prisma, buildConfig(true));
+    await cron.execute();
+    expect(prisma.subscription.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { currentPeriodEnd: 'asc' },
+      }),
+    );
+  });
+
+  it('finds zero due subscriptions when re-run minutes after a successful charge', async () => {
+    // Simulate the post-charge state: a subscription whose `lastPaymentAt`
+    // is 5 min ago and `currentPeriodEnd` is in the future. Even if it
+    // somehow re-appeared in the candidate set, the OR filter must
+    // exclude it. We emulate Prisma `findMany`'s where evaluation manually.
+    const justPaidSub = {
+      id: 'sub-just-paid',
+      organizationId: 'org-just-paid',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date(Date.now() - 60_000),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      moyasarCardTokenRef: 'tok_saved',
+      lastPaymentAt: new Date(Date.now() - 5 * 60_000),
+      plan: makeMonthlyPlan(),
+    };
+    const prisma = {
+      subscription: {
+        findMany: jest.fn().mockImplementation(({ where }: { where: Record<string, unknown> }) => {
+          const periodEnd = where.currentPeriodEnd as { lte: Date };
+          const orClauses = where.OR as Array<Record<string, unknown>> | undefined;
+          const candidates = [justPaidSub];
+          return Promise.resolve(
+            candidates.filter((s) => {
+              if (s.currentPeriodEnd > periodEnd.lte) return false;
+              if (!orClauses) return true;
+              return orClauses.some((c) => {
+                if ('lastPaymentAt' in c && c.lastPaymentAt === null) {
+                  return s.lastPaymentAt === null;
+                }
+                if (
+                  'lastPaymentAt' in c &&
+                  typeof c.lastPaymentAt === 'object' &&
+                  c.lastPaymentAt !== null &&
+                  'lt' in (c.lastPaymentAt as Record<string, unknown>)
+                ) {
+                  const cutoff = (c.lastPaymentAt as { lt: Date }).lt;
+                  return s.lastPaymentAt !== null && s.lastPaymentAt < cutoff;
+                }
+                return false;
+              });
+            }),
+          );
+        }),
+      },
+      subscriptionInvoice: { create: jest.fn() },
+    };
+    const deps = buildDeps();
+    const cron = buildCron(prisma as never, buildConfig(true), deps);
+    await cron.execute();
+    // No invoice created, no Moyasar charge — the second cron tick is a no-op.
+    expect(prisma.subscriptionInvoice.create).not.toHaveBeenCalled();
+    expect(deps.moyasar.chargeWithToken).not.toHaveBeenCalled();
+    expect(deps.recordPayment.execute).not.toHaveBeenCalled();
+  });
+
   it('records charge exceptions as payment failures', async () => {
     const sub = {
       id: 'sub-error',
