@@ -4,7 +4,6 @@ import Link from "next/link"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Search01Icon,
-  Notification03Icon,
   Add01Icon,
 } from "@hugeicons/core-free-icons"
 
@@ -59,15 +58,6 @@ export function GreetingHeader({
             className="h-10 w-full max-w-[260px] rounded-full ps-10"
           />
         </div>
-
-        {/* Notification bell */}
-        <button
-          aria-label={t("dashboard.notifications")}
-          className="relative flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:text-primary"
-        >
-          <HugeiconsIcon icon={Notification03Icon} size={20} />
-          <span className="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-error" />
-        </button>
 
         {/* New booking */}
         <Button asChild className="gap-2 rounded-full">
