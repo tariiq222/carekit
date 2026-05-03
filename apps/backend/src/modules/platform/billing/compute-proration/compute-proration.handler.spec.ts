@@ -18,6 +18,21 @@ const proPlan = {
   isActive: true,
 };
 
+// Plans matching the bug report: BASIC 249.92/mo (2999/yr), PRO 799/mo
+const bugReportBasicPlan = {
+  id: 'plan-basic-bug',
+  priceMonthly: '299.00',
+  priceAnnual: '2999.00',
+  isActive: true,
+};
+
+const bugReportProPlan = {
+  id: 'plan-pro-bug',
+  priceMonthly: '799.00',
+  priceAnnual: '7999.00',
+  isActive: true,
+};
+
 const buildPrisma = () => ({
   subscription: { findFirst: jest.fn() },
   plan: { findFirst: jest.fn() },
@@ -181,5 +196,53 @@ describe('ComputeProrationHandler', () => {
     await expect(
       handler.execute({ planId: 'plan-pro', billingCycle: 'MONTHLY' }),
     ).resolves.toMatchObject({ action: 'UPGRADE_NOW', clearsScheduledCancellation: true });
+  });
+
+  it('correctly identifies upgrade when current is ANNUAL BASIC and target is MONTHLY PRO (the bug case)', async () => {
+    // Bug: ANNUAL BASIC (2999 SAR/yr) vs MONTHLY PRO (799 SAR/mo)
+    // Old code compared 2999 vs 799 and wrongly concluded downgrade.
+    // Monthly-equivalent of BASIC annual = 2999/12 = 249.92 SAR/mo < 799 SAR/mo → upgrade.
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      billingCycle: 'ANNUAL',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: false,
+      plan: bugReportBasicPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(bugReportProPlan);
+    const handler = buildHandler(prisma);
+
+    const result = await handler.execute({ planId: 'plan-pro-bug', billingCycle: 'MONTHLY' });
+
+    expect(result).toMatchObject({
+      isUpgrade: true,
+      action: 'UPGRADE_NOW',
+    });
+  });
+
+  it('correctly identifies downgrade when current is MONTHLY PRO and target is ANNUAL BASIC (inverse direction)', async () => {
+    // MONTHLY PRO (799 SAR/mo) vs ANNUAL BASIC (2999/12 = 249.92 SAR/mo) → downgrade.
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: false,
+      plan: bugReportProPlan,
+    });
+    prisma.plan.findFirst.mockResolvedValue(bugReportBasicPlan);
+    const handler = buildHandler(prisma);
+
+    const result = await handler.execute({ planId: 'plan-basic-bug', billingCycle: 'ANNUAL' });
+
+    expect(result).toMatchObject({
+      isUpgrade: false,
+      action: 'SCHEDULE_DOWNGRADE',
+    });
   });
 });

@@ -25,6 +25,21 @@ const proPlan = {
   isActive: true,
 };
 
+// Plans matching the bug report: BASIC 249.92/mo (2999/yr), PRO 799/mo
+const bugReportBasicPlan = {
+  id: 'plan-basic-bug',
+  nameAr: 'أساسي',
+  priceMonthly: '299.00',
+  priceAnnual: '2999.00',
+};
+const bugReportProPlan = {
+  id: 'plan-pro-bug',
+  nameAr: 'احترافي',
+  priceMonthly: '799.00',
+  priceAnnual: '7999.00',
+  isActive: true,
+};
+
 const buildPrisma = () => ({
   subscription: {
     findFirst: jest.fn(),
@@ -272,6 +287,25 @@ describe('UpgradePlanHandler', () => {
       expect.objectContaining({ fromPlanName: 'أساسي', toPlanName: 'احترافي' }),
     );
     expect(result).toEqual({ id: 'sub-1', planId: 'plan-2' });
+  });
+
+  it('does not throw for ANNUAL BASIC → MONTHLY PRO (the cross-cycle upgrade bug case)', async () => {
+    // Bug: old code compared 2999 (annual) vs 799 (monthly) and wrongly threw 'not an upgrade'.
+    // Fix: monthly-equivalent of BASIC annual = 2999/12 ≈ 249.92 < 799 → valid upgrade.
+    const prisma = buildPrisma();
+    const moyasar = buildMoyasar();
+    prisma.subscription.findFirst.mockResolvedValue(
+      activeSubscription({ billingCycle: 'ANNUAL', plan: bugReportBasicPlan }),
+    );
+    prisma.plan.findFirst.mockResolvedValue(bugReportProPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-pro-bug' });
+    const handler = buildHandler(prisma, buildCache(), buildMailer(), moyasar);
+
+    await expect(
+      handler.execute({ planId: 'plan-pro-bug', billingCycle: 'MONTHLY' }),
+    ).resolves.toBeDefined();
+    // Moyasar should have been charged (proration amount > 0)
+    expect(moyasar.chargeWithToken).toHaveBeenCalled();
   });
 
   it('changes trial plans immediately without charging or requiring a card', async () => {

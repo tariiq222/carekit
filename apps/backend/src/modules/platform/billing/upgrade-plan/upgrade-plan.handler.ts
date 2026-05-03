@@ -13,6 +13,7 @@ import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { ChangePlanDto } from '../dto/change-plan.dto';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { computeProrationAmountSar } from '../compute-proration/proration-calculator';
+import { priceMonthlyEquivalentSar } from '../compute-proration/compute-proration.handler';
 import { EventBusService } from '../../../../infrastructure/events';
 import {
   SUBSCRIPTION_UPDATED_EVENT,
@@ -115,15 +116,15 @@ export class UpgradePlanHandler {
       return updated;
     }
 
-    const currentPrice = priceForCycle(sub.plan, sub.billingCycle);
-    const targetPrice = priceForCycle(targetPlan, dto.billingCycle);
-    if (Number(targetPrice) <= Number(currentPrice)) {
+    const currentMonthlySar = priceMonthlyEquivalentSar(sub.plan, sub.billingCycle);
+    const targetMonthlySar = priceMonthlyEquivalentSar(targetPlan, dto.billingCycle);
+    if (Number(targetMonthlySar) <= Number(currentMonthlySar)) {
       throw new BadRequestException('Target plan is not an upgrade');
     }
 
     const proration = computeProrationAmountSar({
-      currentPriceSar: currentPrice,
-      targetPriceSar: targetPrice,
+      currentPriceSar: currentMonthlySar,
+      targetPriceSar: targetMonthlySar,
       periodStart: sub.currentPeriodStart,
       periodEnd: sub.currentPeriodEnd,
       now: new Date(Date.now()),
@@ -294,11 +295,4 @@ export class UpgradePlanHandler {
   }
 }
 
-function priceForCycle(
-  plan: { priceMonthly: { toString(): string }; priceAnnual: { toString(): string } },
-  billingCycle: string,
-) {
-  return billingCycle === 'ANNUAL'
-    ? plan.priceAnnual.toString()
-    : plan.priceMonthly.toString();
-}
+

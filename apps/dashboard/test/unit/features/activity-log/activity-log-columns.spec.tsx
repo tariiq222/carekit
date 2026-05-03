@@ -63,7 +63,7 @@ describe("getActivityLogColumns", () => {
 
   it("renders a translated system-placeholder when user is null", () => {
     const col = getActivityLogColumns(t).find((c) => c.id === "user")!
-    const html = cellHtml(col, { ...baseLog, user: null as unknown as ActivityLog["user"] }).textContent ?? ""
+    const html = cellHtml(col, { ...baseLog, user: null as unknown as ActivityLog["user"], userEmail: null }).textContent ?? ""
     expect(html).toBe("activityLog.system")
   })
 

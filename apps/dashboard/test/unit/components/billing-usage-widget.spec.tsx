@@ -15,6 +15,10 @@ vi.mock("@/components/locale-provider", () => ({
   useLocale,
 }))
 
+vi.mock("@/hooks/use-usage", () => ({
+  useUsage: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 describe("BillingUsageWidget", () => {
   beforeEach(() => {
     useBilling.mockReset()

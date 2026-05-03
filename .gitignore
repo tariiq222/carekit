@@ -59,6 +59,14 @@ coverage-e2e/
 **/playwright-*-results.json
 **/~$*
 
+# Ad-hoc test reports + artifact analyzers (not source code)
+TESTING_REPORT*.md
+**/TESTING_REPORT*.md
+**/test-report-*.md
+analyze-results.py
+**/analyze-results.py
+**/analyze-test-*.{py,js,mjs,ts}
+
 # ─── Docker volumes (local) ───────────────────────────────────
 docker/data/
 

@@ -63,9 +63,12 @@ export class ComputeProrationHandler {
       };
     }
 
+    const currentMonthlySar = priceMonthlyEquivalentSar(subscription.plan, subscription.billingCycle);
+    const targetMonthlySar = priceMonthlyEquivalentSar(targetPlan, dto.billingCycle);
+
     const proration = computeProrationAmountSar({
-      currentPriceSar: priceForCycle(subscription.plan, subscription.billingCycle),
-      targetPriceSar: priceForCycle(targetPlan, dto.billingCycle),
+      currentPriceSar: currentMonthlySar,
+      targetPriceSar: targetMonthlySar,
       periodStart: subscription.currentPeriodStart,
       periodEnd: subscription.currentPeriodEnd,
       now,
@@ -83,11 +86,20 @@ export class ComputeProrationHandler {
   }
 }
 
-function priceForCycle(
+/**
+ * Normalize a plan's price to a monthly-equivalent SAR value, so prices
+ * can be compared regardless of the billing cycle a tenant chose.
+ * ANNUAL price is divided by 12 to express the same period.
+ */
+export function priceMonthlyEquivalentSar(
   plan: { priceMonthly: { toString(): string }; priceAnnual: { toString(): string } },
   billingCycle: BillingCycle,
-) {
-  return billingCycle === 'ANNUAL'
-    ? plan.priceAnnual.toString()
-    : plan.priceMonthly.toString();
+): string {
+  if (billingCycle === 'ANNUAL') {
+    const annual = Number(plan.priceAnnual.toString());
+    // Round to 2 decimals; the proration calculator's halalas conversion
+    // will further normalize.
+    return (annual / 12).toFixed(2);
+  }
+  return plan.priceMonthly.toString();
 }

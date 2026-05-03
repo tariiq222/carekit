@@ -5,7 +5,7 @@ import type { UseFormReturn, FieldValues } from "react-hook-form"
 import {
   useBookingCreateResets,
   useBookingEditDateReset,
-} from "@/hooks/use-booking-form-resets"
+} from "@/components/features/bookings/use-booking-form-resets"
 
 function makeForm(): UseFormReturn<FieldValues> {
   return {

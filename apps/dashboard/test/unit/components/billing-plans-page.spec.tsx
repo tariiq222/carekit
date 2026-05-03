@@ -24,6 +24,7 @@ vi.mock("@/hooks/use-current-subscription", () => ({
   usePlans,
   useProrationPreview,
   useBillingMutations,
+  useSavedCards: vi.fn(() => ({ data: [], isLoading: false })),
 }))
 vi.mock("@/components/features/breadcrumbs", () => ({
   Breadcrumbs: () => <div>Breadcrumbs</div>,

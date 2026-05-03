@@ -9,6 +9,9 @@ const { useLocale, useBilling } = vi.hoisted(() => ({
 
 vi.mock("@/components/locale-provider", () => ({ useLocale }))
 vi.mock("@/lib/billing/billing-context", () => ({ useBilling }))
+vi.mock("@/hooks/use-usage", () => ({
+  useUsage: vi.fn(() => ({ data: [], isLoading: false })),
+}))
 vi.mock("@/components/features/breadcrumbs", () => ({
   Breadcrumbs: () => <div>Breadcrumbs</div>,
 }))

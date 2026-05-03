@@ -11,6 +11,7 @@
 import { render, screen } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import React from "react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 /* ─── Hoisted mocks ─── */
 
@@ -35,6 +36,11 @@ vi.mock("@/components/locale-provider", () => ({
 import { TenantSwitcher } from "@/components/tenant-switcher"
 
 /* ─── Helpers ─── */
+
+function renderWithClient(ui: React.ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+}
 
 const orgA = {
   id: "m-a",
@@ -93,7 +99,7 @@ describe("TenantSwitcher", () => {
 
   it("renders nothing when user has only 1 membership", () => {
     mockUseMemberships.mockReturnValue({ data: [orgA], isLoading: false })
-    const { container } = render(<TenantSwitcher />)
+    const { container } = renderWithClient(<TenantSwitcher />)
     expect(container.firstChild).toBeNull()
   })
 
@@ -103,13 +109,13 @@ describe("TenantSwitcher", () => {
       data: [orgA, orgB],
       isLoading: false,
     })
-    const { container } = render(<TenantSwitcher />)
+    const { container } = renderWithClient(<TenantSwitcher />)
     expect(container.firstChild).toBeNull()
   })
 
   it("renders nothing while memberships are still loading", () => {
     mockUseMemberships.mockReturnValue({ data: undefined, isLoading: true })
-    const { container } = render(<TenantSwitcher />)
+    const { container } = renderWithClient(<TenantSwitcher />)
     expect(container.firstChild).toBeNull()
   })
 
@@ -118,7 +124,7 @@ describe("TenantSwitcher", () => {
       data: [orgA, orgB],
       isLoading: false,
     })
-    render(<TenantSwitcher />)
+    renderWithClient(<TenantSwitcher />)
     expect(screen.getByRole("button")).toHaveTextContent("العيادة أ")
   })
 
@@ -128,7 +134,7 @@ describe("TenantSwitcher", () => {
       data: [orgA, orgB],
       isLoading: false,
     })
-    render(<TenantSwitcher />)
+    renderWithClient(<TenantSwitcher />)
     expect(screen.getByRole("button")).toHaveTextContent("Clinic A")
   })
 
@@ -144,7 +150,7 @@ describe("TenantSwitcher", () => {
       data: [orgA, orgB],
       isLoading: false,
     })
-    render(<TenantSwitcher />)
+    renderWithClient(<TenantSwitcher />)
     expect(screen.getByRole("button")).toHaveTextContent("العيادة ب")
   })
 
@@ -157,7 +163,7 @@ describe("TenantSwitcher", () => {
       data: [orgA, orgB],
       isLoading: false,
     })
-    render(<TenantSwitcher />)
+    renderWithClient(<TenantSwitcher />)
     expect(screen.getByRole("button")).toHaveTextContent("العيادة أ")
   })
 })
