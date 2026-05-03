@@ -444,6 +444,9 @@ importers:
         specifier: ^3.24.4
         version: 3.25.76
     devDependencies:
+      '@deqah/test-helpers-pw':
+        specifier: workspace:*
+        version: link:../../packages/test-helpers-pw
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.5

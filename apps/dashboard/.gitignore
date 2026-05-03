@@ -39,8 +39,9 @@ pnpm-debug.log*
 next-env.d.ts
 
 # Playwright
-playwright-report/
 test-results/
+playwright-report/
+playwright/.cache/
 test/e2e/setup/.auth/
 
 # SaaS-06 local i18n audit scratch

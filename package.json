@@ -19,7 +19,8 @@
     "test:report": "py scripts/qa/generate_html_report.py",
     "test:report:open": "py scripts/qa/generate_html_report.py && start data/test-reports/output/test-report.html",
     "kiwi:sync-manual": "node scripts/kiwi/kiwi-sync-manual-qa.mjs --plan",
-    "brand:check": "node scripts/brand/check-brand-identity.mjs"
+    "brand:check": "node scripts/brand/check-brand-identity.mjs",
+    "e2e:dashboard": "pnpm --filter dashboard e2e"
   },
   "devDependencies": {
     "react-test-renderer": "19.2.4",
