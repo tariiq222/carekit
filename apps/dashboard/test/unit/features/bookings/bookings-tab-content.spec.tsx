@@ -2,8 +2,8 @@
  * bookings-tab-content.spec.tsx
  *
  * Tests the feature flag guard for walk_in filter option:
- * - walk_in filter option is included when isEnabled('walk_in') = true
- * - walk_in filter option is excluded when isEnabled('walk_in') = false
+ * - walk_in filter option is included when isEnabled('walk_in_bookings') = true
+ * - walk_in filter option is excluded when isEnabled('walk_in_bookings') = false
  */
 
 import { render, screen } from "@testing-library/react"
@@ -70,7 +70,7 @@ const { useLocale } = vi.hoisted(() => ({
 vi.mock("@/hooks/use-bookings", () => ({ useBookings, useBookingMutations }))
 vi.mock("@/hooks/use-employees", () => ({ useEmployees }))
 vi.mock("@/hooks/use-organization-config", () => ({ useOrganizationConfig }))
-vi.mock("@/hooks/use-feature-flags", () => ({ useFeatureFlagMap }))
+vi.mock("@/hooks/use-billing-features", () => ({ useFeatureFlagMap }))
 vi.mock("@/lib/api/bookings", () => ({}))
 vi.mock("@/components/features/data-table", () => ({
   DataTable: ({ emptyTitle }: { emptyTitle: string }) => <div data-testid="data-table">{emptyTitle}</div>,
@@ -119,10 +119,10 @@ describe("BookingsTabContent — walk_in feature flag guard", () => {
     vi.clearAllMocks()
   })
 
-  it("includes walk_in filter option when isEnabled('walk_in') = true", () => {
+  it("includes walk_in filter option when isEnabled('walk_in_bookings') = true", () => {
     useFeatureFlagMap.mockReturnValue({
-      map: { walk_in: true },
-      isEnabled: vi.fn((_key: string) => _key === "walk_in"),
+      map: { walk_in_bookings: true },
+      isEnabled: vi.fn((_key: string) => _key === "walk_in_bookings"),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any)
 
@@ -133,10 +133,10 @@ describe("BookingsTabContent — walk_in feature flag guard", () => {
     expect(screen.getByTestId("option-walk_in")).toBeTruthy()
   })
 
-  it("excludes walk_in filter option when isEnabled('walk_in') = false", () => {
+  it("excludes walk_in filter option when isEnabled('walk_in_bookings') = false", () => {
     useFeatureFlagMap.mockReturnValue({
-      map: { walk_in: false },
-      isEnabled: vi.fn((_key: string) => _key === "walk_in" ? false : true),
+      map: { walk_in_bookings: false },
+      isEnabled: vi.fn((_key: string) => _key === "walk_in_bookings" ? false : true),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any)
 
