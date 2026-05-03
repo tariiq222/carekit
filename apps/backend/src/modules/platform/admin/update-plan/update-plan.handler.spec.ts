@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { UpdatePlanHandler } from './update-plan.handler';
 import { PrismaService } from '../../../../infrastructure/database';
+import { EventBusService } from '../../../../infrastructure/events';
 
 describe('UpdatePlanHandler', () => {
   let handler: UpdatePlanHandler;
@@ -21,11 +22,16 @@ describe('UpdatePlanHandler', () => {
     const prismaMock = {
       $allTenants: {
         $transaction: jest.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
+        subscription: { findMany: jest.fn().mockResolvedValue([]) },
       },
     } as unknown as PrismaService;
 
     const moduleRef = await Test.createTestingModule({
-      providers: [UpdatePlanHandler, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        UpdatePlanHandler,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: EventBusService, useValue: { publish: jest.fn().mockResolvedValue(undefined) } },
+      ],
     }).compile();
     handler = moduleRef.get(UpdatePlanHandler);
   });

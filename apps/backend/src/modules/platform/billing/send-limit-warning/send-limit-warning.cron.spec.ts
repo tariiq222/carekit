@@ -43,9 +43,9 @@ const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8,
       count: jest.fn().mockResolvedValue(usedCounts.clients),
     },
     usageCounter: {
-      findFirst: jest.fn().mockImplementation(({ where }: { where: { metric: string } }) => {
-        if (where.metric === 'BOOKINGS_PER_MONTH') return Promise.resolve({ count: usedCounts.bookings });
-        if (where.metric === 'STORAGE_MB') return Promise.resolve({ count: usedCounts.storage });
+      findFirst: jest.fn().mockImplementation(({ where }: { where: { featureKey: string } }) => {
+        if (where.featureKey === 'BOOKINGS_PER_MONTH') return Promise.resolve({ value: usedCounts.bookings });
+        if (where.featureKey === 'STORAGE_MB') return Promise.resolve({ value: usedCounts.storage });
         return Promise.resolve(null);
       }),
     },
