@@ -104,6 +104,7 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'Invitation',
   // ImpersonationSession deliberately NOT scoped — list-impersonation-sessions handler
   // must read across all organizations via $allTenants bypass.
+  // WebhookEvent is platform-level (Deqah's own webhook dedup), intentionally unscoped
   // Phase 5 — materialized quota counters (tenant-scoped for RLS safety)
   'UsageCounter',
 ]);

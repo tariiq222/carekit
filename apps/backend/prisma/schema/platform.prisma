@@ -568,6 +568,21 @@ model UsageRecord {
   @@index([metric])
 }
 
+// Platform-level webhook dedup. Intentionally NOT in SCOPED_MODELS — Moyasar webhooks belong to Deqah, not a tenant.
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String // 'MOYASAR_PLATFORM' | 'MOYASAR_TENANT'
+  eventId     String
+  eventType   String
+  receivedAt  DateTime  @default(now())
+  payloadHash String
+  processedAt DateTime?
+  result      String? // 'processed' | 'skipped_duplicate' | 'error'
+
+  @@unique([provider, eventId])
+  @@index([receivedAt])
+}
+
 // Phase 5 — materialized quota counters. One row per (org, featureKey, period).
 // monthly_bookings resets each calendar month (periodStart = 1st of month UTC).
 // All other quantitative keys use EPOCH (1970-01-01) as their periodStart
