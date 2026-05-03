@@ -51,7 +51,9 @@ import { PublicModule } from "./api/public/public.module";
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
+      // THROTTLER_DISABLED=true disables throttling globally — use for automated test suites
       useFactory: (config: ConfigService) => ({
+        skipIf: () => config.get('THROTTLER_DISABLED') === 'true',
         throttlers: [{ ttl: 60_000, limit: 300 }],
         storage: new ThrottlerStorageRedisService({
           host: config.getOrThrow<string>('REDIS_HOST'),

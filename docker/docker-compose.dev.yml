@@ -14,6 +14,7 @@ services:
       target: deps
     environment:
       NODE_ENV: development
+      THROTTLER_DISABLED: "true"
     command: ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npx prisma db execute --file prisma/hooks/ensure_vector_indexes.sql && exec npx nest start --watch"]
     working_dir: /app/apps/backend
     volumes:
