@@ -58,7 +58,7 @@ export class GetOrgBillingHandler {
         })
       : [];
 
-    const credits = await this.prisma.billingCredit.findMany({
+    const credits = await this.prisma.$allTenants.billingCredit.findMany({
       where: { organizationId: q.organizationId },
       orderBy: { grantedAt: 'desc' },
       select: {

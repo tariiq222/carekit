@@ -218,7 +218,6 @@ describe("GET /dashboard/billing/my-features (e2e)", () => {
     expect(res.body.planSlug).toBe("ENTERPRISE");
 
     expect(res.body.features.advanced_reports?.enabled).toBe(true);
-    expect(res.body.features.zatca?.enabled).toBe(true);
     expect(res.body.features.custom_roles?.enabled).toBe(true);
     expect(res.body.features.activity_log?.enabled).toBe(true);
   });

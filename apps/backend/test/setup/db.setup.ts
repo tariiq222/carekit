@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
+import { PLAN_SEED_SQL } from './seed-plans.helper';
 
 const TEST_DB_URL =
   process.env.TEST_DATABASE_URL ??
@@ -39,4 +40,8 @@ export async function flushTestRedis(): Promise<void> {
   } finally {
     await redis.quit();
   }
+}
+
+export async function reseedPlans(): Promise<void> {
+  await testPrisma.$executeRawUnsafe(PLAN_SEED_SQL);
 }

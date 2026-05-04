@@ -13,7 +13,7 @@
 import SuperTest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, reseedPlans } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
@@ -22,6 +22,9 @@ const ADMIN_HOST = 'admin.isolation.test';
 describe('Admin Multi-Tenant Isolation (e2e)', () => {
   let req: SuperTest.Agent;
   let superAdminUserId: string;
+  let regularUserId: string;
+  let userOrgAId: string;
+  let userOrgBId: string;
   let harness: Awaited<ReturnType<typeof bootHarness>>;
 
   let orgA: { id: string };
@@ -41,6 +44,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
       'SavedCard',
       'Plan',
     ]);
+    await reseedPlans();
 
     const user = await testPrisma.user.upsert({
       where: { email: 'isolation-super@e2e.test' },
@@ -56,63 +60,50 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     });
     superAdminUserId = user.id;
 
-    let plans = await harness.prisma.plan.findMany({ where: { slug: { in: ['BASIC'] } } });
-    if (plans.length === 0) {
-      const basicPlan = await harness.prisma.plan.create({
-        data: {
-          slug: 'BASIC',
-          nameAr: 'الأساسية',
-          nameEn: 'Basic',
-          priceMonthly: 99,
-          priceAnnual: 990,
-          currency: 'SAR',
-          limits: {
-            maxBranches: 1,
-            maxEmployees: 5,
-            maxServices: -1,
-            maxBookingsPerMonth: -1,
-            maxClients: -1,
-            maxStorageMB: 1024,
-            overageRateBookings: 0,
-            overageRateClients: 0,
-            overageRateStorageGB: 0,
-            recurring_bookings: false,
-            waitlist: false,
-            group_sessions: false,
-            ai_chatbot: false,
-            email_templates: true,
-            coupons: false,
-            advanced_reports: false,
-            intake_forms: false,
-            zatca: false,
-            custom_roles: false,
-            activity_log: false,
-            zoom_integration: false,
-            walk_in_bookings: false,
-            bank_transfer_payments: false,
-            multi_branch: false,
-            departments: false,
-            client_ratings: false,
-            data_export: false,
-            sms_provider_per_tenant: false,
-            white_label_mobile: false,
-            custom_domain: false,
-            api_access: false,
-            webhooks: false,
-            priority_support: false,
-            audit_export: false,
-            multi_currency: false,
-            email_fallback_monthly: 500,
-            sms_fallback_monthly: 100,
-          },
-          isActive: true,
-          sortOrder: 1,
-        },
-      });
-      BASIC_PLAN_ID = basicPlan.id;
-    } else {
-      BASIC_PLAN_ID = plans.find((p) => p.slug === 'BASIC')!.id;
-    }
+    const regularUser = await testPrisma.user.upsert({
+      where: { email: 'regular-tenant-iso@e2e.test' },
+      update: {},
+      create: {
+        email: 'regular-tenant-iso@e2e.test',
+        name: 'Regular Tenant User',
+        passwordHash: 'dummy',
+        role: 'ADMIN',
+        isActive: true,
+        isSuperAdmin: false,
+      },
+    });
+    regularUserId = regularUser.id;
+
+    const userOrgA = await testPrisma.user.upsert({
+      where: { email: 'user-org-a-iso@e2e.test' },
+      update: {},
+      create: {
+        email: 'user-org-a-iso@e2e.test',
+        name: 'User Org A',
+        passwordHash: 'dummy',
+        role: 'ADMIN',
+        isActive: true,
+        isSuperAdmin: false,
+      },
+    });
+    userOrgAId = userOrgA.id;
+
+    const userOrgB = await testPrisma.user.upsert({
+      where: { email: 'user-org-b-iso@e2e.test' },
+      update: {},
+      create: {
+        email: 'user-org-b-iso@e2e.test',
+        name: 'User Org B',
+        passwordHash: 'dummy',
+        role: 'ADMIN',
+        isActive: true,
+        isSuperAdmin: false,
+      },
+    });
+    userOrgBId = userOrgB.id;
+
+    const plans = await testPrisma.plan.findMany({ where: { slug: { in: ['BASIC'] } } });
+    BASIC_PLAN_ID = plans.find((p) => p.slug === 'BASIC')!.id;
 
     orgA = await harness.createOrg(`iso-org-a-${Date.now()}`, 'منظمة أ');
     orgB = await harness.createOrg(`iso-org-b-${Date.now()}`, 'منظمة ب');
@@ -169,6 +160,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
       'SavedCard',
       'Plan',
     ]);
+    await reseedPlans();
     await closeTestApp();
   });
 
@@ -222,7 +214,20 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     it('GET /api/v1/admin/billing/subscriptions with isSuperAdmin=false → 403', async () => {
       const res = await req
         .get(`/api/v1/admin/billing/subscriptions/${orgA.id}`)
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${jwt.sign(
+          {
+            sub: regularUserId,
+            email: 'regular-tenant-iso@e2e.test',
+            role: 'ADMIN',
+            isSuperAdmin: false,
+            organizationId: orgA.id,
+            customRoleId: null,
+            permissions: [],
+            features: [],
+          },
+          ACCESS_SECRET,
+          { expiresIn: '1h' },
+        )}`)
         .set('Host', ADMIN_HOST);
 
       expect(res.status).toBe(403);
@@ -231,8 +236,6 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
 
   describe('Non-superadmin tenant user blocked from admin routes', () => {
     it('GET /api/v1/admin/billing/subscriptions → 403 for regular tenant user', async () => {
-      const regularUserId = 'regular-tenant-user-iso';
-
       const res = await req
         .get('/api/v1/admin/billing/subscriptions')
         .set(
@@ -240,7 +243,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
           `Bearer ${jwt.sign(
             {
               sub: regularUserId,
-              email: 'regular@tenant.test',
+              email: 'regular-tenant-iso@e2e.test',
               role: 'ADMIN',
               isSuperAdmin: false,
               organizationId: orgA.id,
@@ -261,11 +264,11 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
   describe('Org-scoped routes with tenant context', () => {
     it('dashboard route with correct X-Tenant-ID returns org data', async () => {
       const res = await req
-        .get('/api/v1/dashboard/branches')
+        .get('/api/v1/dashboard/organization/branches')
         .set('Authorization', `Bearer ${jwt.sign(
           {
-            sub: 'user-org-a',
-            email: 'usera@tenant.test',
+            sub: userOrgAId,
+            email: 'user-org-a-iso@e2e.test',
             role: 'ADMIN',
             isSuperAdmin: false,
             organizationId: orgA.id,
@@ -284,11 +287,11 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
 
     it('dashboard route with X-Tenant-ID for org B returns empty (no branches seeded)', async () => {
       const res = await req
-        .get('/api/v1/dashboard/branches')
+        .get('/api/v1/dashboard/organization/branches')
         .set('Authorization', `Bearer ${jwt.sign(
           {
-            sub: 'user-org-b',
-            email: 'userb@tenant.test',
+            sub: userOrgBId,
+            email: 'user-org-b-iso@e2e.test',
             role: 'ADMIN',
             isSuperAdmin: false,
             organizationId: orgB.id,
@@ -308,11 +311,11 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
 
     it('dashboard route with wrong X-Tenant-ID (using org A token on org B) → 403 or empty', async () => {
       const res = await req
-        .get('/api/v1/dashboard/branches')
+        .get('/api/v1/dashboard/organization/branches')
         .set('Authorization', `Bearer ${jwt.sign(
           {
-            sub: 'user-org-a',
-            email: 'usera@tenant.test',
+            sub: userOrgAId,
+            email: 'user-org-a-iso@e2e.test',
             role: 'ADMIN',
             isSuperAdmin: false,
             organizationId: orgA.id,

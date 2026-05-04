@@ -24,8 +24,8 @@ describe('GetOrgBillingHandler', () => {
         subscriptionInvoice: { findMany: invFindMany },
         usageRecord: { findMany: usageFindMany },
         dunningLog: { findMany: jest.fn().mockResolvedValue([]) },
+        billingCredit: { findMany: creditFindMany },
       },
-      billingCredit: { findMany: creditFindMany },
     } as unknown as PrismaService;
 
     const moduleRef = await Test.createTestingModule({

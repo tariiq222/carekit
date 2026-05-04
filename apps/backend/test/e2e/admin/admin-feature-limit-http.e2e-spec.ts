@@ -17,7 +17,7 @@
 import SuperTest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 
@@ -238,16 +238,17 @@ describe('FeatureGuard + PlanLimitsGuard at HTTP level (e2e)', () => {
 
     it('GET /dashboard/ops/reports → 403 when ADVANCED_REPORTS feature is disabled (BASIC plan)', async () => {
       const res = await req
-        .get('/api/v1/dashboard/ops/reports')
+        .post('/api/v1/dashboard/ops/reports')
         .set('Authorization', `Bearer ${tenantToken(tenantUserId, testOrgId)}`)
-        .set('Host', 'tenant.example.com');
+        .set('Host', 'tenant.example.com')
+        .send({});
 
       expect(res.status).toBe(403);
     });
 
     it('GET /dashboard/ops/activity-log → 403 when ACTIVITY_LOG feature is disabled (BASIC plan)', async () => {
       const res = await req
-        .get('/api/v1/dashboard/ops/activity-log')
+        .get('/api/v1/dashboard/ops/activity')
         .set('Authorization', `Bearer ${tenantToken(tenantUserId, testOrgId)}`)
         .set('Host', 'tenant.example.com');
 
@@ -326,8 +327,9 @@ describe('FeatureGuard + PlanLimitsGuard at HTTP level (e2e)', () => {
 
     it('GET /dashboard/ops/reports without token → 401', async () => {
       const res = await req
-        .get('/api/v1/dashboard/ops/reports')
-        .set('Host', 'tenant.example.com');
+        .post('/api/v1/dashboard/ops/reports')
+        .set('Host', 'tenant.example.com')
+        .send({});
 
       expect(res.status).toBe(401);
     });
@@ -335,6 +337,7 @@ describe('FeatureGuard + PlanLimitsGuard at HTTP level (e2e)', () => {
 
   describe('Suspension blocks all non-owner actions', () => {
     it('suspended org → 401 on dashboard route', async () => {
+      await flushTestRedis();
       await harness.prisma.organization.update({
         where: { id: testOrgId },
         data: { suspendedAt: new Date() },
