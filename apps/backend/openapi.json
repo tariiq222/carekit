@@ -7129,7 +7129,7 @@
             "type": "string"
           },
           "vatRate": {
-            "description": "VAT rate as a decimal (e.g. 0.15 for 15%)",
+            "description": "VAT rate as fraction (0..1). Super-admin only.",
             "example": 0.15,
             "type": "number"
           },
@@ -7170,10 +7170,6 @@
         "required": [
           "provider"
         ],
-        "type": "object"
-      },
-      "UpsertPlatformSettingDto": {
-        "properties": {},
         "type": "object"
       },
       "UpsertSeedDepartmentDto": {
@@ -10757,95 +10753,6 @@
         ]
       }
     },
-    "/api/v1/admin/settings": {
-      "put": {
-        "operationId": "AdminSettingsController_upsertSettingValue",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPlatformSettingDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "key": {
-                      "type": "string"
-                    },
-                    "updatedAt": {
-                      "format": "date-time",
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upsert a platform setting value",
-        "tags": [
-          "Admin / Platform Settings"
-        ]
-      }
-    },
     "/api/v1/admin/settings/billing": {
       "get": {
         "operationId": "BillingSettingsController_getAllSettings",
@@ -11415,94 +11322,6 @@
         "summary": "Update platform security settings",
         "tags": [
           "Admin / Security Settings"
-        ]
-      }
-    },
-    "/api/v1/admin/settings/{key}": {
-      "get": {
-        "operationId": "AdminSettingsController_getSettingByKey",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "key",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "nullable": true,
-                  "properties": {
-                    "key": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "404": {
-            "description": "Setting not found"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get platform setting by key",
-        "tags": [
-          "Admin / Platform Settings"
         ]
       }
     },
