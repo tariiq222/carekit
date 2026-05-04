@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 
 const WARNING_THRESHOLD = 80;
 
@@ -29,11 +31,19 @@ export class SendLimitWarningCron {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this.runWarnings();
+    });
+  }
+
+  private async runWarnings(): Promise<void> {
     const subscriptions = await this.prisma.$allTenants.subscription.findMany({
       where: { status: { in: ['ACTIVE', 'TRIALING'] } },
       include: { plan: true },

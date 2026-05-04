@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SendLimitWarningCron } from './send-limit-warning.cron';
 
 const PERIOD_START = new Date('2026-04-01T00:00:00.000Z');
@@ -60,10 +61,16 @@ const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8,
   },
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 const buildCron = (
   prisma: ReturnType<typeof buildPrisma>,
   config = buildConfig(true),
-) => new SendLimitWarningCron(prisma as never, config as never);
+  cls = buildCls(),
+) => new SendLimitWarningCron(prisma as never, config as never, cls as never);
 
 describe('SendLimitWarningCron', () => {
   it('does nothing when billing cron is disabled', async () => {
@@ -189,5 +196,16 @@ describe('SendLimitWarningCron', () => {
     const kinds = calls.map((c: any[]) => c[0].data.metadata.kind);
     expect(kinds).toContain('EMPLOYEES');
     expect(kinds).toContain('BRANCHES');
+  });
+
+  it('wraps execute body in super-admin CLS context', async () => {
+    const prisma = buildPrisma([]);
+    const cls = buildCls();
+    const cron = buildCron(prisma, buildConfig(true), cls);
+
+    await cron.execute();
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
