@@ -42,6 +42,7 @@ import { ListPublicGroupSessionsHandler } from './public/list-public-group-sessi
 import { GetPublicGroupSessionHandler } from './public/get-public-group-session.handler';
 import { BookGroupSessionHandler } from './public/book-group-session.handler';
 import { CreateEmployeeBookingHandler } from './create-employee-booking/create-employee-booking.handler';
+import { ValidateCouponService } from './coupons/validate-coupon.service';
 
 const handlers = [
   CreateBookingHandler,
@@ -79,6 +80,7 @@ const handlers = [
   ListPublicGroupSessionsHandler,
   GetPublicGroupSessionHandler,
   BookGroupSessionHandler,
+  ValidateCouponService,
 ];
 
 @Module({
@@ -92,7 +94,7 @@ const handlers = [
   ],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
-  exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler, ClientCancelBookingHandler, ClientRescheduleBookingHandler],
+  exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler, ClientCancelBookingHandler, ClientRescheduleBookingHandler, ValidateCouponService],
 })
 export class BookingsModule implements OnModuleInit {
   constructor(private readonly paymentCompletedHandler: PaymentCompletedEventHandler) {}
