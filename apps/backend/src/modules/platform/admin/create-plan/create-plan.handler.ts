@@ -32,11 +32,11 @@ export class CreatePlanHandler {
   ) {}
 
   async execute(cmd: CreatePlanCommand) {
-    return this.prisma.$allTenants.$transaction(async (tx) => {
+    const plan = await this.prisma.$allTenants.$transaction(async (tx) => {
       const existing = await tx.plan.findUnique({ where: { slug: cmd.data.slug } });
       if (existing) throw new ConflictException('plan_slug_already_exists');
 
-      const plan = await tx.plan.create({
+      const created = await tx.plan.create({
         data: {
           slug: cmd.data.slug,
           nameAr: cmd.data.nameAr,
@@ -56,13 +56,13 @@ export class CreatePlanHandler {
           actionType: SuperAdminActionType.PLAN_CREATE,
           organizationId: null,
           reason: cmd.reason,
-          metadata: { planId: plan.id, slug: plan.slug },
+          metadata: { planId: created.id, slug: created.slug },
           ipAddress: cmd.ipAddress,
           userAgent: cmd.userAgent,
         },
       });
 
-      return plan;
+      return created;
     });
 
     if (this.flags.planVersioningEnabled) {
