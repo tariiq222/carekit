@@ -43,6 +43,7 @@ export class ChargeDueSubscriptionsCron {
 
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: charge-due-subscriptions tick');
       await this.runCharge();
     });
   }

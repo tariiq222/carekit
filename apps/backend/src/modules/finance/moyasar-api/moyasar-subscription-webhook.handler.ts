@@ -133,6 +133,7 @@ export class MoyasarSubscriptionWebhookHandler {
         isSuperAdmin: false,
       });
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: moyasar subscription webhook handler');
 
       if (event.type === 'payment_paid') {
         await this.recordPayment.execute({

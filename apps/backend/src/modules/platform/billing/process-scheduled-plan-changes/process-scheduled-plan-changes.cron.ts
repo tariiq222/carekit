@@ -26,6 +26,7 @@ export class ProcessScheduledPlanChangesCron {
 
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: process-scheduled-plan-changes tick');
       await this._executeInContext();
     });
   }
