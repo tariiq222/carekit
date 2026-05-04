@@ -8,6 +8,8 @@ import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment
 import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
 import { LaunchFlags } from '../feature-flags/launch-flags';
 
+const PLATFORM_VAT_RATE = 0.15;
+
 interface PriceSource {
   priceMonthly: unknown;
   priceAnnual: unknown;
@@ -86,14 +88,31 @@ export class ChargeDueSubscriptionsCron {
         ? Number(priceSource.priceAnnual)
         : Number(priceSource.priceMonthly);
 
+    const overageAmount = 0;
+    const flatLine = {
+      kind: 'FLAT_FEE' as const,
+      description: `Subscription ${sub.billingCycle.toLowerCase()}`,
+      amount: flatAmount,
+    };
+    const overageLines: Array<{ kind: 'OVERAGE'; amount: number }> = [];
+    const subtotal = flatAmount + overageAmount;
+    const vatAmt = Number((subtotal * PLATFORM_VAT_RATE).toFixed(2));
+    const total = Number((subtotal + vatAmt).toFixed(2));
+    const lineItems = [
+      flatLine,
+      ...overageLines,
+      { kind: 'VAT' as const, rate: PLATFORM_VAT_RATE, amount: vatAmt },
+    ];
+
     // Create invoice
     const invoice = await this.prisma.$allTenants.subscriptionInvoice.create({
       data: {
         subscriptionId: sub.id,
         organizationId: sub.organizationId,
-        amount: flatAmount,
+        amount: total,
         flatAmount,
-        overageAmount: 0,
+        overageAmount,
+        lineItems,
         status: 'DUE',
         billingCycle: sub.billingCycle as never,
         periodStart: sub.currentPeriodStart,
@@ -112,7 +131,7 @@ export class ChargeDueSubscriptionsCron {
     try {
       const payment = await this.moyasar.chargeWithToken({
         token: sub.moyasarCardTokenRef,
-        amount: Math.round(flatAmount * 100),
+        amount: Math.round(total * 100),
         currency: 'SAR',
         idempotencyKey: `subscription-invoice:${invoice.id}`,
         description: `Deqah subscription invoice ${invoice.id}`,
