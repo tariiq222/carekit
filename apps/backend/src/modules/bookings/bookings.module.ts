@@ -30,6 +30,7 @@ import { CreateZoomMeetingHandler } from './create-zoom-meeting/create-zoom-meet
 import { RetryZoomMeetingHandler } from './retry-zoom-meeting/retry-zoom-meeting.handler';
 import { ZoomMeetingService } from './zoom-meeting.service';
 import { ZoomModule } from '../integrations/zoom/zoom.module';
+import { BillingModule } from '../platform/billing/billing.module';
 import { GroupSessionMinReachedHandler } from './group-session-min-reached/group-session-min-reached.handler';
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 import { GetPublicAvailabilityHandler } from './availability/public/get-public-availability.handler';
@@ -87,6 +88,7 @@ const handlers = [
     TenantModule,
     OrgExperienceModule,
     ZoomModule,
+    BillingModule,
   ],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],

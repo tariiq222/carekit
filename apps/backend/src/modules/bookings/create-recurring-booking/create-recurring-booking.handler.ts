@@ -2,11 +2,14 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { RecurringFrequency } from '@prisma/client';
 import type { Booking } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { FeatureCheckService } from '../../platform/billing/feature-check.service';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { randomUUID } from 'crypto';
 import { CreateRecurringBookingDto } from './create-recurring-booking.dto';
 
@@ -22,13 +25,22 @@ export type CreateRecurringBookingCommand = Omit<
 
 @Injectable()
 export class CreateRecurringBookingHandler {
+  private readonly logger = new Logger(CreateRecurringBookingHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly featureCheck: FeatureCheckService,
   ) {}
 
   async execute(dto: CreateRecurringBookingCommand) {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    if (!(await this.featureCheck.isEnabled(organizationId, FeatureKey.RECURRING_BOOKINGS))) {
+      this.logger.debug(`feature_disabled_skip: org=${organizationId} feature=RECURRING_BOOKINGS`);
+      throw new BadRequestException('Recurring bookings are not available on your current plan');
+    }
+
     this.validate(dto);
 
     const dates = this.resolveDates(dto);
