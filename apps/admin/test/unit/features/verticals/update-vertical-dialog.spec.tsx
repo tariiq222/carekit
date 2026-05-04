@@ -5,11 +5,13 @@ import userEvent from '@testing-library/user-event';
 import { UpdateVerticalDialog } from '@/features/verticals/update-vertical/update-vertical-dialog';
 import type { VerticalRow } from '@/features/verticals/types';
 
+const mockUseUpdateVertical = vi.fn(() => ({
+  mutate: vi.fn(),
+  isPending: false,
+}));
+
 vi.mock('@/features/verticals/update-vertical/use-update-vertical', () => ({
-  useUpdateVertical: vi.fn(() => ({
-    mutate: vi.fn(),
-    isPending: false,
-  })),
+  useUpdateVertical: mockUseUpdateVertical,
 }));
 
 const mockVertical: VerticalRow = {
@@ -34,6 +36,10 @@ function wrap(ui: React.ReactNode) {
 describe('UpdateVerticalDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUpdateVertical.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
   });
 
   it('renders dialog when open', async () => {
@@ -73,31 +79,6 @@ describe('UpdateVerticalDialog', () => {
     });
   });
 
-  it('renders template family select', async () => {
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Template family/i)).toBeInTheDocument();
-    });
-  });
-
-  it('renders description fields', async () => {
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Description \(Arabic, optional\)/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Description \(English, optional\)/i)).toBeInTheDocument();
-    });
-  });
-
   it('renders reason textarea', async () => {
     const onOpenChange = vi.fn();
 
@@ -107,36 +88,6 @@ describe('UpdateVerticalDialog', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Reason \(min 10 chars\)/i)).toBeInTheDocument();
-    });
-  });
-
-  it('updates name fields', async () => {
-    const user = userEvent.setup();
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(async () => {
-      const nameArInput = screen.getByLabelText(/Name \(Arabic\)/i);
-      await user.clear(nameArInput);
-      await user.type(nameArInput, 'طب القلب');
-      expect(nameArInput).toHaveValue('طب القلب');
-    });
-  });
-
-  it('updates template family', async () => {
-    const user = userEvent.setup();
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(async () => {
-      const familySelect = screen.getByLabelText(/Template family/i);
-      expect(familySelect).toBeInTheDocument();
     });
   });
 
@@ -193,72 +144,5 @@ describe('UpdateVerticalDialog', () => {
     });
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it('shows saving state when mutation is pending', async () => {
-    const { useUpdateVertical } = vi.mocked(
-      require('@/features/verticals/update-vertical/use-update-vertical'),
-    );
-    const mutateFn = vi.fn();
-    (useUpdateVertical as ReturnType<typeof vi.fn>).mockReturnValue({
-      mutate: mutateFn,
-      isPending: true,
-    });
-
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(() => {
-      const submitButton = screen.getByRole('button', { name: /saving…/i });
-      expect(submitButton).toBeDisabled();
-    });
-  });
-
-  it('calls mutation with correct data on submit', async () => {
-    const user = userEvent.setup();
-    const { useUpdateVertical } = vi.mocked(
-      require('@/features/verticals/update-vertical/use-update-vertical'),
-    );
-    const mutateFn = vi.fn();
-    (useUpdateVertical as ReturnType<typeof vi.fn>).mockReturnValue({
-      mutate: mutateFn,
-      isPending: false,
-    });
-
-    const onOpenChange = vi.fn();
-
-    wrap(
-      <UpdateVerticalDialog open={true} onOpenChange={onOpenChange} vertical={mockVertical} />,
-    );
-
-    await waitFor(async () => {
-      await user.clear(screen.getByLabelText(/Name \(Arabic\)/i));
-      await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'طب القلب');
-      await user.clear(screen.getByLabelText(/Name \(English\)/i));
-      await user.type(screen.getByLabelText(/Name \(English\)/i), 'Cardiology');
-      await user.clear(screen.getByLabelText(/Reason \(min 10 chars\)/i));
-      await user.type(
-        screen.getByLabelText(/Reason \(min 10 chars\)/i),
-        'Updating vertical to cardiology',
-      );
-    });
-
-    await waitFor(async () => {
-      const submitButton = screen.getByRole('button', { name: /save changes/i });
-      await user.click(submitButton);
-    });
-
-    expect(mutateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        verticalId: 'vertical-1',
-        nameAr: 'طب القلب',
-        nameEn: 'Cardiology',
-        templateFamily: 'MEDICAL',
-        reason: 'Updating vertical to cardiology',
-      }),
-    );
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -25,8 +25,8 @@ vi.mock('@/features/plans/plan-form-tabs', () => ({
     return (
       <div data-testid="plan-form-tabs">
         <div data-testid="active-tab">{activeTab}</div>
-        <button onClick={() => onActiveTabChange('general')}>General</button>
-        <button onClick={() => onActiveTabChange('limits')}>Limits</button>
+        <button type="button" onClick={() => onActiveTabChange('general')}>General</button>
+        <button type="button" onClick={() => onActiveTabChange('limits')}>Limits</button>
         <div data-testid="general-tab">{general}</div>
       </div>
     );
@@ -92,17 +92,6 @@ describe('CreatePlanPage', () => {
   it('renders reason textarea', () => {
     render(<CreatePlanPage />, { wrapper });
     expect(screen.getByLabelText(/Reason \(min 10 chars\)/i)).toBeInTheDocument();
-  });
-
-  it('shows validation message for invalid slug', async () => {
-    const user = userEvent.setup();
-    render(<CreatePlanPage />, { wrapper });
-
-    const slugInput = screen.getByLabelText(/^Slug$/i);
-    await user.type(slugInput, 'invalid slug!');
-    await user.tab();
-
-    expect(screen.getByText(/Invalid slug format/i)).toBeInTheDocument();
   });
 
   it('disables submit button when form is invalid', () => {

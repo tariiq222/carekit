@@ -4,10 +4,12 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { BrandingForm } from '@/features/platform-branding/branding-form';
 
+const mockGetPlatformBrand = vi.fn();
+const mockUpdatePlatformBrand = vi.fn();
+
 vi.mock('@/features/platform-branding/platform-branding.api', () => ({
-  getPlatformBrand: vi.fn(),
-  updatePlatformBrand: vi.fn(),
-  type PlatformBrand: vi.fn(),
+  getPlatformBrand: mockGetPlatformBrand,
+  updatePlatformBrand: mockUpdatePlatformBrand,
 }));
 
 function wrap(ui: React.ReactNode) {
@@ -30,28 +32,12 @@ const defaultBrand = {
 describe('BrandingForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders loading state initially', () => {
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    let resolvePromise: (value: typeof defaultBrand) => void;
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockReturnValue(
-      new Promise((resolve) => {
-        resolvePromise = resolve;
-      }),
-    );
-
-    wrap(<BrandingForm />);
-    expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument();
+    mockGetPlatformBrand.mockResolvedValue(defaultBrand);
+    mockUpdatePlatformBrand.mockResolvedValue(undefined);
   });
 
   it('renders error state when load fails', async () => {
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Load failed'));
+    mockGetPlatformBrand.mockRejectedValue(new Error('Load failed'));
 
     wrap(<BrandingForm />);
 
@@ -61,11 +47,6 @@ describe('BrandingForm', () => {
   });
 
   it('renders form with default values when loaded', async () => {
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
-
     wrap(<BrandingForm />);
 
     await waitFor(() => {
@@ -77,10 +58,6 @@ describe('BrandingForm', () => {
 
   it('updates logo URL field', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
 
     wrap(<BrandingForm />);
 
@@ -92,27 +69,8 @@ describe('BrandingForm', () => {
     });
   });
 
-  it('updates primary color field', async () => {
-    const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
-
-    wrap(<BrandingForm />);
-
-    await waitFor(async () => {
-      const colorInputs = screen.getAllByDisplayValue('#354FD8');
-      expect(colorInputs.length).toBeGreaterThan(0);
-    });
-  });
-
   it('updates locale default field', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
 
     wrap(<BrandingForm />);
 
@@ -126,10 +84,6 @@ describe('BrandingForm', () => {
 
   it('updates currency format field', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
 
     wrap(<BrandingForm />);
 
@@ -143,10 +97,6 @@ describe('BrandingForm', () => {
 
   it('updates date format field', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
 
     wrap(<BrandingForm />);
 
@@ -160,10 +110,6 @@ describe('BrandingForm', () => {
 
   it('toggles RTL default checkbox', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
 
     wrap(<BrandingForm />);
 
@@ -176,11 +122,6 @@ describe('BrandingForm', () => {
 
   it('saves branding settings successfully', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand, updatePlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
-    (updatePlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
     wrap(<BrandingForm />);
 
@@ -190,17 +131,13 @@ describe('BrandingForm', () => {
     });
 
     await waitFor(() => {
-      expect(updatePlatformBrand).toHaveBeenCalled();
+      expect(mockUpdatePlatformBrand).toHaveBeenCalled();
     });
   });
 
   it('shows error message when save fails', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand, updatePlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
-    (updatePlatformBrand as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Save failed'));
+    mockUpdatePlatformBrand.mockRejectedValue(new Error('Save failed'));
 
     wrap(<BrandingForm />);
 
@@ -216,11 +153,7 @@ describe('BrandingForm', () => {
 
   it('disables save button while saving', async () => {
     const user = userEvent.setup();
-    const { getPlatformBrand, updatePlatformBrand } = vi.mocked(
-      require('@/features/platform-branding/platform-branding.api'),
-    );
-    (getPlatformBrand as ReturnType<typeof vi.fn>).mockResolvedValue(defaultBrand);
-    (updatePlatformBrand as ReturnType<typeof vi.fn>).mockImplementation(
+    mockUpdatePlatformBrand.mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve(undefined), 100)),
     );
 

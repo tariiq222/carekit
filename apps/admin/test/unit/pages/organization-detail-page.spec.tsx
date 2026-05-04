@@ -1,15 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, waitFor } from 'vitest';
 import OrganizationDetailPage from '@/app/(admin)/organizations/[id]/page';
 
+const mockUseGetOrganization = vi.fn();
+const mockUseGetOrgBilling = vi.fn();
+
 vi.mock('@/features/organizations/get-organization/use-get-organization', () => ({
-  useGetOrganization: vi.fn(),
+  useGetOrganization: mockUseGetOrganization,
 }));
 
 vi.mock('@/features/organizations/get-org-billing/use-get-org-billing', () => ({
-  useGetOrgBilling: vi.fn(),
+  useGetOrgBilling: mockUseGetOrgBilling,
 }));
 
 vi.mock('@/features/organizations/suspend-organization/suspend-dialog', () => ({
@@ -77,104 +80,75 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('OrganizationDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders organization details', async () => {
-    const { useGetOrganization } = vi.mocked(
-      require('@/features/organizations/get-organization/use-get-organization'),
-    );
-    const { useGetOrgBilling } = vi.mocked(
-      require('@/features/organizations/get-org-billing/use-get-org-billing'),
-    );
-
-    (useGetOrganization as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrganization.mockReturnValue({
       data: mockOrganization,
       isLoading: false,
       error: null,
     });
-    (useGetOrgBilling as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrgBilling.mockReturnValue({
       data: { subscription: null },
     });
+  });
 
+  it('renders organization details', async () => {
     const params = Promise.resolve({ id: 'org-1' });
     render(<OrganizationDetailPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('Test Organization')).toBeInTheDocument();
     });
   });
 
   it('renders loading skeleton when loading', async () => {
-    const { useGetOrganization } = vi.mocked(
-      require('@/features/organizations/get-organization/use-get-organization'),
-    );
-    const { useGetOrgBilling } = vi.mocked(
-      require('@/features/organizations/get-org-billing/use-get-org-billing'),
-    );
-
-    (useGetOrganization as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrganization.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     });
-    (useGetOrgBilling as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrgBilling.mockReturnValue({
       data: undefined,
     });
 
     const params = Promise.resolve({ id: 'org-1' });
     render(<OrganizationDetailPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.h-48')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(document.querySelector('[class*="h-48"]')).toBeInTheDocument();
     });
   });
 
   it('renders error state when load fails', async () => {
-    const { useGetOrganization } = vi.mocked(
-      require('@/features/organizations/get-organization/use-get-organization'),
-    );
-    const { useGetOrgBilling } = vi.mocked(
-      require('@/features/organizations/get-org-billing/use-get-org-billing'),
-    );
-
-    (useGetOrganization as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrganization.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to load'),
     });
-    (useGetOrgBilling as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrgBilling.mockReturnValue({
       data: undefined,
     });
 
     const params = Promise.resolve({ id: 'org-1' });
     render(<OrganizationDetailPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
     });
   });
 
   it('renders suspended organization warning', async () => {
-    const { useGetOrganization } = vi.mocked(
-      require('@/features/organizations/get-organization/use-get-organization'),
-    );
-    const { useGetOrgBilling } = vi.mocked(
-      require('@/features/organizations/get-org-billing/use-get-org-billing'),
-    );
-
-    (useGetOrganization as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrganization.mockReturnValue({
       data: { ...mockOrganization, status: 'SUSPENDED', suspendedAt: '2024-01-15T00:00:00Z' },
       isLoading: false,
       error: null,
     });
-    (useGetOrgBilling as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseGetOrgBilling.mockReturnValue({
       data: { subscription: null },
     });
 
     const params = Promise.resolve({ id: 'org-1' });
     render(<OrganizationDetailPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText(/SUSPENDED/i)).toBeInTheDocument();
     });
   });

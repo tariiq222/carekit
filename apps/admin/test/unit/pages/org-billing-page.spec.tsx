@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -30,7 +30,7 @@ describe('OrgBillingPage', () => {
     const params = Promise.resolve({ orgId: 'org-123' });
     render(<OrgBillingPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('Organization billing')).toBeInTheDocument();
       expect(screen.getByText('org-123')).toBeInTheDocument();
     });
@@ -40,7 +40,7 @@ describe('OrgBillingPage', () => {
     const params = Promise.resolve({ orgId: 'org-123' });
     render(<OrgBillingPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByRole('link', { name: /← back to subscriptions/i })).toBeInTheDocument();
     });
   });
@@ -49,7 +49,7 @@ describe('OrgBillingPage', () => {
     const params = Promise.resolve({ orgId: 'org-123' });
     render(<OrgBillingPage params={params} />, { wrapper });
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByTestId('org-billing-detail')).toBeInTheDocument();
       expect(screen.getByTestId('org-billing-detail')).toHaveTextContent('org-123');
     });

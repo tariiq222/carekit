@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import BillingSubscriptionsPage from '@/app/(admin)/billing/page';
 
+const mockUseListSubscriptions = vi.fn();
+
 vi.mock('@/features/billing/list-subscriptions/use-list-subscriptions', () => ({
-  useListSubscriptions: vi.fn(),
+  useListSubscriptions: mockUseListSubscriptions,
 }));
 
 vi.mock('@/features/billing/list-subscriptions/subscriptions-filter-bar', () => ({
@@ -75,33 +77,20 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('BillingSubscriptionsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders page title and description', () => {
-    const { useListSubscriptions } = vi.mocked(
-      require('@/features/billing/list-subscriptions/use-list-subscriptions'),
-    );
-    (useListSubscriptions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListSubscriptions.mockReturnValue({
       data: mockSubscriptionsData,
       isLoading: false,
       error: null,
     });
+  });
 
+  it('renders page title and description', () => {
     render(<BillingSubscriptionsPage />, { wrapper });
     expect(screen.getByText('Billing — Subscriptions')).toBeInTheDocument();
     expect(screen.getByText(/Every SaaS subscription on the platform/i)).toBeInTheDocument();
   });
 
   it('renders filter bar and table', () => {
-    const { useListSubscriptions } = vi.mocked(
-      require('@/features/billing/list-subscriptions/use-list-subscriptions'),
-    );
-    (useListSubscriptions as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockSubscriptionsData,
-      isLoading: false,
-      error: null,
-    });
-
     render(<BillingSubscriptionsPage />, { wrapper });
     expect(screen.getByTestId('subscriptions-filter-bar')).toBeInTheDocument();
     expect(screen.getByTestId('subscriptions-table')).toBeInTheDocument();
@@ -109,10 +98,7 @@ describe('BillingSubscriptionsPage', () => {
   });
 
   it('renders error state when load fails', () => {
-    const { useListSubscriptions } = vi.mocked(
-      require('@/features/billing/list-subscriptions/use-list-subscriptions'),
-    );
-    (useListSubscriptions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListSubscriptions.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to load'),
@@ -123,10 +109,7 @@ describe('BillingSubscriptionsPage', () => {
   });
 
   it('renders pagination when multiple pages exist', () => {
-    const { useListSubscriptions } = vi.mocked(
-      require('@/features/billing/list-subscriptions/use-list-subscriptions'),
-    );
-    (useListSubscriptions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListSubscriptions.mockReturnValue({
       data: { ...mockSubscriptionsData, meta: { ...mockSubscriptionsData.meta, totalPages: 2 } },
       isLoading: false,
       error: null,
@@ -139,15 +122,6 @@ describe('BillingSubscriptionsPage', () => {
   });
 
   it('renders link to invoices page', () => {
-    const { useListSubscriptions } = vi.mocked(
-      require('@/features/billing/list-subscriptions/use-list-subscriptions'),
-    );
-    (useListSubscriptions as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockSubscriptionsData,
-      isLoading: false,
-      error: null,
-    });
-
     render(<BillingSubscriptionsPage />, { wrapper });
     expect(screen.getByRole('link', { name: /all invoices/i })).toBeInTheDocument();
   });

@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ImpersonationSessionsPage from '@/app/(admin)/impersonation-sessions/page';
 
+const mockUseListImpersonationSessions = vi.fn();
+
 vi.mock('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions', () => ({
-  useListImpersonationSessions: vi.fn(),
+  useListImpersonationSessions: mockUseListImpersonationSessions,
 }));
 
 vi.mock('@/features/impersonation/list-impersonation-sessions/sessions-table', () => ({
@@ -77,42 +79,26 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('ImpersonationSessionsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders page title and description', () => {
-    const { useListImpersonationSessions } = vi.mocked(
-      require('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions'),
-    );
-    (useListImpersonationSessions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListImpersonationSessions.mockReturnValue({
       data: mockSessionsData,
       isLoading: false,
       error: null,
     });
+  });
 
+  it('renders page title and description', () => {
     render(<ImpersonationSessionsPage />, { wrapper });
     expect(screen.getByText('Impersonation sessions')).toBeInTheDocument();
     expect(screen.getByText(/Active \+ historical impersonation sessions/i)).toBeInTheDocument();
   });
 
   it('renders sessions table', () => {
-    const { useListImpersonationSessions } = vi.mocked(
-      require('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions'),
-    );
-    (useListImpersonationSessions as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockSessionsData,
-      isLoading: false,
-      error: null,
-    });
-
     render(<ImpersonationSessionsPage />, { wrapper });
     expect(screen.getByTestId('sessions-table')).toBeInTheDocument();
   });
 
   it('renders error state when load fails', () => {
-    const { useListImpersonationSessions } = vi.mocked(
-      require('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions'),
-    );
-    (useListImpersonationSessions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListImpersonationSessions.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to load'),
@@ -123,10 +109,7 @@ describe('ImpersonationSessionsPage', () => {
   });
 
   it('renders pagination when multiple pages exist', () => {
-    const { useListImpersonationSessions } = vi.mocked(
-      require('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions'),
-    );
-    (useListImpersonationSessions as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListImpersonationSessions.mockReturnValue({
       data: { ...mockSessionsData, meta: { ...mockSessionsData.meta, totalPages: 2 } },
       isLoading: false,
       error: null,

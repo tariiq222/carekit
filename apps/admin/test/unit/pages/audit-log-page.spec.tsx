@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import AuditLogPage from '@/app/(admin)/audit-log/page';
 
+const mockUseListAuditLog = vi.fn();
+
 vi.mock('@/features/audit-log/list-audit-log/use-list-audit-log', () => ({
-  useListAuditLog: vi.fn(),
+  useListAuditLog: mockUseListAuditLog,
 }));
 
 vi.mock('@/features/audit-log/list-audit-log/audit-log-filter-bar', () => ({
@@ -62,43 +64,27 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('AuditLogPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders page title and description', () => {
-    const { useListAuditLog } = vi.mocked(
-      require('@/features/audit-log/list-audit-log/use-list-audit-log'),
-    );
-    (useListAuditLog as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListAuditLog.mockReturnValue({
       data: mockAuditLogData,
       isLoading: false,
       error: null,
     });
+  });
 
+  it('renders page title and description', () => {
     render(<AuditLogPage />, { wrapper });
     expect(screen.getByText('Audit log')).toBeInTheDocument();
     expect(screen.getByText(/Every destructive super-admin action/i)).toBeInTheDocument();
   });
 
   it('renders filter bar and table', () => {
-    const { useListAuditLog } = vi.mocked(
-      require('@/features/audit-log/list-audit-log/use-list-audit-log'),
-    );
-    (useListAuditLog as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockAuditLogData,
-      isLoading: false,
-      error: null,
-    });
-
     render(<AuditLogPage />, { wrapper });
     expect(screen.getByTestId('audit-log-filter-bar')).toBeInTheDocument();
     expect(screen.getByTestId('audit-log-table')).toBeInTheDocument();
   });
 
   it('renders error state when load fails', () => {
-    const { useListAuditLog } = vi.mocked(
-      require('@/features/audit-log/list-audit-log/use-list-audit-log'),
-    );
-    (useListAuditLog as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListAuditLog.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to load'),
@@ -109,10 +95,7 @@ describe('AuditLogPage', () => {
   });
 
   it('renders pagination when multiple pages exist', () => {
-    const { useListAuditLog } = vi.mocked(
-      require('@/features/audit-log/list-audit-log/use-list-audit-log'),
-    );
-    (useListAuditLog as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListAuditLog.mockReturnValue({
       data: { ...mockAuditLogData, meta: { ...mockAuditLogData.meta, totalPages: 2 } },
       isLoading: false,
       error: null,

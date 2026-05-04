@@ -1,20 +1,22 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { useParams } from 'next/navigation';
 import EditPlanPage from '@/app/(admin)/plans/[id]/edit/page';
 
+const mockUseListPlans = vi.fn();
+const mockUseUpdatePlan = vi.fn(() => ({
+  mutate: vi.fn(),
+  isPending: false,
+}));
+
 vi.mock('@/features/plans/list-plans/use-list-plans', () => ({
-  useListPlans: vi.fn(),
+  useListPlans: mockUseListPlans,
 }));
 
 vi.mock('@/features/plans/update-plan/use-update-plan', () => ({
-  useUpdatePlan: vi.fn(() => ({
-    mutate: vi.fn(),
-    isPending: false,
-  })),
+  useUpdatePlan: mockUseUpdatePlan,
 }));
 
 vi.mock('@/features/plans/plan-form-tabs', () => ({
@@ -30,8 +32,8 @@ vi.mock('@/features/plans/plan-form-tabs', () => ({
     return (
       <div data-testid="plan-form-tabs">
         <div data-testid="active-tab">{activeTab}</div>
-        <button onClick={() => onActiveTabChange('general')}>General</button>
-        <button onClick={() => onActiveTabChange('limits')}>Limits</button>
+        <button type="button" onClick={() => onActiveTabChange('general')}>General</button>
+        <button type="button" onClick={() => onActiveTabChange('limits')}>Limits</button>
         <div data-testid="general-tab">{general}</div>
       </div>
     );
@@ -77,11 +79,14 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('EditPlanPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseListPlans.mockReturnValue({
+      data: mockPlansData,
+      isLoading: false,
+    });
   });
 
   it('renders loading skeleton when loading', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListPlans.mockReturnValue({
       data: undefined,
       isLoading: true,
     });
@@ -91,8 +96,7 @@ describe('EditPlanPage', () => {
   });
 
   it('renders error when plan not found', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListPlans.mockReturnValue({
       data: [],
       isLoading: false,
     });
@@ -102,57 +106,27 @@ describe('EditPlanPage', () => {
   });
 
   it('renders page title and form when plan found', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByText('Edit plan')).toBeInTheDocument();
     expect(screen.getByTestId('plan-form-tabs')).toBeInTheDocument();
   });
 
   it('renders back link to plans', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByRole('link', { name: /← back to plans/i })).toBeInTheDocument();
   });
 
   it('renders form fields with plan data', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByDisplayValue('BASIC')).toBeInTheDocument();
   });
 
   it('renders active checkbox', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByLabelText(/Plan is active/i)).toBeInTheDocument();
   });
 
   it('disables submit button when form is invalid', () => {
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
     const submitButton = screen.getByRole('button', { name: /save changes/i });
     expect(submitButton).toBeDisabled();
@@ -160,12 +134,6 @@ describe('EditPlanPage', () => {
 
   it('enables submit button when form is valid', async () => {
     const user = userEvent.setup();
-    const { useListPlans } = vi.mocked(require('@/features/plans/list-plans/use-list-plans'));
-    (useListPlans as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockPlansData,
-      isLoading: false,
-    });
-
     render(<EditPlanPage />, { wrapper });
 
     await user.clear(screen.getByLabelText(/Name \(Arabic\)/i));
