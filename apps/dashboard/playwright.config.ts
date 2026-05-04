@@ -7,6 +7,10 @@
  *
  * The webServer block below spawns the Next.js dev server automatically
  * (or reuses an already-running one in non-CI mode).
+ *
+ * Projects:
+ *   smoke  — e2e/smoke/**   ≤7 specs, <2 min, runs on every PR
+ *   flows  — e2e/flows/**   full feature flows, runs nightly
  */
 import { defineConfig, devices } from '@playwright/test';
 
@@ -33,16 +37,25 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
 
-  // globalSetup / globalTeardown are wired here for future persona pre-seeding.
-  // D1 tests the login form directly and does not need pre-seeded storageState,
-  // so we skip global-setup to avoid triggering the login-rate-limiter on dev.
-  // Uncomment when D2+ tests use `test.use({ storageState })` patterns.
-  // globalSetup: require.resolve('@deqah/test-helpers-pw/global-setup'),
-  // globalTeardown: require.resolve('@deqah/test-helpers-pw/global-teardown'),
+  // globalSetup / globalTeardown — wired here for future persona pre-seeding.
+  // Once D2+ tests use `test.use({ storageState })` patterns, enable these:
+  //
+  // TODO (playwright.config.ts): enable globalSetup once fixtures/auth.ts
+  //   storageState approach is ready. Reference: e2e/fixtures/auth.ts →
+  //   storageStatePath() + the planned e2e/global-setup.ts entry point.
+  //
+  // globalSetup: require.resolve('./e2e/global-setup'),
+  // globalTeardown: require.resolve('./e2e/global-teardown'),
 
   projects: [
     {
-      name: 'chromium',
+      name: 'smoke',
+      testMatch: 'e2e/smoke/**/*.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'flows',
+      testMatch: 'e2e/flows/**/*.spec.ts',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

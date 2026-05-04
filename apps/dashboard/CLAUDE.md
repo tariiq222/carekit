@@ -194,4 +194,26 @@ npm run i18n:verify  # AR/EN parity gate
 
 ## QA Gate
 
-Dashboard e2e is manual via **Chrome DevTools MCP** — this is the required pre-merge check for any page change. Playwright was removed on 2026-04-16; tagged test reports are not the source of truth for dashboard UI.
+**Playwright is the official e2e tool for `apps/dashboard`** (restored 2026-05-04).
+Specs live under `apps/dashboard/e2e/` with two project tiers:
+
+| Project | Path | When |
+|---------|------|------|
+| `smoke` | `e2e/smoke/` | every PR touching `apps/dashboard/**` or `apps/backend/**` |
+| `flows` | `e2e/flows/` | nightly cron (02:00 UTC) |
+
+CI workflow: `.github/workflows/dashboard-e2e.yml`
+
+```bash
+# Local smoke run (requires backend on :5100 + docker stack)
+cd apps/dashboard
+npm run e2e:smoke
+
+# Full flows
+npm run e2e:flows
+
+# Interactive debug
+npm run e2e:ui
+```
+
+**Chrome DevTools MCP** remains available as a supplemental ad-hoc debugging tool — it is NOT the primary QA gate. Playwright smoke is the required pre-merge check for any page change.

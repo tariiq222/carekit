@@ -1,0 +1,171 @@
+name: Dashboard E2E (Playwright)
+
+on:
+  pull_request:
+    paths:
+      - 'apps/dashboard/**'
+      - 'apps/backend/**'
+  schedule:
+    # Nightly at 02:00 UTC — runs full flows suite
+    - cron: '0 2 * * *'
+
+jobs:
+  smoke:
+    name: Smoke Suite (PR gate)
+    runs-on: ubuntu-latest
+    # Only run the smoke suite on PRs; nightly runs the flows job below.
+    if: github.event_name == 'pull_request'
+    # TODO (dashboard-e2e.yml): backend boot is out of scope for this task.
+    # Smoke specs (login, navigation, root render) hit the frontend with
+    # mocked or gracefully-failing API calls, so the job can still provide
+    # signal without a live backend.  When backend boot is ready, remove
+    # continue-on-error and add a "Start backend" step.
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: deqah_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/dashboard
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke suite
+        working-directory: apps/dashboard
+        run: npm run e2e:smoke
+        env:
+          CI: true
+          NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ''
+          # Backend URL — set when backend boot step is added
+          # PW_DASHBOARD_URL: http://localhost:5103
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: apps/dashboard/playwright-report/
+          retention-days: 7
+
+  flows:
+    name: Flows Suite (nightly)
+    runs-on: ubuntu-latest
+    # Only run the full flows suite on the nightly schedule.
+    if: github.event_name == 'schedule'
+    # TODO (dashboard-e2e.yml): same backend boot caveat as smoke job above.
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: deqah_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/dashboard
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full flows suite
+        working-directory: apps/dashboard
+        run: npm run e2e:flows
+        env:
+          CI: true
+          NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ''
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-flows-report
+          path: apps/dashboard/playwright-report/
+          retention-days: 14

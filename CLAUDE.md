@@ -97,8 +97,14 @@ npm run dev
 npm run build
 npm run typecheck
 npm run lint
-npm run test              # Vitest
-# Manual QA via Chrome DevTools MCP (Playwright removed 2026-04-16)
+npm run test              # Vitest unit tests
+
+# Dashboard e2e (Playwright — official e2e tool, restored 2026-05-04)
+cd apps/dashboard
+npm run e2e:smoke         # smoke suite — runs on every PR
+npm run e2e:flows         # full flows — runs nightly
+npm run e2e:ui            # interactive debug mode
+# Chrome DevTools MCP is supplemental for ad-hoc debugging only
 
 # Mobile (cd apps/mobile)
 npm run dev               # Expo start

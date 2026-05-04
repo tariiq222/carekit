@@ -15,11 +15,11 @@
     "test:report": "py ../../data/test-reports/scripts/generate_html_report.py",
     "i18n:verify": "node scripts/verify-translation-parity.mjs",
     "openapi:generate": "openapi-typescript ../../apps/backend/openapi.json -o lib/types/api.generated.ts",
-    "test:e2e:pw": "playwright test",
-    "test:e2e:pw:ui": "playwright test --ui",
-    "test:e2e:pw:report": "playwright show-report",
-    "e2e": "playwright test",
+    "e2e": "playwright test --project=flows",
+    "e2e:smoke": "playwright test --project=smoke",
+    "e2e:flows": "playwright test --project=flows",
     "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
     "e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
