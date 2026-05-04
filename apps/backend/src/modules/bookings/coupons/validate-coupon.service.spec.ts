@@ -1,17 +1,29 @@
 import { ValidateCouponService } from './validate-coupon.service';
 
-const baseCoupon = {
+const baseCoupon: {
+  id: string;
+  code: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: string;
+  isActive: boolean;
+  expiresAt: Date | null;
+  minOrderAmt: string | null;
+  serviceIds: string[];
+  maxUses: number | null;
+  usedCount: number;
+  maxUsesPerUser: number | null;
+} = {
   id: 'c1',
   code: 'PROMO10',
-  discountType: 'PERCENTAGE' as const,
+  discountType: 'PERCENTAGE',
   discountValue: '10',
   isActive: true,
-  expiresAt: null as Date | null,
-  minOrderAmt: null as string | null,
-  serviceIds: [] as string[],
-  maxUses: null as number | null,
+  expiresAt: null,
+  minOrderAmt: null,
+  serviceIds: [],
+  maxUses: null,
   usedCount: 0,
-  maxUsesPerUser: null as number | null,
+  maxUsesPerUser: null,
 };
 
 const buildTx = (overrides: Partial<typeof baseCoupon> = {}, perUserUses = 0) => ({
