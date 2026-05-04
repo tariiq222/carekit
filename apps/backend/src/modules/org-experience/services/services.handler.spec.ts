@@ -197,8 +197,8 @@ describe('UpdateServiceHandler', () => {
     await handler.execute({ serviceId, isActive: false });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'org-experience.service.deactivated',
       expect.objectContaining({
-        eventName: 'org-experience.service.deactivated',
         payload: { serviceId, organizationId: DEFAULT_ORG },
       }),
     );
@@ -214,8 +214,8 @@ describe('UpdateServiceHandler', () => {
     await handler.execute({ serviceId, isActive: true });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'org-experience.service.reactivated',
       expect.objectContaining({
-        eventName: 'org-experience.service.reactivated',
         payload: { serviceId, organizationId: DEFAULT_ORG },
       }),
     );

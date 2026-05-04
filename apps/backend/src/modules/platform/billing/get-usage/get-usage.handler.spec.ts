@@ -37,11 +37,6 @@ function buildPrisma(overrides: Partial<Record<string, number>> = {}) {
     employee: { count: jest.fn().mockResolvedValue(overrides.employees ?? 0) },
     service: { count: jest.fn().mockResolvedValue(overrides.services ?? 0) },
     booking: { count: jest.fn().mockResolvedValue(overrides.bookings ?? 0) },
-    file: {
-      aggregate: jest.fn().mockResolvedValue({
-        _sum: { size: overrides.storageBytes ?? 0 },
-      }),
-    },
   } as unknown as PrismaService;
 }
 
@@ -50,11 +45,10 @@ const PRO_LIMITS = {
   maxEmployees: 20,
   maxServices: 50,
   maxBookingsPerMonth: 500,
-  maxStorageMB: 5120,
 };
 
 describe('GetUsageHandler', () => {
-  it('returns 5 rows, one per quantitative feature key', async () => {
+  it('returns 4 rows, one per quantitative feature key', async () => {
     const handler = new GetUsageHandler(
       buildTenant(),
       buildCache(PRO_LIMITS),
@@ -63,13 +57,12 @@ describe('GetUsageHandler', () => {
     );
 
     const rows = await handler.execute({ organizationId: ORG_ID });
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(4);
     const keys = rows.map((r) => r.featureKey);
     expect(keys).toContain(FeatureKey.BRANCHES);
     expect(keys).toContain(FeatureKey.EMPLOYEES);
     expect(keys).toContain(FeatureKey.SERVICES);
     expect(keys).toContain(FeatureKey.MONTHLY_BOOKINGS);
-    expect(keys).toContain(FeatureKey.STORAGE);
   });
 
   it('unlimited limit (-1) returns 0% and correct limit', async () => {

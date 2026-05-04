@@ -1,14 +1,11 @@
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { DowngradeSafetyService } from './downgrade-safety.service';
 
-const buildPrisma = (counts: { branches?: number; employees?: number; bookings?: number; storageBytes?: number } = {}) => ({
+const buildPrisma = (counts: { branches?: number; employees?: number; bookings?: number } = {}) => ({
   $allTenants: {
     branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
     employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
     booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0) },
-    file: {
-      aggregate: jest.fn().mockResolvedValue({ _sum: { size: counts.storageBytes ?? 0 } }),
-    },
   },
 });
 
@@ -35,13 +32,12 @@ describe('DowngradeSafetyService', () => {
       [FeatureKey.BRANCHES]: 1,
       [FeatureKey.EMPLOYEES]: 3,
       [FeatureKey.MONTHLY_BOOKINGS]: 10,
-      [FeatureKey.STORAGE]: 200,
     });
     const svc = buildService(prisma, counters);
 
     const result = await svc.checkDowngrade(
-      planWith({ maxBranches: 5, maxEmployees: 10, maxBookingsPerMonth: 100, maxStorageMB: 1024 }),
-      planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 50, maxStorageMB: 512 }),
+      planWith({ maxBranches: 5, maxEmployees: 10, maxBookingsPerMonth: 100 }),
+      planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 50 }),
       'org-A',
     );
 
@@ -55,13 +51,12 @@ describe('DowngradeSafetyService', () => {
       [FeatureKey.BRANCHES]: 1,
       [FeatureKey.EMPLOYEES]: 12,
       [FeatureKey.MONTHLY_BOOKINGS]: 10,
-      [FeatureKey.STORAGE]: 100,
     });
     const svc = buildService(prisma, counters);
 
     const result = await svc.checkDowngrade(
-      planWith({ maxBranches: 5, maxEmployees: 20, maxBookingsPerMonth: 1000, maxStorageMB: 5000 }),
-      planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 100, maxStorageMB: 1024 }),
+      planWith({ maxBranches: 5, maxEmployees: 20, maxBookingsPerMonth: 1000 }),
+      planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 100 }),
       'org-A',
     );
 
@@ -77,13 +72,12 @@ describe('DowngradeSafetyService', () => {
       [FeatureKey.BRANCHES]: 8,
       [FeatureKey.EMPLOYEES]: 50,
       [FeatureKey.MONTHLY_BOOKINGS]: 0,
-      [FeatureKey.STORAGE]: 0,
     });
     const svc = buildService(prisma, counters);
 
     const result = await svc.checkDowngrade(
-      planWith({ maxBranches: -1, maxEmployees: -1, maxBookingsPerMonth: -1, maxStorageMB: -1 }),
-      planWith({ maxBranches: 3, maxEmployees: 10, maxBookingsPerMonth: 100, maxStorageMB: 1024 }),
+      planWith({ maxBranches: -1, maxEmployees: -1, maxBookingsPerMonth: -1 }),
+      planWith({ maxBranches: 3, maxEmployees: 10, maxBookingsPerMonth: 100 }),
       'org-A',
     );
 
@@ -91,9 +85,8 @@ describe('DowngradeSafetyService', () => {
     const kinds = result.violations.map((v) => v.kind);
     expect(kinds).toContain(FeatureKey.BRANCHES);
     expect(kinds).toContain(FeatureKey.EMPLOYEES);
-    // bookings/storage are 0 — under target — no violation
+    // bookings are 0 — under target — no violation
     expect(kinds).not.toContain(FeatureKey.MONTHLY_BOOKINGS);
-    expect(kinds).not.toContain(FeatureKey.STORAGE);
   });
 
   it('unlimited target plan never violates', async () => {
@@ -102,13 +95,12 @@ describe('DowngradeSafetyService', () => {
       [FeatureKey.BRANCHES]: 999,
       [FeatureKey.EMPLOYEES]: 999,
       [FeatureKey.MONTHLY_BOOKINGS]: 999,
-      [FeatureKey.STORAGE]: 999_999,
     });
     const svc = buildService(prisma, counters);
 
     const result = await svc.checkDowngrade(
-      planWith({ maxBranches: 100, maxEmployees: 100, maxBookingsPerMonth: 100, maxStorageMB: 1024 }),
-      planWith({ maxBranches: -1, maxEmployees: -1, maxBookingsPerMonth: -1, maxStorageMB: -1 }),
+      planWith({ maxBranches: 100, maxEmployees: 100, maxBookingsPerMonth: 100 }),
+      planWith({ maxBranches: -1, maxEmployees: -1, maxBookingsPerMonth: -1 }),
       'org-A',
     );
 

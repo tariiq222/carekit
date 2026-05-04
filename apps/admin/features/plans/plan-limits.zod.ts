@@ -12,10 +12,8 @@ export const planLimitsSchema = z.object({
   maxServices: z.number().int().min(-1),
   maxBookingsPerMonth: z.number().int().min(-1),
   maxClients: z.number().int().min(-1),
-  maxStorageMB: z.number().int().min(-1),
   overageRateBookings: z.number().min(0),
   overageRateClients: z.number().min(0),
-  overageRateStorageGB: z.number().min(0),
   recurring_bookings: z.boolean(),
   waitlist: z.boolean(),
   group_sessions: z.boolean(),
@@ -24,7 +22,6 @@ export const planLimitsSchema = z.object({
   coupons: z.boolean(),
   advanced_reports: z.boolean(),
   intake_forms: z.boolean(),
-  zatca: z.boolean(),
   custom_roles: z.boolean(),
   activity_log: z.boolean(),
   // Phase 3: 15 new boolean keys

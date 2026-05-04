@@ -37,7 +37,6 @@ export const FEATURE_KEY_MAP: Record<FeatureKey, string> = {
   [FeatureKey.EMPLOYEES]: 'maxEmployees',
   [FeatureKey.SERVICES]: 'maxServices',
   [FeatureKey.MONTHLY_BOOKINGS]: 'maxBookingsPerMonth',
-  [FeatureKey.STORAGE]: 'maxStorageMB',
   // ── Phase 3: 15 new boolean keys ──────────────────────────────────
   [FeatureKey.ZOOM_INTEGRATION]: 'zoom_integration',
   [FeatureKey.WALK_IN_BOOKINGS]: 'walk_in_bookings',

@@ -124,14 +124,6 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureCatalogEntry> = {
     descAr: "عدد الحجوزات المسموح بها كل شهر",
     descEn: "Bookings allowed per calendar month",
   },
-  [FeatureKey.STORAGE]: {
-    key: FeatureKey.STORAGE,
-    kind: "quantitative", tier: "PRO", group: "Operations",
-    nameAr: "مساحة التخزين", nameEn: "Storage",
-    descAr: "إجمالي مساحة الملفات بالميجابايت",
-    descEn: "Total file storage in MB",
-  },
-
   // ── Phase 3: 15 new keys ──────────────────────────────────────────
 
   [FeatureKey.ZOOM_INTEGRATION]: {

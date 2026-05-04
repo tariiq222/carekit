@@ -55,7 +55,7 @@ export class UpdateBranchHandler {
           const event = dto.isActive
             ? new BranchReactivatedEvent({ branchId: updated.id, organizationId })
             : new BranchDeactivatedEvent({ branchId: updated.id, organizationId });
-          await this.eventBus.publish(event).catch(() => undefined);
+          await this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => undefined);
         }
 
         return updated;

@@ -19,7 +19,6 @@ interface MetricConfig {
 const METRIC_CONFIGS: MetricConfig[] = [
   { metric: 'BOOKINGS_PER_MONTH', limitKey: 'maxBookingsPerMonth', rateKey: 'overageRateBookings' },
   { metric: 'CLIENTS', limitKey: 'maxClients', rateKey: 'overageRateClients' },
-  { metric: 'STORAGE_MB', limitKey: 'maxStorageMB', rateKey: 'overageRateStorageGB' },
 ];
 
 @Injectable()
@@ -52,11 +51,7 @@ export class ComputeOverageCron {
       const overage = Math.max(0, used - included);
       const rate = Number(params.limits[rateKey] ?? 0);
 
-      // STORAGE_MB: rate is per GB, but metric is MB
-      const amount =
-        metric === 'STORAGE_MB'
-          ? parseFloat(((overage / 1024) * rate).toFixed(2))
-          : parseFloat((overage * rate).toFixed(2));
+      const amount = parseFloat((overage * rate).toFixed(2));
 
       if (overage > 0) {
         lines.push({ metric, included, used, overage, rate, amount });

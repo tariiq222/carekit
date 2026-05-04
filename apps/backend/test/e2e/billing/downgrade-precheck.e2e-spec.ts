@@ -49,14 +49,12 @@ describe('Bug B8 — Downgrade pre-check e2e (employees over BASIC cap)', () => 
       coupons: true,
       advanced_reports: false,
       intake_forms: true,
-      zatca: false,
       custom_roles: false,
       activity_log: false,
       maxBranches: -1,
       maxEmployees: 20,
       maxServices: -1,
       maxBookingsPerMonth: -1,
-      maxStorageMB: -1,
     };
     const limitsBasic = { ...limitsPro, maxEmployees: 5 };
 

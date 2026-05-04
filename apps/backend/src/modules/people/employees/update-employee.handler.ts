@@ -43,7 +43,7 @@ export class UpdateEmployeeHandler {
       const event = cmd.isActive
         ? new EmployeeReactivatedEvent({ employeeId: updated.id, organizationId })
         : new EmployeeDeactivatedEvent({ employeeId: updated.id, organizationId });
-      await this.eventBus.publish(event).catch(() => undefined);
+      await this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => undefined);
     }
 
     return updated;

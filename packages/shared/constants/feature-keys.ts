@@ -31,7 +31,6 @@ export const FeatureKey = {
   EMPLOYEES: "employees",
   SERVICES: "services",
   MONTHLY_BOOKINGS: "monthly_bookings",
-  STORAGE: "storage",
 
   // ── On/Off — PRO (Phase 3) ────────────────────────────────────────
   ZOOM_INTEGRATION: "zoom_integration",

@@ -218,14 +218,6 @@ export class FeatureGuard implements CanActivate {
           },
         });
       }
-      case FeatureKey.STORAGE: {
-        const result = await this.prisma.file.aggregate({
-          where: { organizationId, isDeleted: false },
-          _sum: { size: true },
-        });
-        const bytes = result._sum.size ?? 0;
-        return Math.ceil(bytes / (1024 * 1024));
-      }
       default:
         return 0;
     }

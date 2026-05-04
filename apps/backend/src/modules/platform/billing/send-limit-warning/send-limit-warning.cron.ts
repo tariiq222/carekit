@@ -5,7 +5,7 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 
 const WARNING_THRESHOLD = 80;
 
-type MetricKind = 'EMPLOYEES' | 'BRANCHES' | 'BOOKINGS' | 'CLIENTS' | 'STORAGE_MB';
+type MetricKind = 'EMPLOYEES' | 'BRANCHES' | 'BOOKINGS' | 'CLIENTS';
 
 interface MetricCheck {
   kind: MetricKind;
@@ -83,17 +83,6 @@ export class SendLimitWarningCron {
           return count;
         },
         formatBody: (used, max) => `Clients are at ${used}/${max} for this plan.`,
-      },
-      {
-        kind: 'STORAGE_MB',
-        limitKey: 'maxStorageMB',
-        getUsed: async (orgId, periodStart) => {
-          const counter = await this.prisma.$allTenants.usageCounter.findFirst({
-            where: { organizationId: orgId, featureKey: 'STORAGE_MB', periodStart },
-          });
-          return counter?.value ?? 0;
-        },
-        formatBody: (used, max) => `Storage usage is at ${used}/${max} MB for this plan.`,
       },
     ];
 

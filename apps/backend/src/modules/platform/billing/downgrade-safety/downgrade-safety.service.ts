@@ -22,8 +22,7 @@ import { EPOCH, startOfMonthUTC } from '../usage-counter/period.util';
 export type DowngradeLimitKind =
   | typeof FeatureKey.BRANCHES
   | typeof FeatureKey.EMPLOYEES
-  | typeof FeatureKey.MONTHLY_BOOKINGS
-  | typeof FeatureKey.STORAGE;
+  | typeof FeatureKey.MONTHLY_BOOKINGS;
 
 export interface DowngradeViolation {
   kind: DowngradeLimitKind;
@@ -40,7 +39,6 @@ interface PlanLimitsLike {
   maxBranches?: number;
   maxEmployees?: number;
   maxBookingsPerMonth?: number;
-  maxStorageMB?: number;
   [key: string]: unknown;
 }
 
@@ -61,7 +59,6 @@ const HARD_CAP_DIMENSIONS: ReadonlyArray<{
   { kind: FeatureKey.BRANCHES, jsonKey: 'maxBranches' },
   { kind: FeatureKey.EMPLOYEES, jsonKey: 'maxEmployees' },
   { kind: FeatureKey.MONTHLY_BOOKINGS, jsonKey: 'maxBookingsPerMonth' },
-  { kind: FeatureKey.STORAGE, jsonKey: 'maxStorageMB' },
 ];
 
 @Injectable()
@@ -132,14 +129,6 @@ export class DowngradeSafetyService {
             status: { not: BookingStatus.CANCELLED },
           },
         });
-      }
-      case FeatureKey.STORAGE: {
-        const result = await this.prisma.$allTenants.file.aggregate({
-          where: { organizationId, isDeleted: false },
-          _sum: { size: true },
-        });
-        const bytes = result._sum.size ?? 0;
-        return Math.ceil(bytes / (1024 * 1024));
       }
       default:
         return 0;

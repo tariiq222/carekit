@@ -22,13 +22,12 @@ const subscription = (overrides: Record<string, unknown> = {}) => ({
       maxBranches: 3,
       maxBookingsPerMonth: 100,
       maxClients: 50,
-      maxStorageMB: 1024,
     },
   },
   ...overrides,
 });
 
-const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8, branches: 1, bookings: 0, clients: 0, storage: 0 }) => ({
+const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8, branches: 1, bookings: 0, clients: 0 }) => ({
   $allTenants: {
     subscription: {
       findMany: jest.fn().mockResolvedValue(subscriptions),
@@ -45,7 +44,6 @@ const buildPrisma = (subscriptions: unknown[] = [], usedCounts = { employees: 8,
     usageCounter: {
       findFirst: jest.fn().mockImplementation(({ where }: { where: { featureKey: string } }) => {
         if (where.featureKey === 'BOOKINGS_PER_MONTH') return Promise.resolve({ value: usedCounts.bookings });
-        if (where.featureKey === 'STORAGE_MB') return Promise.resolve({ value: usedCounts.storage });
         return Promise.resolve(null);
       }),
     },
@@ -91,7 +89,7 @@ describe('SendLimitWarningCron', () => {
   });
 
   it('creates a warning notification when employee usage reaches 80 percent', async () => {
-    const prisma = buildPrisma([subscription()], { employees: 8, branches: 1, bookings: 0, clients: 0, storage: 0 });
+    const prisma = buildPrisma([subscription()], { employees: 8, branches: 1, bookings: 0, clients: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();
@@ -109,7 +107,7 @@ describe('SendLimitWarningCron', () => {
 
   it('creates a warning notification when branch usage reaches 80 percent', async () => {
     // maxBranches=3, used=3 → 100% >= 80%
-    const prisma = buildPrisma([subscription()], { employees: 1, branches: 3, bookings: 0, clients: 0, storage: 0 });
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 3, bookings: 0, clients: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();
@@ -122,7 +120,7 @@ describe('SendLimitWarningCron', () => {
 
   it('creates a warning notification when booking usage reaches 80 percent', async () => {
     // maxBookingsPerMonth=100, used=85 → 85% >= 80%
-    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 85, clients: 0, storage: 0 });
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 85, clients: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();
@@ -135,7 +133,7 @@ describe('SendLimitWarningCron', () => {
 
   it('creates a warning notification when client usage reaches 80 percent', async () => {
     // maxClients=50, used=42 → 84% >= 80%
-    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 0, clients: 42, storage: 0 });
+    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 0, clients: 42 });
     const cron = buildCron(prisma);
 
     await cron.execute();
@@ -144,19 +142,6 @@ describe('SendLimitWarningCron', () => {
     const clientCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'CLIENTS');
     expect(clientCall).toBeDefined();
     expect(clientCall[0].data.metadata).toEqual({ kind: 'CLIENTS', threshold: 80 });
-  });
-
-  it('creates a warning notification when storage usage reaches 80 percent', async () => {
-    // maxStorageMB=1024, used=900 → 87% >= 80%
-    const prisma = buildPrisma([subscription()], { employees: 1, branches: 1, bookings: 0, clients: 0, storage: 900 });
-    const cron = buildCron(prisma);
-
-    await cron.execute();
-
-    const calls = prisma.$allTenants.notification.create.mock.calls;
-    const storageCall = calls.find((c: any[]) => c[0].data.metadata.kind === 'STORAGE_MB');
-    expect(storageCall).toBeDefined();
-    expect(storageCall[0].data.metadata).toEqual({ kind: 'STORAGE_MB', threshold: 80 });
   });
 
   it('skips when a matching notification already exists in the current period', async () => {
@@ -173,7 +158,7 @@ describe('SendLimitWarningCron', () => {
     const prisma = buildPrisma([
       subscription({
         id: 'sub-unlimited',
-        plan: { limits: { maxEmployees: -1, maxBranches: -1, maxBookingsPerMonth: -1, maxClients: -1, maxStorageMB: -1 } },
+        plan: { limits: { maxEmployees: -1, maxBranches: -1, maxBookingsPerMonth: -1, maxClients: -1 } },
       }),
     ]);
     const cron = buildCron(prisma);
@@ -195,7 +180,7 @@ describe('SendLimitWarningCron', () => {
 
   it('sends multiple metric warnings for the same org in one run', async () => {
     // employees at 80%, branches at 100%
-    const prisma = buildPrisma([subscription()], { employees: 8, branches: 3, bookings: 0, clients: 0, storage: 0 });
+    const prisma = buildPrisma([subscription()], { employees: 8, branches: 3, bookings: 0, clients: 0 });
     const cron = buildCron(prisma);
 
     await cron.execute();

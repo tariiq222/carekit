@@ -218,7 +218,6 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
           maxEmployees: -1,
           maxServices: -1,
           maxBookingsPerMonth: -1,
-          maxStorageMB: -1,
         },
         isActive: true,
         sortOrder: 99,

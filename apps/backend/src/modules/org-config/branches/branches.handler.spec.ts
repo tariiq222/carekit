@@ -119,8 +119,8 @@ describe('UpdateBranchHandler', () => {
     await handler.execute({ branchId, isActive: false });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'org-config.branch.deactivated',
       expect.objectContaining({
-        eventName: 'org-config.branch.deactivated',
         payload: { branchId, organizationId: DEFAULT_ORG },
       }),
     );
@@ -136,8 +136,8 @@ describe('UpdateBranchHandler', () => {
     await handler.execute({ branchId, isActive: true });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'org-config.branch.reactivated',
       expect.objectContaining({
-        eventName: 'org-config.branch.reactivated',
         payload: { branchId, organizationId: DEFAULT_ORG },
       }),
     );

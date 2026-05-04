@@ -70,7 +70,7 @@ describe('SaaS-04 — usage metering cron', () => {
     aggregator.increment(orgA.id, 'BOOKINGS_PER_MONTH', 3);
     aggregator.increment(orgA.id, 'CLIENTS', 5);
     aggregator.increment(orgB.id, 'BOOKINGS_PER_MONTH', 8);
-    aggregator.increment(orgB.id, 'STORAGE_MB', 120);
+    aggregator.increment(orgB.id, 'CLIENTS', 15);
 
     await cron.execute();
 
@@ -87,7 +87,7 @@ describe('SaaS-04 — usage metering cron', () => {
     expect(recordsA.every((r) => r.organizationId === orgA.id)).toBe(true);
     expect(recordsA.every((r) => r.periodStart.getTime() === subA.currentPeriodStart.getTime())).toBe(true);
 
-    // Org B — expect 2 records, different metrics
+    // Org B — expect 2 records, different counts
     const recordsB = await h.prisma.usageRecord.findMany({
       where: { subscriptionId: subB.id },
       orderBy: { metric: 'asc' },
@@ -95,7 +95,7 @@ describe('SaaS-04 — usage metering cron', () => {
     expect(recordsB).toHaveLength(2);
     expect(recordsB.map((r) => [r.metric, r.count])).toEqual([
       ['BOOKINGS_PER_MONTH', 8],
-      ['STORAGE_MB', 120],
+      ['CLIENTS', 15],
     ]);
     expect(recordsB.every((r) => r.organizationId === orgB.id)).toBe(true);
 

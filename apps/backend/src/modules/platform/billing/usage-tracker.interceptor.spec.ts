@@ -92,18 +92,5 @@ describe('UsageTrackerInterceptor', () => {
     expect(aggregator.getCount('org-1', 'CLIENTS')).toBe(1);
   });
 
-  it('STORAGE_MB increments by Math.ceil(sizeBytes / 1024 / 1024)', async () => {
-    mockReflector.get.mockReturnValue('STORAGE_MB');
-    mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: {} });
-    // 2.5 MB = 2621440 bytes → ceil = 3
-    const next = { handle: jest.fn().mockReturnValue(from([{ sizeBytes: 2621440 }])) };
-
-    const obs = await interceptor.intercept(mockCtx, next as never);
-
-    await new Promise<void>((resolve, reject) => {
-      obs.subscribe({ next: () => undefined, error: reject, complete: resolve });
-    });
-
-    expect(aggregator.getCount('org-1', 'STORAGE_MB')).toBe(3);
-  });
 });
+

@@ -167,8 +167,8 @@ describe('UpdateEmployeeHandler (direct)', () => {
     await handler.execute({ employeeId, isActive: false });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'people.employee.deactivated',
       expect.objectContaining({
-        eventName: 'people.employee.deactivated',
         payload: { employeeId, organizationId: DEFAULT_ORG },
       }),
     );
@@ -184,8 +184,8 @@ describe('UpdateEmployeeHandler (direct)', () => {
     await handler.execute({ employeeId, isActive: true });
 
     expect(eventBus.publish).toHaveBeenCalledWith(
+      'people.employee.reactivated',
       expect.objectContaining({
-        eventName: 'people.employee.reactivated',
         payload: { employeeId, organizationId: DEFAULT_ORG },
       }),
     );

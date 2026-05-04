@@ -4,10 +4,8 @@ export interface PlanLimits {
   maxServices: number;
   maxBookingsPerMonth: number;
   maxClients: number;
-  maxStorageMB: number;
   overageRateBookings: number;
   overageRateClients: number;
-  overageRateStorageGB: number;
   recurring_bookings: boolean;
   waitlist: boolean;
   group_sessions: boolean;
@@ -16,7 +14,6 @@ export interface PlanLimits {
   coupons: boolean;
   advanced_reports: boolean;
   intake_forms: boolean;
-  zatca: boolean;
   custom_roles: boolean;
   activity_log: boolean;
   // Phase 3: 15 new boolean keys
@@ -45,13 +42,11 @@ export const QUOTA_FIELDS = [
   { key: 'maxServices', label: 'Max services', hint: '-1 = unlimited' },
   { key: 'maxBookingsPerMonth', label: 'Bookings / month', hint: '-1 = unlimited' },
   { key: 'maxClients', label: 'Max clients', hint: '-1 = unlimited' },
-  { key: 'maxStorageMB', label: 'Storage (MB)', hint: '-1 = unlimited' },
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string; hint: string }>;
 
 export const OVERAGE_FIELDS = [
   { key: 'overageRateBookings', label: 'Overage — per booking (⃁)' },
   { key: 'overageRateClients', label: 'Overage — per client (⃁)' },
-  { key: 'overageRateStorageGB', label: 'Overage — per GB storage (⃁)' },
 ] as const satisfies ReadonlyArray<{ key: keyof PlanLimits; label: string }>;
 
 /**
@@ -64,7 +59,6 @@ export const QUANT_FIELD_MAP = {
   employees: 'maxEmployees',
   services: 'maxServices',
   monthly_bookings: 'maxBookingsPerMonth',
-  storage: 'maxStorageMB',
 } as const satisfies Partial<Record<string, keyof PlanLimits>>;
 
 export const FEATURE_FIELDS = [
@@ -76,7 +70,6 @@ export const FEATURE_FIELDS = [
   { key: 'coupons', label: 'Coupons' },
   { key: 'advanced_reports', label: 'Advanced reports' },
   { key: 'intake_forms', label: 'Intake forms' },
-  { key: 'zatca', label: 'ZATCA e-invoicing' },
   { key: 'custom_roles', label: 'Custom roles' },
   { key: 'activity_log', label: 'Activity log' },
   // Phase 3: 15 new keys — Phase 4 will replace this array with FEATURE_CATALOG iteration
@@ -103,10 +96,8 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   maxServices: -1,
   maxBookingsPerMonth: -1,
   maxClients: -1,
-  maxStorageMB: 1024,
   overageRateBookings: 0,
   overageRateClients: 0,
-  overageRateStorageGB: 0,
   recurring_bookings: false,
   waitlist: false,
   group_sessions: false,
@@ -115,7 +106,6 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   coupons: false,
   advanced_reports: false,
   intake_forms: false,
-  zatca: false,
   custom_roles: false,
   activity_log: false,
   // Phase 3: 15 new boolean keys

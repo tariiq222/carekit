@@ -95,7 +95,7 @@ export class UpdateServiceHandler {
       const event = dto.isActive
         ? new ServiceReactivatedEvent({ serviceId: updated.id, organizationId })
         : new ServiceDeactivatedEvent({ serviceId: updated.id, organizationId });
-      await this.eventBus.publish(event).catch(() => undefined);
+      await this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => undefined);
     }
 
     return updated;

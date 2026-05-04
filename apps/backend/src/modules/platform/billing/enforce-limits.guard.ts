@@ -11,7 +11,7 @@ import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from './subscription-cache.service';
 import { UsageCounterService } from './usage-counter/usage-counter.service';
-import { EPOCH, startOfMonthUTC } from './usage-counter/period.util';
+import { startOfMonthUTC } from './usage-counter/period.util';
 import { ENFORCE_LIMIT_KEY, LimitKind } from './plan-limits.decorator';
 
 interface AuthenticatedRequest {
@@ -25,17 +25,10 @@ interface AuthenticatedRequest {
  * domain table — these are tiny tables, the count is cheap and the
  * UsageCounter row may not yet exist (orgs created before SaaS-04).
  *
- * For BOOKINGS_PER_MONTH / STORAGE_MB the domain tables can be large
- * (millions of rows for a busy clinic), so we read the materialized
- * UsageCounter row and fall back to a recompute if the row is absent
- * (self-heal). The reconcile cron in `reconcile-usage-counters.handler.ts`
- * keeps these honest.
- *
- * STORAGE_MB pre-check is approximate: this guard runs BEFORE the multer
- * interceptor parses the body, so the per-request file size is unknown
- * here. We deny only when the org is already at-or-above its cap; the
- * post-upload reconcile path covers the marginal case where a single
- * upload pushes a near-cap org over the line.
+ * For BOOKINGS_PER_MONTH the domain table can be large (millions of rows for a
+ * busy clinic), so we read the materialized UsageCounter row and fall back to a
+ * recompute if the row is absent (self-heal). The reconcile cron in
+ * `reconcile-usage-counters.handler.ts` keeps these honest.
  */
 @Injectable()
 export class PlanLimitsGuard implements CanActivate {
@@ -89,7 +82,6 @@ export class PlanLimitsGuard implements CanActivate {
       case 'BRANCHES': return Number(limits['maxBranches'] ?? 0);
       case 'EMPLOYEES': return Number(limits['maxEmployees'] ?? 0);
       case 'BOOKINGS_PER_MONTH': return Number(limits['maxBookingsPerMonth'] ?? 0);
-      case 'STORAGE_MB': return Number(limits['maxStorageMB'] ?? 0);
     }
   }
 
@@ -105,13 +97,6 @@ export class PlanLimitsGuard implements CanActivate {
           FeatureKey.MONTHLY_BOOKINGS,
           startOfMonthUTC(),
           () => this.recomputeMonthlyBookings(organizationId),
-        );
-      case 'STORAGE_MB':
-        return this.readCounter(
-          organizationId,
-          FeatureKey.STORAGE,
-          EPOCH,
-          () => this.recomputeStorageMb(organizationId),
         );
     }
   }
@@ -141,14 +126,5 @@ export class PlanLimitsGuard implements CanActivate {
         status: { not: BookingStatus.CANCELLED },
       },
     });
-  }
-
-  private async recomputeStorageMb(organizationId: string): Promise<number> {
-    const result = await this.prisma.file.aggregate({
-      where: { organizationId, isDeleted: false },
-      _sum: { size: true },
-    });
-    const bytes = result._sum.size ?? 0;
-    return Math.ceil(bytes / (1024 * 1024));
   }
 }

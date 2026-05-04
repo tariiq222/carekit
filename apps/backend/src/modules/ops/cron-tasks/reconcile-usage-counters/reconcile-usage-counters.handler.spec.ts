@@ -11,7 +11,6 @@ const buildPrisma = () => ({
   employee: { count: jest.fn() },
   service: { count: jest.fn() },
   booking: { count: jest.fn() },
-  file: { aggregate: jest.fn() },
 });
 
 const buildCounters = () => ({
@@ -41,14 +40,9 @@ describe('ReconcileUsageCountersHandler', () => {
     prisma.employee.count.mockResolvedValue(3);
     prisma.service.count.mockResolvedValue(3);
     prisma.booking.count.mockResolvedValue(3);
-    // Storage: 3 MB exactly
-    prisma.file.aggregate.mockResolvedValue({ _sum: { size: 3 * 1024 * 1024 } });
 
     // Counter reads match reality — no drift
-    counters.read.mockImplementation((_org: string, key: FeatureKey) => {
-      if (key === FeatureKey.STORAGE) return Promise.resolve(3);
-      return Promise.resolve(3);
-    });
+    counters.read.mockResolvedValue(3);
 
     const handler = new ReconcileUsageCountersHandler(
       prisma as never,
@@ -68,18 +62,16 @@ describe('ReconcileUsageCountersHandler', () => {
     const cls = buildCls();
 
     prisma.$allTenants.organization.findMany.mockResolvedValue([{ id: 'org-1' }]);
-    // Source: branches=1, employees=1, services=1, bookings=7, storage=1MB
+    // Source: branches=1, employees=1, services=1, bookings=7
     prisma.branch.count.mockResolvedValue(1);
     prisma.employee.count.mockResolvedValue(1);
     prisma.service.count.mockResolvedValue(1);
     prisma.booking.count.mockResolvedValue(7);
-    prisma.file.aggregate.mockResolvedValue({ _sum: { size: 1024 * 1024 } }); // 1 MB
 
     counters.read.mockImplementation((_org: string, key: FeatureKey) => {
       // Drift only on monthly_bookings (stored=5, truth=7)
       if (key === FeatureKey.MONTHLY_BOOKINGS) return Promise.resolve(5);
       // All others match
-      if (key === FeatureKey.STORAGE) return Promise.resolve(1);
       return Promise.resolve(1);
     });
 
@@ -110,7 +102,6 @@ describe('ReconcileUsageCountersHandler', () => {
     prisma.employee.count.mockResolvedValue(4);
     prisma.service.count.mockResolvedValue(0);
     prisma.booking.count.mockResolvedValue(0);
-    prisma.file.aggregate.mockResolvedValue({ _sum: { size: 1024 * 1024 * 10 } }); // 10 MB
 
     counters.read.mockResolvedValue(null); // no rows yet
 
@@ -121,8 +112,9 @@ describe('ReconcileUsageCountersHandler', () => {
     );
 
     const result = await handler.execute();
-    // null !== truth for all 5 keys → 5 repairs
-    expect(result.rowsRepaired).toBe(5);
-    expect(counters.upsertExact).toHaveBeenCalledWith('org-2', FeatureKey.STORAGE, expect.any(Date), 10);
+    // null !== truth for all 4 keys → 4 repairs
+    expect(result.rowsRepaired).toBe(4);
+    expect(counters.upsertExact).toHaveBeenCalledWith('org-2', FeatureKey.BRANCHES, expect.any(Date), 2);
+    expect(counters.upsertExact).toHaveBeenCalledWith('org-2', FeatureKey.EMPLOYEES, expect.any(Date), 4);
   });
 });
