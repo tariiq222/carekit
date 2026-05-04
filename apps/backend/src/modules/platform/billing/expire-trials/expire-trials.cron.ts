@@ -47,17 +47,17 @@ export class ExpireTrialsCron {
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
     private readonly mailer: PlatformMailerService,
+    private readonly cls: ClsService,
     @Optional() private readonly moyasar?: MoyasarSubscriptionClient,
     @Optional() private readonly recordPayment?: RecordSubscriptionPaymentHandler,
     @Optional() private readonly recordFailure?: RecordSubscriptionPaymentFailureHandler,
-    private readonly cls?: ClsService,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
-    await this.cls!.run(async () => {
-      this.cls!.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
       await this.runExpireTrials();
     });
   }

@@ -153,10 +153,10 @@ function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) 
     buildConfig(enabled) as never,
     cache as never,
     mailer as never,
+    cls as never,
     moyasar as never,
     recordPayment as never,
     recordFailure as never,
-    cls as never,
   );
 }
 
