@@ -2218,7 +2218,7 @@
             "type": "number"
           },
           "vatRate": {
-            "description": "VAT rate as a decimal (e.g. 0.15 for 15%)",
+            "description": "VAT rate as fraction (0..1). Defaults to OrganizationSettings.vatRate.",
             "example": 0.15,
             "type": "number"
           }
