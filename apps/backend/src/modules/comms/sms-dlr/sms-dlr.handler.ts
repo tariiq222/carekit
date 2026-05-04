@@ -35,6 +35,7 @@ export class SmsDlrHandler {
   async execute(req: SmsDlrRequest): Promise<{ skipped?: boolean }> {
     // STAGE 1 — resolve tenant SMS config in system context.
     const cfg = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'SmsDlrHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.organizationSmsConfig.findFirst({
         where: { organizationId: req.organizationId },
@@ -60,6 +61,7 @@ export class SmsDlrHandler {
     // STAGE 2 — build adapter (in system ctx so credentials decrypt works)
     // and verify signature.
     const adapter = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'SmsDlrHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.factory.forCurrentTenant(req.organizationId);
     });

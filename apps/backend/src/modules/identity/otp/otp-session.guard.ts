@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { ClsService } from 'nestjs-cls';
 import { OtpSessionService } from './otp-session.service';
@@ -8,6 +8,8 @@ import { OtpPurpose } from '@prisma/client';
 
 @Injectable()
 export class OtpSessionGuard implements CanActivate {
+  private readonly logger = new Logger(OtpSessionGuard.name);
+
   constructor(
     private readonly otpSession: OtpSessionService,
     private readonly prisma: PrismaService,
@@ -34,6 +36,7 @@ export class OtpSessionGuard implements CanActivate {
     }
 
     const used = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'OtpSessionGuard' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.usedOtpSession.findUnique({
         where: { jti: payload.jti },

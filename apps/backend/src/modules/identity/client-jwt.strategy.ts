@@ -61,6 +61,10 @@ export class ClientJwtStrategy extends PassportStrategy(Strategy, 'client-jwt') 
       throw new UnauthorizedException('Client not found or inactive');
     }
 
+    if (client.organizationId !== payload.organizationId) {
+      throw new UnauthorizedException('Client organization mismatch');
+    }
+
     return {
       id: client.id,
       email: client.email,

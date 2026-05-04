@@ -21,6 +21,7 @@ const ADMIN_HOST = 'admin.impersonation.test';
 describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
   let req: SuperTest.Agent;
   let superAdminUserId: string;
+  let regularUserId: string;
   let harness: Awaited<ReturnType<typeof bootHarness>>;
   let testOrgId: string;
   let tenantUserId: string;
@@ -54,6 +55,20 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
       },
     });
     superAdminUserId = superAdmin.id;
+
+    const regularUser = await testPrisma.user.upsert({
+      where: { email: 'impersonation-regular@e2e.test' },
+      update: {},
+      create: {
+        email: 'impersonation-regular@e2e.test',
+        name: 'Impersonation Regular User',
+        passwordHash: 'dummy',
+        role: 'ADMIN',
+        isActive: true,
+        isSuperAdmin: false,
+      },
+    });
+    regularUserId = regularUser.id;
 
     const org = await harness.createOrg(`imp-org-${Date.now()}`, 'منظمة انتحال');
     testOrgId = org.id;
@@ -167,7 +182,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
     await closeTestApp();
   });
 
-  function superadminToken(overrides: Record<string, unknown> = {}): string {
+  function superadminToken(): string {
     return jwt.sign(
       {
         sub: superAdminUserId,
@@ -177,7 +192,22 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
         customRoleId: null,
         permissions: [],
         features: [],
-        ...overrides,
+      },
+      ACCESS_SECRET,
+      { expiresIn: '1h' },
+    );
+  }
+
+  function regularToken(): string {
+    return jwt.sign(
+      {
+        sub: regularUserId,
+        email: 'impersonation-regular@e2e.test',
+        role: 'ADMIN',
+        isSuperAdmin: false,
+        customRoleId: null,
+        permissions: [],
+        features: [],
       },
       ACCESS_SECRET,
       { expiresIn: '1h' },
@@ -213,7 +243,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
         .set('Host', ADMIN_HOST)
         .send({
           organizationId: testOrgId,
-          targetUserId: '00000000-0000-0000-0000-000000000999',
+          targetUserId: '00000000-0000-4000-8000-000000000999',
           reason: 'Testing impersonation with non-existent user for E2E coverage',
         });
 
@@ -252,7 +282,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .post('/api/v1/admin/impersonation')
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({
           organizationId: testOrgId,
@@ -317,7 +347,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .get('/api/v1/admin/impersonation/sessions')
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST);
 
       expect(res.status).toBe(403);
@@ -349,7 +379,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
 
     it('returns 404 when session does not exist', async () => {
       const res = await req
-        .post('/api/v1/admin/impersonation/00000000-0000-0000-0000-000000000999/end')
+        .post('/api/v1/admin/impersonation/00000000-0000-4000-8000-000000000999/end')
         .set('Authorization', `Bearer ${superadminToken()}`)
         .set('Host', ADMIN_HOST)
         .send({});
@@ -400,7 +430,7 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
 
       const res = await req
         .post(`/api/v1/admin/impersonation/${sessionId}/end`)
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({});
 

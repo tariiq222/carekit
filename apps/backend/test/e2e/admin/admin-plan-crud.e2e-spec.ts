@@ -9,7 +9,7 @@
 import SuperTest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, reseedPlans } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
@@ -88,6 +88,7 @@ describe('Admin Plan CRUD (e2e)', () => {
   afterAll(async () => {
     if (harness) await harness.close();
     await cleanTables(['Plan', 'SuperAdminActionLog', 'User', 'Membership']);
+    await reseedPlans();
     await closeTestApp();
   });
 

@@ -26,6 +26,7 @@ export class VerifyEmailHandler {
     const tokenHash = createHash('sha256').update(cmd.token).digest('hex');
 
     return this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'VerifyEmailHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
       const record = await this.prisma.emailVerificationToken.findFirst({

@@ -52,6 +52,7 @@ export class RequestOtpHandler {
     const orgId = dto.organizationId ?? null;
 
     return this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'RequestOtpHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
       // Fix C — per-identifier rate limit: max 5 requests per hour

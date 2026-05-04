@@ -14,7 +14,7 @@
 import SuperTest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, reseedPlans } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
@@ -23,6 +23,7 @@ const ADMIN_HOST = 'admin.test';
 describe('Admin Billing Actions (HTTP e2e)', () => {
   let req: SuperTest.Agent;
   let superAdminUserId: string;
+  let regularUserId: string;
   let BASIC_PLAN_ID: string;
   let ENTERPRISE_PLAN_ID: string;
   let harness: Awaited<ReturnType<typeof bootHarness>>;
@@ -48,6 +49,20 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
       },
     });
     superAdminUserId = user.id;
+
+    const regularUser = await testPrisma.user.upsert({
+      where: { email: 'billing-http-regular@e2e.test' },
+      update: {},
+      create: {
+        email: 'billing-http-regular@e2e.test',
+        name: 'Billing HTTP Regular User',
+        passwordHash: 'dummy',
+        role: 'ADMIN',
+        isActive: true,
+        isSuperAdmin: false,
+      },
+    });
+    regularUserId = regularUser.id;
 
     const plans = await harness.prisma.plan.findMany({ where: { slug: { in: ['BASIC', 'ENTERPRISE'] } } });
     if (plans.length === 0) {
@@ -195,10 +210,11 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
       await harness.close();
     }
     await cleanTables(['SuperAdminActionLog', 'Subscription', 'Plan', 'User', 'Membership']);
+    await reseedPlans();
     await closeTestApp();
   });
 
-  function superadminToken(overrides: Record<string, unknown> = {}): string {
+  function superadminToken(): string {
     return jwt.sign(
       {
         sub: superAdminUserId,
@@ -208,7 +224,22 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
         customRoleId: null,
         permissions: [],
         features: [],
-        ...overrides,
+      },
+      ACCESS_SECRET,
+      { expiresIn: '1h' },
+    );
+  }
+
+  function regularToken(): string {
+    return jwt.sign(
+      {
+        sub: regularUserId,
+        email: 'billing-http-regular@e2e.test',
+        role: 'ADMIN',
+        isSuperAdmin: false,
+        customRoleId: null,
+        permissions: [],
+        features: [],
       },
       ACCESS_SECRET,
       { expiresIn: '1h' },
@@ -241,7 +272,7 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .get('/api/v1/admin/billing/subscriptions')
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST);
 
       expect(res.status).toBe(403);
@@ -262,11 +293,11 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
 
     it('returns 404 for non-existent org', async () => {
       const res = await req
-        .get('/api/v1/admin/billing/subscriptions/00000000-0000-0000-0000-000000000999')
+        .get('/api/v1/admin/billing/subscriptions/00000000-0000-4000-8000-000000000999')
         .set('Authorization', `Bearer ${superadminToken()}`)
         .set('Host', ADMIN_HOST);
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(404);
     });
   });
 
@@ -295,7 +326,7 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .post(`/api/v1/admin/billing/subscriptions/${testOrgId}/force-charge`)
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({});
 
@@ -318,7 +349,7 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .post(`/api/v1/admin/billing/subscriptions/${testOrgId}/cancel-scheduled`)
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({});
 
@@ -396,7 +427,7 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .patch(`/api/v1/admin/billing/subscriptions/${testOrgId}/plan`)
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({
           newPlanId: BASIC_PLAN_ID,
@@ -455,7 +486,7 @@ describe('Admin Billing Actions (HTTP e2e)', () => {
     it('returns 403 when not superadmin', async () => {
       const res = await req
         .post('/api/v1/admin/billing/credits')
-        .set('Authorization', `Bearer ${superadminToken({ isSuperAdmin: false })}`)
+        .set('Authorization', `Bearer ${regularToken()}`)
         .set('Host', ADMIN_HOST)
         .send({
           organizationId: testOrgId,
