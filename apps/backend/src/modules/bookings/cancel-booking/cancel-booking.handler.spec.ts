@@ -10,12 +10,16 @@ const defaultCancelSettings = {
     lateCancelRefundPercent: 0,
   }),
 };
+const flagsOn = { couponStrictEnabled: true };
+const flagsOff = { couponStrictEnabled: false };
+
+const buildZoom = () => ({ deleteMeeting: jest.fn().mockResolvedValue(undefined) });
 
 describe('CancelBookingHandler', () => {
   it('cancels PENDING booking and emits event', async () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
-    const result = await new CancelBookingHandler(prisma as never, buildTenant() as never, eb as never, defaultCancelSettings as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never).execute({
+    const result = await new CancelBookingHandler(prisma as never, buildTenant() as never, eb as never, defaultCancelSettings as never, buildZoom() as never, flagsOff as never).execute({
       bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
@@ -29,7 +33,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CancelBookingHandler(prisma as never, buildTenant() as never, buildEventBus() as never, defaultCancelSettings as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never).execute({
+      new CancelBookingHandler(prisma as never, buildTenant() as never, buildEventBus() as never, defaultCancelSettings as never, buildZoom() as never, flagsOff as never).execute({
         bookingId: 'bad', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(NotFoundException);
@@ -39,7 +43,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
-      new CancelBookingHandler(prisma as never, buildTenant() as never, buildEventBus() as never, defaultCancelSettings as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never).execute({
+      new CancelBookingHandler(prisma as never, buildTenant() as never, buildEventBus() as never, defaultCancelSettings as never, buildZoom() as never, flagsOff as never).execute({
         bookingId: 'book-1', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -50,7 +54,7 @@ describe('CancelBookingHandler — status log', () => {
   it('writes a BookingStatusLog entry on cancel', async () => {
     const prisma = buildPrisma();
     const eventBus = { publish: jest.fn() };
-    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, defaultCancelSettings as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never);
+    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, defaultCancelSettings as never, buildZoom() as never, flagsOff as never);
 
     await handler.execute({
       bookingId: 'book-1',
@@ -81,7 +85,7 @@ describe('CancelBookingHandler — free cancel window', () => {
         lateCancelRefundPercent: 0,
       }),
     };
-    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, settingsHandler as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never);
+    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, settingsHandler as never, buildZoom() as never, flagsOff as never);
 
     const result = await handler.execute({
       bookingId: 'book-1',
@@ -103,7 +107,7 @@ describe('CancelBookingHandler — free cancel window', () => {
         lateCancelRefundPercent: 0,
       }),
     };
-    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, settingsHandler as never, { deleteMeeting: jest.fn().mockResolvedValue(undefined) } as never);
+    const handler = new CancelBookingHandler(prisma as never, buildTenant() as never, eventBus as never, settingsHandler as never, buildZoom() as never, flagsOff as never);
 
     const result = await handler.execute({
       bookingId: 'book-1',
@@ -111,5 +115,72 @@ describe('CancelBookingHandler — free cancel window', () => {
     });
 
     expect(result.refundType).toBe('NONE');
+  });
+});
+
+describe('CancelBookingHandler — coupon release on cancel', () => {
+  it('decrements coupon.usedCount when booking had a coupon and flag on', async () => {
+    const prisma = buildPrisma();
+    const couponUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+    (prisma as Record<string, unknown>).coupon = { updateMany: couponUpdateMany };
+    prisma.booking.findUnique.mockResolvedValue({ ...mockBooking, couponCode: 'PROMO10' });
+
+    const handler = new CancelBookingHandler(
+      prisma as never,
+      buildTenant() as never,
+      buildEventBus() as never,
+      defaultCancelSettings as never,
+      buildZoom() as never,
+      flagsOn as never,
+    );
+
+    await handler.execute({ bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-1' });
+
+    expect(couponUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ code: 'PROMO10', usedCount: { gt: 0 } }),
+        data: { usedCount: { decrement: 1 } },
+      }),
+    );
+  });
+
+  it('does not decrement when booking had no coupon', async () => {
+    const prisma = buildPrisma();
+    const couponUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
+    (prisma as Record<string, unknown>).coupon = { updateMany: couponUpdateMany };
+    prisma.booking.findUnique.mockResolvedValue({ ...mockBooking, couponCode: null });
+
+    const handler = new CancelBookingHandler(
+      prisma as never,
+      buildTenant() as never,
+      buildEventBus() as never,
+      defaultCancelSettings as never,
+      buildZoom() as never,
+      flagsOn as never,
+    );
+
+    await handler.execute({ bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-1' });
+
+    expect(couponUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('does not decrement when flag off', async () => {
+    const prisma = buildPrisma();
+    const couponUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
+    (prisma as Record<string, unknown>).coupon = { updateMany: couponUpdateMany };
+    prisma.booking.findUnique.mockResolvedValue({ ...mockBooking, couponCode: 'PROMO10' });
+
+    const handler = new CancelBookingHandler(
+      prisma as never,
+      buildTenant() as never,
+      buildEventBus() as never,
+      defaultCancelSettings as never,
+      buildZoom() as never,
+      flagsOff as never,
+    );
+
+    await handler.execute({ bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-1' });
+
+    expect(couponUpdateMany).not.toHaveBeenCalled();
   });
 });
