@@ -1,4 +1,5 @@
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { ProcessScheduledPlanChangesCron } from './process-scheduled-plan-changes.cron';
 
 const NOW = new Date('2026-05-01T00:00:00.000Z');
@@ -31,6 +32,14 @@ const buildSafety = (
   checkDowngrade: jest.fn().mockResolvedValue(result),
 });
 
+const buildCls = () => {
+  const cls = {
+    run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+    set: jest.fn(),
+  };
+  return cls;
+};
+
 const proPlan = { priceMonthly: '900.00', limits: { maxEmployees: 20 } };
 const basicPlan = { priceMonthly: '300.00', limits: { maxEmployees: 5 } };
 
@@ -45,6 +54,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(false) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -59,6 +69,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -99,6 +110,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       cache as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -138,6 +150,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       cache as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -169,6 +182,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -196,6 +210,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -225,6 +240,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -252,6 +268,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -261,5 +278,22 @@ describe('ProcessScheduledPlanChangesCron', () => {
       ([call]) => call.data.apiAccessGraceUntil || call.data.webhooksGraceUntil,
     );
     expect(graceCalls.length).toBe(0);
+  });
+
+  it('wraps execute body in super-admin CLS context', async () => {
+    const prisma = buildPrisma([]);
+    const cls = buildCls();
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+      cls as never,
+    );
+
+    await cron.execute();
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
