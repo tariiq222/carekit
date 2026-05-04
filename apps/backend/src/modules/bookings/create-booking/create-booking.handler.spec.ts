@@ -53,6 +53,9 @@ const buildPrisma = () => {
     employeeService: {
       findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
     },
+    coupon: {
+      update: jest.fn().mockResolvedValue({}),
+    },
     $transaction: jest.fn(),
   };
   prisma.$transaction = jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prisma));
@@ -292,7 +295,7 @@ describe('CreateBookingHandler — validation guards', () => {
   it('throws BadRequestException when pay-at-clinic is disabled', async () => {
     const prisma = buildPrisma();
     const settings = { execute: jest.fn().mockResolvedValue({ payAtClinicEnabled: false }) };
-    const handler = new CreateBookingHandler(prisma as never, mockTenant as never, { resolve: jest.fn() } as never, settings as never, {} as never, mockEventBus as never, mockSubscriptionCache as never);
+    const handler = new CreateBookingHandler(prisma as never, mockTenant as never, { resolve: jest.fn() } as never, settings as never, {} as never, mockEventBus as never, mockSubscriptionCache as never, { couponStrictEnabled: false } as never, {} as never);
 
     await expect(handler.execute({
       scheduledAt: new Date(Date.now() + 86400_000),
@@ -300,5 +303,72 @@ describe('CreateBookingHandler — validation guards', () => {
       branchId: 'branch-1', bookingType: 'INDIVIDUAL' as never,
       payAtClinic: true,
     })).rejects.toThrow('Pay at clinic');
+  });
+});
+
+describe('CreateBookingHandler — coupon strict validation', () => {
+  it('uses ValidateCouponService and increments usedCount when flag on', async () => {
+    const prisma = buildPrisma();
+    const couponValidator = {
+      validate: jest.fn().mockResolvedValue({ couponId: 'c-1', discount: 20 }),
+    };
+    const flags = { couponStrictEnabled: true };
+    const handler = new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler() as never,
+      {} as never,
+      mockEventBus as never,
+      mockSubscriptionCache as never,
+      flags as never,
+      couponValidator as never,
+    );
+
+    await handler.execute({ ...dto, couponCode: 'PROMO10' });
+
+    expect(couponValidator.validate).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'PROMO10' }),
+    );
+    expect(prisma.coupon.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'c-1' },
+        data: { usedCount: { increment: 1 } },
+      }),
+    );
+  });
+
+  it('falls back to legacy minimal validation when flag off', async () => {
+    const prisma = buildPrisma();
+    const legacyCoupon = {
+      id: 'c-2', isActive: true, expiresAt: null,
+      minOrderAmt: null, discountType: 'FIXED', discountValue: '10',
+    };
+    prisma.coupon = {
+      ...prisma.coupon,
+      findFirst: jest.fn().mockResolvedValue(legacyCoupon),
+    } as never;
+    const couponValidator = { validate: jest.fn() };
+    const flags = { couponStrictEnabled: false };
+    const handler = new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler() as never,
+      {} as never,
+      mockEventBus as never,
+      mockSubscriptionCache as never,
+      flags as never,
+      couponValidator as never,
+    );
+
+    await handler.execute({ ...dto, couponCode: 'OLD10' });
+
+    expect(couponValidator.validate).not.toHaveBeenCalled();
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ couponCode: 'OLD10' }),
+      }),
+    );
   });
 });
