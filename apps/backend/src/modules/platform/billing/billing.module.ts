@@ -56,6 +56,7 @@ import { ChangePlanHandler } from "./change-plan/change-plan.handler";
 import { FeatureCheckService } from "./feature-check.service";
 import { CustomDomainGraceCron } from "./grace-watchers/custom-domain-grace.cron";
 import { ApiWebhooksGraceCron } from "./grace-watchers/api-webhooks-grace.cron";
+import { LaunchFlags } from "./feature-flags/launch-flags";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -134,8 +135,10 @@ const HANDLERS = [
     FeatureCheckService,
     CustomDomainGraceCron,
     ApiWebhooksGraceCron,
+    LaunchFlags,
   ],
   exports: [
+    LaunchFlags,
     FeatureGuard,
     PlanLimitsGuard,
     SubscriptionCacheService,
