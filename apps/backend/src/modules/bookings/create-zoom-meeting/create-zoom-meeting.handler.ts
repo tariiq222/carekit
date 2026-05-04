@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../../../infrastructure/database';
 import { ZoomApiClient } from '../../../infrastructure/zoom/zoom-api.client';
 import { ZoomCredentialsService } from '../../../infrastructure/zoom/zoom-credentials.service';
+import { FeatureCheckService } from '../../platform/billing/feature-check.service';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { ZoomMeetingStatus } from '@prisma/client';
 
 export interface CreateZoomMeetingCommand {
@@ -21,6 +23,7 @@ export class CreateZoomMeetingHandler {
     private readonly prisma: PrismaService,
     private readonly zoomApi: ZoomApiClient,
     private readonly zoomCredentials: ZoomCredentialsService,
+    private readonly featureCheck: FeatureCheckService,
   ) {}
 
   async execute(cmd: CreateZoomMeetingCommand) {
@@ -29,6 +32,20 @@ export class CreateZoomMeetingHandler {
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
+    }
+
+    // Feature gate: skip Zoom meeting creation if ZOOM_INTEGRATION is disabled
+    if (!(await this.featureCheck.isEnabled(booking.organizationId, FeatureKey.ZOOM_INTEGRATION))) {
+      this.logger.debug(
+        `feature_disabled_skip: org=${booking.organizationId} feature=ZOOM_INTEGRATION`,
+      );
+      return this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: 'Zoom integration is not available on your current plan',
+        },
+      });
     }
 
     // Idempotency: skip if already CREATED
