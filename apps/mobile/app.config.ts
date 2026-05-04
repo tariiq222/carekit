@@ -35,6 +35,14 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-notifications',
     'expo-image-picker',
+    [
+      '@sentry/react-native/expo',
+      {
+        url: 'http://100.124.231.44:8000/',
+        organization: 'webvue',
+        project: 'deqah-mobile',
+      },
+    ],
   ],
 };
 

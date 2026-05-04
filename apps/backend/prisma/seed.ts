@@ -113,10 +113,11 @@ async function main() {
   });
 
   // 4. Main branch
+  const DEFAULT_BRANCH_ID = 'c1b2c3d4-e5f6-4a5b-8c9d-e0f1a2b3c4d5';
   await prisma.branch.upsert({
-    where: { id: 'main-branch' },
+    where: { id: DEFAULT_BRANCH_ID },
     create: {
-      id:       'main-branch',
+      id:       DEFAULT_BRANCH_ID,
       organizationId: DEFAULT_ORG_ID,
       nameAr:   'الفرع الرئيسي',
       nameEn:   'Main Branch',
@@ -133,10 +134,10 @@ async function main() {
   for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
     const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Fri, Sat
     await prisma.businessHour.upsert({
-      where: { branchId_dayOfWeek: { branchId: 'main-branch', dayOfWeek } },
+      where: { branchId_dayOfWeek: { branchId: DEFAULT_BRANCH_ID, dayOfWeek } },
       create: {
         organizationId: DEFAULT_ORG_ID,
-        branchId:       'main-branch',
+        branchId:       DEFAULT_BRANCH_ID,
         dayOfWeek,
         startTime:      '09:00',
         endTime:        '17:00',
