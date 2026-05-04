@@ -12,13 +12,21 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       all: true,
-      include: ['features/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}', 'shell/**/*.{ts,tsx}'],
+      include: [
+        'features/**/*.{ts,tsx}',
+        'lib/**/*.{ts,tsx}',
+        'shell/**/*.{ts,tsx}',
+        'app/**/*.{ts,tsx}',
+      ],
       exclude: [
         '**/*.d.ts',
         '**/types.ts',
         '**/index.ts',
         '**/*.config.{ts,js,mjs}',
-        'features/**/*.api.ts',
+        'app/**/layout.tsx',
+        'app/**/loading.tsx',
+        'app/**/error.tsx',
+        'app/**/not-found.tsx',
       ],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage/unit',
