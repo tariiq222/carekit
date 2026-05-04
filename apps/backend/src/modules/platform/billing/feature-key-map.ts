@@ -30,7 +30,6 @@ export const FEATURE_KEY_MAP: Record<FeatureKey, string> = {
   [FeatureKey.COUPONS]: 'coupons',
   [FeatureKey.ADVANCED_REPORTS]: 'advanced_reports',
   [FeatureKey.INTAKE_FORMS]: 'intake_forms',
-  [FeatureKey.ZATCA]: 'zatca',
   [FeatureKey.CUSTOM_ROLES]: 'custom_roles',
   [FeatureKey.ACTIVITY_LOG]: 'activity_log',
   [FeatureKey.BRANCHES]: 'maxBranches',

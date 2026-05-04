@@ -313,27 +313,6 @@ describe("FeatureGuard", () => {
     });
   });
 
-  describe("FeatureKey ZATCA", () => {
-    it("should allow when ZATCA is enabled", async () => {
-      const reflector = mockReflector(
-        jest.fn().mockReturnValue(FeatureKey.ZATCA),
-      );
-      const guard = makeGuard(reflector, mockPrisma({}), { zatca: true });
-      const ctx = mockContext();
-      const result = await guard.canActivate(ctx);
-      expect(result).toBe(true);
-    });
-
-    it("should throw when ZATCA is disabled", async () => {
-      const reflector = mockReflector(
-        jest.fn().mockReturnValue(FeatureKey.ZATCA),
-      );
-      const guard = makeGuard(reflector, mockPrisma({}), { zatca: false });
-      const ctx = mockContext();
-      await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
-    });
-  });
-
   describe("caching behavior", () => {
     it("should cache features for the same organization", async () => {
       const cacheService = mockCacheService({ maxEmployees: 10 });

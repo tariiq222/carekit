@@ -22,7 +22,6 @@ export const FeatureKey = {
   // ── On/Off — ENTERPRISE only ──────────────────────────────────────
   ADVANCED_REPORTS: "advanced_reports",
   INTAKE_FORMS: "intake_forms",
-  ZATCA: "zatca",
   CUSTOM_ROLES: "custom_roles",
   ACTIVITY_LOG: "activity_log",
 

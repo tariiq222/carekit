@@ -130,10 +130,6 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
     await expectGated(FeatureKey.COUPONS);
   });
 
-  it('BASIC plan blocks ZATCA (zatca: false)', async () => {
-    await expectGated(FeatureKey.ZATCA);
-  });
-
   it('BASIC plan blocks AI_CHATBOT (ai_chatbot: false)', async () => {
     await expectGated(FeatureKey.AI_CHATBOT);
   });

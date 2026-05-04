@@ -25,7 +25,6 @@ export const planLimitsSchema = z.object({
   coupons: z.boolean(),
   advanced_reports: z.boolean(),
   intake_forms: z.boolean(),
-  zatca: z.boolean(),
   custom_roles: z.boolean(),
   activity_log: z.boolean(),
   // Phase 3: 15 new boolean keys
@@ -66,7 +65,6 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   coupons: false,
   advanced_reports: false,
   intake_forms: false,
-  zatca: false,
   custom_roles: false,
   activity_log: false,
   // Phase 3: 15 new boolean keys
