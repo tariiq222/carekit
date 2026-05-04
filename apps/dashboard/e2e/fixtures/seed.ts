@@ -1,65 +1,319 @@
 /**
  * e2e/fixtures/seed.ts
  *
- * Deterministic test data helpers for Playwright e2e tests.
+ * Typed API helpers for creating and cleaning up test data in e2e tests.
  *
- * These helpers create predictable, isolated test data before a test run
- * and clean it up after.  Full implementation is out of scope for the
- * initial restructure — stubs with TODO comments are provided.
+ * All helpers POST / DELETE to the live backend running on :5100 using a
+ * JWT obtained from getTestTenant().  They operate inside the seeded
+ * default org (DEFAULT_ORG_ID) and are safe to call in beforeEach/afterEach.
  *
- * Usage pattern (intended, not yet implemented):
- *   import { seedClient, cleanupClient } from '../fixtures/seed';
+ * Usage:
+ *   import { seedClient, seedService, seedEmployee, seedBooking } from '../fixtures/seed';
+ *   import { getTestTenant } from '../fixtures/tenant';
  *
- *   test.beforeEach(async () => { clientId = await seedClient(); });
- *   test.afterEach(async () => { await cleanupClient(clientId); });
+ *   let token: string;
+ *   test.beforeAll(async () => { token = (await getTestTenant()).accessToken; });
+ *
+ *   test.beforeEach(async () => {
+ *     const client = await seedClient(token);
+ *     const service = await seedService(token);
+ *   });
  */
+
+import { DEFAULT_BRANCH_ID } from './tenant';
+
+// ─── Backend base URL ─────────────────────────────────────────────────────
+
+const API_BASE = process.env.PW_API_URL ?? 'http://localhost:5100';
+
+// ─── Input types (mirrors backend DTOs — only required + common optionals) ─
+
+export interface SeedClientInput {
+  firstName?: string;
+  lastName?: string;
+  /** Must match Saudi E.164: +9665XXXXXXXX */
+  phone?: string;
+  gender?: 'MALE' | 'FEMALE';
+}
+
+export interface SeedServiceInput {
+  nameAr?: string;
+  nameEn?: string;
+  durationMins?: number;
+  price?: number;
+  currency?: string;
+}
+
+export interface SeedEmployeeInput {
+  name?: string;
+  email?: string;
+  phone?: string;
+  gender?: 'MALE' | 'FEMALE';
+}
+
+export interface SeedBookingInput {
+  clientId: string;
+  employeeId: string;
+  serviceId: string;
+  /** ISO 8601 datetime — defaults to tomorrow 09:00 Asia/Riyadh */
+  scheduledAt?: string;
+  branchId?: string;
+  payAtClinic?: boolean;
+}
+
+// ─── Seeded entity shapes ────────────────────────────────────────────────
 
 export interface SeededClient {
   id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface SeededService {
+  id: string;
   nameAr: string;
   nameEn: string;
-  phone: string;
+  durationMins: number;
+  price: number;
 }
 
 export interface SeededEmployee {
   id: string;
-  nameAr: string;
-  nameEn: string;
-  email: string;
+  name: string;
+  email: string | null;
 }
 
 export interface SeededBooking {
   id: string;
   clientId: string;
   employeeId: string;
-  startsAt: string;
+  serviceId: string;
+  scheduledAt: string;
+  status: string;
 }
+
+// ─── Counter for unique phone numbers within a test run ──────────────────
+
+let phoneCounter = 0;
+
+function uniquePhone(): string {
+  // Format: +9665XXXXXXXX — use timestamp + counter to stay unique across runs
+  const suffix = String(Date.now()).slice(-6) + String(phoneCounter++).padStart(2, '0');
+  return `+96650${suffix.slice(0, 8)}`;
+}
+
+// ─── Internal fetch helper ────────────────────────────────────────────────
+
+async function apiPost<T>(
+  path: string,
+  token: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/v1${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '(unreadable)');
+    throw new Error(`[seed] POST ${path} failed — HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+async function apiDelete(path: string, token: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  // 404 on cleanup is fine — the record may have already been removed.
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text().catch(() => '(unreadable)');
+    throw new Error(`[seed] DELETE ${path} failed — HTTP ${res.status}: ${text}`);
+  }
+}
+
+// ─── Client ──────────────────────────────────────────────────────────────
 
 /**
- * TODO (seed.ts): implement via direct backend API calls using a seeding
- * access token stored in SEED_API_TOKEN env var, or via a dedicated
- * /e2e/seed endpoint gated behind NODE_ENV !== 'production'.
+ * Create a test client via POST /dashboard/people/clients.
+ * Cleans up with cleanupClient(id, token).
  */
-export async function seedClient(_overrides?: Partial<SeededClient>): Promise<SeededClient> {
-  throw new Error('TODO: seedClient not yet implemented — see e2e/fixtures/seed.ts');
+export async function seedClient(
+  token: string,
+  overrides: SeedClientInput = {},
+): Promise<SeededClient> {
+  const body = {
+    firstName: overrides.firstName ?? 'اختبار',
+    lastName: overrides.lastName ?? 'عميل',
+    phone: overrides.phone ?? uniquePhone(),
+    gender: overrides.gender ?? 'FEMALE',
+  };
+
+  const created = await apiPost<{ id: string; firstName: string; lastName: string; phone: string }>(
+    '/dashboard/people/clients',
+    token,
+    body,
+  );
+
+  return {
+    id: created.id,
+    firstName: created.firstName,
+    lastName: created.lastName,
+    phone: created.phone,
+  };
 }
 
-export async function cleanupClient(_id: string): Promise<void> {
-  throw new Error('TODO: cleanupClient not yet implemented — see e2e/fixtures/seed.ts');
+export async function cleanupClient(id: string, token: string): Promise<void> {
+  await apiDelete(`/dashboard/people/clients/${id}`, token);
 }
 
-export async function seedEmployee(_overrides?: Partial<SeededEmployee>): Promise<SeededEmployee> {
-  throw new Error('TODO: seedEmployee not yet implemented — see e2e/fixtures/seed.ts');
+// ─── Service ─────────────────────────────────────────────────────────────
+
+/**
+ * Create a test service via POST /dashboard/organization/services.
+ * Cleans up with cleanupService(id, token).
+ */
+export async function seedService(
+  token: string,
+  overrides: SeedServiceInput = {},
+): Promise<SeededService> {
+  const body = {
+    nameAr: overrides.nameAr ?? 'خدمة اختبار',
+    nameEn: overrides.nameEn ?? 'Test Service',
+    durationMins: overrides.durationMins ?? 30,
+    price: overrides.price ?? 100,
+    currency: overrides.currency ?? 'SAR',
+    isActive: true,
+  };
+
+  const created = await apiPost<{
+    id: string;
+    nameAr: string;
+    nameEn: string;
+    durationMins: number;
+    price: number;
+  }>('/dashboard/organization/services', token, body);
+
+  return {
+    id: created.id,
+    nameAr: created.nameAr,
+    nameEn: created.nameEn ?? body.nameEn,
+    durationMins: created.durationMins,
+    price: created.price,
+  };
 }
 
-export async function cleanupEmployee(_id: string): Promise<void> {
-  throw new Error('TODO: cleanupEmployee not yet implemented — see e2e/fixtures/seed.ts');
+export async function cleanupService(id: string, token: string): Promise<void> {
+  // Services use archive (soft delete) endpoint
+  await apiDelete(`/dashboard/organization/services/${id}`, token);
 }
 
-export async function seedBooking(_overrides?: Partial<SeededBooking>): Promise<SeededBooking> {
-  throw new Error('TODO: seedBooking not yet implemented — see e2e/fixtures/seed.ts');
+// ─── Employee ─────────────────────────────────────────────────────────────
+
+/**
+ * Create a test employee via POST /dashboard/people/employees.
+ * Cleans up with cleanupEmployee(id, token).
+ */
+export async function seedEmployee(
+  token: string,
+  overrides: SeedEmployeeInput = {},
+): Promise<SeededEmployee> {
+  // Generate a unique email if none provided to avoid unique-constraint collisions
+  const email =
+    overrides.email ?? `e2e-employee-${Date.now()}-${phoneCounter}@deqah-test.com`;
+
+  const body = {
+    name: overrides.name ?? 'موظف اختبار',
+    email,
+    phone: overrides.phone,
+    gender: overrides.gender ?? 'MALE',
+  };
+
+  const created = await apiPost<{ id: string; name: string; email: string | null }>(
+    '/dashboard/people/employees',
+    token,
+    body,
+  );
+
+  return {
+    id: created.id,
+    name: created.name,
+    email: created.email,
+  };
 }
 
-export async function cleanupBooking(_id: string): Promise<void> {
-  throw new Error('TODO: cleanupBooking not yet implemented — see e2e/fixtures/seed.ts');
+export async function cleanupEmployee(id: string, token: string): Promise<void> {
+  await apiDelete(`/dashboard/people/employees/${id}`, token);
+}
+
+// ─── Booking ──────────────────────────────────────────────────────────────
+
+/**
+ * Create a test booking via POST /dashboard/bookings.
+ * Cleans up with cleanupBooking(id, token).
+ *
+ * Requires a pre-existing client, employee, and service — create them
+ * first with seedClient / seedEmployee / seedService.
+ */
+export async function seedBooking(
+  token: string,
+  input: SeedBookingInput,
+): Promise<SeededBooking> {
+  // Default scheduledAt: tomorrow at 09:00 Asia/Riyadh (UTC+3 = 06:00Z)
+  const tomorrow = new Date();
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(6, 0, 0, 0); // 06:00 UTC = 09:00 Riyadh
+
+  const body = {
+    branchId: input.branchId ?? DEFAULT_BRANCH_ID,
+    clientId: input.clientId,
+    employeeId: input.employeeId,
+    serviceId: input.serviceId,
+    scheduledAt: input.scheduledAt ?? tomorrow.toISOString(),
+    payAtClinic: input.payAtClinic ?? true,
+    bookingType: 'INDIVIDUAL',
+  };
+
+  const created = await apiPost<{
+    id: string;
+    clientId: string;
+    employeeId: string;
+    serviceId: string;
+    scheduledAt: string;
+    status: string;
+  }>('/dashboard/bookings', token, body);
+
+  return {
+    id: created.id,
+    clientId: created.clientId,
+    employeeId: created.employeeId,
+    serviceId: created.serviceId,
+    scheduledAt: created.scheduledAt,
+    status: created.status,
+  };
+}
+
+export async function cleanupBooking(id: string, token: string): Promise<void> {
+  // Cancel then the nightly cleanup will purge it; DELETE is not exposed
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/bookings/${id}/cancel`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reason: 'e2e test cleanup' }),
+  });
+
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text().catch(() => '(unreadable)');
+    throw new Error(`[seed] PATCH /bookings/${id}/cancel failed — HTTP ${res.status}: ${text}`);
+  }
 }

@@ -1,66 +1,139 @@
 /**
  * e2e/fixtures/tenant.ts
  *
- * Per-test tenant isolation helpers for Playwright e2e tests.
+ * Deterministic test-tenant descriptor for Playwright e2e tests.
  *
- * In a multi-tenant system every e2e test should run against a dedicated
- * throwaway organization so tests are fully isolated from each other and
- * from the seeded dev data.
+ * Strategy: rather than creating throwaway orgs per test (which requires a
+ * super-admin service-account token and teardown logic), we rely on the
+ * deterministic org seeded by `apps/backend/prisma/seed.ts` (DEFAULT_ORG_ID).
+ * That seed script is idempotent and safe to re-run in CI beforeAll.
  *
- * Full implementation is out of scope for the initial restructure.
- * Stubs with TODO comments are provided for the intended API.
+ * `getTestTenant()` logs in as the seeded admin, calls the backend health
+ * endpoint to confirm it is reachable, and returns the typed tenant descriptor
+ * together with a valid access token for subsequent API calls in seed helpers.
  *
- * Usage pattern (intended, not yet implemented):
- *   import { createTestTenant, destroyTestTenant } from '../fixtures/tenant';
+ * Usage:
+ *   import { getTestTenant, TEST_TENANT } from '../fixtures/tenant';
  *
- *   let tenantId: string;
- *   test.beforeEach(async () => { tenantId = await createTestTenant(); });
- *   test.afterEach(async () => { await destroyTestTenant(tenantId); });
+ *   let token: string;
+ *   test.beforeAll(async () => {
+ *     const t = await getTestTenant();
+ *     token = t.accessToken;
+ *   });
  */
 
+// ─── Constants matching apps/backend/prisma/seed.ts defaults ──────────────
+
+/** Fixed org ID written by seed.ts — never changes across runs. */
+export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+/** Hard-coded seed branch ID written by seed.ts. */
+export const DEFAULT_BRANCH_ID = 'main-branch';
+
+/** Backend base URL — override via PW_API_URL in CI. */
+const API_BASE = process.env.PW_API_URL ?? 'http://localhost:5100';
+
+// ─── Types ────────────────────────────────────────────────────────────────
+
 export interface TestTenant {
+  /** Organization UUID (matches DEFAULT_ORG_ID) */
   id: string;
+  /** Human-readable slug used in dashboard routing */
   slug: string;
   nameAr: string;
   nameEn: string;
-  /** JWT for the auto-created owner of this test tenant */
-  ownerToken: string;
+  /** Main branch UUID (matches DEFAULT_BRANCH_ID) */
+  branchId: string;
+  /** Admin user email (from SEED_EMAIL env or seed default) */
+  adminEmail: string;
+  /** Admin user password (from SEED_PASSWORD env or seed default) */
+  adminPassword: string;
+  /**
+   * Valid JWT access token obtained by logging in as admin.
+   * Populated by getTestTenant() — empty string on the static TEST_TENANT const.
+   */
+  accessToken: string;
+}
+
+// ─── Static const (no accessToken — use getTestTenant() for API calls) ───
+
+/**
+ * Static descriptor of the seeded test tenant.
+ * Use this when you only need org metadata (IDs, credentials) and do NOT
+ * need to make authenticated API calls.  For API calls, call getTestTenant()
+ * which returns the same shape but with a live accessToken.
+ */
+export const TEST_TENANT: Readonly<Omit<TestTenant, 'accessToken'>> = {
+  id: DEFAULT_ORG_ID,
+  slug: 'default',
+  nameAr: 'منظمتي',
+  nameEn: 'My Organization',
+  branchId: DEFAULT_BRANCH_ID,
+  adminEmail: process.env.SEED_EMAIL ?? 'admin@deqah-test.com',
+  adminPassword: process.env.SEED_PASSWORD ?? 'Admin@1234',
+};
+
+// ─── Login response shape (partial — only what we use) ────────────────────
+
+interface LoginResponseBody {
+  accessToken: string;
+  organizationId?: string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Obtain a live accessToken by logging in as the seeded admin user, then
+ * return the full TestTenant descriptor.
+ *
+ * Throws a descriptive error if the backend is not reachable or credentials
+ * are wrong — which surfaces the root cause immediately rather than letting
+ * individual tests fail with cryptic 401s.
+ */
+export async function getTestTenant(): Promise<TestTenant> {
+  const { adminEmail, adminPassword } = TEST_TENANT;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+    });
+  } catch (err) {
+    throw new Error(
+      `[e2e/fixtures/tenant] Backend unreachable at ${API_BASE}. ` +
+        `Start the backend with 'npm run dev:backend' before running e2e tests. ` +
+        `Original error: ${String(err)}`,
+    );
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '(unreadable body)');
+    throw new Error(
+      `[e2e/fixtures/tenant] Login failed for ${adminEmail} — HTTP ${res.status}. ` +
+        `Ensure 'npm run seed' has been run in apps/backend. Body: ${body}`,
+    );
+  }
+
+  const data = (await res.json()) as LoginResponseBody;
+
+  if (!data.accessToken) {
+    throw new Error(
+      `[e2e/fixtures/tenant] Login response missing accessToken. Got: ${JSON.stringify(data)}`,
+    );
+  }
+
+  return {
+    ...TEST_TENANT,
+    accessToken: data.accessToken,
+  };
 }
 
 /**
- * Create a throwaway tenant via the super-admin API.
- *
- * TODO (tenant.ts): call POST /admin/organizations with a service-account
- * token stored in SEED_ADMIN_TOKEN env var.  The tenant should be
- * auto-tagged with { deletable: true } so the nightly cleanup cron can
- * sweep them up even if afterEach fails.
+ * Return the dashboard base URL (for baseURL overrides in tests).
+ * Defaults to the PW_DASHBOARD_URL env var or localhost:5103.
  */
-export async function createTestTenant(
-  _overrides?: Partial<Pick<TestTenant, 'nameAr' | 'nameEn' | 'slug'>>,
-): Promise<TestTenant> {
-  throw new Error('TODO: createTestTenant not yet implemented — see e2e/fixtures/tenant.ts');
-}
-
-/**
- * Destroy a throwaway tenant and all its data.
- *
- * TODO (tenant.ts): call DELETE /admin/organizations/:id with the service-
- * account token.  Safe-guard: verify the org has the deletable tag before
- * issuing the delete to prevent accidental production data loss.
- */
-export async function destroyTestTenant(_tenantId: string): Promise<void> {
-  throw new Error('TODO: destroyTestTenant not yet implemented — see e2e/fixtures/tenant.ts');
-}
-
-/**
- * Return the base URL for a given tenant slug.
- * Useful when the dashboard uses subdomain-based tenant routing.
- *
- * TODO (tenant.ts): align with the tenant resolver strategy (subdomain vs
- * header vs path) once the e2e environment topology is finalised.
- */
-export function tenantBaseUrl(slug: string): string {
-  const base = process.env.PW_DASHBOARD_URL ?? 'http://localhost:5103';
-  // Placeholder — adjust once subdomain routing is confirmed for e2e env.
-  return `${base}?org=${slug}`;
+export function dashboardBaseUrl(): string {
+  return process.env.PW_DASHBOARD_URL ?? 'http://localhost:5103';
 }

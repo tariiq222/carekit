@@ -8,7 +8,7 @@
  *   await loginAs(page, 'admin');
  *
  * Credentials are sourced from env vars (set in CI) or fall back to the
- * seeded defaults from apps/backend/prisma/seed.ts.
+ * seeded defaults from apps/backend/prisma/seed.ts (via TEST_TENANT).
  *
  * TODO: once globalSetup is enabled in playwright.config.ts, replace
  *       direct form login with storageState reuse for speed:
@@ -16,17 +16,30 @@
  */
 
 import { Page, expect } from '@playwright/test';
+import { TEST_TENANT } from './tenant';
 
 export type Persona = 'admin' | 'owner' | 'receptionist';
 
+/**
+ * Credentials keyed by persona.
+ *
+ * - admin / owner: resolved from TEST_TENANT so they stay in sync with
+ *   the backend seed script (SEED_EMAIL / SEED_PASSWORD env vars or defaults).
+ * - receptionist: sourced from its own env vars; falls back to a known
+ *   test default.  A receptionist membership must be seeded separately if
+ *   receptionist-specific tests are needed.
+ */
 const PERSONA_CREDENTIALS: Record<Persona, { email: string; password: string }> = {
   admin: {
-    email: process.env.SEED_EMAIL ?? 'admin@deqah-test.com',
-    password: process.env.SEED_PASSWORD ?? 'Admin@1234',
+    email: TEST_TENANT.adminEmail,
+    password: TEST_TENANT.adminPassword,
   },
   owner: {
-    email: process.env.SEED_OWNER_EMAIL ?? 'owner@deqah-test.com',
-    password: process.env.SEED_OWNER_PASSWORD ?? 'Owner@1234',
+    // Owner uses the same seeded user as admin in the default test org.
+    // Override via SEED_OWNER_EMAIL / SEED_OWNER_PASSWORD when a distinct
+    // owner account is seeded.
+    email: process.env.SEED_OWNER_EMAIL ?? TEST_TENANT.adminEmail,
+    password: process.env.SEED_OWNER_PASSWORD ?? TEST_TENANT.adminPassword,
   },
   receptionist: {
     email: process.env.SEED_RECEPTIONIST_EMAIL ?? 'receptionist@deqah-test.com',
@@ -87,4 +100,12 @@ export async function logout(page: Page): Promise<void> {
  */
 export function storageStatePath(persona: Persona): string {
   return `e2e/.auth/${persona}.json`;
+}
+
+/**
+ * Return the raw credentials for a persona (useful for API-level auth in
+ * seed helpers that need a token outside of a browser context).
+ */
+export function getPersonaCredentials(persona: Persona): { email: string; password: string } {
+  return PERSONA_CREDENTIALS[persona];
 }
