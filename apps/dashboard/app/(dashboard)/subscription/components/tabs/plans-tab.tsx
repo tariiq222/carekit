@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils"
 import type { BillingCycle } from "@/lib/types/billing"
 import { PlanComparisonGrid } from "../../plans/components/plan-comparison-grid"
 import { FeatureMatrix } from "../../plans/components/feature-matrix"
+import { DowngradeViolationsDialog } from "@/components/features/billing/downgrade-violations-dialog"
+import { DowngradeBlockedError, type DowngradeViolation } from "@/lib/types/billing"
 
 function interpolate(template: string, values: Record<string, string>) {
   return Object.entries(values).reduce(
@@ -51,6 +53,9 @@ export function PlansTab() {
     subscription?.billingCycle ?? "MONTHLY",
   )
   const [selectedPlanId, setSelectedPlanId] = useState("")
+  const [violationDialogOpen, setViolationDialogOpen] = useState(false)
+  const [violations, setViolations] = useState<DowngradeViolation[]>([])
+  const [violationTargetPlan, setViolationTargetPlan] = useState("")
   const {
     upgradeMut,
     scheduleDowngradeMut,
@@ -78,10 +83,20 @@ export function PlansTab() {
   async function submitPlanChange() {
     if (!selectedPlan || isCurrent) return
     const dto = { planId: selectedPlan.id, billingCycle }
-    if (preview?.action === "SCHEDULE_DOWNGRADE") {
-      await scheduleDowngradeMut.mutateAsync(dto)
-    } else {
-      await upgradeMut.mutateAsync(dto)
+    try {
+      if (preview?.action === "SCHEDULE_DOWNGRADE") {
+        await scheduleDowngradeMut.mutateAsync(dto)
+      } else {
+        await upgradeMut.mutateAsync(dto)
+      }
+    } catch (err) {
+      if (err instanceof DowngradeBlockedError) {
+        setViolations(err.body.violations)
+        setViolationTargetPlan(locale === "ar" ? selectedPlan.nameAr : selectedPlan.nameEn)
+        setViolationDialogOpen(true)
+        return
+      }
+      throw err
     }
   }
 
@@ -161,6 +176,14 @@ export function PlansTab() {
           <FeatureMatrix plans={plans} locale={locale} t={t} />
         </>
       )}
+
+      <DowngradeViolationsDialog
+        open={violationDialogOpen}
+        onOpenChange={setViolationDialogOpen}
+        violations={violations}
+        targetPlanName={violationTargetPlan}
+        onChooseHigherPlan={() => setViolationDialogOpen(false)}
+      />
     </div>
   )
 }
