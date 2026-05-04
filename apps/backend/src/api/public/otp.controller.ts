@@ -1,6 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { Public } from '../../common/guards/jwt.guard';
 import { ApiPublicResponses } from '../../common/swagger';
 import { RequestOtpHandler } from '../../modules/identity/otp/request-otp.handler';
@@ -20,7 +20,9 @@ export class PublicOtpController {
   @Public()
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @Post('request')
-  @ApiOperation({ summary: 'Request an OTP code' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request an OTP for client login' })
+  @ApiOkResponse({ schema: { type: 'object', properties: { message: { type: 'string' } } } })
   async request(@Body() dto: RequestOtpDto) {
     return this.requestHandler.execute(dto);
   }
@@ -28,7 +30,8 @@ export class PublicOtpController {
   @Public()
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @Post('verify')
-  @ApiOperation({ summary: 'Verify an OTP code and receive a session token' })
+  @ApiOperation({ summary: 'Verify OTP and obtain session tokens' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Auth tokens on successful OTP verification' } })
   async verify(@Body() dto: VerifyOtpDto) {
     return this.verifyHandler.execute(dto);
   }

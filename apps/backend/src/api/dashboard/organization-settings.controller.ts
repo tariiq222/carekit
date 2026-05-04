@@ -42,6 +42,7 @@ import { UpsertOrgSettingsHandler } from '../../modules/org-experience/org-setti
 import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/upsert-org-settings.dto';
 import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
+import { UpsertBookingSettingsDto } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.dto';
 import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
 import { PrismaService } from '../../infrastructure/database';
 import { TenantContextService } from '../../common/tenant/tenant-context.service';
@@ -168,6 +169,7 @@ export class DashboardOrganizationSettingsController {
   // ── Branding ──────────────────────────────────────────────────────────────
 
   @Post('branding')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Upsert clinic branding' })
   @ApiOkResponse({ description: 'Branding saved' })
   upsertBrandingEndpoint(@Body() body: UpsertBrandingDto) {
@@ -285,7 +287,7 @@ export class DashboardOrganizationSettingsController {
   @Patch('booking-settings')
   @ApiOperation({ summary: 'Update booking settings' })
   @ApiOkResponse({ description: 'Booking settings updated' })
-  upsertBookingSettingsEndpoint(@Body() body: Record<string, unknown>) {
+  upsertBookingSettingsEndpoint(@Body() body: UpsertBookingSettingsDto) {
     return this.upsertBookingSettings.execute({ branchId: null, ...body });
   }
 

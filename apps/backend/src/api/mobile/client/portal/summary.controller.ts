@@ -18,7 +18,14 @@ export class MobileClientSummaryController {
   @ApiOperation({ summary: 'Get account summary statistics for the authenticated client' })
   @ApiOkResponse({
     description: 'Total bookings count, last visit date, and outstanding balance.',
-    schema: { type: 'object' },
+    schema: {
+      type: 'object',
+      properties: {
+        totalBookings: { type: 'number', example: 8 },
+        lastVisit: { type: 'string', format: 'date-time', nullable: true },
+        outstandingBalance: { type: 'number', example: 250 },
+      },
+    },
   })
   async summary(@ClientSession() user: ClientSession) {
     const [totalBookings, lastBooking, unpaidInvoices] = await Promise.all([

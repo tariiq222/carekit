@@ -9,7 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Public } from '../../common/guards/jwt.guard';
 import { MoyasarWebhookHandler } from '../../modules/finance/moyasar-webhook/moyasar-webhook.handler';
@@ -24,7 +24,8 @@ export class PublicPaymentWebhookController {
   @Throttle({ default: { ttl: 60_000, limit: 120 } })
   @Post()
   @HttpCode(200)
-  @ApiOperation({ summary: 'Moyasar booking-payment webhook' })
+  @ApiOperation({ summary: 'Receive Moyasar booking-payment webhook events' })
+  @ApiOkResponse({ schema: { type: 'object', properties: { received: { type: 'boolean' } } } })
   async handle(
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-moyasar-signature') signature: string | undefined,

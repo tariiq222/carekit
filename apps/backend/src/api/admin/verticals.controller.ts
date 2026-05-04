@@ -12,11 +12,20 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListVerticalsAdminHandler } from '../../modules/platform/admin/list-verticals/list-verticals-admin.handler';
 import { CreateVerticalAdminHandler } from '../../modules/platform/admin/create-vertical/create-vertical-admin.handler';
 import { UpdateVerticalAdminHandler } from '../../modules/platform/admin/update-vertical/update-vertical-admin.handler';
@@ -26,9 +35,11 @@ import {
   UpdateVerticalDto,
   DeleteVerticalDto,
 } from './dto/vertical.dto';
+import { VerticalResponseDto } from './dto/admin-response.dto';
 
-@ApiTags('admin')
+@ApiTags('Admin / Verticals')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/verticals')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -42,12 +53,14 @@ export class AdminVerticalsController {
 
   @Get()
   @ApiOperation({ summary: 'List all verticals (admin view, includes inactive)' })
+  @ApiOkResponse({ type: [VerticalResponseDto] })
   list() {
     return this.listHandler.execute();
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a vertical (audited)' })
+  @ApiOperation({ summary: 'Create a vertical' })
+  @ApiCreatedResponse({ type: VerticalResponseDto })
   create(
     @Body() dto: CreateVerticalDto,
     @CurrentUser() user: { id: string },
@@ -64,7 +77,9 @@ export class AdminVerticalsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a vertical (audited)' })
+  @ApiOperation({ summary: 'Update a vertical' })
+  @ApiOkResponse({ type: VerticalResponseDto })
+  @ApiParam({ name: 'id', description: 'Vertical UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   update(
     @Param('id') id: string,
     @Body() dto: UpdateVerticalDto,
@@ -84,7 +99,9 @@ export class AdminVerticalsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft-delete a vertical (audited)' })
+  @ApiOperation({ summary: 'Soft-delete a vertical' })
+  @ApiNoContentResponse({ description: 'Vertical deleted' })
+  @ApiParam({ name: 'id', description: 'Vertical UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async remove(
     @Param('id') id: string,
     @Body() dto: DeleteVerticalDto,

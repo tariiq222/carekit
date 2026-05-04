@@ -19,7 +19,20 @@ export class DashboardStatsController {
 
   @Get()
   @ApiOperation({ summary: 'Get dashboard home page statistics for today' })
-  @ApiOkResponse({ description: 'Dashboard statistics aggregated for today' })
+  @ApiOkResponse({
+    description: 'Dashboard statistics aggregated for today',
+    schema: {
+      type: 'object',
+      properties: {
+        todayBookings: { type: 'number' },
+        pendingBookings: { type: 'number' },
+        completedToday: { type: 'number' },
+        revenueToday: { type: 'number' },
+        activeClients: { type: 'number' },
+        newClientsThisMonth: { type: 'number' },
+      },
+    },
+  })
   getStatsEndpoint() {
     return this.getStats.execute();
   }

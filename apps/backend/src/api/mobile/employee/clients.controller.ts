@@ -3,9 +3,11 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiOkResponse,
+  ApiNotFoundResponse, ApiExtraModels, getSchemaPath,
 } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../../common/swagger';
+import { ClientResponseDto } from '../../dashboard/dto/people-response.dto';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../infrastructure/database';
@@ -24,6 +26,7 @@ export class EmployeeClientListQuery {
 @ApiTags('Mobile Employee / Clients')
 @ApiBearerAuth()
 @ApiStandardResponses()
+@ApiExtraModels(ClientResponseDto)
 @UseGuards(JwtGuard)
 @Controller('mobile/employee/clients')
 export class MobileEmployeeClientsController {
@@ -34,7 +37,24 @@ export class MobileEmployeeClientsController {
   @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
   @ApiQuery({ name: 'search', required: false, description: 'Search by client name or phone', example: 'Sara' })
-  @ApiOkResponse({ description: 'Paginated list of clients who have had bookings with this employee' })
+  @ApiOkResponse({
+    description: 'Paginated list of clients who have had bookings with this employee',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { $ref: getSchemaPath(ClientResponseDto) } },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' },
+          },
+        },
+      },
+    },
+  })
   async listMyClients(
     @CurrentUser() user: JwtUser,
     @Query() q: EmployeeClientListQuery,
@@ -78,7 +98,24 @@ export class MobileEmployeeClientsController {
   @Get(':clientId/history')
   @ApiOperation({ summary: "Get booking history for a client with the authenticated employee" })
   @ApiParam({ name: 'clientId', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'List of past bookings (up to 20, most recent first)' })
+  @ApiOkResponse({
+    description: 'List of past bookings (up to 20, most recent first)',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          clientId: { type: 'string', format: 'uuid' },
+          employeeId: { type: 'string', format: 'uuid' },
+          scheduledAt: { type: 'string', format: 'date-time' },
+          status: { type: 'string', example: 'COMPLETED' },
+          durationMins: { type: 'integer', example: 60 },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Client not found' })
   clientHistory(
     @CurrentUser() user: JwtUser,
     @Param('clientId', ParseUUIDPipe) clientId: string,

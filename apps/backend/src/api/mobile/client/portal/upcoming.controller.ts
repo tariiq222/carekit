@@ -29,7 +29,21 @@ export class MobileClientUpcomingController {
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)', example: 10 })
   @ApiOkResponse({
     description: 'Paginated list of upcoming bookings with status PENDING or CONFIRMED.',
-    schema: { type: 'object' },
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, scheduledAt: { type: 'string', format: 'date-time' }, status: { type: 'string' }, employeeId: { type: 'string', format: 'uuid', nullable: true } } } },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'number' },
+            page: { type: 'number' },
+            limit: { type: 'number' },
+            totalPages: { type: 'number' },
+          },
+        },
+      },
+    },
   })
   async upcoming(
     @ClientSession() user: ClientSession,

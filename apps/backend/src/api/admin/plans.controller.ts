@@ -12,19 +12,30 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListPlansAdminHandler } from '../../modules/platform/admin/list-plans/list-plans-admin.handler';
 import { CreatePlanHandler } from '../../modules/platform/admin/create-plan/create-plan.handler';
 import { UpdatePlanHandler } from '../../modules/platform/admin/update-plan/update-plan.handler';
 import { DeletePlanHandler } from '../../modules/platform/admin/delete-plan/delete-plan.handler';
 import { CreatePlanDto, UpdatePlanDto, DeletePlanDto } from './dto/plan.dto';
+import { PlanResponseDto, PlanWithCountDto } from './dto/admin-response.dto';
 
-@ApiTags('admin')
+@ApiTags('Admin / Plans')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/plans')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -38,12 +49,14 @@ export class AdminPlansController {
 
   @Get()
   @ApiOperation({ summary: 'List all plans (admin view, includes inactive)' })
+  @ApiOkResponse({ type: [PlanWithCountDto] })
   list() {
     return this.listHandler.execute();
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a plan (audited)' })
+  @ApiOperation({ summary: 'Create a billing plan' })
+  @ApiCreatedResponse({ type: PlanResponseDto })
   create(
     @Body() dto: CreatePlanDto,
     @CurrentUser() user: { id: string },
@@ -60,7 +73,9 @@ export class AdminPlansController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a plan (audited)' })
+  @ApiOperation({ summary: 'Update a billing plan' })
+  @ApiOkResponse({ type: PlanResponseDto })
+  @ApiParam({ name: 'id', description: 'Plan UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   update(
     @Param('id') id: string,
     @Body() dto: UpdatePlanDto,
@@ -80,7 +95,9 @@ export class AdminPlansController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft-delete a plan (sets isActive=false; audited)' })
+  @ApiOperation({ summary: 'Soft-delete a billing plan (sets isActive=false)' })
+  @ApiNoContentResponse({ description: 'Plan deleted' })
+  @ApiParam({ name: 'id', description: 'Plan UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async remove(
     @Param('id') id: string,
     @Body() dto: DeletePlanDto,

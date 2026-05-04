@@ -1,5 +1,5 @@
 import { Controller, Headers, HttpCode, Post, RawBodyRequest, Req } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { MoyasarSubscriptionWebhookHandler } from '../../modules/finance/moyasar-api/moyasar-subscription-webhook.handler';
 
@@ -10,7 +10,8 @@ export class BillingWebhookController {
 
   @Post()
   @HttpCode(200)
-  @ApiOperation({ summary: 'Moyasar subscription payment webhook' })
+  @ApiOperation({ summary: 'Receive Moyasar billing webhook events' })
+  @ApiOkResponse({ schema: { type: 'object', properties: { received: { type: 'boolean' } } } })
   handle(
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-moyasar-signature') signature: string,

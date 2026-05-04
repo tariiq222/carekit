@@ -12,7 +12,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Public } from '../../common/guards/jwt.guard';
 import { SmsDlrHandler } from '../../modules/comms/sms-dlr/sms-dlr.handler';
@@ -31,6 +31,7 @@ export class PublicSmsWebhooksController {
   @ApiOperation({ summary: 'Inbound SMS delivery-receipt webhook' })
   @ApiParam({ name: 'provider', enum: ['UNIFONIC', 'TAQNYAT'] })
   @ApiParam({ name: 'organizationId', description: 'Owning tenant id' })
+  @ApiOkResponse({ schema: { type: 'object', properties: { received: { type: 'boolean' } } } })
   async handle(
     @Param('provider') provider: string,
     @Param('organizationId') organizationId: string,

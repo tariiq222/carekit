@@ -1,11 +1,17 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { SuperAdminContextInterceptor } from '../../common/interceptors/super-admin-context.interceptor';
 import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
+import { UpdatePlatformBrandDto } from './dto/update-platform-brand.dto';
 
+@ApiTags('Admin / Branding Settings')
+@ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/settings/brand')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -13,6 +19,19 @@ export class BrandingSettingsController {
   constructor(private readonly settings: PlatformSettingsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get platform branding configuration' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        logoUrl: { type: 'string', nullable: true },
+        primaryColor: { type: 'string', nullable: true },
+        accentColor: { type: 'string', nullable: true },
+        defaultLocale: { type: 'string' },
+        supportedLocales: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
   async getBrand() {
     const [logoUrl, primaryColor, accentColor, locale, rtlDefault, dateFormat, currencyFormat] = await Promise.all([
       this.settings.get<string>('platform.brand.logoUrl'),
@@ -38,13 +57,15 @@ export class BrandingSettingsController {
 
   @Put()
   @HttpCode(HttpStatus.OK)
-  async updateBrand(@Body() body: Record<string, unknown>, @CurrentUser() user: JwtUser) {
+  @ApiOperation({ summary: 'Update platform branding configuration' })
+  @ApiOkResponse({ schema: { type: 'object', properties: { updated: { type: 'boolean' } } } })
+  async updateBrand(@Body() body: UpdatePlatformBrandDto, @CurrentUser() user: JwtUser) {
     const updates: Array<[string, unknown]> = [];
     if ('logoUrl' in body) updates.push(['platform.brand.logoUrl', body.logoUrl]);
     if ('primaryColor' in body) updates.push(['platform.brand.primaryColor', body.primaryColor]);
     if ('accentColor' in body) updates.push(['platform.brand.accentColor', body.accentColor]);
     if (body.locale && typeof body.locale === 'object') {
-      const loc = body.locale as Record<string, unknown>;
+      const loc = body.locale;
       if ('default' in loc) updates.push(['platform.locale.default', loc.default]);
       if ('rtlDefault' in loc) updates.push(['platform.locale.rtlDefault', loc.rtlDefault]);
       if ('dateFormat' in loc) updates.push(['platform.locale.dateFormat', loc.dateFormat]);

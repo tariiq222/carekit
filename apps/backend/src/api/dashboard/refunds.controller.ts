@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { ListRefundsHandler } from '../../modules/finance/refund-payment/list-refunds.handler';
 import { ApproveRefundHandler } from '../../modules/finance/refund-payment/approve-refund.handler';
@@ -15,6 +15,7 @@ class DenyRefundDto {
 }
 
 @ApiTags('Dashboard / Refunds')
+@ApiBearerAuth()
 @Controller('refunds')
 export class RefundsController {
   constructor(
@@ -25,7 +26,9 @@ export class RefundsController {
 
   @UseGuards(JwtGuard)
   @Get()
-  @ApiOperation({ summary: 'List all refund requests' })
+  @ApiOperation({ summary: 'List refund requests' })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiOkResponse({ schema: { type: 'object', properties: { data: { type: 'array', items: { type: 'object' } }, total: { type: 'number' } } } })
   async listRefunds(@Query('status') status?: string) {
     return this.listRefundsHandler.execute(status);
   }
@@ -33,6 +36,7 @@ export class RefundsController {
   @UseGuards(JwtGuard)
   @Post('approve')
   @ApiOperation({ summary: 'Approve a refund request' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Approved refund result' } })
   async approveRefund(
     @Body() dto: ApproveRefundDto,
     @Body('processedBy') processedBy: string,
@@ -46,6 +50,7 @@ export class RefundsController {
   @UseGuards(JwtGuard)
   @Post('deny')
   @ApiOperation({ summary: 'Deny a refund request' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Denied refund result' } })
   async denyRefund(
     @Body() dto: DenyRefundDto,
     @Body('processedBy') processedBy: string,

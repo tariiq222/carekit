@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth, ApiOperation,
   ApiOkResponse, ApiNoContentResponse, ApiCreatedResponse,
@@ -75,6 +75,7 @@ export class MobileClientNotificationsController {
     description: 'Pass `notificationId` in the body to mark a single notification; omit to mark all.',
   })
   @ApiNoContentResponse({ description: 'Notifications marked as read' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Patch('mark-read')
   markReadEndpoint(
     @ClientSession() user: ClientSession,

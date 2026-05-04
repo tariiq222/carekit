@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Body, UseGuards, Param, Query, ParseUUIDPipe, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiParam, ApiOkResponse, ApiCreatedResponse, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/guards/jwt.guard';
 import { ApiPublicResponses } from '../../common/swagger';
 import { CreateGuestBookingHandler } from '../../modules/bookings/public/create-guest-booking.handler';
@@ -28,14 +28,19 @@ export class PublicBookingsController {
 
   @Public()
   @Get('group-sessions')
-  @ApiOperation({ summary: 'List public group sessions' })
+  @ApiOperation({ summary: 'List public group session slots' })
+  @ApiQuery({ name: 'branchId', required: false, type: String })
+  @ApiOkResponse({ schema: { type: 'array', items: { type: 'object' }, description: 'List of available group sessions' } })
   async listGroupSessionsEndpoint(@Query('branchId') branchId?: string) {
     return this.listGroupSessions.execute(branchId);
   }
 
   @Public()
   @Get('group-sessions/:id')
-  @ApiOperation({ summary: 'Get a public group session' })
+  @ApiOperation({ summary: 'Get a group session by ID' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Group session details' } })
+  @ApiResponse({ status: 404, description: 'Session not found' })
   async getGroupSessionEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.getGroupSession.execute(id);
   }
@@ -43,7 +48,10 @@ export class PublicBookingsController {
   @ApiBearerAuth()
   @UseGuards(ClientSessionGuard)
   @Post('group-sessions/:id/book')
-  @ApiOperation({ summary: 'Book a group session or join waitlist (requires client auth)' })
+  @ApiOperation({ summary: 'Book or join waitlist for a group session' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ schema: { type: 'object', properties: { type: { type: 'string', enum: ['BOOKED', 'WAITLISTED'] }, bookingId: { type: 'string', nullable: true }, waitlistPosition: { type: 'number', nullable: true } } } })
+  @ApiResponse({ status: 409, description: 'Session full' })
   async bookGroupSessionEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @ClientSession() client: { id: string },

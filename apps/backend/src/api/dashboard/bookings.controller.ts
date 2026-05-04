@@ -72,7 +72,21 @@ export class DashboardBookingsController {
   @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
-  @ApiCreatedResponse({ description: 'Booking created', schema: { type: 'object' } })
+  @ApiCreatedResponse({
+    description: 'Booking created',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        status: { type: 'string', example: 'PENDING' },
+        scheduledAt: { type: 'string', format: 'date-time' },
+        clientId: { type: 'string', format: 'uuid' },
+        employeeId: { type: 'string', format: 'uuid' },
+        organizationId: { type: 'string', format: 'uuid' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   createBooking(@UserId() userId: string, @Body() body: CreateBookingDto) {
     const { scheduledAt, expiresAt, ...rest } = body;
     return this.createHandler.execute({
@@ -87,7 +101,21 @@ export class DashboardBookingsController {
   @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a recurring booking series' })
-  @ApiCreatedResponse({ description: 'Recurring booking series created', schema: { type: 'object' } })
+  @ApiCreatedResponse({
+    description: 'Recurring booking series created',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          status: { type: 'string', example: 'PENDING' },
+          scheduledAt: { type: 'string', format: 'date-time' },
+          recurringGroupId: { type: 'string', format: 'uuid', nullable: true },
+        },
+      },
+    },
+  })
   createRecurringBooking(
     @Body() body: CreateRecurringBookingDto,
   ) {
@@ -103,7 +131,18 @@ export class DashboardBookingsController {
 
   @Get()
   @ApiOperation({ summary: 'List bookings' })
-  @ApiOkResponse({ description: 'Paginated list of bookings', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Paginated list of bookings',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object' } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   listBookings(@Query() q: ListBookingsDto) {
     const { page, limit, fromDate, toDate, ...rest } = q;
     return this.listHandler.execute({
@@ -117,14 +156,37 @@ export class DashboardBookingsController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Today\'s booking counters + revenue for the dashboard StatsGrid' })
-  @ApiOkResponse({ description: 'Today/pending counts and today revenue', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Today/pending counts and today revenue',
+    schema: {
+      type: 'object',
+      properties: {
+        todayCount: { type: 'number', example: 12 },
+        pendingCount: { type: 'number', example: 3 },
+        completedToday: { type: 'number', example: 7 },
+        revenueToday: { type: 'number', example: 1500 },
+      },
+    },
+  })
   getStats() {
     return this.statsHandler.execute();
   }
 
   @Get('availability')
   @ApiOperation({ summary: 'Check employee availability for a date' })
-  @ApiOkResponse({ description: 'Available time slots', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Available time slots',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          startTime: { type: 'string', format: 'date-time' },
+          endTime: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
   checkAvailability(@Query() q: CheckAvailabilityDto) {
     const { date, ...rest } = q;
     return this.availabilityHandler.execute({
@@ -136,7 +198,22 @@ export class DashboardBookingsController {
   @Get(':id/status-log')
   @ApiOperation({ summary: 'Get the status transition log for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Status log entries (oldest first)', schema: { type: 'array' } })
+  @ApiOkResponse({
+    description: 'Status log entries (oldest first)',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          fromStatus: { type: 'string', nullable: true },
+          toStatus: { type: 'string' },
+          changedBy: { type: 'string', format: 'uuid', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
   getBookingStatusLog(@Param('id', ParseUUIDPipe) id: string) {
     return this.statusLogHandler.execute({ bookingId: id });
   }
@@ -144,7 +221,19 @@ export class DashboardBookingsController {
   @Post('waitlist')
   @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'Add a client to the waitlist' })
-  @ApiCreatedResponse({ description: 'Waitlist entry created', schema: { type: 'object' } })
+  @ApiCreatedResponse({
+    description: 'Waitlist entry created',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        clientId: { type: 'string', format: 'uuid' },
+        serviceId: { type: 'string', format: 'uuid', nullable: true },
+        preferredDate: { type: 'string', format: 'date-time', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   addToWaitlist(@Body() body: AddToWaitlistDto) {
     const { preferredDate, ...rest } = body;
     return this.waitlistHandler.execute({
@@ -156,7 +245,22 @@ export class DashboardBookingsController {
   @Get('waitlist')
   @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'List waitlist entries' })
-  @ApiOkResponse({ description: 'List of waitlist entries', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'List of waitlist entries',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          clientId: { type: 'string', format: 'uuid' },
+          serviceId: { type: 'string', format: 'uuid', nullable: true },
+          preferredDate: { type: 'string', format: 'date-time', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
   listWaitlist(@Query() query: ListWaitlistDto) {
     return this.listWaitlistHandler.execute({ ...query });
   }
@@ -177,7 +281,22 @@ export class DashboardBookingsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking detail', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Booking detail',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        status: { type: 'string' },
+        scheduledAt: { type: 'string', format: 'date-time' },
+        durationMins: { type: 'number' },
+        clientId: { type: 'string', format: 'uuid' },
+        employeeId: { type: 'string', format: 'uuid' },
+        zoomJoinUrl: { type: 'string', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   getBooking(@Param('id', ParseUUIDPipe) id: string) {
     return this.getHandler.execute({ bookingId: id });
@@ -186,7 +305,18 @@ export class DashboardBookingsController {
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancel a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking cancelled', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Booking cancelled',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        status: { type: 'string', example: 'CANCELLED' },
+        refundType: { type: 'string', nullable: true, example: 'FULL' },
+        cancelledAt: { type: 'string', format: 'date-time', nullable: true },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   cancelBooking(
     @UserId() userId: string,
@@ -203,7 +333,7 @@ export class DashboardBookingsController {
   @Patch(':id/reschedule')
   @ApiOperation({ summary: 'Reschedule a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking rescheduled', schema: { type: 'object' } })
+  @ApiOkResponse({ description: 'Booking rescheduled', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, scheduledAt: { type: 'string', format: 'date-time' }, status: { type: 'string' } } } })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   rescheduleBooking(
     @UserId() userId: string,
@@ -222,7 +352,7 @@ export class DashboardBookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Confirm a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking confirmed', schema: { type: 'object' } })
+  @ApiOkResponse({ description: 'Booking confirmed', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, status: { type: 'string', example: 'CONFIRMED' } } } })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   confirmBooking(
     @UserId() userId: string,
@@ -236,7 +366,18 @@ export class DashboardBookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Retry creating Zoom meeting for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Zoom meeting retry attempted', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Zoom meeting retry attempted',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        zoomMeetingId: { type: 'string', nullable: true },
+        zoomJoinUrl: { type: 'string', nullable: true },
+        zoomStartUrl: { type: 'string', nullable: true },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   retryZoomMeeting(
     @Param('id', ParseUUIDPipe) id: string,
@@ -248,7 +389,7 @@ export class DashboardBookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Check in a client for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Client checked in', schema: { type: 'object' } })
+  @ApiOkResponse({ description: 'Client checked in', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, status: { type: 'string', example: 'CHECKED_IN' }, checkedInAt: { type: 'string', format: 'date-time', nullable: true } } } })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   checkInBooking(
     @UserId() userId: string,
@@ -261,7 +402,7 @@ export class DashboardBookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a booking as complete' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking marked complete', schema: { type: 'object' } })
+  @ApiOkResponse({ description: 'Booking marked complete', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, status: { type: 'string', example: 'COMPLETED' }, completedAt: { type: 'string', format: 'date-time', nullable: true } } } })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   completeBooking(
     @UserId() userId: string,
@@ -279,7 +420,7 @@ export class DashboardBookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a booking as no-show' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'Booking marked as no-show', schema: { type: 'object' } })
+  @ApiOkResponse({ description: 'Booking marked as no-show', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, status: { type: 'string', example: 'NO_SHOW' } } } })
   @ApiResponse({ status: 404, description: 'Booking not found', type: ApiErrorDto })
   noShowBooking(
     @UserId() userId: string,

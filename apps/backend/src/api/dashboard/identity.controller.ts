@@ -101,7 +101,18 @@ export class DashboardIdentityController {
   @ApiQuery({ name: 'isActive', required: false, description: 'Filter by active status', example: true })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
-  @ApiOkResponse({ description: 'Paginated list of users' })
+  @ApiOkResponse({
+    description: 'Paginated list of users',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, name: { type: 'string' }, email: { type: 'string' }, role: { type: 'string' }, isActive: { type: 'boolean' } } } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   async listUsers(@Query() query: ListUsersQueryDto) {
     return this.listUsersHandler.execute({
       page: query.page ?? 1,
@@ -114,7 +125,23 @@ export class DashboardIdentityController {
   @Get('users/:id')
   @ApiOperation({ summary: 'Get a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'User details' })
+  @ApiOkResponse({
+    description: 'User details',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        phone: { type: 'string', nullable: true },
+        gender: { type: 'string', nullable: true },
+        role: { type: 'string' },
+        isActive: { type: 'boolean' },
+        customRoleId: { type: 'string', format: 'uuid', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'User not found', type: ApiErrorDto })
   async getUserEndpoint(@Param('id', ParseUUIDPipe) userId: string) {
     return this.getUserHandler.execute({ userId });
@@ -122,7 +149,20 @@ export class DashboardIdentityController {
 
   @Post('users')
   @ApiOperation({ summary: 'Create a user' })
-  @ApiCreatedResponse({ description: 'User created' })
+  @ApiCreatedResponse({
+    description: 'User created',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        role: { type: 'string' },
+        isActive: { type: 'boolean' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   async createUserEndpoint(@Body() body: CreateUserDto) {
     return this.createUserHandler.execute(body);
   }
@@ -130,7 +170,20 @@ export class DashboardIdentityController {
   @Patch('users/:id')
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @ApiOkResponse({ description: 'User updated' })
+  @ApiOkResponse({
+    description: 'User updated',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        role: { type: 'string' },
+        isActive: { type: 'boolean' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   @ApiResponse({ status: 404, description: 'User not found', type: ApiErrorDto })
   async updateUserEndpoint(
     @Param('id', ParseUUIDPipe) userId: string,
@@ -200,7 +253,20 @@ export class DashboardIdentityController {
 
   @Get('roles')
   @ApiOperation({ summary: 'List custom roles' })
-  @ApiOkResponse({ description: 'List of custom roles' })
+  @ApiOkResponse({
+    description: 'List of custom roles',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          permissions: { type: 'array', items: { type: 'object', properties: { action: { type: 'string' }, subject: { type: 'string' } } } },
+        },
+      },
+    },
+  })
   async listRoles() {
     return this.listRolesHandler.execute();
   }
@@ -208,7 +274,18 @@ export class DashboardIdentityController {
   @Post('roles')
   @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @ApiOperation({ summary: 'Create a custom role' })
-  @ApiCreatedResponse({ description: 'Role created' })
+  @ApiCreatedResponse({
+    description: 'Role created',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        organizationId: { type: 'string', format: 'uuid' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   async createRoleEndpoint(@Body() body: CreateRoleDto) {
     return this.createRoleHandler.execute(body);
   }
@@ -229,7 +306,19 @@ export class DashboardIdentityController {
 
   @Get('permissions')
   @ApiOperation({ summary: 'List available permissions' })
-  @ApiOkResponse({ description: 'All available CASL permissions' })
+  @ApiOkResponse({
+    description: 'All available CASL permissions',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', example: 'create' },
+          subject: { type: 'string', example: 'Booking' },
+        },
+      },
+    },
+  })
   async listPermissions() {
     return this.listPermissionsHandler.execute();
   }

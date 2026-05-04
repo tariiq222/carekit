@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
-  UseGuards, ParseUUIDPipe,
+  UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
@@ -85,6 +85,7 @@ export class DashboardOrganizationBranchesController {
   }
 
   @Delete('branches/:branchId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a branch' })
   @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiNoContentResponse({ description: 'Branch deleted' })

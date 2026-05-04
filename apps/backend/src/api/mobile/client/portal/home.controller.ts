@@ -27,7 +27,15 @@ export class MobileClientHomeController {
   @ApiOperation({ summary: 'Get home screen aggregated data for the authenticated client' })
   @ApiOkResponse({
     description: 'Client profile, upcoming bookings, unread notifications, and recent payments.',
-    schema: { type: 'object' },
+    schema: {
+      type: 'object',
+      properties: {
+        profile: { type: 'object', description: 'Client profile' },
+        upcomingBookings: { type: 'array', items: { type: 'object' } },
+        unreadNotifications: { type: 'array', items: { type: 'object' } },
+        recentPayments: { type: 'array', items: { type: 'object' } },
+      },
+    },
   })
   async home(@ClientSession() user: ClientSession) {
     const now = new Date();

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Req, Ip, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse } from '@nestjs/swagger';
 import { Public } from '../../common/guards/jwt.guard';
 import { ApiPublicResponses } from '../../common/swagger';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
@@ -32,7 +32,8 @@ export class PublicAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @Post('register')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Register a client account via verified OTP session' })
+  @ApiOperation({ summary: 'Register a new client account' })
+  @ApiCreatedResponse({ schema: { type: 'object', description: 'Created client account with tokens' } })
   async registerEndpoint(@Body() dto: RegisterDto, @Req() req: Request) {
     return this.register.execute(dto, req);
   }
@@ -41,7 +42,8 @@ export class PublicAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in with email and password' })
+  @ApiOperation({ summary: 'Log in with phone and password' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Auth tokens' } })
   async loginEndpoint(@Body() dto: ClientLoginDto, @Ip() ip: string) {
     return this.login.execute(dto, ip);
   }
@@ -49,7 +51,8 @@ export class PublicAuthController {
   @UseGuards(ClientSessionGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Rotate a client refresh token and issue new token pair' })
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'New access token' } })
   async refreshEndpoint(
     @Body() dto: RefreshTokenDto,
     @ClientSession() session: { id: string },
@@ -60,7 +63,8 @@ export class PublicAuthController {
   @UseGuards(ClientSessionGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('logout')
-  @ApiOperation({ summary: 'Revoke a client refresh token (log out)' })
+  @ApiOperation({ summary: 'Log out and revoke refresh token' })
+  @ApiNoContentResponse()
   async logoutEndpoint(
     @Body() dto: LogoutDto,
     @ClientSession() session: { id: string },
@@ -72,7 +76,8 @@ export class PublicAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('reset-password')
-  @ApiOperation({ summary: 'Reset client password using a verified OTP session token' })
+  @ApiOperation({ summary: 'Reset password with OTP token' })
+  @ApiNoContentResponse()
   async resetPasswordEndpoint(@Body() dto: ResetPasswordDto): Promise<void> {
     await this.resetPassword.execute(dto);
   }

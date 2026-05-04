@@ -13,7 +13,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { OrganizationStatus } from '@prisma/client';
 import type { Request } from 'express';
 import {
@@ -23,6 +32,7 @@ import {
 } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListOrganizationsHandler } from '../../modules/platform/admin/list-organizations/list-organizations.handler';
 import { GetOrganizationHandler } from '../../modules/platform/admin/get-organization/get-organization.handler';
 import { CreateTenantHandler } from '../../modules/platform/admin/create-tenant/create-tenant.handler';
@@ -39,6 +49,12 @@ import {
   ReinstateOrganizationDto,
   SuspendOrganizationDto,
 } from './dto/suspend-organization.dto';
+import {
+  OrganizationCreatedDto,
+  OrganizationDetailDto,
+  OrganizationListResponseDto,
+  OrganizationUpdatedDto,
+} from './dto/admin-response.dto';
 
 // Guard order is load-bearing:
 //   1. AdminHostGuard — rejects non-admin Host headers (invariant 2)
@@ -47,8 +63,9 @@ import {
 // SuperAdminContextInterceptor runs after guards and unlocks $allTenants
 // by setting the CLS flag (invariant 1). It also refuses to run when the
 // token carries scope='impersonation'.
-@ApiTags('admin')
+@ApiTags('Admin / Organizations')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/organizations')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -65,6 +82,14 @@ export class AdminOrganizationsController {
 
   @Get()
   @ApiOperation({ summary: 'List all organizations (cross-tenant)' })
+  @ApiOkResponse({ type: OrganizationListResponseDto })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'perPage', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'suspended', required: false, type: Boolean })
+  @ApiQuery({ name: 'status', required: false, enum: OrganizationStatus })
+  @ApiQuery({ name: 'verticalId', required: false, type: String, description: 'Filter by vertical UUID' })
+  @ApiQuery({ name: 'planId', required: false, type: String, description: 'Filter by plan UUID' })
   list(
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
@@ -89,12 +114,15 @@ export class AdminOrganizationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get organization detail with stats' })
+  @ApiOkResponse({ type: OrganizationDetailDto })
+  @ApiParam({ name: 'id', description: 'Organization UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   show(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.getHandler.execute({ id });
   }
 
   @Post()
   @ApiOperation({ summary: 'Create tenant organization and owner membership' })
+  @ApiCreatedResponse({ type: OrganizationCreatedDto })
   create(
     @Body() dto: CreateTenantDto,
     @CurrentUser() user: { sub?: string; id?: string },
@@ -110,6 +138,8 @@ export class AdminOrganizationsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update organization tenant metadata' })
+  @ApiOkResponse({ type: OrganizationUpdatedDto })
+  @ApiParam({ name: 'id', description: 'Organization UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateOrganizationDto,
@@ -128,6 +158,8 @@ export class AdminOrganizationsController {
   @Post(':id/archive')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Archive an organization without deleting tenant data' })
+  @ApiNoContentResponse({ description: 'Organization archived' })
+  @ApiParam({ name: 'id', description: 'Organization UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async archive(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: ArchiveOrganizationDto,
@@ -146,6 +178,8 @@ export class AdminOrganizationsController {
   @Post(':id/suspend')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Suspend an organization (logs audit entry)' })
+  @ApiNoContentResponse({ description: 'Organization suspended' })
+  @ApiParam({ name: 'id', description: 'Organization UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async suspend(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: SuspendOrganizationDto,
@@ -164,6 +198,8 @@ export class AdminOrganizationsController {
   @Post(':id/reinstate')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Reinstate a suspended organization' })
+  @ApiNoContentResponse({ description: 'Organization reinstated' })
+  @ApiParam({ name: 'id', description: 'Organization UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async reinstate(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: ReinstateOrganizationDto,

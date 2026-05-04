@@ -65,7 +65,18 @@ export class DashboardOpsController {
   @Get('activity')
   @RequireFeature(FeatureKey.ACTIVITY_LOG)
   @ApiOperation({ summary: 'List activity log entries' })
-  @ApiOkResponse({ description: 'Paginated list of activity log entries' })
+  @ApiOkResponse({
+    description: 'Paginated list of activity log entries',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, action: { type: 'string' }, entity: { type: 'string' }, entityId: { type: 'string', format: 'uuid', nullable: true }, userId: { type: 'string', format: 'uuid', nullable: true }, createdAt: { type: 'string', format: 'date-time' } } } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   @ApiQuery({ name: 'userId', required: false, description: 'Filter by staff user UUID' })
   @ApiQuery({ name: 'entity', required: false, description: 'Filter by entity type (e.g. Booking, Client)' })
   @ApiQuery({ name: 'entityId', required: false, description: 'Filter by entity UUID' })

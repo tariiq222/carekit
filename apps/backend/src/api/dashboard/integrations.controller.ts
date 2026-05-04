@@ -25,7 +25,16 @@ export class DashboardIntegrationsController {
   @Get('zoom')
   @RequireFeature(FeatureKey.ZOOM_INTEGRATION)
   @ApiOperation({ summary: 'Get Zoom integration status (no secrets returned)' })
-  @ApiOkResponse({ description: 'Configured + active flags' })
+  @ApiOkResponse({
+    description: 'Configured + active flags',
+    schema: {
+      type: 'object',
+      properties: {
+        isConfigured: { type: 'boolean' },
+        isActive: { type: 'boolean' },
+      },
+    },
+  })
   getZoom() {
     return this.getZoomConfig.execute();
   }
@@ -33,7 +42,16 @@ export class DashboardIntegrationsController {
   @Put('zoom')
   @RequireFeature(FeatureKey.ZOOM_INTEGRATION)
   @ApiOperation({ summary: 'Create or update Zoom S2S OAuth credentials' })
-  @ApiOkResponse({ description: 'Configured + active flags (no secrets returned)' })
+  @ApiOkResponse({
+    description: 'Configured + active flags (no secrets returned)',
+    schema: {
+      type: 'object',
+      properties: {
+        isConfigured: { type: 'boolean' },
+        isActive: { type: 'boolean' },
+      },
+    },
+  })
   upsertZoom(@Body() body: UpsertZoomConfigDto) {
     return this.upsertZoomConfig.execute(body);
   }
@@ -42,7 +60,16 @@ export class DashboardIntegrationsController {
   @RequireFeature(FeatureKey.ZOOM_INTEGRATION)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Validate Zoom credentials by exchanging for an access token' })
-  @ApiOkResponse({ description: '{ ok: boolean, error?: string }' })
+  @ApiOkResponse({
+    description: 'Zoom credential test result',
+    schema: {
+      type: 'object',
+      properties: {
+        ok: { type: 'boolean' },
+        error: { type: 'string', nullable: true },
+      },
+    },
+  })
   testZoom(@Body() body: UpsertZoomConfigDto) {
     return this.testZoomConfig.execute(body);
   }

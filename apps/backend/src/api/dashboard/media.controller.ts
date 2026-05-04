@@ -6,6 +6,7 @@ import {
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
   ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse, ApiBody, ApiConsumes,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../../common/guards/jwt.guard';
@@ -49,7 +50,21 @@ export class DashboardMediaController {
       required: ['file'],
     },
   })
-  @ApiCreatedResponse({ description: 'File uploaded successfully' })
+  @ApiCreatedResponse({
+    description: 'File uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        url: { type: 'string' },
+        filename: { type: 'string' },
+        mimetype: { type: 'string' },
+        size: { type: 'number' },
+        visibility: { type: 'string', enum: ['PUBLIC', 'PRIVATE'] },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   uploadFileEndpoint(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: UploadFileDto,
@@ -70,7 +85,22 @@ export class DashboardMediaController {
   @Get(':id')
   @ApiOperation({ summary: 'Get file metadata by ID' })
   @ApiParam({ name: 'id', description: 'UUID of the file', example: 'b3d2e1f0-9a8b-7c6d-5e4f-3a2b1c0d9e8f' })
-  @ApiOkResponse({ description: 'File metadata returned' })
+  @ApiOkResponse({
+    description: 'File metadata returned',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        url: { type: 'string' },
+        filename: { type: 'string' },
+        mimetype: { type: 'string' },
+        size: { type: 'number' },
+        visibility: { type: 'string', enum: ['PUBLIC', 'PRIVATE'] },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'File not found' })
   getFileEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
   ) {
@@ -82,6 +112,7 @@ export class DashboardMediaController {
   @ApiOperation({ summary: 'Delete a file by ID' })
   @ApiParam({ name: 'id', description: 'UUID of the file to delete', example: 'b3d2e1f0-9a8b-7c6d-5e4f-3a2b1c0d9e8f' })
   @ApiNoContentResponse({ description: 'File deleted successfully' })
+  @ApiNotFoundResponse({ description: 'File not found' })
   deleteFileEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
   ) {
@@ -92,7 +123,17 @@ export class DashboardMediaController {
   @ApiOperation({ summary: 'Generate a presigned URL for temporary file access' })
   @ApiParam({ name: 'id', description: 'UUID of the file', example: 'b3d2e1f0-9a8b-7c6d-5e4f-3a2b1c0d9e8f' })
   @ApiQuery({ name: 'expirySeconds', required: false, description: 'URL validity in seconds (60–86400)', example: 3600 })
-  @ApiOkResponse({ description: 'Presigned URL generated' })
+  @ApiOkResponse({
+    description: 'Presigned URL generated',
+    schema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', example: 'https://storage.example.com/file?X-Amz-Signature=...' },
+        expiresAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'File not found' })
   presignedUrlEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() query: GeneratePresignedUrlDto,

@@ -29,7 +29,25 @@ export class MobileEmployeeEarningsController {
   @ApiOperation({ summary: 'Get earnings summary for the authenticated employee within a date range' })
   @ApiOkResponse({
     description: 'Earnings totals and breakdown by payment method for the requested period',
-    schema: { type: 'object' },
+    schema: {
+      type: 'object',
+      properties: {
+        period: {
+          type: 'object',
+          properties: {
+            from: { type: 'string', format: 'date-time' },
+            to: { type: 'string', format: 'date-time' },
+          },
+        },
+        totalEarnings: { type: 'number', example: 4500 },
+        invoiceCount: { type: 'number', example: 12 },
+        byMethod: {
+          type: 'object',
+          additionalProperties: { type: 'number' },
+          example: { CARD: 3000, CASH: 1500 },
+        },
+      },
+    },
   })
   @ApiQuery({ name: 'from', required: false, description: 'Start of earnings period (ISO 8601)', example: '2026-04-01' })
   @ApiQuery({ name: 'to', required: false, description: 'End of earnings period (ISO 8601)', example: '2026-04-30' })

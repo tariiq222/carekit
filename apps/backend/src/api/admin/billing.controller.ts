@@ -10,11 +10,20 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListSubscriptionsHandler } from '../../modules/platform/admin/list-subscriptions/list-subscriptions.handler';
 import { GetOrgBillingHandler } from '../../modules/platform/admin/get-org-billing/get-org-billing.handler';
 import { ListSubscriptionInvoicesHandler } from '../../modules/platform/admin/list-subscription-invoices/list-subscription-invoices.handler';
@@ -26,6 +35,15 @@ import { AdminRefundInvoiceHandler } from '../../modules/platform/admin/admin-re
 import { AdminForceChargeHandler } from '../../modules/platform/admin/admin-force-charge/admin-force-charge.handler';
 import { AdminCancelScheduledHandler } from '../../modules/platform/admin/admin-cancel-scheduled/admin-cancel-scheduled.handler';
 import {
+  AdminBillingMetricsDto,
+  AdminCancelScheduledDto,
+  AdminChangePlanResultDto,
+  AdminForceChargeResultDto,
+  AdminInvoiceRefundResultDto,
+  AdminSubscriptionInvoiceDto,
+  AdminSubscriptionSummaryDto,
+  AdminWaiveInvoiceResultDto,
+  BillingCreditDto,
   ChangePlanForOrgDto,
   GrantCreditDto,
   ListSubscriptionInvoicesQueryDto,
@@ -33,12 +51,19 @@ import {
   RefundInvoiceDto,
   WaiveInvoiceDto,
 } from './dto/billing.dto';
+import { PaginationMetaDto } from '../../common/swagger/api-paginated.dto';
 
-@ApiTags('admin')
+@ApiTags('Admin / Billing')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/billing')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
+@ApiExtraModels(
+  PaginationMetaDto,
+  AdminSubscriptionSummaryDto,
+  AdminSubscriptionInvoiceDto,
+)
 export class AdminBillingController {
   constructor(
     private readonly listSubs: ListSubscriptionsHandler,
@@ -55,6 +80,17 @@ export class AdminBillingController {
 
   @Get('subscriptions')
   @ApiOperation({ summary: 'List all subscriptions across tenants' })
+  @ApiOkResponse({
+    description: 'Paginated list of subscriptions',
+    schema: {
+      type: 'object',
+      required: ['items', 'meta'],
+      properties: {
+        items: { type: 'array', items: { $ref: getSchemaPath(AdminSubscriptionSummaryDto) } },
+        meta: { $ref: getSchemaPath(PaginationMetaDto) },
+      },
+    },
+  })
   list(@Query() q: ListSubscriptionsQueryDto) {
     return this.listSubs.execute({
       page: q.page ?? 1,
@@ -66,12 +102,25 @@ export class AdminBillingController {
 
   @Get('subscriptions/:orgId')
   @ApiOperation({ summary: 'Get full billing detail for one organization' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiOkResponse({ description: 'Billing detail for the organization' })
   getOrg(@Param('orgId') orgId: string) {
     return this.getOrgBilling.execute({ organizationId: orgId });
   }
 
   @Get('invoices')
   @ApiOperation({ summary: 'List subscription invoices across tenants' })
+  @ApiOkResponse({
+    description: 'Paginated list of subscription invoices',
+    schema: {
+      type: 'object',
+      required: ['items', 'meta'],
+      properties: {
+        items: { type: 'array', items: { $ref: getSchemaPath(AdminSubscriptionInvoiceDto) } },
+        meta: { $ref: getSchemaPath(PaginationMetaDto) },
+      },
+    },
+  })
   invoices(@Query() q: ListSubscriptionInvoicesQueryDto) {
     return this.listInvoices.execute({
       page: q.page ?? 1,
@@ -85,13 +134,16 @@ export class AdminBillingController {
   }
 
   @Get('metrics')
-  @ApiOperation({ summary: 'Aggregate billing metrics (MRR, ARR, churn, by-plan)' })
+  @ApiOperation({ summary: 'Retrieve aggregate billing metrics (MRR, ARR, churn, by-plan)' })
+  @ApiOkResponse({ type: AdminBillingMetricsDto, description: 'Platform-wide billing metrics' })
   metrics() {
     return this.getMetrics.execute();
   }
 
   @Post('invoices/:id/waive')
-  @ApiOperation({ summary: 'Waive a DUE/FAILED invoice (sets status=VOID; audited)' })
+  @ApiOperation({ summary: 'Waive a DUE or FAILED invoice (sets status=VOID; audited)' })
+  @ApiParam({ name: 'id', description: 'Invoice ID', format: 'uuid' })
+  @ApiOkResponse({ type: AdminWaiveInvoiceResultDto, description: 'Voided invoice' })
   waive(
     @Param('id') id: string,
     @Body() dto: WaiveInvoiceDto,
@@ -109,6 +161,7 @@ export class AdminBillingController {
 
   @Post('credits')
   @ApiOperation({ summary: 'Grant a billing credit to an organization (audited)' })
+  @ApiOkResponse({ type: BillingCreditDto, description: 'Created billing credit' })
   grant(
     @Body() dto: GrantCreditDto,
     @CurrentUser() user: { id: string },
@@ -129,6 +182,8 @@ export class AdminBillingController {
   @ApiOperation({
     summary: 'Refund a PAID invoice via Moyasar (full or partial; idempotent; audited)',
   })
+  @ApiParam({ name: 'id', description: 'Invoice ID', format: 'uuid' })
+  @ApiOkResponse({ type: AdminInvoiceRefundResultDto, description: 'Updated invoice after refund' })
   refund(
     @Param('id') id: string,
     @Body() dto: RefundInvoiceDto,
@@ -147,6 +202,8 @@ export class AdminBillingController {
 
   @Post('subscriptions/:orgId/force-charge')
   @ApiOperation({ summary: 'Force an immediate payment retry for a PAST_DUE subscription (audited)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiOkResponse({ type: AdminForceChargeResultDto, description: 'Result of the force-charge attempt' })
   forceChargeOrg(
     @Param('orgId') orgId: string,
     @CurrentUser() user: { id: string },
@@ -162,6 +219,8 @@ export class AdminBillingController {
 
   @Post('subscriptions/:orgId/cancel-scheduled')
   @ApiOperation({ summary: 'Cancel a scheduled end-of-period cancellation (audited)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiOkResponse({ type: AdminCancelScheduledDto, description: 'Updated subscription with cancelAtPeriodEnd=false' })
   cancelScheduledCancellation(
     @Param('orgId') orgId: string,
     @CurrentUser() user: { id: string },
@@ -176,7 +235,9 @@ export class AdminBillingController {
   }
 
   @Patch('subscriptions/:orgId/plan')
-  @ApiOperation({ summary: "Change an organization plan immediately (no proration; audited)" })
+  @ApiOperation({ summary: 'Change an organization plan immediately (no proration; audited)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiOkResponse({ type: AdminChangePlanResultDto, description: 'Subscription with updated plan' })
   changePlan(
     @Param('orgId') orgId: string,
     @Body() dto: ChangePlanForOrgDto,

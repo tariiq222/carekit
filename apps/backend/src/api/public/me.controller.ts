@@ -1,5 +1,6 @@
 import { Controller, Get, Patch, Query, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
 import { ClientSession } from '../../common/auth/client-session.decorator';
 import { GetMeHandler } from '../../modules/identity/client-auth/get-me.handler';
@@ -12,6 +13,7 @@ import { GetBookingInvoiceHandler } from '../../modules/finance/get-invoice/get-
 
 @ApiTags('Public / Me')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(ClientSessionGuard)
 @Controller('public/me')
 export class PublicMeController {
@@ -24,13 +26,17 @@ export class PublicMeController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get the authenticated client profile' })
+  @ApiOperation({ summary: 'Get authenticated client profile' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Client profile with membership info' } })
   async meEndpoint(@ClientSession() session: { id: string }) {
     return this.getMe.execute(session.id);
   }
 
   @Get('bookings')
-  @ApiOperation({ summary: 'List bookings for the authenticated client' })
+  @ApiOperation({ summary: 'List client bookings' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Paginated bookings list' } })
   async bookingsEndpoint(
     @ClientSession() session: { id: string },
     @Query('page') page?: string,
@@ -44,8 +50,10 @@ export class PublicMeController {
   }
 
   @Patch('bookings/:id/cancel')
-  @ApiOperation({ summary: 'Cancel a booking (client self-serve)' })
-  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOperation({ summary: 'Cancel a client booking' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Updated booking' } })
+  @ApiResponse({ status: 404, description: 'Booking not found' })
   async cancelBookingEndpoint(
     @ClientSession() session: { id: string },
     @Param('id', ParseUUIDPipe) id: string,
@@ -55,8 +63,10 @@ export class PublicMeController {
   }
 
   @Get('bookings/:id/invoice')
-  @ApiOperation({ summary: 'Get the invoice (with ZATCA QR) for one of the client\'s bookings' })
-  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOperation({ summary: 'Get invoice for a booking' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Invoice details' } })
+  @ApiResponse({ status: 404, description: 'Booking not found' })
   async bookingInvoiceEndpoint(
     @ClientSession() session: { id: string },
     @Param('id', ParseUUIDPipe) id: string,
@@ -65,8 +75,9 @@ export class PublicMeController {
   }
 
   @Patch('bookings/:id/reschedule')
-  @ApiOperation({ summary: 'Reschedule a booking (client self-serve)' })
-  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOperation({ summary: 'Reschedule a client booking' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ schema: { type: 'object', description: 'Updated booking' } })
   async rescheduleBookingEndpoint(
     @ClientSession() session: { id: string },
     @Param('id', ParseUUIDPipe) id: string,

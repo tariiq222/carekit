@@ -5,17 +5,26 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { DeliveryChannel, DeliveryStatus } from '@prisma/client';
 import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListNotificationDeliveryLogHandler } from '../../modules/platform/admin/list-notification-delivery-log/list-notification-delivery-log.handler';
+import { NotificationDeliveryLogListResponseDto } from './dto/admin-response.dto';
 
 const VALID_STATUSES = new Set<string>(Object.values(DeliveryStatus));
 const VALID_CHANNELS = new Set<string>(Object.values(DeliveryChannel));
 
-@ApiTags('admin')
+@ApiTags('Admin / Notifications')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/notifications')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -24,11 +33,12 @@ export class AdminNotificationsController {
 
   @Get('delivery-log')
   @ApiOperation({ summary: 'List notification delivery log across all tenants' })
-  @ApiQuery({ name: 'organizationId', required: false, description: 'Filter by organization UUID' })
-  @ApiQuery({ name: 'status', required: false, description: 'Filter by delivery status' })
-  @ApiQuery({ name: 'channel', required: false, description: 'Filter by delivery channel' })
-  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'perPage', required: false, description: 'Items per page (default: 50, max: 200)' })
+  @ApiOkResponse({ type: NotificationDeliveryLogListResponseDto })
+  @ApiQuery({ name: 'organizationId', required: false, type: String, description: 'Filter by organization UUID' })
+  @ApiQuery({ name: 'status', required: false, enum: DeliveryStatus, description: 'Filter by delivery status' })
+  @ApiQuery({ name: 'channel', required: false, enum: DeliveryChannel, description: 'Filter by delivery channel' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'perPage', required: false, type: Number, description: 'Items per page (default: 50, max: 200)' })
   list(
     @Query('organizationId') organizationId?: string,
     @Query('status') status?: string,

@@ -35,6 +35,7 @@ import { GetZatcaConfigHandler } from '../../modules/finance/zatca-config/get-za
 import { UpsertZatcaConfigHandler } from '../../modules/finance/zatca-config/upsert-zatca-config.handler';
 import { UpsertZatcaConfigDto } from '../../modules/finance/zatca-config/upsert-zatca-config.dto';
 import { OnboardZatcaHandler } from '../../modules/finance/zatca-config/onboard-zatca.handler';
+import { ZatcaOnboardDto } from '../../modules/finance/zatca-config/zatca-onboard.dto';
 import { GetPaymentStatsHandler } from '../../modules/finance/get-payment-stats/get-payment-stats.handler';
 import { RefundPaymentHandler } from '../../modules/finance/refund-payment/refund-payment.handler';
 import { RefundPaymentDto } from '../../modules/finance/refund-payment/refund-payment.dto';
@@ -192,6 +193,7 @@ export class DashboardFinanceController {
   // ── Coupons apply (existing) ───────────────────────────────────────────────
 
   @Post('coupons/apply')
+  @HttpCode(HttpStatus.OK)
   @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Apply a coupon code to an invoice' })
   @ApiOkResponse({ description: 'Coupon applied; returns updated discount amount' })
@@ -280,7 +282,7 @@ export class DashboardFinanceController {
   @ApiOperation({ summary: 'Onboard the clinic with ZATCA (certificate signing request)' })
   @ApiOkResponse({ description: 'ZATCA onboarding initiated' })
   onboardZatcaEndpoint(
-    @Body() body: { vatRegistrationNumber: string; sellerName: string },
+    @Body() body: ZatcaOnboardDto,
   ) {
     return this.onboardZatca.execute(body);
   }

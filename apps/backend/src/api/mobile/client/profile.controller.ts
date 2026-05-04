@@ -6,6 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../../common/swagger';
+import { ClientResponseDto } from '../../dashboard/dto/people-response.dto';
 import { ClientSessionGuard } from '../../../common/guards/client-session.guard';
 import { ClientSession } from '../../../common/auth/client-session.decorator';
 import { GetClientHandler } from '../../../modules/people/clients/get-client.handler';
@@ -59,14 +60,14 @@ export class MobileClientProfileController {
 
   @Get()
   @ApiOperation({ summary: "Get the authenticated client's profile" })
-  @ApiOkResponse({ description: 'Client profile record' })
+  @ApiOkResponse({ type: ClientResponseDto, description: 'Client profile record' })
   getProfile(@ClientSession() user: ClientSession) {
     return this.getClient.execute({ clientId: user.id });
   }
 
   @Patch()
   @ApiOperation({ summary: "Update the authenticated client's profile" })
-  @ApiOkResponse({ description: 'Updated client profile' })
+  @ApiOkResponse({ type: ClientResponseDto, description: 'Updated client profile' })
   updateProfile(
     @ClientSession() user: ClientSession,
     @Body() body: MobileUpdateProfileBody,

@@ -1,17 +1,17 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { SuperAdminContextInterceptor } from '../../common/interceptors/super-admin-context.interceptor';
 import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
+import { SecuritySettingsDto, UpdateSecuritySettingsDto } from './dto/security-settings.dto';
 
-interface SecuritySettings {
-  sessionTtlMinutes: number;
-  require2fa: boolean;
-  ipAllowlist: string[];
-}
-
+@ApiTags('Admin / Security Settings')
+@ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/settings/security')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -19,7 +19,9 @@ export class SecuritySettingsController {
   constructor(private readonly settings: PlatformSettingsService) {}
 
   @Get()
-  async getSettings(): Promise<SecuritySettings> {
+  @ApiOperation({ summary: 'Get platform security settings' })
+  @ApiOkResponse({ type: SecuritySettingsDto })
+  async getSettings(): Promise<SecuritySettingsDto> {
     const [ttl, require2fa, ipAllowlist] = await Promise.all([
       this.settings.get<number>('security.session.superAdminTtlMinutes'),
       this.settings.get<boolean>('security.twoFactor.required'),
@@ -34,7 +36,9 @@ export class SecuritySettingsController {
 
   @Put()
   @HttpCode(HttpStatus.OK)
-  async updateSettings(@Body() body: Partial<SecuritySettings>, @CurrentUser() user: JwtUser) {
+  @ApiOperation({ summary: 'Update platform security settings' })
+  @ApiOkResponse({ type: SecuritySettingsDto })
+  async updateSettings(@Body() body: UpdateSecuritySettingsDto, @CurrentUser() user: JwtUser) {
     const updates: Array<[string, unknown]> = [];
     if (body.sessionTtlMinutes !== undefined) updates.push(['security.session.superAdminTtlMinutes', body.sessionTtlMinutes]);
     if (body.require2fa !== undefined) updates.push(['security.twoFactor.required', body.require2fa]);

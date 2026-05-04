@@ -10,6 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiNoContentResponse, ApiResponse,
+  ApiCreatedResponse, ApiParam,
 } from '@nestjs/swagger';
 import { LoginHandler } from '../../modules/identity/login/login.handler';
 import { LogoutHandler } from '../../modules/identity/logout/logout.handler';
@@ -96,7 +97,24 @@ export class AuthController {
         accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
         refreshToken: { type: 'string', example: 'a1b2c3d4-...' },
         expiresIn: { type: 'number', example: 900 },
-        user: { type: 'object', description: 'Authenticated user profile' },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            email: { type: 'string', format: 'email' },
+            name: { type: 'string' },
+            phone: { type: 'string', nullable: true },
+            gender: { type: 'string', nullable: true },
+            avatarUrl: { type: 'string', nullable: true },
+            isActive: { type: 'boolean' },
+            role: { type: 'string' },
+            isSuperAdmin: { type: 'boolean' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            organizationId: { type: 'string', format: 'uuid', nullable: true },
+            permissions: { type: 'array', items: { type: 'string' } },
+          },
+        },
       },
     },
   })
@@ -232,7 +250,7 @@ export class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke a refresh token (log out)' })
-  @ApiOkResponse({ description: 'Token revoked; no body returned' })
+  @ApiNoContentResponse({ description: 'Token revoked; no body returned' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
   async logoutEndpoint(
     @Body() body: LogoutDto,
@@ -251,7 +269,23 @@ export class AuthController {
   @AllowDuringSuspension()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the currently authenticated user' })
-  @ApiOkResponse({ description: 'Current user profile with role and permissions' })
+  @ApiOkResponse({
+    description: 'Current user profile with role and permissions',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        email: { type: 'string', format: 'email' },
+        name: { type: 'string' },
+        phone: { type: 'string', nullable: true },
+        avatarUrl: { type: 'string', nullable: true },
+        role: { type: 'string' },
+        isSuperAdmin: { type: 'boolean' },
+        organizationId: { type: 'string', format: 'uuid', nullable: true },
+        permissions: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   async meEndpoint(@UserId() userId: string) {
     const user = await this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
@@ -267,7 +301,24 @@ export class AuthController {
       'SaaS-06 — powers the tenant switcher. Returns one row per ACTIVE ' +
       'membership for the caller, with the organization summary attached.',
   })
-  @ApiOkResponse({ description: 'Array of MembershipSummary rows' })
+  @ApiOkResponse({
+    description: 'Array of MembershipSummary rows',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          membershipId: { type: 'string', format: 'uuid' },
+          organizationId: { type: 'string', format: 'uuid' },
+          organizationName: { type: 'string' },
+          role: { type: 'string' },
+          displayName: { type: 'string', nullable: true },
+          jobTitle: { type: 'string', nullable: true },
+          avatarUrl: { type: 'string', nullable: true },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   async membershipsEndpoint(@UserId() userId: string) {
     return this.listMemberships.execute({ userId });
@@ -317,11 +368,12 @@ export class AuthController {
   @Patch('memberships/:id/profile')
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'Membership UUID', format: 'uuid', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOperation({
-    summary: 'Update the caller’s per-org display profile',
+    summary: "Update the caller's per-org display profile",
     description:
-      'Per-membership-profile — updates displayName / jobTitle / avatarUrl ' +
-      'on the caller’s own Membership. Cross-user edits are blocked (403).',
+      "Per-membership-profile — updates displayName / jobTitle / avatarUrl " +
+      "on the caller's own Membership. Cross-user edits are blocked (403).",
   })
   @ApiOkResponse({ description: 'Updated MembershipSummary-shaped row' })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
@@ -344,10 +396,11 @@ export class AuthController {
   @Post('memberships/:id/avatar')
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'Membership UUID', format: 'uuid', example: '00000000-0000-0000-0000-000000000000' })
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Avatar image for the caller’s membership',
+    description: "Avatar image for the caller's membership",
     schema: {
       type: 'object',
       required: ['avatar'],
@@ -357,13 +410,19 @@ export class AuthController {
     },
   })
   @ApiOperation({
-    summary: 'Upload an avatar for the caller’s membership',
+    summary: "Upload an avatar for the caller's membership",
     description:
       'Per-membership-profile — stores at memberships/{id}/avatar-{ts}.{ext}. ' +
       'Max 5MB, image/jpeg|png|webp only. Cross-user uploads return 403. The ' +
       'previous avatar object is intentionally NOT deleted (audit trail).',
   })
-  @ApiOkResponse({ description: 'Persisted avatar URL' })
+  @ApiOkResponse({
+    description: 'Persisted avatar URL',
+    schema: {
+      type: 'object',
+      properties: { avatarUrl: { type: 'string', example: 'https://cdn.example.com/memberships/xxx/avatar.jpg' } },
+    },
+  })
   @ApiResponse({ status: 400, description: 'Invalid mime/size or empty file', type: ApiErrorDto })
   @ApiResponse({ status: 403, description: 'Caller does not own the membership', type: ApiErrorDto })
   @ApiResponse({ status: 404, description: 'Membership not found', type: ApiErrorDto })
@@ -394,7 +453,19 @@ export class AuthController {
       'membership conflict is surfaced (409). Optional displayName/jobTitle ' +
       'are carried into the new Membership on accept.',
   })
-  @ApiResponse({ status: 201, description: 'PENDING invitation row' })
+  @ApiCreatedResponse({
+    description: 'PENDING invitation row',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        email: { type: 'string', format: 'email' },
+        role: { type: 'string' },
+        status: { type: 'string', example: 'PENDING' },
+        expiresAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   @ApiResponse({ status: 409, description: 'Email already has an active membership in this org', type: ApiErrorDto })
   async inviteUserEndpoint(
@@ -422,7 +493,18 @@ export class AuthController {
       'Membership is linked silently. If not, password + name are required to ' +
       'create the User. Expired or already-accepted tokens return 410 Gone.',
   })
-  @ApiResponse({ status: 200, description: 'Active Membership info' })
+  @ApiOkResponse({
+    description: 'Active Membership info',
+    schema: {
+      type: 'object',
+      properties: {
+        membershipId: { type: 'string', format: 'uuid' },
+        organizationId: { type: 'string', format: 'uuid' },
+        role: { type: 'string' },
+        isActive: { type: 'boolean' },
+      },
+    },
+  })
   @ApiResponse({ status: 400, description: 'Missing password/name for new account', type: ApiErrorDto })
   @ApiResponse({ status: 404, description: 'Token not found', type: ApiErrorDto })
   @ApiResponse({ status: 410, description: 'Token expired or already used', type: ApiErrorDto })
@@ -458,6 +540,7 @@ export class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Request a password reset email for a staff (User) account' })
+  @ApiNoContentResponse({ description: 'Reset email sent (response is identical regardless of whether the email exists)' })
   async requestPasswordResetEndpoint(@Body() dto: RequestPasswordResetDto): Promise<void> {
     if (!(await this.captcha.verify(dto.hCaptchaToken))) {
       throw new BadRequestException('CAPTCHA_FAILED');
@@ -470,6 +553,8 @@ export class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Reset staff (User) password using a token from the reset email' })
+  @ApiNoContentResponse({ description: 'Password reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired reset token', type: ApiErrorDto })
   async performPasswordResetEndpoint(@Body() dto: PerformPasswordResetDto): Promise<void> {
     await this.performPasswordReset.execute(dto);
   }

@@ -47,7 +47,18 @@ export class MobileEmployeeScheduleController {
   ) {}
 
   @ApiOperation({ summary: 'Get today\'s bookings for the authenticated employee' })
-  @ApiOkResponse({ description: 'Paginated list of today\'s bookings', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Paginated list of today\'s bookings',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, scheduledAt: { type: 'string', format: 'date-time' }, status: { type: 'string' }, clientId: { type: 'string', format: 'uuid' } } } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   @Get('today')
   today(@CurrentUser() user: JwtUser) {
     const today = new Date();
@@ -63,7 +74,18 @@ export class MobileEmployeeScheduleController {
   }
 
   @ApiOperation({ summary: 'Get weekly bookings for the authenticated employee' })
-  @ApiOkResponse({ description: 'Paginated list of bookings within the given date range', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Paginated list of bookings within the given date range',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, scheduledAt: { type: 'string', format: 'date-time' }, status: { type: 'string' }, clientId: { type: 'string', format: 'uuid' } } } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   @ApiQuery({ name: 'fromDate', required: false, description: 'Start of date range (ISO 8601)', example: '2026-04-01' })
   @ApiQuery({ name: 'toDate', required: false, description: 'End of date range (ISO 8601)', example: '2026-04-07' })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
@@ -83,7 +105,17 @@ export class MobileEmployeeScheduleController {
   }
 
   @ApiOperation({ summary: 'Update availability windows and exceptions for the authenticated employee' })
-  @ApiOkResponse({ description: 'Availability updated successfully', schema: { type: 'object' } })
+  @ApiOkResponse({
+    description: 'Availability updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        employeeId: { type: 'string', format: 'uuid' },
+        windows: { type: 'array', items: { type: 'object' } },
+        exceptions: { type: 'array', items: { type: 'object' } },
+      },
+    },
+  })
   @Patch('availability')
   updateAvailabilityEndpoint(
     @CurrentUser() user: JwtUser,

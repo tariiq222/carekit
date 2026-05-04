@@ -1,10 +1,13 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiParam } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { SuperAdminContextInterceptor } from '../../common/interceptors/super-admin-context.interceptor';
 import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
+import { UpdateBillingSettingValueDto } from './dto/update-billing-setting-value.dto';
 
 const SECRET_KEYS = new Set([
   'billing.moyasar.platformSecretKey',
@@ -20,6 +23,9 @@ const ALL_BILLING_KEYS = [
   'billing.defaults.trialDays',
 ] as const;
 
+@ApiTags('Admin / Billing Settings')
+@ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('admin/settings/billing')
 @UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
@@ -27,6 +33,25 @@ export class BillingSettingsController {
   constructor(private readonly platformSettings: PlatformSettingsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all billing settings' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        settings: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              key: { type: 'string' },
+              value: { type: 'string' },
+              isSecret: { type: 'boolean' },
+            },
+          },
+        },
+      },
+    },
+  })
   async getAllSettings() {
     const entries = await Promise.all(
       ALL_BILLING_KEYS.map(async (key) => {
@@ -43,9 +68,12 @@ export class BillingSettingsController {
 
   @Patch(':key')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update a billing setting value' })
+  @ApiParam({ name: 'key', type: String })
+  @ApiOkResponse({ schema: { type: 'object', properties: { updated: { type: 'boolean' } } } })
   async updateSetting(
     @Param('key') key: string,
-    @Body() body: { value: unknown },
+    @Body() body: UpdateBillingSettingValueDto,
     @CurrentUser() user: JwtUser,
   ) {
     if (!ALL_BILLING_KEYS.includes(key as (typeof ALL_BILLING_KEYS)[number])) {
@@ -57,6 +85,18 @@ export class BillingSettingsController {
 
   @Post('test-connection')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Test Moyasar connection with current credentials' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        ok: { type: 'boolean' },
+        latencyMs: { type: 'number' },
+        statusCode: { type: 'number', nullable: true },
+        error: { type: 'string', nullable: true },
+      },
+    },
+  })
   async testMoyasarConnection() {
     const secretKey = await this.platformSettings.get<string>('billing.moyasar.platformSecretKey', 'MOYASAR_PLATFORM_SECRET_KEY');
     if (!secretKey) {
