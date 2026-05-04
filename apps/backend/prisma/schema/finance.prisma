@@ -219,7 +219,7 @@ model OrganizationPaymentConfig {
   organizationId     String    @unique // singleton per org (matches BrandingConfig pattern)
   publishableKey     String // pk_test_… / pk_live_… — not secret, stored plain
   secretKeyEnc       String // AES-256-GCM ciphertext (base64), AAD = organizationId
-  webhookSecretEnc   String? // optional, AES-256-GCM
+  webhookSecretEnc   String  // REQUIRED — AES-256-GCM, per-tenant webhook signing secret (2026-05-05)
   isLive             Boolean   @default(false)
   lastVerifiedAt     DateTime?
   lastVerifiedStatus String? // 'OK' | 'INVALID_KEY' | 'NETWORK_ERROR'

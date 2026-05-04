@@ -7,7 +7,7 @@ import { MoyasarApiClient } from '../moyasar-api/moyasar-api.client';
 export interface UpsertMoyasarConfigCommand {
   publishableKey: string;
   secretKey: string;
-  webhookSecret?: string;
+  webhookSecret: string;
   isLive: boolean;
 }
 
@@ -30,9 +30,10 @@ export class UpsertMoyasarConfigHandler {
   async execute(cmd: UpsertMoyasarConfigCommand): Promise<UpsertMoyasarConfigResult> {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const secretKeyEnc = this.creds.encrypt({ secretKey: cmd.secretKey }, organizationId);
-    const webhookSecretEnc = cmd.webhookSecret
-      ? this.creds.encrypt({ webhookSecret: cmd.webhookSecret }, organizationId)
-      : null;
+    const webhookSecretEnc = this.creds.encrypt(
+      { webhookSecret: cmd.webhookSecret },
+      organizationId,
+    );
 
     const row = await this.prisma.organizationPaymentConfig.upsert({
       where: { organizationId },

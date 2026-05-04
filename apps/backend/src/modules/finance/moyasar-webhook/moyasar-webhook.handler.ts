@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
+import { MoyasarCredentialsService } from '../../../infrastructure/payments/moyasar-credentials.service';
 import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
 import { PaymentFailedEvent } from '../events/payment-failed.event';
@@ -22,20 +17,20 @@ export interface MoyasarWebhookRequest {
 }
 
 /**
- * Processes Moyasar webhook events.
+ * Processes Moyasar webhook events with PER-TENANT signature verification.
  *
- * Three-stage flow (SaaS-02e):
- *   1. Verify HMAC signature (pure crypto, no DB).
- *   2. Resolve tenant from payload — reads Payment/Invoice under a
- *      system-context flag that bypasses Proxy organizationId filtering.
- *      Inbound webhooks carry no CLS tenant; the invoice metadata tells us
- *      which org the payment belongs to.
- *   3. Run mutations inside `cls.run` with the resolved organizationId so
- *      the Proxy auto-scopes and RLS is satisfied.
+ * Stage order (changed 2026-05-05):
+ *   1. Parse payload — read invoiceId from metadata.
+ *   2. System-context lookup of Invoice → resolves the tenant.
+ *   3. System-context lookup of OrganizationPaymentConfig for that tenant.
+ *   4. Decrypt the tenant's webhook secret (AAD = organizationId).
+ *   5. Verify HMAC signature with the tenant's secret.
+ *   6. Idempotency check + mutations under the resolved tenant CLS context.
  *
- * Idempotency: a Payment with the same gatewayRef in COMPLETED status is
- * skipped. The idempotency lookup also runs in system context because the
- * same gatewayRef could theoretically belong to any org.
+ * Why DB before signature: the tenant secret is per-org, so we cannot verify
+ * a signature without first resolving which tenant the payload belongs to.
+ * The endpoint is rate-limited (Throttle 120/min) and lookup failures return
+ * the same generic responses to avoid acting as an oracle.
  */
 @Injectable()
 export class MoyasarWebhookHandler {
@@ -44,8 +39,8 @@ export class MoyasarWebhookHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
-    private readonly config: ConfigService,
     private readonly cls: ClsService,
+    private readonly creds: MoyasarCredentialsService,
   ) {}
 
   verifySignature(rawBody: string, signature: string, secret: string): void {
@@ -61,14 +56,7 @@ export class MoyasarWebhookHandler {
   }
 
   async execute(req: MoyasarWebhookRequest): Promise<{ skipped?: boolean }> {
-    // STAGE 1 — verify signature. Mandatory; fail loudly on misconfiguration.
-    const secret = this.config.get<string>('MOYASAR_SECRET_KEY');
-    if (!secret) {
-      this.logger.error('MOYASAR_SECRET_KEY not configured — refusing webhook');
-      throw new InternalServerErrorException('Payment webhook is not configured');
-    }
-    this.verifySignature(req.rawBody, req.signature, secret);
-
+    // STAGE 1 — parse payload.
     const payload = req.payload;
     const { invoiceId } = payload.metadata ?? {};
     if (!invoiceId) {
@@ -76,15 +64,43 @@ export class MoyasarWebhookHandler {
       return { skipped: true };
     }
 
-    // STAGE 2 — resolve tenant from payload under system context (bypasses
-    // Proxy org filter). The webhook arrives unauthenticated; the signed
-    // payload itself is our authorization to look up the invoice.
+    // STAGE 2 — resolve tenant from invoice (system context bypasses Proxy).
     const invoice = await this.cls.run(async () => {
       this.logger.warn('systemContext bypass activated', { context: 'MoyasarWebhookHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.invoice.findFirst({ where: { id: invoiceId } });
     });
     if (!invoice) return { skipped: true };
+
+    // STAGE 3 — fetch tenant's payment config (system context).
+    const cfg = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'MoyasarWebhookHandler' });
+      this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+      return this.prisma.organizationPaymentConfig.findUnique({
+        where: { organizationId: invoice.organizationId },
+      });
+    });
+    if (!cfg) {
+      throw new BadRequestException('Tenant payment config not found');
+    }
+
+    // STAGE 4 — decrypt the tenant's webhook secret (AAD = organizationId).
+    let webhookSecret: string;
+    try {
+      const decoded = this.creds.decrypt<{ webhookSecret: string }>(
+        cfg.webhookSecretEnc,
+        invoice.organizationId,
+      );
+      webhookSecret = decoded.webhookSecret;
+    } catch (err) {
+      this.logger.error(
+        `Failed to decrypt webhook secret for org ${invoice.organizationId}: ${err instanceof Error ? err.message : 'unknown'}`,
+      );
+      throw new BadRequestException('Tenant payment config is corrupt');
+    }
+
+    // STAGE 5 — verify signature with tenant's own secret.
+    this.verifySignature(req.rawBody, req.signature, webhookSecret);
 
     // Idempotency check — also in system context. A given gatewayRef could
     // theoretically belong to any org; we rely on the signed payload as
@@ -98,7 +114,7 @@ export class MoyasarWebhookHandler {
     });
     if (existing) return { skipped: true };
 
-    // STAGE 3 — run mutations inside the resolved tenant's CLS context.
+    // STAGE 6 — run mutations inside the resolved tenant's CLS context.
     return this.cls.run(async () => {
       this.cls.set('tenant', {
         organizationId: invoice.organizationId,
@@ -116,7 +132,7 @@ export class MoyasarWebhookHandler {
         where: { idempotencyKey: `moyasar:${payload.id}` },
         update: { status, processedAt: new Date(), failureReason: payload.message },
         create: {
-          organizationId: invoice.organizationId, // SaaS-02e
+          organizationId: invoice.organizationId,
           invoiceId,
           amount: amountSar,
           currency: payload.currency,

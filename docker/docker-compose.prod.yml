@@ -85,10 +85,6 @@ services:
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_CHAT_MODEL: ${OPENROUTER_CHAT_MODEL:-anthropic/claude-3.5-haiku}
 
-      # Tenant Moyasar (per-tenant booking payments)
-      MOYASAR_API_KEY: ${MOYASAR_API_KEY:-}
-      MOYASAR_WEBHOOK_SECRET: ${MOYASAR_WEBHOOK_SECRET:-}
-
       # Multi-tenancy
       TENANT_ENFORCEMENT: "${TENANT_ENFORCEMENT:-strict}"
       DEFAULT_ORGANIZATION_ID: ${DEFAULT_ORGANIZATION_ID:-00000000-0000-0000-0000-000000000001}

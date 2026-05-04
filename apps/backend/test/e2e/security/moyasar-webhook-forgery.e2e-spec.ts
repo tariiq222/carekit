@@ -2,7 +2,7 @@
  * SaaS-02h — Moyasar webhook forgery penetration.
  *
  * Validates the hardening contract for the webhook's system-context bypass:
- *   1. Invalid HMAC signature → rejected BEFORE DB access.
+ *   1. Invalid HMAC signature → rejected (after DB lookup resolves the tenant secret).
  *   2. Valid signature + bogus invoiceId → skipped (no payment created).
  *   3. Valid signature + missing metadata → skipped.
  *   4. systemContext is reachable only from the webhook handler, not from any
@@ -12,9 +12,9 @@
  */
 import { createHmac } from 'crypto';
 import { BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { bootSecurityHarness, SecurityHarness } from './harness';
 import { MoyasarWebhookHandler } from '../../../src/modules/finance/moyasar-webhook/moyasar-webhook.handler';
+import { MoyasarCredentialsService } from '../../../src/infrastructure/payments/moyasar-credentials.service';
 
 describe('SaaS-02h — Moyasar webhook forgery', () => {
   let h: SecurityHarness;
@@ -24,32 +24,81 @@ describe('SaaS-02h — Moyasar webhook forgery', () => {
   const sign = (rawBody: string) =>
     createHmac('sha256', SECRET).update(rawBody).digest('hex');
 
+  // Org used for tests that need a real invoice + config
+  let testOrgId: string;
+
   beforeAll(async () => {
-    process.env.MOYASAR_SECRET_KEY = SECRET;
     h = await bootSecurityHarness();
     handler = h.app.get(MoyasarWebhookHandler);
-    // Re-inject secret into ConfigService if the cached instance was built before env var set.
-    const cfg = h.app.get(ConfigService);
-    jest.spyOn(cfg, 'get').mockImplementation((key: string) => {
-      if (key === 'MOYASAR_SECRET_KEY') return SECRET;
-      // fall through to process.env
-      return process.env[key];
-    });
+
+    // Create an org and seed its payment config with our test secret
+    const org = await h.createOrg(`forgery-test-${Date.now()}`, 'منظمة تزوير');
+    testOrgId = org.id;
+    const creds = h.app.get(MoyasarCredentialsService);
+    await h.runAs({ organizationId: testOrgId }, () =>
+      h.prisma.organizationPaymentConfig.create({
+        data: {
+          organizationId: testOrgId,
+          publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxx',
+          secretKeyEnc: creds.encrypt({ secretKey: 'sk_test_xxxxxxxxxxxxxxxxxxxx' }, testOrgId),
+          webhookSecretEnc: creds.encrypt({ webhookSecret: SECRET }, testOrgId),
+          isLive: false,
+        },
+      }),
+    );
   });
 
   afterAll(async () => {
     if (h) await h.close();
   });
 
-  it('rejects webhook with invalid signature before DB access', async () => {
+  it('rejects webhook with invalid signature', async () => {
+    // Seed a real invoice so Stage 2 (invoice lookup) and Stage 3 (config lookup) succeed,
+    // allowing Stage 5 (signature verification) to be the one that throws.
+    const bookingId = crypto.randomUUID();
+    await h.prisma.booking.create({
+      data: {
+        id: bookingId,
+        organizationId: testOrgId,
+        branchId: `br-forg-${Date.now()}`,
+        clientId: `cli-forg-${Date.now()}`,
+        employeeId: `emp-forg-${Date.now()}`,
+        serviceId: `svc-forg-${Date.now()}`,
+        scheduledAt: new Date('2031-10-01T10:00:00Z'),
+        endsAt: new Date('2031-10-01T11:00:00Z'),
+        durationMins: 60,
+        price: 200,
+        currency: 'SAR',
+      },
+    });
+    const invoice = await h.prisma.invoice.create({
+      data: {
+        organizationId: testOrgId,
+        bookingId,
+        branchId: `br-forg-${Date.now()}`,
+        clientId: `cli-forg-${Date.now()}`,
+        employeeId: `emp-forg-${Date.now()}`,
+        subtotal: 200,
+        discountAmt: 0,
+        vatRate: 0.15,
+        vatAmt: 30,
+        total: 230,
+        status: 'ISSUED',
+        issuedAt: new Date(),
+        currency: 'SAR',
+      },
+      select: { id: true },
+    });
+
     const payload = {
-      id: 'pay_bogus_1',
+      id: `pay_bogus_sig_${Date.now()}`,
       status: 'paid' as const,
       amount: 10000,
       currency: 'SAR',
-      metadata: { invoiceId: 'does-not-exist' },
+      metadata: { invoiceId: invoice.id },
     };
     const rawBody = JSON.stringify(payload);
+    // 'deadbeef' is not a valid hex of correct length — rejected at Stage 5
     await expect(
       handler.execute({ payload, rawBody, signature: 'deadbeef' }),
     ).rejects.toThrow(BadRequestException);

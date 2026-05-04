@@ -1,5 +1,5 @@
-import { IsBoolean, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpsertMoyasarConfigDto {
   @ApiProperty({
@@ -18,14 +18,13 @@ export class UpsertMoyasarConfigDto {
   @Matches(/^sk_(test|live)_[A-Za-z0-9]{20,}$/)
   secretKey!: string;
 
-  @ApiPropertyOptional({
-    description: 'Optional Moyasar webhook signing secret. Stored AES-256-GCM encrypted.',
+  @ApiProperty({
+    description: 'Tenant Moyasar webhook signing secret. REQUIRED — used to verify inbound webhook signatures per-tenant. Stored AES-256-GCM encrypted.',
   })
-  @IsOptional()
   @IsString()
   @MinLength(8)
   @MaxLength(256)
-  webhookSecret?: string;
+  webhookSecret!: string;
 
   @ApiProperty({
     description: 'true if these are live (production) keys, false for test mode.',
