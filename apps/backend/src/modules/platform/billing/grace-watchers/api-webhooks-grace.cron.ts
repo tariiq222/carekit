@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 
 const WARNING_DAYS = new Set([6, 3, 1]);
@@ -13,12 +15,20 @@ export class ApiWebhooksGraceCron {
     private readonly prisma: PrismaService,
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
+    private readonly cls: ClsService,
   ) {}
 
   /** Called daily at 04:00 by the platform cron scheduler. */
   async run() {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this.runGraceWarnings();
+    });
+  }
+
+  private async runGraceWarnings() {
     const subs = await this.prisma.$allTenants.subscription.findMany({
       where: {
         OR: [

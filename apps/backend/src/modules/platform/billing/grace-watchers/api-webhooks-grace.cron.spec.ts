@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { ApiWebhooksGraceCron } from './api-webhooks-grace.cron';
 
 const buildConfig = (cronEnabled = true) => ({
@@ -31,6 +32,11 @@ const buildPrisma = (
   },
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 const daysFromNow = (n: number) => new Date(Date.now() + n * 86_400_000);
 
 describe('ApiWebhooksGraceCron', () => {
@@ -39,7 +45,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(6), webhooksGraceUntil: null },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).toHaveBeenCalledWith(
       'owner@sawa.sa',
       expect.objectContaining({ featureKey: 'api_access', daysLeft: 6 }),
@@ -51,7 +57,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(3), webhooksGraceUntil: null },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).toHaveBeenCalledWith(
       'owner@sawa.sa',
       expect.objectContaining({ featureKey: 'api_access', daysLeft: 3 }),
@@ -63,7 +69,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(1), webhooksGraceUntil: null },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).toHaveBeenCalledWith(
       'owner@sawa.sa',
       expect.objectContaining({ featureKey: 'api_access', daysLeft: 1 }),
@@ -75,7 +81,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(5), webhooksGraceUntil: null },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).not.toHaveBeenCalled();
   });
 
@@ -84,7 +90,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: null, webhooksGraceUntil: daysFromNow(3) },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).toHaveBeenCalledWith(
       'owner@sawa.sa',
       expect.objectContaining({ featureKey: 'webhooks', daysLeft: 3 }),
@@ -96,7 +102,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(6), webhooksGraceUntil: daysFromNow(6) },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).toHaveBeenCalledTimes(2);
   });
 
@@ -105,7 +111,7 @@ describe('ApiWebhooksGraceCron', () => {
     const prisma = buildPrisma([
       { organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(3), webhooksGraceUntil: null },
     ]);
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig(false) as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig(false) as never, buildCls() as never).run();
     expect(prisma.$allTenants.subscription.findMany).not.toHaveBeenCalled();
   });
 
@@ -115,7 +121,19 @@ describe('ApiWebhooksGraceCron', () => {
       [{ organizationId: 'org-1', apiAccessGraceUntil: daysFromNow(3), webhooksGraceUntil: null }],
       null,
     );
-    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never).run();
+    await new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, buildCls() as never).run();
     expect(mailer.sendFeatureGraceWarning).not.toHaveBeenCalled();
+  });
+
+  it('wraps run body in super-admin CLS context', async () => {
+    const mailer = buildMailer();
+    const prisma = buildPrisma([]);
+    const cls = buildCls();
+    const cron = new ApiWebhooksGraceCron(prisma as never, mailer as never, buildConfig() as never, cls as never);
+
+    await cron.run();
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
