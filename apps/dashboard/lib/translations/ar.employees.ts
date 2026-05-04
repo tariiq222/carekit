@@ -196,6 +196,10 @@ export const arEmployees: Record<string, string> = {
   "employees.services.useCustomOptions": "استخدام خيارات مخصصة",
 
   // — Status Dialog —
+  "employees.action.deactivate": "تعطيل",
+  "employees.action.activate": "تفعيل",
+
+  // — Status Dialog —
   "employees.status.activateTitle": "تفعيل الممارس",
   "employees.status.suspendTitle": "إيقاف الممارس",
   "employees.status.activateDesc": "سيتم تفعيل {name} وإعادة ظهوره في النظام وقبول الحجوزات باسمه.",

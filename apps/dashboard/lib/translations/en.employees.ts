@@ -196,6 +196,10 @@ export const enEmployees: Record<string, string> = {
   "employees.services.useCustomOptions": "Use custom options",
 
   // — Status Dialog —
+  "employees.action.deactivate": "Deactivate",
+  "employees.action.activate": "Activate",
+
+  // — Status Dialog —
   "employees.status.activateTitle": "Activate Employee",
   "employees.status.suspendTitle": "Suspend Employee",
   "employees.status.activateDesc": "This will activate {name}, making them visible in the system and open for new bookings.",
