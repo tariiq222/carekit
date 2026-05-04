@@ -5,6 +5,7 @@ import type { TenantContextService } from '../../../common/tenant';
 import type { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
 import type { UsageCounterService } from '../../platform/billing/usage-counter/usage-counter.service';
 import type { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import type { FeatureCheckService } from '../../platform/billing/feature-check.service';
 
 const ORG_ID = 'org-test-1';
 
@@ -45,6 +46,12 @@ const buildSubscriptionCache = () =>
     get: jest.fn().mockResolvedValue(null),
   }) as unknown as SubscriptionCacheService;
 
+/** FeatureCheckService mock — enabled by default */
+const buildFeatureCheck = (enabled = true) =>
+  ({
+    isEnabled: jest.fn().mockResolvedValue(enabled),
+  }) as unknown as FeatureCheckService;
+
 describe('SendEmailHandler', () => {
   it('substitutes template variables and sends email via platform SMTP when no tenant provider', async () => {
     const prisma = buildPrisma();
@@ -59,6 +66,7 @@ describe('SendEmailHandler', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -84,6 +92,7 @@ describe('SendEmailHandler', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -106,6 +115,7 @@ describe('SendEmailHandler', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({
       to: 'client@example.com',
       templateSlug: 'missing',
@@ -126,6 +136,7 @@ describe('SendEmailHandler — interpolation', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({ to: 'a@b.com', templateSlug: 'missing', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -140,6 +151,7 @@ describe('SendEmailHandler — interpolation', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -162,6 +174,7 @@ describe('SendEmailHandler — interpolation', () => {
       buildNoOpFactory(),
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: { name: 'Ahmad' } });
     expect(smtp.sendMail).toHaveBeenCalledWith('a@b.com', 'مرحبا Ahmad', '<p>Hello Ahmad</p>');
   });
@@ -192,6 +205,7 @@ describe('SendEmailHandler — interpolation', () => {
       tenantFactory,
       buildUsageCounter(),
       buildSubscriptionCache(),
+      buildFeatureCheck(),
     ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
 
     expect(tenantSendMail).toHaveBeenCalled();
@@ -211,7 +225,39 @@ describe('SendEmailHandler — interpolation', () => {
         buildNoOpFactory(),
         buildUsageCounter(),
         buildSubscriptionCache(),
+        buildFeatureCheck(),
       ).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} }),
     ).resolves.not.toThrow();
+  });
+});
+
+describe('SendEmailHandler — feature gate', () => {
+  it('skips custom template and uses platform fallback when EMAIL_TEMPLATES disabled', async () => {
+    const prisma = buildPrisma();
+    const smtp = {
+      isAvailable: jest.fn().mockReturnValue(true),
+      sendMail: jest.fn().mockResolvedValue(undefined),
+    };
+    await new SendEmailHandler(
+      smtp as unknown as SmtpService,
+      prisma as unknown as PrismaService,
+      buildTenant(),
+      buildNoOpFactory(),
+      buildUsageCounter(),
+      buildSubscriptionCache(),
+      buildFeatureCheck(false),
+    ).execute({
+      to: 'client@example.com',
+      templateSlug: 'welcome',
+      vars: { subject: 'Test Subject', body: '<p>Test body</p>' },
+    });
+    // Custom template lookup must be skipped
+    expect(prisma.emailTemplate.findFirst).not.toHaveBeenCalled();
+    // Platform SMTP fallback must be used
+    expect(smtp.sendMail).toHaveBeenCalledWith(
+      'client@example.com',
+      'Test Subject',
+      '<p>Test body</p>',
+    );
   });
 });

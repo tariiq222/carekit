@@ -36,6 +36,7 @@ import { CAPTCHA_VERIFIER, createCaptchaVerifier } from './contact-messages/capt
 import { NotificationChannelModule } from './notification-channel/notification-channel.module';
 import { SmsModule } from '../../infrastructure/sms/sms.module';
 import { EmailModule } from '../../infrastructure/email/email.module';
+import { BillingModule } from '../platform/billing/billing.module';
 import { GetOrgSmsConfigHandler } from './org-sms-config/get-org-sms-config.handler';
 import { UpsertOrgSmsConfigHandler } from './org-sms-config/upsert-org-sms-config.handler';
 import { TestSmsConfigHandler } from './org-sms-config/test-sms-config.handler';
@@ -108,7 +109,7 @@ const eventHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule, SmsModule, EmailModule],
+  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule, SmsModule, EmailModule, BillingModule],
   controllers: [DashboardCommsController],
   providers: [...handlers, ...eventHandlers, { provide: CAPTCHA_VERIFIER, useFactory: () => createCaptchaVerifier() }],
   exports: [...handlers, NotificationChannelModule],

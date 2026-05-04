@@ -6,6 +6,7 @@ import { SmtpService } from '../../../infrastructure/mail';
 import { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
 import { UsageCounterService } from '../../platform/billing/usage-counter/usage-counter.service';
 import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
+import { FeatureCheckService } from '../../platform/billing/feature-check.service';
 import { SendEmailDto } from './send-email.dto';
 
 export type SendEmailCommand = SendEmailDto;
@@ -21,9 +22,28 @@ export class SendEmailHandler {
     private readonly emailFactory: EmailProviderFactory,
     private readonly usageCounter: UsageCounterService,
     private readonly subscriptionCache: SubscriptionCacheService,
+    private readonly featureCheck: FeatureCheckService,
   ) {}
 
   async execute(dto: SendEmailCommand): Promise<void> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const emailTemplatesEnabled = await this.featureCheck.isEnabled(
+      organizationId,
+      FeatureKey.EMAIL_TEMPLATES,
+    );
+
+    if (!emailTemplatesEnabled) {
+      // Feature disabled — skip custom template, fall back to platform SMTP with a
+      // minimal plain-text body built from the dto vars directly.
+      this.logger.debug(
+        `feature_disabled_skip: org=${organizationId} feature=EMAIL_TEMPLATES — using platform fallback`,
+      );
+      const subject = dto.vars['subject'] ?? dto.templateSlug;
+      const html = dto.vars['body'] ?? Object.entries(dto.vars).map(([k, v]) => `${k}: ${v}`).join('<br>');
+      await this.sendViaFallback(dto.to, subject, html);
+      return;
+    }
+
     // SaaS-02f: slug uniqueness is now composite-per-org. The Prisma Proxy
     // auto-scopes `where` by organizationId from CLS, so findFirst is correct here.
     const template = await this.prisma.emailTemplate.findFirst({
@@ -41,7 +61,6 @@ export class SendEmailHandler {
     // Try per-tenant email provider first; fall back to platform SMTP.
     let useFallback = true;
     try {
-      const organizationId = this.tenant.requireOrganizationIdOrDefault();
       const tenantAdapter = await this.emailFactory.forCurrentTenant(organizationId);
 
       if (tenantAdapter.isAvailable()) {
