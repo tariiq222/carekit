@@ -10,9 +10,11 @@ import {
   getLocalizedPlanName,
 } from "@/lib/billing/utils"
 import { cn } from "@/lib/utils"
-import type { Plan, Subscription, SubscriptionStatus } from "@/lib/types/billing"
+import type { DowngradeViolation, Plan, Subscription, SubscriptionStatus } from "@/lib/types/billing"
+import { DowngradeBlockedError } from "@/lib/types/billing"
 import { CancelSubscriptionDialog } from "./cancel-subscription-dialog"
 import { PlanChangeDialog } from "./plan-change-dialog"
+import { DowngradeViolationsDialog } from "@/components/features/billing/downgrade-violations-dialog"
 
 const statusClassNames: Record<SubscriptionStatus, string> = {
   ACTIVE: "border-success/30 bg-success/10 text-success",
@@ -44,6 +46,9 @@ export function CurrentPlanCard({
   const { t, locale } = useLocale()
   const [planDialogOpen, setPlanDialogOpen] = useState(false)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [violationDialogOpen, setViolationDialogOpen] = useState(false)
+  const [violations, setViolations] = useState<DowngradeViolation[]>([])
+  const [violationTargetPlan, setViolationTargetPlan] = useState("")
   const {
     changePlanMut,
     cancelMut,
@@ -97,8 +102,20 @@ export function CurrentPlanCard({
     planId: string
     billingCycle: Subscription["billingCycle"]
   }) {
-    await changePlanMut.mutateAsync(payload)
-    setPlanDialogOpen(false)
+    try {
+      await changePlanMut.mutateAsync(payload)
+      setPlanDialogOpen(false)
+    } catch (err) {
+      if (err instanceof DowngradeBlockedError) {
+        const targetPlan = plans.find((p) => p.id === payload.planId)
+        setViolations(err.body.violations)
+        setViolationTargetPlan(targetPlan ? getLocalizedPlanName(targetPlan, locale) : "")
+        setPlanDialogOpen(false)
+        setViolationDialogOpen(true)
+        return
+      }
+      throw err
+    }
   }
 
   async function submitCancellation(reason?: string) {
@@ -225,6 +242,17 @@ export function CurrentPlanCard({
           onConfirm={submitCancellation}
         />
       )}
+
+      <DowngradeViolationsDialog
+        open={violationDialogOpen}
+        onOpenChange={setViolationDialogOpen}
+        violations={violations}
+        targetPlanName={violationTargetPlan}
+        onChooseHigherPlan={() => {
+          setViolationDialogOpen(false)
+          setPlanDialogOpen(true)
+        }}
+      />
     </>
   )
 }

@@ -1,6 +1,8 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
@@ -48,11 +50,19 @@ export class ExpireTrialsCron {
     @Optional() private readonly moyasar?: MoyasarSubscriptionClient,
     @Optional() private readonly recordPayment?: RecordSubscriptionPaymentHandler,
     @Optional() private readonly recordFailure?: RecordSubscriptionPaymentFailureHandler,
+    private readonly cls?: ClsService,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls!.run(async () => {
+      this.cls!.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this.runExpireTrials();
+    });
+  }
+
+  private async runExpireTrials(): Promise<void> {
     const now = new Date();
     const billingUrl = this.billingUrl();
 

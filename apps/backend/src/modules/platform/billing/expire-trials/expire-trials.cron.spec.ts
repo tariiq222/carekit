@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { ExpireTrialsCron } from './expire-trials.cron';
 
 const NOW = new Date('2026-05-01T12:00:00.000Z');
@@ -122,6 +123,11 @@ const buildPrisma = ({
 
 const buildCache = () => ({ invalidate: jest.fn() });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 type CronDeps = {
   enabled?: boolean;
   cache?: ReturnType<typeof buildCache>;
@@ -129,6 +135,7 @@ type CronDeps = {
   moyasar?: unknown;
   recordPayment?: unknown;
   recordFailure?: unknown;
+  cls?: ReturnType<typeof buildCls>;
 };
 
 function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) {
@@ -139,6 +146,7 @@ function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) 
     moyasar,
     recordPayment,
     recordFailure,
+    cls = buildCls(),
   } = deps;
   return new ExpireTrialsCron(
     prisma as never,
@@ -148,6 +156,7 @@ function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) 
     moyasar as never,
     recordPayment as never,
     recordFailure as never,
+    cls as never,
   );
 }
 
@@ -335,5 +344,16 @@ describe('ExpireTrialsCron', () => {
       where: { id: 'org-1' },
       data: { status: 'PAST_DUE' },
     });
+  });
+
+  it('wraps execute body in super-admin CLS context', async () => {
+    const prisma = buildPrisma();
+    const cls = buildCls();
+    const cron = buildCron(prisma, { cls });
+
+    await cron.execute();
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
