@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { DunningRetryService } from './dunning-retry.service';
 
 const NOW = new Date('2026-04-30T12:00:00.000Z');
@@ -50,6 +51,11 @@ const buildMailer = () => ({
   sendDunningRetry: jest.fn().mockResolvedValue(undefined),
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 const buildService = (
   prisma = buildPrisma(),
   moyasar = buildMoyasar(),
@@ -57,6 +63,7 @@ const buildService = (
   cache = buildCache(),
   config = buildConfig(),
   mailer = buildMailer(),
+  cls = buildCls(),
 ) =>
   new DunningRetryService(
     prisma as never,
@@ -65,6 +72,7 @@ const buildService = (
     cache as never,
     config as never,
     mailer as never,
+    cls as never,
   );
 
 const subscription = {
@@ -268,5 +276,23 @@ describe('DunningRetryService', () => {
         lastFailureReason: 'Moyasar returned status failed',
       },
     });
+  });
+
+  it('wraps retryInvoice body in super-admin CLS context', async () => {
+    const cls = buildCls();
+    const service = buildService(
+      buildPrisma(),
+      buildMoyasar(),
+      buildRecordPayment(),
+      buildCache(),
+      buildConfig(),
+      buildMailer(),
+      cls,
+    );
+
+    await service.retryInvoice({ subscription, invoice, now: NOW, manual: false });
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });

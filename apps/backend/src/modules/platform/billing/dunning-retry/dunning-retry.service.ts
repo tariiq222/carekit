@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
@@ -47,9 +49,17 @@ export class DunningRetryService {
     private readonly cache: SubscriptionCacheService,
     private readonly config: ConfigService,
     private readonly mailer: PlatformMailerService,
+    private readonly cls: ClsService,
   ) {}
 
   async retryInvoice(cmd: RetryInvoiceCommand): Promise<RetryInvoiceResult> {
+    return this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.runRetry(cmd);
+    });
+  }
+
+  private async runRetry(cmd: RetryInvoiceCommand): Promise<RetryInvoiceResult> {
     const attemptNumber = cmd.subscription.dunningRetryCount + 1;
     const log = await this.createAttemptLog(cmd, attemptNumber);
     if (!log) {
