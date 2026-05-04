@@ -115,6 +115,16 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch('subscription-payment-failed', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  async sendOrphanOrgsDigest(
+    to: string,
+    vars: import('./templates/orphan-orgs-digest.template').OrphanOrgsDigestVars,
+  ): Promise<void> {
+    if (vars.orphans.length === 0) return;
+    const { orphanOrgsDigestTemplate } = await import('./templates/orphan-orgs-digest.template');
+    const t = orphanOrgsDigestTemplate(vars);
+    await this.dispatch('orphan-orgs-digest', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
   async sendDunningRetry(
     to: string,
     vars: import('./templates/dunning-retry.template').DunningRetryVars,

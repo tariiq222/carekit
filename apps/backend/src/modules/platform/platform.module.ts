@@ -47,6 +47,7 @@ import { StartImpersonationHandler } from './admin/start-impersonation/start-imp
 import { EndImpersonationHandler } from './admin/end-impersonation/end-impersonation.handler';
 import { ListImpersonationSessionsHandler } from './admin/list-impersonation-sessions/list-impersonation-sessions.handler';
 import { ExpireImpersonationSessionsCron } from './admin/expire-impersonation-sessions/expire-impersonation-sessions.cron';
+import { OrgsWithoutOwnerCron } from './admin/orgs-without-owner/orgs-without-owner.cron';
 import { ListSubscriptionsHandler } from './admin/list-subscriptions/list-subscriptions.handler';
 import { GetOrgBillingHandler } from './admin/get-org-billing/get-org-billing.handler';
 import { ListSubscriptionInvoicesHandler } from './admin/list-subscription-invoices/list-subscription-invoices.handler';
@@ -100,6 +101,7 @@ const ADMIN_HANDLERS = [
   EndImpersonationHandler,
   ListImpersonationSessionsHandler,
   ExpireImpersonationSessionsCron,
+  OrgsWithoutOwnerCron,
   ListSubscriptionsHandler,
   GetOrgBillingHandler,
   ListSubscriptionInvoicesHandler,
