@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import OrganizationsListPage from '@/app/(admin)/organizations/page';
 
+const mockUseListOrganizations = vi.fn();
+
 vi.mock('@/features/organizations/list-organizations/use-list-organizations', () => ({
-  useListOrganizations: vi.fn(),
+  useListOrganizations: mockUseListOrganizations,
 }));
 
 vi.mock('@/features/organizations/create-tenant/create-tenant-dialog', () => ({
@@ -73,43 +75,27 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('OrganizationsListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('renders page title and description', () => {
-    const { useListOrganizations } = vi.mocked(
-      require('@/features/organizations/list-organizations/use-list-organizations'),
-    );
-    (useListOrganizations as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListOrganizations.mockReturnValue({
       data: mockOrganizationsData,
       isLoading: false,
       error: null,
     });
+  });
 
+  it('renders page title and description', () => {
     render(<OrganizationsListPage />, { wrapper });
     expect(screen.getByText('Organizations')).toBeInTheDocument();
     expect(screen.getByText('Manage organizations')).toBeInTheDocument();
   });
 
   it('renders filter bar and table', () => {
-    const { useListOrganizations } = vi.mocked(
-      require('@/features/organizations/list-organizations/use-list-organizations'),
-    );
-    (useListOrganizations as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockOrganizationsData,
-      isLoading: false,
-      error: null,
-    });
-
     render(<OrganizationsListPage />, { wrapper });
     expect(screen.getByTestId('organizations-filter-bar')).toBeInTheDocument();
     expect(screen.getByTestId('organizations-table')).toBeInTheDocument();
   });
 
   it('renders error state when load fails', () => {
-    const { useListOrganizations } = vi.mocked(
-      require('@/features/organizations/list-organizations/use-list-organizations'),
-    );
-    (useListOrganizations as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListOrganizations.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to load'),
@@ -120,10 +106,7 @@ describe('OrganizationsListPage', () => {
   });
 
   it('renders loading state', () => {
-    const { useListOrganizations } = vi.mocked(
-      require('@/features/organizations/list-organizations/use-list-organizations'),
-    );
-    (useListOrganizations as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListOrganizations.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -134,10 +117,7 @@ describe('OrganizationsListPage', () => {
   });
 
   it('renders pagination when multiple pages exist', () => {
-    const { useListOrganizations } = vi.mocked(
-      require('@/features/organizations/list-organizations/use-list-organizations'),
-    );
-    (useListOrganizations as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseListOrganizations.mockReturnValue({
       data: { ...mockOrganizationsData, meta: { ...mockOrganizationsData.meta, totalPages: 2 } },
       isLoading: false,
       error: null,
