@@ -53,6 +53,7 @@ import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
 import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
 import { ChangePlanHandler } from "./change-plan/change-plan.handler";
+import { FeatureCheckService } from "./feature-check.service";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -128,6 +129,7 @@ const HANDLERS = [
     CacheInvalidatorListener,
     GetUsageHandler,
     DowngradeSafetyService,
+    FeatureCheckService,
   ],
   exports: [
     FeatureGuard,
@@ -138,6 +140,7 @@ const HANDLERS = [
     UsageCounterService,
     GetUsageHandler,
     DowngradeSafetyService,
+    FeatureCheckService,
     ...HANDLERS,
   ],
 })
