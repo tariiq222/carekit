@@ -6,7 +6,7 @@
 --
 -- Intentionally NOT in SCOPED_MODELS — webhook events belong to Deqah, not a tenant.
 
-CREATE TABLE IF NOT EXISTS "WebhookEvent" (
+CREATE TABLE "WebhookEvent" (
     "id"          TEXT NOT NULL,
     "provider"    TEXT NOT NULL,
     "eventId"     TEXT NOT NULL,
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS "WebhookEvent" (
 );
 
 -- Composite uniqueness: same eventId can never be processed twice for the same provider.
-CREATE UNIQUE INDEX IF NOT EXISTS "WebhookEvent_provider_eventId_key"
+CREATE UNIQUE INDEX "WebhookEvent_provider_eventId_key"
     ON "WebhookEvent"("provider", "eventId");
 
 -- Operational index: scan recent events / enable retention sweep.
-CREATE INDEX IF NOT EXISTS "WebhookEvent_receivedAt_idx"
+CREATE INDEX "WebhookEvent_receivedAt_idx"
     ON "WebhookEvent"("receivedAt");
