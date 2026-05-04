@@ -15,6 +15,9 @@ out/
 # ─── Git worktrees ────────────────────────────────────────────
 .worktrees/
 
+# ─── Graphify knowledge graph (generated locally) ─────────────
+graphify-out/
+
 # ─── Environment variables ────────────────────────────────────
 *.env
 .env
