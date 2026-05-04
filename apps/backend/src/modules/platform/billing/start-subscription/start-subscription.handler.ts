@@ -9,6 +9,7 @@ import {
   SUBSCRIPTION_UPDATED_EVENT,
   type SubscriptionUpdatedPayload,
 } from '../events/subscription-updated.event';
+import { LaunchFlags } from '../feature-flags/launch-flags';
 
 @Injectable()
 export class StartSubscriptionHandler {
@@ -18,6 +19,7 @@ export class StartSubscriptionHandler {
     private readonly cache: SubscriptionCacheService,
     private readonly config: ConfigService,
     private readonly eventBus: EventBusService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(dto: StartSubscriptionDto) {
@@ -28,6 +30,16 @@ export class StartSubscriptionHandler {
 
     const plan = await this.prisma.plan.findFirst({ where: { id: dto.planId, isActive: true } });
     if (!plan) throw new NotFoundException('Plan not found');
+
+    let planVersionId: string | undefined;
+    if (this.flags.planVersioningEnabled) {
+      const latest = await this.prisma.planVersion.findFirst({
+        where: { planId: plan.id },
+        orderBy: { version: 'desc' },
+        select: { id: true },
+      });
+      planVersionId = latest?.id;
+    }
 
     const trialDays = this.config.get<number>('SAAS_TRIAL_DAYS', 14);
     const now = new Date();
@@ -41,6 +53,7 @@ export class StartSubscriptionHandler {
       data: {
         organizationId,
         planId: plan.id,
+        planVersionId: planVersionId ?? null,
         status: 'TRIALING',
         billingCycle: dto.billingCycle,
         trialStartedAt: now,
