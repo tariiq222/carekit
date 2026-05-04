@@ -21,16 +21,17 @@ export class CompleteBookingHandler {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.CONFIRMED], 'completed');
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.booking.update({
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.booking.update({
         where: { id: cmd.bookingId, organizationId },
         data: {
           status: BookingStatus.COMPLETED,
           completedAt: new Date(),
           ...(cmd.completionNotes && { notes: cmd.completionNotes }),
         },
-      }),
-      this.prisma.bookingStatusLog.create({
+      });
+
+      await tx.bookingStatusLog.create({
         data: {
           organizationId,
           bookingId: cmd.bookingId,
@@ -38,8 +39,43 @@ export class CompleteBookingHandler {
           toStatus: BookingStatus.COMPLETED,
           changedBy: cmd.changedBy,
         },
-      }),
-    ]);
-    return updated;
+      });
+
+      // payAtClinic bookings have no invoice yet (create-booking.handler.ts skips it
+      // for payAtClinic). Create one now at completion time so the financial trail
+      // is complete. We use findUnique on bookingId to silently no-op if an invoice
+      // somehow already exists.
+      if (booking.payAtClinic) {
+        const existing = await tx.invoice.findUnique({ where: { bookingId: booking.id } });
+        if (!existing) {
+          const orgSettings = await tx.organizationSettings.findFirst({
+            where: { organizationId },
+            select: { vatRate: true },
+          });
+          const vatRate = orgSettings?.vatRate ? Number(orgSettings.vatRate) : 0.15;
+          const subtotal = Number(booking.discountedPrice ?? booking.price);
+          const vatAmt = Number((subtotal * vatRate).toFixed(2));
+          const total = Number((subtotal + vatAmt).toFixed(2));
+          await tx.invoice.create({
+            data: {
+              organizationId,
+              branchId: booking.branchId,
+              clientId: booking.clientId,
+              employeeId: booking.employeeId,
+              bookingId: booking.id,
+              subtotal,
+              vatRate,
+              vatAmt,
+              total,
+              currency: booking.currency,
+              status: 'ISSUED',
+              issuedAt: new Date(),
+            },
+          });
+        }
+      }
+
+      return updated;
+    });
   }
 }
