@@ -24,6 +24,7 @@ export class VerifyOtpHandler {
     const orgId = dto.organizationId ?? null;
 
     return this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'VerifyOtpHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
       const otpRecord = await this.prisma.otpCode.findFirst({

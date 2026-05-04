@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, UnauthorizedException } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import * as bcrypt from 'bcryptjs';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
@@ -26,6 +26,8 @@ export interface VerifyMobileOtpResult {
 
 @Injectable()
 export class VerifyMobileOtpHandler {
+  private readonly logger = new Logger(VerifyMobileOtpHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
@@ -47,6 +49,7 @@ export class VerifyMobileOtpHandler {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     return this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'VerifyMobileOtpHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
       const otpRecord = await this.prisma.otpCode.findFirst({

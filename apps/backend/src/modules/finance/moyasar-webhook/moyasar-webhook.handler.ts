@@ -80,6 +80,7 @@ export class MoyasarWebhookHandler {
     // Proxy org filter). The webhook arrives unauthenticated; the signed
     // payload itself is our authorization to look up the invoice.
     const invoice = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'MoyasarWebhookHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.invoice.findFirst({ where: { id: invoiceId } });
     });
@@ -89,6 +90,7 @@ export class MoyasarWebhookHandler {
     // theoretically belong to any org; we rely on the signed payload as
     // authorization to observe it regardless of CLS.
     const existing = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'MoyasarWebhookHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.payment.findFirst({
         where: { gatewayRef: payload.id, status: PaymentStatus.COMPLETED },

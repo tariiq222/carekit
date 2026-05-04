@@ -54,7 +54,7 @@ describe('ClientJwtStrategy', () => {
 
   it('propagates organizationId from JWT payload into req.user and tenant context', async () => {
     prisma.client.findUnique.mockResolvedValue({
-      id: 'c1', email: 'c@x.sa', phone: null, organizationId: 'org-db', isActive: true, deletedAt: null,
+      id: 'c1', email: 'c@x.sa', phone: null, organizationId: 'org-jwt', isActive: true, deletedAt: null,
     });
     const result = await strategy.validate({} as Request, { ...payload, organizationId: 'org-jwt' });
     expect(result.organizationId).toBe('org-jwt');
@@ -72,7 +72,7 @@ describe('ClientJwtStrategy', () => {
     tenant.set.mockImplementation(() => order.push('tenant'));
     prisma.client.findUnique.mockImplementation(async () => {
       order.push('lookup');
-      return { id: 'c1', email: 'c@x.sa', phone: null, isActive: true, deletedAt: null };
+      return { id: 'c1', email: 'c@x.sa', phone: null, organizationId: 'org-jwt', isActive: true, deletedAt: null };
     });
 
     await strategy.validate({} as Request, { ...payload, organizationId: 'org-jwt' });
@@ -86,6 +86,15 @@ describe('ClientJwtStrategy', () => {
     );
     expect(prisma.client.findUnique).not.toHaveBeenCalled();
     expect(tenant.set).not.toHaveBeenCalled();
+  });
+
+  it('rejects when client organizationId does not match JWT claim', async () => {
+    prisma.client.findUnique.mockResolvedValue({
+      id: 'c1', email: 'c@x.sa', phone: null, organizationId: 'org-different', isActive: true, deletedAt: null,
+    });
+    await expect(
+      strategy.validate({} as Request, { ...payload, organizationId: 'org-jwt' }),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('does not fall back to Client.organizationId when JWT lacks the claim', async () => {

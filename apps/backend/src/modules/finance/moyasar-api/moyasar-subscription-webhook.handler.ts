@@ -107,6 +107,7 @@ export class MoyasarSubscriptionWebhookHandler {
   private async process(event: WebhookEventPayload): Promise<{ ok: true }> {
     // Stage 3: platform-level lookup (system context — no tenant filter)
     const invoice = await this.cls.run(async () => {
+      this.logger.warn('systemContext bypass activated', { context: 'MoyasarSubscriptionWebhookHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return this.prisma.subscriptionInvoice.findFirst({
         where: { moyasarPaymentId: event.data.id },

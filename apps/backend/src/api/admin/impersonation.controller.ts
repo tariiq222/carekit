@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
   Req,
@@ -73,7 +72,7 @@ export class AdminImpersonationController {
   @ApiNoContentResponse({ description: 'Impersonation session ended' })
   @ApiParam({ name: 'id', description: 'Impersonation session UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
   async end(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @CurrentUser() user: { sub: string },
     @Req() req: Request,
   ): Promise<void> {
