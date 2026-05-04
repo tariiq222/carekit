@@ -1,10 +1,9 @@
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { DowngradeSafetyService, BooleanViolation } from './downgrade-safety.service';
 
-const buildPrisma = (counts: { branches?: number; employees?: number; bookings?: number } = {}) => ({
-  $allTenants: {
-    branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
-    employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
+const buildPrisma = (counts: { branches?: number; employees?: number; bookings?: number } = {}) => {
+  // Tenant-scoped model mocks (used by BOOLEAN_CHECKS which run in tenant CLS context)
+  const tenantModels = {
     booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0), findMany: jest.fn().mockResolvedValue([]) },
     waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
     groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
@@ -18,8 +17,31 @@ const buildPrisma = (counts: { branches?: number; employees?: number; bookings?:
     department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
     organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
     invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
-  },
-});
+  };
+
+  return {
+    // $allTenants still needed for recomputeFromSource (quantitative fallback path)
+    $allTenants: {
+      branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
+      employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
+      booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0), findMany: jest.fn().mockResolvedValue([]) },
+      waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      coupon: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      integration: { findFirst: jest.fn().mockResolvedValue(null) },
+      payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+      invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    },
+    // Tenant-scoped accessors used by BOOLEAN_CHECKS
+    ...tenantModels,
+  };
+};
 
 const buildCounters = (
   values: Partial<Record<string, number | null>> = {},
@@ -169,10 +191,7 @@ describe('DowngradeSafetyService', () => {
           groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
-          coupon: {
-            count: jest.fn().mockResolvedValue(3),
-            findMany: jest.fn().mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]),
-          },
+          coupon: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           integration: { findFirst: jest.fn().mockResolvedValue(null) },
@@ -181,6 +200,23 @@ describe('DowngradeSafetyService', () => {
           organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
           invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
         },
+        // Tenant-scoped mocks used by BOOLEAN_CHECKS
+        booking: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        coupon: {
+          count: jest.fn().mockResolvedValue(3),
+          findMany: jest.fn().mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]),
+        },
+        intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        integration: { findFirst: jest.fn().mockResolvedValue(null) },
+        payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+        invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
       };
       const counters = buildCounters({ [FeatureKey.BRANCHES]: 1, [FeatureKey.EMPLOYEES]: 1, [FeatureKey.MONTHLY_BOOKINGS]: 5 });
       const svc = new DowngradeSafetyService(prisma as never, counters as never);
@@ -208,7 +244,7 @@ describe('DowngradeSafetyService', () => {
           groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
-          coupon: { count: jest.fn().mockResolvedValue(5), findMany: jest.fn().mockResolvedValue([{ id: 'c1' }]) },
+          coupon: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
           integration: { findFirst: jest.fn().mockResolvedValue(null) },
@@ -217,6 +253,20 @@ describe('DowngradeSafetyService', () => {
           organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
           invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
         },
+        // Tenant-scoped mocks used by BOOLEAN_CHECKS
+        booking: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        coupon: { count: jest.fn().mockResolvedValue(5), findMany: jest.fn().mockResolvedValue([{ id: 'c1' }]) },
+        intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        integration: { findFirst: jest.fn().mockResolvedValue(null) },
+        payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+        invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
       };
       const counters = buildCounters({ [FeatureKey.BRANCHES]: 1, [FeatureKey.EMPLOYEES]: 1, [FeatureKey.MONTHLY_BOOKINGS]: 5 });
       const svc = new DowngradeSafetyService(prisma as never, counters as never);

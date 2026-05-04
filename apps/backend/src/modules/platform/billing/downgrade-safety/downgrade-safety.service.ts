@@ -76,7 +76,7 @@ type BooleanCheck = (
 const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
   [FeatureKey.RECURRING_BOOKINGS]: async (orgId, prisma) => {
     // Recurring bookings = future bookings with recurringGroupId set
-    const rows = await prisma.$allTenants.booking.findMany({
+    const rows = await prisma.booking.findMany({
       where: {
         organizationId: orgId,
         recurringGroupId: { not: null },
@@ -86,7 +86,7 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.booking.count({
+    const total = await prisma.booking.count({
       where: {
         organizationId: orgId,
         recurringGroupId: { not: null },
@@ -97,59 +97,59 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
   },
 
   [FeatureKey.WAITLIST]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.waitlistEntry.findMany({
+    const rows = await prisma.waitlistEntry.findMany({
       where: { organizationId: orgId, status: 'WAITING' },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.waitlistEntry.count({
+    const total = await prisma.waitlistEntry.count({
       where: { organizationId: orgId, status: 'WAITING' },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/bookings/waitlist' };
   },
 
   [FeatureKey.GROUP_SESSIONS]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.groupSession.findMany({
+    const rows = await prisma.groupSession.findMany({
       where: { organizationId: orgId, scheduledAt: { gte: new Date() } },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.groupSession.count({
+    const total = await prisma.groupSession.count({
       where: { organizationId: orgId, scheduledAt: { gte: new Date() } },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/bookings/group' };
   },
 
   [FeatureKey.AI_CHATBOT]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.knowledgeDocument.findMany({
+    const rows = await prisma.knowledgeDocument.findMany({
       where: { organizationId: orgId },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.knowledgeDocument.count({
+    const total = await prisma.knowledgeDocument.count({
       where: { organizationId: orgId },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/chatbot/knowledge' };
   },
 
   [FeatureKey.EMAIL_TEMPLATES]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.emailTemplate.findMany({
+    const rows = await prisma.emailTemplate.findMany({
       where: { organizationId: orgId, isActive: true },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.emailTemplate.count({
+    const total = await prisma.emailTemplate.count({
       where: { organizationId: orgId, isActive: true },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/settings/email-templates' };
   },
 
   [FeatureKey.COUPONS]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.coupon.findMany({
+    const rows = await prisma.coupon.findMany({
       where: {
         organizationId: orgId,
         isActive: true,
@@ -159,7 +159,7 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.coupon.count({
+    const total = await prisma.coupon.count({
       where: {
         organizationId: orgId,
         isActive: true,
@@ -170,33 +170,33 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
   },
 
   [FeatureKey.INTAKE_FORMS]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.intakeForm.findMany({
+    const rows = await prisma.intakeForm.findMany({
       where: { organizationId: orgId, isActive: true },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.intakeForm.count({
+    const total = await prisma.intakeForm.count({
       where: { organizationId: orgId, isActive: true },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/settings/intake-forms' };
   },
 
   [FeatureKey.CUSTOM_ROLES]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.customRole.findMany({
+    const rows = await prisma.customRole.findMany({
       where: { organizationId: orgId },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.customRole.count({
+    const total = await prisma.customRole.count({
       where: { organizationId: orgId },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/settings/roles' };
   },
 
   [FeatureKey.ZOOM_INTEGRATION]: async (orgId, prisma) => {
-    const integration = await prisma.$allTenants.integration.findFirst({
+    const integration = await prisma.integration.findFirst({
       where: { organizationId: orgId, provider: 'ZOOM', isActive: true },
       select: { id: true },
     });
@@ -205,33 +205,33 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
   },
 
   [FeatureKey.BANK_TRANSFER_PAYMENTS]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.payment.findMany({
+    const rows = await prisma.payment.findMany({
       where: { organizationId: orgId, method: 'BANK_TRANSFER', status: 'PENDING' },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.payment.count({
+    const total = await prisma.payment.count({
       where: { organizationId: orgId, method: 'BANK_TRANSFER', status: 'PENDING' },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/payments?method=bank' };
   },
 
   [FeatureKey.DEPARTMENTS]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.department.findMany({
+    const rows = await prisma.department.findMany({
       where: { organizationId: orgId, isActive: true },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.department.count({
+    const total = await prisma.department.count({
       where: { organizationId: orgId, isActive: true },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/departments' };
   },
 
   [FeatureKey.SMS_PROVIDER_PER_TENANT]: async (orgId, prisma) => {
-    const config = await prisma.$allTenants.organizationSmsConfig.findFirst({
+    const config = await prisma.organizationSmsConfig.findFirst({
       where: { organizationId: orgId, NOT: { provider: 'NONE' } },
       select: { id: true },
     });
@@ -241,13 +241,13 @@ const BOOLEAN_CHECKS: Partial<Record<FeatureKey, BooleanCheck>> = {
 
   // MULTI_CURRENCY: check open invoices in non-SAR currency
   [FeatureKey.MULTI_CURRENCY]: async (orgId, prisma) => {
-    const rows = await prisma.$allTenants.invoice.findMany({
+    const rows = await prisma.invoice.findMany({
       where: { organizationId: orgId, currency: { not: 'SAR' }, status: InvoiceStatus.ISSUED },
       select: { id: true },
       take: 3,
     });
     if (rows.length === 0) return null;
-    const total = await prisma.$allTenants.invoice.count({
+    const total = await prisma.invoice.count({
       where: { organizationId: orgId, currency: { not: 'SAR' }, status: InvoiceStatus.ISSUED },
     });
     return { count: total, sampleIds: rows.map(r => r.id), deepLink: '/payments' };
