@@ -49,16 +49,29 @@ describe('BookingAutocompleteCron', () => {
 });
 
 describe('BookingExpiryCron', () => {
+  // Legacy path (flag off) preserves the pre-launch-readiness behavior.
+  // Enhanced-path coverage lives in booking-expiry.cron.spec.ts.
+  const buildFlags = () => ({ bookingExpiryEnabled: false });
+  const buildCls = () => ({ run: jest.fn(), set: jest.fn() });
+
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new BookingExpiryCron(prisma as never);
+    const cron = new BookingExpiryCron(
+      prisma as never,
+      buildFlags() as never,
+      buildCls() as never,
+    );
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
   it('updates pending bookings that have expired', async () => {
     const prisma = buildPrisma();
     prisma.booking.updateMany = jest.fn().mockResolvedValue({ count: 3 });
-    const cron = new BookingExpiryCron(prisma as never);
+    const cron = new BookingExpiryCron(
+      prisma as never,
+      buildFlags() as never,
+      buildCls() as never,
+    );
     await cron.execute();
     expect(prisma.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({

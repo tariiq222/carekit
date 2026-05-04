@@ -57,6 +57,7 @@ export class ReconcileUsageCountersHandler {
         // needs prisma.$allTenants (e.g. recomputeFromSource uses scoped models
         // directly, so this is defensive only).
         this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+        this.logger.log(`systemContext: reconcile-usage-counters org=${orgId}`);
 
         let localRepaired = 0;
 

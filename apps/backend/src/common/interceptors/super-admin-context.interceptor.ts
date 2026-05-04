@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
@@ -15,6 +16,8 @@ interface SuperAdminRequestUser {
 
 @Injectable()
 export class SuperAdminContextInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(SuperAdminContextInterceptor.name);
+
   constructor(private readonly cls: ClsService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -25,6 +28,7 @@ export class SuperAdminContextInterceptor implements NestInterceptor {
     }
 
     this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+    this.logger.log('systemContext: super-admin interceptor');
     return next.handle();
   }
 }

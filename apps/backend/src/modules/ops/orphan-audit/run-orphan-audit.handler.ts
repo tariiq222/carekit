@@ -31,6 +31,7 @@ export class RunOrphanAuditHandler {
     // Wrap in a super-admin CLS context so prisma.$allTenants is accessible.
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: orphan-audit tick');
       await this.runAudit();
     });
   }

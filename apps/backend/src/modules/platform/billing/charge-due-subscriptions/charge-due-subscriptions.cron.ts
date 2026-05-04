@@ -6,6 +6,14 @@ import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.co
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
+import { LaunchFlags } from '../feature-flags/launch-flags';
+
+const PLATFORM_VAT_RATE = 0.15;
+
+interface PriceSource {
+  priceMonthly: unknown;
+  priceAnnual: unknown;
+}
 
 interface SubWithPlan {
   id: string;
@@ -14,10 +22,8 @@ interface SubWithPlan {
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   moyasarCardTokenRef: string | null;
-  plan: {
-    priceMonthly: unknown;
-    priceAnnual: unknown;
-  };
+  plan: PriceSource;
+  planVersion: PriceSource | null;
 }
 
 @Injectable()
@@ -31,6 +37,7 @@ export class ChargeDueSubscriptionsCron {
     private readonly moyasar: MoyasarSubscriptionClient,
     private readonly recordPayment: RecordSubscriptionPaymentHandler,
     private readonly recordFailure: RecordSubscriptionPaymentFailureHandler,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(): Promise<void> {
@@ -38,6 +45,7 @@ export class ChargeDueSubscriptionsCron {
 
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: charge-due-subscriptions tick');
       await this.runCharge();
     });
   }
@@ -57,7 +65,7 @@ export class ChargeDueSubscriptionsCron {
         status: { in: ['TRIALING', 'ACTIVE', 'PAST_DUE'] },
         OR: [{ lastPaymentAt: null }, { lastPaymentAt: { lt: recentPaymentCutoff } }],
       },
-      include: { plan: true },
+      include: { plan: true, planVersion: true },
       orderBy: { currentPeriodEnd: 'asc' },
     });
 
@@ -71,19 +79,40 @@ export class ChargeDueSubscriptionsCron {
   }
 
   private async chargeSubscription(sub: SubWithPlan, now: Date): Promise<void> {
+    const priceSource: PriceSource =
+      this.flags.planVersioningEnabled && sub.planVersion
+        ? sub.planVersion
+        : sub.plan;
     const flatAmount =
       sub.billingCycle === 'ANNUAL'
-        ? Number(sub.plan.priceAnnual)
-        : Number(sub.plan.priceMonthly);
+        ? Number(priceSource.priceAnnual)
+        : Number(priceSource.priceMonthly);
+
+    const overageAmount = 0;
+    const flatLine = {
+      kind: 'FLAT_FEE' as const,
+      description: `Subscription ${sub.billingCycle.toLowerCase()}`,
+      amount: flatAmount,
+    };
+    const overageLines: Array<{ kind: 'OVERAGE'; amount: number }> = [];
+    const subtotal = flatAmount + overageAmount;
+    const vatAmt = Number((subtotal * PLATFORM_VAT_RATE).toFixed(2));
+    const total = Number((subtotal + vatAmt).toFixed(2));
+    const lineItems = [
+      flatLine,
+      ...overageLines,
+      { kind: 'VAT' as const, rate: PLATFORM_VAT_RATE, amount: vatAmt },
+    ];
 
     // Create invoice
     const invoice = await this.prisma.$allTenants.subscriptionInvoice.create({
       data: {
         subscriptionId: sub.id,
         organizationId: sub.organizationId,
-        amount: flatAmount,
+        amount: total,
         flatAmount,
-        overageAmount: 0,
+        overageAmount,
+        lineItems,
         status: 'DUE',
         billingCycle: sub.billingCycle as never,
         periodStart: sub.currentPeriodStart,
@@ -102,7 +131,7 @@ export class ChargeDueSubscriptionsCron {
     try {
       const payment = await this.moyasar.chargeWithToken({
         token: sub.moyasarCardTokenRef,
-        amount: Math.round(flatAmount * 100),
+        amount: Math.round(total * 100),
         currency: 'SAR',
         idempotencyKey: `subscription-invoice:${invoice.id}`,
         description: `Deqah subscription invoice ${invoice.id}`,

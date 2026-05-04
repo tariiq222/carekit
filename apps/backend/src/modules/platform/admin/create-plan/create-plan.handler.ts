@@ -2,6 +2,8 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { parsePlanLimits } from '../../billing/plan-limits.zod';
+import { LaunchFlags } from '../../billing/feature-flags/launch-flags';
+import { CreatePlanVersionHandler } from '../../billing/plan-versions/create-plan-version.handler';
 
 export interface CreatePlanCommand {
   superAdminUserId: string;
@@ -23,14 +25,18 @@ export interface CreatePlanCommand {
 
 @Injectable()
 export class CreatePlanHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly flags: LaunchFlags,
+    private readonly createPlanVersion: CreatePlanVersionHandler,
+  ) {}
 
   async execute(cmd: CreatePlanCommand) {
-    return this.prisma.$allTenants.$transaction(async (tx) => {
+    const plan = await this.prisma.$allTenants.$transaction(async (tx) => {
       const existing = await tx.plan.findUnique({ where: { slug: cmd.data.slug } });
       if (existing) throw new ConflictException('plan_slug_already_exists');
 
-      const plan = await tx.plan.create({
+      const created = await tx.plan.create({
         data: {
           slug: cmd.data.slug,
           nameAr: cmd.data.nameAr,
@@ -50,13 +56,19 @@ export class CreatePlanHandler {
           actionType: SuperAdminActionType.PLAN_CREATE,
           organizationId: null,
           reason: cmd.reason,
-          metadata: { planId: plan.id, slug: plan.slug },
+          metadata: { planId: created.id, slug: created.slug },
           ipAddress: cmd.ipAddress,
           userAgent: cmd.userAgent,
         },
       });
 
-      return plan;
+      return created;
     });
+
+    if (this.flags.planVersioningEnabled) {
+      await this.createPlanVersion.execute({ planId: plan.id });
+    }
+
+    return plan;
   }
 }

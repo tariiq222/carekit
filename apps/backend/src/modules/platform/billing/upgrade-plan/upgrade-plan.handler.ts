@@ -19,6 +19,7 @@ import {
   SUBSCRIPTION_UPDATED_EVENT,
   type SubscriptionUpdatedPayload,
 } from '../events/subscription-updated.event';
+import { LaunchFlags } from '../feature-flags/launch-flags';
 
 @Injectable()
 export class UpgradePlanHandler {
@@ -31,6 +32,7 @@ export class UpgradePlanHandler {
     private readonly moyasar: MoyasarSubscriptionClient,
     private readonly config: ConfigService,
     private readonly eventBus: EventBusService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(dto: ChangePlanDto) {
@@ -77,11 +79,22 @@ export class UpgradePlanHandler {
     });
     if (!targetPlan) throw new NotFoundException('Target plan not found');
 
+    let planVersionId: string | undefined;
+    if (this.flags.planVersioningEnabled) {
+      const latest = await this.prisma.planVersion.findFirst({
+        where: { planId: targetPlan.id },
+        orderBy: { version: 'desc' },
+        select: { id: true },
+      });
+      planVersionId = latest?.id;
+    }
+
     if (sub.status === 'TRIALING') {
       const updated = await this.prisma.subscription.update({
         where: { id: sub.id },
         data: {
           planId: targetPlan.id,
+          planVersionId: planVersionId ?? null,
           billingCycle: dto.billingCycle,
           cancelAtPeriodEnd: false,
           scheduledCancellationDate: null,
@@ -136,6 +149,7 @@ export class UpgradePlanHandler {
         where: { id: sub.id },
         data: {
           planId: targetPlan.id,
+          planVersionId: planVersionId ?? null,
           billingCycle: dto.billingCycle,
           cancelAtPeriodEnd: false,
           scheduledCancellationDate: null,
@@ -237,6 +251,7 @@ export class UpgradePlanHandler {
       where: { id: sub.id },
       data: {
         planId: targetPlan.id,
+        planVersionId: planVersionId ?? null,
         billingCycle: dto.billingCycle,
         cancelAtPeriodEnd: false,
         scheduledCancellationDate: null,

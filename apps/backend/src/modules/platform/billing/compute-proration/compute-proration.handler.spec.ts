@@ -42,8 +42,13 @@ const buildTenant = (organizationId = 'org-A') => ({
   requireOrganizationId: jest.fn().mockReturnValue(organizationId),
 });
 
-const buildHandler = (prisma: ReturnType<typeof buildPrisma>) =>
-  new ComputeProrationHandler(prisma as never, buildTenant() as never);
+const buildFlags = (planVersioningEnabled = false) => ({ planVersioningEnabled });
+
+const buildHandler = (
+  prisma: ReturnType<typeof buildPrisma>,
+  flags = buildFlags(),
+) =>
+  new ComputeProrationHandler(prisma as never, buildTenant() as never, flags as never);
 
 describe('ComputeProrationHandler', () => {
   beforeEach(() => {
@@ -244,5 +249,49 @@ describe('ComputeProrationHandler', () => {
       isUpgrade: false,
       action: 'SCHEDULE_DOWNGRADE',
     });
+  });
+
+  it('uses planVersion price when flag on (legacy plan price changed but sub keeps old)', async () => {
+    // planVersion has old price 300/mo; live plan now has 900/mo
+    // When flag is on, proration base uses 300 (version snapshot), not 900
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: false,
+      plan: { id: 'plan-basic', priceMonthly: '900.00', priceAnnual: '9000.00' },
+      planVersion: { id: 'pv-1', priceMonthly: '300.00', priceAnnual: '3000.00' },
+    });
+    prisma.plan.findFirst.mockResolvedValue(proPlan); // target: 900/mo
+    const handler = buildHandler(prisma, buildFlags(true));
+
+    const result = await handler.execute({ planId: 'plan-pro', billingCycle: 'MONTHLY' });
+
+    // When planVersion price (300) is used as current, pro plan (900) is an upgrade
+    expect(result).toMatchObject({ action: 'UPGRADE_NOW', isUpgrade: true });
+  });
+
+  it('falls back to live plan when flag off', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+      cancelAtPeriodEnd: false,
+      plan: { id: 'plan-basic', priceMonthly: '300.00', priceAnnual: '3000.00' },
+      planVersion: { id: 'pv-1', priceMonthly: '900.00', priceAnnual: '9000.00' },
+    });
+    prisma.plan.findFirst.mockResolvedValue(basicPlan); // target: 300/mo
+    const handler = buildHandler(prisma, buildFlags(false));
+
+    const result = await handler.execute({ planId: 'plan-basic', billingCycle: 'MONTHLY' });
+
+    // flag off → uses live plan price (300) as current. Target is 300 → downgrade/equal
+    expect(result).toMatchObject({ isUpgrade: false });
   });
 });

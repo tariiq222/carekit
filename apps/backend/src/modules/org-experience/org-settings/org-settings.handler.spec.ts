@@ -1,3 +1,4 @@
+import { ForbiddenException } from '@nestjs/common';
 import { GetOrgSettingsHandler } from './get-org-settings.handler';
 import { UpsertOrgSettingsHandler } from './upsert-org-settings.handler';
 import { TenantContextService } from '../../../common/tenant';
@@ -57,10 +58,11 @@ const buildPrisma = () => ({
   },
 });
 
-const buildTenant = (organizationId = DEFAULT_ORG) =>
+const buildTenant = (organizationId = DEFAULT_ORG, isSuperAdmin = false) =>
   ({
     requireOrganizationId: jest.fn().mockReturnValue(organizationId),
     requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+    isSuperAdmin: jest.fn().mockReturnValue(isSuperAdmin),
   }) as unknown as TenantContextService;
 
 describe('GetOrgSettingsHandler', () => {
@@ -101,6 +103,49 @@ describe('UpsertOrgSettingsHandler', () => {
     );
     expect(prismaB.organizationSettings.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ where: { organizationId: 'org-B' } }),
+    );
+  });
+});
+
+describe('vatRate (super-admin gate)', () => {
+  it('GetOrgSettings returns vatRate', async () => {
+    const configWithVat = { ...mockConfig, vatRate: 0.15 };
+    const prisma = {
+      organizationSettings: {
+        upsert: jest.fn().mockResolvedValue(configWithVat),
+      },
+    };
+    const handler = new GetOrgSettingsHandler(prisma as never, buildTenant());
+    const result = await handler.execute();
+    expect(result).toHaveProperty('vatRate', 0.15);
+  });
+
+  it('UpsertOrgSettings allows vatRate change for super-admin', async () => {
+    const prisma = buildPrisma();
+    const handler = new UpsertOrgSettingsHandler(prisma as never, buildTenant(DEFAULT_ORG, true));
+    await handler.execute({ vatRate: 0.05 });
+    expect(prisma.organizationSettings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({ vatRate: 0.05 }),
+      }),
+    );
+  });
+
+  it('UpsertOrgSettings rejects vatRate change for non-super-admin', async () => {
+    const prisma = buildPrisma();
+    const handler = new UpsertOrgSettingsHandler(prisma as never, buildTenant(DEFAULT_ORG, false));
+    await expect(handler.execute({ vatRate: 0.05 })).rejects.toThrow(ForbiddenException);
+    expect(prisma.organizationSettings.upsert).not.toHaveBeenCalled();
+  });
+
+  it('UpsertOrgSettings allows other field changes for non-super-admin (no vatRate field)', async () => {
+    const prisma = buildPrisma();
+    const handler = new UpsertOrgSettingsHandler(prisma as never, buildTenant(DEFAULT_ORG, false));
+    await expect(handler.execute({ companyNameAr: 'Test Clinic' })).resolves.not.toThrow();
+    expect(prisma.organizationSettings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({ companyNameAr: 'Test Clinic' }),
+      }),
     );
   });
 });

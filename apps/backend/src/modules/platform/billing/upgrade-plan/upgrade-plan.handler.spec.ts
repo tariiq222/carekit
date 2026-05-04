@@ -48,6 +48,9 @@ const buildPrisma = () => ({
   plan: {
     findFirst: jest.fn(),
   },
+  planVersion: {
+    findFirst: jest.fn().mockResolvedValue({ id: 'pv-latest' }),
+  },
   subscriptionInvoice: {
     create: jest.fn().mockResolvedValue({ id: 'inv-1' }),
     update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PAID' }),
@@ -104,11 +107,14 @@ const buildEventBus = () => ({
   publish: jest.fn().mockResolvedValue(undefined),
 });
 
+const buildFlags = (planVersioningEnabled = false) => ({ planVersioningEnabled });
+
 const buildHandler = (
   prisma: ReturnType<typeof buildPrisma>,
   cache = buildCache(),
   mailer = buildMailer(),
   moyasar = buildMoyasar(),
+  flags = buildFlags(),
 ) =>
   new UpgradePlanHandler(
     prisma as never,
@@ -119,6 +125,7 @@ const buildHandler = (
     moyasar as never,
     buildConfig() as never,
     buildEventBus() as never,
+    flags as never,
   );
 
 describe('UpgradePlanHandler', () => {
@@ -347,5 +354,33 @@ describe('UpgradePlanHandler', () => {
       expect.objectContaining({ fromPlanName: 'احترافي', toPlanName: 'أساسي' }),
     );
     expect(result).toEqual({ id: 'sub-1', planId: 'plan-1' });
+  });
+
+  it('snapshots planVersionId of latest version when flag on', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue(activeSubscription());
+    prisma.plan.findFirst.mockResolvedValue(proPlan);
+    prisma.planVersion.findFirst.mockResolvedValue({ id: 'pv-upgrade' });
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-2' });
+    const handler = buildHandler(prisma, buildCache(), buildMailer(), buildMoyasar(), buildFlags(true));
+
+    await handler.execute({ planId: 'plan-2', billingCycle: 'MONTHLY' });
+
+    const updateCall = prisma.subscription.update.mock.calls[0][0];
+    expect(updateCall.data.planVersionId).toBe('pv-upgrade');
+  });
+
+  it('omits planVersionId when flag off (legacy)', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue(activeSubscription());
+    prisma.plan.findFirst.mockResolvedValue(proPlan);
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-2' });
+    const handler = buildHandler(prisma, buildCache(), buildMailer(), buildMoyasar(), buildFlags(false));
+
+    await handler.execute({ planId: 'plan-2', billingCycle: 'MONTHLY' });
+
+    const updateCall = prisma.subscription.update.mock.calls[0][0];
+    expect(updateCall.data.planVersionId).toBeNull();
+    expect(prisma.planVersion.findFirst).not.toHaveBeenCalled();
   });
 });

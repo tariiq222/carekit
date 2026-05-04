@@ -6,6 +6,7 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { DowngradeSafetyService } from '../downgrade-safety/downgrade-safety.service';
+import { LaunchFlags } from '../feature-flags/launch-flags';
 
 @Injectable()
 export class ProcessScheduledPlanChangesCron {
@@ -17,6 +18,7 @@ export class ProcessScheduledPlanChangesCron {
     private readonly cache: SubscriptionCacheService,
     private readonly downgradeSafety: DowngradeSafetyService,
     private readonly cls: ClsService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(): Promise<void> {
@@ -24,6 +26,7 @@ export class ProcessScheduledPlanChangesCron {
 
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      this.logger.log('systemContext: process-scheduled-plan-changes tick');
       await this._executeInContext();
     });
   }
@@ -82,10 +85,21 @@ export class ProcessScheduledPlanChangesCron {
         }
       }
 
+      let planVersionId: string | undefined;
+      if (this.flags.planVersioningEnabled) {
+        const latest = await this.prisma.$allTenants.planVersion.findFirst({
+          where: { planId: sub.scheduledPlanId },
+          orderBy: { version: 'desc' },
+          select: { id: true },
+        });
+        planVersionId = latest?.id;
+      }
+
       await this.prisma.$allTenants.subscription.update({
         where: { id: sub.id },
         data: {
           planId: sub.scheduledPlanId,
+          planVersionId: planVersionId ?? null,
           billingCycle: sub.scheduledBillingCycle,
           scheduledPlanId: null,
           scheduledBillingCycle: null,

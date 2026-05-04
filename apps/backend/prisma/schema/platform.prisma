@@ -355,6 +355,7 @@ model Plan {
 
   subscriptions          Subscription[]
   scheduledSubscriptions Subscription[] @relation("SubscriptionScheduledPlan")
+  versions               PlanVersion[]
 
   @@index([isActive, sortOrder])
 }
@@ -365,6 +366,8 @@ model Subscription {
   organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   planId                 String
   plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planVersionId          String?
+  planVersion            PlanVersion?       @relation(fields: [planVersionId], references: [id], onDelete: Restrict)
   status                 SubscriptionStatus @default(TRIALING)
   billingCycle           BillingCycle       @default(MONTHLY)
   currentPeriodStart     DateTime
@@ -406,12 +409,31 @@ model Subscription {
   dunningLogs  DunningLog[]
 
   @@index([planId])
+  @@index([planVersionId])
   @@index([status])
   @@index([currentPeriodEnd])
   @@index([cancelAtPeriodEnd, scheduledCancellationDate])
   @@index([scheduledPlanChangeAt])
   @@index([nextRetryAt])
 }
+
+model PlanVersion {
+  id           String   @id @default(uuid())
+  planId       String
+  plan         Plan     @relation(fields: [planId], references: [id], onDelete: Restrict)
+  version      Int
+  priceMonthly Decimal  @db.Decimal(12, 2)
+  priceAnnual  Decimal  @db.Decimal(12, 2)
+  currency     String   @default("SAR")
+  limits       Json
+  createdAt    DateTime @default(now())
+
+  subscriptions Subscription[]
+
+  @@unique([planId, version])
+  @@index([planId])
+}
+
 
 model SavedCard {
   id             String       @id @default(uuid())

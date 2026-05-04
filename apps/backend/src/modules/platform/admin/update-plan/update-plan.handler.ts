@@ -7,6 +7,8 @@ import {
   PLAN_UPDATED_EVENT,
   type PlanUpdatedPayload,
 } from '../../billing/events/plan-updated.event';
+import { LaunchFlags } from '../../billing/feature-flags/launch-flags';
+import { CreatePlanVersionHandler } from '../../billing/plan-versions/create-plan-version.handler';
 
 export interface UpdatePlanCommand {
   planId: string;
@@ -32,6 +34,8 @@ export class UpdatePlanHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly flags: LaunchFlags,
+    private readonly createPlanVersion: CreatePlanVersionHandler,
   ) {}
 
   async execute(cmd: UpdatePlanCommand) {
@@ -66,6 +70,10 @@ export class UpdatePlanHandler {
 
       return updated;
     });
+
+    if (this.flags.planVersioningEnabled) {
+      await this.createPlanVersion.execute({ planId: cmd.planId });
+    }
 
     // Resolve orgs subscribed to this plan so the cache invalidator can target them.
     const affectedSubs = await this.prisma.$allTenants.subscription.findMany({

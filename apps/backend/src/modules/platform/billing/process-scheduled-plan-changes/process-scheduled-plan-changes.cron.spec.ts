@@ -16,6 +16,9 @@ const buildPrisma = (subs: unknown[] = []) => ({
       findMany: jest.fn().mockResolvedValue(subs),
       update: jest.fn().mockResolvedValue({}),
     },
+    planVersion: {
+      findFirst: jest.fn().mockResolvedValue({ id: 'pv-swap' }),
+    },
     organizationSettings: {
       findFirst: jest.fn().mockResolvedValue(null),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -52,6 +55,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       buildSafety() as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -67,6 +71,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       buildSafety() as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -108,20 +113,21 @@ describe('ProcessScheduledPlanChangesCron', () => {
       cache as never,
       safety as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
 
     expect(prisma.$allTenants.subscription.update).toHaveBeenCalledWith({
       where: { id: 'sub-1' },
-      data: {
+      data: expect.objectContaining({
         planId: 'plan-basic',
         billingCycle: 'MONTHLY',
         scheduledPlanId: null,
         scheduledBillingCycle: null,
         scheduledPlanChangeAt: null,
         scheduledChangeBlockedReason: null,
-      },
+      }),
     });
     expect(cache.invalidate).toHaveBeenCalledWith('org-1');
   });
@@ -148,6 +154,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       cache as never,
       safety as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -180,6 +187,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       safety as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -208,6 +216,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       buildSafety() as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -238,6 +247,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       buildSafety() as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -266,6 +276,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildCache() as never,
       buildSafety() as never,
       buildCls() as never,
+      { planVersioningEnabled: false } as never,
     );
 
     await cron.execute();
@@ -275,5 +286,61 @@ describe('ProcessScheduledPlanChangesCron', () => {
       ([call]) => call.data.apiAccessGraceUntil || call.data.webhooksGraceUntil,
     );
     expect(graceCalls.length).toBe(0);
+  });
+
+  it('snapshots planVersionId of scheduled plan version at swap time when flag on', async () => {
+    const prisma = buildPrisma([
+      {
+        id: 'sub-1',
+        organizationId: 'org-1',
+        scheduledPlanId: 'plan-basic',
+        scheduledBillingCycle: 'MONTHLY',
+        plan: proPlan,
+        scheduledPlan: basicPlan,
+      },
+    ]);
+    prisma.$allTenants.planVersion.findFirst.mockResolvedValue({ id: 'pv-at-swap' });
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+      buildCls() as never,
+      { planVersioningEnabled: true } as never,
+    );
+
+    await cron.execute();
+
+    const updateCalls = (prisma.$allTenants.subscription.update as jest.Mock).mock.calls;
+    const swapCall = updateCalls.find(([c]) => c.data.planId === 'plan-basic');
+    expect(swapCall[0].data.planVersionId).toBe('pv-at-swap');
+  });
+
+  it('omits planVersionId at swap time when flag off (legacy)', async () => {
+    const prisma = buildPrisma([
+      {
+        id: 'sub-1',
+        organizationId: 'org-1',
+        scheduledPlanId: 'plan-basic',
+        scheduledBillingCycle: 'MONTHLY',
+        plan: proPlan,
+        scheduledPlan: basicPlan,
+      },
+    ]);
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+      buildCls() as never,
+      { planVersioningEnabled: false } as never,
+    );
+
+    await cron.execute();
+
+    expect(prisma.$allTenants.planVersion.findFirst).not.toHaveBeenCalled();
+    const updateCalls = (prisma.$allTenants.subscription.update as jest.Mock).mock.calls;
+    const swapCall = updateCalls.find(([c]) => c.data.planId === 'plan-basic');
+    expect(swapCall[0].data.planVersionId).toBeNull();
   });
 });

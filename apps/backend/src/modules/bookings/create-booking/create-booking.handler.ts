@@ -14,9 +14,9 @@ import { EventBusService } from '../../../infrastructure/events';
 import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 import { assertLimitNotExceeded } from '../../platform/billing/assert-limit-not-exceeded';
 import { BookingCreatedEvent } from '../events/booking-created.event';
+import { LaunchFlags } from '../../platform/billing/feature-flags/launch-flags';
+import { ValidateCouponService } from '../coupons/validate-coupon.service';
 import { CreateBookingDto } from './create-booking.dto';
-
-const VAT_RATE = 0.15;
 
 /** Re-map a Postgres exclusion violation (23P01) to a domain 409 conflict. */
 function mapDbConflict(err: unknown): never {
@@ -47,6 +47,8 @@ export class CreateBookingHandler {
     private readonly groupMinReachedHandler: GroupSessionMinReachedHandler,
     private readonly eventBus: EventBusService,
     private readonly subscriptionCache: SubscriptionCacheService,
+    private readonly flags: LaunchFlags,
+    private readonly couponValidator: ValidateCouponService,
   ) {}
 
   async execute(dto: CreateBookingCommand) {
@@ -122,26 +124,6 @@ export class CreateBookingHandler {
 
     let discountedPrice: number | null = null;
 
-    if (dto.couponCode) {
-      // SaaS-02e: Coupon.code is now composite-unique per (organizationId, code).
-      // The Proxy auto-scopes organizationId from CLS — this is an authenticated
-      // flow (dashboard/client), so CLS is always set.
-      const coupon = await this.prisma.coupon.findFirst({
-        where: { code: dto.couponCode },
-      });
-      if (!coupon || !coupon.isActive) throw new BadRequestException(`Coupon ${dto.couponCode} not found`);
-      if (coupon.expiresAt && coupon.expiresAt < new Date()) {
-        throw new BadRequestException(`Coupon ${dto.couponCode} has expired`);
-      }
-      if (coupon.minOrderAmt !== null && Number(price) < Number(coupon.minOrderAmt)) {
-        throw new BadRequestException(`Order total does not meet minimum for coupon`);
-      }
-      const discount = coupon.discountType === 'PERCENTAGE'
-        ? Number(price) * Number(coupon.discountValue) / 100
-        : Math.min(Number(coupon.discountValue), Number(price));
-      discountedPrice = parseFloat((Number(price) - discount).toFixed(2));
-    }
-
     // Resolve group-session settings from the service
     const serviceRecord = await this.prisma.service.findFirst({
       where: { id: dto.serviceId },
@@ -193,6 +175,39 @@ export class CreateBookingHandler {
           }
         }
 
+        if (dto.couponCode) {
+          if (this.flags.couponStrictEnabled) {
+            const result = await this.couponValidator.validate({
+              tx,
+              code: dto.couponCode,
+              orgId: organizationId,
+              clientId: dto.clientId,
+              serviceId: dto.serviceId,
+              subtotal: Number(price),
+            });
+            discountedPrice = parseFloat((Number(price) - result.discount).toFixed(2));
+            await tx.coupon.update({
+              where: { id: result.couponId },
+              data: { usedCount: { increment: 1 } },
+            });
+          } else {
+            // Legacy minimal validation — use tx.coupon so reads see consistent state
+            // with the rest of the transaction.
+            const coupon = await tx.coupon.findFirst({ where: { code: dto.couponCode } });
+            if (!coupon || !coupon.isActive) throw new BadRequestException(`Coupon ${dto.couponCode} not found`);
+            if (coupon.expiresAt && coupon.expiresAt < new Date()) {
+              throw new BadRequestException(`Coupon ${dto.couponCode} has expired`);
+            }
+            if (coupon.minOrderAmt !== null && Number(price) < Number(coupon.minOrderAmt)) {
+              throw new BadRequestException(`Order total does not meet minimum for coupon`);
+            }
+            const discount = coupon.discountType === 'PERCENTAGE'
+              ? Number(price) * Number(coupon.discountValue) / 100
+              : Math.min(Number(coupon.discountValue), Number(price));
+            discountedPrice = parseFloat((Number(price) - discount).toFixed(2));
+          }
+        }
+
         const booking = await tx.booking.create({
           data: {
             organizationId,
@@ -219,8 +234,14 @@ export class CreateBookingHandler {
 
         let invoice: { id: string } | null = null;
         if (!dto.payAtClinic && !isGroupService) {
+          const orgSettings = await tx.organizationSettings.findFirst({
+            where: { organizationId },
+            select: { vatRate: true },
+          });
+          const vatRate = orgSettings?.vatRate ? Number(orgSettings.vatRate) : 0.15;
+
           const subtotal = discountedPrice ?? price;
-          const vatAmt = roundMoney(subtotal * VAT_RATE);
+          const vatAmt = roundMoney(subtotal * vatRate);
           const total = roundMoney(subtotal + vatAmt);
 
           invoice = await tx.invoice.create({
@@ -231,7 +252,7 @@ export class CreateBookingHandler {
               employeeId: booking.employeeId,
               bookingId: booking.id,
               subtotal,
-              vatRate: VAT_RATE,
+              vatRate,
               vatAmt,
               total,
               currency: booking.currency,

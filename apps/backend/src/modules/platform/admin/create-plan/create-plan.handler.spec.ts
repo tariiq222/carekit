@@ -3,6 +3,8 @@ import { ConflictException } from '@nestjs/common';
 import { CreatePlanHandler } from './create-plan.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 import { DEFAULT_PLAN_LIMITS } from '../../billing/plan-limits.zod';
+import { LaunchFlags } from '../../billing/feature-flags/launch-flags';
+import { CreatePlanVersionHandler } from '../../billing/plan-versions/create-plan-version.handler';
 
 describe('CreatePlanHandler', () => {
   let handler: CreatePlanHandler;
@@ -26,7 +28,12 @@ describe('CreatePlanHandler', () => {
     } as unknown as PrismaService;
 
     const moduleRef = await Test.createTestingModule({
-      providers: [CreatePlanHandler, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        CreatePlanHandler,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: LaunchFlags, useValue: { planVersioningEnabled: false } },
+        { provide: CreatePlanVersionHandler, useValue: { execute: jest.fn().mockResolvedValue({}) } },
+      ],
     }).compile();
 
     handler = moduleRef.get(CreatePlanHandler);

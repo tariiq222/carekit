@@ -13,6 +13,7 @@ import { SubscriptionCacheService } from './subscription-cache.service';
 import { UsageCounterService } from './usage-counter/usage-counter.service';
 import { startOfMonthUTC } from './usage-counter/period.util';
 import { ENFORCE_LIMIT_KEY, LimitKind } from './plan-limits.decorator';
+import { LaunchFlags } from './feature-flags/launch-flags';
 
 interface AuthenticatedRequest {
   user?: { organizationId?: string };
@@ -37,6 +38,7 @@ export class PlanLimitsGuard implements CanActivate {
     private readonly prisma: PrismaService,
     private readonly cache: SubscriptionCacheService,
     private readonly counters: UsageCounterService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -60,7 +62,11 @@ export class PlanLimitsGuard implements CanActivate {
       throw new ForbiddenException(`Subscription is ${cached.status}`);
     }
 
-    const limit = this.resolveLimit(kind, cached.limits);
+    const limitSource =
+      this.flags.planVersioningEnabled && cached.planVersionLimits
+        ? cached.planVersionLimits
+        : cached.limits;
+    const limit = this.resolveLimit(kind, limitSource);
     if (limit === -1) return true; // unlimited
 
     const current = await this.currentUsage(kind, organizationId);

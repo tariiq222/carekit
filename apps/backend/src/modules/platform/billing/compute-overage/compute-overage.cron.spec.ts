@@ -6,6 +6,8 @@ const buildPrisma = (record: unknown = null) => ({
   },
 });
 
+const buildFlags = (planVersioningEnabled = false) => ({ planVersioningEnabled });
+
 const STARTER_LIMITS: Record<string, number | boolean> = {
   maxBookingsPerMonth: 500,
   maxClients: 200,
@@ -33,7 +35,7 @@ describe('ComputeOverageCron', () => {
       .mockResolvedValueOnce({ count: 100 }) // BOOKINGS
       .mockResolvedValueOnce({ count: 50 });  // CLIENTS
 
-    const cron = new ComputeOverageCron(prisma as never);
+    const cron = new ComputeOverageCron(prisma as never, buildFlags() as never);
     const result = await cron.computeForSubscription({ ...BASE_PARAMS, limits: STARTER_LIMITS });
 
     expect(result.lines).toHaveLength(0);
@@ -46,7 +48,7 @@ describe('ComputeOverageCron', () => {
       .mockResolvedValueOnce({ count: 612 }) // BOOKINGS — over limit
       .mockResolvedValueOnce({ count: 50 });  // CLIENTS — under
 
-    const cron = new ComputeOverageCron(prisma as never);
+    const cron = new ComputeOverageCron(prisma as never, buildFlags() as never);
     const result = await cron.computeForSubscription({ ...BASE_PARAMS, limits: STARTER_LIMITS });
 
     expect(result.lines).toHaveLength(1);
@@ -66,7 +68,7 @@ describe('ComputeOverageCron', () => {
     // Only CLIENTS will be queried (bookings is unlimited for enterprise with -1 rate)
     prisma.usageRecord.findFirst = jest.fn().mockResolvedValue({ count: 50 });
 
-    const cron = new ComputeOverageCron(prisma as never);
+    const cron = new ComputeOverageCron(prisma as never, buildFlags() as never);
     const result = await cron.computeForSubscription({ ...BASE_PARAMS, limits: ENTERPRISE_LIMITS });
 
     // No overage for bookings (unlimited), clients (unlimited)
@@ -86,7 +88,7 @@ describe('ComputeOverageCron', () => {
       .mockResolvedValueOnce({ count: 100 })  // BOOKINGS — under
       .mockResolvedValueOnce({ count: 150 }); // CLIENTS — over by 50
 
-    const cron = new ComputeOverageCron(prisma as never);
+    const cron = new ComputeOverageCron(prisma as never, buildFlags() as never);
     const result = await cron.computeForSubscription({ ...BASE_PARAMS, limits });
 
     expect(result.lines).toHaveLength(1);
@@ -94,5 +96,68 @@ describe('ComputeOverageCron', () => {
     expect(result.lines[0].metric).toBe('CLIENTS');
     expect(result.lines[0].amount).toBe(100);
     expect(result.totalOverage).toBe(100);
+  });
+
+  it('uses planVersionLimits when flag on (legacy plan limit reduced but sub keeps original lower rate)', async () => {
+    // planVersion had 0.5/booking overage rate and 500 limit
+    // live plan now has 1.0/booking overage rate and 200 limit
+    // With flag on → uses planVersion (0.5 rate, 500 limit)
+    const prisma = buildPrisma();
+    prisma.usageRecord.findFirst = jest.fn()
+      .mockResolvedValueOnce({ count: 600 }) // BOOKINGS — 100 over planVersion limit (500), but only 600-500=100 overage
+      .mockResolvedValueOnce({ count: 10 });  // CLIENTS — under
+
+    const limits: Record<string, number | boolean> = {
+      maxBookingsPerMonth: 200,
+      maxClients: 1000,
+      overageRateBookings: 1.0,
+      overageRateClients: 0,
+    };
+    const planVersionLimits: Record<string, number | boolean> = {
+      maxBookingsPerMonth: 500,
+      maxClients: 1000,
+      overageRateBookings: 0.5,
+      overageRateClients: 0,
+    };
+
+    const cron = new ComputeOverageCron(prisma as never, buildFlags(true) as never);
+    const result = await cron.computeForSubscription({
+      ...BASE_PARAMS,
+      limits,
+      planVersionLimits,
+    });
+
+    // Should use planVersion: 100 overage × 0.5 = 50 SAR (not 400 overage × 1.0)
+    expect(result.lines[0]).toMatchObject({ overage: 100, rate: 0.5, amount: 50 });
+  });
+
+  it('falls back to live plan when flag off', async () => {
+    const prisma = buildPrisma();
+    prisma.usageRecord.findFirst = jest.fn()
+      .mockResolvedValueOnce({ count: 600 })
+      .mockResolvedValueOnce({ count: 10 });
+
+    const limits: Record<string, number | boolean> = {
+      maxBookingsPerMonth: 200,
+      maxClients: 1000,
+      overageRateBookings: 1.0,
+      overageRateClients: 0,
+    };
+    const planVersionLimits: Record<string, number | boolean> = {
+      maxBookingsPerMonth: 500,
+      maxClients: 1000,
+      overageRateBookings: 0.5,
+      overageRateClients: 0,
+    };
+
+    const cron = new ComputeOverageCron(prisma as never, buildFlags(false) as never);
+    const result = await cron.computeForSubscription({
+      ...BASE_PARAMS,
+      limits,
+      planVersionLimits,
+    });
+
+    // Should use live plan: 400 overage × 1.0 = 400 SAR
+    expect(result.lines[0]).toMatchObject({ overage: 400, rate: 1.0, amount: 400 });
   });
 });

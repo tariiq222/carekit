@@ -39,11 +39,14 @@ const buildDeps = () => ({
   },
 });
 
+const buildFlags = (planVersioningEnabled = false) => ({ planVersioningEnabled });
+
 const buildCron = (
   prisma: ReturnType<typeof buildPrisma>,
   config: ReturnType<typeof buildConfig>,
   deps = buildDeps(),
   cls = buildCls(),
+  flags = buildFlags(),
 ) =>
   new ChargeDueSubscriptionsCron(
     prisma as never,
@@ -52,6 +55,7 @@ const buildCron = (
     deps.moyasar as never,
     deps.recordPayment as never,
     deps.recordFailure as never,
+    flags as never,
   );
 
 const PAST_DATE = new Date(Date.now() - 1000);
@@ -105,7 +109,7 @@ describe('ChargeDueSubscriptionsCron', () => {
           organizationId: 'org-1',
           status: 'DUE',
           flatAmount: 199,
-          amount: 199,
+          amount: 228.85, // 199 * 1.15
           overageAmount: 0,
           billingCycle: 'MONTHLY',
         }),
@@ -132,7 +136,7 @@ describe('ChargeDueSubscriptionsCron', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           flatAmount: 1990,
-          amount: 1990,
+          amount: 2288.5, // 1990 * 1.15
           billingCycle: 'ANNUAL',
         }),
       }),
@@ -181,7 +185,7 @@ describe('ChargeDueSubscriptionsCron', () => {
 
     expect(deps.moyasar.chargeWithToken).toHaveBeenCalledWith({
       token: 'tok_saved',
-      amount: 19_900,
+      amount: 22_885, // 199 * 1.15 * 100 = 228.85 * 100
       currency: 'SAR',
       idempotencyKey: 'subscription-invoice:inv-1',
       description: 'Deqah subscription invoice inv-1',
@@ -326,6 +330,94 @@ describe('ChargeDueSubscriptionsCron', () => {
       invoiceId: 'inv-1',
       moyasarPaymentId: 'unavailable',
       reason: 'network timeout',
+    });
+  });
+
+  it('uses planVersion price when flag on (legacy plan price changed but sub keeps old)', async () => {
+    // planVersion has 99/month, live plan has 199/month; flag on → uses 99
+    const sub = {
+      id: 'sub-versioned',
+      organizationId: 'org-versioned',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: 'tok_versioned',
+      plan: { priceMonthly: 199, priceAnnual: 1990 },
+      planVersion: { priceMonthly: 99, priceAnnual: 990 },
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps, buildCls(), buildFlags(true));
+
+    await cron.execute();
+
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ flatAmount: 99, amount: 113.85 }), // 99 * 1.15
+      }),
+    );
+  });
+
+  it('falls back to live plan when flag off', async () => {
+    const sub = {
+      id: 'sub-live',
+      organizationId: 'org-live',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: null,
+      plan: { priceMonthly: 199, priceAnnual: 1990 },
+      planVersion: { priceMonthly: 99, priceAnnual: 990 },
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps, buildCls(), buildFlags(false));
+
+    await cron.execute();
+
+    // flag off → uses live plan price (199); amount includes 15% VAT
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ flatAmount: 199, amount: 228.85 }), // 199 * 1.15
+      }),
+    );
+  });
+
+  describe('VAT line item', () => {
+    it('appends VAT line at 15% and sets invoice.amount = subtotal + vat', async () => {
+      const sub = {
+        id: 'sub-vat',
+        organizationId: 'org-vat',
+        billingCycle: 'MONTHLY',
+        currentPeriodStart: new Date('2026-04-01'),
+        currentPeriodEnd: PAST_DATE,
+        moyasarCardTokenRef: 'tok',
+        plan: { priceMonthly: 200, priceAnnual: 2000 },
+        planVersion: null,
+      };
+      const prisma = buildPrisma([sub]);
+      const deps = buildDeps();
+      const cron = buildCron(prisma, buildConfig(true), deps);
+
+      await cron.execute();
+
+      const createCall = prisma.$allTenants.subscriptionInvoice.create.mock.calls[0][0] as {
+        data: {
+          flatAmount: number;
+          amount: number;
+          lineItems: Array<{ kind: string; rate?: number; amount: number }>;
+        };
+      };
+      expect(createCall.data.flatAmount).toBe(200);
+      expect(createCall.data.amount).toBe(230); // 200 * 1.15
+      expect(createCall.data.lineItems).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ kind: 'VAT', rate: 0.15, amount: 30 }),
+        ]),
+      );
+      expect(deps.moyasar.chargeWithToken).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 23_000 }), // 230 * 100
+      );
     });
   });
 });

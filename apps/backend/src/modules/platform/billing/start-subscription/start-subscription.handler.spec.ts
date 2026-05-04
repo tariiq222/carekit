@@ -9,6 +9,9 @@ const buildPrisma = () => ({
   plan: {
     findFirst: jest.fn(),
   },
+  planVersion: {
+    findFirst: jest.fn().mockResolvedValue({ id: 'pv-1' }),
+  },
 });
 
 const buildTenant = (organizationId = 'org-A') => ({
@@ -23,11 +26,29 @@ const buildConfig = (trialDays = 14) => ({
   get: jest.fn().mockReturnValue(trialDays),
 });
 
+const buildFlags = (planVersioningEnabled = false) => ({
+  planVersioningEnabled,
+});
+
 const buildEventBus = () => ({
   publish: jest.fn().mockResolvedValue(undefined),
 });
 
 const basicPlan = { id: 'plan-1', slug: 'basic', isActive: true, priceMonthly: 299 };
+
+const buildHandler = (
+  prisma: ReturnType<typeof buildPrisma>,
+  flags: { planVersioningEnabled: boolean } = buildFlags(),
+  config = buildConfig(),
+) =>
+  new StartSubscriptionHandler(
+    prisma as never,
+    buildTenant('org-A') as never,
+    buildCache() as never,
+    config as never,
+    buildEventBus() as never,
+    flags as never,
+  );
 
 describe('StartSubscriptionHandler', () => {
   it('throws ConflictException when subscription already exists', async () => {
@@ -40,6 +61,7 @@ describe('StartSubscriptionHandler', () => {
       buildCache() as never,
       buildConfig() as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     await expect(
@@ -58,6 +80,7 @@ describe('StartSubscriptionHandler', () => {
       buildCache() as never,
       buildConfig() as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     await expect(
@@ -77,6 +100,7 @@ describe('StartSubscriptionHandler', () => {
       buildCache() as never,
       buildConfig() as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
@@ -107,6 +131,7 @@ describe('StartSubscriptionHandler', () => {
       buildCache() as never,
       buildConfig(7) as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     const before = Date.now();
@@ -134,6 +159,7 @@ describe('StartSubscriptionHandler', () => {
       buildCache() as never,
       buildConfig() as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     const before = Date.now();
@@ -158,10 +184,41 @@ describe('StartSubscriptionHandler', () => {
       cache as never,
       buildConfig() as never,
       buildEventBus() as never,
+      buildFlags() as never,
     );
 
     await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
 
     expect(cache.invalidate).toHaveBeenCalledWith('org-A');
+  });
+
+  it('snapshots planVersionId of latest version when flag on', async () => {
+    const prisma = buildPrisma();
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.create.mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+      Promise.resolve({ id: 'sub-1', ...data }),
+    );
+    prisma.planVersion.findFirst.mockResolvedValue({ id: 'pv-latest' });
+    const handler = buildHandler(prisma, buildFlags(true));
+
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    const createCall = prisma.subscription.create.mock.calls[0][0];
+    expect(createCall.data.planVersionId).toBe('pv-latest');
+  });
+
+  it('omits planVersionId when flag off (legacy)', async () => {
+    const prisma = buildPrisma();
+    prisma.plan.findFirst.mockResolvedValue(basicPlan);
+    prisma.subscription.create.mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+      Promise.resolve({ id: 'sub-1', ...data }),
+    );
+    const handler = buildHandler(prisma, buildFlags(false));
+
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    const createCall = prisma.subscription.create.mock.calls[0][0];
+    expect(createCall.data.planVersionId).toBeNull();
+    expect(prisma.planVersion.findFirst).not.toHaveBeenCalled();
   });
 });

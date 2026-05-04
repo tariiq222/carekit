@@ -5,6 +5,7 @@ import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
+import { LaunchFlags } from '../../platform/billing/feature-flags/launch-flags';
 import { CancelBookingDto } from './cancel-booking.dto';
 import { ZoomMeetingService } from '../zoom-meeting.service';
 
@@ -27,6 +28,7 @@ export class CancelBookingHandler {
     private readonly eventBus: EventBusService,
     private readonly settingsHandler: GetBookingSettingsHandler,
     private readonly zoomMeetingService: ZoomMeetingService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(cmd: CancelBookingCommand) {
@@ -61,8 +63,8 @@ export class CancelBookingHandler {
       ? settings.freeCancelRefundType
       : RefundType.NONE;
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.booking.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const cancelledBooking = await tx.booking.update({
         where: { id: cmd.bookingId },
         data: {
           status: BookingStatus.CANCELLED,
@@ -71,8 +73,8 @@ export class CancelBookingHandler {
           cancelledAt: new Date(),
           zoomMeetingStatus: booking.zoomMeetingId ? 'CANCELLED' : undefined,
         },
-      }),
-      this.prisma.bookingStatusLog.create({
+      });
+      await tx.bookingStatusLog.create({
         data: {
           organizationId,
           bookingId: cmd.bookingId,
@@ -81,8 +83,19 @@ export class CancelBookingHandler {
           changedBy: cmd.changedBy,
           reason: cmd.reason,
         },
-      }),
-    ]);
+      });
+      if (booking.couponCode && this.flags.couponStrictEnabled) {
+        await tx.coupon.updateMany({
+          where: {
+            code: booking.couponCode,
+            organizationId,
+            usedCount: { gt: 0 },
+          },
+          data: { usedCount: { decrement: 1 } },
+        });
+      }
+      return cancelledBooking;
+    });
 
     const event = new BookingCancelledEvent({
       bookingId: booking.id,
