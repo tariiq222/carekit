@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
@@ -21,6 +23,7 @@ export class RecordSubscriptionPaymentHandler {
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
     private readonly issueInvoice: IssueInvoiceHandler,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(cmd: RecordSubscriptionPaymentCommand) {
@@ -77,27 +80,35 @@ export class RecordSubscriptionPaymentHandler {
       await this.issueInvoice.execute(invoice.id);
     }
 
-    const owner = await this.prisma.$allTenants.membership.findFirst({
-      where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
-      select: {
-        displayName: true,
-        user: { select: { email: true, name: true } },
-        organization: { select: { nameAr: true } },
-      },
-    });
-    if (owner?.user) {
-      const baseUrl = this.config.get<string>(
-        'PLATFORM_DASHBOARD_URL',
-        'https://app.webvue.pro/dashboard',
-      );
-      await this.mailer.sendSubscriptionPaymentSucceeded(owner.user.email, {
-        ownerName: owner.displayName ?? owner.user.name ?? '',
-        orgName: owner.organization.nameAr,
-        amountSar: Number(invoice.amount).toFixed(2),
-        invoiceId: invoice.id,
-        receiptUrl: `${baseUrl}/billing/${invoice.id}`,
+    // $allTenants requires SUPER_ADMIN_CONTEXT_CLS_KEY to be set in CLS.
+    // This handler is called from both CLS-wrapped contexts (ChargeDueSubscriptionsCron)
+    // and non-wrapped contexts (DunningRetryService). Wrapping here — inside the handler —
+    // makes the fix caller-agnostic: every invocation path gets the required context,
+    // regardless of whether the caller set it up.
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      const owner = await this.prisma.$allTenants.membership.findFirst({
+        where: { organizationId: sub.organizationId, role: 'OWNER', isActive: true },
+        select: {
+          displayName: true,
+          user: { select: { email: true, name: true } },
+          organization: { select: { nameAr: true } },
+        },
       });
-    }
+      if (owner?.user) {
+        const baseUrl = this.config.get<string>(
+          'PLATFORM_DASHBOARD_URL',
+          'https://app.webvue.pro/dashboard',
+        );
+        await this.mailer.sendSubscriptionPaymentSucceeded(owner.user.email, {
+          ownerName: owner.displayName ?? owner.user.name ?? '',
+          orgName: owner.organization.nameAr,
+          amountSar: Number(invoice.amount).toFixed(2),
+          invoiceId: invoice.id,
+          receiptUrl: `${baseUrl}/billing/${invoice.id}`,
+        });
+      }
+    });
 
     return { ok: true };
   }

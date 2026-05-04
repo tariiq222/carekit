@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { RecordSubscriptionPaymentHandler } from './record-subscription-payment.handler';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 
 const FUTURE_PERIOD_END = new Date('2026-06-01T00:00:00.000Z');
 
@@ -62,6 +63,11 @@ const buildIssueInvoice = () => ({
   execute: jest.fn().mockResolvedValue({}),
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 describe('RecordSubscriptionPaymentHandler', () => {
   it('throws NotFoundException for unknown invoice', async () => {
     const prisma = buildPrisma();
@@ -73,6 +79,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await expect(
@@ -95,6 +102,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -121,6 +129,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -146,6 +155,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-abc' });
@@ -172,6 +182,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -198,6 +209,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -229,6 +241,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -252,6 +265,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       mailer as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -291,6 +305,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -326,6 +341,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -363,6 +379,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     const beforeExecute = Date.now();
@@ -395,6 +412,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildCls() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -410,5 +428,51 @@ describe('RecordSubscriptionPaymentHandler', () => {
         }),
       }),
     );
+  });
+
+  // ─── CLS super-admin context wrapping ─────────────────────────────────────
+  // $allTenants throws ForbiddenException unless SUPER_ADMIN_CONTEXT_CLS_KEY
+  // is set in CLS. This handler is called from both wrapped contexts (the
+  // charge cron) and non-wrapped contexts (DunningRetryService). The wrap
+  // must live INSIDE the handler, not at the call site.
+  it('wraps the $allTenants owner lookup in a super-admin CLS context', async () => {
+    const txPrisma = buildTxPrisma();
+    const prisma = buildPrisma(txPrisma);
+    prisma.subscriptionInvoice.findFirst.mockResolvedValue({
+      id: 'inv-1',
+      amount: 299,
+      subscription: buildSub({ id: 'sub-1', status: 'PAST_DUE', organizationId: 'org-A' }),
+    });
+    const cls = buildCls();
+
+    // Track call order: we need cls.set to happen before $allTenants.membership.findFirst
+    const callOrder: string[] = [];
+    cls.set.mockImplementation((_key: unknown, _value: unknown) => {
+      callOrder.push('cls.set');
+    });
+    prisma.$allTenants.membership.findFirst.mockImplementation(async () => {
+      callOrder.push('membership.findFirst');
+      return {
+        user: { email: 'owner@example.com', name: 'Owner' },
+        organization: { nameAr: 'Org AR' },
+      };
+    });
+
+    const handler = new RecordSubscriptionPaymentHandler(
+      prisma as never,
+      buildCache() as never,
+      new SubscriptionStateMachine(),
+      buildMailer() as never,
+      buildConfig() as never,
+      buildIssueInvoice() as never,
+      cls as never,
+    );
+
+    await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+    // cls.set must be called before membership.findFirst
+    expect(callOrder.indexOf('cls.set')).toBeLessThan(callOrder.indexOf('membership.findFirst'));
   });
 });
