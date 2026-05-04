@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
@@ -44,4 +45,11 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: 'webvue',
+  project: 'deqah-admin',
+  url: 'http://100.124.231.44:8000/',
+  silent: true,
+  disableLogger: true,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});

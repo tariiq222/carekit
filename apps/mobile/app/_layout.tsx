@@ -1,6 +1,13 @@
+import * as Sentry from '@sentry/react-native';
 import { useEffect } from 'react';
 import { I18nManager } from 'react-native';
 import { Slot, useRouter } from 'expo-router';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,
+  enableAutoSessionTracking: true,
+});
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as ReduxProvider } from 'react-redux';
@@ -45,7 +52,7 @@ function AuthRouter() {
   return null;
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
     if (!I18nManager.isRTL) {
       I18nManager.allowRTL(true);
@@ -74,3 +81,5 @@ export default function RootLayout() {
     </ReduxProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 const isProduction = process.env.NODE_ENV === "production"
 
@@ -34,4 +36,12 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: 'webvue',
+  project: 'deqah-dashboard',
+  url: 'http://100.124.231.44:8000/',
+  silent: true,
+  disableLogger: true,
+  // Source-map upload only runs when SENTRY_AUTH_TOKEN is present
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
