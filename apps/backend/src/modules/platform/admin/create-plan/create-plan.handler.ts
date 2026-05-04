@@ -2,6 +2,8 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, SuperAdminActionType } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
 import { parsePlanLimits } from '../../billing/plan-limits.zod';
+import { LaunchFlags } from '../../billing/feature-flags/launch-flags';
+import { CreatePlanVersionHandler } from '../../billing/plan-versions/create-plan-version.handler';
 
 export interface CreatePlanCommand {
   superAdminUserId: string;
@@ -23,7 +25,11 @@ export interface CreatePlanCommand {
 
 @Injectable()
 export class CreatePlanHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly flags: LaunchFlags,
+    private readonly createPlanVersion: CreatePlanVersionHandler,
+  ) {}
 
   async execute(cmd: CreatePlanCommand) {
     return this.prisma.$allTenants.$transaction(async (tx) => {
@@ -58,5 +64,11 @@ export class CreatePlanHandler {
 
       return plan;
     });
+
+    if (this.flags.planVersioningEnabled) {
+      await this.createPlanVersion.execute({ planId: plan.id });
+    }
+
+    return plan;
   }
 }

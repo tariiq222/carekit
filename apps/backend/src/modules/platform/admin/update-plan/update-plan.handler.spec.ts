@@ -3,6 +3,8 @@ import { NotFoundException } from '@nestjs/common';
 import { UpdatePlanHandler } from './update-plan.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 import { EventBusService } from '../../../../infrastructure/events';
+import { LaunchFlags } from '../../billing/feature-flags/launch-flags';
+import { CreatePlanVersionHandler } from '../../billing/plan-versions/create-plan-version.handler';
 
 describe('UpdatePlanHandler', () => {
   let handler: UpdatePlanHandler;
@@ -31,6 +33,8 @@ describe('UpdatePlanHandler', () => {
         UpdatePlanHandler,
         { provide: PrismaService, useValue: prismaMock },
         { provide: EventBusService, useValue: { publish: jest.fn().mockResolvedValue(undefined) } },
+        { provide: LaunchFlags, useValue: { planVersioningEnabled: false } },
+        { provide: CreatePlanVersionHandler, useValue: { execute: jest.fn().mockResolvedValue({}) } },
       ],
     }).compile();
     handler = moduleRef.get(UpdatePlanHandler);
