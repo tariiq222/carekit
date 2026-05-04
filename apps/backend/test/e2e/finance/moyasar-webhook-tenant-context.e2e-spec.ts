@@ -1,6 +1,8 @@
 import { createHmac } from 'crypto';
+import { BadRequestException } from '@nestjs/common';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 import { MoyasarWebhookHandler } from '../../../src/modules/finance/moyasar-webhook/moyasar-webhook.handler';
+import { MoyasarCredentialsService } from '../../../src/infrastructure/payments/moyasar-credentials.service';
 import { EventBusService } from '../../../src/infrastructure/events';
 
 /**
@@ -16,13 +18,17 @@ import { EventBusService } from '../../../src/infrastructure/events';
  * 3. Second webhook for Org B invoice → Payment created under orgB.id
  * 4. list-payments runAs(A) returns orgA payment only; runAs(B) returns orgB only
  * 5. Idempotency: replay first webhook → { skipped: true }, no duplicate payment
+ * 6. Cross-tenant: org A payload signed with org B secret → rejected
  */
 describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
   let h: IsolationHarness;
-  const SECRET = 'test-webhook-secret-02e';
 
-  function sign(rawBody: string): string {
-    return createHmac('sha256', SECRET).update(rawBody).digest('hex');
+  // Per-org secrets — each tenant gets its own webhook secret
+  const SECRET_A = 'test-webhook-secret-02e-orgA';
+  const SECRET_B = 'test-webhook-secret-02e-orgB';
+
+  function signWith(rawBody: string, secret: string): string {
+    return createHmac('sha256', secret).update(rawBody).digest('hex');
   }
 
   function buildPayload(invoiceId: string, paymentId: string) {
@@ -36,8 +42,6 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
   }
 
   beforeAll(async () => {
-    // Set the secret so the handler can read it from ConfigService
-    process.env.MOYASAR_SECRET_KEY = SECRET;
     h = await bootHarness();
   });
 
@@ -90,6 +94,25 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Helper: seed an OrganizationPaymentConfig for an org
+  // ──────────────────────────────────────────────────────────────────────────
+
+  async function seedPaymentConfig(orgId: string, webhookSecret: string): Promise<void> {
+    const creds = h.app.get(MoyasarCredentialsService);
+    await h.runAs({ organizationId: orgId }, () =>
+      h.prisma.organizationPaymentConfig.create({
+        data: {
+          organizationId: orgId,
+          publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxx',
+          secretKeyEnc: creds.encrypt({ secretKey: 'sk_test_xxxxxxxxxxxxxxxxxxxx' }, orgId),
+          webhookSecretEnc: creds.encrypt({ webhookSecret }, orgId),
+          isLive: false,
+        },
+      }),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
   // Main test: cross-org webhook + idempotency
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -97,6 +120,10 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
     const ts = Date.now();
     const orgA = await h.createOrg(`wh-iso-a-${ts}`, 'منظمة ويب هوك أ');
     const orgB = await h.createOrg(`wh-iso-b-${ts}`, 'منظمة ويب هوك ب');
+
+    // Seed per-tenant payment configs with distinct webhook secrets
+    await seedPaymentConfig(orgA.id, SECRET_A);
+    await seedPaymentConfig(orgB.id, SECRET_B);
 
     // Seed invoices without tenant CLS (raw — webhook handler reads system context)
     const invAId = await seedInvoice(orgA.id, `a-${ts}`);
@@ -119,7 +146,7 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
     const paymentIdA = `mys-wh-a-${ts}`;
     const payloadA = buildPayload(invAId, paymentIdA);
     const rawBodyA = JSON.stringify(payloadA);
-    const sigA = sign(rawBodyA);
+    const sigA = signWith(rawBodyA, SECRET_A);
 
     const resultA = await webhookHandler.execute({
       payload: payloadA,
@@ -149,7 +176,7 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
     const paymentIdB = `mys-wh-b-${ts}`;
     const payloadB = buildPayload(invBId, paymentIdB);
     const rawBodyB = JSON.stringify(payloadB);
-    const sigB = sign(rawBodyB);
+    const sigB = signWith(rawBodyB, SECRET_B);
 
     const resultB = await webhookHandler.execute({
       payload: payloadB,
@@ -214,6 +241,7 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
   it('webhook with invalid signature is rejected', async () => {
     const ts = Date.now();
     const orgA = await h.createOrg(`wh-sig-a-${ts}`, 'منظمة توقيع أ');
+    await seedPaymentConfig(orgA.id, SECRET_A);
     const invId = await seedInvoice(orgA.id, `sig-${ts}`);
     const payload = buildPayload(invId, `mys-sig-${ts}`);
     const rawBody = JSON.stringify(payload);
@@ -227,5 +255,30 @@ describe('SaaS-02e — Moyasar webhook tenant resolution', () => {
         signature: 'deadbeef00000000000000000000000000000000000000000000000000000000',
       }),
     ).rejects.toThrow();
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Cross-tenant: org A payload signed with org B secret → rejected
+  // ──────────────────────────────────────────────────────────────────────────
+
+  it('rejects org A payload signed with org B secret', async () => {
+    const ts2 = Date.now();
+    const orgC = await h.createOrg(`wh-cross-c-${ts2}`, 'منظمة عابرة ج');
+    const orgD = await h.createOrg(`wh-cross-d-${ts2}`, 'منظمة عابرة د');
+    const SECRET_C = 'secret-for-org-c';
+    const SECRET_D = 'secret-for-org-d';
+    await seedPaymentConfig(orgC.id, SECRET_C);
+    await seedPaymentConfig(orgD.id, SECRET_D);
+
+    const invCId = await seedInvoice(orgC.id, `c-${ts2}`);
+    const payloadC = buildPayload(invCId, `mys-cross-c-${ts2}`);
+    const rawBodyC = JSON.stringify(payloadC);
+    // Sign org C's payload with org D's secret — should be rejected
+    const wrongSig = signWith(rawBodyC, SECRET_D);
+
+    const webhookHandler = h.app.get(MoyasarWebhookHandler);
+    await expect(
+      webhookHandler.execute({ payload: payloadC, rawBody: rawBodyC, signature: wrongSig }),
+    ).rejects.toThrow(BadRequestException);
   });
 });

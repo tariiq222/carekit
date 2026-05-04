@@ -35,7 +35,6 @@ export async function createTestApp(
   process.env.REDIS_PORT = '5380';
   process.env.OPENAI_API_KEY = 'test-key';
   process.env.OPENROUTER_API_KEY = 'test-key';
-  process.env.MOYASAR_API_KEY = 'test-key';
   process.env.FCM_PROJECT_ID = 'test-project';
   process.env.SMTP_HOST = 'localhost';
   process.env.SMTP_PORT = '1025';
@@ -95,7 +94,6 @@ export async function createTestApp(
           REDIS_PORT: '5380',
           OPENAI_API_KEY: 'test-key',
           OPENROUTER_API_KEY: 'test-key',
-          MOYASAR_API_KEY: 'test-key',
           FCM_PROJECT_ID: 'test-project',
           SMTP_HOST: 'localhost',
           SMTP_PORT: '1025',
@@ -135,7 +133,6 @@ export async function createTestApp(
           REDIS_PORT: '5380',
           OPENAI_API_KEY: 'test-key',
           OPENROUTER_API_KEY: 'test-key',
-          MOYASAR_API_KEY: 'test-key',
           FCM_PROJECT_ID: 'test-project',
           SMTP_HOST: 'localhost',
           SMTP_PORT: '1025',

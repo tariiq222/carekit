@@ -55,6 +55,7 @@ export const enSettings: Record<string, string> = {
   "settings.moyasarKey": "Publishable Key",
   "settings.moyasarSecret": "Secret Key",
   "settings.moyasar.webhookSecret": "Webhook Secret",
+  "settings.moyasar.webhookSecretRequired": "Re-enter the webhook secret on every save — the previous value cannot be recovered.",
   "settings.moyasar.liveMode": "Live Mode",
   "settings.moyasar.liveModeDesc": "Use live credentials when processing real payments.",
   "settings.moyasar.lastStatus": "Last verification",

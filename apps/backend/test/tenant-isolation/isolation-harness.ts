@@ -43,7 +43,6 @@ export async function bootHarness(): Promise<IsolationHarness> {
   process.env.JWT_CLIENT_REFRESH_TTL = '30d';
   process.env.OPENAI_API_KEY = 'test-key';
   process.env.OPENROUTER_API_KEY = 'test-key';
-  process.env.MOYASAR_API_KEY = 'test-key';
   process.env.FCM_PROJECT_ID = ''; // empty → FcmService.onModuleInit() skips firebase init
   process.env.SMTP_HOST = 'localhost';
   process.env.SMTP_PORT = '1025';

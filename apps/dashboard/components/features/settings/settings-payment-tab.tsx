@@ -48,7 +48,7 @@ export function SettingsPaymentTab() {
       {
         publishableKey: publishableKey.trim(),
         secretKey: secretKey.trim(),
-        ...(webhookSecret.trim() ? { webhookSecret: webhookSecret.trim() } : {}),
+        webhookSecret: webhookSecret.trim(),
         isLive,
       },
       {
@@ -112,7 +112,7 @@ export function SettingsPaymentTab() {
   ]
 
   const activeTabDef = tabs.find((tab) => tab.id === activeTab)!
-  const canSaveMoyasar = publishableKey.trim().length > 0 && secretKey.trim().length > 0
+  const canSaveMoyasar = publishableKey.trim().length > 0 && secretKey.trim().length > 0 && webhookSecret.trim().length > 0
 
   return (
     <Card className="overflow-hidden p-0">
@@ -200,6 +200,7 @@ export function SettingsPaymentTab() {
                       <CardContent className="space-y-2 pt-3 pb-3">
                         <Label>{t("settings.moyasar.webhookSecret")}</Label>
                         <Input value={webhookSecret} onChange={(e) => setWebhookSecret(e.target.value)} placeholder={moyasarConfig?.hasWebhookSecret ? "............" : "whsec_..."} type="password" dir="ltr" />
+                        <p className="text-xs text-muted-foreground">{t("settings.moyasar.webhookSecretRequired")}</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-surface shadow-sm">

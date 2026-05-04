@@ -2,8 +2,8 @@ import { createHmac } from 'crypto';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import { seedEmployee, seedService, seedBranch, seedEmployeeService, seedClient } from '../../setup/seed.helper';
 import { MoyasarWebhookHandler } from '../../../src/modules/finance/moyasar-webhook/moyasar-webhook.handler';
+import { MoyasarCredentialsService } from '../../../src/infrastructure/payments/moyasar-credentials.service';
 import { EventBusService } from '../../../src/infrastructure/events';
-import { ConfigService } from '@nestjs/config';
 import { PaymentStatus } from '@prisma/client';
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
@@ -23,21 +23,12 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
   let serviceId: string;
   let branchId: string;
 
-  const buildConfig = () => ({
-    get: jest.fn().mockImplementation((key: string) => {
-      const map: Record<string, string> = {
-        MOYASAR_SECRET_KEY: TEST_SECRET,
-      };
-      return map[key];
-    }),
-  });
-
   const buildEventBus = () => ({
     publish: jest.fn().mockResolvedValue(undefined),
   });
 
   beforeEach(async () => {
-    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch', 'OrganizationPaymentConfig']);
 
     const [client, employee, service, branch] = await Promise.all([
       seedClient(testPrisma as never),
@@ -86,6 +77,26 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
     });
     invoiceId = invoice.id;
 
+    // Seed per-tenant payment config with the test webhook secret.
+    // MoyasarCredentialsService requires the encryption key from env — the
+    // isolation-harness sets MOYASAR_TENANT_ENCRYPTION_KEY so we can use it directly.
+    const encKey = process.env.MOYASAR_TENANT_ENCRYPTION_KEY ?? Buffer.alloc(32, 3).toString('base64');
+    const { ConfigService } = await import('@nestjs/config');
+    const cfg = { get: (k: string) => (k === 'MOYASAR_TENANT_ENCRYPTION_KEY' ? encKey : undefined) } as InstanceType<typeof ConfigService>;
+    const creds = new MoyasarCredentialsService(cfg);
+
+    await testPrisma.organizationPaymentConfig.upsert({
+      where: { organizationId: DEFAULT_ORG_ID },
+      update: { webhookSecretEnc: creds.encrypt({ webhookSecret: TEST_SECRET }, DEFAULT_ORG_ID) },
+      create: {
+        organizationId: DEFAULT_ORG_ID,
+        publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxx',
+        secretKeyEnc: creds.encrypt({ secretKey: 'sk_test_xxxxxxxxxxxxxxxxxxxx' }, DEFAULT_ORG_ID),
+        webhookSecretEnc: creds.encrypt({ webhookSecret: TEST_SECRET }, DEFAULT_ORG_ID),
+        isLive: false,
+      },
+    });
+
     // Minimal ClsService stub: `run` executes callback; `set`/`get` track local
     // storage so the handler's SaaS-02e 3-stage flow (system-context bypass
     // then tenant context) works in the raw e2e harness.
@@ -100,13 +111,13 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
     handler = new MoyasarWebhookHandler(
       testPrisma as never,
       buildEventBus() as never,
-      buildConfig() as never,
       cls as never,
+      creds as never,
     );
   });
 
   afterAll(async () => {
-    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch', 'OrganizationPaymentConfig']);
   });
 
   const makeWebhookRequest = (paymentId: string, status: 'paid' | 'failed' = 'paid') => {

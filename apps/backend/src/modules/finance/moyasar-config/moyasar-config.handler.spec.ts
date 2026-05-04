@@ -59,6 +59,7 @@ describe('UpsertMoyasarConfigHandler', () => {
     const result = await handler.execute({
       publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       secretKey: 'sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      webhookSecret: 'whsec_testvalue00000000000000',
       isLive: false,
     });
 
@@ -90,6 +91,7 @@ describe('UpsertMoyasarConfigHandler', () => {
     await handler.execute({
       publishableKey: 'pk_test_new00000000000000000000',
       secretKey: 'sk_test_new00000000000000000000',
+      webhookSecret: 'whsec_newvalue000000000000000',
       isLive: false,
     });
 
@@ -98,7 +100,7 @@ describe('UpsertMoyasarConfigHandler', () => {
     expect(saved.lastVerifiedStatus).toBeNull();
   });
 
-  it('persists webhook secret encrypted only when provided', async () => {
+  it('persists webhook secret AES-256-GCM encrypted', async () => {
     const key = randomBytes(32).toString('base64');
     const creds = new MoyasarCredentialsService(cfg(key));
     const prisma = buildPrismaStore();

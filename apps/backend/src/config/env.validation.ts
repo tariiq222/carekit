@@ -82,13 +82,6 @@ export const envValidationSchema = Joi.object({
   OPENROUTER_BASE_URL: Joi.string().uri().default('https://openrouter.ai/api/v1'),
   OPENROUTER_CHAT_MODEL: Joi.string().default('anthropic/claude-3.5-haiku'),
 
-  // Moyasar (Finance BC) — legacy global keys; superseded by per-tenant
-  // OrganizationPaymentConfig (P0 2026-04-27). Kept optional so existing
-  // deployments don't break before they migrate.
-  MOYASAR_API_KEY: Joi.string().allow('').optional(),
-  MOYASAR_WEBHOOK_SECRET: Joi.string().allow('').optional(),
-  MOYASAR_SECRET_KEY: Joi.string().allow('').optional(),
-
   // Per-tenant Moyasar AES-256-GCM key — REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
   // Used to wrap each tenant's MoyasarPublishableKey + secretKey at rest.
   MOYASAR_TENANT_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),

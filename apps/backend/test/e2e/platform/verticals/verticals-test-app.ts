@@ -44,8 +44,6 @@ const CONFIG_MAP: Record<string, string | number> = {
   REDIS_PORT: 5380,
   OPENAI_API_KEY: 'test-key',
   OPENROUTER_API_KEY: 'test-key',
-  MOYASAR_API_KEY: 'test-key',
-  MOYASAR_SECRET_KEY: 'test-secret',
   FCM_PROJECT_ID: 'test-project',
   SMTP_HOST: 'localhost',
   SMTP_PORT: 1025,
@@ -92,7 +90,6 @@ export async function createVerticalsTestApp(): Promise<VerticalsTestApp> {
   process.env.JWT_CLIENT_REFRESH_TTL = '30d';
   process.env.OPENAI_API_KEY = 'test-key';
   process.env.OPENROUTER_API_KEY = 'test-key';
-  process.env.MOYASAR_API_KEY = 'test-key';
   process.env.FCM_PROJECT_ID = 'test-project';
   process.env.SMTP_HOST = 'localhost';
   process.env.SMTP_PORT = '1025';
