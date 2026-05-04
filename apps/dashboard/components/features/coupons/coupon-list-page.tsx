@@ -17,7 +17,7 @@ import { DeleteCouponDialog } from "@/components/features/coupons/delete-coupon-
 import { Button } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { FilterBar } from "@/components/features/filter-bar"
-import { useCoupons } from "@/hooks/use-coupons"
+import { useCoupons, useCouponMutations } from "@/hooks/use-coupons"
 import { useLocale } from "@/components/locale-provider"
 import type { Coupon } from "@/lib/types/coupon"
 
@@ -26,6 +26,8 @@ export function CouponListPage() {
   const { t, locale } = useLocale()
   const { coupons, meta, isLoading, error, search, setSearch, status, setStatus, page, setPage } = useCoupons()
 
+  const { updateMut } = useCouponMutations()
+
   const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null)
 
   const now = new Date()
@@ -33,7 +35,13 @@ export function CouponListPage() {
   const inactiveCount = coupons.filter((c) => !c.isActive).length
   const expiredCount = coupons.filter((c) => c.expiresAt && new Date(c.expiresAt) < now).length
 
-  const columns = getCouponColumns(locale, (c) => router.push(`/coupons/${c.id}/edit`), (c) => setDeleteTarget(c), t)
+  const columns = getCouponColumns(
+    locale,
+    (c) => router.push(`/coupons/${c.id}/edit`),
+    (c) => setDeleteTarget(c),
+    t,
+    (c) => updateMut.mutate({ id: c.id, isActive: !c.isActive }),
+  )
 
   return (
     <ListPageShell>
