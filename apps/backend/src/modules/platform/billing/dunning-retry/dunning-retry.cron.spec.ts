@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { DunningRetryCron } from './dunning-retry.cron';
 
 const NOW = new Date('2026-04-30T12:00:00.000Z');
@@ -21,11 +22,16 @@ const buildRetryService = () => ({
   retryInvoice: jest.fn().mockResolvedValue({ ok: true, status: 'PAID', attemptNumber: 1 }),
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 describe('DunningRetryCron', () => {
   it('does nothing when billing cron is disabled', async () => {
     const prisma = buildPrisma();
     const retry = buildRetryService();
-    const cron = new DunningRetryCron(prisma as never, buildConfig(false) as never, retry as never);
+    const cron = new DunningRetryCron(prisma as never, buildConfig(false) as never, retry as never, buildCls() as never);
 
     await cron.execute();
 
@@ -35,7 +41,7 @@ describe('DunningRetryCron', () => {
 
   it('queries PAST_DUE subscriptions with due nextRetryAt', async () => {
     const prisma = buildPrisma([]);
-    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, buildRetryService() as never);
+    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, buildRetryService() as never, buildCls() as never);
 
     await cron.execute(NOW);
 
@@ -67,7 +73,7 @@ describe('DunningRetryCron', () => {
     };
     const prisma = buildPrisma([subscription]);
     const retry = buildRetryService();
-    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, retry as never);
+    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, retry as never, buildCls() as never);
 
     await cron.execute(NOW);
 
@@ -93,10 +99,26 @@ describe('DunningRetryCron', () => {
       },
     ]);
     const retry = buildRetryService();
-    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, retry as never);
+    const cron = new DunningRetryCron(prisma as never, buildConfig(true) as never, retry as never, buildCls() as never);
 
     await cron.execute(NOW);
 
     expect(retry.retryInvoice).not.toHaveBeenCalled();
+  });
+
+  it('wraps execute body in super-admin CLS context', async () => {
+    const prisma = buildPrisma([]);
+    const cls = buildCls();
+    const cron = new DunningRetryCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildRetryService() as never,
+      cls as never,
+    );
+
+    await cron.execute(NOW);
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
