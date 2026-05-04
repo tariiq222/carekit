@@ -15,18 +15,55 @@ const zoomIntegration = {
   config: { ciphertext: 'cipher' },
 };
 
-function buildMocks() {
+/** Build a tx mock that mirrors all fields the handler calls on the transaction. */
+function buildTx(overrides: Partial<{
+  bookingFindFirst: jest.Mock;
+  bookingUpdate: jest.Mock;
+  integrationFindFirst: jest.Mock;
+  orgSettingsFindFirst: jest.Mock;
+  queryRaw: jest.Mock;
+  executeRaw: jest.Mock;
+}> = {}) {
+  const bookingUpdate = overrides.bookingUpdate ??
+    jest.fn().mockImplementation(({ data }) => Promise.resolve({ ...onlineBooking, ...data }));
+  const queryRaw = overrides.queryRaw ?? jest.fn().mockResolvedValue([]);
+  const executeRaw = overrides.executeRaw ?? jest.fn().mockResolvedValue(1);
+
+  return {
+    $queryRaw: queryRaw,
+    $executeRaw: executeRaw,
+    booking: {
+      findFirst: overrides.bookingFindFirst ?? jest.fn().mockResolvedValue(onlineBooking),
+      update: bookingUpdate,
+    },
+    integration: {
+      findFirst: overrides.integrationFindFirst ?? jest.fn().mockResolvedValue(zoomIntegration),
+    },
+    organizationSettings: {
+      findFirst: overrides.orgSettingsFindFirst ?? jest.fn().mockResolvedValue({ timezone: 'Asia/Riyadh' }),
+    },
+  };
+}
+
+function buildMocks(txOverrides: Parameters<typeof buildTx>[0] = {}) {
   const prisma = buildPrisma();
+
+  // Outer (pre-tx) booking read
   prisma.booking.findFirst = jest.fn().mockResolvedValue(onlineBooking);
-  (prisma as unknown as { integration: { findFirst: jest.Mock } }).integration = {
-    findFirst: jest.fn().mockResolvedValue(zoomIntegration),
-  };
-  (prisma as unknown as { organizationSettings: { findFirst: jest.Mock } }).organizationSettings = {
-    findFirst: jest.fn().mockResolvedValue({ timezone: 'Asia/Riyadh' }),
-  };
-  prisma.booking.update = jest
-    .fn()
-    .mockImplementation(({ data }) => Promise.resolve({ ...onlineBooking, ...data }));
+
+  // Build tx mock and wire $transaction to invoke callback with it
+  const tx = buildTx(txOverrides);
+  (prisma as unknown as { $transaction: jest.Mock }).$transaction = jest.fn(
+    (arg: ((t: typeof tx) => Promise<unknown>) | Promise<unknown>[]) => {
+      if (typeof arg === 'function') return arg(tx);
+      return Promise.all(arg);
+    },
+  );
+
+  // Keep outer booking.update for feature-disabled path (runs outside tx)
+  prisma.booking.update = jest.fn().mockImplementation(
+    ({ data }) => Promise.resolve({ ...onlineBooking, ...data }),
+  );
 
   const zoomApi = {
     getAccessToken: jest.fn().mockResolvedValue('token'),
@@ -43,7 +80,7 @@ function buildMocks() {
     }),
   };
 
-  return { prisma, zoomApi, zoomCredentials };
+  return { prisma, tx, zoomApi, zoomCredentials };
 }
 
 describe('CreateZoomMeetingHandler', () => {
@@ -62,12 +99,13 @@ describe('CreateZoomMeetingHandler', () => {
     );
   });
 
-  it('skips if already CREATED (idempotency)', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
-    prisma.booking.findFirst = jest.fn().mockResolvedValue({
-      ...onlineBooking,
-      zoomMeetingId: '99',
-      zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+  it('skips if already CREATED (idempotency) — re-read inside tx returns CREATED', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks({
+      bookingFindFirst: jest.fn().mockResolvedValue({
+        ...onlineBooking,
+        zoomMeetingId: '99',
+        zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+      }),
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
@@ -82,8 +120,9 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('sets FAILED status when Zoom integration not configured', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
-    (prisma as unknown as { integration: { findFirst: jest.Mock } }).integration.findFirst = jest.fn().mockResolvedValue(null);
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks({
+      integrationFindFirst: jest.fn().mockResolvedValue(null),
+    });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
       zoomApi as never,
@@ -93,7 +132,7 @@ describe('CreateZoomMeetingHandler', () => {
 
     await handler.execute({ bookingId: 'book-1' });
 
-    expect(prisma.booking.update).toHaveBeenCalledWith(
+    expect(tx.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           zoomMeetingStatus: ZoomMeetingStatus.FAILED,
@@ -103,7 +142,7 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('calls Zoom API and updates booking with meeting details on success', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
       zoomApi as never,
@@ -114,7 +153,7 @@ describe('CreateZoomMeetingHandler', () => {
     await handler.execute({ bookingId: 'book-1' });
 
     expect(zoomApi.createMeeting).toHaveBeenCalled();
-    expect(prisma.booking.update).toHaveBeenCalledWith(
+    expect(tx.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           zoomMeetingId: '99',
@@ -126,7 +165,7 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('sets FAILED status when Zoom API fails', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     zoomApi.createMeeting.mockRejectedValue(new Error('Zoom Outage'));
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
@@ -137,7 +176,7 @@ describe('CreateZoomMeetingHandler', () => {
 
     await handler.execute({ bookingId: 'book-1' });
 
-    expect(prisma.booking.update).toHaveBeenCalledWith(
+    expect(tx.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           zoomMeetingStatus: ZoomMeetingStatus.FAILED,
@@ -167,5 +206,77 @@ describe('CreateZoomMeetingHandler', () => {
         }),
       }),
     );
+  });
+
+  it('throws BadRequestException when booking is not ONLINE type', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({
+      ...onlineBooking,
+      bookingType: 'INDIVIDUAL',
+    });
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+      buildFeatureCheck() as never,
+    );
+
+    await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('acquires advisory lock before reading booking inside transaction', async () => {
+    const callOrder: string[] = [];
+    const executeRaw = jest.fn().mockImplementation(() => {
+      callOrder.push('executeRaw');
+      return Promise.resolve(1);
+    });
+    const bookingFindFirst = jest.fn().mockImplementation(() => {
+      callOrder.push('bookingFindFirst');
+      return Promise.resolve(onlineBooking);
+    });
+
+    const { prisma, zoomApi, zoomCredentials } = buildMocks({ executeRaw, bookingFindFirst });
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+      buildFeatureCheck() as never,
+    );
+
+    await handler.execute({ bookingId: 'book-1' });
+
+    expect(executeRaw).toHaveBeenCalled();
+    // The $executeRaw call must have contained pg_advisory_xact_lock
+    const rawCall = executeRaw.mock.calls[0][0] as TemplateStringsArray;
+    expect(rawCall.join('')).toContain('pg_advisory_xact_lock');
+    // Advisory lock acquired BEFORE tx booking re-read
+    expect(callOrder.indexOf('executeRaw')).toBeLessThan(callOrder.indexOf('bookingFindFirst'));
+  });
+
+  it('re-reads booking inside transaction and skips Zoom API if status flipped to CREATED between outer read and lock acquisition', async () => {
+    // Outer read returns PENDING; tx re-read returns CREATED (race won by another worker)
+    const { prisma, zoomApi, zoomCredentials } = buildMocks({
+      bookingFindFirst: jest.fn().mockResolvedValue({
+        ...onlineBooking,
+        zoomMeetingId: '42',
+        zoomMeetingStatus: ZoomMeetingStatus.CREATED,
+      }),
+    });
+    // Outer read is still PENDING
+    prisma.booking.findFirst = jest.fn().mockResolvedValue(onlineBooking);
+
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+      buildFeatureCheck() as never,
+    );
+
+    const result = await handler.execute({ bookingId: 'book-1' });
+
+    expect(zoomApi.createMeeting).not.toHaveBeenCalled();
+    expect((result as typeof onlineBooking & { zoomMeetingStatus: ZoomMeetingStatus }).zoomMeetingStatus).toBe(ZoomMeetingStatus.CREATED);
   });
 });
