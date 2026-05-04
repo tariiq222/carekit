@@ -22,6 +22,9 @@ import { bootSecurityHarness, SecurityHarness } from './harness';
 
 describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => {
   let h: SecurityHarness;
+  // Unique suffix per test run to avoid booking_employee_no_overlap constraint
+  // conflicts from leftover rows in the test DB across repeated runs.
+  const runId = Date.now();
 
   beforeAll(async () => {
     h = await bootSecurityHarness();
@@ -46,7 +49,7 @@ describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => 
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-07-01T10:00:00Z'),
           endsAt: new Date('2030-07-01T11:00:00Z'),
@@ -62,7 +65,7 @@ describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => 
           organizationId: orgB.id,
           branchId: 'branch-b',
           clientId: 'client-b',
-          employeeId: 'emp-b',
+          employeeId: `emp-b-${runId}`,
           serviceId: 'svc-b',
           scheduledAt: new Date('2030-07-01T10:00:00Z'),
           endsAt: new Date('2030-07-01T11:00:00Z'),
@@ -96,7 +99,7 @@ describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => 
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-07-02T10:00:00Z'),
           endsAt: new Date('2030-07-02T11:00:00Z'),
@@ -113,7 +116,7 @@ describe('SaaS-02h — Postgres RLS backstop under deqah_rls_probe role', () => 
           organizationId: orgB.id,
           branchId: 'branch-b',
           clientId: 'client-b',
-          employeeId: 'emp-b',
+          employeeId: `emp-b-${runId}`,
           serviceId: 'svc-b',
           scheduledAt: new Date('2030-07-02T10:00:00Z'),
           endsAt: new Date('2030-07-02T11:00:00Z'),

@@ -10,6 +10,9 @@ import { bootSecurityHarness, SecurityHarness } from './harness';
 
 describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', () => {
   let h: SecurityHarness;
+  // Unique suffix per test run to avoid booking_employee_no_overlap constraint
+  // conflicts from leftover rows in the test DB across repeated runs.
+  const runId = Date.now();
 
   beforeAll(async () => {
     h = await bootSecurityHarness();
@@ -32,7 +35,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-03-01T10:00:00Z'),
           endsAt: new Date('2030-03-01T11:00:00Z'),
@@ -59,7 +62,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-03-02T10:00:00Z'),
           endsAt: new Date('2030-03-02T11:00:00Z'),
@@ -158,7 +161,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: `branch-a-${i}`,
           clientId: `client-a-${i}`,
-          employeeId: `emp-a-${i}`,
+          employeeId: `emp-a-${runId}-${i}`,
           serviceId: `svc-a-${i}`,
           scheduledAt: new Date('2030-04-01T10:00:00Z'),
           endsAt: new Date('2030-04-01T11:00:00Z'),
@@ -188,7 +191,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-05-01T10:00:00Z'),
           endsAt: new Date('2030-05-01T11:00:00Z'),
@@ -220,7 +223,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-06-01T10:00:00Z'),
           endsAt: new Date('2030-06-01T11:00:00Z'),
@@ -293,7 +296,7 @@ describe('SaaS-02h — cross-tenant penetration (Prisma Proxy under strict)', ()
           organizationId: orgA.id,
           branchId: 'branch-a',
           clientId: 'client-a',
-          employeeId: 'emp-a',
+          employeeId: `emp-a-${runId}`,
           serviceId: 'svc-a',
           scheduledAt: new Date('2030-07-01T10:00:00Z'),
           endsAt: new Date('2030-07-01T11:00:00Z'),
