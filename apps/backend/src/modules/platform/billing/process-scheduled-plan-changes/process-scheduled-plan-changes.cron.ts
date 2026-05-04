@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { DowngradeSafetyService } from '../downgrade-safety/downgrade-safety.service';
@@ -83,6 +84,39 @@ export class ProcessScheduledPlanChangesCron {
         },
       });
       this.cache.invalidate(sub.organizationId);
+
+      // Write grace columns for features removed by this downgrade swap.
+      if (isDowngrade) {
+        const oldLimits = (sub.plan.limits ?? {}) as Record<string, unknown>;
+        const newLimits = (sub.scheduledPlan.limits ?? {}) as Record<string, unknown>;
+
+        const graceUpdates: Prisma.SubscriptionUpdateInput = {};
+        if (oldLimits['api_access'] === true && newLimits['api_access'] !== true) {
+          graceUpdates.apiAccessGraceUntil = new Date(Date.now() + 7 * 86_400_000);
+        }
+        if (oldLimits['webhooks'] === true && newLimits['webhooks'] !== true) {
+          graceUpdates.webhooksGraceUntil = new Date(Date.now() + 7 * 86_400_000);
+        }
+        if (Object.keys(graceUpdates).length > 0) {
+          await this.prisma.$allTenants.subscription.update({
+            where: { id: sub.id },
+            data: graceUpdates,
+          });
+        }
+
+        if (oldLimits['custom_domain'] === true && newLimits['custom_domain'] !== true) {
+          const settings = await this.prisma.$allTenants.organizationSettings.findFirst({
+            where: { organizationId: sub.organizationId },
+            select: { customDomain: true },
+          });
+          if (settings?.customDomain) {
+            await this.prisma.$allTenants.organizationSettings.updateMany({
+              where: { organizationId: sub.organizationId },
+              data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
+            });
+          }
+        }
+      }
     }
 
     if (due.length > 0) {

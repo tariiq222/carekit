@@ -15,6 +15,10 @@ const buildPrisma = () => ({
   membership: {
     findFirst: jest.fn().mockResolvedValue(null),
   },
+  organizationSettings: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+  },
 });
 
 const buildTenant = (organizationId = 'org-A') => ({
@@ -207,5 +211,49 @@ describe('DowngradePlanHandler', () => {
     const result = await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
     expect(safety.checkDowngrade).toHaveBeenCalled();
     expect(result).toEqual({ id: 'sub-1', planId: 'plan-1' });
+  });
+
+  it('writes apiAccessGraceUntil and webhooksGraceUntil when those features are removed by downgrade', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: { ...proPlan, limits: { api_access: true, webhooks: true } },
+    });
+    prisma.plan.findFirst.mockResolvedValue({ ...basicPlan, limits: { api_access: false, webhooks: false } });
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
+    const handler = buildHandler(prisma);
+
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    // subscription.update called at least twice: once for plan swap, once for grace columns
+    const updateCalls = (prisma.subscription.update as jest.Mock).mock.calls;
+    const graceCalls = updateCalls.filter(
+      ([call]) => call.data.apiAccessGraceUntil || call.data.webhooksGraceUntil,
+    );
+    expect(graceCalls.length).toBe(1);
+    expect(graceCalls[0][0].data.apiAccessGraceUntil).toBeInstanceOf(Date);
+    expect(graceCalls[0][0].data.webhooksGraceUntil).toBeInstanceOf(Date);
+  });
+
+  it('writes customDomainGraceUntil when custom_domain is removed and org has a custom domain', async () => {
+    const prisma = buildPrisma();
+    prisma.subscription.findFirst.mockResolvedValue({
+      id: 'sub-1',
+      status: 'ACTIVE',
+      plan: { ...proPlan, limits: { custom_domain: true } },
+    });
+    prisma.plan.findFirst.mockResolvedValue({ ...basicPlan, limits: { custom_domain: false } });
+    prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
+    prisma.organizationSettings.findFirst.mockResolvedValue({ customDomain: 'custom.example.com' });
+    const handler = buildHandler(prisma);
+
+    await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });
+
+    expect(prisma.organizationSettings.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ customDomainGraceUntil: expect.any(Date) }),
+      }),
+    );
   });
 });
