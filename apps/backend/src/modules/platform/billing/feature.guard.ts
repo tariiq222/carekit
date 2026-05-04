@@ -203,7 +203,7 @@ export class FeatureGuard implements CanActivate {
           where: { organizationId, isActive: true },
         });
       case FeatureKey.EMPLOYEES:
-        return this.prisma.employee.count({ where: { organizationId } });
+        return this.prisma.employee.count({ where: { organizationId, isActive: true } });
       case FeatureKey.SERVICES:
         return this.prisma.service.count({
           where: { organizationId, isActive: true },

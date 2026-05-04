@@ -121,7 +121,7 @@ export class DowngradeSafetyService {
         });
       case FeatureKey.EMPLOYEES:
         return this.prisma.$allTenants.employee.count({
-          where: { organizationId },
+          where: { organizationId, isActive: true },
         });
       case FeatureKey.MONTHLY_BOOKINGS: {
         const startOfMonth = startOfMonthUTC();

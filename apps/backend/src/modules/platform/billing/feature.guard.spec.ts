@@ -195,6 +195,23 @@ describe("FeatureGuard", () => {
     });
   });
 
+  describe("FeatureKey employees (isActive fix)", () => {
+    it("counts only active employees in EMPLOYEES recompute (self-heal path)", async () => {
+      const prisma = mockPrisma({});
+      prisma.employee.count = jest.fn().mockResolvedValue(1);
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
+      );
+      const guard = makeGuard(reflector, prisma, { maxEmployees: 5 });
+      const ctx = mockContext();
+      const result = await guard.canActivate(ctx);
+      expect(prisma.employee.count).toHaveBeenCalledWith({
+        where: { organizationId: ORG_ID, isActive: true },
+      });
+      expect(result).toBe(true);
+    });
+  });
+
   describe("FeatureKey branches", () => {
     it("should count only active branches (self-heal path)", async () => {
       const prisma = mockPrisma({});

@@ -136,4 +136,20 @@ describe('DowngradeSafetyService', () => {
       targetMax: 5,
     });
   });
+
+  it('recomputes employees with isActive=true filter', async () => {
+    const prisma = buildPrisma({ employees: 3 });
+    const counters = buildCounters(); // no row → triggers fallback
+    const svc = buildService(prisma, counters);
+
+    await svc.checkDowngrade(
+      planWith({ maxEmployees: 10 }),
+      planWith({ maxEmployees: 5 }),
+      'org-B',
+    );
+
+    expect(prisma.$allTenants.employee.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ isActive: true }) }),
+    );
+  });
 });
