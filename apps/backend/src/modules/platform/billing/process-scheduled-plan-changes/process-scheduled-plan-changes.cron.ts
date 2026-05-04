@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { DowngradeSafetyService } from '../downgrade-safety/downgrade-safety.service';
 
@@ -14,11 +16,19 @@ export class ProcessScheduledPlanChangesCron {
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
     private readonly downgradeSafety: DowngradeSafetyService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this._executeInContext();
+    });
+  }
+
+  private async _executeInContext(): Promise<void> {
     const now = new Date();
     const due = await this.prisma.$allTenants.subscription.findMany({
       where: {

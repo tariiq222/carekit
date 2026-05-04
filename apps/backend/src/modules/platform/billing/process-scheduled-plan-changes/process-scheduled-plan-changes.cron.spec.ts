@@ -25,6 +25,12 @@ const buildPrisma = (subs: unknown[] = []) => ({
 
 const buildCache = () => ({ invalidate: jest.fn() });
 
+const buildCls = () => ({
+  run: jest.fn((fn: () => Promise<unknown>) => fn()),
+  set: jest.fn(),
+  get: jest.fn(),
+});
+
 const buildSafety = (
   result: { ok: boolean; violations: Array<{ kind: string; current: number; targetMax: number }> } = { ok: true, violations: [] },
 ) => ({
@@ -45,6 +51,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(false) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -59,6 +66,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -99,6 +107,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       cache as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -138,6 +147,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       cache as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -169,6 +179,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       safety as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -196,6 +207,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -225,6 +237,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -252,6 +265,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
       buildConfig(true) as never,
       buildCache() as never,
       buildSafety() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
