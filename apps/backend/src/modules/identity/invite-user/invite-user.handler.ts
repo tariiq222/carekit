@@ -1,7 +1,9 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { PlatformMailerService } from '../../../infrastructure/mail/platform-mailer.service';
 import type { InviteUserCommand, InviteUserResult } from './invite-user.command';
 
@@ -27,19 +29,24 @@ export class InviteUserHandler {
     private readonly prisma: PrismaService,
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(cmd: InviteUserCommand): Promise<InviteUserResult> {
     const email = cmd.email.trim().toLowerCase();
 
     // Reject only if an active membership already exists (org-internal fact).
-    const existingMembership = await this.prisma.$allTenants.membership.findFirst({
-      where: {
-        organizationId: cmd.organizationId,
-        isActive: true,
-        user: { email },
-      },
-      select: { id: true },
+    // Wrap in super-admin CLS context so $allTenants does not throw.
+    const existingMembership = await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.prisma.$allTenants.membership.findFirst({
+        where: {
+          organizationId: cmd.organizationId,
+          isActive: true,
+          user: { email },
+        },
+        select: { id: true },
+      });
     });
     if (existingMembership) {
       throw new ConflictException('User is already an active member of this organization');

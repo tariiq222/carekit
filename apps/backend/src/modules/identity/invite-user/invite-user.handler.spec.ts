@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { InviteUserHandler } from './invite-user.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { PlatformMailerService } from '../../../infrastructure/mail/platform-mailer.service';
@@ -10,8 +12,14 @@ describe('InviteUserHandler', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let prisma: any;
   let mailer: jest.Mocked<PlatformMailerService>;
+  let cls: { run: jest.Mock; set: jest.Mock };
 
   beforeEach(async () => {
+    cls = {
+      run: jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn()),
+      set: jest.fn(),
+    };
+
     const module = await Test.createTestingModule({
       providers: [
         InviteUserHandler,
@@ -39,6 +47,10 @@ describe('InviteUserHandler', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('https://app.example.com/dashboard') },
+        },
+        {
+          provide: ClsService,
+          useValue: cls,
         },
       ],
     }).compile();
@@ -113,5 +125,17 @@ describe('InviteUserHandler', () => {
       role: 'RECEPTIONIST',
     });
     expect(result.status).toBe('PENDING');
+  });
+
+  it('wraps $allTenants membership lookup in super-admin CLS context', async () => {
+    await handler.execute({
+      invitedByUserId: 'admin-1',
+      organizationId: 'org-1',
+      email: 'newuser@clinic.sa',
+      role: 'RECEPTIONIST',
+    });
+
+    expect(cls.run).toHaveBeenCalled();
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
