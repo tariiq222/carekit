@@ -1,4 +1,4 @@
-CREATE TABLE "PlatformSetting" (
+CREATE TABLE IF NOT EXISTS "PlatformSetting" (
   "id"        TEXT NOT NULL,
   "key"       TEXT NOT NULL,
   "value"     TEXT NOT NULL,
@@ -7,4 +7,4 @@ CREATE TABLE "PlatformSetting" (
   CONSTRAINT "PlatformSetting_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "PlatformSetting_key_key" ON "PlatformSetting"("key");
+CREATE UNIQUE INDEX IF NOT EXISTS "PlatformSetting_key_key" ON "PlatformSetting"("key");

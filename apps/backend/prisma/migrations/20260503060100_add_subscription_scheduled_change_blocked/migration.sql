@@ -4,4 +4,4 @@
 -- Populated by the ProcessScheduledPlanChangesCron, surfaced to super-admin.
 
 ALTER TABLE "Subscription"
-    ADD COLUMN "scheduledChangeBlockedReason" TEXT;
+    ADD COLUMN IF NOT EXISTS "scheduledChangeBlockedReason" TEXT;
