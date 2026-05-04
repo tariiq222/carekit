@@ -104,4 +104,42 @@ describe('HttpExceptionFilter', () => {
     const body = jsonFn.mock.calls[0][0];
     expect(body.requestId).toBeUndefined();
   });
+
+  it('preserves custom keys (e.g. code, violations) from structured exceptions', () => {
+    const jsonFn = jest.fn();
+    const ex = new HttpException(
+      {
+        code: 'DOWNGRADE_VIOLATES_NEW_LIMITS',
+        message: 'Cannot downgrade',
+        messageAr: 'لا يمكن التخفيض',
+        violations: [
+          { kind: 'QUANTITATIVE', featureKey: 'employees', current: 12, targetMax: 5 },
+        ],
+      },
+      422,
+    );
+    filter.catch(ex, makeHost(jest.fn(), jsonFn) as any);
+    const body = jsonFn.mock.calls[0][0];
+    expect(body.code).toBe('DOWNGRADE_VIOLATES_NEW_LIMITS');
+    expect(body.messageAr).toBe('لا يمكن التخفيض');
+    expect(body.violations).toEqual([
+      { kind: 'QUANTITATIVE', featureKey: 'employees', current: 12, targetMax: 5 },
+    ]);
+    // Reserved keys still set normally
+    expect(body.statusCode).toBe(422);
+    expect(body.message).toBe('Cannot downgrade');
+  });
+
+  it('does not allow custom keys to overwrite reserved fields', () => {
+    const jsonFn = jest.fn();
+    const ex = new HttpException(
+      { message: 'real msg', statusCode: 999, path: '/spoofed', timestamp: 'fake' },
+      400,
+    );
+    filter.catch(ex, makeHost(jest.fn(), jsonFn) as any);
+    const body = jsonFn.mock.calls[0][0];
+    expect(body.statusCode).toBe(400);
+    expect(body.path).toBe('/test');
+    expect(body.timestamp).not.toBe('fake');
+  });
 });

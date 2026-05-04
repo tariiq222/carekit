@@ -16,7 +16,10 @@ interface ErrorResponse {
   requestId: string | undefined;
   timestamp: string;
   path: string;
+  [key: string]: unknown;
 }
+
+const RESERVED_KEYS = new Set(['statusCode', 'error', 'message', 'requestId', 'timestamp', 'path']);
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -57,6 +60,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       path: req.url,
     };
+
+    // Preserve any custom keys (e.g. `code`, `violations`) that callers attached
+    // to the HttpException response — without this, structured exceptions like
+    // DowngradePrecheckFailedException lose all their actionable payload.
+    if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      for (const [key, value] of Object.entries(exceptionResponse as Record<string, unknown>)) {
+        if (!RESERVED_KEYS.has(key)) {
+          body[key] = value;
+        }
+      }
+    }
 
     if (status >= 500) {
       this.logger.error(
