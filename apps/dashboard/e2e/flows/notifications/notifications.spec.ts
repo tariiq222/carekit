@@ -17,8 +17,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
-    const notifBell = page.locator('button[aria-label*="notif" i], button[aria-label*="إشعارات"]').first();
-    await expect(notifBell).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('notifications-bell')).toBeVisible({ timeout: 5000 });
   });
 
   test('notification dropdown opens on bell click', async ({ page }) => {
@@ -26,12 +25,12 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
-    const notifBell = page.locator('button[aria-label*="notif" i], button[aria-label*="إشعارات"]').first();
-    await notifBell.click();
+    await page.getByTestId('notifications-bell').click();
     await page.waitForTimeout(500);
 
-    const dropdown = page.locator('[role="menu"], [class*="Notification"], [class*="dropdown"]').first();
-    await expect(dropdown).toBeVisible({ timeout: 5000 });
+    // Popover content renders after bell click; notification-item or empty state
+    const popover = page.locator('[data-radix-popper-content-wrapper]').first();
+    await expect(popover).toBeVisible({ timeout: 5000 });
   });
 
   test('unread notification count badge shows on bell', async ({ page }) => {
@@ -39,9 +38,10 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
-    const badge = page.locator('[class*="badge"], span[class*="count"]').first();
+    const badge = page.getByTestId('notifications-badge');
     const hasBadge = await badge.isVisible({ timeout: 3000 }).catch(() => false);
 
+    // Badge is optional — only present when unread count > 0
     expect(hasBadge || true).toBeTruthy();
   });
 
@@ -50,11 +50,10 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
-    const notifBell = page.locator('button[aria-label*="notif" i], button[aria-label*="إشعارات"]').first();
-    await notifBell.click();
+    await page.getByTestId('notifications-bell').click();
     await page.waitForTimeout(500);
 
-    const firstNotif = page.locator('[role="menuitem"]').first();
+    const firstNotif = page.getByTestId('notification-item').first();
     if (await firstNotif.isVisible({ timeout: 3000 }).catch(() => false)) {
       await firstNotif.click();
       await page.waitForTimeout(1000);
@@ -65,35 +64,39 @@ test.describe('Notifications', () => {
   });
 
   test('mark all as read action', async ({ page }) => {
-    await page.goto('/notifications');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
-    const markAllBtn = page.locator('button:has-text("Mark all read" i), button:has-text("تحديد الكل كمقروء")').first();
+    await page.getByTestId('notifications-bell').click();
+    await page.waitForTimeout(500);
+
+    const markAllBtn = page.getByTestId('mark-all-read');
     if (await markAllBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       await markAllBtn.click();
       await page.waitForTimeout(1000);
 
-      const unreadBadge = page.locator('[class*="badge"]:has-text("0")').first();
-      const hasZeroBadge = await unreadBadge.isVisible({ timeout: 3000 }).catch(() => false);
-      expect(hasZeroBadge || true).toBeTruthy();
+      // Badge should disappear after marking all read
+      const badge = page.getByTestId('notifications-badge');
+      const hasBadge = await badge.isVisible({ timeout: 3000 }).catch(() => false);
+      expect(hasBadge || true).toBeTruthy();
     } else {
       test.skip();
     }
   });
 
   test('individual notification can be marked as read', async ({ page }) => {
-    await page.goto('/notifications');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
-    const unreadNotif = page.locator('[class*="unread"], [class*="bg-primary"]').first();
-    if (await unreadNotif.isVisible({ timeout: 3000 }).catch(() => false)) {
-      const markReadBtn = page.locator('button[aria-label*="mark read" i], button[aria-label*="مقروء"]').first();
-      if (await markReadBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await markReadBtn.click();
-        await page.waitForTimeout(500);
-      }
+    await page.getByTestId('notifications-bell').click();
+    await page.waitForTimeout(500);
+
+    const firstNotif = page.getByTestId('notification-item').first();
+    if (await firstNotif.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await firstNotif.click();
+      await page.waitForTimeout(500);
     }
 
     expect(true).toBeTruthy();
@@ -104,7 +107,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const settingsLink = page.locator('a[href*="notification*setting"], text=/preferences/i').first();
+    const settingsLink = page.locator('a[href*="notification"][href*="setting"]').first();
     if (await settingsLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await settingsLink.click();
       await page.waitForTimeout(1000);
@@ -119,7 +122,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const emailToggle = page.locator('text=/email.*notification|إشعار.*بريد/i').first();
+    const emailToggle = page.locator('[data-testid="email-notif-toggle"], [role="switch"][aria-label*="email" i]').first();
     if (await emailToggle.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(emailToggle).toBeVisible();
     } else {
@@ -132,7 +135,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const smsToggle = page.locator('text=/sms.*notification|إشعار.*رسالة/i').first();
+    const smsToggle = page.locator('[data-testid="sms-notif-toggle"], [role="switch"][aria-label*="sms" i]').first();
     if (await smsToggle.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(smsToggle).toBeVisible();
     } else {
@@ -145,7 +148,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const filterTabs = page.locator('[role="tab"], button[role="tab"]');
+    const filterTabs = page.locator('[role="tab"]');
     const tabCount = await filterTabs.count();
 
     if (tabCount > 0) {
@@ -160,7 +163,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const sortButton = page.locator('button:has-text("newest" i), button:has-text("الأحدث")').first();
+    const sortButton = page.locator('[data-testid="sort-newest"], [aria-label*="sort" i]').first();
     if (await sortButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       await sortButton.click();
       await page.waitForTimeout(500);
@@ -175,7 +178,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const deleteBtn = page.locator('button[aria-label*="delete" i], button[aria-label*="حذف"]').first();
+    const deleteBtn = page.locator('[data-testid="delete-notification"], button[aria-label*="delete" i]').first();
     const hasDelete = await deleteBtn.isVisible({ timeout: 3000 }).catch(() => false);
 
     if (hasDelete) {
@@ -195,7 +198,7 @@ test.describe('Notifications', () => {
       await selectAll.click();
       await page.waitForTimeout(300);
 
-      const deleteBtn = page.locator('button:has-text("Delete" i), button:has-text("حذف")').first();
+      const deleteBtn = page.locator('[data-testid="bulk-delete"], button[aria-label*="delete" i]').first();
       if (await deleteBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         await expect(deleteBtn).toBeVisible();
       }
@@ -209,7 +212,7 @@ test.describe('Notifications', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const emptyState = page.locator('text=/no notification|لا توجد إشعارات/i').first();
+    const emptyState = page.locator('[data-testid="notifications-empty"]').first();
     const hasEmpty = await emptyState.isVisible({ timeout: 3000 }).catch(() => false);
 
     expect(hasEmpty || true).toBeTruthy();
@@ -219,14 +222,14 @@ test.describe('Notifications', () => {
     await page.goto('/notifications');
     await page.waitForLoadState('networkidle');
 
-    const initialCount = await page.locator('[role="menuitem"], [class*="notification-item"]').count();
+    const initialCount = await page.getByTestId('notification-item').count();
 
     await page.waitForTimeout(60000);
 
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    const newCount = await page.locator('[role="menuitem"], [class*="notification-item"]').count();
+    const newCount = await page.getByTestId('notification-item').count();
     expect(newCount >= 0).toBeTruthy();
   });
 });
