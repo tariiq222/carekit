@@ -1,0 +1,26 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/integration/**/*.integration-spec.ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "<rootDir>/test/tsconfig-e2e.json", "isolatedModules": false, "diagnostics": false }]
+  },
+  "setupFiles": ["<rootDir>/test/jest.setup.ts"],
+  "globalSetup": "<rootDir>/test/setup/global-setup.ts",
+  "globalTeardown": "<rootDir>/test/setup/global-teardown.ts",
+  "testTimeout": 120000,
+  "maxWorkers": 2,
+  "moduleNameMapper": {
+    "^@deqah/shared$": "<rootDir>/../../packages/shared/index.ts",
+    "^@deqah/shared/(.*)$": "<rootDir>/../../packages/shared/$1"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.{js,ts}",
+    "!src/**/*.dto.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/index.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "coverage-integration"
+}
