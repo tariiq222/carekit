@@ -56,6 +56,7 @@ pnpm-debug.log*
 # ─── Coverage & test artifacts ────────────────────────────────
 coverage/
 coverage-e2e/
+coverage.backup-*/
 **/test-results/
 **/test-results-*.json
 **/playwright-report/
@@ -114,3 +115,4 @@ data/*.xls
 
 # ─── QA run artifacts ─────────────────────────────────────────
 data/kiwi/
+apps/backend/coverage.backup-*/
