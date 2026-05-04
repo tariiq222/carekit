@@ -32,6 +32,8 @@ export const arDepartments: Record<string, string> = {
   // Actions
   "departments.action.edit": "تعديل",
   "departments.action.delete": "حذف",
+  "departments.action.deactivate": "تعطيل",
+  "departments.action.activate": "تفعيل",
 
   // Filters
   "departments.filters.allStatuses": "جميع الحالات",

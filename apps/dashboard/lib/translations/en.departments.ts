@@ -32,6 +32,8 @@ export const enDepartments: Record<string, string> = {
   // Actions
   "departments.action.edit": "Edit",
   "departments.action.delete": "Delete",
+  "departments.action.deactivate": "Deactivate",
+  "departments.action.activate": "Activate",
 
   // Filters
   "departments.filters.allStatuses": "All Statuses",
