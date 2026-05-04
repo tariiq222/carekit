@@ -7,6 +7,8 @@ import {
   Delete02Icon,
   StarIcon,
   ViewIcon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 import { formatName, getInitials, getAvatarGradientStyle } from "@/lib/utils"
 
@@ -39,6 +41,7 @@ export function getEmployeeColumns(
   onDelete?: (p: Employee) => void,
   t?: (key: string) => string,
   onPreview?: (p: Employee) => void,
+  onToggleActive?: (p: Employee) => void,
 ): ColumnDef<Employee>[] {
   return [
     {
@@ -148,6 +151,20 @@ export function getEmployeeColumns(
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">{t?.("common.edit") ?? "Edit"}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(btn, p.isActive ? "hover:text-warning hover:bg-warning/10 hover:border-warning/20" : "hover:text-success hover:bg-success/10 hover:border-success/20")}
+                  onClick={() => onToggleActive?.(p)}
+                  aria-label={p.isActive ? (t?.("employees.action.deactivate") ?? "Deactivate") : (t?.("employees.action.activate") ?? "Activate")}
+                >
+                  <HugeiconsIcon icon={p.isActive ? Cancel01Icon : CheckmarkCircle02Icon} size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {p.isActive ? (t?.("employees.action.deactivate") ?? "Deactivate") : (t?.("employees.action.activate") ?? "Activate")}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>

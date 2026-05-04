@@ -42,7 +42,11 @@ const makePrisma = (
     plan: { findFirst: jest.fn().mockResolvedValue({ id: 'plan-1', isActive: true }) },
     subscription: { findFirst: jest.fn().mockResolvedValue(null) },
     organization: { count: jest.fn().mockResolvedValue(0) },
-    user: { findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null }) },
+    user: {
+      findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null }),
+      // Pre-check for existing email — returns null by default (email is available)
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     vertical: {
       findFirst: jest.fn().mockResolvedValue(DEFAULT_VERTICAL),
     },
@@ -63,6 +67,9 @@ const makeConfig = (slug = 'BASIC', trialDays = 14) => ({
 const makeTenant = () => ({ set: jest.fn(), requireOrganizationId: jest.fn().mockReturnValue('org-1') });
 const makeCache = () => ({ invalidate: jest.fn() });
 const makeMailer = () => ({ sendTenantWelcome: jest.fn().mockResolvedValue(undefined) });
+const makeOwnerProvisioning = () => ({
+  provision: jest.fn().mockResolvedValue({ userId: 'user-1', isNewUser: true }),
+});
 
 describe('RegisterTenantHandler', () => {
   let prisma: ReturnType<typeof makePrisma>;
@@ -79,6 +86,7 @@ describe('RegisterTenantHandler', () => {
       tenant as never,
       makeCache() as never,
       mailer as never,
+      makeOwnerProvisioning() as never,
     );
   }
 
@@ -90,12 +98,29 @@ describe('RegisterTenantHandler', () => {
     mailer = makeMailer();
   });
 
-  it('throws ConflictException when email already exists (P2002 on user.email)', async () => {
+  it('throws ConflictException when email already exists (pre-check)', async () => {
+    prisma.user.findUnique = jest.fn().mockResolvedValue({ id: 'existing-user' });
+    const handler = buildHandler();
+    await expect(handler.execute({ name: 'Ali', email: 'a@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }))
+      .rejects.toThrow(ConflictException);
+  });
+
+  it('throws ConflictException when email conflicts at tx level (race)', async () => {
     const tx = makeTxMock();
     tx.user.create = jest.fn().mockRejectedValue({ code: 'P2002', meta: { target: ['email'] }, message: 'Unique constraint failed on email' });
     const p = makePrisma({}, tx);
-    const handler = buildHandler(p);
-    await expect(handler.execute({ name: 'Ali', email: 'a@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }))
+    // provision mock throws to simulate the race condition path through OwnerProvisioningService
+    const handler = new RegisterTenantHandler(
+      p as never,
+      makePassword() as never,
+      makeTokens() as never,
+      makeConfig() as never,
+      makeTenant() as never,
+      makeCache() as never,
+      makeMailer() as never,
+      { provision: jest.fn().mockRejectedValue({ code: 'P2002', meta: { target: ['email'] }, message: 'Unique constraint failed on email' }) } as never,
+    );
+    await expect(handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }))
       .rejects.toThrow(ConflictException);
   });
 

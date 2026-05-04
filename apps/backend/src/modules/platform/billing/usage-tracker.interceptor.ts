@@ -28,12 +28,8 @@ export class UsageTrackerInterceptor implements NestInterceptor {
     // No subscription → allow (dev/trial)
 
     return next.handle().pipe(
-      tap((response) => {
-        const delta =
-          kind === 'STORAGE_MB'
-            ? Math.ceil(Number((response as { sizeBytes?: number })?.sizeBytes ?? 0) / (1024 * 1024))
-            : 1;
-        if (delta > 0) this.aggregator.increment(organizationId, kind, delta);
+      tap(() => {
+        this.aggregator.increment(organizationId, kind, 1);
       }),
     );
   }

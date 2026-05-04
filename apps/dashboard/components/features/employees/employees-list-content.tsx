@@ -17,8 +17,10 @@ import { FilterBar } from "@/components/features/filter-bar"
 import { Skeleton } from "@deqah/ui"
 import { getEmployeeColumns } from "@/components/features/employees/employee-columns"
 import { DeleteEmployeeDialog } from "@/components/features/employees/delete-employee-dialog"
+import { EmployeeStatusDialog } from "@/components/features/employees/employee-status-dialog"
 import { useLocale } from "@/components/locale-provider"
 import { useEmployeeStats } from "@/hooks/use-employees"
+import { useEmployeeMutations } from "@/hooks/use-employee-mutations"
 import type { Employee, EmployeeSortField } from "@/lib/types/employee"
 import type { SortingState } from "@tanstack/react-table"
 
@@ -60,10 +62,14 @@ export function EmployeesListContent({
   const { data: stats } = useEmployeeStats()
 
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null)
+  const [statusTarget, setStatusTarget] = useState<Employee | null>(null)
+
+  const { updateMutation } = useEmployeeMutations()
 
   const handleEdit = (p: Employee) => router.push(`/employees/${p.id}/edit`)
   const handleDelete = (p: Employee) => setDeleteTarget(p)
   const handlePreview = (p: Employee) => router.push(`/employees/${p.id}`)
+  const handleToggleActive = (p: Employee) => setStatusTarget(p)
 
   const totalCount = stats?.total ?? meta?.total ?? employees.length
   const activeCount = stats?.active ?? employees.filter((p) => p.isActive).length
@@ -85,7 +91,7 @@ export function EmployeesListContent({
   const hasActiveFilters = hasFilters || search.length > 0
   const handleReset = () => { resetFilters(); setSearch("") }
 
-  const columns = getEmployeeColumns(handleEdit, locale, handleEdit, handleDelete, t, handlePreview)
+  const columns = getEmployeeColumns(handleEdit, locale, handleEdit, handleDelete, t, handlePreview, handleToggleActive)
 
   return (
     <div className="flex flex-col gap-6">
@@ -186,6 +192,18 @@ export function EmployeesListContent({
         employee={deleteTarget}
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+      />
+
+      <EmployeeStatusDialog
+        open={!!statusTarget}
+        targetStatus={!statusTarget?.isActive}
+        employeeName={statusTarget ? `${statusTarget.user.firstName} ${statusTarget.user.lastName}` : ""}
+        onConfirm={() => {
+          if (!statusTarget) return
+          updateMutation.mutate({ id: statusTarget.id, isActive: !statusTarget.isActive })
+          setStatusTarget(null)
+        }}
+        onCancel={() => setStatusTarget(null)}
       />
     </div>
   )

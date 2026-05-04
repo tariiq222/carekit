@@ -4,7 +4,7 @@ import {
   UserMultiple02Icon,
   Store01Icon,
   UserGroupIcon,
-  HardDriveIcon,
+  Calendar01Icon,
 } from "@hugeicons/core-free-icons"
 import { Skeleton } from "@deqah/ui"
 import { StatsGrid } from "@/components/features/stats-grid"
@@ -53,12 +53,12 @@ export function UsageStatsGrid({ subscription, isLoading }: UsageStatsGridProps)
   const employees = readUsageVal(usage, ["EMPLOYEES", "employees"])
   const branches = readUsageVal(usage, ["BRANCHES", "branches"])
   const clients = readUsageVal(usage, ["CLIENTS", "clients"])
-  const storage = readUsageVal(usage, ["STORAGE_MB", "storageMB", "storage"])
+  const bookings = readUsageVal(usage, ["MONTHLY_BOOKINGS", "monthly_bookings", "BOOKINGS_PER_MONTH"])
 
   const empMax = fmtLimit(limits["maxEmployees"], t)
   const branchMax = fmtLimit(limits["maxBranches"], t)
   const clientMax = fmtLimit(limits["maxClients"], t)
-  const storageMax = fmtLimit(limits["maxStorageMB"], t)
+  const bookingsMax = fmtLimit(limits["maxBookingsPerMonth"], t)
 
   return (
     <StatsGrid>
@@ -81,9 +81,9 @@ export function UsageStatsGrid({ subscription, isLoading }: UsageStatsGridProps)
         iconColor="warning"
       />
       <StatCard
-        title={t("billing.usage.stat.storage")}
-        value={`${storage} / ${storageMax} MB`}
-        icon={HardDriveIcon}
+        title={t("billing.usage.stat.bookings")}
+        value={`${bookings} / ${bookingsMax}`}
+        icon={Calendar01Icon}
         iconColor="accent"
       />
     </StatsGrid>

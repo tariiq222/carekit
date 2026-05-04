@@ -3,6 +3,8 @@ import { CreateZoomMeetingHandler } from './create-zoom-meeting.handler';
 import { buildPrisma, mockBooking } from '../testing/booking-test-helpers';
 import { ZoomMeetingStatus } from '@prisma/client';
 
+const buildFeatureCheck = (enabled = true) => ({ isEnabled: jest.fn().mockResolvedValue(enabled) });
+
 const onlineBooking = {
   ...mockBooking,
   bookingType: 'ONLINE' as const,
@@ -52,6 +54,7 @@ describe('CreateZoomMeetingHandler', () => {
       prisma as never,
       zoomApi as never,
       zoomCredentials as never,
+      buildFeatureCheck() as never,
     );
 
     await expect(handler.execute({ bookingId: 'bad' })).rejects.toThrow(
@@ -70,6 +73,7 @@ describe('CreateZoomMeetingHandler', () => {
       prisma as never,
       zoomApi as never,
       zoomCredentials as never,
+      buildFeatureCheck() as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -84,6 +88,7 @@ describe('CreateZoomMeetingHandler', () => {
       prisma as never,
       zoomApi as never,
       zoomCredentials as never,
+      buildFeatureCheck() as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -103,6 +108,7 @@ describe('CreateZoomMeetingHandler', () => {
       prisma as never,
       zoomApi as never,
       zoomCredentials as never,
+      buildFeatureCheck() as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -126,6 +132,7 @@ describe('CreateZoomMeetingHandler', () => {
       prisma as never,
       zoomApi as never,
       zoomCredentials as never,
+      buildFeatureCheck() as never,
     );
 
     await handler.execute({ bookingId: 'book-1' });
@@ -135,6 +142,28 @@ describe('CreateZoomMeetingHandler', () => {
         data: expect.objectContaining({
           zoomMeetingStatus: ZoomMeetingStatus.FAILED,
           zoomMeetingError: 'Zoom Outage',
+        }),
+      }),
+    );
+  });
+
+  it('sets FAILED status when ZOOM_INTEGRATION feature is disabled', async () => {
+    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const handler = new CreateZoomMeetingHandler(
+      prisma as never,
+      zoomApi as never,
+      zoomCredentials as never,
+      buildFeatureCheck(false) as never,
+    );
+
+    await handler.execute({ bookingId: 'book-1' });
+
+    expect(zoomApi.createMeeting).not.toHaveBeenCalled();
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          zoomMeetingStatus: ZoomMeetingStatus.FAILED,
+          zoomMeetingError: 'Zoom integration is not available on your current plan',
         }),
       }),
     );

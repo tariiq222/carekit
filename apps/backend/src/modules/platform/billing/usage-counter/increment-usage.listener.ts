@@ -25,12 +25,6 @@ interface ServiceCreatedPayload {
   organizationId: string;
 }
 
-interface FileUploadedPayload {
-  fileId: string;
-  organizationId: string;
-  sizeBytes: number;
-}
-
 /**
  * Listens for domain events and increments the corresponding UsageCounter rows.
  *
@@ -100,19 +94,6 @@ export class IncrementUsageListener implements OnModuleInit {
           .increment(organizationId, FeatureKey.SERVICES, EPOCH, 1)
           .catch((err: unknown) =>
             this.logger.error({ err, organizationId }, 'usage_counter_service_increment_failed'),
-          );
-      },
-    );
-
-    this.eventBus.subscribe<FileUploadedPayload>(
-      'media.file.uploaded',
-      async (envelope) => {
-        const { organizationId, sizeBytes } = envelope.payload;
-        const mb = Math.ceil(sizeBytes / (1024 * 1024));
-        await this.counters
-          .increment(organizationId, FeatureKey.STORAGE, EPOCH, mb)
-          .catch((err: unknown) =>
-            this.logger.error({ err, organizationId }, 'usage_counter_storage_increment_failed'),
           );
       },
     );

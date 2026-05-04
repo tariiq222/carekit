@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreHorizontalIcon, PencilEdit01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { MoreHorizontalIcon, PencilEdit01Icon, Delete02Icon, CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@deqah/ui"
 import { Button } from "@deqah/ui"
@@ -24,6 +24,7 @@ export function getCouponColumns(
   onEdit?: (c: Coupon) => void,
   onDelete?: (c: Coupon) => void,
   t?: TFn,
+  onToggleActive?: (c: Coupon) => void,
 ): ColumnDef<Coupon>[] {
   const label = (key: string, fallback: string) => t?.(key) ?? fallback
 
@@ -130,6 +131,13 @@ export function getCouponColumns(
               <DropdownMenuItem onClick={() => onEdit?.(c)}>
                 <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
                 {label("coupons.action.edit", "Edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onToggleActive?.(c)}>
+                <HugeiconsIcon icon={c.isActive ? Cancel01Icon : CheckmarkCircle02Icon} size={14} />
+                {label(
+                  c.isActive ? "coupons.action.deactivate" : "coupons.action.activate",
+                  c.isActive ? "Deactivate" : "Activate",
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete?.(c)}

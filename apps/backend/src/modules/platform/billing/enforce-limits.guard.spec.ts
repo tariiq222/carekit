@@ -1,7 +1,7 @@
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { PlanLimitsGuard } from './enforce-limits.guard';
-import { EPOCH, startOfMonthUTC } from './usage-counter/period.util';
+import { startOfMonthUTC } from './usage-counter/period.util';
 
 describe('PlanLimitsGuard', () => {
   const mockReflector = { get: jest.fn() };
@@ -9,7 +9,6 @@ describe('PlanLimitsGuard', () => {
     branch: { count: jest.fn() },
     employee: { count: jest.fn() },
     booking: { count: jest.fn() },
-    file: { aggregate: jest.fn() },
   };
   const mockCache = { get: jest.fn() };
   const mockCounters = { read: jest.fn(), upsertExact: jest.fn() };
@@ -168,29 +167,5 @@ describe('PlanLimitsGuard', () => {
     });
   });
 
-  describe('STORAGE_MB', () => {
-    it('allows when current storage is below the limit', async () => {
-      mockReflector.get.mockReturnValue('STORAGE_MB');
-      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
-      mockCounters.read.mockResolvedValue(500);
-      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
-      expect(mockCounters.read).toHaveBeenCalledWith('org-1', FeatureKey.STORAGE, EPOCH);
-    });
-
-    it('throws ForbiddenException when storage usage equals the limit', async () => {
-      mockReflector.get.mockReturnValue('STORAGE_MB');
-      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
-      mockCounters.read.mockResolvedValue(1024);
-      await expect(guard.canActivate(buildCtx())).rejects.toThrow('Plan limit reached for STORAGE_MB: 1024/1024');
-    });
-
-    it('self-heals from File aggregate when counter row is missing', async () => {
-      mockReflector.get.mockReturnValue('STORAGE_MB');
-      mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxStorageMB: 1024 } });
-      mockCounters.read.mockResolvedValue(null);
-      mockPrisma.file.aggregate.mockResolvedValue({ _sum: { size: 5 * 1024 * 1024 } }); // 5MB
-      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
-      expect(mockCounters.upsertExact).toHaveBeenCalledWith('org-1', FeatureKey.STORAGE, EPOCH, 5);
-    });
-  });
 });
+

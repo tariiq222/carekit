@@ -22,7 +22,6 @@ export const FeatureKey = {
   // ── On/Off — ENTERPRISE only ──────────────────────────────────────
   ADVANCED_REPORTS: "advanced_reports",
   INTAKE_FORMS: "intake_forms",
-  ZATCA: "zatca",
   CUSTOM_ROLES: "custom_roles",
   ACTIVITY_LOG: "activity_log",
 
@@ -31,7 +30,6 @@ export const FeatureKey = {
   EMPLOYEES: "employees",
   SERVICES: "services",
   MONTHLY_BOOKINGS: "monthly_bookings",
-  STORAGE: "storage",
 
   // ── On/Off — PRO (Phase 3) ────────────────────────────────────────
   ZOOM_INTEGRATION: "zoom_integration",

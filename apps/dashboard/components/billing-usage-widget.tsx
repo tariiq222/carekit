@@ -14,13 +14,11 @@ const FEATURE_LABEL_KEY: Record<string, string> = {
   MAX_EMPLOYEES: "billing.usage.employees",
   MAX_SERVICES: "billing.usage.clients", // services ~ clients label
   MAX_BOOKINGS_PER_MONTH: "billing.usage.bookings",
-  MAX_STORAGE_MB: "billing.usage.storage",
   // canonical lowercase variants used by backend FeatureKey enum
   branches: "billing.usage.branches",
   employees: "billing.usage.employees",
   services: "billing.usage.clients",
   monthly_bookings: "billing.usage.bookings",
-  storage: "billing.usage.storage",
 }
 
 function UsageBar({ row, t }: { row: UsageRow; t: (k: string) => string }) {

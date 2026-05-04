@@ -27,21 +27,37 @@ export class UsageCounterService {
     periodStart: Date,
     by = 1,
   ): Promise<void> {
-    await this.prisma.usageCounter.upsert({
-      where: {
-        organizationId_featureKey_periodStart: {
+    await this.prisma.$transaction(async (tx) => {
+      const row = await tx.usageCounter.findUnique({
+        where: {
+          organizationId_featureKey_periodStart: {
+            organizationId: orgId,
+            featureKey,
+            periodStart,
+          },
+        },
+        select: { value: true },
+      });
+
+      const currentValue = row?.value ?? 0;
+      const newValue = Math.max(0, currentValue + by);
+
+      await tx.usageCounter.upsert({
+        where: {
+          organizationId_featureKey_periodStart: {
+            organizationId: orgId,
+            featureKey,
+            periodStart,
+          },
+        },
+        update: { value: newValue },
+        create: {
           organizationId: orgId,
           featureKey,
           periodStart,
+          value: Math.max(0, by),
         },
-      },
-      update: { value: { increment: by } },
-      create: {
-        organizationId: orgId,
-        featureKey,
-        periodStart,
-        value: by,
-      },
+      });
     });
   }
 

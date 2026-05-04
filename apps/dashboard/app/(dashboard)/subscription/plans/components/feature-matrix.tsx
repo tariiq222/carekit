@@ -13,7 +13,6 @@ interface FeatureMatrixProps {
 const FEATURES = [
   { key: "maxEmployees", label: "billing.plans.employees" },
   { key: "chatbotEnabled", label: "billing.plans.chatbot" },
-  { key: "zatcaEnabled", label: "billing.plans.zatca" },
 ] as const
 
 export function FeatureMatrix({ plans, locale, t }: FeatureMatrixProps) {

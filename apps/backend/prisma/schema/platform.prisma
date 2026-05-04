@@ -133,7 +133,7 @@ model SuperAdminActionLog {
   actionType             SuperAdminActionType
   organizationId         String?
   impersonationSessionId String?
-  reason                 String               @db.Text
+  reason                 String?              @db.Text
   metadata               Json
   ipAddress              String
   userAgent              String               @db.Text
@@ -383,6 +383,8 @@ model Subscription {
   scheduledBillingCycle  BillingCycle?
   scheduledPlanChangeAt  DateTime?
   scheduledChangeBlockedReason String?      // Set by cron when downgrade-safety check fails at swap-time
+  apiAccessGraceUntil    DateTime? // set when API_ACCESS is revoked on downgrade; tenant keeps access until this date
+  webhooksGraceUntil     DateTime? // set when WEBHOOKS is revoked on downgrade; tenant keeps access until this date
   pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
   retryCount             Int                @default(0) // analytics only; not used for state decisions
   maxRetries             Int                @default(3) // charging attempts within grace window

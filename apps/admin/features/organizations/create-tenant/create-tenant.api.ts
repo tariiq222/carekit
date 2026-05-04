@@ -15,7 +15,6 @@ export interface CreateTenantCommand {
   planId?: string;
   billingCycle?: 'MONTHLY' | 'ANNUAL';
   trialDays?: number;
-  reason: string;
 }
 
 export function createTenant(cmd: CreateTenantCommand): Promise<OrganizationRow> {

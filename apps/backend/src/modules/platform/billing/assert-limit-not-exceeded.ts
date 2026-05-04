@@ -52,7 +52,6 @@ function resolveLimit(
     case 'BRANCHES': return Number(limits['maxBranches'] ?? 0);
     case 'EMPLOYEES': return Number(limits['maxEmployees'] ?? 0);
     case 'BOOKINGS_PER_MONTH': return Number(limits['maxBookingsPerMonth'] ?? 0);
-    case 'STORAGE_MB': return Number(limits['maxStorageMB'] ?? 0);
   }
 }
 
@@ -82,13 +81,5 @@ async function currentUsage(
           status: { not: BookingStatus.CANCELLED },
         },
       });
-    case 'STORAGE_MB': {
-      const result = await tx.file.aggregate({
-        where: { organizationId, isDeleted: false },
-        _sum: { size: true },
-      });
-      const bytes = result._sum.size ?? 0;
-      return Math.ceil(bytes / (1024 * 1024));
-    }
   }
 }

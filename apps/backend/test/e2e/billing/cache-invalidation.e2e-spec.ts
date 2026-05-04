@@ -69,7 +69,6 @@ describe('Phase 5 / Task 13 — Cache invalidation on plan/subscription changes'
           maxEmployees: -1,
           maxServices: -1,
           maxBookingsPerMonth: -1,
-          maxStorageMB: -1,
         },
         isActive: true,
         sortOrder: 999,
@@ -134,7 +133,6 @@ describe('Phase 5 / Task 13 — Cache invalidation on plan/subscription changes'
           maxEmployees: -1,
           maxServices: -1,
           maxBookingsPerMonth: -1,
-          maxStorageMB: -1,
         },
       },
     });

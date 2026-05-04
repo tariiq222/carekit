@@ -7,6 +7,7 @@ import { TokenService } from '../../identity/shared/token.service';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../billing/subscription-cache.service';
 import { PlatformMailerService } from '../../../infrastructure/mail';
+import { OwnerProvisioningService } from '../../identity/owner-provisioning/owner-provisioning.service';
 import type { RegisterTenantDto } from './register-tenant.dto';
 
 function slugify(text: string): string {
@@ -41,6 +42,7 @@ export class RegisterTenantHandler {
     private readonly tenant: TenantContextService,
     private readonly cache: SubscriptionCacheService,
     private readonly mailer: PlatformMailerService,
+    private readonly ownerProvisioning: OwnerProvisioningService,
   ) {}
 
   async execute(dto: RegisterTenantDto) {
@@ -48,10 +50,19 @@ export class RegisterTenantHandler {
     const plan = await this.prisma.plan.findFirst({ where: { slug: planSlug, isActive: true } });
     if (!plan) throw new NotFoundException(`Default plan '${planSlug}' not found — run the seed script`);
 
+    // Self-serve must NOT auto-link existing users — that is admin-only behaviour.
+    // Pre-check before entering the transaction so we surface a clean 409.
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      select: { id: true },
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+
     const trialDays = this.config.get<number>('SAAS_TRIAL_DAYS', 14);
     const now = new Date();
     const trialEndsAt = new Date(now.getTime() + trialDays * DAY_MS);
-    const passwordHash = await this.password.hash(dto.password);
     const baseSlug = slugify(dto.businessNameAr) || 'org';
 
     // Resolve billing cycle period
@@ -85,20 +96,17 @@ export class RegisterTenantHandler {
             },
           });
 
-          const user = await tx.user.create({
-            data: {
-              email: dto.email,
-              name: dto.name,
-              phone: dto.phone,
-              passwordHash,
-              role: 'ADMIN',
-              isActive: true,
-            },
+          const ownerResult = await this.ownerProvisioning.provision({
+            name: dto.name,
+            email: dto.email,
+            phone: dto.phone,
+            password: dto.password,
+            tx,
           });
 
           const membership = await tx.membership.create({
             data: {
-              userId: user.id,
+              userId: ownerResult.userId,
               organizationId: org.id,
               role: 'OWNER',
               isActive: true,
@@ -162,7 +170,7 @@ export class RegisterTenantHandler {
             }
           }
 
-          return { orgId: org.id, userId: user.id, membershipId: membership.id, subscriptionId: sub.id };
+          return { orgId: org.id, userId: ownerResult.userId, membershipId: membership.id, subscriptionId: sub.id };
         });
         break;
       } catch (err: unknown) {

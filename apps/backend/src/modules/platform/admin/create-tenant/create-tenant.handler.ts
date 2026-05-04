@@ -1,4 +1,5 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   BillingCycle,
   Prisma,
@@ -6,18 +7,23 @@ import {
   SuperAdminActionType,
 } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database';
+import { PlatformMailerService } from '../../../../infrastructure/mail';
+import { OwnerProvisioningService } from '../../../identity/owner-provisioning/owner-provisioning.service';
 
 export interface CreateTenantCommand {
   slug: string;
   nameAr: string;
   nameEn?: string;
-  ownerUserId: string;
+  ownerUserId?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  ownerPassword?: string;
   verticalSlug?: string;
   planId?: string;
   billingCycle?: 'MONTHLY' | 'ANNUAL';
   trialDays?: number;
   superAdminUserId: string;
-  reason: string;
   ipAddress: string;
   userAgent: string;
 }
@@ -26,21 +32,35 @@ const DAY_MS = 86_400_000;
 
 @Injectable()
 export class CreateTenantHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(CreateTenantHandler.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ownerProvisioning: OwnerProvisioningService,
+    private readonly mailer: PlatformMailerService,
+    private readonly config: ConfigService,
+  ) {}
 
   async execute(cmd: CreateTenantCommand) {
-    return this.prisma.$allTenants.$transaction(async (tx) => {
+    if (!cmd.ownerUserId && !cmd.ownerEmail) {
+      throw new BadRequestException('ownerUserId_or_ownerEmail_required');
+    }
+
+    const txResult = await this.prisma.$allTenants.$transaction(async (tx) => {
       const existing = await tx.organization.findUnique({
         where: { slug: cmd.slug },
         select: { id: true },
       });
       if (existing) throw new ConflictException('organization_slug_already_exists');
 
-      const owner = await tx.user.findUnique({
-        where: { id: cmd.ownerUserId },
-        select: { id: true, isActive: true },
+      const provisionResult = await this.ownerProvisioning.provision({
+        ownerUserId: cmd.ownerUserId,
+        name: cmd.ownerName,
+        email: cmd.ownerEmail,
+        phone: cmd.ownerPhone,
+        password: cmd.ownerPassword,
+        tx,
       });
-      if (!owner || !owner.isActive) throw new NotFoundException('owner_user_not_found');
 
       const vertical = cmd.verticalSlug
         ? await tx.vertical.findFirst({
@@ -98,7 +118,7 @@ export class CreateTenantHandler {
       await tx.membership.create({
         data: {
           organizationId: organization.id,
-          userId: owner.id,
+          userId: provisionResult.userId,
           role: 'OWNER',
           isActive: true,
           acceptedAt: now,
@@ -169,10 +189,12 @@ export class CreateTenantHandler {
           superAdminUserId: cmd.superAdminUserId,
           actionType: SuperAdminActionType.TENANT_CREATE,
           organizationId: organization.id,
-          reason: cmd.reason,
+          reason: null,
           metadata: {
             slug: cmd.slug,
-            ownerUserId: owner.id,
+            ownerUserId: provisionResult.userId,
+            ownerCreatedNew: provisionResult.isNewUser,
+            passwordWasGenerated: Boolean(provisionResult.generatedPassword),
             verticalSlug: vertical?.slug ?? null,
             planId: plan?.id ?? null,
             planSlug: plan?.slug ?? null,
@@ -183,7 +205,28 @@ export class CreateTenantHandler {
         },
       });
 
-      return organization;
+      return { organization, provisionResult };
     });
+
+    // Fire-and-forget welcome email for newly created owners
+    const { organization, provisionResult } = txResult;
+    if (provisionResult.isNewUser && cmd.ownerEmail) {
+      const dashboardUrl = this.config.get<string>(
+        'PLATFORM_DASHBOARD_URL',
+        'https://app.webvue.pro/dashboard',
+      );
+      this.mailer
+        .sendTenantWelcome(cmd.ownerEmail, {
+          ownerName: cmd.ownerName ?? cmd.ownerEmail,
+          orgName: cmd.nameAr,
+          dashboardUrl,
+          generatedPassword: provisionResult.generatedPassword,
+        })
+        .catch((err: unknown) =>
+          this.logger.error('failed to send tenant welcome email', err),
+        );
+    }
+
+    return organization;
   }
 }

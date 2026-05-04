@@ -151,6 +151,24 @@ export class PlatformMailerService implements OnModuleInit {
     await this.dispatch('membership-invitation', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
   }
 
+  async sendFeatureGraceWarning(
+    to: string,
+    vars: import('./templates/feature-grace-warning.template').FeatureGraceWarningVars,
+  ): Promise<void> {
+    const { featureGraceWarningTemplate } = await import('./templates/feature-grace-warning.template');
+    const t = featureGraceWarningTemplate(vars);
+    await this.dispatch('feature-grace-warning', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
+  async sendFeatureGraceExpired(
+    to: string,
+    vars: import('./templates/feature-grace-expired.template').FeatureGraceExpiredVars,
+  ): Promise<void> {
+    const { featureGraceExpiredTemplate } = await import('./templates/feature-grace-expired.template');
+    const t = featureGraceExpiredTemplate(vars);
+    await this.dispatch('feature-grace-expired', to, this.bilingualSubject(t.subjectAr, t.subjectEn), t.html);
+  }
+
   /**
    * Send a raw email with full control over to/subject/html.
    * Used by the platform email test-send endpoint.

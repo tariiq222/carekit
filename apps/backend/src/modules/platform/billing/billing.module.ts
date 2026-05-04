@@ -6,6 +6,7 @@ import { MailModule } from "../../../infrastructure/mail";
 import { MessagingModule } from "../../../infrastructure/messaging.module";
 import { UsageCounterService } from "./usage-counter/usage-counter.service";
 import { IncrementUsageListener } from "./usage-counter/increment-usage.listener";
+import { DecrementOnLifecycleListener } from "./usage-counter/decrement-on-lifecycle.listener";
 import { DecrementOnRefundListener } from "./usage-counter/decrement-on-refund/decrement-on-refund.listener";
 import { CacheInvalidatorListener } from "./cache-invalidator.listener";
 import { GetUsageHandler } from "./get-usage/get-usage.handler";
@@ -52,6 +53,9 @@ import { FeatureGuard } from "./feature.guard";
 import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
 import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
 import { ChangePlanHandler } from "./change-plan/change-plan.handler";
+import { FeatureCheckService } from "./feature-check.service";
+import { CustomDomainGraceCron } from "./grace-watchers/custom-domain-grace.cron";
+import { ApiWebhooksGraceCron } from "./grace-watchers/api-webhooks-grace.cron";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -122,10 +126,14 @@ const HANDLERS = [
     { provide: APP_INTERCEPTOR, useClass: UsageTrackerInterceptor },
     UsageCounterService,
     IncrementUsageListener,
+    DecrementOnLifecycleListener,
     DecrementOnRefundListener,
     CacheInvalidatorListener,
     GetUsageHandler,
     DowngradeSafetyService,
+    FeatureCheckService,
+    CustomDomainGraceCron,
+    ApiWebhooksGraceCron,
   ],
   exports: [
     FeatureGuard,
@@ -136,6 +144,7 @@ const HANDLERS = [
     UsageCounterService,
     GetUsageHandler,
     DowngradeSafetyService,
+    FeatureCheckService,
     ...HANDLERS,
   ],
 })

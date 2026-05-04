@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { captureException } from '../../../infrastructure/telemetry/posthog.client';
 import { BullMqService } from '../../../infrastructure/queue/bull-mq.service';
 import { BookingAutocompleteCron } from './booking-autocomplete.cron';
 import { BookingExpiryCron } from './booking-expiry.cron';
@@ -184,12 +183,6 @@ export class CronTasksService implements OnModuleInit {
           `Cron ${job.name} failed (attempt ${job.attemptsMade + 1})`,
           err instanceof Error ? err.stack : err,
         );
-        captureException(err, {
-          'cron.job': job.name,
-          'cron.queue': QUEUE_NAME,
-          'bullmq.attemptsMade': job.attemptsMade,
-          'bullmq.attemptsAllowed': job.opts.attempts,
-        });
         throw err; // re-throw so BullMQ records the failure and applies backoff
       }
     });
@@ -201,11 +194,6 @@ export class CronTasksService implements OnModuleInit {
           `Cron ${job?.name ?? 'unknown'} EXHAUSTED retries — job ${job?.id} → DLQ`,
           err.stack,
         );
-        captureException(err, {
-          'cron.job': job?.name ?? 'unknown',
-          'cron.dlq': true,
-          severity: 'fatal',
-        });
       }
     });
   }

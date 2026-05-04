@@ -8,6 +8,8 @@ import { subscriptionPaymentFailedTemplate } from '../subscription-payment-faile
 import { dunningRetryTemplate } from '../dunning-retry.template';
 import { planChangedTemplate } from '../plan-changed.template';
 import { accountStatusChangedTemplate } from '../account-status-changed.template';
+import { featureGraceWarningTemplate } from '../feature-grace-warning.template';
+import { featureGraceExpiredTemplate } from '../feature-grace-expired.template';
 
 describe('platform email templates', () => {
   it('tenantWelcome renders both languages, escapes name', () => {
@@ -140,5 +142,63 @@ describe('platform email templates', () => {
       contactUrl: 'https://app.example/dashboard',
     });
     expect(reinstated.subjectEn.toLowerCase()).toContain('reinstated');
+  });
+});
+
+describe('feature grace templates', () => {
+  const warningVars = {
+    ownerName: 'Tariq',
+    orgName: 'Sawa',
+    featureKey: 'custom_domain',
+    featureNameAr: 'النطاق المخصص',
+    featureNameEn: 'Custom Domain',
+    daysLeft: 7,
+  };
+
+  const expiredVars = {
+    ownerName: 'Tariq',
+    orgName: 'Sawa',
+    featureKey: 'custom_domain',
+    featureNameAr: 'النطاق المخصص',
+    featureNameEn: 'Custom Domain',
+  };
+
+  it('featureGraceWarning renders AR + EN with owner name, org name, feature name and daysLeft', () => {
+    const out = featureGraceWarningTemplate(warningVars);
+    expect(out.html).toContain('Tariq');
+    expect(out.html).toContain('Sawa');
+    expect(out.html).toContain('Custom Domain');
+    expect(out.html).toContain('النطاق المخصص');
+    expect(out.html).toContain('7');
+    expect(out.subjectAr).toContain('7');
+    expect(out.subjectEn).toContain('7');
+  });
+
+  it('featureGraceWarning uses singular day word when daysLeft=1', () => {
+    const out = featureGraceWarningTemplate({ ...warningVars, daysLeft: 1 });
+    expect(out.subjectEn).toContain('1 day');
+    expect(out.subjectAr).toContain('يوم');
+  });
+
+  it('featureGraceWarning escapes XSS in ownerName', () => {
+    const out = featureGraceWarningTemplate({ ...warningVars, ownerName: '<script>xss</script>' });
+    expect(out.html).not.toContain('<script>xss</script>');
+    expect(out.html).toContain('&lt;script&gt;');
+  });
+
+  it('featureGraceExpired renders AR + EN with owner name, org name and feature name (no daysLeft)', () => {
+    const out = featureGraceExpiredTemplate(expiredVars);
+    expect(out.html).toContain('Tariq');
+    expect(out.html).toContain('Sawa');
+    expect(out.html).toContain('Custom Domain');
+    expect(out.html).toContain('النطاق المخصص');
+    expect(out.subjectAr).toContain('النطاق المخصص');
+    expect(out.subjectEn).toContain('Custom Domain');
+  });
+
+  it('featureGraceExpired escapes XSS in orgName', () => {
+    const out = featureGraceExpiredTemplate({ ...expiredVars, orgName: '<b>hack</b>' });
+    expect(out.html).not.toContain('<b>hack</b>');
+    expect(out.html).toContain('&lt;b&gt;');
   });
 });

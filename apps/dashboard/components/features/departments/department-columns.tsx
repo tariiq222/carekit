@@ -5,6 +5,8 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PencilEdit01Icon,
   Delete02Icon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@deqah/ui"
@@ -22,6 +24,7 @@ export function getDepartmentColumns(
   t: TFn,
   onEdit?: (d: Department) => void,
   onDelete?: (d: Department) => void,
+  onToggleActive?: (d: Department) => void,
 ): ColumnDef<Department>[] {
   const label = (key: string, fallback: string) => t?.(key) ?? fallback
 
@@ -98,6 +101,20 @@ export function getDepartmentColumns(
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">{label("departments.action.edit", "Edit")}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(iconBtnBase, d.isActive ? "hover:text-warning hover:bg-warning/10 hover:border-warning/20" : "hover:text-success hover:bg-success/10 hover:border-success/20")}
+                  aria-label={d.isActive ? label("departments.action.deactivate", "Deactivate") : label("departments.action.activate", "Activate")}
+                  onClick={() => onToggleActive?.(d)}
+                >
+                  <HugeiconsIcon icon={d.isActive ? Cancel01Icon : CheckmarkCircle02Icon} size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {d.isActive ? label("departments.action.deactivate", "Deactivate") : label("departments.action.activate", "Activate")}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>

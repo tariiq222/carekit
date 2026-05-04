@@ -1,5 +1,6 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateTenantHandler } from './create-tenant.handler';
+import { OwnerProvisioningService } from '../../../identity/owner-provisioning/owner-provisioning.service';
 
 describe('CreateTenantHandler', () => {
   const tx = {
@@ -22,7 +23,19 @@ describe('CreateTenantHandler', () => {
     },
   };
 
-  const handler = new CreateTenantHandler(prisma as never);
+  const mailer = { sendTenantWelcome: jest.fn().mockResolvedValue(undefined) };
+  const config = { get: jest.fn().mockReturnValue('https://app.webvue.pro/dashboard') };
+
+  const ownerProvisioning = {
+    provision: jest.fn(),
+  } as unknown as OwnerProvisioningService;
+
+  const handler = new CreateTenantHandler(
+    prisma as never,
+    ownerProvisioning,
+    mailer as never,
+    config as never,
+  );
 
   const cmd = {
     slug: 'riyadh-clinic',
@@ -34,7 +47,6 @@ describe('CreateTenantHandler', () => {
     billingCycle: 'MONTHLY' as const,
     trialDays: 10,
     superAdminUserId: 'sa-1',
-    reason: 'Create tenant for onboarding',
     ipAddress: '127.0.0.1',
     userAgent: 'jest',
   };
@@ -51,7 +63,10 @@ describe('CreateTenantHandler', () => {
       verticalId: 'vertical-1',
       trialEndsAt: new Date('2026-05-09T00:00:00.000Z'),
     });
-    tx.user.findUnique.mockResolvedValue({ id: 'owner-1', isActive: true });
+    (ownerProvisioning.provision as jest.Mock).mockResolvedValue({
+      userId: 'owner-1',
+      isNewUser: false,
+    });
     tx.vertical.findFirst.mockResolvedValue({
       id: 'vertical-1',
       slug: 'clinic',
@@ -62,6 +77,11 @@ describe('CreateTenantHandler', () => {
     tx.subscription.create.mockResolvedValue({ id: 'sub-1' });
   });
 
+  it('rejects when neither ownerUserId nor ownerEmail is provided', async () => {
+    const { ownerUserId: _removed, ...cmdWithoutOwner } = cmd;
+    await expect(handler.execute(cmdWithoutOwner)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('rejects duplicate slug', async () => {
     tx.organization.findUnique.mockResolvedValue({ id: 'existing' });
 
@@ -69,8 +89,10 @@ describe('CreateTenantHandler', () => {
     expect(tx.organization.create).not.toHaveBeenCalled();
   });
 
-  it('rejects missing owner user', async () => {
-    tx.user.findUnique.mockResolvedValue(null);
+  it('rejects missing owner user via provision service', async () => {
+    (ownerProvisioning.provision as jest.Mock).mockRejectedValue(
+      new NotFoundException('owner_user_not_found'),
+    );
 
     await expect(handler.execute(cmd)).rejects.toBeInstanceOf(NotFoundException);
     expect(tx.organization.create).not.toHaveBeenCalled();
@@ -143,7 +165,7 @@ describe('CreateTenantHandler', () => {
     });
   });
 
-  it('writes super-admin audit log with action metadata', async () => {
+  it('writes super-admin audit log with null reason and metadata flags', async () => {
     await handler.execute(cmd);
 
     expect(tx.superAdminActionLog.create).toHaveBeenCalledWith({
@@ -151,15 +173,48 @@ describe('CreateTenantHandler', () => {
         superAdminUserId: 'sa-1',
         actionType: 'TENANT_CREATE',
         organizationId: 'org-1',
-        reason: cmd.reason,
+        reason: null,
         metadata: expect.objectContaining({
           slug: cmd.slug,
           ownerUserId: 'owner-1',
+          ownerCreatedNew: false,
+          passwordWasGenerated: false,
           verticalSlug: 'clinic',
           planId: 'plan-1',
           subscriptionId: 'sub-1',
         }),
       }),
     });
+  });
+
+  it('sends welcome email for newly created owner via email path', async () => {
+    const cmdWithEmail = { ...cmd, ownerUserId: undefined, ownerEmail: 'new@example.com', ownerName: 'New User', ownerPhone: '+966501234567' };
+    (ownerProvisioning.provision as jest.Mock).mockResolvedValue({
+      userId: 'new-user-1',
+      isNewUser: true,
+      generatedPassword: 'TempPass7',
+    });
+
+    await handler.execute(cmdWithEmail);
+
+    expect(mailer.sendTenantWelcome).toHaveBeenCalledWith(
+      'new@example.com',
+      expect.objectContaining({
+        ownerName: 'New User',
+        generatedPassword: 'TempPass7',
+      }),
+    );
+  });
+
+  it('does not send welcome email when linking an existing user', async () => {
+    const cmdWithEmail = { ...cmd, ownerUserId: undefined, ownerEmail: 'existing@example.com' };
+    (ownerProvisioning.provision as jest.Mock).mockResolvedValue({
+      userId: 'existing-user-1',
+      isNewUser: false,
+    });
+
+    await handler.execute(cmdWithEmail);
+
+    expect(mailer.sendTenantWelcome).not.toHaveBeenCalled();
   });
 });

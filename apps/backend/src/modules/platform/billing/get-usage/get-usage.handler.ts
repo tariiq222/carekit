@@ -10,14 +10,13 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { UsageRowDto } from './get-usage.dto';
 
 /**
- * The 5 quantitative feature keys that have numeric limits and usage counters.
+ * The 4 quantitative feature keys that have numeric limits and usage counters.
  */
 export const QUANTITATIVE_KEYS: readonly FeatureKey[] = [
   FeatureKey.BRANCHES,
   FeatureKey.EMPLOYEES,
   FeatureKey.SERVICES,
   FeatureKey.MONTHLY_BOOKINGS,
-  FeatureKey.STORAGE,
 ] as const;
 
 @Injectable()
@@ -86,14 +85,6 @@ export class GetUsageHandler {
             status: { not: BookingStatus.CANCELLED },
           },
         });
-      }
-      case FeatureKey.STORAGE: {
-        const result = await this.prisma.file.aggregate({
-          where: { organizationId, isDeleted: false },
-          _sum: { size: true },
-        });
-        const bytes = result._sum.size ?? 0;
-        return Math.ceil(bytes / (1024 * 1024));
       }
       default:
         return 0;

@@ -75,13 +75,6 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureCatalogEntry> = {
     descAr: "نماذج استقبال مخصصة قبل الموعد",
     descEn: "Custom pre-appointment intake forms",
   },
-  [FeatureKey.ZATCA]: {
-    key: FeatureKey.ZATCA,
-    kind: "boolean", tier: "ENTERPRISE", group: "Finance & Compliance",
-    nameAr: "فوترة زاتكا الإلكترونية", nameEn: "ZATCA E-Invoicing",
-    descAr: "إصدار فواتير متوافقة مع هيئة الزكاة والضريبة",
-    descEn: "Issue ZATCA-compliant e-invoices",
-  },
   [FeatureKey.CUSTOM_ROLES]: {
     key: FeatureKey.CUSTOM_ROLES,
     kind: "boolean", tier: "ENTERPRISE", group: "Operations",
@@ -124,14 +117,6 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureCatalogEntry> = {
     descAr: "عدد الحجوزات المسموح بها كل شهر",
     descEn: "Bookings allowed per calendar month",
   },
-  [FeatureKey.STORAGE]: {
-    key: FeatureKey.STORAGE,
-    kind: "quantitative", tier: "PRO", group: "Operations",
-    nameAr: "مساحة التخزين", nameEn: "Storage",
-    descAr: "إجمالي مساحة الملفات بالميجابايت",
-    descEn: "Total file storage in MB",
-  },
-
   // ── Phase 3: 15 new keys ──────────────────────────────────────────
 
   [FeatureKey.ZOOM_INTEGRATION]: {

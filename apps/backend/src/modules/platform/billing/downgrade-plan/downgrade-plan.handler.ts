@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { TenantContextService } from '../../../../common/tenant/tenant-context.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
@@ -65,6 +66,28 @@ export class DowngradePlanHandler {
       data: { planId: targetPlan.id, billingCycle: dto.billingCycle, updatedAt: new Date() },
     });
     this.cache.invalidate(organizationId);
+
+    // Write grace columns for features that are being removed by this downgrade.
+    const oldLimits = (sub.plan.limits ?? {}) as Record<string, unknown>;
+    const newLimits = (targetPlan.limits ?? {}) as Record<string, unknown>;
+
+    const graceUpdates: Prisma.SubscriptionUpdateInput = {};
+    if (oldLimits['api_access'] === true && newLimits['api_access'] !== true) {
+      graceUpdates.apiAccessGraceUntil = new Date(Date.now() + 7 * 86_400_000);
+    }
+    if (oldLimits['webhooks'] === true && newLimits['webhooks'] !== true) {
+      graceUpdates.webhooksGraceUntil = new Date(Date.now() + 7 * 86_400_000);
+    }
+    if (Object.keys(graceUpdates).length > 0) {
+      await this.prisma.subscription.update({ where: { id: sub.id }, data: graceUpdates });
+    }
+
+    if (oldLimits['custom_domain'] === true && newLimits['custom_domain'] !== true) {
+      await this.prisma.organizationSettings.updateMany({
+        where: { organizationId },
+        data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
+      });
+    }
 
     await this.eventBus
       .publish<SubscriptionUpdatedPayload>(SUBSCRIPTION_UPDATED_EVENT, {

@@ -145,4 +145,6 @@ export const arFinance: Record<string, string> = {
   "coupons.noExpiry": "بدون انتهاء",
   "coupons.action.edit": "تعديل",
   "coupons.action.delete": "حذف",
+  "coupons.action.deactivate": "تعطيل",
+  "coupons.action.activate": "تفعيل",
 }

@@ -16,6 +16,10 @@ const buildPrisma = (subs: unknown[] = []) => ({
       findMany: jest.fn().mockResolvedValue(subs),
       update: jest.fn().mockResolvedValue({}),
     },
+    organizationSettings: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    },
   },
 });
 
@@ -174,5 +178,88 @@ describe('ProcessScheduledPlanChangesCron', () => {
       where: { id: 'sub-1' },
       data: expect.objectContaining({ planId: 'plan-pro' }),
     });
+  });
+
+  it('writes grace columns for api_access and webhooks on downgrade swap', async () => {
+    const prisma = buildPrisma([
+      {
+        id: 'sub-1',
+        organizationId: 'org-1',
+        scheduledPlanId: 'plan-basic',
+        scheduledBillingCycle: 'MONTHLY',
+        plan: { priceMonthly: '900.00', limits: { api_access: true, webhooks: true } },
+        scheduledPlan: { priceMonthly: '300.00', limits: { api_access: false, webhooks: false } },
+      },
+    ]);
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+    );
+
+    await cron.execute();
+
+    const updateCalls = (prisma.$allTenants.subscription.update as jest.Mock).mock.calls;
+    const graceCalls = updateCalls.filter(
+      ([call]) => call.data.apiAccessGraceUntil || call.data.webhooksGraceUntil,
+    );
+    expect(graceCalls.length).toBe(1);
+    expect(graceCalls[0][0].data.apiAccessGraceUntil).toBeInstanceOf(Date);
+    expect(graceCalls[0][0].data.webhooksGraceUntil).toBeInstanceOf(Date);
+  });
+
+  it('writes customDomainGraceUntil on downgrade swap when custom_domain feature is removed', async () => {
+    const prisma = buildPrisma([
+      {
+        id: 'sub-1',
+        organizationId: 'org-1',
+        scheduledPlanId: 'plan-basic',
+        scheduledBillingCycle: 'MONTHLY',
+        plan: { priceMonthly: '900.00', limits: { custom_domain: true } },
+        scheduledPlan: { priceMonthly: '300.00', limits: { custom_domain: false } },
+      },
+    ]);
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+    );
+
+    await cron.execute();
+
+    expect(prisma.$allTenants.organizationSettings.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ customDomainGraceUntil: expect.any(Date) }),
+      }),
+    );
+  });
+
+  it('does NOT write grace columns for upgrades', async () => {
+    const prisma = buildPrisma([
+      {
+        id: 'sub-1',
+        organizationId: 'org-1',
+        scheduledPlanId: 'plan-pro',
+        scheduledBillingCycle: 'MONTHLY',
+        plan: { priceMonthly: '300.00', limits: { api_access: false } },
+        scheduledPlan: { priceMonthly: '900.00', limits: { api_access: true } },
+      },
+    ]);
+    const cron = new ProcessScheduledPlanChangesCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      buildSafety() as never,
+    );
+
+    await cron.execute();
+
+    const updateCalls = (prisma.$allTenants.subscription.update as jest.Mock).mock.calls;
+    const graceCalls = updateCalls.filter(
+      ([call]) => call.data.apiAccessGraceUntil || call.data.webhooksGraceUntil,
+    );
+    expect(graceCalls.length).toBe(0);
   });
 });

@@ -195,6 +195,23 @@ describe("FeatureGuard", () => {
     });
   });
 
+  describe("FeatureKey employees (isActive fix)", () => {
+    it("counts only active employees in EMPLOYEES recompute (self-heal path)", async () => {
+      const prisma = mockPrisma({});
+      prisma.employee.count = jest.fn().mockResolvedValue(1);
+      const reflector = mockReflector(
+        jest.fn().mockReturnValue(FeatureKey.EMPLOYEES),
+      );
+      const guard = makeGuard(reflector, prisma, { maxEmployees: 5 });
+      const ctx = mockContext();
+      const result = await guard.canActivate(ctx);
+      expect(prisma.employee.count).toHaveBeenCalledWith({
+        where: { organizationId: ORG_ID, isActive: true },
+      });
+      expect(result).toBe(true);
+    });
+  });
+
   describe("FeatureKey branches", () => {
     it("should count only active branches (self-heal path)", async () => {
       const prisma = mockPrisma({});
@@ -291,27 +308,6 @@ describe("FeatureGuard", () => {
         jest.fn().mockReturnValue(FeatureKey.RECURRING_BOOKINGS),
       );
       const guard = makeGuard(reflector, mockPrisma({}), { recurring_bookings: false });
-      const ctx = mockContext();
-      await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
-    });
-  });
-
-  describe("FeatureKey ZATCA", () => {
-    it("should allow when ZATCA is enabled", async () => {
-      const reflector = mockReflector(
-        jest.fn().mockReturnValue(FeatureKey.ZATCA),
-      );
-      const guard = makeGuard(reflector, mockPrisma({}), { zatca: true });
-      const ctx = mockContext();
-      const result = await guard.canActivate(ctx);
-      expect(result).toBe(true);
-    });
-
-    it("should throw when ZATCA is disabled", async () => {
-      const reflector = mockReflector(
-        jest.fn().mockReturnValue(FeatureKey.ZATCA),
-      );
-      const guard = makeGuard(reflector, mockPrisma({}), { zatca: false });
       const ctx = mockContext();
       await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
     });

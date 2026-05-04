@@ -3,11 +3,12 @@
  * SaaS Plan 04 — billing skeleton
  */
 
-import { api } from "@/lib/api"
+import { api, ApiError } from "@/lib/api"
 import type {
   AddSavedCardInput,
   ChangePlanInput,
   DownloadInvoiceResponse,
+  DowngradeBlockedBody,
   Invoice,
   InvoiceListFilters,
   InvoiceListResponse,
@@ -18,6 +19,20 @@ import type {
   Subscription,
   UsageRow,
 } from "@/lib/types/billing"
+import { DowngradeBlockedError } from "@/lib/types/billing"
+
+function rethrowIfDowngradeBlocked(err: unknown): never {
+  if (
+    err instanceof ApiError &&
+    err.status === 422
+  ) {
+    const body = err.body as DowngradeBlockedBody
+    if (body?.code === 'DOWNGRADE_VIOLATES_NEW_LIMITS') {
+      throw new DowngradeBlockedError(body)
+    }
+  }
+  throw err
+}
 
 export const billingApi = {
   listPlans: () =>
@@ -42,10 +57,10 @@ export const billingApi = {
     api.post<Subscription>('/dashboard/billing/subscription/upgrade', dto),
 
   downgrade: (dto: ChangePlanInput) =>
-    api.post<Subscription>('/dashboard/billing/subscription/downgrade', dto),
+    api.post<Subscription>('/dashboard/billing/subscription/downgrade', dto).catch(rethrowIfDowngradeBlocked),
 
   scheduleDowngrade: (dto: ChangePlanInput) =>
-    api.post<Subscription>('/dashboard/billing/subscription/schedule-downgrade', dto),
+    api.post<Subscription>('/dashboard/billing/subscription/schedule-downgrade', dto).catch(rethrowIfDowngradeBlocked),
 
   cancelScheduledDowngrade: () =>
     api.post<Subscription>('/dashboard/billing/subscription/cancel-scheduled-downgrade', {}),

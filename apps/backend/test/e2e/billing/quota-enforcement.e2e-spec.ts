@@ -70,7 +70,6 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
             maxEmployees: MAX_EMPLOYEES,
             maxServices: -1,
             maxBookingsPerMonth: -1,
-            maxStorageMB: -1,
           },
           isActive: true,
           sortOrder: 999,

@@ -144,3 +144,43 @@ export interface UsageRow {
   percentage: number
   periodEnd: string | null
 }
+
+// Phase 4 — Downgrade violation discriminated union
+
+export type QuantitativeViolation = {
+  kind: 'QUANTITATIVE';
+  featureKey: 'branches' | 'employees' | 'monthly_bookings';
+  current: number;
+  targetMax: number;
+};
+
+export type BooleanViolation = {
+  kind: 'BOOLEAN';
+  featureKey: string;
+  blockingResources: {
+    count: number;
+    sampleIds: string[];
+    deepLink: string;
+  };
+};
+
+export type DowngradeViolation = QuantitativeViolation | BooleanViolation;
+
+export type DowngradeBlockedBody = {
+  code: 'DOWNGRADE_VIOLATES_NEW_LIMITS';
+  message: string;
+  messageAr: string;
+  violations: DowngradeViolation[];
+};
+
+export class DowngradeBlockedError extends Error {
+  constructor(public readonly body: DowngradeBlockedBody) {
+    super(body.message);
+    this.name = 'DowngradeBlockedError';
+  }
+}
+
+export const isQuantitativeViolation = (v: DowngradeViolation): v is QuantitativeViolation =>
+  v.kind === 'QUANTITATIVE';
+export const isBooleanViolation = (v: DowngradeViolation): v is BooleanViolation =>
+  v.kind === 'BOOLEAN';

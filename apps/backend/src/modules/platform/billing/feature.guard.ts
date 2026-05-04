@@ -203,7 +203,7 @@ export class FeatureGuard implements CanActivate {
           where: { organizationId, isActive: true },
         });
       case FeatureKey.EMPLOYEES:
-        return this.prisma.employee.count({ where: { organizationId } });
+        return this.prisma.employee.count({ where: { organizationId, isActive: true } });
       case FeatureKey.SERVICES:
         return this.prisma.service.count({
           where: { organizationId, isActive: true },
@@ -217,14 +217,6 @@ export class FeatureGuard implements CanActivate {
             status: { not: BookingStatus.CANCELLED },
           },
         });
-      }
-      case FeatureKey.STORAGE: {
-        const result = await this.prisma.file.aggregate({
-          where: { organizationId, isDeleted: false },
-          _sum: { size: true },
-        });
-        const bytes = result._sum.size ?? 0;
-        return Math.ceil(bytes / (1024 * 1024));
       }
       default:
         return 0;

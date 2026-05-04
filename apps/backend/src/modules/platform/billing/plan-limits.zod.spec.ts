@@ -13,7 +13,7 @@ describe("parsePlanLimits (backend)", () => {
 
   it("rejects a string where a boolean is expected", () => {
     expect(() =>
-      parsePlanLimits({ ...DEFAULT_PLAN_LIMITS, zatca: "true" }),
+      parsePlanLimits({ ...DEFAULT_PLAN_LIMITS, coupons: "true" }),
     ).toThrow();
   });
 

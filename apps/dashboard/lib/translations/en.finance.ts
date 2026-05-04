@@ -145,4 +145,6 @@ export const enFinance: Record<string, string> = {
   "coupons.noExpiry": "No expiry",
   "coupons.action.edit": "Edit",
   "coupons.action.delete": "Delete",
+  "coupons.action.deactivate": "Deactivate",
+  "coupons.action.activate": "Activate",
 }

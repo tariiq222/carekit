@@ -24,7 +24,7 @@ import { EditDepartmentDialog } from "@/components/features/departments/edit-dep
 import { DeleteDepartmentDialog } from "@/components/features/departments/delete-department-dialog"
 import { Button } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
-import { useDepartments, useDepartmentStats } from "@/hooks/use-departments"
+import { useDepartments, useDepartmentStats, useDepartmentMutations } from "@/hooks/use-departments"
 import { useLocale } from "@/components/locale-provider"
 import type { Department } from "@/lib/types/department"
 
@@ -37,6 +37,7 @@ export function DepartmentListPage() {
   } = useDepartments()
 
   const stats = useDepartmentStats()
+  const { updateMut } = useDepartmentMutations()
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Department | null>(null)
@@ -49,6 +50,7 @@ export function DepartmentListPage() {
     t,
     (d) => setEditTarget(d),
     (d) => setDeleteTarget(d),
+    (d) => updateMut.mutate({ id: d.id, isActive: !d.isActive }),
   )
 
   return (

@@ -1840,17 +1840,33 @@
             "maxLength": 120,
             "type": "string"
           },
+          "ownerEmail": {
+            "description": "Email of the owner. If an existing active user matches, they are linked; otherwise a new user is created.",
+            "example": "ahmed@example.com",
+            "type": "string"
+          },
+          "ownerName": {
+            "description": "Full name of the new owner to create. Required when ownerEmail is provided and no existing user matches.",
+            "example": "Ahmed Al-Zahrani",
+            "type": "string"
+          },
+          "ownerPassword": {
+            "description": "Password for the new owner. If omitted, a strong password is auto-generated and emailed.",
+            "example": "SecurePass1",
+            "type": "string"
+          },
+          "ownerPhone": {
+            "description": "Phone number of the new owner. Required when creating a new user via ownerEmail.",
+            "example": "+966501234567",
+            "type": "string"
+          },
           "ownerUserId": {
+            "description": "UUID of an existing active user to make owner. Mutually exclusive with ownerEmail.",
             "format": "uuid",
             "type": "string"
           },
           "planId": {
             "format": "uuid",
-            "type": "string"
-          },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
             "type": "string"
           },
           "slug": {
@@ -1870,9 +1886,7 @@
         },
         "required": [
           "slug",
-          "nameAr",
-          "ownerUserId",
-          "reason"
+          "nameAr"
         ],
         "type": "object"
       },
@@ -5099,14 +5113,12 @@
               "coupons",
               "advanced_reports",
               "intake_forms",
-              "zatca",
               "custom_roles",
               "activity_log",
               "branches",
               "employees",
               "services",
               "monthly_bookings",
-              "storage",
               "zoom_integration",
               "walk_in_bookings",
               "bank_transfer_payments",

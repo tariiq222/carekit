@@ -11,13 +11,6 @@
         "@modelcontextprotocol/server-postgres",
         "postgresql://deqah:deqah_dev_password@localhost:5999/deqah_dev"
       ]
-    },
-    "posthog": {
-      "type": "http",
-      "url": "https://mcp.posthog.com/mcp",
-      "headers": {
-        "Authorization": "Bearer REPLACE_WITH_POSTHOG_API_KEY"
-      }
     }
   }
 }

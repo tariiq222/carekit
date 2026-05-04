@@ -30,7 +30,7 @@ const tMap: Record<string, string> = {
   "billing.usage.stat.employees": "Active Employees",
   "billing.usage.stat.branches": "Branches",
   "billing.usage.stat.clients": "Clients",
-  "billing.usage.stat.storage": "Storage",
+  "billing.usage.stat.bookings": "Bookings this month",
   "billing.usage.stat.unlimited": "∞",
   "billing.usage.stat.na": "—",
   "billing.usage.heading": "Usage limits",
@@ -38,7 +38,6 @@ const tMap: Record<string, string> = {
   "billing.usage.branches": "Branches",
   "billing.usage.employees": "Employees",
   "billing.usage.clients": "Clients",
-  "billing.usage.storage": "Storage (MB)",
   "billing.usage.unlimited": "Unlimited",
   "billing.usage.unavailable": "Not available",
   "billing.empty.subscription": "No active subscription.",
@@ -53,7 +52,7 @@ const basePlan = {
   priceMonthly: "199",
   priceAnnual: "1999",
   currency: "SAR",
-  limits: { maxEmployees: 10, maxBranches: 5, maxClients: 200, maxStorageMB: 1024 },
+  limits: { maxEmployees: 10, maxBranches: 5, maxClients: 200, maxBookingsPerMonth: 500 },
   sortOrder: 2,
 }
 
@@ -65,7 +64,7 @@ const baseSubscription = {
   currentPeriodStart: "2026-04-01T00:00:00.000Z",
   currentPeriodEnd: "2026-05-01T00:00:00.000Z",
   plan: basePlan,
-  usage: { EMPLOYEES: 3, BRANCHES: 2, CLIENTS: 50, STORAGE_MB: 128 },
+  usage: { EMPLOYEES: 3, BRANCHES: 2, CLIENTS: 50, MONTHLY_BOOKINGS: 128 },
   invoices: [],
 }
 
@@ -77,7 +76,7 @@ beforeEach(() => {
 })
 
 describe("BillingUsagePage", () => {
-  it("renders StatsGrid with employee/branch/client/storage values", () => {
+  it("renders StatsGrid with employee/branch/client/bookings values", () => {
     useBilling.mockReturnValue({ subscription: baseSubscription, isLoading: false })
 
     render(<BillingUsagePage />)
@@ -88,8 +87,8 @@ describe("BillingUsagePage", () => {
     expect(screen.getAllByText("2 / 5").length).toBeGreaterThan(0)
     expect(screen.getAllByText("Clients").length).toBeGreaterThan(0)
     expect(screen.getAllByText("50 / 200").length).toBeGreaterThan(0)
-    expect(screen.getByText("Storage")).toBeInTheDocument()
-    expect(screen.getByText("128 / 1024 MB")).toBeInTheDocument()
+    expect(screen.getByText("Bookings this month")).toBeInTheDocument()
+    expect(screen.getAllByText("128 / 500").length).toBeGreaterThan(0)
   })
 
   it("shows unlimited label when limit is -1", () => {
@@ -97,9 +96,9 @@ describe("BillingUsagePage", () => {
       ...baseSubscription,
       plan: {
         ...basePlan,
-        limits: { maxEmployees: -1, maxBranches: -1, maxClients: -1, maxStorageMB: -1 },
+        limits: { maxEmployees: -1, maxBranches: -1, maxClients: -1, maxBookingsPerMonth: -1 },
       },
-      usage: { EMPLOYEES: 7, BRANCHES: 1, CLIENTS: 30, STORAGE_MB: 50 },
+      usage: { EMPLOYEES: 7, BRANCHES: 1, CLIENTS: 30, MONTHLY_BOOKINGS: 50 },
     }
     useBilling.mockReturnValue({ subscription: unlimitedSubscription, isLoading: false })
 

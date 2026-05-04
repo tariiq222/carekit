@@ -2,19 +2,16 @@ import { ForbiddenException } from '@nestjs/common';
 import { assertLimitNotExceeded } from './assert-limit-not-exceeded';
 
 type AnyCount = { count: jest.Mock };
-type AnyAggregate = { aggregate: jest.Mock };
 
 function makeTx(): {
   branch: AnyCount;
   employee: AnyCount;
   booking: AnyCount;
-  file: AnyAggregate;
 } {
   return {
     branch: { count: jest.fn() },
     employee: { count: jest.fn() },
     booking: { count: jest.fn() },
-    file: { aggregate: jest.fn() },
   };
 }
 
@@ -80,15 +77,6 @@ describe('assertLimitNotExceeded', () => {
     expect(tx.booking.count).toHaveBeenCalledTimes(1);
     const call = tx.booking.count.mock.calls[0][0] as { where: { scheduledAt?: { gte: Date } } };
     expect(call.where.scheduledAt?.gte).toBeInstanceOf(Date);
-  });
-
-  it('aggregates File.size for STORAGE_MB kind', async () => {
-    const tx = makeTx();
-    // 1100 MB = 1.07 GB → exceeds 1024 MB cap
-    tx.file.aggregate.mockResolvedValue({ _sum: { size: 1100 * 1024 * 1024 } });
-    await expect(
-      assertLimitNotExceeded(tx as never, 'org-1', 'STORAGE_MB', { maxStorageMB: 1024 }),
-    ).rejects.toThrow('Plan limit reached for STORAGE_MB: 1100/1024');
   });
 
   it('treats limit=0 as "not configured" and skips the check (no false-positive denial)', async () => {

@@ -45,7 +45,6 @@ const PRO_LIMITS: Record<string, number | boolean> = {
   // On/Off — ENTERPRISE only → false on PRO
   advanced_reports: false,
   intake_forms: false,
-  zatca: false,
   custom_roles: false,
   activity_log: false,
   // Quantitative limits
@@ -53,7 +52,6 @@ const PRO_LIMITS: Record<string, number | boolean> = {
   maxEmployees: 20,
   maxServices: 50,
   maxBookingsPerMonth: 500,
-  maxStorageMB: 5120,
 };
 
 const BASIC_LIMITS: Record<string, number | boolean> = {
@@ -65,14 +63,12 @@ const BASIC_LIMITS: Record<string, number | boolean> = {
   coupons: false,
   advanced_reports: false,
   intake_forms: false,
-  zatca: false,
   custom_roles: false,
   activity_log: false,
   maxBranches: 1,
   maxEmployees: 3,
   maxServices: 5,
   maxBookingsPerMonth: 50,
-  maxStorageMB: 100,
 };
 
 // ─── Mock builders ────────────────────────────────────────────────────────────
@@ -94,9 +90,6 @@ function buildPrisma() {
     },
     booking: {
       count: jest.fn().mockResolvedValue(0),
-    },
-    file: {
-      aggregate: jest.fn().mockResolvedValue({ _sum: { size: 0 } }),
     },
   };
 }
@@ -331,46 +324,6 @@ describe('GetMyFeaturesHandler', () => {
       });
     });
 
-    it('should convert storage bytes to MB (ceiling) for maxStorageMB.currentCount', async () => {
-      const prisma = buildPrisma();
-      // 1.5 MB = 1,572,864 bytes → Math.ceil(1_572_864 / 1_048_576) = 2
-      prisma.file.aggregate.mockResolvedValue({ _sum: { size: 1_572_864 } });
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      expect(result.features['maxStorageMB']).toMatchObject({
-        enabled: true,
-        limit: 5120,
-        currentCount: 2,
-      });
-    });
-
-    it('should return currentCount = 0 when file aggregate returns null size', async () => {
-      const prisma = buildPrisma();
-      // Prisma returns null for _sum when there are no rows
-      prisma.file.aggregate.mockResolvedValue({ _sum: { size: null } });
-
-      const handler = new GetMyFeaturesHandler(
-        prisma as never,
-        buildTenant() as never,
-        buildCache(makeCached('PRO', PRO_LIMITS)) as never,
-        buildCounters() as never,
-      );
-
-      const result = await handler.execute();
-
-      expect(result.features['maxStorageMB']).toMatchObject({
-        currentCount: 0,
-      });
-    });
-
     it('should count non-cancelled bookings in current month for maxBookingsPerMonth', async () => {
       const prisma = buildPrisma();
       prisma.booking.count.mockResolvedValue(42);
@@ -455,11 +408,6 @@ describe('GetMyFeaturesHandler', () => {
         return Promise.resolve(50);
       });
 
-      prisma.file.aggregate.mockImplementation(() => {
-        callOrder.push('file');
-        return Promise.resolve({ _sum: { size: 0 } });
-      });
-
       const handler = new GetMyFeaturesHandler(
         prisma as never,
         buildTenant() as never,
@@ -472,17 +420,17 @@ describe('GetMyFeaturesHandler', () => {
       /**
        * Flush microtask queue through the async steps that precede Promise.all:
        *   Tick 1 → cache.get (mockResolvedValue) resolves; handler advances to
-       *            the Promise.all block and calls all five currentUsage()
+       *            the Promise.all block and calls all four currentUsage()
        *            callbacks synchronously via map().
        *   Tick 2 → safety buffer for any extra microtask wrapping.
        */
       await Promise.resolve(); // tick 1
       await Promise.resolve(); // tick 2 (safety)
 
-      // ── All five usage calls must already be in-flight ───────────────────────
-      expect(callOrder).toHaveLength(5);
+      // ── All four usage calls must already be in-flight ───────────────────────
+      expect(callOrder).toHaveLength(4);
       expect(callOrder).toEqual(
-        expect.arrayContaining(['branch', 'employee', 'service', 'booking', 'file']),
+        expect.arrayContaining(['branch', 'employee', 'service', 'booking']),
       );
 
       // ── Each called exactly once — no duplicate (N+1) queries ────────────────
@@ -490,7 +438,6 @@ describe('GetMyFeaturesHandler', () => {
       expect(prisma.employee.count).toHaveBeenCalledTimes(1);
       expect(prisma.service.count).toHaveBeenCalledTimes(1);
       expect(prisma.booking.count).toHaveBeenCalledTimes(1);
-      expect(prisma.file.aggregate).toHaveBeenCalledTimes(1);
 
       // ── Unblock branch so the Promise.all resolves and handler completes ─────
       unblockBranch(1);
@@ -565,14 +512,12 @@ describe('GetMyFeaturesHandler', () => {
         coupons: true,
         advanced_reports: false,
         intake_forms: false,
-        zatca: false,
         custom_roles: false,
         activity_log: false,
         maxBranches: 3,
         maxEmployees: 20,
         maxServices: 50,
         maxBookingsPerMonth: 500,
-        maxStorageMB: 5120,
         // zoom_integration intentionally omitted → undefined → fail-closed
       };
 

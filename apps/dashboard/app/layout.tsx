@@ -9,7 +9,6 @@ import { BrandingProvider } from "@/components/providers/branding-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { LocaleProvider } from "@/components/locale-provider"
-import { PostHogProvider } from "@/components/providers/posthog-provider"
 import { cn } from "@/lib/utils"
 
 const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
@@ -32,7 +31,6 @@ export default function RootLayout({
       className={cn("antialiased", ibmPlexSansArabic.variable)}
     >
       <body className="font-sans">
-        <PostHogProvider>
           <LocaleProvider>
             <ThemeProvider>
               <QueryProvider>
@@ -47,7 +45,6 @@ export default function RootLayout({
             </ThemeProvider>
             <Toaster />
           </LocaleProvider>
-        </PostHogProvider>
       </body>
     </html>
   )

@@ -9,8 +9,7 @@ import { PlanLimitsGuard } from './enforce-limits.guard';
 export type LimitKind =
   | 'BRANCHES'
   | 'EMPLOYEES'
-  | 'BOOKINGS_PER_MONTH'
-  | 'STORAGE_MB';
+  | 'BOOKINGS_PER_MONTH';
 
 export const ENFORCE_LIMIT_KEY = 'plan-limits:enforce';
 
