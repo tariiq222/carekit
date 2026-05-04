@@ -32,7 +32,8 @@
     "openapi:export": "tsx scripts/export-openapi.ts",
     "openapi:snapshot": "WRITE_OPENAPI_SPEC=1 tsx -e \"require('./dist/main.js')\"",
     "openapi:build-and-snapshot": "pnpm run build && pnpm run openapi:snapshot",
-    "check:openapi-coverage": "tsx scripts/check-openapi-coverage.ts"
+    "check:openapi-coverage": "tsx scripts/check-openapi-coverage.ts",
+    "backfill:counters": "tsx scripts/billing/recompute-all-counters.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",
