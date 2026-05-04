@@ -54,6 +54,8 @@ import { UsageTrackerInterceptor } from "./usage-tracker.interceptor";
 import { DowngradeSafetyService } from "./downgrade-safety/downgrade-safety.service";
 import { ChangePlanHandler } from "./change-plan/change-plan.handler";
 import { FeatureCheckService } from "./feature-check.service";
+import { CustomDomainGraceCron } from "./grace-watchers/custom-domain-grace.cron";
+import { ApiWebhooksGraceCron } from "./grace-watchers/api-webhooks-grace.cron";
 
 const HANDLERS = [
   ListPlansHandler,
@@ -130,6 +132,8 @@ const HANDLERS = [
     GetUsageHandler,
     DowngradeSafetyService,
     FeatureCheckService,
+    CustomDomainGraceCron,
+    ApiWebhooksGraceCron,
   ],
   exports: [
     FeatureGuard,
