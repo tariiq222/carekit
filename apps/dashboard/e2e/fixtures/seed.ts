@@ -20,7 +20,7 @@
  *   });
  */
 
-import { DEFAULT_BRANCH_ID } from './tenant';
+
 
 // ─── Backend base URL ─────────────────────────────────────────────────────
 
@@ -98,9 +98,13 @@ export interface SeededBooking {
 let phoneCounter = 0;
 
 function uniquePhone(): string {
-  // Format: +9665XXXXXXXX — use timestamp + counter to stay unique across runs
+  // Format: +9665XXXXXXXX — 5 chars prefix + 8 digits = 13 total (E.164)
   const suffix = String(Date.now()).slice(-6) + String(phoneCounter++).padStart(2, '0');
-  return `+96650${suffix.slice(0, 8)}`;
+  return `+9665${suffix.slice(0, 8)}`;
+}
+
+function uniqueSuffix(): string {
+  return String(Date.now()).slice(-6) + String(phoneCounter++).padStart(2, '0');
 }
 
 // ─── Internal fetch helper ────────────────────────────────────────────────
@@ -138,6 +142,28 @@ async function apiDelete(path: string, token: string): Promise<void> {
     const text = await res.text().catch(() => '(unreadable)');
     throw new Error(`[seed] DELETE ${path} failed — HTTP ${res.status}: ${text}`);
   }
+}
+
+async function apiPatch<T>(
+  path: string,
+  token: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/v1${path}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '(unreadable)');
+    throw new Error(`[seed] PATCH ${path} failed — HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json() as Promise<T>;
 }
 
 // ─── Client ──────────────────────────────────────────────────────────────
@@ -185,9 +211,10 @@ export async function seedService(
   token: string,
   overrides: SeedServiceInput = {},
 ): Promise<SeededService> {
+  const suffix = uniqueSuffix();
   const body = {
-    nameAr: overrides.nameAr ?? 'خدمة اختبار',
-    nameEn: overrides.nameEn ?? 'Test Service',
+    nameAr: `خدمة اختبار ${suffix}`,
+    nameEn: `Test Service ${suffix}`,
     durationMins: overrides.durationMins ?? 30,
     price: overrides.price ?? 100,
     currency: overrides.currency ?? 'SAR',
@@ -216,6 +243,49 @@ export async function cleanupService(id: string, token: string): Promise<void> {
   await apiDelete(`/dashboard/organization/services/${id}`, token);
 }
 
+// ─── Employee ↔ Service assignment ────────────────────────────────────────
+
+/**
+ * Assign an employee to a service so bookings can be created.
+ */
+export async function assignEmployeeToService(
+  token: string,
+  employeeId: string,
+  serviceId: string,
+): Promise<void> {
+  await apiPost(`/dashboard/people/employees/${employeeId}/services`, token, {
+    serviceId,
+  });
+}
+
+// ─── Branch ─────────────────────────────────────────────────────────────────
+
+/**
+ * Create a branch with a valid RFC 4122 UUID and return its ID.
+ * The seeded DEFAULT_BRANCH_ID uses an invalid variant and is rejected
+ * by the backend's @IsUUID validation, so we always create a fresh branch.
+ */
+export async function ensureValidBranchId(token: string): Promise<string> {
+  // Always create a fresh branch to avoid stale cache issues.
+  // Create a branch with a valid RFC 4122 UUID (the seeded DEFAULT_BRANCH_ID
+  // uses an invalid variant and is rejected by @IsUUID validation).
+  const suffix = uniqueSuffix();
+  const created = await apiPost<{ id: string }>(
+    '/dashboard/organization/branches',
+    token,
+    { nameAr: `فرع اختبار ${suffix}`, nameEn: `Test Branch ${suffix}`, isMain: false },
+  );
+
+  // Enable pay-at-clinic so bookings with payAtClinic: true succeed
+  await apiPatch(`/dashboard/organization/booking-settings?branchId=${created.id}`, token, {
+    payAtClinicEnabled: true,
+  }).catch(() => {
+    // Ignore errors — settings endpoint may not exist or may require different payload
+  });
+
+  return created.id;
+}
+
 // ─── Employee ─────────────────────────────────────────────────────────────
 
 /**
@@ -227,11 +297,12 @@ export async function seedEmployee(
   overrides: SeedEmployeeInput = {},
 ): Promise<SeededEmployee> {
   // Generate a unique email if none provided to avoid unique-constraint collisions
+  const suffix = uniqueSuffix();
   const email =
-    overrides.email ?? `e2e-employee-${Date.now()}-${phoneCounter}@deqah-test.com`;
+    overrides.email ?? `e2e-employee-${suffix}@deqah-test.com`;
 
   const body = {
-    name: overrides.name ?? 'موظف اختبار',
+    name: overrides.name ?? `موظف اختبار ${suffix}`,
     email,
     phone: overrides.phone,
     gender: overrides.gender ?? 'MALE',
@@ -262,6 +333,10 @@ export async function cleanupEmployee(id: string, token: string): Promise<void> 
  *
  * Requires a pre-existing client, employee, and service — create them
  * first with seedClient / seedEmployee / seedService.
+ *
+ * Note: automatically assigns the employee to the service and resolves
+ * a valid branch UUID (the seeded DEFAULT_BRANCH_ID uses an invalid
+ * RFC 4122 variant and is rejected by @IsUUID validation).
  */
 export async function seedBooking(
   token: string,
@@ -272,13 +347,21 @@ export async function seedBooking(
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   tomorrow.setUTCHours(6, 0, 0, 0); // 06:00 UTC = 09:00 Riyadh
 
+  // Ensure employee is assigned to the service
+  await assignEmployeeToService(token, input.employeeId, input.serviceId).catch(() => {
+    // 409 Conflict = already assigned; ignore
+  });
+
+  // Resolve a valid branch UUID
+  const branchId = input.branchId ?? (await ensureValidBranchId(token));
+
   const body = {
-    branchId: input.branchId ?? DEFAULT_BRANCH_ID,
+    branchId,
     clientId: input.clientId,
     employeeId: input.employeeId,
     serviceId: input.serviceId,
     scheduledAt: input.scheduledAt ?? tomorrow.toISOString(),
-    payAtClinic: input.payAtClinic ?? true,
+    payAtClinic: input.payAtClinic ?? false,
     bookingType: 'INDIVIDUAL',
   };
 
