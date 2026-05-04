@@ -83,16 +83,10 @@ export class DowngradePlanHandler {
     }
 
     if (oldLimits['custom_domain'] === true && newLimits['custom_domain'] !== true) {
-      const settings = await this.prisma.organizationSettings.findFirst({
+      await this.prisma.organizationSettings.updateMany({
         where: { organizationId },
-        select: { customDomain: true },
+        data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
       });
-      if (settings?.customDomain) {
-        await this.prisma.organizationSettings.updateMany({
-          where: { organizationId },
-          data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
-        });
-      }
     }
 
     await this.eventBus

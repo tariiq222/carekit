@@ -105,16 +105,10 @@ export class ProcessScheduledPlanChangesCron {
         }
 
         if (oldLimits['custom_domain'] === true && newLimits['custom_domain'] !== true) {
-          const settings = await this.prisma.$allTenants.organizationSettings.findFirst({
+          await this.prisma.$allTenants.organizationSettings.updateMany({
             where: { organizationId: sub.organizationId },
-            select: { customDomain: true },
+            data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
           });
-          if (settings?.customDomain) {
-            await this.prisma.$allTenants.organizationSettings.updateMany({
-              where: { organizationId: sub.organizationId },
-              data: { customDomainGraceUntil: new Date(Date.now() + 30 * 86_400_000) },
-            });
-          }
         }
       }
     }

@@ -236,7 +236,7 @@ describe('DowngradePlanHandler', () => {
     expect(graceCalls[0][0].data.webhooksGraceUntil).toBeInstanceOf(Date);
   });
 
-  it('writes customDomainGraceUntil when custom_domain is removed and org has a custom domain', async () => {
+  it('writes customDomainGraceUntil when custom_domain feature is removed by downgrade', async () => {
     const prisma = buildPrisma();
     prisma.subscription.findFirst.mockResolvedValue({
       id: 'sub-1',
@@ -245,7 +245,6 @@ describe('DowngradePlanHandler', () => {
     });
     prisma.plan.findFirst.mockResolvedValue({ ...basicPlan, limits: { custom_domain: false } });
     prisma.subscription.update.mockResolvedValue({ id: 'sub-1', planId: 'plan-1' });
-    prisma.organizationSettings.findFirst.mockResolvedValue({ customDomain: 'custom.example.com' });
     const handler = buildHandler(prisma);
 
     await handler.execute({ planId: 'plan-1', billingCycle: 'MONTHLY' });

@@ -14,7 +14,6 @@ const buildMailer = () => ({
 
 const makeOrg = (daysFromNow: number) => ({
   organizationId: 'org-1',
-  customDomain: 'custom.example.com',
   customDomainGraceUntil: new Date(Date.now() + daysFromNow * 86_400_000),
 });
 
@@ -67,7 +66,7 @@ describe('CustomDomainGraceCron', () => {
     expect(prisma.$allTenants.organizationSettings.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { organizationId: 'org-1' },
-        data: { customDomain: null, customDomainGraceUntil: null },
+        data: { customDomainGraceUntil: null },
       }),
     );
     expect(mailer.sendFeatureGraceExpired).toHaveBeenCalledWith(

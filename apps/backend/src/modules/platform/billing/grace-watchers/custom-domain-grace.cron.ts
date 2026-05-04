@@ -21,7 +21,6 @@ export class CustomDomainGraceCron {
       where: { customDomainGraceUntil: { not: null } },
       select: {
         organizationId: true,
-        customDomain: true,
         customDomainGraceUntil: true,
       },
     });
@@ -70,7 +69,7 @@ export class CustomDomainGraceCron {
   private async revertDomain(organizationId: string) {
     await this.prisma.$allTenants.organizationSettings.update({
       where: { organizationId },
-      data: { customDomain: null, customDomainGraceUntil: null },
+      data: { customDomainGraceUntil: null },
     });
   }
 }

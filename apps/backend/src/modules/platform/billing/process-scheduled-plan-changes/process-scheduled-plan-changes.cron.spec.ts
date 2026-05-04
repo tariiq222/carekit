@@ -209,7 +209,7 @@ describe('ProcessScheduledPlanChangesCron', () => {
     expect(graceCalls[0][0].data.webhooksGraceUntil).toBeInstanceOf(Date);
   });
 
-  it('writes customDomainGraceUntil on downgrade swap when org has a custom domain', async () => {
+  it('writes customDomainGraceUntil on downgrade swap when custom_domain feature is removed', async () => {
     const prisma = buildPrisma([
       {
         id: 'sub-1',
@@ -220,7 +220,6 @@ describe('ProcessScheduledPlanChangesCron', () => {
         scheduledPlan: { priceMonthly: '300.00', limits: { custom_domain: false } },
       },
     ]);
-    prisma.$allTenants.organizationSettings.findFirst.mockResolvedValue({ customDomain: 'custom.example.com' });
     const cron = new ProcessScheduledPlanChangesCron(
       prisma as never,
       buildConfig(true) as never,
