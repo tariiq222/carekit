@@ -20,6 +20,12 @@ const buildUsersPrisma = () => {
       upsert: jest.fn().mockResolvedValue({ id: 'm-1', userId: 'u-1', organizationId: 'org-1' }),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
+    $allTenants: {
+      membership: {
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(1),
+      },
+    },
   };
   prisma.$transaction.mockImplementation((fn) => fn(prisma));
   return prisma;
@@ -82,6 +88,39 @@ describe('DeactivateUserHandler', () => {
     prisma.user.findUnique = jest.fn().mockResolvedValue(null);
     const handler = new DeactivateUserHandler(prisma as never);
     await expect(handler.execute({ userId: 'u-1' })).rejects.toThrow(NotFoundException);
+  });
+
+  describe('last-active-OWNER protection', () => {
+    it('rejects deactivating a user when they are the only active OWNER of an org', async () => {
+      const prisma = buildUsersPrisma();
+      prisma.$allTenants.membership.findMany = jest.fn().mockResolvedValue([
+        { id: 'm-owner', organizationId: 'org-1' },
+      ]);
+      prisma.$allTenants.membership.count = jest.fn().mockResolvedValue(0);
+      const handler = new DeactivateUserHandler(prisma as never);
+      await expect(handler.execute({ userId: 'u-1' })).rejects.toThrow(/last active OWNER|active OWNER/i);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('allows deactivating an OWNER when another active OWNER exists', async () => {
+      const prisma = buildUsersPrisma();
+      prisma.$allTenants.membership.findMany = jest.fn().mockResolvedValue([
+        { id: 'm-owner', organizationId: 'org-1' },
+      ]);
+      prisma.$allTenants.membership.count = jest.fn().mockResolvedValue(1);
+      const handler = new DeactivateUserHandler(prisma as never);
+      await handler.execute({ userId: 'u-1' });
+      expect(prisma.user.update).toHaveBeenCalled();
+    });
+
+    it('allows deactivating a non-OWNER user without checking', async () => {
+      const prisma = buildUsersPrisma();
+      prisma.$allTenants.membership.findMany = jest.fn().mockResolvedValue([]);
+      const handler = new DeactivateUserHandler(prisma as never);
+      await handler.execute({ userId: 'u-1' });
+      expect(prisma.$allTenants.membership.count).not.toHaveBeenCalled();
+      expect(prisma.user.update).toHaveBeenCalled();
+    });
   });
 });
 
