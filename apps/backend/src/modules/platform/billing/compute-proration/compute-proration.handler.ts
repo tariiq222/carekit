@@ -4,6 +4,7 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { TenantContextService } from '../../../../common/tenant/tenant-context.service';
 import { ProrationPreviewDto } from '../dto/change-plan.dto';
 import { computeProrationAmountSar } from './proration-calculator';
+import { LaunchFlags } from '../feature-flags/launch-flags';
 
 type PreviewAction = 'UPGRADE_NOW' | 'SCHEDULE_DOWNGRADE';
 
@@ -12,6 +13,7 @@ export class ComputeProrationHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly flags: LaunchFlags,
   ) {}
 
   async execute(dto: ProrationPreviewDto) {
@@ -25,6 +27,13 @@ export class ComputeProrationHandler {
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
         plan: {
+          select: {
+            id: true,
+            priceMonthly: true,
+            priceAnnual: true,
+          },
+        },
+        planVersion: {
           select: {
             id: true,
             priceMonthly: true,
@@ -63,7 +72,11 @@ export class ComputeProrationHandler {
       };
     }
 
-    const currentMonthlySar = priceMonthlyEquivalentSar(subscription.plan, subscription.billingCycle);
+    const priceSource =
+      this.flags.planVersioningEnabled && subscription.planVersion
+        ? subscription.planVersion
+        : subscription.plan;
+    const currentMonthlySar = priceMonthlyEquivalentSar(priceSource, subscription.billingCycle);
     const targetMonthlySar = priceMonthlyEquivalentSar(targetPlan, dto.billingCycle);
 
     const proration = computeProrationAmountSar({

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { LaunchFlags } from '../feature-flags/launch-flags';
 
 export interface OverageLine {
   metric: string;
@@ -25,19 +26,28 @@ const METRIC_CONFIGS: MetricConfig[] = [
 export class ComputeOverageCron {
   private readonly logger = new Logger(ComputeOverageCron.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly flags: LaunchFlags,
+  ) {}
 
   async computeForSubscription(params: {
     subscriptionId: string;
     organizationId: string;
     periodStart: Date;
     limits: Record<string, number | boolean>;
+    planVersionLimits?: Record<string, number | boolean>;
   }): Promise<{ lines: OverageLine[]; totalOverage: number }> {
     const lines: OverageLine[] = [];
     let totalOverage = 0;
 
+    const limitSource =
+      this.flags.planVersioningEnabled && params.planVersionLimits
+        ? params.planVersionLimits
+        : params.limits;
+
     for (const { metric, limitKey, rateKey } of METRIC_CONFIGS) {
-      const included = Number(params.limits[limitKey] ?? 0);
+      const included = Number(limitSource[limitKey] ?? 0);
       if (included === -1) continue; // unlimited, no overage
 
       const record = await this.prisma.usageRecord.findFirst({
@@ -49,7 +59,7 @@ export class ComputeOverageCron {
       });
       const used = record?.count ?? 0;
       const overage = Math.max(0, used - included);
-      const rate = Number(params.limits[rateKey] ?? 0);
+      const rate = Number(limitSource[rateKey] ?? 0);
 
       const amount = parseFloat((overage * rate).toFixed(2));
 

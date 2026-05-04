@@ -15,6 +15,8 @@ export interface CachedPlanLimits {
   planSlug: string;
   status: SubscriptionStatus;
   limits: PlanLimitsJson;
+  /** Plan version snapshot limits, if the subscription has a planVersionId. */
+  planVersionLimits?: PlanLimitsJson;
   /** Monotonic epoch-ms; compared against injected clock. */
   expiresAt: number;
 }
@@ -64,7 +66,7 @@ export class SubscriptionCacheService {
 
     const sub = await this.prisma.subscription.findFirst({
       where: { organizationId },
-      include: { plan: true },
+      include: { plan: true, planVersion: true },
     });
     if (!sub) {
       return null;
@@ -78,10 +80,23 @@ export class SubscriptionCacheService {
       }
     }
 
+    let planVersionLimits: PlanLimitsJson | undefined;
+    if (sub.planVersion) {
+      const pvLimits = sub.planVersion.limits as Prisma.JsonObject;
+      const narrowedPv: PlanLimitsJson = {};
+      for (const [k, v] of Object.entries(pvLimits)) {
+        if (typeof v === 'number' || typeof v === 'boolean') {
+          narrowedPv[k] = v;
+        }
+      }
+      planVersionLimits = narrowedPv;
+    }
+
     const entry: CachedPlanLimits = {
       planSlug: sub.plan.slug,
       status: sub.status,
       limits: narrowed,
+      planVersionLimits,
       expiresAt: this.clock.now() + this.ttlMs,
     };
     this.cache.set(organizationId, entry);

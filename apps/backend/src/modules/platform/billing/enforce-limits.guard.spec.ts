@@ -12,11 +12,13 @@ describe('PlanLimitsGuard', () => {
   };
   const mockCache = { get: jest.fn() };
   const mockCounters = { read: jest.fn(), upsertExact: jest.fn() };
+  const mockFlags = { planVersioningEnabled: false };
   const guard = new PlanLimitsGuard(
     mockReflector as never,
     mockPrisma as never,
     mockCache as never,
     mockCounters as never,
+    mockFlags as never,
   );
 
   // Using a sentinel object avoids the JS default-param pitfall where
@@ -164,6 +166,39 @@ describe('PlanLimitsGuard', () => {
       mockCache.get.mockResolvedValue({ status: 'ACTIVE', limits: { maxBookingsPerMonth: -1 } });
       await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
       expect(mockCounters.read).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('plan version limits', () => {
+    it('uses planVersionLimits when flag on (legacy plan limit raised but sub keeps old lower limit)', async () => {
+      mockReflector.get.mockReturnValue('BRANCHES');
+      // live plan allows 10, but planVersion (when sub started) allowed 3
+      mockCache.get.mockResolvedValue({
+        status: 'ACTIVE',
+        limits: { maxBranches: 10 },
+        planVersionLimits: { maxBranches: 3 },
+      });
+      mockPrisma.branch.count.mockResolvedValue(3);
+      const guardWithFlag = new PlanLimitsGuard(
+        mockReflector as never,
+        mockPrisma as never,
+        mockCache as never,
+        mockCounters as never,
+        { planVersioningEnabled: true } as never,
+      );
+      await expect(guardWithFlag.canActivate(buildCtx())).rejects.toThrow('Plan limit reached for BRANCHES: 3/3');
+    });
+
+    it('falls back to live plan limits when flag off', async () => {
+      mockReflector.get.mockReturnValue('BRANCHES');
+      mockCache.get.mockResolvedValue({
+        status: 'ACTIVE',
+        limits: { maxBranches: 10 },
+        planVersionLimits: { maxBranches: 3 },
+      });
+      mockPrisma.branch.count.mockResolvedValue(3);
+      // flag off — uses live plan limits (10 branches), count=3 < 10 → allow
+      await expect(guard.canActivate(buildCtx())).resolves.toBe(true);
     });
   });
 

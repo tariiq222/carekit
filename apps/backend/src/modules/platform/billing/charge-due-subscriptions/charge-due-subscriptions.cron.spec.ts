@@ -39,11 +39,14 @@ const buildDeps = () => ({
   },
 });
 
+const buildFlags = (planVersioningEnabled = false) => ({ planVersioningEnabled });
+
 const buildCron = (
   prisma: ReturnType<typeof buildPrisma>,
   config: ReturnType<typeof buildConfig>,
   deps = buildDeps(),
   cls = buildCls(),
+  flags = buildFlags(),
 ) =>
   new ChargeDueSubscriptionsCron(
     prisma as never,
@@ -52,6 +55,7 @@ const buildCron = (
     deps.moyasar as never,
     deps.recordPayment as never,
     deps.recordFailure as never,
+    flags as never,
   );
 
 const PAST_DATE = new Date(Date.now() - 1000);
@@ -327,5 +331,55 @@ describe('ChargeDueSubscriptionsCron', () => {
       moyasarPaymentId: 'unavailable',
       reason: 'network timeout',
     });
+  });
+
+  it('uses planVersion price when flag on (legacy plan price changed but sub keeps old)', async () => {
+    // planVersion has 99/month, live plan has 199/month; flag on → uses 99
+    const sub = {
+      id: 'sub-versioned',
+      organizationId: 'org-versioned',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: 'tok_versioned',
+      plan: { priceMonthly: 199, priceAnnual: 1990 },
+      planVersion: { priceMonthly: 99, priceAnnual: 990 },
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps, buildCls(), buildFlags(true));
+
+    await cron.execute();
+
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ flatAmount: 99, amount: 99 }),
+      }),
+    );
+  });
+
+  it('falls back to live plan when flag off', async () => {
+    const sub = {
+      id: 'sub-live',
+      organizationId: 'org-live',
+      billingCycle: 'MONTHLY',
+      currentPeriodStart: new Date('2026-03-01'),
+      currentPeriodEnd: PAST_DATE,
+      moyasarCardTokenRef: null,
+      plan: { priceMonthly: 199, priceAnnual: 1990 },
+      planVersion: { priceMonthly: 99, priceAnnual: 990 },
+    };
+    const prisma = buildPrisma([sub]);
+    const deps = buildDeps();
+    const cron = buildCron(prisma, buildConfig(true), deps, buildCls(), buildFlags(false));
+
+    await cron.execute();
+
+    // flag off → uses live plan price (199)
+    expect(prisma.$allTenants.subscriptionInvoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ flatAmount: 199, amount: 199 }),
+      }),
+    );
   });
 });
