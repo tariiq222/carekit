@@ -18,8 +18,6 @@ import { LaunchFlags } from '../../platform/billing/feature-flags/launch-flags';
 import { ValidateCouponService } from '../coupons/validate-coupon.service';
 import { CreateBookingDto } from './create-booking.dto';
 
-const VAT_RATE = 0.15;
-
 /** Re-map a Postgres exclusion violation (23P01) to a domain 409 conflict. */
 function mapDbConflict(err: unknown): never {
   if (
@@ -236,8 +234,14 @@ export class CreateBookingHandler {
 
         let invoice: { id: string } | null = null;
         if (!dto.payAtClinic && !isGroupService) {
+          const orgSettings = await tx.organizationSettings.findFirst({
+            where: { organizationId },
+            select: { vatRate: true },
+          });
+          const vatRate = orgSettings?.vatRate ? Number(orgSettings.vatRate) : 0.15;
+
           const subtotal = discountedPrice ?? price;
-          const vatAmt = roundMoney(subtotal * VAT_RATE);
+          const vatAmt = roundMoney(subtotal * vatRate);
           const total = roundMoney(subtotal + vatAmt);
 
           invoice = await tx.invoice.create({
@@ -248,7 +252,7 @@ export class CreateBookingHandler {
               employeeId: booking.employeeId,
               bookingId: booking.id,
               subtotal,
-              vatRate: VAT_RATE,
+              vatRate,
               vatAmt,
               total,
               currency: booking.currency,

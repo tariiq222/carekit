@@ -56,6 +56,9 @@ const buildPrisma = () => {
     coupon: {
       update: jest.fn().mockResolvedValue({}),
     },
+    organizationSettings: {
+      findFirst: jest.fn().mockResolvedValue({ vatRate: '0.15' }),
+    },
     $transaction: jest.fn(),
   };
   prisma.$transaction = jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prisma));
@@ -374,6 +377,68 @@ describe('CreateBookingHandler — coupon strict validation', () => {
     expect(prisma.booking.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ couponCode: 'OLD10' }),
+      }),
+    );
+  });
+});
+
+describe('per-org VAT rate', () => {
+  it('uses orgSettings.vatRate when set (e.g. 0.10)', async () => {
+    const prisma = buildPrisma();
+    prisma.organizationSettings.findFirst = jest.fn().mockResolvedValue({ vatRate: '0.10' });
+
+    const handler = new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler() as never,
+      {} as never,
+      mockEventBus as never,
+      mockSubscriptionCache as never,
+      { couponStrictEnabled: false } as never,
+      {} as never,
+    );
+
+    await handler.execute(dto);
+
+    // subtotal = 200 (price, no discount), vatRate = 0.10, vatAmt = 20.00, total = 220.00
+    expect(prisma.invoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          vatRate: 0.10,
+          vatAmt: 20,
+          total: 220,
+        }),
+      }),
+    );
+  });
+
+  it('falls back to 0.15 when orgSettings is null', async () => {
+    const prisma = buildPrisma();
+    prisma.organizationSettings.findFirst = jest.fn().mockResolvedValue(null);
+
+    const handler = new CreateBookingHandler(
+      prisma as never,
+      mockTenant as never,
+      buildPriceResolver() as never,
+      buildSettingsHandler() as never,
+      {} as never,
+      mockEventBus as never,
+      mockSubscriptionCache as never,
+      { couponStrictEnabled: false } as never,
+      {} as never,
+    );
+
+    await handler.execute(dto);
+
+    // subtotal = 200, vatRate = 0.15 (fallback), vatAmt = 30, total = 230
+    expect(prisma.invoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          vatRate: 0.15,
+          vatAmt: 30,
+          total: 230,
+        }),
       }),
     );
   });
