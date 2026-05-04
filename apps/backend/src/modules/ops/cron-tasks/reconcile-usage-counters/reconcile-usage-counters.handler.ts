@@ -35,6 +35,13 @@ export class ReconcileUsageCountersHandler {
   ) {}
 
   async execute(): Promise<{ orgsScanned: number; rowsRepaired: number }> {
+    return this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.runReconciliation();
+    });
+  }
+
+  private async runReconciliation(): Promise<{ orgsScanned: number; rowsRepaired: number }> {
     const orgs = await this.prisma.$allTenants.organization.findMany({
       where: { status: { in: ['TRIALING', 'ACTIVE'] } },
       select: { id: true },

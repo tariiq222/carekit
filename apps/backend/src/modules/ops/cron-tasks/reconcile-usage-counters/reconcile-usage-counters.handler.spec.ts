@@ -1,4 +1,5 @@
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { ReconcileUsageCountersHandler } from './reconcile-usage-counters.handler';
 
 const buildPrisma = () => ({
@@ -116,5 +117,26 @@ describe('ReconcileUsageCountersHandler', () => {
     expect(result.rowsRepaired).toBe(4);
     expect(counters.upsertExact).toHaveBeenCalledWith('org-2', FeatureKey.BRANCHES, expect.any(Date), 2);
     expect(counters.upsertExact).toHaveBeenCalledWith('org-2', FeatureKey.EMPLOYEES, expect.any(Date), 4);
+  });
+
+  it('wraps execute body in outer super-admin CLS context', async () => {
+    const prisma = buildPrisma();
+    const counters = buildCounters();
+    const cls = buildCls();
+
+    prisma.$allTenants.organization.findMany.mockResolvedValue([]);
+    counters.read.mockResolvedValue(0);
+
+    const handler = new ReconcileUsageCountersHandler(
+      prisma as never,
+      counters as never,
+      cls as never,
+    );
+
+    await handler.execute();
+
+    // The outer cls.run call must set SUPER_ADMIN_CONTEXT_CLS_KEY
+    expect(cls.run).toHaveBeenCalled();
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });
