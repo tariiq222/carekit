@@ -27,7 +27,6 @@ const DIALOG_FEATURE_KEYS = [
   "waitlist",
   "ai_chatbot",
   "coupons",
-  "zatca",
   "advanced_reports",
   "intake_forms",
   "zoom_integration",

@@ -8,7 +8,6 @@ import { QUANT_FIELD_MAP } from '../plan-limits';
 
 // Quota hints per quantitative key
 const QUANT_HINTS: Partial<Record<FeatureKey, string>> = {
-  storage: 'MB (-1 = unlimited)',
   branches: '-1 = unlimited',
   employees: '-1 = unlimited',
   services: '-1 = unlimited',
