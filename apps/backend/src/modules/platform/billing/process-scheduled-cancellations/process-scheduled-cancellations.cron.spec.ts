@@ -1,3 +1,4 @@
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { ProcessScheduledCancellationsCron } from './process-scheduled-cancellations.cron';
 
 const NOW = new Date('2026-05-01T00:00:00.000Z');
@@ -22,6 +23,11 @@ const buildCache = () => ({
   invalidate: jest.fn(),
 });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn()),
+  set: jest.fn(),
+});
+
 describe('ProcessScheduledCancellationsCron', () => {
   beforeEach(() => jest.useFakeTimers().setSystemTime(NOW));
   afterEach(() => jest.useRealTimers());
@@ -32,6 +38,7 @@ describe('ProcessScheduledCancellationsCron', () => {
       prisma as never,
       buildConfig(false) as never,
       buildCache() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -45,6 +52,7 @@ describe('ProcessScheduledCancellationsCron', () => {
       prisma as never,
       buildConfig(true) as never,
       buildCache() as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -66,6 +74,7 @@ describe('ProcessScheduledCancellationsCron', () => {
       prisma as never,
       buildConfig(true) as never,
       cache as never,
+      buildCls() as never,
     );
 
     await cron.execute();
@@ -79,5 +88,21 @@ describe('ProcessScheduledCancellationsCron', () => {
       },
     });
     expect(cache.invalidate).toHaveBeenCalledWith('org-1');
+  });
+
+  it('wraps execute body in super-admin CLS context', async () => {
+    const prisma = buildPrisma([]);
+    const cls = buildCls();
+    const cron = new ProcessScheduledCancellationsCron(
+      prisma as never,
+      buildConfig(true) as never,
+      buildCache() as never,
+      cls as never,
+    );
+
+    await cron.execute();
+
+    expect(cls.run).toHaveBeenCalledTimes(1);
+    expect(cls.set).toHaveBeenCalledWith(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
   });
 });

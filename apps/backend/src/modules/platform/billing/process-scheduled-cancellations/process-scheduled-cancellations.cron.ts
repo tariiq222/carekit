@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 
 @Injectable()
@@ -11,11 +13,19 @@ export class ProcessScheduledCancellationsCron {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await this.runCancellations();
+    });
+  }
+
+  private async runCancellations(): Promise<void> {
     const now = new Date();
     const due = await this.prisma.$allTenants.subscription.findMany({
       where: {
