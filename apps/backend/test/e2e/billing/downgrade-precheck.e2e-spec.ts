@@ -157,7 +157,8 @@ describe('Bug B8 — Downgrade pre-check e2e (employees over BASIC cap)', () => 
         code: 'DOWNGRADE_VIOLATES_NEW_LIMITS',
         violations: expect.arrayContaining([
           expect.objectContaining({
-            kind: FeatureKey.EMPLOYEES,
+            kind: 'QUANTITATIVE',
+            featureKey: FeatureKey.EMPLOYEES,
             current: 12,
             targetMax: 5,
           }),

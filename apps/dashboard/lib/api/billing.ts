@@ -45,7 +45,7 @@ export const billingApi = {
     api.post<Subscription>('/dashboard/billing/subscription/start', dto),
 
   changePlan: (dto: ChangePlanInput) =>
-    api.post<Subscription>('/dashboard/billing/subscription/change-plan', dto),
+    api.post<Subscription>('/dashboard/billing/subscription/change-plan', dto).catch(rethrowIfDowngradeBlocked),
 
   prorationPreview: (dto: ChangePlanInput) =>
     api.get<ProrationPreview>('/dashboard/billing/subscription/proration-preview', {

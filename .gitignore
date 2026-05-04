@@ -111,3 +111,6 @@ data/*.xls
 
 # ─── QA run artifacts ─────────────────────────────────────────
 data/kiwi/
+
+apps/backend/coverage.backup-*/
+graphify-out/
