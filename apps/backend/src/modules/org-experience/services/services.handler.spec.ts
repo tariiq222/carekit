@@ -152,12 +152,15 @@ describe('GetServiceHandler', () => {
   });
 });
 
+const serviceId = 'svc-1';
+const mockServiceInactive = { ...mockService, isActive: false };
+
 describe('UpdateServiceHandler', () => {
   it('updates service scoped by org', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
-    const handler = new UpdateServiceHandler(prisma as never, buildTenant());
-    const result = await handler.execute({ serviceId: 'svc-1', durationMins: 45 });
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
+    const result = await handler.execute({ serviceId, durationMins: 45 });
     expect(prisma.service.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ organizationId: DEFAULT_ORG }) }),
     );
@@ -166,22 +169,80 @@ describe('UpdateServiceHandler', () => {
 
   it('throws NotFoundException when service not found', async () => {
     const prisma = buildPrisma();
-    const handler = new UpdateServiceHandler(prisma as never, buildTenant());
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(handler.execute({ serviceId: 'missing', durationMins: 45 })).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when depositAmount would exceed updated price', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, depositEnabled: true, depositAmount: '80.00' });
-    const handler = new UpdateServiceHandler(prisma as never, buildTenant());
-    await expect(handler.execute({ serviceId: 'svc-1', price: 50 })).rejects.toThrow(BadRequestException);
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
+    await expect(handler.execute({ serviceId, price: 50 })).rejects.toThrow(BadRequestException);
   });
 
   it('throws BadRequestException when minParticipants would exceed maxParticipants', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, maxParticipants: 5 });
-    const handler = new UpdateServiceHandler(prisma as never, buildTenant());
-    await expect(handler.execute({ serviceId: 'svc-1', minParticipants: 10 })).rejects.toThrow(BadRequestException);
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), buildEventBus() as never);
+    await expect(handler.execute({ serviceId, minParticipants: 10 })).rejects.toThrow(BadRequestException);
+  });
+
+  it('emits ServiceDeactivatedEvent when isActive transitions true → false', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue(mockService); // isActive: true
+    prisma.service.update = jest.fn().mockResolvedValue({ ...mockService, isActive: false });
+    const eventBus = buildEventBus();
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ serviceId, isActive: false });
+
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: 'org-experience.service.deactivated',
+        payload: { serviceId, organizationId: DEFAULT_ORG },
+      }),
+    );
+  });
+
+  it('emits ServiceReactivatedEvent when isActive transitions false → true', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue(mockServiceInactive); // isActive: false
+    prisma.service.update = jest.fn().mockResolvedValue(mockService);
+    const eventBus = buildEventBus();
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ serviceId, isActive: true });
+
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: 'org-experience.service.reactivated',
+        payload: { serviceId, organizationId: DEFAULT_ORG },
+      }),
+    );
+  });
+
+  it('emits no lifecycle event when isActive does not change', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue(mockService); // isActive: true
+    prisma.service.update = jest.fn().mockResolvedValue(mockService);
+    const eventBus = buildEventBus();
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ serviceId, isActive: true }); // same value
+
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it('emits no lifecycle event when isActive not in payload', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
+    prisma.service.update = jest.fn().mockResolvedValue(mockService);
+    const eventBus = buildEventBus();
+    const handler = new UpdateServiceHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ serviceId, durationMins: 45 });
+
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 });
 

@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { BranchDeactivatedEvent } from '../events/branch-deactivated.event';
+import { BranchReactivatedEvent } from '../events/branch-reactivated.event';
 import { UpdateBranchDto } from './update-branch.dto';
 
 export type UpdateBranchCommand = UpdateBranchDto & { branchId: string };
@@ -10,6 +13,7 @@ export class UpdateBranchHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: UpdateBranchCommand) {
@@ -28,7 +32,8 @@ export class UpdateBranchHandler {
           });
         }
 
-        return tx.branch.update({
+        const wasActive = branch.isActive;
+        const updated = await tx.branch.update({
           where: { id: dto.branchId },
           data: {
             nameAr: dto.nameAr,
@@ -45,6 +50,15 @@ export class UpdateBranchHandler {
             timezone: dto.timezone,
           },
         });
+
+        if (dto.isActive !== undefined && dto.isActive !== wasActive) {
+          const event = dto.isActive
+            ? new BranchReactivatedEvent({ branchId: updated.id, organizationId })
+            : new BranchDeactivatedEvent({ branchId: updated.id, organizationId });
+          await this.eventBus.publish(event).catch(() => undefined);
+        }
+
+        return updated;
       },
       { isolationLevel: 'Serializable' },
     );

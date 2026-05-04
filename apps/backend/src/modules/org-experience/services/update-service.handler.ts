@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
+import { EventBusService } from '../../../infrastructure/events';
+import { ServiceDeactivatedEvent } from '../events/service-deactivated.event';
+import { ServiceReactivatedEvent } from '../events/service-reactivated.event';
 import { UpdateServiceDto } from './update-service.dto';
 
 export type UpdateServiceCommand = UpdateServiceDto & { serviceId: string };
@@ -10,6 +13,7 @@ export class UpdateServiceHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(dto: UpdateServiceCommand) {
@@ -44,7 +48,8 @@ export class UpdateServiceHandler {
       throw new BadRequestException('reserveWithoutPayment requires maxParticipants > 1');
     }
 
-    return this.prisma.service.update({
+    const wasActive = service.isActive;
+    const updated = await this.prisma.service.update({
       where: { id: dto.serviceId },
       data: {
         nameAr: dto.nameAr,
@@ -85,5 +90,14 @@ export class UpdateServiceHandler {
         durationOptions: { orderBy: { sortOrder: 'asc' } },
       },
     });
+
+    if (dto.isActive !== undefined && dto.isActive !== wasActive) {
+      const event = dto.isActive
+        ? new ServiceReactivatedEvent({ serviceId: updated.id, organizationId })
+        : new ServiceDeactivatedEvent({ serviceId: updated.id, organizationId });
+      await this.eventBus.publish(event).catch(() => undefined);
+    }
+
+    return updated;
   }
 }

@@ -9,9 +9,10 @@ const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) }
 const buildSubscriptionCache = () => ({ get: jest.fn().mockResolvedValue(null) });
 
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
+const branchId = 'branch-1';
 
 const mockBranch = {
-  id: 'branch-1',
+  id: branchId,
   organizationId: DEFAULT_ORG,
   nameAr: 'الفرع الرئيسي',
   nameEn: 'Main Branch',
@@ -23,11 +24,14 @@ const mockBranch = {
   latitude: null,
   longitude: null,
   isActive: true,
+  isMain: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   businessHours: [],
   holidays: [],
 };
+
+const mockBranchInactive = { ...mockBranch, isActive: false };
 
 const buildPrisma = (overrides: Record<string, unknown> = {}) => {
   const branchMethods = {
@@ -92,16 +96,75 @@ describe('UpdateBranchHandler', () => {
   it('updates branch when found in org', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
-    const handler = new UpdateBranchHandler(prisma as never, buildTenant());
-    const result = await handler.execute({ branchId: 'branch-1', city: 'Riyadh' });
+    const eventBus = buildEventBus();
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), eventBus as never);
+    const result = await handler.execute({ branchId, city: 'Riyadh' });
     expect(result).toEqual(mockBranch);
   });
 
   it('throws NotFoundException when branch not found', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
-    const handler = new UpdateBranchHandler(prisma as never, buildTenant());
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), buildEventBus() as never);
     await expect(handler.execute({ branchId: 'missing', city: 'Riyadh' })).rejects.toThrow(NotFoundException);
+  });
+
+  it('emits BranchDeactivatedEvent when isActive transitions true → false', async () => {
+    const prisma = buildPrisma();
+    prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch); // isActive: true
+    prisma.branch.update = jest.fn().mockResolvedValue({ ...mockBranch, isActive: false });
+    const eventBus = buildEventBus();
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ branchId, isActive: false });
+
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: 'org-config.branch.deactivated',
+        payload: { branchId, organizationId: DEFAULT_ORG },
+      }),
+    );
+  });
+
+  it('emits BranchReactivatedEvent when isActive transitions false → true', async () => {
+    const prisma = buildPrisma();
+    prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranchInactive); // isActive: false
+    prisma.branch.update = jest.fn().mockResolvedValue({ ...mockBranch, isActive: true });
+    const eventBus = buildEventBus();
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ branchId, isActive: true });
+
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: 'org-config.branch.reactivated',
+        payload: { branchId, organizationId: DEFAULT_ORG },
+      }),
+    );
+  });
+
+  it('emits no lifecycle event when isActive does not change', async () => {
+    const prisma = buildPrisma();
+    prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch); // isActive: true
+    prisma.branch.update = jest.fn().mockResolvedValue(mockBranch);
+    const eventBus = buildEventBus();
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ branchId, isActive: true }); // same value — no transition
+
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it('emits no lifecycle event when isActive is not in the update payload', async () => {
+    const prisma = buildPrisma();
+    prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
+    prisma.branch.update = jest.fn().mockResolvedValue(mockBranch);
+    const eventBus = buildEventBus();
+    const handler = new UpdateBranchHandler(prisma as never, buildTenant(), eventBus as never);
+
+    await handler.execute({ branchId, city: 'Riyadh' }); // no isActive in payload
+
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 });
 
