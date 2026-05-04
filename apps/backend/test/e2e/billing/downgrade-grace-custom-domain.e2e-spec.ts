@@ -16,6 +16,7 @@ import { CustomDomainGraceCron } from '../../../src/modules/platform/billing/gra
 import { PlatformMailerService } from '../../../src/infrastructure/mail';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
+import { ConfigService } from '@nestjs/config';
 
 describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
   let h: IsolationHarness;
@@ -98,11 +99,13 @@ describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
     );
 
     // Ensure OrganizationSettings row exists
-    await h.prisma.$allTenants.organizationSettings.upsert({
-      where: { organizationId: org.id },
-      update: {},
-      create: { organizationId: org.id },
-    });
+    await runAsSuperAdmin(() =>
+      h.prisma.$allTenants.organizationSettings.upsert({
+        where: { organizationId: org.id },
+        update: {},
+        create: { organizationId: org.id },
+      }),
+    );
 
     cacheService.invalidate(org.id);
   }, 60_000);
@@ -132,10 +135,12 @@ describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
       downgrade.execute({ planId: basicPlanId, billingCycle: 'MONTHLY' }),
     );
 
-    const settings = await h.prisma.$allTenants.organizationSettings.findFirst({
-      where: { organizationId: org.id },
-      select: { customDomainGraceUntil: true },
-    });
+    const settings = await runAsSuperAdmin(() =>
+      h.prisma.$allTenants.organizationSettings.findFirst({
+        where: { organizationId: org.id },
+        select: { customDomainGraceUntil: true },
+      }),
+    );
 
     expect(settings?.customDomainGraceUntil).not.toBeNull();
     const thirtyDaysMs = 30 * 86_400_000;
@@ -146,17 +151,20 @@ describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
 
   it('cron sends warning email when ≤7 days remain', async () => {
     // Set grace date to 3 days from now (within warning window)
-    await h.prisma.$allTenants.organizationSettings.update({
-      where: { organizationId: org.id },
-      data: { customDomainGraceUntil: new Date(Date.now() + 3 * 86_400_000) },
-    });
+    await runAsSuperAdmin(() =>
+      h.prisma.$allTenants.organizationSettings.update({
+        where: { organizationId: org.id },
+        data: { customDomainGraceUntil: new Date(Date.now() + 3 * 86_400_000) },
+      }),
+    );
 
     // Mock mailer method
     const warnSpy = jest.spyOn(mailer, 'sendFeatureGraceWarning').mockResolvedValue(undefined);
 
-    process.env.BILLING_CRON_ENABLED = 'true';
-    await cron.run();
-    process.env.BILLING_CRON_ENABLED = 'false';
+    const cfg = h.app.get(ConfigService) as ConfigService & { set: (k: string, v: unknown) => void };
+    cfg.set('BILLING_CRON_ENABLED', true);
+    await runAsSuperAdmin(() => cron.run());
+    cfg.set('BILLING_CRON_ENABLED', false);
 
     expect(warnSpy).toHaveBeenCalledWith(
       expect.any(String),
@@ -168,16 +176,19 @@ describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
 
   it('cron reverts customDomainGraceUntil and sends expiry email when grace has passed', async () => {
     // Set grace date in the past (grace expired)
-    await h.prisma.$allTenants.organizationSettings.update({
-      where: { organizationId: org.id },
-      data: { customDomainGraceUntil: new Date(Date.now() - 86_400_000) },
-    });
+    await runAsSuperAdmin(() =>
+      h.prisma.$allTenants.organizationSettings.update({
+        where: { organizationId: org.id },
+        data: { customDomainGraceUntil: new Date(Date.now() - 86_400_000) },
+      }),
+    );
 
     const expirySpy = jest.spyOn(mailer, 'sendFeatureGraceExpired').mockResolvedValue(undefined);
 
-    process.env.BILLING_CRON_ENABLED = 'true';
-    await cron.run();
-    process.env.BILLING_CRON_ENABLED = 'false';
+    const cfg = h.app.get(ConfigService) as ConfigService & { set: (k: string, v: unknown) => void };
+    cfg.set('BILLING_CRON_ENABLED', true);
+    await runAsSuperAdmin(() => cron.run());
+    cfg.set('BILLING_CRON_ENABLED', false);
 
     expect(expirySpy).toHaveBeenCalledWith(
       expect.any(String),
@@ -185,10 +196,12 @@ describe('Phase 5 / Task 5.4 — Custom domain grace cron e2e', () => {
     );
 
     // Grace column should be null (reverted)
-    const settings = await h.prisma.$allTenants.organizationSettings.findFirst({
-      where: { organizationId: org.id },
-      select: { customDomainGraceUntil: true },
-    });
+    const settings = await runAsSuperAdmin(() =>
+      h.prisma.$allTenants.organizationSettings.findFirst({
+        where: { organizationId: org.id },
+        select: { customDomainGraceUntil: true },
+      }),
+    );
     expect(settings?.customDomainGraceUntil).toBeNull();
 
     expirySpy.mockRestore();
