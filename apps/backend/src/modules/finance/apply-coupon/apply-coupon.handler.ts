@@ -1,19 +1,29 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
+import { FeatureCheckService } from '../../platform/billing/feature-check.service';
+import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { ApplyCouponDto } from './apply-coupon.dto';
 
 export type ApplyCouponCommand = ApplyCouponDto;
 
 @Injectable()
 export class ApplyCouponHandler {
+  private readonly logger = new Logger(ApplyCouponHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
+    private readonly featureCheck: FeatureCheckService,
   ) {}
 
   async execute(cmd: ApplyCouponCommand) {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    if (!(await this.featureCheck.isEnabled(organizationId, FeatureKey.COUPONS))) {
+      this.logger.debug(`feature_disabled_skip: org=${organizationId} feature=COUPONS`);
+      throw new BadRequestException('Coupons are not available on your current plan');
+    }
 
     const invoice = await this.prisma.invoice.findFirst({
       where: { id: cmd.invoiceId },
