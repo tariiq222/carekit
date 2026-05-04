@@ -1,11 +1,23 @@
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
-import { DowngradeSafetyService } from './downgrade-safety.service';
+import { DowngradeSafetyService, BooleanViolation } from './downgrade-safety.service';
 
 const buildPrisma = (counts: { branches?: number; employees?: number; bookings?: number } = {}) => ({
   $allTenants: {
     branch: { count: jest.fn().mockResolvedValue(counts.branches ?? 0) },
     employee: { count: jest.fn().mockResolvedValue(counts.employees ?? 0) },
-    booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0) },
+    booking: { count: jest.fn().mockResolvedValue(counts.bookings ?? 0), findMany: jest.fn().mockResolvedValue([]) },
+    waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    coupon: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    integration: { findFirst: jest.fn().mockResolvedValue(null) },
+    payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+    invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
   },
 });
 
@@ -62,7 +74,7 @@ describe('DowngradeSafetyService', () => {
 
     expect(result.ok).toBe(false);
     expect(result.violations).toEqual([
-      { kind: FeatureKey.EMPLOYEES, current: 12, targetMax: 5 },
+      { kind: 'QUANTITATIVE', featureKey: FeatureKey.EMPLOYEES, current: 12, targetMax: 5 },
     ]);
   });
 
@@ -82,11 +94,11 @@ describe('DowngradeSafetyService', () => {
     );
 
     expect(result.ok).toBe(false);
-    const kinds = result.violations.map((v) => v.kind);
-    expect(kinds).toContain(FeatureKey.BRANCHES);
-    expect(kinds).toContain(FeatureKey.EMPLOYEES);
+    const featureKeys = result.violations.map((v) => v.featureKey);
+    expect(featureKeys).toContain(FeatureKey.BRANCHES);
+    expect(featureKeys).toContain(FeatureKey.EMPLOYEES);
     // bookings are 0 — under target — no violation
-    expect(kinds).not.toContain(FeatureKey.MONTHLY_BOOKINGS);
+    expect(featureKeys).not.toContain(FeatureKey.MONTHLY_BOOKINGS);
   });
 
   it('unlimited target plan never violates', async () => {
@@ -123,7 +135,8 @@ describe('DowngradeSafetyService', () => {
     expect(prisma.$allTenants.employee.count).toHaveBeenCalled();
     expect(result.ok).toBe(false);
     expect(result.violations[0]).toEqual({
-      kind: FeatureKey.EMPLOYEES,
+      kind: 'QUANTITATIVE',
+      featureKey: FeatureKey.EMPLOYEES,
       current: 8,
       targetMax: 5,
     });
@@ -143,5 +156,80 @@ describe('DowngradeSafetyService', () => {
     expect(prisma.$allTenants.employee.count).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ isActive: true }) }),
     );
+  });
+
+  describe('boolean checks', () => {
+    it('returns BOOLEAN violation when coupons are active and feature is removed', async () => {
+      const prisma = {
+        $allTenants: {
+          branch: { count: jest.fn().mockResolvedValue(1) },
+          employee: { count: jest.fn().mockResolvedValue(1) },
+          booking: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          coupon: {
+            count: jest.fn().mockResolvedValue(3),
+            findMany: jest.fn().mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]),
+          },
+          intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          integration: { findFirst: jest.fn().mockResolvedValue(null) },
+          payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+          invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        },
+      };
+      const counters = buildCounters({ [FeatureKey.BRANCHES]: 1, [FeatureKey.EMPLOYEES]: 1, [FeatureKey.MONTHLY_BOOKINGS]: 5 });
+      const svc = new DowngradeSafetyService(prisma as never, counters as never);
+
+      const result = await svc.checkDowngrade(
+        planWith({ maxBranches: 5, maxEmployees: 10, maxBookingsPerMonth: 100, coupons: true }),
+        planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 50, coupons: false }),
+        'org-A',
+      );
+
+      expect(result.ok).toBe(false);
+      const boolViolation = result.violations.find(v => v.kind === 'BOOLEAN') as BooleanViolation | undefined;
+      expect(boolViolation).toBeDefined();
+      expect(boolViolation?.featureKey).toBe(FeatureKey.COUPONS);
+      expect(boolViolation?.blockingResources.count).toBe(3);
+    });
+
+    it('returns no BOOLEAN violation when feature stays on in target plan', async () => {
+      const prisma = {
+        $allTenants: {
+          branch: { count: jest.fn().mockResolvedValue(1) },
+          employee: { count: jest.fn().mockResolvedValue(1) },
+          booking: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          waitlistEntry: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          groupSession: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          knowledgeDocument: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          emailTemplate: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          coupon: { count: jest.fn().mockResolvedValue(5), findMany: jest.fn().mockResolvedValue([{ id: 'c1' }]) },
+          intakeForm: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          customRole: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          integration: { findFirst: jest.fn().mockResolvedValue(null) },
+          payment: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          department: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+          organizationSmsConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+          invoice: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        },
+      };
+      const counters = buildCounters({ [FeatureKey.BRANCHES]: 1, [FeatureKey.EMPLOYEES]: 1, [FeatureKey.MONTHLY_BOOKINGS]: 5 });
+      const svc = new DowngradeSafetyService(prisma as never, counters as never);
+
+      // coupons: true in BOTH current and target — no boolean violation
+      const result = await svc.checkDowngrade(
+        planWith({ maxBranches: 5, maxEmployees: 10, maxBookingsPerMonth: 100, coupons: true }),
+        planWith({ maxBranches: 2, maxEmployees: 5, maxBookingsPerMonth: 50, coupons: true }),
+        'org-A',
+      );
+
+      const boolViolation = result.violations.find(v => v.kind === 'BOOLEAN');
+      expect(boolViolation).toBeUndefined();
+    });
   });
 });
