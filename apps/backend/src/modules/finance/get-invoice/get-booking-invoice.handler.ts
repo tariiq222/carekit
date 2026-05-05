@@ -13,14 +13,6 @@ export class GetBookingInvoiceHandler {
         bookingId,
         clientId,
       },
-      include: {
-        zatcaSub: {
-          select: {
-            qrCode: true,
-            status: true,
-          },
-        },
-      },
     });
 
     if (!invoice) {
@@ -47,8 +39,6 @@ export class GetBookingInvoiceHandler {
       dueAt: invoice.dueAt?.toISOString() ?? null,
       paidAt: invoice.paidAt?.toISOString() ?? null,
       createdAt: invoice.createdAt.toISOString(),
-      qrCode: invoice.zatcaSub?.qrCode ?? null,
-      zatcaStatus: invoice.zatcaSub?.status ?? null,
     };
   }
 }

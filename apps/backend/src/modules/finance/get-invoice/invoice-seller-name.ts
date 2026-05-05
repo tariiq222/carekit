@@ -6,14 +6,6 @@ export async function resolveInvoiceSellerName(
   prisma: PrismaService,
   organizationId: string,
 ): Promise<string> {
-  const zatca = await prisma.zatcaConfig.findUnique({
-    where: { organizationId },
-    select: { sellerName: true },
-  });
-
-  const zatcaName = zatca?.sellerName?.trim();
-  if (zatcaName) return zatcaName;
-
   const branding = await prisma.brandingConfig.findUnique({
     where: { organizationId },
     select: { organizationNameEn: true, organizationNameAr: true },

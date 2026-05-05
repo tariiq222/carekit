@@ -20,8 +20,6 @@ export interface GetPublicInvoiceResult {
   dueAt: string | null;
   paidAt: string | null;
   createdAt: string;
-  qrCode: string | null;
-  zatcaStatus: string | null;
 }
 
 @Injectable()
@@ -33,14 +31,6 @@ export class GetPublicInvoiceHandler {
       where: {
         id: invoiceId,
         clientId: clientId,
-      },
-      include: {
-        zatcaSub: {
-          select: {
-            qrCode: true,
-            status: true,
-          },
-        },
       },
     });
 
@@ -68,8 +58,6 @@ export class GetPublicInvoiceHandler {
       dueAt: invoice.dueAt?.toISOString() ?? null,
       paidAt: invoice.paidAt?.toISOString() ?? null,
       createdAt: invoice.createdAt.toISOString(),
-      qrCode: invoice.zatcaSub?.qrCode ?? null,
-      zatcaStatus: invoice.zatcaSub?.status ?? null,
     };
   }
 }

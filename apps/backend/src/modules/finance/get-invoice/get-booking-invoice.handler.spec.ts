@@ -19,15 +19,11 @@ const mockInvoice = {
   dueAt: null,
   paidAt: new Date('2026-04-17T10:05:00Z'),
   createdAt: new Date('2026-04-17T10:00:00Z'),
-  zatcaSub: { qrCode: 'data:image/png;base64,xxx', status: 'REPORTED' },
 };
 
 describe('GetBookingInvoiceHandler', () => {
   const buildPrisma = (invoice: typeof mockInvoice | null = mockInvoice) => ({
     invoice: { findFirst: jest.fn().mockResolvedValue(invoice) },
-    zatcaConfig: {
-      findUnique: jest.fn().mockResolvedValue({ sellerName: 'Deqah Medical Clinic' }),
-    },
     brandingConfig: {
       findUnique: jest.fn().mockResolvedValue({
         organizationNameEn: 'Fallback Clinic',
@@ -36,7 +32,7 @@ describe('GetBookingInvoiceHandler', () => {
     },
   });
 
-  it('returns invoice scoped to booking + client with QR passthrough', async () => {
+  it('returns invoice scoped to booking + client', async () => {
     const prisma = buildPrisma();
     const handler = new GetBookingInvoiceHandler(prisma as never);
 
@@ -48,27 +44,11 @@ describe('GetBookingInvoiceHandler', () => {
       }),
     );
     expect(result.id).toBe('inv-1');
-    expect(result.qrCode).toBe('data:image/png;base64,xxx');
-    expect(result.zatcaStatus).toBe('REPORTED');
     expect(result.total).toBe(103.5);
   });
 
-  it('returns the configured ZATCA seller name for client-facing invoices', async () => {
+  it('returns the seller name from BrandingConfig', async () => {
     const prisma = buildPrisma();
-    const handler = new GetBookingInvoiceHandler(prisma as never);
-
-    const result = await handler.execute('booking-1', 'client-1');
-
-    expect(prisma.zatcaConfig.findUnique).toHaveBeenCalledWith({
-      where: { organizationId: 'org-1' },
-      select: { sellerName: true },
-    });
-    expect(result.sellerName).toBe('Deqah Medical Clinic');
-  });
-
-  it('falls back to the organization branding name when ZATCA seller name is missing', async () => {
-    const prisma = buildPrisma();
-    prisma.zatcaConfig.findUnique.mockResolvedValueOnce({ sellerName: null });
     const handler = new GetBookingInvoiceHandler(prisma as never);
 
     const result = await handler.execute('booking-1', 'client-1');

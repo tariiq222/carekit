@@ -14,7 +14,6 @@ export class GetInvoiceHandler {
       where: { id: query.invoiceId },
       include: {
         payments: { orderBy: { createdAt: 'desc' } },
-        zatcaSub: true,
       },
     });
     if (!invoice) {
