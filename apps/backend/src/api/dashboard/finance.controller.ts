@@ -21,8 +21,6 @@ import { ListPaymentsHandler } from '../../modules/finance/list-payments/list-pa
 import { ListPaymentsDto } from '../../modules/finance/list-payments/list-payments.dto';
 import { ApplyCouponHandler } from '../../modules/finance/apply-coupon/apply-coupon.handler';
 import { ApplyCouponDto } from '../../modules/finance/apply-coupon/apply-coupon.dto';
-import { ZatcaSubmitHandler } from '../../modules/finance/zatca-submit/zatca-submit.handler';
-import { ZatcaSubmitDto } from '../../modules/finance/zatca-submit/zatca-submit.dto';
 import { ListCouponsHandler } from '../../modules/finance/coupons/list-coupons.handler';
 import { ListCouponsDto } from '../../modules/finance/coupons/list-coupons.dto';
 import { GetCouponHandler } from '../../modules/finance/coupons/get-coupon.handler';
@@ -31,11 +29,6 @@ import { CreateCouponDto } from '../../modules/finance/coupons/create-coupon.dto
 import { UpdateCouponHandler } from '../../modules/finance/coupons/update-coupon.handler';
 import { UpdateCouponDto } from '../../modules/finance/coupons/update-coupon.dto';
 import { DeleteCouponHandler } from '../../modules/finance/coupons/delete-coupon.handler';
-import { GetZatcaConfigHandler } from '../../modules/finance/zatca-config/get-zatca-config.handler';
-import { UpsertZatcaConfigHandler } from '../../modules/finance/zatca-config/upsert-zatca-config.handler';
-import { UpsertZatcaConfigDto } from '../../modules/finance/zatca-config/upsert-zatca-config.dto';
-import { OnboardZatcaHandler } from '../../modules/finance/zatca-config/onboard-zatca.handler';
-import { ZatcaOnboardDto } from '../../modules/finance/zatca-config/zatca-onboard.dto';
 import { GetPaymentStatsHandler } from '../../modules/finance/get-payment-stats/get-payment-stats.handler';
 import { RefundPaymentHandler } from '../../modules/finance/refund-payment/refund-payment.handler';
 import { RefundPaymentDto } from '../../modules/finance/refund-payment/refund-payment.dto';
@@ -62,15 +55,11 @@ export class DashboardFinanceController {
     private readonly processPayment: ProcessPaymentHandler,
     private readonly listPayments: ListPaymentsHandler,
     private readonly applyCoupon: ApplyCouponHandler,
-    private readonly zatcaSubmit: ZatcaSubmitHandler,
     private readonly listCoupons: ListCouponsHandler,
     private readonly getCoupon: GetCouponHandler,
     private readonly createCoupon: CreateCouponHandler,
     private readonly updateCoupon: UpdateCouponHandler,
     private readonly deleteCoupon: DeleteCouponHandler,
-    private readonly getZatcaConfig: GetZatcaConfigHandler,
-    private readonly upsertZatcaConfig: UpsertZatcaConfigHandler,
-    private readonly onboardZatca: OnboardZatcaHandler,
     private readonly getPaymentStats: GetPaymentStatsHandler,
     private readonly refundPayment: RefundPaymentHandler,
     private readonly verifyPayment: VerifyPaymentHandler,
@@ -252,39 +241,6 @@ export class DashboardFinanceController {
   @ApiResponse({ status: 404, description: 'Coupon not found', type: ApiErrorDto })
   deleteCouponEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.deleteCoupon.execute({ couponId: id });
-  }
-
-  // ── ZATCA ─────────────────────────────────────────────────────────────────
-
-  @Post('zatca/submit')
-  @ApiOperation({ summary: 'Submit an invoice to ZATCA for e-invoicing compliance' })
-  @ApiCreatedResponse({ description: 'Invoice submitted to ZATCA' })
-  zatca(@Body() body: ZatcaSubmitDto) {
-    return this.zatcaSubmit.execute({ ...body });
-  }
-
-  @Get('zatca/config')
-  @ApiOperation({ summary: 'Get the ZATCA configuration' })
-  @ApiOkResponse({ description: 'ZATCA configuration' })
-  getZatcaConfigEndpoint() {
-    return this.getZatcaConfig.execute();
-  }
-
-  @Patch('zatca/config')
-  @ApiOperation({ summary: 'Create or update the ZATCA configuration' })
-  @ApiOkResponse({ description: 'ZATCA configuration saved' })
-  upsertZatcaConfigEndpoint(@Body() body: UpsertZatcaConfigDto) {
-    return this.upsertZatcaConfig.execute(body);
-  }
-
-  @Post('zatca/onboard')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Onboard the clinic with ZATCA (certificate signing request)' })
-  @ApiOkResponse({ description: 'ZATCA onboarding initiated' })
-  onboardZatcaEndpoint(
-    @Body() body: ZatcaOnboardDto,
-  ) {
-    return this.onboardZatca.execute(body);
   }
 
   // ── Per-tenant Moyasar credentials ────────────────────────────────────────

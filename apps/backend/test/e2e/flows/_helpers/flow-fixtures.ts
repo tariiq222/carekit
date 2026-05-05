@@ -29,7 +29,6 @@ export interface FlowFixtures {
  * — children first in the list; Postgres still resolves FK relationships via CASCADE.
  */
 export const FLOW_TABLES = [
-  'ZatcaSubmission',
   'Payment',
   'Invoice',
   'WaitlistEntry',

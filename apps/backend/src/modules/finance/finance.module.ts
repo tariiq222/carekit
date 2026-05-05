@@ -13,7 +13,6 @@ import { ProcessPaymentHandler } from './process-payment/process-payment.handler
 import { MoyasarWebhookHandler } from './moyasar-webhook/moyasar-webhook.handler';
 import { BankTransferUploadHandler } from './bank-transfer-upload/bank-transfer-upload.handler';
 import { ApplyCouponHandler } from './apply-coupon/apply-coupon.handler';
-import { ZatcaSubmitHandler } from './zatca-submit/zatca-submit.handler';
 import { GetInvoiceHandler } from './get-invoice/get-invoice.handler';
 import { GetPublicInvoiceHandler } from './get-invoice/get-public-invoice.handler';
 import { GetBookingInvoiceHandler } from './get-invoice/get-booking-invoice.handler';
@@ -23,9 +22,6 @@ import { GetCouponHandler } from './coupons/get-coupon.handler';
 import { CreateCouponHandler } from './coupons/create-coupon.handler';
 import { UpdateCouponHandler } from './coupons/update-coupon.handler';
 import { DeleteCouponHandler } from './coupons/delete-coupon.handler';
-import { GetZatcaConfigHandler } from './zatca-config/get-zatca-config.handler';
-import { UpsertZatcaConfigHandler } from './zatca-config/upsert-zatca-config.handler';
-import { OnboardZatcaHandler } from './zatca-config/onboard-zatca.handler';
 import { GetPaymentStatsHandler } from './get-payment-stats/get-payment-stats.handler';
 import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
@@ -49,7 +45,6 @@ const handlers = [
   MoyasarWebhookHandler,
   BankTransferUploadHandler,
   ApplyCouponHandler,
-  ZatcaSubmitHandler,
   GetInvoiceHandler,
   GetPublicInvoiceHandler,
   GetBookingInvoiceHandler,
@@ -59,9 +54,6 @@ const handlers = [
   CreateCouponHandler,
   UpdateCouponHandler,
   DeleteCouponHandler,
-  GetZatcaConfigHandler,
-  UpsertZatcaConfigHandler,
-  OnboardZatcaHandler,
   GetPaymentStatsHandler,
   RefundPaymentHandler,
   VerifyPaymentHandler,

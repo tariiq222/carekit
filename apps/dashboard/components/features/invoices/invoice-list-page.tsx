@@ -22,12 +22,10 @@ export function InvoiceListPage() {
   const { t } = useLocale()
 
   const [search, setSearch] = useState("")
-  const [zatcaStatus, setZatcaStatus] = useState("all")
 
-  const hasFilters = search !== "" || zatcaStatus !== "all"
+  const hasFilters = search !== ""
   const resetFilters = () => {
     setSearch("")
-    setZatcaStatus("all")
   }
 
   const columns = getInvoiceColumns(undefined, t)
@@ -74,21 +72,6 @@ export function InvoiceListPage() {
           onChange: setSearch,
           placeholder: t("invoices.searchPlaceholder"),
         }}
-        selects={[
-          {
-            key: "zatcaStatus",
-            value: zatcaStatus,
-            placeholder: t("invoices.filters.zatcaStatus"),
-            options: [
-              { value: "all", label: t("invoices.filters.allStatuses") },
-              { value: "pending", label: t("invoices.filters.pending") },
-              { value: "submitted", label: t("invoices.filters.submitted") },
-              { value: "accepted", label: t("invoices.filters.accepted") },
-              { value: "rejected", label: t("invoices.filters.rejected") },
-            ],
-            onValueChange: setZatcaStatus,
-          },
-        ]}
         hasFilters={hasFilters}
         onReset={resetFilters}
       />

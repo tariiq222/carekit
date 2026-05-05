@@ -67,12 +67,6 @@ export type TransferVerificationStatus =
   | "approved"
   | "rejected"
 
-export type ZatcaStatus =
-  | "not_applicable"
-  | "pending"
-  | "reported"
-  | "failed"
-
 export type NotificationType =
   | "booking_confirmed"
   | "booking_completed"

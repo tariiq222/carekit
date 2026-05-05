@@ -1,5 +1,4 @@
 import type { PaymentMethod, PaymentStatus, TransferVerificationStatus } from '../enums/payment';
-import type { ZatcaStatus } from '../enums/zatca';
 
 export interface Payment {
   id: string;
@@ -40,7 +39,6 @@ export interface Invoice {
   vatRate: number;
   invoiceHash: string | null;
   qrCodeData: string | null;
-  zatcaStatus: ZatcaStatus;
   xmlContent: string | null;
   createdAt: string;
 }

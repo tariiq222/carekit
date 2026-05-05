@@ -1,4 +1,4 @@
-/** VAT rate for Saudi Arabia (ZATCA) — 15% stored as integer basis points */
+/** VAT rate for Saudi Arabia — 15% stored as integer basis points */
 export const VAT_RATE = 1500;
 export const VAT_PERCENTAGE = 15;
 

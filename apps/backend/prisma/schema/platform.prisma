@@ -81,26 +81,26 @@ enum SuperAdminActionType {
 }
 
 model Organization {
-  id              String             @id @default(uuid())
-  slug            String             @unique
-  nameAr          String
-  nameEn          String?
-  status          OrganizationStatus @default(ACTIVE)
-  verticalId      String?
-  vertical        Vertical?          @relation(fields: [verticalId], references: [id], onDelete: SetNull)
-  trialEndsAt     DateTime?
-  suspendedAt     DateTime?
+  id                    String             @id @default(uuid())
+  slug                  String             @unique
+  nameAr                String
+  nameEn                String?
+  status                OrganizationStatus @default(ACTIVE)
+  verticalId            String?
+  vertical              Vertical?          @relation(fields: [verticalId], references: [id], onDelete: SetNull)
+  trialEndsAt           DateTime?
+  suspendedAt           DateTime?
   suspendedReason       String?
   onboardingCompletedAt DateTime?
   createdAt             DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  updatedAt             DateTime           @updatedAt
 
-  memberships    Membership[]
-  invitations    Invitation[]
-  subscription   Subscription?
-  savedCards     SavedCard[]
+  memberships     Membership[]
+  invitations     Invitation[]
+  subscription    Subscription?
+  savedCards      SavedCard[]
   invoiceCounters OrganizationInvoiceCounter[]
-  usageCounters  UsageCounter[]
+  usageCounters   UsageCounter[]
 
   @@index([status])
   @@index([verticalId])
@@ -208,7 +208,7 @@ model Invitation {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([token])
@@ -345,7 +345,7 @@ model Plan {
   //   { maxBranches, maxEmployees,                         // hard-capped quotas (-1 = unlimited)
   //     maxBookingsPerMonth, maxClients, maxStorageMB,     // metered overage quotas (-1 = unlimited)
   //     overageRateBookings, overageRateClients, overageRateStorageGB, // SAR per unit above quota
-  //     websiteEnabled, customDomainEnabled, chatbotEnabled, zatcaEnabled, ratingsEnabled }
+  //     websiteEnabled, customDomainEnabled, chatbotEnabled, ratingsEnabled }
   limits           Json
   isActive         Boolean  @default(true)
   isVisible        Boolean  @default(true)
@@ -361,48 +361,48 @@ model Plan {
 }
 
 model Subscription {
-  id                     String             @id @default(uuid())
-  organizationId         String             @unique // one active sub per org (SaaS-04 scoped)
-  organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  planId                 String
-  plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
-  planVersionId          String?
-  planVersion            PlanVersion?       @relation(fields: [planVersionId], references: [id], onDelete: Restrict)
-  status                 SubscriptionStatus @default(TRIALING)
-  billingCycle           BillingCycle       @default(MONTHLY)
-  currentPeriodStart     DateTime
-  currentPeriodEnd       DateTime
-  trialStartedAt         DateTime?
-  trialEndsAt            DateTime?
-  trialExtendedBy        Int                @default(0)
-  trialExtendedById      String?
-  trialExtendedAt        DateTime?
-  canceledAt             DateTime?
-  cancelReason           String?
-  cancelAtPeriodEnd      Boolean            @default(false)
-  scheduledCancellationDate DateTime?
-  scheduledPlanId        String?
-  scheduledPlan          Plan?              @relation("SubscriptionScheduledPlan", fields: [scheduledPlanId], references: [id], onDelete: SetNull)
-  scheduledBillingCycle  BillingCycle?
-  scheduledPlanChangeAt  DateTime?
-  scheduledChangeBlockedReason String?      // Set by cron when downgrade-safety check fails at swap-time
-  apiAccessGraceUntil    DateTime? // set when API_ACCESS is revoked on downgrade; tenant keeps access until this date
-  webhooksGraceUntil     DateTime? // set when WEBHOOKS is revoked on downgrade; tenant keeps access until this date
-  pastDueSince           DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
-  retryCount             Int                @default(0) // analytics only; not used for state decisions
-  maxRetries             Int                @default(3) // charging attempts within grace window
-  dunningRetryCount      Int                @default(0)
-  nextRetryAt            DateTime?
-  moyasarCustomerRef     String? // Moyasar customer id
-  moyasarCardTokenRef    String? // tokenized saved card
-  moyasarSubscriptionRef String? // reserved for future native recurring
-  defaultSavedCardId     String?
-  defaultSavedCard       SavedCard?         @relation("SubscriptionDefaultSavedCard", fields: [defaultSavedCardId], references: [id], onDelete: SetNull)
-  lastPaymentAt          DateTime?
-  lastFailureReason      String?
-  notifiedTrialEndingAt  DateTime? // resend platform emails: dedupe trial-ending notifications
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  id                           String             @id @default(uuid())
+  organizationId               String             @unique // one active sub per org (SaaS-04 scoped)
+  organization                 Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId                       String
+  plan                         Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planVersionId                String?
+  planVersion                  PlanVersion?       @relation(fields: [planVersionId], references: [id], onDelete: Restrict)
+  status                       SubscriptionStatus @default(TRIALING)
+  billingCycle                 BillingCycle       @default(MONTHLY)
+  currentPeriodStart           DateTime
+  currentPeriodEnd             DateTime
+  trialStartedAt               DateTime?
+  trialEndsAt                  DateTime?
+  trialExtendedBy              Int                @default(0)
+  trialExtendedById            String?
+  trialExtendedAt              DateTime?
+  canceledAt                   DateTime?
+  cancelReason                 String?
+  cancelAtPeriodEnd            Boolean            @default(false)
+  scheduledCancellationDate    DateTime?
+  scheduledPlanId              String?
+  scheduledPlan                Plan?              @relation("SubscriptionScheduledPlan", fields: [scheduledPlanId], references: [id], onDelete: SetNull)
+  scheduledBillingCycle        BillingCycle?
+  scheduledPlanChangeAt        DateTime?
+  scheduledChangeBlockedReason String? // Set by cron when downgrade-safety check fails at swap-time
+  apiAccessGraceUntil          DateTime? // set when API_ACCESS is revoked on downgrade; tenant keeps access until this date
+  webhooksGraceUntil           DateTime? // set when WEBHOOKS is revoked on downgrade; tenant keeps access until this date
+  pastDueSince                 DateTime? // set when ACTIVE → PAST_DUE; drives 2-day grace
+  retryCount                   Int                @default(0) // analytics only; not used for state decisions
+  maxRetries                   Int                @default(3) // charging attempts within grace window
+  dunningRetryCount            Int                @default(0)
+  nextRetryAt                  DateTime?
+  moyasarCustomerRef           String? // Moyasar customer id
+  moyasarCardTokenRef          String? // tokenized saved card
+  moyasarSubscriptionRef       String? // reserved for future native recurring
+  defaultSavedCardId           String?
+  defaultSavedCard             SavedCard?         @relation("SubscriptionDefaultSavedCard", fields: [defaultSavedCardId], references: [id], onDelete: SetNull)
+  lastPaymentAt                DateTime?
+  lastFailureReason            String?
+  notifiedTrialEndingAt        DateTime? // resend platform emails: dedupe trial-ending notifications
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
 
   invoices     SubscriptionInvoice[]
   usageRecords UsageRecord[]
@@ -433,7 +433,6 @@ model PlanVersion {
   @@unique([planId, version])
   @@index([planId])
 }
-
 
 model SavedCard {
   id             String       @id @default(uuid())
@@ -500,12 +499,12 @@ model SubscriptionInvoice {
 
   dunningLogs DunningLog[]
 
+  @@unique([organizationId, invoiceNumber], name: "SubscriptionInvoice_org_number_uq")
   @@index([subscriptionId])
   @@index([organizationId])
   @@index([status])
   @@index([dueDate])
   @@index([organizationId, issuedAt])
-  @@unique([organizationId, invoiceNumber], name: "SubscriptionInvoice_org_number_uq")
 }
 
 // Phase 7 — per-organization invoice number sequence (yearly reset).
@@ -516,8 +515,8 @@ model SubscriptionInvoice {
 model OrganizationInvoiceCounter {
   organizationId String
   year           Int
-  lastSequence   Int      @default(0)
-  updatedAt      DateTime @updatedAt
+  lastSequence   Int          @default(0)
+  updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@id([organizationId, year])
@@ -538,10 +537,10 @@ model DunningLog {
   scheduledFor     DateTime
   executedAt       DateTime            @default(now())
 
+  @@unique([invoiceId, attemptNumber])
   @@index([organizationId])
   @@index([subscriptionId])
   @@index([invoiceId])
-  @@unique([invoiceId, attemptNumber])
 }
 
 // SaaS-05c — credit granted by super-admin, applied against next invoice.
@@ -621,7 +620,6 @@ model PlatformSetting {
   updatedAt DateTime @updatedAt
   updatedBy String?
 }
-
 
 // ─── RefundUsageRevertLog ─────────────────────────────────────────────────────
 // Idempotency log for usage-counter decrements triggered by refunds. Each row

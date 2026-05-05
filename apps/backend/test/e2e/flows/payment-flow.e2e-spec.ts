@@ -171,30 +171,4 @@ describe('Flows — Payment (e2e)', () => {
     expect(['REFUNDED', 'PARTIALLY_REFUNDED']).toContain(after!.status);
   });
 
-  it('[FLOW-PAY-05][Flows/payment-flow][P1-High] ZATCA submit بعد payment → submission مُسجّلة أو ZATCA غير مفعّل', async () => {
-    const { invoiceId } = await createPaidInvoice(fx);
-
-    const res = await fx.req
-      .post('/dashboard/finance/zatca/submit')
-      .set(authHeaders(fx.token))
-      .send({ invoiceId });
-
-    // ZATCA_ENABLED is not set in the test ConfigService mock → 503 (ServiceUnavailableException).
-    // Accept both: 200/201 when ZATCA is configured, 503 when feature-gated off.
-    // The important invariant is that the route exists and does not crash with an
-    // unexpected 4xx/5xx unrelated to ZATCA configuration.
-    expect([200, 201, 503]).toContain(res.status);
-
-    if (res.status === 200 || res.status === 201) {
-      const submission = await (
-        testPrisma as never as {
-          zatcaSubmission: {
-            findUnique(args: unknown): Promise<{ invoiceId: string; status: string } | null>;
-          };
-        }
-      ).zatcaSubmission.findUnique({ where: { invoiceId } });
-      expect(submission).not.toBeNull();
-      expect(['SUBMITTED', 'ACCEPTED']).toContain(submission!.status);
-    }
-  });
 });

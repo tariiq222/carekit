@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import { Button, Input, Label } from "@deqah/ui"
 import { useLocale } from "@/components/locale-provider"
+import { loginErrorMessage } from "@/lib/api/auth-errors"
 
 const RESEND_COOLDOWN = 30
 
 interface Props {
   identifier: string
   loading: boolean
-  error: string | null
+  error: unknown
   otpSentAt: number | null
   onSubmit: (code: string) => void
   onResend: () => void
@@ -58,7 +59,9 @@ export function OtpStep({ identifier, loading, error, otpSentAt, onSubmit, onRes
           disabled={loading}
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error ? (
+        <p className="text-sm text-destructive">{loginErrorMessage(error)}</p>
+      ) : null}
       <Button type="submit" disabled={loading || code.length !== 6} className="w-full">
         {loading ? t("login.signingIn") : t("login.signIn")}
       </Button>

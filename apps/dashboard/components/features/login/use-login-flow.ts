@@ -10,9 +10,11 @@ export function useLoginFlow() {
   const [step, setStep] = useState<LoginStep>("identifier")
   const [identifier, setIdentifier] = useState("")
   const [method, setMethod] = useState<LoginMethod | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null)
+
+  const clearError = useCallback(() => setError(null), [])
 
   const submitIdentifier = useCallback((value: string) => {
     setIdentifier(value)
@@ -31,7 +33,7 @@ export function useLoginFlow() {
           setOtpSentAt(Date.now())
           setStep("otp")
         } catch (e) {
-          setError(e instanceof Error ? e.message : "OTP_REQUEST_FAILED")
+          setError(e)
         } finally {
           setLoading(false)
         }
@@ -50,7 +52,7 @@ export function useLoginFlow() {
         const res = await apiLogin(identifier, password, captcha)
         loginWithTokens(res)
       } catch (e) {
-        setError(e instanceof Error ? e.message : "LOGIN_FAILED")
+        setError(e)
       } finally {
         setLoading(false)
       }
@@ -66,7 +68,7 @@ export function useLoginFlow() {
         const res = await verifyDashboardOtp(identifier, code)
         loginWithTokens(res)
       } catch (e) {
-        setError(e instanceof Error ? e.message : "OTP_VERIFY_FAILED")
+        setError(e)
       } finally {
         setLoading(false)
       }
@@ -81,7 +83,7 @@ export function useLoginFlow() {
       await requestDashboardOtp(identifier)
       setOtpSentAt(Date.now())
     } catch (e) {
-      setError(e instanceof Error ? e.message : "OTP_REQUEST_FAILED")
+      setError(e)
     } finally {
       setLoading(false)
     }
@@ -95,6 +97,6 @@ export function useLoginFlow() {
 
   return {
     step, identifier, method, error, loading, otpSentAt,
-    submitIdentifier, chooseMethod, submitPassword, submitOtp, resendOtp, back,
+    submitIdentifier, chooseMethod, submitPassword, submitOtp, resendOtp, back, clearError,
   }
 }

@@ -50,13 +50,6 @@ app/(dashboard)/payments/           @tariq
 app/(dashboard)/invoices/           @tariq
 app/(dashboard)/coupons/            @tariq
 
-# ── Compliance ───────────────────────────────────────
-# ZATCA — امتثال ضريبي، لا تعديل بدون مراجعة
-components/features/zatca/          @tariq
-app/(dashboard)/zatca/              @tariq
-lib/types/zatca.ts                  @tariq
-lib/api/zatca.ts                    @tariq
-
 # ── Configuration & Settings ─────────────────────────
 components/features/settings/       @tariq
 components/features/branding/        @tariq

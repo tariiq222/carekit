@@ -11,7 +11,7 @@ export interface DeletePlanCommand {
 }
 
 // Soft-delete by flipping isActive=false. We never hard-delete because
-// SubscriptionInvoices reference the plan for audit/ZATCA history.
+// SubscriptionInvoices reference the plan for audit history.
 @Injectable()
 export class DeletePlanHandler {
   constructor(private readonly prisma: PrismaService) {}

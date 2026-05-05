@@ -1,6 +1,6 @@
 /**
  * English translations — Extended A
- * (chatbot, table, activityLog, tab keys, ratings, zatca)
+ * (chatbot, table, activityLog, tab keys, ratings)
  */
 
 export const enChatbot: Record<string, string> = {
@@ -64,7 +64,6 @@ export const enChatbot: Record<string, string> = {
   "bookings.tabs.list": "Bookings",
   "bookings.tabs.waitlist": "Waitlist",
   "invoices.tabs.list": "Invoices",
-  "invoices.tabs.zatca": "ZATCA Compliance",
   "users.tabs.activityLog": "Activity Log",
 
   // ─── Problem Reports ───
@@ -82,38 +81,4 @@ export const enChatbot: Record<string, string> = {
   "ratings.anonymous": "Anonymous",
   "ratings.previous": "Previous",
   "ratings.next": "Next",
-
-  // ─── ZATCA ───
-  "zatca.title": "ZATCA Compliance",
-  "zatca.description": "Saudi e-invoicing compliance and onboarding",
-  "zatca.startOnboarding": "Start Onboarding",
-  "zatca.onboardSuccess": "ZATCA onboarding completed successfully",
-  "zatca.onboardTitle": "ZATCA Phase 2 Onboarding",
-  "zatca.onboardDesc": "Enter the OTP from the Fatoora portal to start compliance onboarding",
-  "zatca.otpPlaceholder": "Enter OTP from Fatoora",
-  "zatca.totalReported": "Total Reported",
-  "zatca.accepted": "Accepted",
-  "zatca.rejected": "Rejected",
-  "zatca.warnings": "Warnings",
-  "zatca.config": "Configuration",
-  "zatca.configDesc": "Current ZATCA settings",
-  "zatca.vatNumber": "VAT Number",
-  "zatca.orgName": "Organization Name",
-  "zatca.phase": "Phase",
-  "zatca.onboardingStatus": "Onboarding Status",
-  "zatca.complianceCsid": "Compliance CSID",
-  "zatca.productionCsid": "Production CSID",
-  "zatca.csidExpiry": "CSID Expiry",
-  "zatca.environment": "Environment",
-  "zatca.onboarded": "Onboarded",
-  "zatca.onboardedAt": "Onboarded On",
-  "zatca.seller": "Seller Name",
-  "zatca.alreadyOnboarded": "Already Onboarded",
-  "zatca.vatPlaceholder": "300xxxxxxxxxxx3",
-  "zatca.sellerPlaceholder": "Registered organization name",
-  "zatca.onboardError": "Failed to complete onboarding",
-  "zatca.zakatLinkTitle": "Zakat & Tax Authority Link",
-  "zatca.zakatLinkDesc": "Connection status and current e-invoicing settings",
-  "zatca.linkedStatus": "Linked",
-  "zatca.notLinkedStatus": "Not Linked",
 }

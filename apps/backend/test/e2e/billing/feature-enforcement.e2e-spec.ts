@@ -27,7 +27,6 @@ import { UsageCounterService } from '../../../src/modules/platform/billing/usage
  *   coupons:            false  ← gated
  *   advanced_reports:   false  ← gated
  *   intake_forms:       false  ← gated (Phase 1 / Bug B3 corrected catalog tier=ENTERPRISE)
- *   zatca:              false  ← gated
  *   custom_roles:       false  ← gated
  *   activity_log:       false  ← gated
  */
@@ -207,7 +206,6 @@ describe('Plan Features Phase 1 — FeatureGuard enforcement (BASIC plan)', () =
           coupons: false,
           advanced_reports: false,
           intake_forms: true,
-          zatca: false,
           custom_roles: false,
           activity_log: false,
           maxBranches: -1,

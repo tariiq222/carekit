@@ -17,7 +17,7 @@ export const arBranding: Record<string, string> = {
   "branding.whatsapp": "واتساب",
   "branding.linkedin": "لينكدإن",
   // Entity
-  "branding.entityWarning": "هذه البيانات مرتبطة بعقد الترخيص وتُستخدم في الفواتير الرسمية وإقرارات ZATCA. لا تُعدّل إلا بعد التحقق من العقد.",
+  "branding.entityWarning": "هذه البيانات مرتبطة بعقد الترخيص وتُستخدم في الفواتير الرسمية. لا تُعدّل إلا بعد التحقق من العقد.",
   "branding.companyData": "بيانات الشركة القانونية",
   "branding.companyNameAr": "اسم الشركة (عربي)",
   "branding.companyNameEn": "اسم الشركة (إنجليزي)",

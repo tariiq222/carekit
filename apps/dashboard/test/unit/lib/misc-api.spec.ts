@@ -13,13 +13,6 @@ vi.mock("@/lib/api", () => ({
 }))
 
 import {
-  fetchZatcaConfig,
-  onboardZatca,
-  fetchOnboardingStatus,
-  reportToSandbox,
-} from "@/lib/api/zatca"
-
-import {
   fetchActivityLogs,
 } from "@/lib/api/activity-log"
 
@@ -27,34 +20,6 @@ import {
   fetchWaitlist,
   removeWaitlistEntry,
 } from "@/lib/api/waitlist"
-
-describe("zatca api", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetchZatcaConfig calls /dashboard/finance/zatca/config", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchZatcaConfig()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/finance/zatca/config")
-  })
-
-  it("onboardZatca posts to /dashboard/finance/zatca/onboard", async () => {
-    postMock.mockResolvedValueOnce({})
-    await onboardZatca({ vatRegistrationNumber: "123", sellerName: "Clinic" })
-    expect(postMock).toHaveBeenCalledWith("/dashboard/finance/zatca/onboard", expect.anything())
-  })
-
-  it("fetchOnboardingStatus calls /dashboard/finance/zatca/config", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchOnboardingStatus()
-    expect(getMock).toHaveBeenCalledWith("/dashboard/finance/zatca/config")
-  })
-
-  it("reportToSandbox posts to /dashboard/finance/zatca/submit", async () => {
-    postMock.mockResolvedValueOnce({})
-    await reportToSandbox("inv-1")
-    expect(postMock).toHaveBeenCalledWith("/dashboard/finance/zatca/submit", { invoiceId: "inv-1" })
-  })
-})
 
 describe("activity-log api", () => {
   beforeEach(() => { vi.clearAllMocks() })

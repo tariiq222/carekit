@@ -18,8 +18,6 @@ export interface InvoiceDetail {
   dueAt: string | null;
   paidAt: string | null;
   createdAt: string;
-  qrCode: string | null;
-  zatcaStatus: string | null;
 }
 
 export async function getMyBookingInvoice(

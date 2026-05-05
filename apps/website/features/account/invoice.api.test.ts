@@ -18,8 +18,6 @@ const sample: InvoiceDetail = {
   dueAt: null,
   paidAt: '2026-04-17T10:05:00Z',
   createdAt: '2026-04-17T10:00:00Z',
-  qrCode: null,
-  zatcaStatus: null,
 };
 
 describe('invoice.api — getMyBookingInvoice', () => {

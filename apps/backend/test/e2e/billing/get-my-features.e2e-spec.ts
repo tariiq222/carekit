@@ -197,11 +197,11 @@ describe("GET /dashboard/billing/my-features (e2e)", () => {
   // ──────────────────────────────────────────────────────────────────────────
   /**
    * ENTERPRISE plan seeds all four gated features as `true` in limits JSON:
-   *   advanced_reports, zatca, custom_roles, activity_log.
+   *   advanced_reports, custom_roles, activity_log.
    *
    * The handler derives `enabled` directly from the plan limits JSON.
    */
-  it("[TC-3] ENTERPRISE plan → advanced_reports, zatca, custom_roles, activity_log all enabled", async () => {
+  it("[TC-3] ENTERPRISE plan → advanced_reports, custom_roles, activity_log all enabled", async () => {
     const ts = Date.now();
     const { orgId } = await seedOrgWithSubscription({
       slug: `tc3-ent-${ts}`,

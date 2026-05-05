@@ -7,16 +7,25 @@ import { CaptchaField } from "@/components/features/shared/captcha-field"
 import { useLocale } from "@/components/locale-provider"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { EyeIcon, ScanEyeIcon } from "@hugeicons/core-free-icons"
+import { LoginErrorAlert } from "@/components/features/login/login-error-alert"
 
 interface Props {
   identifier: string
   loading: boolean
-  error: string | null
+  error: unknown
   onSubmit: (password: string, captcha: string) => void
   onBack: () => void
+  onClearError: () => void
 }
 
-export function PasswordStep({ identifier, loading, error, onSubmit, onBack }: Props) {
+export function PasswordStep({
+  identifier,
+  loading,
+  error,
+  onSubmit,
+  onBack,
+  onClearError,
+}: Props) {
   const { t } = useLocale()
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -42,7 +51,10 @@ export function PasswordStep({ identifier, loading, error, onSubmit, onBack }: P
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (error) onClearError()
+            }}
             disabled={loading}
             className="pe-10"
           />
@@ -57,7 +69,7 @@ export function PasswordStep({ identifier, loading, error, onSubmit, onBack }: P
         </div>
       </div>
       <CaptchaField ref={captchaRef} onVerify={setCaptcha} />
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <LoginErrorAlert error={error} />
       <Button type="submit" disabled={loading || !password || !captcha} className="w-full">
         {loading ? t("login.signingIn") : t("login.signIn")}
       </Button>

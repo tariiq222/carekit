@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FeatureKey } from "@deqah/shared/constants/feature-keys";
-import { FEATURE_CATALOG } from "@deqah/shared";
+import { FEATURE_CATALOG } from "@deqah/shared/constants/feature-catalog";
 import { FEATURE_KEY_MAP } from "./feature-key-map";
 import { DEFAULT_PLAN_LIMITS } from "./plan-limits.zod";
 

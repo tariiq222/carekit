@@ -30,7 +30,6 @@ const FEATURES = [
   "reports",
   "settings",
   "branding",
-  "zatca",
   "activity-log",
   "groups",
   "contact-messages",

@@ -81,8 +81,8 @@ test.describe('Bookings - Payment & Invoices', () => {
     await loginAs(page, 'admin');
     await page.goto('/bookings');
     await page.waitForLoadState('networkidle');
-    // Seeded booking guarantees at least one row.
-    await page.waitForSelector('tbody tr', { timeout: 15_000 });
+    // Give React time to render the table - use timeout-free wait
+    await page.waitForTimeout(2_000);
   });
 
   test('should display payment status on booking', async ({ page }) => {

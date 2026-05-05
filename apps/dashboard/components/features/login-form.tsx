@@ -65,6 +65,7 @@ export function LoginForm() {
               error={flow.error}
               onSubmit={flow.submitPassword}
               onBack={flow.back}
+              onClearError={flow.clearError}
             />
           )}
           {flow.step === "otp" && (

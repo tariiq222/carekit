@@ -11,7 +11,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@deqah/ui"
-import { Badge } from "@deqah/ui"
 import { Separator } from "@deqah/ui"
 import { Skeleton } from "@deqah/ui"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
@@ -22,16 +21,6 @@ import { useLocale } from "@/components/locale-provider"
 import { formatDatePattern } from "@/lib/date"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { InvoiceActions } from "./invoice-actions"
-
-/* ─── ZATCA Styles ─── */
-
-const zatcaStyles: Record<string, string> = {
-  pending: "border-warning/30 bg-warning/10 text-warning",
-  submitted: "border-info/30 bg-info/10 text-info",
-  accepted: "border-success/30 bg-success/10 text-success",
-  rejected: "border-destructive/30 bg-destructive/10 text-destructive",
-  warning: "border-warning/30 bg-warning/10 text-warning",
-}
 
 /* ─── Props ─── */
 
@@ -64,16 +53,8 @@ export function InvoiceDetailSheet({
           <SheetTitle>{t("invoices.detail.title")}</SheetTitle>
           <SheetDescription>
             {invoice ? (
-              <span className="flex items-center gap-2">
-                <span className="tabular-nums font-medium text-foreground">
-                  {invoice.invoiceNumber}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={zatcaStyles[invoice.zatcaStatus] ?? ""}
-                >
-                  {t(`invoices.zatcaStatus.${invoice.zatcaStatus}`) || invoice.zatcaStatus}
-                </Badge>
+              <span className="tabular-nums font-medium text-foreground">
+                {invoice.invoiceNumber}
               </span>
             ) : (
               t("invoices.detail.loading")
@@ -140,30 +121,6 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
           value={<FormattedCurrency amount={invoice.totalAmount} locale={locale} decimals={2} />}
           numeric
         />
-      </DetailSection>
-
-      <Separator />
-
-      {/* ZATCA */}
-      <DetailSection title={t("invoices.detail.zatca")}>
-        <DetailRow
-          label={t("invoices.detail.status")}
-          value={t(`invoices.zatcaStatus.${invoice.zatcaStatus}`) || invoice.zatcaStatus}
-        />
-        {invoice.zatcaHash && (
-          <DetailRow
-            label={t("invoices.detail.hash")}
-            value={invoice.zatcaHash.slice(0, 16) + "..."}
-            numeric
-          />
-        )}
-        {invoice.sentAt && (
-          <DetailRow
-            label={t("invoices.detail.sentAt")}
-            value={formatDatePattern(invoice.sentAt, "PPp", { locale: isAr ? ar : undefined })}
-            numeric
-          />
-        )}
       </DetailSection>
 
       {/* QR Code */}

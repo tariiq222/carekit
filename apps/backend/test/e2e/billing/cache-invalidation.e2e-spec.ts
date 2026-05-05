@@ -62,7 +62,6 @@ describe('Phase 5 / Task 13 — Cache invalidation on plan/subscription changes'
           coupons: opts.coupons,
           advanced_reports: false,
           intake_forms: true,
-          zatca: false,
           custom_roles: false,
           activity_log: false,
           maxBranches: -1,
@@ -126,7 +125,6 @@ describe('Phase 5 / Task 13 — Cache invalidation on plan/subscription changes'
           coupons: true, // ← changed
           advanced_reports: false,
           intake_forms: true,
-          zatca: false,
           custom_roles: false,
           activity_log: false,
           maxBranches: -1,

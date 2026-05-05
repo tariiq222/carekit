@@ -10,15 +10,11 @@ function buildController() {
   const processPayment = fn({ id: 'pay-1' });
   const listPayments = fn({ data: [], meta: {} });
   const applyCoupon = fn({ discount: 10 });
-  const zatcaSubmit = fn({ status: 'ok' });
   const listCoupons = fn({ data: [], total: 0 });
   const getCoupon = fn({ id: 'c-1' });
   const createCoupon = fn({ id: 'c-1' });
   const updateCoupon = fn({ id: 'c-1' });
   const deleteCoupon = fn(undefined);
-  const getZatcaConfig = fn({ id: 'z-1' });
-  const upsertZatcaConfig = fn({ id: 'z-1' });
-  const onboardZatca = fn({ id: 'z-1' });
   const getPaymentStats = fn({ total: 0 });
   const refundPayment = fn({ id: 'pay-1' });
   const verifyPayment = fn({ id: 'pay-1' });
@@ -28,18 +24,16 @@ function buildController() {
   const testMoyasarConfig = fn({ ok: true, status: 'OK' });
   const controller = new DashboardFinanceController(
     createInvoice as never, getInvoice as never, processPayment as never,
-    listPayments as never, applyCoupon as never, zatcaSubmit as never,
-    listCoupons as never, getCoupon as never, createCoupon as never,
-    updateCoupon as never, deleteCoupon as never, getZatcaConfig as never,
-    upsertZatcaConfig as never, onboardZatca as never, getPaymentStats as never,
-    refundPayment as never, verifyPayment as never, bankTransferUpload as never,
-    getMoyasarConfig as never, upsertMoyasarConfig as never, testMoyasarConfig as never,
+    listPayments as never, applyCoupon as never, listCoupons as never,
+    getCoupon as never, createCoupon as never, updateCoupon as never,
+    deleteCoupon as never, getPaymentStats as never, refundPayment as never,
+    verifyPayment as never, bankTransferUpload as never, getMoyasarConfig as never,
+    upsertMoyasarConfig as never, testMoyasarConfig as never,
   );
   return {
     controller, createInvoice, getInvoice, processPayment, listPayments,
-    applyCoupon, zatcaSubmit, listCoupons, getCoupon, createCoupon,
-    updateCoupon, deleteCoupon, getZatcaConfig, upsertZatcaConfig,
-    onboardZatca, getPaymentStats, refundPayment, verifyPayment, bankTransferUpload,
+    applyCoupon, listCoupons, getCoupon, createCoupon,
+    updateCoupon, deleteCoupon, getPaymentStats, refundPayment, verifyPayment, bankTransferUpload,
     getMoyasarConfig, upsertMoyasarConfig, testMoyasarConfig,
   };
 }
@@ -87,13 +81,7 @@ describe('DashboardFinanceController', () => {
     expect(applyCoupon.execute).toHaveBeenCalledWith(expect.objectContaining({ code: 'SAVE10' }));
   });
 
-  it('zatca — passes invoiceId', async () => {
-    const { controller, zatcaSubmit } = buildController();
-    await controller.zatca({ invoiceId: 'inv-1' } as never);
-    expect(zatcaSubmit.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ invoiceId: 'inv-1' }),
-    );
-  });
+
 });
 
 describe('@RequireFeature metadata — COUPONS', () => {

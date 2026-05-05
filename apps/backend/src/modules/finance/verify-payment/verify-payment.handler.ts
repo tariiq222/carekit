@@ -41,7 +41,7 @@ export class VerifyPaymentHandler {
     // Approve path: mirror ProcessPaymentHandler — mark the payment COMPLETED,
     // recompute invoice.status from the sum of completed payments, and flip the
     // invoice to PAID/PARTIALLY_PAID atomically. Without this, downstream
-    // consumers (ZATCA submit, reports, booking confirmation) see a stuck
+    // consumers (reports, booking confirmation) see a stuck
     // ISSUED invoice even though the money has been received.
     const { updatedPayment, newInvoiceStatus } = await this.prisma.$transaction(
       async (tx) => {

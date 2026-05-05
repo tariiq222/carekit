@@ -5,13 +5,13 @@ import { PaymentStatus } from '@prisma/client';
 
 const mockInvoice = {
   id: 'inv-1', bookingId: 'booking-1',
-  payments: [], zatcaSub: null,
+  payments: [],
 };
 
 const mockPayment = { id: 'pay-1', invoiceId: 'inv-1', status: PaymentStatus.COMPLETED };
 
 describe('GetInvoiceHandler', () => {
-  it('returns invoice with payments and zatcaSub', async () => {
+  it('returns invoice with payments', async () => {
     const prisma = { invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice) } };
     const handler = new GetInvoiceHandler(prisma as never);
     const result = await handler.execute({ invoiceId: 'inv-1' });

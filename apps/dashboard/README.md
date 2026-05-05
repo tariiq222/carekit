@@ -72,7 +72,6 @@ lib/translations/              ← i18n strings (ar + en)
 | --------- | ----------- |
 | Clinical Core | bookings, clients, employees |
 | Financial | payments, invoices, coupons |
-| Compliance | zatca |
 | Catalog | services, branches, categories, departments, intake-forms |
 | Config | settings (incl. billing, sms), branding, content |
 | Users | users |

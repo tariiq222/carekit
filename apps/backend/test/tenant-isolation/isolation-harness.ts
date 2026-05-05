@@ -67,10 +67,6 @@ export async function bootHarness(): Promise<IsolationHarness> {
   process.env.PLATFORM_COMPANY_NAME_EN = 'Deqah';
   process.env.TENANT_ENFORCEMENT = process.env.TENANT_ENFORCEMENT ?? 'strict';
   process.env.DEFAULT_ORGANIZATION_ID = '00000000-0000-0000-0000-000000000001';
-  process.env.ZATCA_ENABLED = 'true';
-  process.env.ZATCA_API_URL = 'http://localhost:9999/zatca-stub';
-  process.env.ZATCA_API_KEY = 'test-zatca-key';
-
   const mod: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })

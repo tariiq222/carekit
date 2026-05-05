@@ -73,7 +73,7 @@ test.describe('Bookings List — user flow', () => {
 
     // Look for create/add button — try multiple selectors
     const createBtn = page.locator(
-      'button:has-text("إضافة حجز"), button:has-text("إضافة"), a[href="/bookings/create"]',
+      'button:has-text("حجز جديد"), button:has-text("إضافة"), a[href="/bookings/create"]',
     ).first();
 
     if (await createBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
@@ -81,7 +81,7 @@ test.describe('Bookings List — user flow', () => {
       // The create action opens a Dialog (not a page navigation)
       await page.waitForTimeout(1_000);
       const dialog = page.locator('[role="dialog"]');
-      await expect(dialog.or(page.locator('body'))).toBeVisible();
+      await expect(dialog).toBeVisible();
     } else {
       // Button may be behind a feature gate or differently labelled
       await expect(page.locator('body')).toBeVisible();

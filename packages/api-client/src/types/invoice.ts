@@ -1,7 +1,5 @@
 import type { PaginatedResponse, PaginationParams } from './api'
 
-export type ZatcaStatus = 'not_applicable' | 'pending' | 'reported' | 'failed'
-
 export interface InvoicePaymentInfo {
   id: string
   amount: number
@@ -30,7 +28,6 @@ export interface InvoiceListItem {
   invoiceHash: string | null
   previousHash: string | null
   qrCodeData: string | null
-  zatcaStatus: ZatcaStatus
   createdAt: string
   updatedAt: string
   payment?: InvoicePaymentInfo | null
@@ -40,13 +37,11 @@ export interface InvoiceStats {
   total: number
   sent: number
   pending: number
-  zatca: Record<string, number>
 }
 
 export interface InvoiceListQuery extends PaginationParams {
   dateFrom?: string
   dateTo?: string
-  zatcaStatus?: ZatcaStatus
 }
 
 export type InvoiceListResponse = PaginatedResponse<InvoiceListItem>

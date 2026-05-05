@@ -50,11 +50,6 @@ services:
       # Sentry — optional
       SENTRY_DSN: ${SENTRY_DSN:-}
 
-      # ZATCA — keep 'false' until UBL 2.1 builder is compliance-reviewed
-      ZATCA_ENABLED: "${ZATCA_ENABLED:-false}"
-      ZATCA_API_URL: ${ZATCA_API_URL:-}
-      ZATCA_API_KEY: ${ZATCA_API_KEY:-}
-
       # JWT (Identity BC)
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
