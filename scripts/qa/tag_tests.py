@@ -30,7 +30,6 @@ ID_TO_MODULE = {
     "AU": "Auth",
     "SV": "Services",
     "WL": "Whitelabel",
-    "ZT": "ZATCA",
     "BH": "OrgConfig",
     "ET": "Comms",
     "A11Y": "Accessibility",

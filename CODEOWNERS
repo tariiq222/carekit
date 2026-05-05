@@ -53,13 +53,6 @@ dashboard/src/components/features/payments/ @tariq
 dashboard/src/components/features/invoices/ @tariq
 
 # ─────────────────────────────────────────────
-# COMPLIANCE — ZATCA (regulated)
-# ─────────────────────────────────────────────
-backend/src/modules/zatca/               @tariq
-dashboard/src/app/(dashboard)/zatca/     @tariq
-dashboard/src/components/features/zatca/ @tariq
-
-# ─────────────────────────────────────────────
 # BOOKING SYSTEM (core clinical flow)
 # ─────────────────────────────────────────────
 backend/src/modules/bookings/            @tariq

@@ -20,8 +20,6 @@ const paid: InvoiceDetail = {
   dueAt: null,
   paidAt: '2026-04-17T10:05:00Z',
   createdAt: '2026-04-17T10:00:00Z',
-  qrCode: null,
-  zatcaStatus: null,
 };
 
 describe('InvoiceView', () => {
@@ -43,11 +41,6 @@ describe('InvoiceView', () => {
   it('hides the discount row when discountAmt is zero', () => {
     render(<InvoiceView invoice={{ ...paid, discountAmt: 0 }} />);
     expect(screen.queryByText('Discount')).toBeNull();
-  });
-
-  it('renders the ZATCA QR image when qrCode is present', () => {
-    render(<InvoiceView invoice={{ ...paid, qrCode: 'data:image/png;base64,xxx' }} />);
-    expect(screen.getByAltText('ZATCA QR Code')).toBeTruthy();
   });
 
   it('calls window.print when the Print button is clicked', () => {

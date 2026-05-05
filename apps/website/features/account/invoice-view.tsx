@@ -101,19 +101,6 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
             </div>
           </div>
 
-          {invoice.qrCode && (
-            <div style={{ textAlign: 'center', padding: '1rem', borderTop: '1px solid var(--border)' }}>
-              <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.5rem' }}>
-                ZATCA QR Code
-              </p>
-              <img
-                src={invoice.qrCode}
-                alt="ZATCA QR Code"
-                style={{ width: '150px', height: '150px', borderRadius: '8px' }}
-              />
-            </div>
-          )}
-
           <div
             className="invoice-view-chrome"
             style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', paddingTop: '0.5rem' }}
