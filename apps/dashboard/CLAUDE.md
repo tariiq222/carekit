@@ -45,7 +45,7 @@ lib/utils.ts                           pure utilities
 `departments/`, `employees/`, `intake-forms/`, `invoices/`,
 `notifications/`, `payments/`, `profile/`, `ratings/`, `reports/`,
 `services/`, `settings/` (with `billing/` and `sms/` sub-routes),
-`users/`, `zatca/`
+`users/`
 
 Top-level layout/error/loading: `layout.tsx`, `error.tsx`, `loading.tsx`, `page.tsx`.
 

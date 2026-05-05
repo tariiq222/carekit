@@ -45,14 +45,13 @@ pnpm dev:all
 
 ## Key Capabilities
 
-- **Multi-tenant** — `organizationId` scoping + Postgres RLS (strict by default); singletons per org for `BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `ZatcaConfig`, `OrganizationSmsConfig`
+- **Multi-tenant** — `organizationId` scoping + Postgres RLS (strict by default); singletons per org for `BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `OrganizationSmsConfig`
 - **Verticals** — ship a clinic vertical (dental, mental-health, …) with its own terminology pack and default seeds
 - **Billing & subscriptions** — plans CRUD, subscription state machine, feature gates, hybrid Moyasar (platform + per-tenant)
 - **Booking system** — in-clinic, phone, and video (Zoom) consultations; recurring, waitlist, walk-in
 - **Per-tenant SMS** — Unifonic / Taqnyat adapters with AES-GCM-encrypted credentials and DLR webhook
 - **Payments** — Moyasar (Mada, Apple Pay, Visa/MC) + bank transfer with AI receipt verification
 - **AI chatbot** — OpenRouter-powered RAG with pgvector, streams answers in Arabic & English
-- **ZATCA compliance** — Saudi e-invoice XML generation and submission per tenant
 - **Branding** — per-tenant logo, colors, fonts, domain — consumed by dashboard, mobile, and website at runtime
 - **Multi-branch** — each org can manage multiple physical locations
 - **RTL-first** — Arabic is the primary UI language; English is fully supported

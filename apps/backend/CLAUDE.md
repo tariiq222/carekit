@@ -30,7 +30,7 @@ src/
 | `identity/` | login, logout, refresh-token, get-current-user, client-auth, otp, list-memberships, switch-organization, users, roles, casl |
 | `people/` | clients, employees, specialties |
 | `bookings/` | create-/cancel-/confirm-/check-in-/reschedule-/complete-/no-show-/expire-booking, check-availability, create-recurring-booking, waitlist, walk-in, create-zoom-meeting, retry-zoom-meeting |
-| `finance/` | payments, moyasar-api, moyasar-webhook, refunds, coupons, zatca-config, zatca-submit, bank-transfer-upload |
+| `finance/` | payments, moyasar-api, moyasar-webhook, refunds, coupons, bank-transfer-upload |
 | `comms/` | notifications, fcm-tokens, email-templates, send-email, send-sms, send-push, org-sms-config, sms-dlr, contact-messages, chat |
 | `ai/` | chatbot RAG (streaming), knowledge-base, pgvector embeddings, semantic-search |
 | `media/` | uploads, MinIO presigned URLs |
@@ -148,7 +148,7 @@ npm run openapi:build-and-snapshot   # Rebuild openapi.json snapshot — commit 
 - **Multi-tenancy (default).** The backend runs multi-tenant by default. As of SaaS-02h, `TENANT_ENFORCEMENT=strict` is the platform default — any scoped-model query without CLS tenant context throws `UnauthorizedTenantAccessError`. Every cluster (02a–02g) is scoped; `SCOPED_MODELS` in `prisma.service.ts` lists the 52 tenant-scoped entities. `permissive` and `off` remain only for local dev + migration bootstrap. See `test/e2e/security/` for the contract (direct-id probe, IDOR, FK injection, `$queryRaw` backstop, webhook forgery, strict-mode enforcement).
 - **One handler = one public method (`execute`).** Don't add `executeVariant()`; create a new slice.
 - **Tests colocated as `*.handler.spec.ts`** next to the handler, not in a parallel `test/` tree.
-- **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
+- **Payments, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
 - **Migrations are immutable** — never edit or squash existing ones; add a new migration instead.
 
 ## Client Auth (Phase 3 — separate token namespace)

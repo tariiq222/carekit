@@ -38,7 +38,7 @@ For non-trivial work (touching 2+ files), use either pipeline. Don't freelance.
 - **Tenant resolver middleware**: `apps/backend/src/common/tenant/tenant-resolver.middleware.ts` — extracts `organizationId` per request from JWT/host/header.
 - **`TENANT_ENFORCEMENT='strict'`** is the default; production rejects any other value (`apps/backend/src/common/tenant/tenant.module.ts`).
 - **Postgres RLS** policies are applied per cluster (9 SaaS-phase migrations). Use `RlsHelper` to bypass only inside admin/cron contexts.
-- **Singleton-per-org models**: `BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `ZatcaConfig`, `OrganizationSmsConfig`.
+- **Singleton-per-org models**: `BrandingConfig`, `OrganizationSettings`, `ChatbotConfig`, `OrganizationSmsConfig`.
 - **Multi-org users**: `Membership` + `switch-organization` + `list-memberships` slices (`apps/backend/src/modules/identity/`).
 - **Verticals**: each org is seeded from a `Vertical` (`apps/backend/src/modules/platform/verticals/`) with terminology packs consumed via `useTerminology()` (dashboard + mobile).
 
@@ -166,7 +166,7 @@ Each cluster lives at `apps/backend/src/modules/<cluster>/` and contains vertica
 | `identity/` | client-auth, otp, switch-organization, list-memberships, casl, roles, users | `users/`, `settings/` |
 | `people/` | clients, employees, specialties | `clients/`, `employees/` |
 | `bookings/` | create/cancel/confirm/check-in/reschedule, recurring, waitlist, walk-in, create-zoom-meeting | `bookings/` |
-| `finance/` | payments, moyasar-api, moyasar-webhook, refunds, coupons, zatca-config, zatca-submit, bank-transfer-upload | `payments/`, `invoices/`, `coupons/`, `zatca/` |
+| `finance/` | payments, moyasar-api, moyasar-webhook, refunds, coupons, bank-transfer-upload | `payments/`, `invoices/`, `coupons/` |
 | `comms/` | notifications, fcm-tokens, email-templates, send-email, send-sms, org-sms-config, sms-dlr, contact-messages | `notifications/`, `contact-messages/` |
 | `ai/` | chatbot RAG (streaming), knowledge-base, pgvector embeddings | `chatbot/` |
 | `media/` | uploads, MinIO integration | (used across) |
@@ -195,7 +195,7 @@ The super-admin app operates the platform. Routes under `app/(admin)/`:
 
 ## Security Sensitivity Tiers
 
-- **Owner-only** (`@tariq`): payments, ZATCA, identity/auth, migrations, schema, tenant infra (`common/tenant/`), `platform/admin`, `platform/billing`, `platform/verticals`, super-admin app, CODEOWNERS
+- **Owner-only** (`@tariq`): payments, identity/auth, migrations, schema, tenant infra (`common/tenant/`), `platform/admin`, `platform/billing`, `platform/verticals`, super-admin app, CODEOWNERS
 - **Standard review**: all other clusters
 
 ## Kiwi TCMS — single source of truth

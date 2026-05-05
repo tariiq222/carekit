@@ -61,7 +61,7 @@ apps/backend/src/modules/<cluster>/<action>/
 - DTOs use Zod (`ZodValidationPipe`)
 - Every endpoint goes through `TenantResolverMiddleware` + `JwtAuthGuard`
 - Plan-tier-restricted endpoints add `@UseGuards(FeatureGuard)`
-- Owner-only clusters (payments, ZATCA, identity, tenant infra, `platform/admin|billing|verticals`): require `@tariq` review
+- Owner-only clusters (payments, identity, tenant infra, `platform/admin|billing|verticals`): require `@tariq` review
 
 ### Frontend (Next.js — dashboard / admin / website)
 
@@ -168,7 +168,7 @@ hotfix/<short-issue>
 
 ## Owner-Only Areas (require @tariq review)
 
-- `apps/backend/src/modules/finance/` (payments, Moyasar, ZATCA, refunds)
+- `apps/backend/src/modules/finance/` (payments, Moyasar, refunds)
 - `apps/backend/src/modules/identity/` (auth, OTP, JWT, memberships, switch-org)
 - `apps/backend/src/common/tenant/` (resolver, RLS, scoping extension)
 - `apps/backend/src/modules/platform/{admin,billing,verticals}/`

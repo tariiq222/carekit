@@ -32,7 +32,7 @@ For worktree mechanics, use `superpowers:using-git-worktrees` (the previous `WOR
 | 🎨 **Khaled** (frontend) | `claude-sonnet-4-6` | Next.js 15 (App Router) + React 19 · React Native 0.83 + Expo SDK 55 · Tailwind 4 · shadcn/ui · next-intl | ✅ |
 | 🧪 **Saad** (tester) | `claude-sonnet-4-6` | Jest + Supertest + Vitest + Chrome DevTools MCP for manual QA · Kiwi TCMS sync | ✅ |
 | 🔍 **Majed** (type-checker) | `claude-sonnet-4-6` | TypeScript strict, Zod schemas, ESLint, Prettier | ✅ |
-| 🔒 **Abdullah** (security) | `claude-opus-4-7` | Security review — owner-only tiers (payments, ZATCA, auth, migrations, schema, CODEOWNERS) | ❌ |
+| 🔒 **Abdullah** (security) | `claude-opus-4-7` | Security review — owner-only tiers (payments, auth, migrations, schema, CODEOWNERS) | ❌ |
 | ♻️ **Badr** (refactor) | `claude-sonnet-4-6` | Refactor within the 350-line rule | ✅ |
 | 📝 **Salem** (docs) | `claude-sonnet-4-6` | JSDoc, README, migration notes, ADRs — AR+EN when user-facing | ✅ |
 | ⚙️ **Turki** (devops) | `claude-sonnet-4-6` | Docker Compose, Turborepo, GitHub Actions, Prisma migrations | ✅ |
@@ -232,7 +232,7 @@ Sometimes Yazid is wrong. Fahad adjusts mid-flight:
 |-----------|--------|
 | Task bigger than Yazid thought | Upgrade path (FAST → STANDARD → DEEP) |
 | Schema change appears unexpectedly | Pull Rashed in |
-| Owner-only module touched (payments, ZATCA, auth, migrations, schema, CODEOWNERS) | Pull Abdullah in |
+| Owner-only module touched (payments, auth, migrations, schema, CODEOWNERS) | Pull Abdullah in |
 | Task smaller than expected | Stay at current path, deliver fast |
 
 **Downgrades are logged but don't require user approval. Upgrades exceeding 2× original budget require user approval.**
@@ -243,7 +243,7 @@ Sometimes Yazid is wrong. Fahad adjusts mid-flight:
 
 | Tier | Modules | Reviewer |
 |------|---------|----------|
-| **Owner-only** | `payments/` · `zatca/` · `auth/` · `prisma/` · schema changes · `CODEOWNERS` | Abdullah (mandatory) |
+| **Owner-only** | `payments/` · `auth/` · `prisma/` · schema changes · `CODEOWNERS` | Abdullah (mandatory) |
 | **Standard** | Every other backend module, dashboard route, mobile flow | Fahad |
 
 Any task touching Owner-only scope is automatically upgraded to DEEP by Fahad regardless of Yazid's initial routing.
