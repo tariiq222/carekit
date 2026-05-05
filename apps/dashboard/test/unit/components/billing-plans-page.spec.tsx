@@ -60,7 +60,7 @@ const plans = [
     priceMonthly: "99",
     priceAnnual: "999",
     currency: "SAR",
-    limits: { maxEmployees: 5, chatbotEnabled: false, zatcaEnabled: false },
+    limits: { maxEmployees: 5, chatbotEnabled: false },
     sortOrder: 1,
   },
   {
@@ -71,7 +71,7 @@ const plans = [
     priceMonthly: "199",
     priceAnnual: "1999",
     currency: "SAR",
-    limits: { maxEmployees: 20, chatbotEnabled: true, zatcaEnabled: true },
+    limits: { maxEmployees: 20, chatbotEnabled: true },
     sortOrder: 2,
   },
 ]
@@ -119,7 +119,6 @@ describe("BillingPlansPage", () => {
           "billing.plans.features": "Feature comparison",
           "billing.plans.employees": "Employees",
           "billing.plans.chatbot": "AI chatbot",
-          "billing.plans.zatca": "ZATCA",
           "billing.usage.unlimited": "Unlimited",
         }[key] ?? key),
       format: (key: string, vars: Record<string, string>) =>

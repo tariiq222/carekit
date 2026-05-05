@@ -2,7 +2,7 @@
  * Invoice Types — Deqah Dashboard
  */
 
-import type { PaginatedQuery, ZatcaStatus } from "./common"
+import type { PaginatedQuery } from "./common"
 
 /* ─── Entities ─── */
 
@@ -13,8 +13,6 @@ export interface Invoice {
   subtotal: number
   taxAmount: number
   totalAmount: number
-  zatcaStatus: ZatcaStatus
-  zatcaHash: string | null
   qrCode: string | null
   sentAt: string | null
   createdAt: string
@@ -50,7 +48,6 @@ export interface InvoiceListQuery extends PaginatedQuery {
   search?: string
   dateFrom?: string
   dateTo?: string
-  zatcaStatus?: ZatcaStatus
 }
 
 /* ─── DTOs ─── */

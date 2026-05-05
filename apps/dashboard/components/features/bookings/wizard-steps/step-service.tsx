@@ -28,7 +28,7 @@ function buildMeta(service: Service, t: (key: string) => string): string {
   // Price — runtime convention is halalas-as-Decimal (see docs/superpowers/
   // tech-debt/price-units-*). Use formatPrice() to convert/format so this
   // dialog matches the /services list and service-columns. The eventual
-  // halalas↔SAR unification migration (owner-only — payments/ZATCA) will
+  // halalas↔SAR unification migration (owner-only — payments) will
   // only need to update lib/money.ts.
   if (!service.hidePriceOnBooking) {
     const currency = t("bookings.wizard.step.service.currency")

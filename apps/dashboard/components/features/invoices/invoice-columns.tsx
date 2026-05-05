@@ -7,7 +7,6 @@ import {
   ViewIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons"
-import { Badge } from "@deqah/ui"
 import { Button } from "@deqah/ui"
 import {
   DropdownMenu,
@@ -18,14 +17,6 @@ import {
 import type { Invoice } from "@/lib/types/invoice"
 import { formatClinicDate } from "@/lib/utils"
 import type { DateFormat } from "@/lib/utils"
-
-const zatcaStyles: Record<string, string> = {
-  pending: "border-warning/30 bg-warning/10 text-warning",
-  submitted: "border-info/30 bg-info/10 text-info",
-  accepted: "border-success/30 bg-success/10 text-success",
-  rejected: "border-destructive/30 bg-destructive/10 text-destructive",
-  warning: "border-warning/30 bg-warning/10 text-warning",
-}
 
 interface InvoiceColumnCallbacks {
   onView: (invoice: Invoice) => void
@@ -86,18 +77,6 @@ export function getInvoiceColumns(
         <span className="tabular-nums text-sm text-muted-foreground">
           {(row.original.taxAmount / 100).toFixed(2)}
         </span>
-      ),
-    },
-    {
-      accessorKey: "zatcaStatus",
-      header: t("invoices.col.zatca"),
-      cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={zatcaStyles[row.original.zatcaStatus] ?? ""}
-        >
-          {row.original.zatcaStatus}
-        </Badge>
       ),
     },
     {

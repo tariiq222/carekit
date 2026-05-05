@@ -5,10 +5,9 @@ import { Card } from "@deqah/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import { ZoomSettingsForm } from "@/components/features/zoom/zoom-settings-form"
-import { ZatcaTab } from "@/components/features/invoices/zatca-tab"
 import { EmailConfigForm } from "@/components/features/email-config/email-config-form"
 
-type IntegrationId = "zoom" | "zatca" | "email"
+type IntegrationId = "zoom" | "email"
 
 export function SettingsIntegrationsTab() {
   const { t } = useLocale()
@@ -17,7 +16,6 @@ export function SettingsIntegrationsTab() {
   const integrations: { id: IntegrationId; label: string }[] = [
     { id: "zoom", label: "Zoom" },
     { id: "email", label: t("emailConfig.menuLabel") },
-    { id: "zatca", label: t("settings.tabs.zatca") },
   ]
 
   return (
@@ -63,7 +61,6 @@ export function SettingsIntegrationsTab() {
         <div className="flex flex-1 flex-col overflow-y-auto bg-surface-muted/50 p-5">
           {activeId === "zoom" && <ZoomSettingsForm />}
           {activeId === "email" && <EmailConfigForm />}
-          {activeId === "zatca" && <ZatcaTab />}
         </div>
       </div>
     </Card>
