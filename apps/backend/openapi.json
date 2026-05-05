@@ -5096,6 +5096,19 @@
         },
         "type": "object"
       },
+      "RequestDashboardOtpDto": {
+        "properties": {
+          "identifier": {
+            "description": "Email address or Saudi mobile number (E.164 format)",
+            "example": "user@example.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier"
+        ],
+        "type": "object"
+      },
       "RequestMobileLoginOtpDto": {
         "properties": {
           "identifier": {
@@ -5141,7 +5154,8 @@
               "CLIENT_LOGIN",
               "CLIENT_PASSWORD_RESET",
               "MOBILE_REGISTER",
-              "MOBILE_LOGIN"
+              "MOBILE_LOGIN",
+              "DASHBOARD_LOGIN"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -6891,13 +6905,14 @@
             "type": "string"
           },
           "webhookSecret": {
-            "description": "Optional Moyasar webhook signing secret. Stored AES-256-GCM encrypted.",
+            "description": "Tenant Moyasar webhook signing secret. REQUIRED — used to verify inbound webhook signatures per-tenant. Stored AES-256-GCM encrypted.",
             "type": "string"
           }
         },
         "required": [
           "publishableKey",
           "secretKey",
+          "webhookSecret",
           "isLive"
         ],
         "type": "object"
@@ -7392,6 +7407,25 @@
         ],
         "type": "string"
       },
+      "VerifyDashboardOtpDto": {
+        "properties": {
+          "code": {
+            "description": "6-digit OTP code",
+            "example": "123456",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Email address or Saudi mobile number (E.164 format)",
+            "example": "user@example.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier",
+          "code"
+        ],
+        "type": "object"
+      },
       "VerifyMobileOtpDto": {
         "properties": {
           "code": {
@@ -7451,7 +7485,8 @@
               "CLIENT_LOGIN",
               "CLIENT_PASSWORD_RESET",
               "MOBILE_REGISTER",
-              "MOBILE_LOGIN"
+              "MOBILE_LOGIN",
+              "DASHBOARD_LOGIN"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -12644,6 +12679,192 @@
           }
         ],
         "summary": "Update the caller's per-org display profile",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/otp/request-dashboard": {
+      "post": {
+        "operationId": "AuthController_requestDashboardOtpEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestDashboardOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "OTP sent successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Request OTP for dashboard login",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/otp/verify-dashboard": {
+      "post": {
+        "operationId": "AuthController_verifyDashboardOtpEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyDashboardOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accessToken": {
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "example": 900,
+                      "type": "number"
+                    },
+                    "refreshToken": {
+                      "example": "a1b2c3d4-...",
+                      "type": "string"
+                    },
+                    "user": {
+                      "properties": {
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "email": {
+                          "format": "email",
+                          "type": "string"
+                        },
+                        "firstName": {
+                          "type": "string"
+                        },
+                        "gender": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "isActive": {
+                          "type": "boolean"
+                        },
+                        "isSuperAdmin": {
+                          "type": "boolean"
+                        },
+                        "lastName": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "organizationId": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "permissions": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "phone": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Access + refresh tokens with user profile"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid or expired code"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid OTP code"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify OTP for dashboard login",
         "tags": [
           "Public / Auth"
         ]
