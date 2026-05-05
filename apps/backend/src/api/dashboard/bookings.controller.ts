@@ -9,6 +9,7 @@ import {
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { UserId } from '../../common/auth/user-id.decorator';
+import { CurrentUser, type JwtUser } from '../../common/auth/current-user.decorator';
 import { ApiStandardResponses } from '../../common/swagger';
 import { ApiErrorDto } from '../../common/swagger';
 import { CreateBookingHandler } from '../../modules/bookings/create-booking/create-booking.handler';
@@ -143,7 +144,7 @@ export class DashboardBookingsController {
       },
     },
   })
-  listBookings(@Query() q: ListBookingsDto) {
+  listBookings(@CurrentUser() user: JwtUser, @Query() q: ListBookingsDto) {
     const { page, limit, fromDate, toDate, ...rest } = q;
     return this.listHandler.execute({
       ...rest,
@@ -151,6 +152,8 @@ export class DashboardBookingsController {
       limit: limit ?? 20,
       fromDate: fromDate ? new Date(fromDate) : undefined,
       toDate: toDate ? new Date(toDate) : undefined,
+      membershipRole: user.membershipRole ?? null,
+      userId: user.sub,
     });
   }
 

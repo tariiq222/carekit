@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { toListResponse } from '../../../common/dto';
 import { ListBookingsDto } from './list-bookings.dto';
 import { mapBookingRow, type BookingRelations } from '../booking-row.mapper';
@@ -9,17 +10,37 @@ export type ListBookingsQuery = Omit<ListBookingsDto, 'page' | 'limit' | 'fromDa
   limit: number;
   fromDate?: Date;
   toDate?: Date;
+  membershipRole?: string | null;
+  userId?: string;
 };
 
 @Injectable()
 export class ListBookingsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(query: ListBookingsQuery) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    let employeeWhere: { employeeId?: string } = {};
+    if (query.membershipRole === 'EMPLOYEE' && query.userId) {
+      const emp = await this.prisma.employee.findFirst({
+        where: { organizationId, userId: query.userId },
+        select: { id: true },
+      });
+      if (!emp) {
+        return toListResponse([], 0, query.page, query.limit);
+      }
+      employeeWhere = { employeeId: emp.id };
+    }
+
     const searchTerm = query.search?.trim();
     const where: Record<string, unknown> = {
       ...(query.clientId ? { clientId: query.clientId } : {}),
       ...(query.employeeId ? { employeeId: query.employeeId } : {}),
+      ...employeeWhere,
       ...(query.branchId ? { branchId: query.branchId } : {}),
       ...(query.serviceId ? { serviceId: query.serviceId } : {}),
       ...(query.status ? { status: query.status } : {}),
