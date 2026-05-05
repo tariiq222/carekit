@@ -24,11 +24,6 @@ export const envValidationSchema = Joi.object({
   // In production MUST be set to the dashboard + mobile origins (no localhost).
   CORS_ORIGINS: Joi.string().allow('').optional(),
 
-// ZATCA e-invoicing — set to 'true' ONLY when UBL 2.1 XML builder is complete
-  // and compliance-reviewed. Any other value leaves the submit endpoint
-  // returning 503 so a half-built XML is never posted to ZATCA in production.
-  ZATCA_ENABLED: Joi.string().valid('true', 'false').default('false'),
-
   // Database (Prisma)
   DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
 
@@ -169,9 +164,6 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.string().allow('').optional(),
   }),
 
-  // ZATCA API config — only consulted when ZATCA_ENABLED=true.
-  ZATCA_API_URL: Joi.string().uri().allow('').optional(),
-  ZATCA_API_KEY: Joi.string().allow('').optional(),
 })
   .unknown(true)
   // Production safety net: refuse to boot if any sensitive value is still a
