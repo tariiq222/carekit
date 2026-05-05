@@ -12,7 +12,7 @@ export class GetChatbotConfigHandler {
   /**
    * SaaS-02f: ChatbotConfig is now an org-unique singleton.
    * Upsert-on-read: the first call per org lazily creates the row.
-   * Mirrors BrandingConfig (02c) and ZatcaConfig (02e).
+   * Mirrors BrandingConfig (02c).
    */
   async execute() {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();

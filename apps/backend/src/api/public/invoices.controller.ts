@@ -14,7 +14,7 @@ export class PublicInvoicesController {
 
   @UseGuards(ClientSessionGuard)
   @Get(':id')
-  @ApiOperation({ summary: 'Get invoice details with ZATCA QR code (requires client auth)' })
+  @ApiOperation({ summary: 'Get invoice details (requires client auth)' })
   async getInvoice(
     @Param('id', ParseUUIDPipe) id: string,
     @ClientSession() client: { id: string },

@@ -123,7 +123,6 @@ describe('Admin Impersonation Lifecycle (HTTP e2e)', () => {
             coupons: false,
             advanced_reports: false,
             intake_forms: false,
-            zatca: false,
             custom_roles: false,
             activity_log: false,
             zoom_integration: false,

@@ -63,7 +63,6 @@ describe('Phase 6 / Task 10 — Quota enforcement e2e (maxEmployees)', () => {
             coupons: false,
             advanced_reports: false,
             intake_forms: true,
-            zatca: false,
             custom_roles: false,
             activity_log: false,
             maxBranches: -1,

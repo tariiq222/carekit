@@ -87,7 +87,6 @@ describe('Cache Invalidation Edge Cases (e2e)', () => {
           coupons: features.coupons,
           advanced_reports: features.advanced_reports,
           intake_forms: false,
-          zatca: false,
           custom_roles: false,
           activity_log: false,
           zoom_integration: false,
