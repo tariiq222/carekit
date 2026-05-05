@@ -1,18 +1,23 @@
 // email-channel-adapter — sends OTP/notification emails.
 //
-// Priority:
+// Priority (in order):
 //   1. Tenant's configured provider (Resend / SendGrid / Mailchimp / SMTP)
 //      — only when organizationId is supplied and a provider is configured.
-//   2. Platform SMTP (SmtpService) — fallback for all other cases.
+//   2. PlatformMailerService (Resend via BullMQ) — for platform-level flows
+//      where no organizationId is present (e.g. dashboard OTP before sign-in),
+//      and as the primary fallback when the tenant provider is unavailable.
+//   3. Platform SMTP (SmtpService) — last resort if PlatformMailerService throws
+//      (e.g. queue unavailable / Resend API key missing).
 //
-// This means: if the clinic owner configures Resend in /settings/integrations,
-// OTP and all notification emails go out from their own account.
-// If they haven't configured anything, the platform SMTP is used — same as before.
+// Tenant path (step 1) is completely unchanged.
 
 import { Injectable, Logger } from '@nestjs/common';
-import { SmtpService } from '../../../infrastructure/mail';
+import { SmtpService, PlatformMailerService } from '../../../infrastructure/mail';
 import { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
 import { NotificationChannel } from './notification-channel';
+
+// Must match OTP_EXPIRY_MINUTES in request-dashboard-otp.handler.ts (5 min).
+const PLATFORM_OTP_EXPIRY_MINUTES = 5;
 
 const OTP_SUBJECT = 'رمز التحقق / Verification Code';
 
@@ -43,6 +48,7 @@ export class EmailChannelAdapter implements NotificationChannel {
   constructor(
     private readonly smtp: SmtpService,
     private readonly emailFactory: EmailProviderFactory,
+    private readonly platformMailer: PlatformMailerService,
   ) {}
 
   async send(
@@ -62,12 +68,25 @@ export class EmailChannelAdapter implements NotificationChannel {
           return;
         }
       } catch (err) {
-        // Tenant config lookup failed — fall through to platform SMTP
+        // Tenant config lookup failed — fall through to platform Resend
         this.logger.warn(`Tenant email provider lookup failed for org ${organizationId}: ${String(err)}`);
       }
     }
 
-    // ── 2. Platform SMTP fallback ─────────────────────────────────────────
+    // ── 2. Platform Resend (PlatformMailerService) ────────────────────────
+    try {
+      await this.platformMailer.sendOtpLogin(identifier, {
+        code: message,
+        expiresInMinutes: PLATFORM_OTP_EXPIRY_MINUTES,
+      });
+      this.logger.debug(`OTP email sent via platform Resend to ${identifier}`);
+      return;
+    } catch (err) {
+      // Queue unavailable or Resend key missing — fall through to SMTP last resort
+      this.logger.warn(`Platform Resend sendOtpLogin failed for ${identifier}: ${String(err)}`);
+    }
+
+    // ── 3. Platform SMTP (last resort) ────────────────────────────────────
     if (!this.smtp.isAvailable()) {
       this.logger.warn(`No email transport available — skipping OTP email to ${identifier}`);
       return;

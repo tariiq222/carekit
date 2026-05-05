@@ -31,7 +31,7 @@ test.describe('Booking Create Wizard — user flow', () => {
     await page.waitForLoadState('networkidle');
 
     // 3. Open create dialog
-    const addBtn = page.getByRole('button', { name: /إضافة حجز/i });
+    const addBtn = page.getByRole('button', { name: /حجز جديد/i });
     await addBtn.click();
 
     // Dialog should open
@@ -40,7 +40,7 @@ test.describe('Booking Create Wizard — user flow', () => {
 
     // 4. Step 1 — Client search tab is active by default
     // Wait for client search input to appear
-    const clientSearchInput = page.getByPlaceholder(/ابحث عن عميل/i);
+    const clientSearchInput = page.getByPlaceholder(/ابحث بالاسم أو رقم الجوال/i);
     await expect(clientSearchInput).toBeVisible({ timeout: 5_000 });
 
     // 5. Switch to "إنشاء عميل جديد" (create) tab since search may be empty
@@ -101,10 +101,13 @@ test.describe('Booking Create Wizard — user flow', () => {
       await page.waitForTimeout(1_000);
     }
 
-    const timeSlot = page.locator('button[class*="time"], [class*="slot"]').first();
-    if (await timeSlot.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await timeSlot.click();
-      await page.waitForTimeout(500);
+    const timeSlotGrid = page.locator('div.grid-cols-3').first();
+    if (await timeSlotGrid.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      const slotButton = timeSlotGrid.locator('button[type="button"]').first();
+      if (await slotButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        await slotButton.click({ force: true });
+        await page.waitForTimeout(500);
+      }
     }
 
     // 12. Confirm step — look for confirm/submit button
@@ -124,7 +127,7 @@ test.describe('Booking Create Wizard — user flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Open dialog
-    const addBtn = page.getByRole('button', { name: /إضافة حجز/i });
+    const addBtn = page.getByRole('button', { name: /حجز جديد/i });
     await addBtn.click();
 
     const dialog = page.locator('[role="dialog"]');
@@ -159,7 +162,7 @@ test.describe('Booking Create Wizard — user flow', () => {
     await page.goto('/bookings');
     await page.waitForLoadState('networkidle');
 
-    const addBtn = page.getByRole('button', { name: /إضافة حجز/i });
+    const addBtn = page.getByRole('button', { name: /حجز جديد/i });
     await addBtn.click();
 
     const dialog = page.locator('[role="dialog"]');

@@ -27,7 +27,7 @@ export async function login(
 }
 
 export async function requestDashboardOtp(identifier: string): Promise<{ success: boolean }> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/otp/request-dashboard`, {
+  const res = await fetch(`/api/proxy/auth/otp/request-dashboard`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -41,7 +41,7 @@ export async function requestDashboardOtp(identifier: string): Promise<{ success
 }
 
 export async function verifyDashboardOtp(identifier: string, code: string): Promise<AuthResponse> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/otp/verify-dashboard`, {
+  const res = await fetch(`/api/proxy/auth/otp/verify-dashboard`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -66,7 +66,7 @@ export interface RegisterTenantPayload {
 }
 
 export async function registerTenant(payload: RegisterTenantPayload): Promise<AuthResponse> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/tenants/register`, {
+  const res = await fetch(`/api/proxy/public/tenants/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

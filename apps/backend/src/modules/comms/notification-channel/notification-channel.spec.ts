@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SmtpService } from '../../../infrastructure/mail';
+import { SmtpService, PlatformMailerService } from '../../../infrastructure/mail';
 import { AuthenticaClient } from '../../../infrastructure/authentica';
 import { EmailProviderFactory } from '../../../infrastructure/email/email-provider.factory';
 import { EmailChannelAdapter } from './email-channel.adapter';
@@ -11,33 +11,51 @@ const buildEmailFactoryMock = (): jest.Mocked<Partial<EmailProviderFactory>> => 
   forCurrentTenant: jest.fn().mockResolvedValue(null),
 });
 
+const buildPlatformMailerMock = () => ({
+  sendOtpLogin: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('EmailChannelAdapter', () => {
   let adapter: EmailChannelAdapter;
-  let smtp: jest.Mocked<SmtpService>;
+  let smtp: jest.Mocked<Pick<SmtpService, 'isAvailable' | 'sendMail'>>;
+  let platformMailer: jest.Mocked<Pick<PlatformMailerService, 'sendOtpLogin'>>;
 
   beforeEach(async () => {
     const smtpMock = {
       isAvailable: jest.fn().mockReturnValue(true),
       sendMail: jest.fn().mockResolvedValue(undefined),
     };
+    const platformMailerMock = buildPlatformMailerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailChannelAdapter,
         { provide: SmtpService, useValue: smtpMock },
         { provide: EmailProviderFactory, useValue: buildEmailFactoryMock() },
+        { provide: PlatformMailerService, useValue: platformMailerMock },
       ],
     }).compile();
 
     adapter = module.get<EmailChannelAdapter>(EmailChannelAdapter);
     smtp = module.get(SmtpService);
+    platformMailer = module.get(PlatformMailerService);
   });
 
   it('should have EMAIL kind', () => {
     expect(adapter.kind).toBe(OtpChannel.EMAIL);
   });
 
-  it('should send email via smtp', async () => {
+  it('should send OTP via platform Resend (no organizationId)', async () => {
+    await adapter.send('test@example.com', '1234');
+    expect(platformMailer.sendOtpLogin).toHaveBeenCalledWith(
+      'test@example.com',
+      { code: '1234', expiresInMinutes: 5 },
+    );
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('falls through to SMTP when platformMailer throws', async () => {
+    (platformMailer.sendOtpLogin as jest.Mock).mockRejectedValueOnce(new Error('queue down'));
     await adapter.send('test@example.com', '1234');
     expect(smtp.sendMail).toHaveBeenCalledWith(
       'test@example.com',
@@ -46,8 +64,9 @@ describe('EmailChannelAdapter', () => {
     );
   });
 
-  it('should not throw when smtp is unavailable', async () => {
-    smtp.isAvailable.mockReturnValue(false);
+  it('should not throw when both platformMailer and smtp are unavailable', async () => {
+    (platformMailer.sendOtpLogin as jest.Mock).mockRejectedValueOnce(new Error('queue down'));
+    (smtp as jest.Mocked<typeof smtp>).isAvailable.mockReturnValue(false);
     await expect(adapter.send('test@example.com', '1234')).resolves.not.toThrow();
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
@@ -104,6 +123,7 @@ describe('NotificationChannelRegistry', () => {
       isConfigured: jest.fn().mockReturnValue(true),
       sendOtp: jest.fn().mockResolvedValue(undefined),
     };
+    const platformMailerMock = buildPlatformMailerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -113,6 +133,7 @@ describe('NotificationChannelRegistry', () => {
         { provide: SmtpService, useValue: smtpMock },
         { provide: AuthenticaClient, useValue: authenticaMock },
         { provide: EmailProviderFactory, useValue: buildEmailFactoryMock() },
+        { provide: PlatformMailerService, useValue: platformMailerMock },
       ],
     }).compile();
 

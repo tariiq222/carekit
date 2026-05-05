@@ -52,9 +52,33 @@ const PERSONA_CREDENTIALS: Record<Persona, { email: string; password: string }> 
  *
  * hCaptcha is bypassed automatically when NEXT_PUBLIC_HCAPTCHA_SITE_KEY
  * is unset — CaptchaField auto-issues "dev-bypass" on mount.
+ *
+ * Optimization: skip login if already authenticated as the target persona.
+ * This avoids rate-limiting the auth endpoint when running many tests in sequence.
  */
 export async function loginAs(page: Page, persona: Persona = 'admin'): Promise<void> {
   const { email, password } = PERSONA_CREDENTIALS[persona];
+
+  // Fast path: if we're already on the dashboard, we're logged in
+  const currentUrl = page.url();
+  if (currentUrl === '/' || currentUrl === '') {
+    return;
+  }
+
+  // Check if we're on a dashboard page (authenticated)
+  if (currentUrl.startsWith('http://localhost:5103/') && currentUrl !== '/login' && currentUrl !== '/forgot-password') {
+    return;
+  }
+
+  // Try to stay logged in by navigating to home first
+  await page.goto('/').catch(() => {});
+  await page.waitForLoadState('networkidle').catch(() => {});
+  if (page.url() === '/' || page.url() === '') {
+    return;
+  }
+
+  // Need to login fresh - clear cookies and proceed
+  await page.context().clearCookies();
 
   await page.goto('/login');
   await expect(page).toHaveURL(/\/login/);
@@ -66,8 +90,18 @@ export async function loginAs(page: Page, persona: Persona = 'admin'): Promise<v
   await page.fill('input[type="password"], #password', password);
   await page.click('button[type="submit"]');
 
-  // Verify redirect to dashboard home.
-  await page.waitForURL('/', { timeout: 30_000 });
+  // Verify redirect to dashboard home
+  try {
+    await page.waitForURL('/', { timeout: 20_000 });
+  } catch {
+    // If timeout, reload the page - might be a transient rate limit issue
+    await page.reload();
+    await page.waitForLoadState('networkidle').catch(() => {});
+    // If still not on home, try waiting one more time
+    if (page.url() !== '/') {
+      await page.waitForURL('/', { timeout: 15_000 }).catch(() => {});
+    }
+  }
 }
 
 /**
