@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@deqah/ui/primitives/table';
+import { formatAdminDate } from '@/lib/date';
 import type { OrganizationBillingIdentity, SubscriptionRow, SubscriptionStatus } from '../types';
 
 const STATUS_TONE: Record<SubscriptionStatus, string> = {
@@ -35,14 +36,6 @@ interface Props {
   isLoading: boolean;
 }
 
-function fmtDate(iso: string | null, locale: string) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 export function SubscriptionsTable({ items, isLoading }: Props) {
   const locale = useLocale();
@@ -94,10 +87,10 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.billingCycle}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {fmtDate(s.currentPeriodEnd, locale)}
+                  {formatAdminDate(s.currentPeriodEnd, locale)}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {fmtDate(s.lastPaymentAt, locale)}
+                  {formatAdminDate(s.lastPaymentAt, locale)}
                 </TableCell>
                 <TableCell className="text-end">
                   <Button asChild variant="ghost" size="sm">

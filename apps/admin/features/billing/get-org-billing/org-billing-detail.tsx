@@ -25,6 +25,7 @@ import { GrantCreditDialog } from '../grant-credit/grant-credit-dialog';
 import { RefundInvoiceDialog } from '../refund-invoice/refund-invoice-dialog';
 import { WaiveInvoiceDialog } from '../waive-invoice/waive-invoice-dialog';
 import { BillingHealthCard } from '../billing-health-card/billing-health-card';
+import { formatAdminDate } from '@/lib/date';
 import { useGetOrgBilling } from './use-get-org-billing';
 
 const WAIVABLE: SubscriptionInvoiceStatus[] = ['DUE', 'FAILED'];
@@ -50,14 +51,6 @@ const INV_TONE: Record<SubscriptionInvoiceStatus, string> = {
   DRAFT: 'border-muted bg-muted text-muted-foreground',
 };
 
-function fmt(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 interface Props {
   orgId: string;
@@ -136,13 +129,13 @@ export function OrgBillingDetail({ orgId }: Props) {
                 </Field>
                 <Field label="Cycle">{data.subscription.billingCycle}</Field>
                 <Field label="Period">
-                  {fmt(data.subscription.currentPeriodStart)} →{' '}
-                  {fmt(data.subscription.currentPeriodEnd)}
+                  {formatAdminDate(data.subscription.currentPeriodStart, 'en')} →{' '}
+                  {formatAdminDate(data.subscription.currentPeriodEnd, 'en')}
                 </Field>
-                <Field label="Trial ends">{fmt(data.subscription.trialEndsAt)}</Field>
-                <Field label="Last payment">{fmt(data.subscription.lastPaymentAt)}</Field>
+                <Field label="Trial ends">{formatAdminDate(data.subscription.trialEndsAt, 'en')}</Field>
+                <Field label="Last payment">{formatAdminDate(data.subscription.lastPaymentAt, 'en')}</Field>
                 {data.subscription.pastDueSince ? (
-                  <Field label="Past due since">{fmt(data.subscription.pastDueSince)}</Field>
+                  <Field label="Past due since">{formatAdminDate(data.subscription.pastDueSince, 'en')}</Field>
                 ) : null}
                 {data.subscription.lastFailureReason ? (
                   <Field label="Last failure">{data.subscription.lastFailureReason}</Field>
@@ -200,10 +193,10 @@ export function OrgBillingDetail({ orgId }: Props) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {fmt(inv.periodStart)} → {fmt(inv.periodEnd)}
+                        {formatAdminDate(inv.periodStart, 'en')} → {formatAdminDate(inv.periodEnd, 'en')}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {fmt(inv.dueDate)}
+                        {formatAdminDate(inv.dueDate, 'en')}
                       </TableCell>
                       <TableCell className="text-right">
                         {WAIVABLE.includes(inv.status) ? (
@@ -287,10 +280,10 @@ export function OrgBillingDetail({ orgId }: Props) {
                       </TableCell>
                       <TableCell className="text-sm">{c.reason}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {fmt(c.grantedAt)}
+                        {formatAdminDate(c.grantedAt, 'en')}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {c.consumedAt ? fmt(c.consumedAt) : 'unused'}
+                        {c.consumedAt ? formatAdminDate(c.consumedAt, 'en') : 'unused'}
                       </TableCell>
                     </TableRow>
                   ))
@@ -323,7 +316,7 @@ export function OrgBillingDetail({ orgId }: Props) {
                   dunningLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">{log.attemptNumber}</TableCell>
-                      <TableCell className="text-sm">{fmt(log.executedAt)}</TableCell>
+                      <TableCell className="text-sm">{formatAdminDate(log.executedAt, 'en')}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
@@ -342,7 +335,7 @@ export function OrgBillingDetail({ orgId }: Props) {
                         {log.failureReason ?? '—'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {fmt(log.scheduledFor)}
+                        {formatAdminDate(log.scheduledFor, 'en')}
                       </TableCell>
                     </TableRow>
                   ))

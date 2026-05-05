@@ -10,6 +10,7 @@ import {
 } from '@deqah/ui/primitives/table';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { formatAdminDateTime } from '@/lib/date';
 import type { DeliveryLogItem, DeliveryStatus, DeliveryChannel } from './list-delivery-log.api';
 
 interface DeliveryLogTableProps {
@@ -33,10 +34,6 @@ const CHANNEL_CLASS: Record<DeliveryChannel, string> = {
 
 const COLUMN_COUNT = 11;
 
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleString();
-}
 
 export function DeliveryLogTable({ items, isLoading }: DeliveryLogTableProps) {
   return (
@@ -114,7 +111,7 @@ export function DeliveryLogTable({ items, isLoading }: DeliveryLogTableProps) {
                 <TableCell className="text-center">{item.attempts}</TableCell>
 
                 <TableCell className="whitespace-nowrap text-xs">
-                  {formatDate(item.sentAt)}
+                  {formatAdminDateTime(item.sentAt)}
                 </TableCell>
 
                 <TableCell>
@@ -131,7 +128,7 @@ export function DeliveryLogTable({ items, isLoading }: DeliveryLogTableProps) {
                 </TableCell>
 
                 <TableCell className="whitespace-nowrap text-xs">
-                  {formatDate(item.createdAt)}
+                  {formatAdminDateTime(item.createdAt)}
                 </TableCell>
               </TableRow>
             ))}

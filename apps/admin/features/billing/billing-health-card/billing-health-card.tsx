@@ -3,6 +3,7 @@
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
+import { formatAdminDate } from '@/lib/date';
 import type { DunningLogRow, SubscriptionRow } from '../types';
 import { useForceCharge } from '../force-charge/use-force-charge';
 import { useCancelScheduled } from '../cancel-scheduled/use-cancel-scheduled';
@@ -21,14 +22,6 @@ const DUNNING_TONE: Record<string, string> = {
   SKIPPED: 'border-muted bg-muted text-muted-foreground',
 };
 
-function fmt(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 interface Props {
   orgId: string;
@@ -77,7 +70,7 @@ export function BillingHealthCard({ orgId, subscription, dunningLogs }: Props) {
             </div>
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Last attempt</p>
-              <p className="font-medium">{latestLog ? fmt(latestLog.executedAt) : '—'}</p>
+              <p className="font-medium">{latestLog ? formatAdminDate(latestLog.executedAt, 'en') : '—'}</p>
             </div>
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Last result</p>
@@ -91,7 +84,7 @@ export function BillingHealthCard({ orgId, subscription, dunningLogs }: Props) {
             </div>
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Scheduled for</p>
-              <p className="font-medium">{latestLog ? fmt(latestLog.scheduledFor) : '—'}</p>
+              <p className="font-medium">{latestLog ? formatAdminDate(latestLog.scheduledFor, 'en') : '—'}</p>
             </div>
           </div>
         ) : null}
