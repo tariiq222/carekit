@@ -33,7 +33,6 @@ export const enNav: Record<string, string> = {
   "nav.contactMessages": "Contact Messages",
   "nav.chatbot": "AI Chatbot",
   "nav.ratings": "Ratings",
-  "nav.zatca": "ZATCA",
   "nav.activityLog": "Activity Log",
   "nav.branding": "System Setup",
   "nav.content": "Content",

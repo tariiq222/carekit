@@ -205,7 +205,6 @@ export const arSettings: Record<string, string> = {
   "settings.booking.paymentMethods.atClinic": "الدفع في العيادة",
   "settings.booking.paymentMethods.atClinicDesc": "السماح للمرضى بالدفع عند الحضور",
   // New tabs
-  "settings.tabs.zatca": "التوافق مع فاتورة",
   "settings.tabs.emailTemplates": "قوالب البريد",
   // Payment tab
   "settings.payment.methods": "طرق الدفع المقبولة",

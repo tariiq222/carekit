@@ -205,7 +205,6 @@ export const enSettings: Record<string, string> = {
   "settings.booking.paymentMethods.atClinic": "Pay at Clinic",
   "settings.booking.paymentMethods.atClinicDesc": "Allow clients to pay upon arrival",
   // New tabs
-  "settings.tabs.zatca": "ZATCA / Fatoora",
   "settings.tabs.emailTemplates": "Email Templates",
   // Payment tab
   "settings.payment.methods": "Accepted Payment Methods",

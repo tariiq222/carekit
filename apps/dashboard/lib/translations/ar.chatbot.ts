@@ -1,6 +1,6 @@
 /**
  * Arabic translations — Extended A
- * (chatbot, table, activityLog, tab keys, ratings, zatca)
+ * (chatbot, table, activityLog, tab keys, ratings)
  */
 
 export const arChatbot: Record<string, string> = {
@@ -64,7 +64,6 @@ export const arChatbot: Record<string, string> = {
   "bookings.tabs.list": "الحجوزات",
   "bookings.tabs.waitlist": "قائمة الانتظار",
   "invoices.tabs.list": "الفواتير",
-  "invoices.tabs.zatca": "التوافق مع فاتورة",
   "users.tabs.activityLog": "سجل النشاط",
 
   // ─── Problem Reports ───
@@ -82,38 +81,4 @@ export const arChatbot: Record<string, string> = {
   "ratings.anonymous": "مجهول",
   "ratings.previous": "السابق",
   "ratings.next": "التالي",
-
-  // ─── ZATCA ───
-  "zatca.title": "التوافق مع فاتورة",
-  "zatca.description": "الفوتكة الإلكترونية السعودية والتسجيل",
-  "zatca.startOnboarding": "بدء التسجيل",
-  "zatca.onboardSuccess": "تم التسجيل في فاتورة بنجاح",
-  "zatca.onboardTitle": "تسجيل المرحلة الثانية",
-  "zatca.onboardDesc": "أدخل رمز OTP من بوابة فاتورة لبدء التسجيل",
-  "zatca.otpPlaceholder": "أدخل رمز OTP من فاتورة",
-  "zatca.totalReported": "إجمالي المبلّغة",
-  "zatca.accepted": "مقبولة",
-  "zatca.rejected": "مرفوضة",
-  "zatca.warnings": "تحذيرات",
-  "zatca.config": "الإعدادات",
-  "zatca.configDesc": "إعدادات فاتورة الحالية",
-  "zatca.vatNumber": "الرقم الضريبي",
-  "zatca.orgName": "اسم المنشأة",
-  "zatca.phase": "المرحلة",
-  "zatca.onboardingStatus": "حالة التسجيل",
-  "zatca.complianceCsid": "شهادة الامتثال",
-  "zatca.productionCsid": "شهادة الإنتاج",
-  "zatca.csidExpiry": "انتهاء الشهادة",
-  "zatca.environment": "البيئة",
-  "zatca.onboarded": "مسجَّل",
-  "zatca.onboardedAt": "تاريخ التسجيل",
-  "zatca.seller": "اسم المنشأة",
-  "zatca.alreadyOnboarded": "تم التسجيل",
-  "zatca.vatPlaceholder": "300xxxxxxxxxxx3",
-  "zatca.sellerPlaceholder": "اسم المنشأة كما في السجل",
-  "zatca.onboardError": "تعذّر إكمال التسجيل",
-  "zatca.zakatLinkTitle": "الربط مع هيئة الزكاة والدخل",
-  "zatca.zakatLinkDesc": "حالة الربط والإعدادات الحالية للفوترة الإلكترونية",
-  "zatca.linkedStatus": "مرتبط",
-  "zatca.notLinkedStatus": "غير مرتبط",
 }

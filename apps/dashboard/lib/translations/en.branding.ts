@@ -15,7 +15,7 @@ export const enBranding: Record<string, string> = {
   "branding.instagram": "Instagram",
   "branding.whatsapp": "WhatsApp",
   "branding.linkedin": "LinkedIn",
-  "branding.entityWarning": "This data is tied to the license agreement and is used in official invoices and ZATCA filings. Do not modify without verifying the contract.",
+  "branding.entityWarning": "This data is tied to the license agreement and is used in official invoices. Do not modify without verifying the contract.",
   "branding.companyData": "Legal Company Data",
   "branding.companyNameAr": "Company Name (Arabic)",
   "branding.companyNameEn": "Company Name (English)",
