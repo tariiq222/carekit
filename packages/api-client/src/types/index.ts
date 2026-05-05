@@ -97,7 +97,6 @@ export type {
   PaymentListResponse,
 } from './payment'
 export type {
-  ZatcaStatus,
   InvoicePaymentInfo,
   InvoiceListItem,
   InvoiceStats,

@@ -4,6 +4,5 @@ export * from './chat';
 export * from './notification';
 export * from './rating';
 export * from './branding';
-export * from './zatca';
 export * from './auth';
 export * from './otp';
