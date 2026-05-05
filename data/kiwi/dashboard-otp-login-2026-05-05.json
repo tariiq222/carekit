@@ -1,0 +1,75 @@
+{
+  "domain": "Dashboard",
+  "version": "main",
+  "build": "dashboard-otp-login-2026-05-05",
+  "planName": "Dashboard OTP Login — identifier-first flow",
+  "planSummary": "Manual QA plan for the 3-step identifier-first login flow (password + OTP paths) added in PR #143.",
+  "runSummary": "Backend: 6 e2e tests written covering request/verify endpoints. Playwright: 2 smoke tests covering password path + OTP navigation. Unit tests: 11/11 passing.",
+  "cases": [
+    {
+      "summary": "Identifier step accepts email",
+      "text": "Navigate to /login. Enter a valid email in the identifier field. Click متابعة. Verify method step appears with two login options.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Identifier step accepts Saudi phone number",
+      "text": "Navigate to /login. Enter a valid Saudi phone (e.g. 0501234567). Click متابعة. Verify method step appears.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Identifier step rejects invalid format",
+      "text": "Navigate to /login. Enter 'notvalid'. Click متابعة. Verify inline error message appears and method step does NOT appear.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Password path — full login success",
+      "text": "Enter admin@deqah-test.com in identifier step, click متابعة. Choose باستخدام كلمة المرور. Fill Admin@1234 in password field. Click تسجيل الدخول. Verify redirect to dashboard and header visible.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Password path — wrong password shows error",
+      "text": "Enter admin@deqah-test.com, choose password, enter WrongPass. Expect 401 error message to appear without redirect.",
+      "result": "PASS"
+    },
+    {
+      "summary": "OTP path — method step shows OTP option",
+      "text": "Enter identifier, click متابعة, verify باستخدام رمز تحقق (OTP) button is visible.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Back navigation — method step to identifier step",
+      "text": "Enter identifier, advance to method step, click رجوع. Verify identifier input reappears.",
+      "result": "PASS"
+    },
+    {
+      "summary": "request-dashboard — enumeration safety (unknown identifier)",
+      "text": "POST /api/v1/public/auth/otp/request-dashboard with identifier=ghost@nowhere.com. Expect 200 {success:true} regardless of whether user exists.",
+      "result": "PASS"
+    },
+    {
+      "summary": "verify-dashboard — valid OTP issues tokens",
+      "text": "Seed OTP row with DASHBOARD_LOGIN purpose. POST verify-dashboard with correct code. Expect 200 + accessToken + user.email.",
+      "result": "PASS"
+    },
+    {
+      "summary": "verify-dashboard — expired OTP rejected",
+      "text": "Seed OTP with expiresAt in the past. POST verify-dashboard. Expect 400.",
+      "result": "PASS"
+    },
+    {
+      "summary": "verify-dashboard — wrong code rejected",
+      "text": "Seed OTP with code 111111. POST verify-dashboard with code 999999. Expect 401.",
+      "result": "PASS"
+    },
+    {
+      "summary": "verify-dashboard — consumed OTP replay rejected",
+      "text": "Seed OTP with consumedAt set. POST verify-dashboard. Expect 400.",
+      "result": "PASS"
+    },
+    {
+      "summary": "verify-dashboard — locked OTP returns OTP_LOCKED_OUT",
+      "text": "Seed OTP with lockedUntil in the future. POST verify-dashboard. Expect 400 + message OTP_LOCKED_OUT.",
+      "result": "PASS"
+    }
+  ]
+}

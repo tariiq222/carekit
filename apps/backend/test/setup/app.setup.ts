@@ -163,7 +163,7 @@ export async function createTestApp(
     .overrideProvider(FcmService)
     .useValue({ sendPush: jest.fn().mockResolvedValue(undefined) })
     .overrideProvider(SmtpService)
-    .useValue({ send: jest.fn().mockResolvedValue(undefined), sendTemplate: jest.fn().mockResolvedValue(undefined) })
+    .useValue({ send: jest.fn().mockResolvedValue(undefined), sendTemplate: jest.fn().mockResolvedValue(undefined), isAvailable: () => false, sendMail: jest.fn().mockResolvedValue(undefined) })
     .overrideProvider(EmbeddingAdapter)
     .useValue({
       isAvailable: () => true,

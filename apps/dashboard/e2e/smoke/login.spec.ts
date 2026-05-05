@@ -5,62 +5,53 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * [D1] Dashboard login golden path
+ * [D1] Dashboard login golden path — identifier-first flow
  *
  * Credentials: seeded by apps/backend/prisma/seed.ts
  *   SEED_EMAIL    (default: admin@deqah-test.com)
  *   SEED_PASSWORD (default: Admin@1234)
  *
- * The hCaptcha widget is bypassed automatically when
- * NEXT_PUBLIC_HCAPTCHA_SITE_KEY is unset — CaptchaField auto-issues
- * "dev-bypass" and the form becomes submittable immediately.
- *
- * Locale is ar-SA (set in playwright.config.ts), so labels match Arabic
- * translations from lib/translations/ar.misc.ts and ar.nav.ts.
+ * Flow: identifier → choose password → login → dashboard → logout
  */
 test.describe('[D1] Dashboard login flow', () => {
   test('admin can log in, see home, and log out', async ({ page }) => {
     // 1. Navigate to login page
     await page.goto('/login');
     await expect(page).toHaveURL(/\/login/);
+    await page.waitForLoadState('domcontentloaded');
 
-    // 2. Wait for the form to settle (captcha auto-bypass fires on mount)
-    await page.waitForLoadState('networkidle');
+    // 2. Step 1 — enter identifier
+    await page.locator('#identifier').fill('admin@deqah-test.com');
+    await page.getByRole('button', { name: 'متابعة' }).click();
 
-    // 3. Fill credentials using the seeded test admin
-    // Label: "البريد الإلكتروني" (login.emailLabel) — id="email"
-    await page.getByLabel('البريد الإلكتروني').fill('admin@deqah-test.com');
-    // Use id="#password" to avoid strict-mode conflict: the "show password"
-    // toggle also carries an aria-label containing "كلمة المرور".
+    // 3. Step 2 — choose password method
+    await expect(
+      page.getByRole('button', { name: 'باستخدام كلمة المرور' }),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: 'باستخدام كلمة المرور' }).click();
+
+    // 4. Step 3 — fill password and submit
+    await expect(page.locator('#password')).toBeVisible({ timeout: 10_000 });
     await page.locator('#password').fill('Admin@1234');
-
-    // 4. Submit — button text: "تسجيل الدخول" (login.signIn)
     await page.getByRole('button', { name: 'تسجيل الدخول' }).click();
 
-    // 5. Wait for redirect away from /login (lands on /, /bookings, etc.)
+    // 5. Wait for redirect away from /login
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
 
-    // 6. Verify dashboard chrome is visible (sticky header present)
-    // The sidebar uses <div> elements (not <nav>); the header is the stable
-    // semantic anchor — it's always rendered in the authenticated layout.
+    // 6. Verify dashboard chrome is visible
     await expect(page.locator('header').first()).toBeVisible({ timeout: 10_000 });
 
-    // 7. Log out via avatar dropdown in the header
-    // The profile trigger wraps the Avatar component (data-slot="avatar-fallback").
+    // 7. Log out via avatar dropdown
     const profileTrigger = page.locator('header').locator('button').filter({
       has: page.locator('[data-slot="avatar-fallback"]'),
     });
     await profileTrigger.click();
 
-    // Wait for the dropdown menu to appear, then click logout
     const logoutBtn = page.getByRole('button', { name: 'تسجيل الخروج' });
     await expect(logoutBtn).toBeVisible({ timeout: 5_000 });
     await logoutBtn.click();
 
-    // 8. Confirm logged out: AuthGate renders LoginForm in-place (no URL redirect).
-    // The login submit button becomes visible when the form mounts.
-    await expect(
-      page.getByRole('button', { name: 'تسجيل الدخول' }),
-    ).toBeVisible({ timeout: 10_000 });
+    // 8. Confirm logged out — identifier-first form shows #identifier input
+    await expect(page.locator('#identifier')).toBeVisible({ timeout: 10_000 });
   });
 });

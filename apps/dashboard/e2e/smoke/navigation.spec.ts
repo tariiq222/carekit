@@ -61,7 +61,7 @@ test.describe('Dashboard Pages Navigation', () => {
 
   test('should collapse sidebar when toggle is clicked', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     const sidebar = page.locator('[class*="sidebar"]').first()
@@ -81,7 +81,7 @@ test.describe('Dashboard Pages Navigation', () => {
 
   test('should expand collapsed sidebar', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     const sidebarTrigger = page.locator('button[aria-label*="menu" i], button[aria-label*="القائمة"]').first()
@@ -101,7 +101,7 @@ test.describe('Dashboard Pages Navigation', () => {
 
   test('should highlight active sidebar item', async ({ page }) => {
     await page.goto('/bookings')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     const activeItem = page.locator('[class*="sidebar"] a[class*="active"], [class*="sidebar"] button[class*="active"]')
@@ -112,7 +112,7 @@ test.describe('Dashboard Pages Navigation', () => {
 
   test('should navigate via sidebar links', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     const sidebarLinks = page.locator('[class*="sidebar"] a[href^="/"]')
     const linkCount = await sidebarLinks.count()
@@ -129,7 +129,7 @@ test.describe('Dashboard Pages Navigation', () => {
 
   test('should expand sidebar group on click', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     const groupLabels = page.locator('[class*="sidebar"] [class*="group-label"], [class*="sidebar"] [class*="SidebarGroupLabel"]')
     const count = await groupLabels.count()
