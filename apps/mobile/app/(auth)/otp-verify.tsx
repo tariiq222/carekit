@@ -127,8 +127,9 @@ export default function OtpVerifyScreen() {
       void registerForPushAsync();
 
       const meResult = await refetchMe();
-      if (meResult.data?.data) {
-        dispatch(setUser(meResult.data.data as any));
+      const profile = meResult.data?.data;
+      if (profile) {
+        dispatch(setUser(profile));
       }
 
       await navigateAfterVerify(result.activeMembership);
