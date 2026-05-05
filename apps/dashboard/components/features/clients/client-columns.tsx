@@ -25,6 +25,7 @@ interface ClientColumnOptions {
   onDeleteClick: (client: Client) => void
   t: (key: string) => string
   locale?: "ar" | "en"
+  dateFormat?: DateFormat
 }
 
 export function getClientColumns({
@@ -35,6 +36,7 @@ export function getClientColumns({
   onDeleteClick,
   t,
   locale = "ar",
+  dateFormat = "Y-m-d",
 }: ClientColumnOptions): ColumnDef<Client>[] {
   return [
     {
@@ -103,10 +105,9 @@ export function getClientColumns({
       accessorKey: "createdAt",
       header: t("clients.col.joined"),
       enableSorting: true,
-      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {formatClinicDate(row.original.createdAt)}
+          {formatClinicDate(row.original.createdAt, dateFormat)}
         </span>
       ),
     },
@@ -125,7 +126,7 @@ export function getClientColumns({
         if (!b) return <span className="text-sm text-muted-foreground">—</span>
         return (
           <span className="tabular-nums text-sm text-muted-foreground">
-            {formatClinicDate(b.date)}
+            {formatClinicDate(b.date, dateFormat)}
           </span>
         )
       },
@@ -145,7 +146,7 @@ export function getClientColumns({
         if (!b) return <span className="text-sm text-muted-foreground">—</span>
         return (
           <span className="tabular-nums text-sm text-muted-foreground">
-            {formatClinicDate(b.date)}
+            {formatClinicDate(b.date, dateFormat)}
           </span>
         )
       },

@@ -39,7 +39,9 @@ interface PaymentColumnCallbacks {
 export function getPaymentColumns(
   callbacks?: PaymentColumnCallbacks,
   t: (key: string) => string = (k) => k,
+  config?: { dateFormat?: DateFormat },
 ): ColumnDef<Payment>[] {
+  const dateFormat = config?.dateFormat ?? "Y-m-d"
   const columns: ColumnDef<Payment>[] = [
     {
       accessorKey: "id",
@@ -107,10 +109,9 @@ export function getPaymentColumns(
     {
       accessorKey: "createdAt",
       header: t("payments.col.date"),
-      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {formatClinicDate(row.original.createdAt)}
+          {formatClinicDate(row.original.createdAt, dateFormat)}
         </span>
       ),
     },

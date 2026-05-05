@@ -35,7 +35,9 @@ interface InvoiceColumnCallbacks {
 export function getInvoiceColumns(
   callbacks?: InvoiceColumnCallbacks,
   t: (key: string) => string = (k) => k,
+  config?: { dateFormat?: DateFormat },
 ): ColumnDef<Invoice>[] {
+  const dateFormat = config?.dateFormat ?? "Y-m-d"
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
@@ -101,10 +103,9 @@ export function getInvoiceColumns(
     {
       accessorKey: "createdAt",
       header: t("invoices.col.date"),
-      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {formatClinicDate(row.original.createdAt)}
+          {formatClinicDate(row.original.createdAt, dateFormat)}
         </span>
       ),
     },

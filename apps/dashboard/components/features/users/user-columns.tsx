@@ -35,7 +35,9 @@ export function getUserColumns(
   callbacks?: UserColumnCallbacks,
   t: (key: string) => string = (k) => k,
   locale: Locale = "ar",
+  config?: { dateFormat?: DateFormat },
 ): ColumnDef<User>[] {
+  const dateFormat = config?.dateFormat ?? "Y-m-d"
   const columns: ColumnDef<User>[] = [
     {
       id: "user",
@@ -95,10 +97,9 @@ export function getUserColumns(
     {
       accessorKey: "createdAt",
       header: t("users.col.joined"),
-      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {formatClinicDate(row.original.createdAt)}
+          {formatClinicDate(row.original.createdAt, dateFormat)}
         </span>
       ),
     },

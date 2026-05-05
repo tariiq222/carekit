@@ -49,7 +49,9 @@ export function getBookingColumns(
   onStatusAction: (booking: Booking, action: "confirm" | "noshow") => void,
   onDelete: (booking: Booking) => void,
   t: (key: string) => string,
+  config?: { dateFormat?: DateFormat },
 ): ColumnDef<Booking>[] {
+  const dateFormat = config?.dateFormat ?? "Y-m-d"
   return [
     {
       accessorKey: "id",
@@ -120,11 +122,10 @@ export function getBookingColumns(
     {
       id: "datetime",
       header: t("bookings.col.header.datetime"),
-      // TODO: pass dateFormat/timeFormat from parent when columns accept config
       cell: ({ row }) => (
         <div className="font-numeric">
           <p className="text-sm font-medium text-foreground">
-            {formatClinicDate(row.original.date)}
+            {formatClinicDate(row.original.date, dateFormat)}
           </p>
           <p className="text-xs text-muted-foreground">{formatClinicTime(row.original.startTime)}</p>
         </div>
