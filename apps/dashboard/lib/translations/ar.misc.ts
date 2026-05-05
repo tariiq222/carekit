@@ -274,4 +274,18 @@ export const arMisc: Record<string, string> = {
   "resetPassword.invalidToken": "الرابط غير صالح أو منتهي الصلاحية",
   "resetPassword.passwordMismatch": "كلمتا المرور غير متطابقتين",
   "resetPassword.weakPassword": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+
+  // — OTP Login flow —
+  "login.identifierLabel": "البريد الإلكتروني أو رقم الجوال",
+  "login.continue": "متابعة",
+  "login.chooseMethod": "كيف تريد تسجيل الدخول؟",
+  "login.usePassword": "باستخدام كلمة المرور",
+  "login.useOtp": "باستخدام رمز تحقق (OTP)",
+  "login.otp.title": "أدخل رمز التحقق",
+  "login.otp.label": "رمز التحقق",
+  "login.otp.sentTo": "أرسلنا رمزاً من 6 أرقام إلى",
+  "login.otp.resend": "إعادة الإرسال",
+  "login.otp.resendIn": "إعادة الإرسال خلال",
+  "login.errors.identifierShape": "أدخل بريداً إلكترونياً صحيحاً أو رقم جوال سعودي",
+  "common.back": "رجوع",
 }
