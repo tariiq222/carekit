@@ -15,16 +15,22 @@ function buildController() {
   return { controller, getStats };
 }
 
+const reqWithRole = (membershipRole: string | null = 'OWNER') =>
+  ({ user: { membershipRole } } as never);
+
 describe('DashboardStatsController', () => {
-  it('getStatsEndpoint — delegates to handler with no args', async () => {
+  it('getStatsEndpoint — delegates to handler with command', async () => {
     const { controller, getStats } = buildController();
-    await controller.getStatsEndpoint();
-    expect(getStats.execute).toHaveBeenCalledWith();
+    await controller.getStatsEndpoint('user-1', reqWithRole('OWNER'));
+    expect(getStats.execute).toHaveBeenCalledWith({
+      membershipRole: 'OWNER',
+      userId: 'user-1',
+    });
   });
 
   it('getStatsEndpoint — returns the stats from the handler', async () => {
     const { controller, getStats } = buildController();
-    const result = await controller.getStatsEndpoint();
+    const result = await controller.getStatsEndpoint('user-1', reqWithRole('OWNER'));
     expect(result).toEqual({
       todayBookings: 5,
       confirmedToday: 3,
@@ -33,11 +39,14 @@ describe('DashboardStatsController', () => {
       cancelRequests: 0,
       todayRevenue: 450.0,
     });
+    expect(getStats.execute).toHaveBeenCalled();
   });
 
   it('getStatsEndpoint — propagates handler errors', async () => {
     const { controller, getStats } = buildController();
     getStats.execute.mockRejectedValue(new Error('DB error'));
-    await expect(controller.getStatsEndpoint()).rejects.toThrow('DB error');
+    await expect(
+      controller.getStatsEndpoint('user-1', reqWithRole('OWNER')),
+    ).rejects.toThrow('DB error');
   });
 });
