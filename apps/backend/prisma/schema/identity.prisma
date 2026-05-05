@@ -11,6 +11,7 @@ enum OtpPurpose {
   CLIENT_PASSWORD_RESET
   MOBILE_REGISTER
   MOBILE_LOGIN
+  DASHBOARD_LOGIN
 }
 
 model OtpCode {

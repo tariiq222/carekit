@@ -61,6 +61,8 @@ import { RequestEmailVerificationHandler } from './request-email-verification/re
 import { VerifyEmailHandler } from './verify-email/verify-email.handler';
 import { AttachMembershipHandler } from './attach-membership/attach-membership.handler';
 import { OwnerProvisioningService } from './owner-provisioning/owner-provisioning.service';
+import { RequestDashboardOtpHandler } from './request-dashboard-otp/request-dashboard-otp.handler';
+import { VerifyDashboardOtpHandler } from './verify-dashboard-otp/verify-dashboard-otp.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -91,6 +93,8 @@ const handlers = [
   RequestEmailVerificationHandler,
   VerifyEmailHandler,
   AttachMembershipHandler,
+  RequestDashboardOtpHandler,
+  VerifyDashboardOtpHandler,
 ];
 
 @Module({

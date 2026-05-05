@@ -17,6 +17,10 @@ import { LogoutHandler } from '../../modules/identity/logout/logout.handler';
 import { LoginDto } from '../../modules/identity/login/login.dto';
 import { RefreshTokenDto } from '../../modules/identity/refresh-token/refresh-token.dto';
 import { LogoutDto } from '../../modules/identity/logout/logout.dto';
+import { RequestDashboardOtpHandler } from '../../modules/identity/request-dashboard-otp/request-dashboard-otp.handler';
+import { RequestDashboardOtpDto } from '../../modules/identity/request-dashboard-otp/request-dashboard-otp.dto';
+import { VerifyDashboardOtpHandler } from '../../modules/identity/verify-dashboard-otp/verify-dashboard-otp.handler';
+import { VerifyDashboardOtpDto } from '../../modules/identity/verify-dashboard-otp/verify-dashboard-otp.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../../modules/identity/shared/token.service';
 import { DEFAULT_ORGANIZATION_ID } from '../../common/tenant';
@@ -83,6 +87,8 @@ export class AuthController {
     private readonly inviteUser: InviteUserHandler,
     private readonly acceptInvitation: AcceptInvitationHandler,
     private readonly tenant: TenantContextService,
+    private readonly requestDashboardOtp: RequestDashboardOtpHandler,
+    private readonly verifyDashboardOtp: VerifyDashboardOtpHandler,
   ) {}
 
   @Post('login')
@@ -557,6 +563,59 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired reset token', type: ApiErrorDto })
   async performPasswordResetEndpoint(@Body() dto: PerformPasswordResetDto): Promise<void> {
     await this.performPasswordReset.execute(dto);
+  }
+
+  @Public()
+  @Post('otp/request-dashboard')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request OTP for dashboard login' })
+  @ApiOkResponse({
+    description: 'OTP sent successfully',
+    schema: { properties: { success: { type: 'boolean' } } },
+  })
+  async requestDashboardOtpEndpoint(@Body() dto: RequestDashboardOtpDto): Promise<{ success: boolean }> {
+    return this.requestDashboardOtp.execute(dto);
+  }
+
+  @Public()
+  @Post('otp/verify-dashboard')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify OTP for dashboard login' })
+  @ApiOkResponse({
+    description: 'Access + refresh tokens with user profile',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+        refreshToken: { type: 'string', example: 'a1b2c3d4-...' },
+        expiresIn: { type: 'number', example: 900 },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            email: { type: 'string', format: 'email' },
+            name: { type: 'string' },
+            phone: { type: 'string', nullable: true },
+            gender: { type: 'string', nullable: true },
+            avatarUrl: { type: 'string', nullable: true },
+            isActive: { type: 'boolean' },
+            role: { type: 'string' },
+            isSuperAdmin: { type: 'boolean' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            organizationId: { type: 'string', format: 'uuid', nullable: true },
+            permissions: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Invalid OTP code', type: ApiErrorDto })
+  @ApiResponse({ status: 400, description: 'Invalid or expired code', type: ApiErrorDto })
+  async verifyDashboardOtpEndpoint(@Body() dto: VerifyDashboardOtpDto) {
+    return this.verifyDashboardOtp.execute(dto);
   }
 
   private setRefreshCookie(res: Response, token: string): void {

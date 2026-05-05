@@ -17,11 +17,41 @@ const USER_KEY = "deqah_user"
 const IMPERSONATION_KEY = "deqah_impersonation"
 
 export async function login(
-  email: string,
+  identifier: string,
   password: string,
   hCaptchaToken: string,
 ): Promise<AuthResponse> {
-  const data = await authApi.login({ email, password, hCaptchaToken })
+  const data = await authApi.login({ email: identifier, password, hCaptchaToken })
+  persistAuth(data)
+  return data
+}
+
+export async function requestDashboardOtp(identifier: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/otp/request-dashboard`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ identifier }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { message?: string }).message ?? 'Failed to send OTP')
+  }
+  return res.json()
+}
+
+export async function verifyDashboardOtp(identifier: string, code: string): Promise<AuthResponse> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/otp/verify-dashboard`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ identifier, code }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { message?: string }).message ?? 'Invalid or expired code')
+  }
+  const data = (await res.json()) as AuthResponse
   persistAuth(data)
   return data
 }

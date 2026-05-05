@@ -274,4 +274,18 @@ export const enMisc: Record<string, string> = {
   "resetPassword.invalidToken": "This link is invalid or has expired",
   "resetPassword.passwordMismatch": "Passwords do not match",
   "resetPassword.weakPassword": "Password must be at least 8 characters",
+
+  // — OTP Login flow —
+  "login.identifierLabel": "Email or mobile number",
+  "login.continue": "Continue",
+  "login.chooseMethod": "How would you like to sign in?",
+  "login.usePassword": "Use password",
+  "login.useOtp": "Use a one-time code (OTP)",
+  "login.otp.title": "Enter your verification code",
+  "login.otp.label": "Verification code",
+  "login.otp.sentTo": "We sent a 6-digit code to",
+  "login.otp.resend": "Resend code",
+  "login.otp.resendIn": "Resend in",
+  "login.errors.identifierShape": "Enter a valid email or Saudi mobile number",
+  "common.back": "Back",
 }

@@ -52,6 +52,8 @@ function buildController() {
   const inviteUser = fn({ invitationId: 'inv-1', status: 'PENDING' as const, expiresAt: new Date() });
   const acceptInvitation = fn({ membershipId: 'm-1', organizationId: 'org-1', userPreExisting: false });
   const tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') } as never;
+  const requestDashboardOtp = fn({ success: true });
+  const verifyDashboardOtp = fn(TOKEN_PAIR);
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
@@ -60,8 +62,9 @@ function buildController() {
     updateMembershipProfile as never,
     uploadMembershipAvatar as never,
     inviteUser as never, acceptInvitation as never, tenant,
+    requestDashboardOtp as never, verifyDashboardOtp as never,
   );
-  return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset };
+  return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset, requestDashboardOtp, verifyDashboardOtp };
 }
 
 describe('AuthController', () => {
