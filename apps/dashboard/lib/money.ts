@@ -15,6 +15,9 @@ export function halalasToSar(halalas: number | null | undefined): number {
   return halalas / HALALAS_PER_SAR
 }
 
+/** Alias for halalasToSar — explicitly returns a number. */
+export const halalasToSarNumber = halalasToSar
+
 /** Convert SAR to halalas (integer). Rounds to nearest halala. */
 export function sarToHalalas(sar: number | null | undefined): number {
   if (sar == null || Number.isNaN(sar)) return 0

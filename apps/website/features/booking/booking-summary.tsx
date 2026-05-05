@@ -1,6 +1,7 @@
 'use client';
 
 import type { GuestClientInfo, Service, EmployeeWithUser, AvailableSlot } from '@deqah/shared';
+import { halalasToSarNumber } from '@/lib/money';
 
 interface BookingSummaryProps {
   service: Service;
@@ -47,7 +48,7 @@ export function BookingSummary({
           <div>
             <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Total</div>
             <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>
-              {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(totalHalalat / 100)} {'⃁'}
+              {Intl.NumberFormat('ar-SA', { style: 'decimal' }).format(halalasToSarNumber(totalHalalat))} {'⃁'}
             </div>
           </div>
         </div>

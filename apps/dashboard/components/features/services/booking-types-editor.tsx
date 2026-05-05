@@ -12,6 +12,7 @@ import {
 import { useLocale } from "@/components/locale-provider"
 import { BookingTypeRow } from "./booking-type-row"
 import type { ServiceBookingType, ServiceBookingMode } from "@/lib/types/service"
+import { sarToHalalas, halalasToSarNumber } from "@/lib/money"
 
 /* ─── Constants ─── */
 
@@ -106,14 +107,14 @@ export function BookingTypesEditor({ serviceId }: BookingTypesEditorProps) {
       await mutation.mutateAsync({
         types: enabledTypes.map((d) => ({
           bookingType: d.bookingType,
-          price: Math.round(d.price * 100),
+          price: sarToHalalas(d.price),
           durationMins: d.durationMins,
           isActive: true,
           durationOptions: d.durationOptions.map((o, i) => ({
             label: o.label,
             labelAr: o.labelAr || undefined,
             durationMins: o.durationMins,
-            price: Math.round(o.price * 100),
+            price: sarToHalalas(o.price),
             isDefault: o.isDefault,
             sortOrder: i,
           })),
@@ -202,14 +203,14 @@ export function mergeDraftsFromServer(
       return {
         bookingType: bt,
         enabled: server.isActive,
-        price: server.price / 100,
+        price: halalasToSarNumber(server.price),
         durationMins: server.durationMins,
         durationOptions: (server.durationOptions ?? []).map((o) => ({
           key: o.id,
           label: o.label,
           labelAr: o.labelAr ?? "",
           durationMins: o.durationMins,
-          price: o.price / 100,
+          price: halalasToSarNumber(o.price),
           isDefault: o.isDefault,
           sortOrder: o.sortOrder,
         })),

@@ -2,6 +2,7 @@
 
 import type { UseFormReturn } from "react-hook-form"
 import { Controller } from "react-hook-form"
+import { sarToHalalas, halalasToSarNumber } from "@/lib/money"
 
 import { Button } from "@deqah/ui"
 import { Input } from "@deqah/ui"
@@ -37,12 +38,12 @@ export function sarToHalalat(val: string | undefined): number | null {
   if (!val || val.trim() === "") return null
   const num = parseFloat(val)
   if (isNaN(num)) return null
-  return Math.round(num * 100)
+  return sarToHalalas(num)
 }
 
 export function halalToSar(val: number | null): string {
   if (val == null) return ""
-  return (val / 100).toFixed(2)
+  return halalasToSarNumber(val).toFixed(2)
 }
 
 export function parseOptionalInt(val: string | undefined): number | null {
