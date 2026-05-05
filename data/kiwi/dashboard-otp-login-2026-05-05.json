@@ -1,5 +1,5 @@
 {
-  "domain": "Auth",
+  "domain": "Dashboard",
   "version": "main",
   "build": "dashboard-otp-login-2026-05-05",
   "planName": "Dashboard OTP Login — identifier-first flow",
