@@ -1,4 +1,4 @@
-// Finance BC — invoices, payments, coupons, gift cards, ZATCA submissions.
+// Finance BC — invoices, payments, coupons, gift cards, refunds.
 // Models added in Phase 7 (p7-t*). Finance BC number in kanban: p6 (column 7).
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -25,13 +25,6 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
-}
-
-enum ZatcaSubmissionStatus {
-  PENDING
-  SUBMITTED
-  ACCEPTED
-  REJECTED
 }
 
 enum DiscountType {
@@ -63,7 +56,6 @@ model Invoice {
   updatedAt      DateTime      @updatedAt
 
   payments       Payment[]
-  zatcaSub       ZatcaSubmission?
   refundRequests RefundRequest[]
 
   @@unique([id, organizationId], name: "invoice_id_org") // DB-05
@@ -140,39 +132,6 @@ model CouponRedemption {
   @@index([organizationId])
 }
 
-// ─── ZATCA Config ─────────────────────────────────────────────────────────────
-
-model ZatcaConfig {
-  id                    String    @id @default(uuid())
-  organizationId        String    @unique // SaaS-02e — one config row per org
-  vatRegistrationNumber String?
-  sellerName            String?
-  environment           String    @default("sandbox") // "sandbox" | "production"
-  isOnboarded           Boolean   @default(false)
-  onboardedAt           DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-}
-
-// ─── ZATCA Submission ─────────────────────────────────────────────────────────
-
-model ZatcaSubmission {
-  id             String                @id @default(uuid())
-  organizationId String // SaaS-02e (denormalized from Invoice)
-  invoiceId      String                @unique
-  invoice        Invoice               @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  status         ZatcaSubmissionStatus @default(PENDING)
-  zatcaUuid      String?
-  qrCode         String?
-  xmlHash        String?
-  submittedAt    DateTime?
-  responseRaw    Json?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-
-  @@index([organizationId])
-}
-
 // ─── Refund Request ──────────────────────────────────────────────────────────────
 
 enum RefundStatus {
@@ -219,7 +178,7 @@ model OrganizationPaymentConfig {
   organizationId     String    @unique // singleton per org (matches BrandingConfig pattern)
   publishableKey     String // pk_test_… / pk_live_… — not secret, stored plain
   secretKeyEnc       String // AES-256-GCM ciphertext (base64), AAD = organizationId
-  webhookSecretEnc   String  // REQUIRED — AES-256-GCM, per-tenant webhook signing secret (2026-05-05)
+  webhookSecretEnc   String // REQUIRED — AES-256-GCM, per-tenant webhook signing secret (2026-05-05)
   isLive             Boolean   @default(false)
   lastVerifiedAt     DateTime?
   lastVerifiedStatus String? // 'OK' | 'INVALID_KEY' | 'NETWORK_ERROR'
