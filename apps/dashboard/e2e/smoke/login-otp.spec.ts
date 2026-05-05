@@ -33,7 +33,8 @@ test.describe('[D1-OTP] Dashboard OTP login flow', () => {
   test('[D1-OTP] Password path via identifier-first flow', async ({ page }) => {
     // 1. Load login page
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    // Wait for the identifier input to be visible — networkidle hangs in dev (devtools SSE connections)
+    await page.locator('#identifier').waitFor({ state: 'visible', timeout: 15_000 });
 
     // 2. Step 1 — enter identifier
     await page.locator('#identifier').fill('admin@deqah-test.com');
@@ -71,7 +72,8 @@ test.describe('[D1-OTP] Dashboard OTP login flow', () => {
   test('[D1-OTP] OTP step renders and back navigation works', async ({ page }) => {
     // 1. Load login page
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    // Wait for the identifier input to be visible — networkidle hangs in dev (devtools SSE connections)
+    await page.locator('#identifier').waitFor({ state: 'visible', timeout: 15_000 });
 
     // 2. Step 1 — enter identifier
     await page.locator('#identifier').fill('admin@deqah-test.com');

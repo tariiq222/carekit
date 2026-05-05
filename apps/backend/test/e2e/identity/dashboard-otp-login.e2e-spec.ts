@@ -44,6 +44,11 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     const codeHash = await bcrypt.hash(code, 10);
     await (testPrisma as any).otpCode.create({
       data: {
+        // Permissive-mode middleware resolves DEFAULT_ORGANIZATION_ID for
+        // non-public non-JWT routes — the scoping extension injects this org id
+        // into every findFirst query. Seed with the same value so the handler
+        // can find the record.
+        organizationId: '00000000-0000-0000-0000-000000000001',
         identifier,
         channel: OtpChannel.EMAIL,
         purpose: OtpPurpose.DASHBOARD_LOGIN,
@@ -60,7 +65,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
 
   it('request-dashboard endpoint — unknown identifier returns {success:true} (enumeration safety)', async () => {
     const res = await req
-      .post('/api/v1/public/auth/otp/request-dashboard')
+      .post('/api/v1/auth/otp/request-dashboard')
       .send({ identifier: 'ghost@nowhere.com' })
       .expect(200);
 
@@ -75,7 +80,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     await seedOtp(email, '654321');
 
     const res = await req
-      .post('/api/v1/public/auth/otp/verify-dashboard')
+      .post('/api/v1/auth/otp/verify-dashboard')
       .send({ identifier: email, code: '654321' })
       .expect(200);
 
@@ -89,7 +94,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     await seedOtp(email, '654321', { expiresAt: new Date(Date.now() - 1) });
 
     await req
-      .post('/api/v1/public/auth/otp/verify-dashboard')
+      .post('/api/v1/auth/otp/verify-dashboard')
       .send({ identifier: email, code: '654321' })
       .expect(400);
   });
@@ -100,7 +105,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     await seedOtp(email, '111111');
 
     await req
-      .post('/api/v1/public/auth/otp/verify-dashboard')
+      .post('/api/v1/auth/otp/verify-dashboard')
       .send({ identifier: email, code: '999999' })
       .expect(401);
   });
@@ -111,7 +116,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     await seedOtp(email, '654321', { consumed: true });
 
     await req
-      .post('/api/v1/public/auth/otp/verify-dashboard')
+      .post('/api/v1/auth/otp/verify-dashboard')
       .send({ identifier: email, code: '654321' })
       .expect(400);
   });
@@ -124,7 +129,7 @@ describe('Dashboard OTP login — request + verify endpoints', () => {
     });
 
     const res = await req
-      .post('/api/v1/public/auth/otp/verify-dashboard')
+      .post('/api/v1/auth/otp/verify-dashboard')
       .send({ identifier: email, code: '654321' })
       .expect(400);
 
