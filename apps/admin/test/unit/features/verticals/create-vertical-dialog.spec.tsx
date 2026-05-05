@@ -1,8 +1,30 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { CreateVerticalDialog } from '@/features/verticals/create-vertical/create-vertical-dialog';
+import { useCreateVertical } from '@/features/verticals/create-vertical/use-create-vertical';
+
+vi.mock('@deqah/ui/primitives/select', () => ({
+  Select: function({ children, value, onValueChange }: { children: React.ReactNode; value: string; onValueChange: (v: string) => void }) {
+    return (
+      <select
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        aria-label="Template family"
+      >
+        {children}
+      </select>
+    );
+  },
+  SelectTrigger: function({ children }: { children: React.ReactNode }) { return <>{children}</>; },
+  SelectValue: function({ placeholder }: { placeholder?: string }) { return <option value="">{placeholder}</option>; },
+  SelectContent: function({ children }: { children: React.ReactNode }) { return <>{children}</>; },
+  SelectItem: function({ children, value }: { children: React.ReactNode; value: string }) {
+    return <option value={value}>{children}</option>;
+  },
+}));
 
 vi.mock('@/features/verticals/create-vertical/use-create-vertical', () => ({
   useCreateVertical: vi.fn(() => ({
@@ -19,6 +41,10 @@ function wrap(ui: React.ReactNode) {
 describe('CreateVerticalDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useCreateVertical).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
   });
 
   it('renders dialog when open', async () => {
@@ -27,7 +53,7 @@ describe('CreateVerticalDialog', () => {
     wrap(<CreateVerticalDialog open={true} onOpenChange={onOpenChange} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Create vertical')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Create vertical' })).toBeInTheDocument();
     });
   });
 
@@ -109,16 +135,14 @@ describe('CreateVerticalDialog', () => {
 
     wrap(<CreateVerticalDialog open={true} onOpenChange={onOpenChange} />);
 
-    await waitFor(async () => {
-      await user.type(screen.getByLabelText(/Slug \(kebab-case\)/i), 'cardiology');
-      await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'طب القلب');
-      await user.type(screen.getByLabelText(/Name \(English\)/i), 'Cardiology');
-      await user.type(screen.getByLabelText(/Reason \(min 10 chars\)/i), 'Creating cardiology vertical');
-    });
+    await user.type(screen.getByLabelText(/Slug \(kebab-case\)/i), 'cardiology');
+    await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'طب القلب');
+    await user.type(screen.getByLabelText(/Name \(English\)/i), 'Cardiology');
+    await user.type(screen.getByLabelText(/Reason \(min 10 chars\)/i), 'Creating cardiology vertical');
+    await user.selectOptions(screen.getByRole('combobox', { name: /template family/i }), 'MEDICAL');
 
     await waitFor(() => {
-      const submitButton = screen.getByRole('button', { name: /create vertical/i });
-      expect(submitButton).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: /create vertical/i })).not.toBeDisabled();
     });
   });
 
@@ -139,11 +163,8 @@ describe('CreateVerticalDialog', () => {
 
   it('resets form after successful creation', async () => {
     const user = userEvent.setup();
-    const { useCreateVertical } = vi.mocked(
-      require('@/features/verticals/create-vertical/use-create-vertical'),
-    );
     const mutateFn = vi.fn();
-    (useCreateVertical as ReturnType<typeof vi.fn>).mockReturnValue({
+    vi.mocked(useCreateVertical).mockReturnValue({
       mutate: mutateFn,
       isPending: false,
     });
@@ -152,32 +173,30 @@ describe('CreateVerticalDialog', () => {
 
     wrap(<CreateVerticalDialog open={true} onOpenChange={onOpenChange} />);
 
-    await waitFor(async () => {
-      await user.type(screen.getByLabelText(/Slug \(kebab-case\)/i), 'cardiology');
-      await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'طب القلب');
-      await user.type(screen.getByLabelText(/Name \(English\)/i), 'Cardiology');
-      await user.type(screen.getByLabelText(/Reason \(min 10 chars\)/i), 'Creating cardiology vertical');
-    });
+    await user.type(screen.getByLabelText(/Slug \(kebab-case\)/i), 'cardiology');
+    await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'طب القلب');
+    await user.type(screen.getByLabelText(/Name \(English\)/i), 'Cardiology');
+    await user.type(screen.getByLabelText(/Reason \(min 10 chars\)/i), 'Creating cardiology vertical');
+    await user.selectOptions(screen.getByRole('combobox', { name: /template family/i }), 'MEDICAL');
 
-    await waitFor(async () => {
-      await user.click(screen.getByRole('button', { name: /create vertical/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create vertical/i })).not.toBeDisabled();
     });
+    await user.click(screen.getByRole('button', { name: /create vertical/i }));
 
-    expect(mutateFn).toHaveBeenCalledWith(
+    await waitFor(() => expect(mutateFn).toHaveBeenCalledWith(
       expect.objectContaining({
         slug: 'cardiology',
         nameAr: 'طب القلب',
         nameEn: 'Cardiology',
         reason: 'Creating cardiology vertical',
       }),
-    );
+      expect.any(Object),
+    ));
   });
 
   it('shows creating state when mutation is pending', async () => {
-    const { useCreateVertical } = vi.mocked(
-      require('@/features/verticals/create-vertical/use-create-vertical'),
-    );
-    (useCreateVertical as ReturnType<typeof vi.fn>).mockReturnValue({
+    vi.mocked(useCreateVertical).mockReturnValue({
       mutate: vi.fn(),
       isPending: true,
     });

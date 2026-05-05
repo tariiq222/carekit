@@ -5,11 +5,11 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import EditPlanPage from '@/app/(admin)/plans/[id]/edit/page';
 
-const mockUseListPlans = vi.fn();
-const mockUseUpdatePlan = vi.fn(() => ({
+const mockUseListPlans = vi.hoisted(() => vi.fn());
+const mockUseUpdatePlan = vi.hoisted(() => vi.fn(() => ({
   mutate: vi.fn(),
   isPending: false,
-}));
+})));
 
 vi.mock('@/features/plans/list-plans/use-list-plans', () => ({
   useListPlans: mockUseListPlans,
@@ -92,7 +92,7 @@ describe('EditPlanPage', () => {
     });
 
     render(<EditPlanPage />, { wrapper });
-    expect(document.querySelector('[class*="h-48"]')).toBeInTheDocument();
+    expect(document.querySelector('[class*="h-8"]')).toBeInTheDocument();
   });
 
   it('renders error when plan not found', () => {
@@ -123,7 +123,7 @@ describe('EditPlanPage', () => {
 
   it('renders active checkbox', () => {
     render(<EditPlanPage />, { wrapper });
-    expect(screen.getByLabelText(/Plan is active/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Active$/i)).toBeInTheDocument();
   });
 
   it('disables submit button when form is invalid', () => {

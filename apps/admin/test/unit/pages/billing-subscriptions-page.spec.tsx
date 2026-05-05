@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import BillingSubscriptionsPage from '@/app/(admin)/billing/page';
 
-const mockUseListSubscriptions = vi.fn();
+const mockUseListSubscriptions = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/billing/list-subscriptions/use-list-subscriptions', () => ({
   useListSubscriptions: mockUseListSubscriptions,
@@ -14,7 +14,6 @@ vi.mock('@/features/billing/list-subscriptions/subscriptions-filter-bar', () => 
   SubscriptionsFilterBar: function MockSubscriptionsFilterBar() {
     return <div data-testid="subscriptions-filter-bar">SubscriptionsFilterBar</div>;
   },
-  type StatusFilter: vi.fn(),
 }));
 
 vi.mock('@/features/billing/list-subscriptions/subscriptions-table', () => ({

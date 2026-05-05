@@ -4,8 +4,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { BrandingForm } from '@/features/platform-branding/branding-form';
 
-const mockGetPlatformBrand = vi.fn();
-const mockUpdatePlatformBrand = vi.fn();
+const mockGetPlatformBrand = vi.hoisted(() => vi.fn());
+const mockUpdatePlatformBrand = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/platform-branding/platform-branding.api', () => ({
   getPlatformBrand: mockGetPlatformBrand,

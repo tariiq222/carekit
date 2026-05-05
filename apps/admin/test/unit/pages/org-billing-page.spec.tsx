@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { Suspense } from 'react';
 import OrgBillingPage from '@/app/(admin)/billing/[orgId]/page';
 
 vi.mock('@/features/billing/get-org-billing/org-billing-detail', () => ({
@@ -15,7 +16,9 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={qc}>
       <NextIntlClientProvider locale="en" messages={{}}>
-        {children}
+        <Suspense fallback={<div>Loading…</div>}>
+          {children}
+        </Suspense>
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
@@ -28,7 +31,10 @@ describe('OrgBillingPage', () => {
 
   it('renders page title with orgId', async () => {
     const params = Promise.resolve({ orgId: 'org-123' });
-    render(<OrgBillingPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrgBillingPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Organization billing')).toBeInTheDocument();
@@ -38,7 +44,10 @@ describe('OrgBillingPage', () => {
 
   it('renders back link to subscriptions', async () => {
     const params = Promise.resolve({ orgId: 'org-123' });
-    render(<OrgBillingPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrgBillingPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /← back to subscriptions/i })).toBeInTheDocument();
@@ -47,7 +56,10 @@ describe('OrgBillingPage', () => {
 
   it('renders org billing detail component', async () => {
     const params = Promise.resolve({ orgId: 'org-123' });
-    render(<OrgBillingPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrgBillingPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('org-billing-detail')).toBeInTheDocument();

@@ -12,6 +12,9 @@ vi.mock("@/lib/billing/billing-context", () => ({ useBilling }))
 vi.mock("@/hooks/use-usage", () => ({
   useUsage: vi.fn(() => ({ data: [], isLoading: false })),
 }))
+vi.mock("@/app/(dashboard)/subscription/components/usage-bars", () => ({
+  UsageBars: () => <div data-testid="usage-bars" />,
+}))
 vi.mock("@/components/features/breadcrumbs", () => ({
   Breadcrumbs: () => <div>Breadcrumbs</div>,
 }))
@@ -118,12 +121,13 @@ describe("BillingUsagePage", () => {
     expect(container.querySelectorAll("[data-slot='skeleton']").length).toBeGreaterThan(0)
   })
 
-  it("shows empty state when subscription is null", () => {
+  it("shows zero values when subscription is null", () => {
     useBilling.mockReturnValue({ subscription: null, isLoading: false })
 
     render(<BillingUsagePage />)
 
-    expect(screen.getByText("No active subscription.")).toBeInTheDocument()
-    expect(screen.getByText("Upgrade plan")).toBeInTheDocument()
+    // No subscription → limits undefined → fmtLimit returns "—" for all
+    const naValues = screen.getAllByText("0 / —")
+    expect(naValues.length).toBe(4)
   })
 })

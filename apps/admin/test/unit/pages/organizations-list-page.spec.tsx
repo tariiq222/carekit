@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import OrganizationsListPage from '@/app/(admin)/organizations/page';
 
-const mockUseListOrganizations = vi.fn();
+const mockUseListOrganizations = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/organizations/list-organizations/use-list-organizations', () => ({
   useListOrganizations: mockUseListOrganizations,
@@ -20,8 +20,6 @@ vi.mock('@/features/organizations/list-organizations/organizations-filter-bar', 
   OrganizationsFilterBar: function MockOrganizationsFilterBar() {
     return <div data-testid="organizations-filter-bar">OrganizationsFilterBar</div>;
   },
-  type SuspendedFilter: vi.fn(),
-  type LifecycleStatusFilter: vi.fn(),
 }));
 
 vi.mock('@/features/organizations/list-organizations/organizations-table', () => ({
@@ -59,7 +57,15 @@ const mockOrganizationsData = {
   meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
 };
 
-const messages = { organizations: { title: 'Organizations', description: 'Manage organizations' } };
+const messages = {
+  organizations: {
+    title: 'Organizations',
+    description: 'Manage organizations',
+    create: { button: 'Create tenant' },
+    error: { loadFailed: 'Failed to load: {message}' },
+    pagination: { summary: 'Page {page} of {totalPages} · {total} total', previous: 'Previous', next: 'Next' },
+  },
+};
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-// Mock the hCaptcha widget — it loads a remote script and won't work in jsdom.
-vi.mock('@hcaptcha/react-hcaptcha', () => ({
-  default: vi.fn(({ onVerify }: { onVerify: (token: string) => void }) => (
+// Mock CaptchaField at the module boundary — bypasses the isCaptchaConfigured guard
+// that would otherwise render a dev-mode placeholder instead of the real widget.
+vi.mock('./captcha-field', () => ({
+  CaptchaField: vi.fn(({ onVerify }: { onVerify: (token: string) => void }) => (
     <button
       data-testid="mock-hcaptcha"
       onClick={() => onVerify('test-captcha-token')}

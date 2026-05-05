@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ImpersonationSessionsPage from '@/app/(admin)/impersonation-sessions/page';
 
-const mockUseListImpersonationSessions = vi.fn();
+const mockUseListImpersonationSessions = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/impersonation/list-impersonation-sessions/use-list-impersonation-sessions', () => ({
   useListImpersonationSessions: mockUseListImpersonationSessions,

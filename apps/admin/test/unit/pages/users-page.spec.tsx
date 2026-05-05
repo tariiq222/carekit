@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import UsersPage from '@/app/(admin)/users/page';
 
-const mockUseSearchUsers = vi.fn();
+const mockUseSearchUsers = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/users/search-users/use-search-users', () => ({
   useSearchUsers: mockUseSearchUsers,

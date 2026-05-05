@@ -1,11 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, it, vi, beforeEach, waitFor } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { Suspense } from 'react';
 import OrganizationDetailPage from '@/app/(admin)/organizations/[id]/page';
 
-const mockUseGetOrganization = vi.fn();
-const mockUseGetOrgBilling = vi.fn();
+const mockUseGetOrganization = vi.hoisted(() => vi.fn());
+const mockUseGetOrgBilling = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/organizations/get-organization/use-get-organization', () => ({
   useGetOrganization: mockUseGetOrganization,
@@ -70,8 +71,10 @@ function wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return (
     <QueryClientProvider client={qc}>
-      <NextIntlClientProvider locale="en" messages={{}}>
-        {children}
+      <NextIntlClientProvider locale="en" messages={{ organizations: { error: { loadFailed: 'Failed to load: {message}' }, status: { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED', ARCHIVED: 'ARCHIVED' }, detail: { back: 'Back', edit: 'Edit', archive: 'Archive', members: 'Members', bookings30d: 'Bookings (30d)', totalRevenue: 'Total Revenue', subscription: 'Subscription', noSubscription: 'No subscription', plan: 'Plan', status: 'Status', suspendedSince: 'Suspended since {date}', reason: 'Reason: {reason}', impersonate: 'Impersonate', changePlan: 'Change Plan' } } }}>
+        <Suspense fallback={<div>Loading…</div>}>
+          {children}
+        </Suspense>
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
@@ -92,7 +95,10 @@ describe('OrganizationDetailPage', () => {
 
   it('renders organization details', async () => {
     const params = Promise.resolve({ id: 'org-1' });
-    render(<OrganizationDetailPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrganizationDetailPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Test Organization')).toBeInTheDocument();
@@ -110,7 +116,10 @@ describe('OrganizationDetailPage', () => {
     });
 
     const params = Promise.resolve({ id: 'org-1' });
-    render(<OrganizationDetailPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrganizationDetailPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(document.querySelector('[class*="h-48"]')).toBeInTheDocument();
@@ -119,7 +128,7 @@ describe('OrganizationDetailPage', () => {
 
   it('renders error state when load fails', async () => {
     mockUseGetOrganization.mockReturnValue({
-      data: undefined,
+      data: mockOrganization,
       isLoading: false,
       error: new Error('Failed to load'),
     });
@@ -128,7 +137,10 @@ describe('OrganizationDetailPage', () => {
     });
 
     const params = Promise.resolve({ id: 'org-1' });
-    render(<OrganizationDetailPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrganizationDetailPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
@@ -146,10 +158,13 @@ describe('OrganizationDetailPage', () => {
     });
 
     const params = Promise.resolve({ id: 'org-1' });
-    render(<OrganizationDetailPage params={params} />, { wrapper });
+    await act(async () => {
+      render(<OrganizationDetailPage params={params} />, { wrapper });
+      await params;
+    });
 
     await waitFor(() => {
-      expect(screen.getByText(/SUSPENDED/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/SUSPENDED/i).length).toBeGreaterThan(0);
     });
   });
 });

@@ -57,7 +57,7 @@ describe('CreatePlanPage', () => {
 
   it('renders page title and description', () => {
     render(<CreatePlanPage />, { wrapper });
-    expect(screen.getByText('Create plan')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Create plan' })).toBeInTheDocument();
     expect(screen.getByText(/Add a new subscription plan/i)).toBeInTheDocument();
   });
 

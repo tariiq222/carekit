@@ -1,30 +1,61 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { useEffect } from "react"
 
-const loginMock = vi.fn()
-
-vi.mock("@/components/providers/auth-provider", () => ({
-  useAuth: () => ({ login: loginMock }),
+const { mockSubmitIdentifier, mockSubmitPassword, mockBack, mockChooseMethod } = vi.hoisted(() => ({
+  mockSubmitIdentifier: vi.fn(),
+  mockSubmitPassword: vi.fn(),
+  mockBack: vi.fn(),
+  mockChooseMethod: vi.fn(),
 }))
 
-vi.mock("@hcaptcha/react-hcaptcha", () => ({
-  default: ({ onVerify }: { onVerify: (token: string) => void }) => {
-    // Automatically verify in tests so the submit button is enabled
-    useEffect(() => {
-      onVerify("dev-bypass")
-    }, [onVerify])
-    return <div data-testid="hcaptcha" />
-  },
+const mockUseLoginFlow = vi.hoisted(() => vi.fn())
+
+vi.mock("@/components/features/login/use-login-flow", () => ({
+  useLoginFlow: mockUseLoginFlow,
+}))
+
+vi.mock("@/components/locale-provider", () => ({
+  useLocale: () => ({ t: (key: string) => key }),
+  LocaleProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+// Mock step components — we test LoginForm orchestration, not step internals
+vi.mock("@/components/features/login/identifier-step", () => ({
+  IdentifierStep: ({ onSubmit }: { onSubmit: (id: string) => void }) => (
+    <div>
+      <input data-testid="identifier-input" placeholder="email" />
+      <button onClick={() => onSubmit("test@test.com")}>Continue</button>
+    </div>
+  ),
+}))
+
+vi.mock("@/components/features/login/method-step", () => ({
+  MethodStep: ({ onPick, onBack }: { onPick: (m: string) => void; onBack: () => void }) => (
+    <div>
+      <button onClick={() => onPick("password")}>Use Password</button>
+      <button onClick={onBack}>Back</button>
+    </div>
+  ),
+}))
+
+vi.mock("@/components/features/login/password-step", () => ({
+  PasswordStep: ({ onSubmit, onBack, error }: { onSubmit: (p: string) => void; onBack: () => void; error?: string | null }) => (
+    <div>
+      <input data-testid="password-input" placeholder="••••••••" type="password" />
+      <button onClick={() => onSubmit("pass123")}>تسجيل الدخول</button>
+      <button onClick={onBack}>Back</button>
+      {error && <div>{error}</div>}
+    </div>
+  ),
+}))
+
+vi.mock("@/components/features/login/otp-step", () => ({
+  OtpStep: () => <div>OTP Step</div>,
 }))
 
 import { LoginForm } from "@/components/features/login-form"
 import { LocaleProvider } from "@/components/locale-provider"
-
-function getPasswordInput() {
-  return document.getElementById("password") as HTMLInputElement
-}
 
 function renderLoginForm() {
   return render(
@@ -37,127 +68,176 @@ function renderLoginForm() {
 describe("LoginForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.stubEnv("NODE_ENV", "test")
-    vi.stubEnv("NEXT_PUBLIC_DEV_EMAIL", "")
-    vi.stubEnv("NEXT_PUBLIC_DEV_PASSWORD", "")
+    // Default: identifier step
+    mockUseLoginFlow.mockReturnValue({
+      step: "identifier",
+      identifier: "",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
+    })
   })
 
-  it("renders email and password fields", () => {
+  it("renders identifier step by default", () => {
     renderLoginForm()
-    expect(screen.getByRole("textbox", { name: /البريد الإلكتروني/i })).toBeInTheDocument()
-    expect(getPasswordInput()).toBeInTheDocument()
+    expect(screen.getByTestId("identifier-input")).toBeInTheDocument()
   })
 
   it("renders submit button", () => {
     renderLoginForm()
+    expect(screen.getByRole("button", { name: /Continue/i })).toBeInTheDocument()
+  })
+
+  it("calls submitIdentifier when Continue is clicked", async () => {
+    renderLoginForm()
+    await userEvent.click(screen.getByRole("button", { name: /Continue/i }))
+    expect(mockSubmitIdentifier).toHaveBeenCalledWith("test@test.com")
+  })
+
+  it("renders method step when step is method", () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "method",
+      identifier: "test@test.com",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
+    })
+    renderLoginForm()
+    expect(screen.getByRole("button", { name: /Use Password/i })).toBeInTheDocument()
+  })
+
+  it("renders password step when step is password", () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "password",
+      identifier: "test@test.com",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
+    })
+    renderLoginForm()
+    expect(screen.getByTestId("password-input")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /تسجيل الدخول/i })).toBeInTheDocument()
   })
 
-  it("calls login with email and password on submit", async () => {
-    loginMock.mockResolvedValueOnce(undefined)
-    renderLoginForm()
-
-    await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
-    await userEvent.type(getPasswordInput(), "password123")
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
-
-    await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("admin@test.com", "password123", "dev-bypass")
+  it("shows error in password step", () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "password",
+      identifier: "test@test.com",
+      loading: false,
+      error: "بيانات غير صحيحة",
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
     })
+    renderLoginForm()
+    expect(screen.getByText("بيانات غير صحيحة")).toBeInTheDocument()
   })
 
-  it("shows loading state during submit", async () => {
-    loginMock.mockReturnValueOnce(new Promise(() => undefined))
-    renderLoginForm()
-
-    await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
-    await userEvent.type(getPasswordInput(), "password123")
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
-
-    await waitFor(() => {
-      expect(screen.getByText(/جارٍ تسجيل الدخول/i)).toBeInTheDocument()
+  it("calls submitPassword when login button clicked", async () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "password",
+      identifier: "test@test.com",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
     })
+    renderLoginForm()
+    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
+    expect(mockSubmitPassword).toHaveBeenCalledWith("pass123")
   })
 
-  it("shows error message on login failure", async () => {
-    loginMock.mockRejectedValueOnce(new Error("بيانات غير صحيحة"))
-    renderLoginForm()
-
-    await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
-    await userEvent.type(getPasswordInput(), "wrong")
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
-
-    await waitFor(() => {
-      expect(screen.getByText(/بيانات غير صحيحة/i)).toBeInTheDocument()
+  it("calls back when Back is clicked in method step", async () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "method",
+      identifier: "test@test.com",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
     })
+    renderLoginForm()
+    await userEvent.click(screen.getByRole("button", { name: /Back/i }))
+    expect(mockBack).toHaveBeenCalled()
   })
 
-  it("shows generic error for non-Error throws", async () => {
-    loginMock.mockRejectedValueOnce("unknown error")
+  it("does not show password field in identifier step", () => {
     renderLoginForm()
+    expect(screen.queryByTestId("password-input")).not.toBeInTheDocument()
+  })
 
-    await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "admin@test.com")
-    await userEvent.type(getPasswordInput(), "wrong")
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
+  it("shows loading title from translation keys", () => {
+    renderLoginForm()
+    // title comes from stepTitles map via t()
+    expect(screen.getByText("login.welcome")).toBeInTheDocument()
+  })
 
-    await waitFor(() => {
-      expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument()
+  it("renders otp step when step is otp", () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "otp",
+      identifier: "test@test.com",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
     })
+    renderLoginForm()
+    expect(screen.getByText("OTP Step")).toBeInTheDocument()
   })
 
-  it("toggles password visibility", async () => {
-    renderLoginForm()
-
-    expect(getPasswordInput()).toHaveAttribute("type", "password")
-
-    const toggleBtn = screen.getByRole("button", { name: /إظهار كلمة المرور/i })
-    await userEvent.click(toggleBtn)
-
-    expect(getPasswordInput()).toHaveAttribute("type", "text")
-    expect(screen.getByRole("button", { name: /إخفاء كلمة المرور/i })).toBeInTheDocument()
-  })
-
-  it("does not show dev login button in production", () => {
-    vi.stubEnv("NODE_ENV", "production")
-    renderLoginForm()
-    expect(screen.queryByText(/Dev Admin Login/i)).toBeNull()
-  })
-
-  it("shows dev login button when env vars are set", () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("NEXT_PUBLIC_DEV_EMAIL", "dev@test.com")
-    vi.stubEnv("NEXT_PUBLIC_DEV_PASSWORD", "devpass")
-    renderLoginForm()
-    expect(screen.getByText(/Dev Admin Login/i)).toBeInTheDocument()
-  })
-
-  it("calls login with dev credentials on dev button click", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("NEXT_PUBLIC_DEV_EMAIL", "dev@test.com")
-    vi.stubEnv("NEXT_PUBLIC_DEV_PASSWORD", "devpass")
-    loginMock.mockResolvedValueOnce(undefined)
-    renderLoginForm()
-
-    await userEvent.click(screen.getByText(/Dev Admin Login/i))
-
-    await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith("dev@test.com", "devpass", "dev-bypass")
+  it("clears old password error when step changes back to identifier", () => {
+    mockUseLoginFlow.mockReturnValue({
+      step: "identifier",
+      identifier: "",
+      loading: false,
+      error: null,
+      otpSentAt: null,
+      submitIdentifier: mockSubmitIdentifier,
+      submitPassword: mockSubmitPassword,
+      chooseMethod: mockChooseMethod,
+      back: mockBack,
+      resendOtp: vi.fn(),
+      submitOtp: vi.fn(),
     })
-  })
-
-  it("clears error on new submit attempt", async () => {
-    loginMock.mockRejectedValueOnce(new Error("خطأ"))
     renderLoginForm()
-
-    await userEvent.type(screen.getByRole("textbox", { name: /البريد الإلكتروني/i }), "a@b.com")
-    await userEvent.type(getPasswordInput(), "123")
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
-
-    await waitFor(() => expect(screen.getByText(/خطأ/i)).toBeInTheDocument())
-
-    loginMock.mockResolvedValueOnce(undefined)
-    await userEvent.click(screen.getByRole("button", { name: /تسجيل الدخول/i }))
-
-    await waitFor(() => expect(screen.queryByText(/خطأ/i)).toBeNull())
+    // No error shown on identifier step
+    expect(screen.queryByText("بيانات غير صحيحة")).not.toBeInTheDocument()
   })
 })

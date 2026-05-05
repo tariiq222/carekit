@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -5,13 +6,33 @@ import userEvent from '@testing-library/user-event';
 import { UpdateVerticalDialog } from '@/features/verticals/update-vertical/update-vertical-dialog';
 import type { VerticalRow } from '@/features/verticals/types';
 
-const mockUseUpdateVertical = vi.fn(() => ({
+const mockUseUpdateVertical = vi.hoisted(() => vi.fn(() => ({
   mutate: vi.fn(),
   isPending: false,
-}));
+})));
 
 vi.mock('@/features/verticals/update-vertical/use-update-vertical', () => ({
   useUpdateVertical: mockUseUpdateVertical,
+}));
+
+vi.mock('@deqah/ui/primitives/select', () => ({
+  Select: function({ children, value, onValueChange }: { children: React.ReactNode; value: string; onValueChange: (v: string) => void }) {
+    return (
+      <select
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        aria-label="Template family"
+      >
+        {children}
+      </select>
+    );
+  },
+  SelectTrigger: function({ children }: { children: React.ReactNode }) { return <>{children}</>; },
+  SelectValue: function({ placeholder }: { placeholder?: string }) { return <option value="">{placeholder}</option>; },
+  SelectContent: function({ children }: { children: React.ReactNode }) { return <>{children}</>; },
+  SelectItem: function({ children, value }: { children: React.ReactNode; value: string }) {
+    return <option value={value}>{children}</option>;
+  },
 }));
 
 const mockVertical: VerticalRow = {
