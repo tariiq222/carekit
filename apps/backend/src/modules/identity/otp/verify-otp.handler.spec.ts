@@ -50,6 +50,7 @@ describe('VerifyOtpHandler', () => {
       code: '1234',
       purpose: OtpPurpose.GUEST_BOOKING,
       organizationId: 'org-B',
+      hCaptchaToken: 'test-token',
     })).rejects.toThrow('Invalid or expired OTP code');
 
     expect(prismaMock.otpCode.findFirst).toHaveBeenCalledWith(
@@ -84,6 +85,7 @@ describe('VerifyOtpHandler', () => {
       identifier: 'test@example.com',
       code: correctCode,
       purpose: OtpPurpose.GUEST_BOOKING,
+      hCaptchaToken: 'test-token',
       // organizationId is omitted -> null
     });
 
@@ -120,6 +122,7 @@ describe('VerifyOtpHandler', () => {
       code: correctCode,
       purpose: OtpPurpose.GUEST_BOOKING,
       organizationId: orgA,
+      hCaptchaToken: 'test-token',
     });
 
     expect(result).toEqual({ sessionToken: 'mock-token' });

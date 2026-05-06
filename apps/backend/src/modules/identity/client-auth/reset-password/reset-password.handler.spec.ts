@@ -72,7 +72,7 @@ describe('ResetPasswordHandler', () => {
       mockTx.clientRefreshToken.updateMany.mockResolvedValue({ count: 2 });
 
       await expect(
-        handler.execute({ sessionToken: 'valid-token', newPassword: 'NewPass123' }),
+        handler.execute({ sessionToken: 'valid-token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' }),
       ).resolves.toBeUndefined();
 
       expect(mockPasswordHistory.assertNotReused).toHaveBeenCalledWith(
@@ -96,7 +96,7 @@ describe('ResetPasswordHandler', () => {
       mockOtpSession.verifySession.mockReturnValue(null);
 
       await expect(
-        handler.execute({ sessionToken: 'bad-token', newPassword: 'NewPass123' }),
+        handler.execute({ sessionToken: 'bad-token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -107,7 +107,7 @@ describe('ResetPasswordHandler', () => {
       });
 
       await expect(
-        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' }),
+        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -116,7 +116,7 @@ describe('ResetPasswordHandler', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' }),
+        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -127,7 +127,7 @@ describe('ResetPasswordHandler', () => {
       mockTx.usedOtpSession.create.mockRejectedValue(new Error('Unique constraint failed'));
 
       await expect(
-        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' }),
+        handler.execute({ sessionToken: 'token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -137,7 +137,7 @@ describe('ResetPasswordHandler', () => {
       mockPasswordHistory.assertNotReused.mockRejectedValue(new Error('PASSWORD_REUSED'));
 
       await expect(
-        handler.execute({ sessionToken: 'token', newPassword: 'ReusedPass1' }),
+        handler.execute({ sessionToken: 'token', newPassword: 'ReusedPass1', hCaptchaToken: 'test-token' }),
       ).rejects.toThrow('PASSWORD_REUSED');
       expect(mockTx.client.update).not.toHaveBeenCalled();
     });
@@ -154,7 +154,7 @@ describe('ResetPasswordHandler', () => {
       mockTx.client.update.mockResolvedValue({});
       mockTx.clientRefreshToken.updateMany.mockResolvedValue({ count: 0 });
 
-      await handler.execute({ sessionToken: 'token', newPassword: 'NewPass123' });
+      await handler.execute({ sessionToken: 'token', newPassword: 'NewPass123', hCaptchaToken: 'test-token' });
 
       expect(mockPrisma.client.findFirst).toHaveBeenCalledWith({
         where: { organizationId: 'org-test', phone: '+966500000001', deletedAt: null },

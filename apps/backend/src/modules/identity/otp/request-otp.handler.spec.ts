@@ -10,6 +10,7 @@ import { RequestOtpHandler } from './request-otp.handler';
 import { NotificationChannelRegistry } from '../../comms/notification-channel/notification-channel-registry';
 import { PrismaService } from '../../../infrastructure/database';
 import { CAPTCHA_VERIFIER } from '../../comms/contact-messages/captcha.verifier';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 
 describe('RequestOtpHandler', () => {
@@ -19,6 +20,7 @@ describe('RequestOtpHandler', () => {
   let otpCountMock: jest.Mock;
   let otpDeleteMock: jest.Mock;
   let prismaMock: any;
+  let redisSetMock: jest.Mock;
 
   const mockChannel = {
     kind: OtpChannel.EMAIL,
@@ -30,6 +32,7 @@ describe('RequestOtpHandler', () => {
     otpCountMock = jest.fn().mockResolvedValue(0);
     otpDeleteMock = jest.fn().mockResolvedValue({ id: 'test-id' });
     mockChannel.send.mockReset().mockResolvedValue(undefined);
+    redisSetMock = jest.fn().mockResolvedValue('OK');
 
     prismaMock = {
       $transaction: jest.fn().mockImplementation(async (fn) => fn({
@@ -41,6 +44,8 @@ describe('RequestOtpHandler', () => {
       otpCode: { count: otpCountMock, delete: otpDeleteMock },
     };
 
+    const redisMock = { getClient: () => ({ set: redisSetMock }) };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RequestOtpHandler,
@@ -48,6 +53,7 @@ describe('RequestOtpHandler', () => {
         { provide: CAPTCHA_VERIFIER, useValue: { verify: captchaVerifyMock } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: PrismaService, useValue: prismaMock },
+        { provide: RedisService, useValue: redisMock },
         {
           provide: ClsService,
           useValue: {
@@ -210,5 +216,42 @@ describe('RequestOtpHandler', () => {
     // Row created, then deleted on send failure.
     expect(txCreateMock).toHaveBeenCalledTimes(1);
     expect(otpDeleteMock).toHaveBeenCalledWith({ where: { id: 'created-otp-id' } });
+  });
+
+  it('rejects with 429 when same identifier+purpose requested within 60s', async () => {
+    // Simulate cooldown key already set (SETNX returns null = key existed)
+    redisSetMock.mockResolvedValueOnce(null);
+
+    await expect(handler.execute({
+      channel: OtpChannel.SMS,
+      identifier: '+966500000000',
+      purpose: OtpPurpose.MOBILE_LOGIN,
+      hCaptchaToken: 'valid-token',
+    })).rejects.toThrow(HttpException);
+
+    // Verify OTP was NOT issued (DB count not called because we bailed early)
+    expect(otpCountMock).not.toHaveBeenCalled();
+  });
+
+  it('allows request after 60s cooldown (SETNX succeeds)', async () => {
+    // Simulate key not present (first request or window expired)
+    redisSetMock.mockResolvedValueOnce('OK');
+
+    const result = await handler.execute({
+      channel: OtpChannel.SMS,
+      identifier: '+966500000000',
+      purpose: OtpPurpose.MOBILE_LOGIN,
+      hCaptchaToken: 'valid-token',
+    });
+
+    expect(result).toEqual({ success: true });
+    // Confirm the Redis SET was called with the right key pattern and TTL
+    expect(redisSetMock).toHaveBeenCalledWith(
+      'otp:cooldown:+966500000000:MOBILE_LOGIN',
+      '1',
+      'EX',
+      60,
+      'NX',
+    );
   });
 });

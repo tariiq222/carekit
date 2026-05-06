@@ -6,6 +6,7 @@ import { validatePassword } from './auth.schema';
 import { clientResetPasswordApi } from './auth.api';
 import { verifyOtp } from '@/features/otp/otp.api';
 import { OtpChannel, OtpPurpose } from '@deqah/shared';
+import { CaptchaField } from '@/features/otp/captcha-field';
 
 type Step = 'otp' | 'password';
 
@@ -22,6 +23,7 @@ export function ResetPasswordForm({ initialEmail, onSuccess }: ResetPasswordForm
   const [step, setStep] = useState<Step>('otp');
   const [otpCode, setOtpCode] = useState('');
   const [otpToken, setOtpToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,10 +34,14 @@ export function ResetPasswordForm({ initialEmail, onSuccess }: ResetPasswordForm
       setError('Please enter the 6-digit code');
       return;
     }
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      return;
+    }
     setError(null);
     setIsLoading(true);
     try {
-      const result = await verifyOtp(email, otpCode, OtpPurpose.CLIENT_PASSWORD_RESET);
+      const result = await verifyOtp(email, otpCode, OtpPurpose.CLIENT_PASSWORD_RESET, captchaToken);
       setOtpToken(result.sessionToken);
       setStep('password');
     } catch (err) {
@@ -63,7 +69,7 @@ export function ResetPasswordForm({ initialEmail, onSuccess }: ResetPasswordForm
 
     setIsLoading(true);
     try {
-      await clientResetPasswordApi({ sessionToken: otpToken, newPassword });
+      await clientResetPasswordApi({ sessionToken: otpToken, newPassword, hCaptchaToken: captchaToken ?? 'dev-bypass' });
       setSuccessMsg('Password updated successfully.');
       if (onSuccess) {
         onSuccess();
@@ -124,10 +130,14 @@ export function ResetPasswordForm({ initialEmail, onSuccess }: ResetPasswordForm
               style={{ ...inputStyle(), fontSize: '1.5rem', letterSpacing: '0.5em', textAlign: 'center' }}
             />
           </div>
+          <CaptchaField
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
+          />
           <button
             onClick={handleOtpSubmit}
-            disabled={isLoading || otpCode.length !== 6}
-            style={primaryButtonStyle(isLoading || otpCode.length !== 6)}
+            disabled={isLoading || otpCode.length !== 6 || !captchaToken}
+            style={primaryButtonStyle(isLoading || otpCode.length !== 6 || !captchaToken)}
           >
             {isLoading ? 'Verifying...' : 'Verify'}
           </button>

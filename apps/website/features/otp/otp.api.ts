@@ -19,12 +19,14 @@ export async function verifyOtp(
   identifier: string,
   code: string,
   purpose: OtpPurpose = OtpPurpose.GUEST_BOOKING,
+  hCaptchaToken = 'dev-bypass',
 ): Promise<OtpVerifyResponse> {
   const payload: OtpVerifyPayload = {
     channel: OtpChannel.EMAIL,
     identifier,
     code,
     purpose,
+    hCaptchaToken,
   };
   const res = await fetch(`${getApiBase()}/public/otp/verify`, {
     method: 'POST',

@@ -8,6 +8,7 @@ import { setTokens, setClient } from './auth-store';
 import { getMeApi } from './auth.api';
 import { requestOtp, verifyOtp } from '@/features/otp/otp.api';
 import { OtpChannel, OtpPurpose } from '@deqah/shared';
+import { CaptchaField } from '@/features/otp/captcha-field';
 
 type Step = 'credentials' | 'otp' | 'password';
 
@@ -23,6 +24,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [password, setPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpToken, setOtpToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,13 +38,18 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       return;
     }
 
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await requestOtp({
         channel: OtpChannel.EMAIL,
         identifier: email,
         purpose: OtpPurpose.CLIENT_LOGIN,
-        hCaptchaToken: '',
+        hCaptchaToken: captchaToken,
       });
       setStep('otp');
     } catch (err) {
@@ -60,7 +67,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await verifyOtp(email, otpCode);
+      const result = await verifyOtp(email, otpCode, OtpPurpose.CLIENT_LOGIN, captchaToken ?? 'dev-bypass');
       setOtpToken(result.sessionToken);
       setStep('password');
     } catch (err) {
@@ -92,6 +99,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         otpSessionToken: otpToken,
         password,
         name: name || undefined,
+        hCaptchaToken: captchaToken ?? 'dev-bypass',
       });
       setTokens(result.accessToken, result.refreshToken);
       const profile = await getMeApi();
@@ -152,7 +160,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               style={inputStyle()}
             />
           </div>
-          <button type="submit" disabled={isLoading} style={primaryButtonStyle(isLoading)}>
+          <CaptchaField
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
+          />
+          <button type="submit" disabled={isLoading || !captchaToken} style={primaryButtonStyle(isLoading || !captchaToken)}>
             {isLoading ? 'Sending code...' : 'Continue'}
           </button>
         </form>

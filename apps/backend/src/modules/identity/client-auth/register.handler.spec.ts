@@ -59,7 +59,7 @@ describe('RegisterHandler', () => {
       });
 
       const result = await handler.execute(
-        { password: 'SecurePass123', name: 'Ahmed' },
+        { password: 'SecurePass123', name: 'Ahmed', hCaptchaToken: 'test-token' },
         mockRequest('Bearer otp-session-token'),
       );
 
@@ -105,7 +105,7 @@ describe('RegisterHandler', () => {
       });
 
       const result = await handler.execute(
-        { password: 'SecurePass123' },
+        { password: 'SecurePass123', hCaptchaToken: 'test-token' },
         mockRequest('Bearer otp-session-token'),
       );
 
@@ -136,7 +136,7 @@ describe('RegisterHandler', () => {
 
       await expect(
         handler.execute(
-          { password: 'SecurePass123' },
+          { password: 'SecurePass123', hCaptchaToken: 'test-token' },
           mockRequest('Bearer otp-session-token'),
         ),
       ).rejects.toThrow(BadRequestException);
@@ -144,7 +144,7 @@ describe('RegisterHandler', () => {
 
     it('throws Unauthorized when no OTP session token provided', async () => {
       await expect(
-        handler.execute({ password: 'SecurePass123' }, mockRequest()),
+        handler.execute({ password: 'SecurePass123', hCaptchaToken: 'test-token' }, mockRequest()),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -153,7 +153,7 @@ describe('RegisterHandler', () => {
 
       await expect(
         handler.execute(
-          { password: 'SecurePass123' },
+          { password: 'SecurePass123', hCaptchaToken: 'test-token' },
           mockRequest('Bearer bad-token'),
         ),
       ).rejects.toThrow(UnauthorizedException);
@@ -169,7 +169,7 @@ describe('RegisterHandler', () => {
 
       await expect(
         handler.execute(
-          { password: 'SecurePass123' },
+          { password: 'SecurePass123', hCaptchaToken: 'test-token' },
           mockRequest('Bearer otp-session-token'),
         ),
       ).rejects.toThrow(UnauthorizedException);

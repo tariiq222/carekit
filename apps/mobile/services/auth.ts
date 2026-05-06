@@ -174,7 +174,8 @@ export const authService = {
       channel: 'EMAIL',
       identifier: email,
       purpose: 'CLIENT_PASSWORD_RESET',
-      hCaptchaToken: '',
+      // TODO: integrate react-native-hcaptcha post-launch for real widget
+      hCaptchaToken: process.env['EXPO_PUBLIC_HCAPTCHA_TOKEN'] ?? 'dev-bypass',
     });
     return response.data;
   },
@@ -193,6 +194,8 @@ export const authService = {
         identifier: email,
         code,
         purpose: 'CLIENT_PASSWORD_RESET',
+        // TODO: integrate react-native-hcaptcha post-launch for real widget
+        hCaptchaToken: process.env['EXPO_PUBLIC_HCAPTCHA_TOKEN'] ?? 'dev-bypass',
       },
     );
     return response.data;
@@ -207,7 +210,12 @@ export const authService = {
   ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
       '/public/auth/reset-password',
-      { sessionToken, newPassword },
+      {
+        sessionToken,
+        newPassword,
+        // TODO: integrate react-native-hcaptcha post-launch for real widget
+        hCaptchaToken: process.env['EXPO_PUBLIC_HCAPTCHA_TOKEN'] ?? 'dev-bypass',
+      },
     );
     return response.data;
   },

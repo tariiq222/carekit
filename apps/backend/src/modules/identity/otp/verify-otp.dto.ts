@@ -28,4 +28,9 @@ export class VerifyOtpDto {
   @IsOptional()
   @IsString()
   organizationId?: string;
+
+  @ApiProperty({ example: '<hCaptcha token>', description: 'hCaptcha token from the OTP verify form' })
+  @IsString()
+  @IsNotEmpty()
+  hCaptchaToken!: string;
 }

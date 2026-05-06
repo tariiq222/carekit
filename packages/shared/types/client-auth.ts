@@ -47,12 +47,14 @@ export interface ClientAuthResponse {
 export interface ClientLoginPayload {
   email: string;
   password: string;
+  hCaptchaToken: string;
 }
 
 export interface ClientRegisterPayload {
   otpSessionToken: string;
   password: string;
   name?: string;
+  hCaptchaToken: string;
 }
 
 export interface CancelMyBookingPayload {

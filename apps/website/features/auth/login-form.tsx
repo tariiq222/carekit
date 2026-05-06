@@ -6,6 +6,7 @@ import { validateEmail } from './auth.schema';
 import { clientLoginApi } from './auth.api';
 import { setTokens, setClient } from './auth-store';
 import { getMeApi } from './auth.api';
+import { CaptchaField } from '@/features/otp/captcha-field';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -15,6 +16,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,9 +35,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       return;
     }
 
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const result = await clientLoginApi({ email, password });
+      const result = await clientLoginApi({ email, password, hCaptchaToken: captchaToken });
       setTokens(result.accessToken, result.refreshToken);
       const profile = await getMeApi();
       setClient(profile);
@@ -109,9 +116,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           }}
         />
       </div>
+      <CaptchaField
+        onVerify={(token) => setCaptchaToken(token)}
+        onExpire={() => setCaptchaToken(null)}
+      />
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || !captchaToken}
         style={{
           padding: '0.875rem',
           borderRadius: '8px',
@@ -120,8 +131,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           fontWeight: 600,
           fontSize: '1rem',
           border: 'none',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1,
+          cursor: isLoading || !captchaToken ? 'not-allowed' : 'pointer',
+          opacity: isLoading || !captchaToken ? 0.7 : 1,
           transition: 'opacity 0.2s',
         }}
       >

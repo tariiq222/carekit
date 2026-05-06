@@ -96,6 +96,7 @@ export async function clientLogoutApi(): Promise<void> {
 export async function clientResetPasswordApi(payload: {
   sessionToken: string
   newPassword: string
+  hCaptchaToken: string
 }): Promise<void> {
   ensureInitialised()
   return clientResetPassword(payload)

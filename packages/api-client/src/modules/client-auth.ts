@@ -70,7 +70,7 @@ export async function clientRegister(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${payload.otpSessionToken}`,
     },
-    body: JSON.stringify({ password: payload.password, name: payload.name }),
+    body: JSON.stringify({ password: payload.password, name: payload.name, hCaptchaToken: payload.hCaptchaToken }),
   });
 }
 
@@ -96,6 +96,7 @@ export async function clientLogout(): Promise<void> {
 export async function clientResetPassword(payload: {
   sessionToken: string;
   newPassword: string;
+  hCaptchaToken: string;
 }): Promise<void> {
   return clientFetch<void>('/public/auth/reset-password', {
     method: 'POST',

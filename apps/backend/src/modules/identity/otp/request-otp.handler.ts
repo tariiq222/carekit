@@ -15,12 +15,14 @@ import { PrismaService } from '../../../infrastructure/database';
 import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { NotificationChannelRegistry } from '../../comms/notification-channel/notification-channel-registry';
 import { CAPTCHA_VERIFIER, type CaptchaVerifier } from '../../comms/contact-messages/captcha.verifier';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { RequestOtpDto } from './request-otp.dto';
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_MIN = 100_000;
 const OTP_MAX = 1_000_000; // exclusive upper bound for randomInt → yields 6 digits
 const MAX_REQUESTS_PER_IDENTIFIER_PER_HOUR = 5;
+const OTP_COOLDOWN_SECONDS = 60;
 
 export type RequestOtpCommand = RequestOtpDto;
 
@@ -34,6 +36,7 @@ export class RequestOtpHandler {
     @Inject(CAPTCHA_VERIFIER) private readonly captchaVerifier: CaptchaVerifier,
     private readonly config: ConfigService,
     private readonly cls: ClsService,
+    private readonly redisService: RedisService,
   ) {}
 
   async execute(dto: RequestOtpCommand): Promise<{ success: boolean }> {
@@ -47,6 +50,15 @@ export class RequestOtpHandler {
       if (!emailRegex.test(dto.identifier)) {
         throw new BadRequestException('Invalid email address');
       }
+    }
+
+    // Per-identifier cooldown: prevent SMS-bombing a single victim
+    const cooldownKey = `otp:cooldown:${dto.identifier}:${dto.purpose}`;
+    const redis = this.redisService.getClient();
+    // SET key 1 NX EX 60 — atomically set only if not exists, expire in 60s
+    const set = await redis.set(cooldownKey, '1', 'EX', OTP_COOLDOWN_SECONDS, 'NX');
+    if (set === null) {
+      throw new HttpException('Please wait before requesting another OTP', HttpStatus.TOO_MANY_REQUESTS);
     }
 
     const orgId = dto.organizationId ?? null;

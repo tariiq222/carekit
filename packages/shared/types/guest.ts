@@ -13,6 +13,7 @@ export interface OtpVerifyPayload {
   identifier: string;
   code: string;
   purpose: OtpPurpose;
+  hCaptchaToken: string;
 }
 
 export interface OtpVerifyResponse {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { validateEmail } from './auth.schema';
 import { requestOtp } from '@/features/otp/otp.api';
 import { OtpChannel, OtpPurpose } from '@deqah/shared';
+import { CaptchaField } from '@/features/otp/captcha-field';
 
 interface ForgotPasswordFormProps {
   onSuccess?: (email: string) => void;
@@ -13,6 +14,7 @@ interface ForgotPasswordFormProps {
 export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,13 +28,18 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       return;
     }
 
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await requestOtp({
         channel: OtpChannel.EMAIL,
         identifier: email,
         purpose: OtpPurpose.CLIENT_PASSWORD_RESET,
-        hCaptchaToken: '',
+        hCaptchaToken: captchaToken,
       });
       if (onSuccess) {
         onSuccess(email);
@@ -75,7 +82,11 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
           style={inputStyle()}
         />
       </div>
-      <button type="submit" disabled={isLoading} style={primaryButtonStyle(isLoading)}>
+      <CaptchaField
+        onVerify={(token) => setCaptchaToken(token)}
+        onExpire={() => setCaptchaToken(null)}
+      />
+      <button type="submit" disabled={isLoading || !captchaToken} style={primaryButtonStyle(isLoading || !captchaToken)}>
         {isLoading ? 'Sending...' : 'Send Code'}
       </button>
       <p style={{ textAlign: 'center', fontSize: '0.875rem', opacity: 0.8 }}>

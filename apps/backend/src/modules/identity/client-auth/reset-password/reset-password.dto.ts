@@ -1,4 +1,4 @@
-import { IsString, MinLength, Matches } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ResetPasswordDto {
@@ -18,4 +18,9 @@ export class ResetPasswordDto {
   @Matches(/[A-Z]/, { message: 'Password must contain at least 1 uppercase letter' })
   @Matches(/[0-9]/, { message: 'Password must contain at least 1 digit' })
   newPassword!: string;
+
+  @ApiProperty({ example: '<hCaptcha token>', description: 'hCaptcha token from the reset-password form' })
+  @IsString()
+  @IsNotEmpty()
+  hCaptchaToken!: string;
 }
