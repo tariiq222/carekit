@@ -21,7 +21,9 @@
     "resolveJsonModule": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "moduleResolution": "node",
+    "types": ["node", "jest", "uuid"]
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
