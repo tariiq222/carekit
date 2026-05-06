@@ -1,0 +1,48 @@
+name: Sync Production Branch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  sync-production:
+    name: Build clean production branch from main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Build clean production branch
+        env:
+          CI: "true"
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=$(git rev-parse HEAD)
+          SOURCE_SHORT=$(git rev-parse --short HEAD)
+
+          # Run sanitizer — produces ./production-tree/
+          bash scripts/sync-production-branch.sh
+
+          # Create orphan branch with the cleaned tree
+          cd production-tree
+          git init -b production
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git add -A
+          git commit \
+            -m "Production sync from main @ ${SOURCE_SHORT}" \
+            -m "Source: ${SOURCE_SHA}"
+          git push --force origin production

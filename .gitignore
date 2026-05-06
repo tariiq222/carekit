@@ -114,3 +114,7 @@ data/kiwi/
 
 apps/backend/coverage.backup-*/
 graphify-out/
+
+# ─── Local scratch / tool artifacts (never commit) ────────────
+testsprite_tests/
+test-results/
