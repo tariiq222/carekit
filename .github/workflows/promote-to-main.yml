@@ -1,19 +1,30 @@
-name: Sync Staging Branch
+name: Promote develop → main (manual)
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "promote" to confirm pushing develop to main'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   sync-staging:
-    name: Build clean staging branch from develop
+    name: Build clean main branch from develop
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "promote" ]; then
+            echo "❌ Confirmation must be exactly 'promote'. Got: '${{ inputs.confirm }}'"
+            exit 1
+          fi
+          echo "✅ Confirmation accepted"
+
       - name: Checkout develop (full history)
         uses: actions/checkout@v4
         with:
@@ -24,7 +35,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Build clean staging branch
+      - name: Build clean main branch
         env:
           CI: "true"
         run: |
@@ -32,17 +43,17 @@ jobs:
           SOURCE_SHA=$(git rev-parse HEAD)
           SOURCE_SHORT=$(git rev-parse --short HEAD)
 
-          # Run sanitizer — produces ./staging-tree/
-          bash scripts/sync-staging-branch.sh
+          # Run sanitizer — produces ./main-tree/
+          bash scripts/sync-main-branch.sh
 
           # Create orphan branch with the cleaned tree
-          cd staging-tree
-          git init -b staging
+          cd main-tree
+          git init -b main
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git add -A
           git commit \
-            -m "Staging sync from develop @ ${SOURCE_SHORT}" \
+            -m "Production promote from develop @ ${SOURCE_SHORT}" \
             -m "Source: ${SOURCE_SHA}"
-          git push --force origin staging
+          git push --force origin main

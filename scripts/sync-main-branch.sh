@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
-# scripts/sync-staging-branch.sh
+# scripts/sync-main-branch.sh
 #
-# Builds a sanitized staging tree from the current working directory.
-# Outputs to ./staging-tree/ (relative to repo root).
+# Builds a sanitized main tree from the current working directory.
+# Outputs to ./main-tree/ (relative to repo root).
 #
 # Usage (local dry-run):
-#   bash scripts/sync-staging-branch.sh
+#   bash scripts/sync-main-branch.sh
 #
 # Usage (CI):
-#   CI=true bash scripts/sync-staging-branch.sh
+#   CI=true bash scripts/sync-main-branch.sh
 #
-# The staging tree contains ONLY runtime/deployment files.
+# The main tree contains ONLY runtime/deployment files.
 # All docs, AI instructions, QA data, test code, and internal metadata
 # are stripped — ensuring a compromised VPS cannot read internal architecture.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT_DIR="${REPO_ROOT}/staging-tree"
+OUT_DIR="${REPO_ROOT}/main-tree"
 IS_CI="${CI:-}"
 
 log() {
-  echo "[sync-staging] $*"
+  echo "[sync-main] $*"
 }
 
 error() {
-  echo "[sync-staging] ERROR: $*" >&2
+  echo "[sync-main] ERROR: $*" >&2
   exit 1
 }
 
 # ─── Clean slate ──────────────────────────────────────────────────────────────
 if [[ -d "${OUT_DIR}" ]]; then
-  log "Removing existing staging-tree..."
+  log "Removing existing main-tree..."
   rm -rf "${OUT_DIR}"
 fi
 mkdir -p "${OUT_DIR}"
@@ -48,8 +48,8 @@ log "Output: ${OUT_DIR}"
 # After stripping, we re-inject ONLY .github/workflows/build-images.yml so
 # that the GitHub Actions build pipeline survives the sanitizer.
 # GitHub requires the workflow definition to exist in the pushed branch (main),
-# not develop — so this file must be present in the staging/main output.
-# Everything else under .github/ (CI tests, e2e, sync-staging.yml, templates)
+# not develop — so this file must be present in the main output.
+# Everything else under .github/ (CI tests, e2e, promote-to-main.yml, templates)
 # stays stripped.
 
 log "Running rsync (allowlist pass)..."
@@ -57,7 +57,7 @@ log "Running rsync (allowlist pass)..."
 rsync -a \
   --exclude='.git/' \
   --exclude='.github/' \
-  --exclude='staging-tree/' \
+  --exclude='main-tree/' \
   --exclude='.githooks/' \
   --exclude='.claude/' \
   --exclude='.kilo/' \
@@ -113,7 +113,7 @@ find "${OUT_DIR}" \( \
   -o -name "*.spec.js" \
 \) -delete
 
-# Remove .env variants that shouldn't be in staging tree
+# Remove .env variants that shouldn't be in main tree
 # (only .env.example is allowed)
 find "${OUT_DIR}" \( \
   -name ".env.local" \
@@ -126,7 +126,7 @@ find "${OUT_DIR}" \( \
 find "${OUT_DIR}/apps" -name "*.md" -delete 2>/dev/null || true
 find "${OUT_DIR}/packages" -name "*.md" -delete 2>/dev/null || true
 
-# Remove scripts/kiwi/ (QA-sync tooling, not needed in staging)
+# Remove scripts/kiwi/ (QA-sync tooling, not needed in main)
 rm -rf "${OUT_DIR}/scripts/kiwi" 2>/dev/null || true
 
 # Remove any .DS_Store files that rsync may have copied
@@ -136,7 +136,7 @@ log "Nested-file stripping complete."
 
 # ─── Step 2b: Re-inject .github/workflows/build-images.yml ──────────────────
 # All of .github/ was excluded from rsync above (to prevent CI/test workflows,
-# PR templates, and internal tooling from reaching staging/main).
+# PR templates, and internal tooling from reaching main).
 # We copy ONLY build-images.yml back in so GitHub Actions can run the Docker
 # image build on push to main.
 BUILD_IMAGES_SRC="${REPO_ROOT}/.github/workflows/build-images.yml"
@@ -144,13 +144,13 @@ BUILD_IMAGES_DST="${OUT_DIR}/.github/workflows/build-images.yml"
 if [[ -f "${BUILD_IMAGES_SRC}" ]]; then
   mkdir -p "$(dirname "${BUILD_IMAGES_DST}")"
   cp "${BUILD_IMAGES_SRC}" "${BUILD_IMAGES_DST}"
-  log "Re-injected .github/workflows/build-images.yml into staging tree."
+  log "Re-injected .github/workflows/build-images.yml into main tree."
 else
   log "WARNING: .github/workflows/build-images.yml not found in source — skipping re-injection."
 fi
 
-# ─── Step 3: Regenerate minimal .gitignore in staging tree ───────────────────
-log "Writing minimal .gitignore for staging tree..."
+# ─── Step 3: Regenerate minimal .gitignore in main tree ───────────────────
+log "Writing minimal .gitignore for main tree..."
 
 cat > "${OUT_DIR}/.gitignore" << 'GITIGNORE'
 node_modules/
@@ -170,38 +170,38 @@ log "Running sanity checks..."
 FAIL=0
 
 if [[ ! -d "${OUT_DIR}/apps/backend" ]]; then
-  echo "[sync-staging] FAIL: staging-tree/apps/backend/ does not exist" >&2
+  echo "[sync-main] FAIL: main-tree/apps/backend/ does not exist" >&2
   FAIL=1
 fi
 
 if [[ ! -f "${OUT_DIR}/package.json" ]]; then
-  echo "[sync-staging] FAIL: staging-tree/package.json does not exist" >&2
+  echo "[sync-main] FAIL: main-tree/package.json does not exist" >&2
   FAIL=1
 fi
 
 if [[ -f "${OUT_DIR}/CLAUDE.md" ]]; then
-  echo "[sync-staging] FAIL: staging-tree/CLAUDE.md still exists!" >&2
+  echo "[sync-main] FAIL: main-tree/CLAUDE.md still exists!" >&2
   FAIL=1
 fi
 
 LEAKED_CLAUDE=$(find "${OUT_DIR}" -name "CLAUDE.md" 2>/dev/null)
 if [[ -n "${LEAKED_CLAUDE}" ]]; then
-  echo "[sync-staging] FAIL: CLAUDE.md found in staging tree:" >&2
+  echo "[sync-main] FAIL: CLAUDE.md found in main tree:" >&2
   echo "${LEAKED_CLAUDE}" >&2
   FAIL=1
 fi
 
 LEAKED_AGENTS=$(find "${OUT_DIR}" -name "AGENTS.md" 2>/dev/null)
 if [[ -n "${LEAKED_AGENTS}" ]]; then
-  echo "[sync-staging] FAIL: AGENTS.md found in staging tree:" >&2
+  echo "[sync-main] FAIL: AGENTS.md found in main tree:" >&2
   echo "${LEAKED_AGENTS}" >&2
   FAIL=1
 fi
 
-# Verify build-images.yml was re-injected (must be present in staging/main
+# Verify build-images.yml was re-injected (must be present in main
 # or the Docker image build workflow won't run on push to main)
 if [[ ! -f "${OUT_DIR}/.github/workflows/build-images.yml" ]]; then
-  echo "[sync-staging] FAIL: .github/workflows/build-images.yml missing from staging tree!" >&2
+  echo "[sync-main] FAIL: .github/workflows/build-images.yml missing from main tree!" >&2
   FAIL=1
 fi
 
@@ -209,13 +209,13 @@ fi
 OTHER_GITHUB=$(find "${OUT_DIR}/.github" -type f \
   ! -path "${OUT_DIR}/.github/workflows/build-images.yml" 2>/dev/null)
 if [[ -n "${OTHER_GITHUB}" ]]; then
-  echo "[sync-staging] FAIL: unexpected .github/ files in staging tree:" >&2
+  echo "[sync-main] FAIL: unexpected .github/ files in main tree:" >&2
   echo "${OTHER_GITHUB}" >&2
   FAIL=1
 fi
 
 if [[ ${FAIL} -ne 0 ]]; then
-  error "Sanity checks failed — aborting. Staging tree is NOT safe to deploy."
+  error "Sanity checks failed — aborting. Main tree is NOT safe to deploy."
 fi
 
 log "All sanity checks passed."
@@ -224,7 +224,7 @@ log "All sanity checks passed."
 if [[ -z "${IS_CI}" ]]; then
   echo ""
   echo "═══════════════════════════════════════════════════════"
-  echo "  Staging Tree Summary"
+  echo "  Main Tree Summary"
   echo "═══════════════════════════════════════════════════════"
 
   FILE_COUNT=$(find "${OUT_DIR}" -type f | wc -l | tr -d ' ')
@@ -254,4 +254,4 @@ if [[ -z "${IS_CI}" ]]; then
   echo ""
 fi
 
-log "Done. Staging tree ready at: ${OUT_DIR}"
+log "Done. Main tree ready at: ${OUT_DIR}"
