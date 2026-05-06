@@ -120,6 +120,14 @@ const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
   'OrganizationInvoiceCounter',
   // Phase 2 / Bug B11 — refund→usage decrement idempotency log
   'RefundUsageRevertLog',
+  // Zoho Invoice integration — link/mirror tables (organizationId scoped).
+  // ZohoWebhookEvent is also scoped because each Zoho webhook delivery is
+  // resolved to a tenant before signature verification, and we never want
+  // a query to bleed events across orgs.
+  'ZohoContactLink',
+  'ZohoInvoiceLink',
+  'ZohoCreditNoteLink',
+  'ZohoWebhookEvent',
 ]);
 
 /**

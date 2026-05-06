@@ -24,6 +24,9 @@ import { OrgExperienceModule } from "./modules/org-experience/org-experience.mod
 import { FinanceModule } from "./modules/finance/finance.module";
 import { BookingsModule } from "./modules/bookings/bookings.module";
 import { ZoomModule } from "./modules/integrations/zoom/zoom.module";
+import { ZohoInfrastructureModule } from "./infrastructure/zoho/zoho-infrastructure.module";
+import { ZohoInvoiceModule } from "./modules/integrations/zoho-invoice/zoho-invoice.module";
+import { SaasZohoModule } from "./modules/platform/saas-billing/zoho/saas-zoho.module";
 import { OpsModule } from "./modules/ops/ops.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { AiModule } from "./modules/ai/ai.module";
@@ -80,6 +83,9 @@ import { PublicModule } from "./api/public/public.module";
     FinanceModule,
     BookingsModule,
     ZoomModule,
+    ZohoInfrastructureModule,
+    ZohoInvoiceModule,
+    SaasZohoModule,
     OpsModule,
     DashboardModule,
     AiModule,

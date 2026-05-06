@@ -126,6 +126,13 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureCatalogEntry> = {
     descAr: "إنشاء روابط زووم تلقائيًا للحجوزات الافتراضية",
     descEn: "Auto-generate Zoom links for virtual appointments",
   },
+  [FeatureKey.ZOHO_INVOICE_INTEGRATION]: {
+    key: FeatureKey.ZOHO_INVOICE_INTEGRATION,
+    kind: "boolean", tier: "PRO", group: "Finance & Compliance",
+    nameAr: "تكامل فواتير زوهو", nameEn: "Zoho Invoice Integration",
+    descAr: "إصدار الفواتير ومرآة المدفوعات والمرتجعات في زوهو Invoice بعد إتمام الدفع",
+    descEn: "Issue invoices and mirror payments/refunds in Zoho Invoice after payment captures",
+  },
   [FeatureKey.WALK_IN_BOOKINGS]: {
     key: FeatureKey.WALK_IN_BOOKINGS,
     kind: "boolean", tier: "PRO", group: "Booking & Scheduling",

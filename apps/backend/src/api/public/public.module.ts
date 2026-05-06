@@ -27,6 +27,8 @@ import { PublicVerticalsController } from './verticals.controller';
 import { PublicSmsWebhooksController } from './sms-webhooks.controller';
 import { BillingWebhookController } from './billing-webhook.controller';
 import { PublicPaymentWebhookController } from './payment-webhook.controller';
+import { PublicZohoWebhookController } from './zoho-webhook.controller';
+import { ZohoInvoiceModule } from '../../modules/integrations/zoho-invoice/zoho-invoice.module';
 import { PublicVerifyEmailController } from './verify-email.controller';
 import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 import { VerticalsModule } from '../../modules/platform/verticals/verticals.module';
@@ -36,7 +38,7 @@ import { OpsModule } from '../../modules/ops/ops.module';
 import { PublicHealthController } from './health.controller';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule, PlatformModule, OpsModule],
-  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController, PublicVerifyEmailController, PublicTenantsController, PublicHealthController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule, ContentModule, VerticalsModule, PlatformModule, OpsModule, ZohoInvoiceModule],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController, PublicInvoicesController, PublicRefundsController, PublicContentController, PublicVerticalsController, PublicSmsWebhooksController, BillingWebhookController, PublicPaymentWebhookController, PublicZohoWebhookController, PublicVerifyEmailController, PublicTenantsController, PublicHealthController],
 })
 export class PublicModule {}

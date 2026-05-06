@@ -29,6 +29,7 @@ export const planLimitsSchema = z.object({
   activity_log: z.boolean(),
   // Phase 3: 15 new boolean keys
   zoom_integration: z.boolean(),
+  zoho_invoice_integration: z.boolean(),
   walk_in_bookings: z.boolean(),
   bank_transfer_payments: z.boolean(),
   multi_branch: z.boolean(),
@@ -69,6 +70,7 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   activity_log: false,
   // Phase 3: 15 new boolean keys
   zoom_integration: false,
+  zoho_invoice_integration: false,
   walk_in_bookings: false,
   bank_transfer_payments: false,
   multi_branch: false,

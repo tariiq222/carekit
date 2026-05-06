@@ -38,6 +38,7 @@ export const FEATURE_KEY_MAP: Record<FeatureKey, string> = {
   [FeatureKey.MONTHLY_BOOKINGS]: 'maxBookingsPerMonth',
   // ── Phase 3: 15 new boolean keys ──────────────────────────────────
   [FeatureKey.ZOOM_INTEGRATION]: 'zoom_integration',
+  [FeatureKey.ZOHO_INVOICE_INTEGRATION]: 'zoho_invoice_integration',
   [FeatureKey.WALK_IN_BOOKINGS]: 'walk_in_bookings',
   [FeatureKey.BANK_TRANSFER_PAYMENTS]: 'bank_transfer_payments',
   [FeatureKey.MULTI_BRANCH]: 'multi_branch',

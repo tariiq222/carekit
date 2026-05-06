@@ -33,6 +33,7 @@ export const FeatureKey = {
 
   // ── On/Off — PRO (Phase 3) ────────────────────────────────────────
   ZOOM_INTEGRATION: "zoom_integration",
+  ZOHO_INVOICE_INTEGRATION: "zoho_invoice_integration",
   WALK_IN_BOOKINGS: "walk_in_bookings",
   BANK_TRANSFER_PAYMENTS: "bank_transfer_payments",
   MULTI_BRANCH: "multi_branch",

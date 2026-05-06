@@ -18,6 +18,7 @@ export interface PlanLimits {
   activity_log: boolean;
   // Phase 3: 15 new boolean keys
   zoom_integration: boolean;
+  zoho_invoice_integration: boolean;
   walk_in_bookings: boolean;
   bank_transfer_payments: boolean;
   multi_branch: boolean;
@@ -74,6 +75,7 @@ export const FEATURE_FIELDS = [
   { key: 'activity_log', label: 'Activity log' },
   // Phase 3: 15 new keys — Phase 4 will replace this array with FEATURE_CATALOG iteration
   { key: 'zoom_integration', label: 'Zoom Integration' },
+  { key: 'zoho_invoice_integration', label: 'Zoho Invoice Integration' },
   { key: 'walk_in_bookings', label: 'Walk-in Bookings' },
   { key: 'bank_transfer_payments', label: 'Bank Transfer Payments' },
   { key: 'multi_branch', label: 'Multi-Branch' },
@@ -110,6 +112,7 @@ export const DEFAULT_PLAN_LIMITS: PlanLimits = {
   activity_log: false,
   // Phase 3: 15 new boolean keys
   zoom_integration: false,
+  zoho_invoice_integration: false,
   walk_in_bookings: false,
   bank_transfer_payments: false,
   multi_branch: false,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
@@ -6,6 +6,8 @@ import { SubscriptionStateMachine } from '../subscription-state-machine';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { IssueInvoiceHandler } from '../issue-invoice/issue-invoice.handler';
 import { advanceBillingPeriodEnd } from '../billing-period.util';
+import { EventBusService } from '../../../../infrastructure/events';
+import { SubscriptionInvoicePaidEvent } from '../events/subscription-invoice-paid.event';
 
 export interface RecordSubscriptionPaymentCommand {
   invoiceId: string;
@@ -14,6 +16,8 @@ export interface RecordSubscriptionPaymentCommand {
 
 @Injectable()
 export class RecordSubscriptionPaymentHandler {
+  private readonly logger = new Logger(RecordSubscriptionPaymentHandler.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: SubscriptionCacheService,
@@ -21,6 +25,7 @@ export class RecordSubscriptionPaymentHandler {
     private readonly mailer: PlatformMailerService,
     private readonly config: ConfigService,
     private readonly issueInvoice: IssueInvoiceHandler,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(cmd: RecordSubscriptionPaymentCommand) {
@@ -97,6 +102,27 @@ export class RecordSubscriptionPaymentHandler {
         invoiceId: invoice.id,
         receiptUrl: `${baseUrl}/billing/${invoice.id}`,
       });
+    }
+
+    // Publish a domain event so downstream integrations (Zoho SaaS-billing
+    // mirror) can react asynchronously without coupling. Non-fatal — the
+    // bus uses BullMQ at-least-once and a publish failure must not roll
+    // back the in-DB payment state.
+    try {
+      const event = new SubscriptionInvoicePaidEvent({
+        subscriptionInvoiceId: invoice.id,
+        organizationId: sub.organizationId,
+        subscriptionId: sub.id,
+        amount: Number(invoice.amount),
+        currency: invoice.currency,
+        moyasarPaymentId: cmd.moyasarPaymentId,
+        paidAt: now,
+      });
+      await this.eventBus.publish(event.eventName, event.toEnvelope());
+    } catch (err) {
+      this.logger.warn(
+        `Failed to publish subscription_invoice.paid for ${invoice.id}: ${(err as Error).message}`,
+      );
     }
 
     return { ok: true };

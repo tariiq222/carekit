@@ -1,3 +1,8 @@
+// Boot-time test environment defaults.
+// `??=` only assigns when the var is unset, so the real .env (and CI overrides)
+// always win. Keep encryption keys deterministic per-test-run so cipher-text
+// from one suite doesn't accidentally satisfy another.
+
 process.env.TENANT_ENFORCEMENT ??= 'permissive';
 process.env.DEFAULT_ORGANIZATION_ID ??= '00000000-0000-0000-0000-000000000001';
 process.env.ADMIN_HOSTS ??= 'localhost,admin.deqah.app';
@@ -15,6 +20,7 @@ process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret-32chars-min';
 process.env.JWT_CLIENT_ACCESS_SECRET ??= 'test-client-access-secret-32chars';
 process.env.SMS_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 1).toString('base64');
 process.env.ZOOM_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 2).toString('base64');
+process.env.ZOHO_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 5).toString('base64');
 process.env.MOYASAR_TENANT_ENCRYPTION_KEY ??= Buffer.alloc(32, 3).toString('base64');
 process.env.EMAIL_PROVIDER_ENCRYPTION_KEY ??= Buffer.alloc(32, 4).toString('base64');
 // Phase 7 — invoice PDF renderer reads platform identity at module init.
