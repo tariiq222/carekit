@@ -24,17 +24,25 @@ function buildController() {
   const login = fn(TOKEN_PAIR);
   const logout = fn({ success: true });
   const captcha = { verify: jest.fn().mockResolvedValue(true) };
+  const refreshTokenModel = {
+    findMany: jest.fn(),
+    update: jest.fn(),
+  };
+  const membershipModel = {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findUnique: jest.fn().mockResolvedValue(null),
+  };
   const prisma = {
-    refreshToken: {
-      findMany: jest.fn(),
-      update: jest.fn(),
-    },
+    refreshToken: refreshTokenModel,
     user: {
       findUnique: jest.fn().mockResolvedValue(null),
     },
-    membership: {
-      findFirst: jest.fn().mockResolvedValue(null),
-      findUnique: jest.fn().mockResolvedValue(null),
+    membership: membershipModel,
+    // /auth/refresh + /auth/logout query through $allTenants because they
+    // run before tenant context exists.
+    $allTenants: {
+      refreshToken: refreshTokenModel,
+      membership: membershipModel,
     },
   } as unknown as import('../../infrastructure/database').PrismaService;
   const tokens = {
@@ -54,6 +62,11 @@ function buildController() {
   const tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') } as never;
   const requestDashboardOtp = fn({ success: true });
   const verifyDashboardOtp = fn(TOKEN_PAIR);
+  const cls = {
+    run: jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn()),
+    set: jest.fn(),
+    get: jest.fn(),
+  } as never;
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
@@ -63,6 +76,7 @@ function buildController() {
     uploadMembershipAvatar as never,
     inviteUser as never, acceptInvitation as never, tenant,
     requestDashboardOtp as never, verifyDashboardOtp as never,
+    cls,
   );
   return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset, requestDashboardOtp, verifyDashboardOtp };
 }
