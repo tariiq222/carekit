@@ -58,6 +58,14 @@ RUN pnpm --filter=backend run prisma:generate
 # lands at node_modules/typescript/ (not .pnpm/). Invoke tsc directly.
 RUN cd /app/packages/shared && node /app/node_modules/typescript/bin/tsc -p tsconfig.json && ls -la dist/ && test -f dist/constants/feature-keys.js
 
+# CRITICAL: pnpm with node-linker=hoisted COPIES workspace packages into
+# node_modules at install time (not symlink). Since pnpm install ran BEFORE
+# we built dist/, the copy in node_modules/@deqah/shared/ is missing dist/.
+# Sync the freshly-built dist back into node_modules so consumers can resolve it.
+RUN cp -r /app/packages/shared/dist /app/node_modules/@deqah/shared/dist \
+ && test -f /app/node_modules/@deqah/shared/dist/constants/feature-keys.js \
+ && test -f /app/node_modules/@deqah/shared/dist/constants/feature-keys.d.ts
+
 # ── Stage 3: app-build ───────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS app-build
 WORKDIR /app
