@@ -43,7 +43,7 @@ COPY apps/backend/prisma.config.ts ./apps/backend/prisma.config.ts
 RUN pnpm --filter=backend run prisma:generate
 # Invoke tsc directly — hoisted linker puts typescript at node_modules/typescript/,
 # not in the .pnpm store that pnpm's script runner expects.
-RUN node /app/node_modules/typescript/bin/tsc -p /app/packages/shared/tsconfig.json
+RUN cd /app/packages/shared && node /app/node_modules/typescript/bin/tsc -p tsconfig.json && test -f dist/constants/feature-keys.js
 
 # ── Stage 3: app-build ───────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS app-build
