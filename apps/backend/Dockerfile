@@ -70,8 +70,18 @@ COPY --from=shared-build /app/packages     ./packages
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY apps/backend/ ./apps/backend/
 
-RUN pnpm --filter=backend run prisma:generate
-RUN pnpm --filter=backend run build
+# Verify shared dist survived the COPY (catch issues early with clear message)
+RUN test -f /app/packages/shared/dist/constants/feature-keys.js \
+  || (echo "❌ packages/shared/dist/ missing in app-build — COPY from shared-build failed" && exit 1)
+
+# Run prisma generate via direct binary path (avoids pnpm's lifecycle re-install)
+RUN cd /app/apps/backend && /app/node_modules/.bin/prisma generate --schema=prisma/schema
+
+# Verify shared dist STILL there after prisma generate
+RUN test -f /app/packages/shared/dist/constants/feature-keys.js \
+  || (echo "❌ packages/shared/dist/ wiped by prisma generate" && exit 1)
+
+RUN cd /app/apps/backend && /app/node_modules/.bin/nest build
 
 # ── Stage 4: runner ──────────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS runner
