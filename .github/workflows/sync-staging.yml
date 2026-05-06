@@ -1,20 +1,20 @@
-name: Sync Production Branch
+name: Sync Staging Branch
 
 on:
   push:
     branches:
-      - main
+      - develop
 
 permissions:
   contents: write
 
 jobs:
-  sync-production:
-    name: Build clean production branch from main
+  sync-staging:
+    name: Build clean staging branch from develop
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main (full history)
+      - name: Checkout develop (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -24,7 +24,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Build clean production branch
+      - name: Build clean staging branch
         env:
           CI: "true"
         run: |
@@ -32,17 +32,17 @@ jobs:
           SOURCE_SHA=$(git rev-parse HEAD)
           SOURCE_SHORT=$(git rev-parse --short HEAD)
 
-          # Run sanitizer — produces ./production-tree/
-          bash scripts/sync-production-branch.sh
+          # Run sanitizer — produces ./staging-tree/
+          bash scripts/sync-staging-branch.sh
 
           # Create orphan branch with the cleaned tree
-          cd production-tree
-          git init -b production
+          cd staging-tree
+          git init -b staging
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git add -A
           git commit \
-            -m "Production sync from main @ ${SOURCE_SHORT}" \
+            -m "Staging sync from develop @ ${SOURCE_SHORT}" \
             -m "Source: ${SOURCE_SHA}"
-          git push --force origin production
+          git push --force origin staging

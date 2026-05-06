@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
-# scripts/sync-production-branch.sh
+# scripts/sync-staging-branch.sh
 #
-# Builds a sanitized production tree from the current working directory.
-# Outputs to ./production-tree/ (relative to repo root).
+# Builds a sanitized staging tree from the current working directory.
+# Outputs to ./staging-tree/ (relative to repo root).
 #
 # Usage (local dry-run):
-#   bash scripts/sync-production-branch.sh
+#   bash scripts/sync-staging-branch.sh
 #
 # Usage (CI):
-#   CI=true bash scripts/sync-production-branch.sh
+#   CI=true bash scripts/sync-staging-branch.sh
 #
-# The production tree contains ONLY runtime/deployment files.
+# The staging tree contains ONLY runtime/deployment files.
 # All docs, AI instructions, QA data, test code, and internal metadata
 # are stripped — ensuring a compromised VPS cannot read internal architecture.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT_DIR="${REPO_ROOT}/production-tree"
+OUT_DIR="${REPO_ROOT}/staging-tree"
 IS_CI="${CI:-}"
 
 log() {
-  echo "[sync-production] $*"
+  echo "[sync-staging] $*"
 }
 
 error() {
-  echo "[sync-production] ERROR: $*" >&2
+  echo "[sync-staging] ERROR: $*" >&2
   exit 1
 }
 
 # ─── Clean slate ──────────────────────────────────────────────────────────────
 if [[ -d "${OUT_DIR}" ]]; then
-  log "Removing existing production-tree..."
+  log "Removing existing staging-tree..."
   rm -rf "${OUT_DIR}"
 fi
 mkdir -p "${OUT_DIR}"
@@ -49,7 +49,7 @@ log "Running rsync (allowlist pass)..."
 rsync -a \
   --exclude='.git/' \
   --exclude='.github/' \
-  --exclude='production-tree/' \
+  --exclude='staging-tree/' \
   --exclude='.githooks/' \
   --exclude='.claude/' \
   --exclude='.kilo/' \
@@ -105,7 +105,7 @@ find "${OUT_DIR}" \( \
   -o -name "*.spec.js" \
 \) -delete
 
-# Remove .env variants that shouldn't be in production tree
+# Remove .env variants that shouldn't be in staging tree
 # (only .env.example is allowed)
 find "${OUT_DIR}" \( \
   -name ".env.local" \
@@ -118,7 +118,7 @@ find "${OUT_DIR}" \( \
 find "${OUT_DIR}/apps" -name "*.md" -delete 2>/dev/null || true
 find "${OUT_DIR}/packages" -name "*.md" -delete 2>/dev/null || true
 
-# Remove scripts/kiwi/ (QA-sync tooling, not needed in production)
+# Remove scripts/kiwi/ (QA-sync tooling, not needed in staging)
 rm -rf "${OUT_DIR}/scripts/kiwi" 2>/dev/null || true
 
 # Remove any .DS_Store files that rsync may have copied
@@ -126,8 +126,8 @@ find "${OUT_DIR}" -name ".DS_Store" -delete
 
 log "Nested-file stripping complete."
 
-# ─── Step 3: Regenerate minimal .gitignore in production tree ────────────────
-log "Writing minimal .gitignore for production tree..."
+# ─── Step 3: Regenerate minimal .gitignore in staging tree ───────────────────
+log "Writing minimal .gitignore for staging tree..."
 
 cat > "${OUT_DIR}/.gitignore" << 'GITIGNORE'
 node_modules/
@@ -147,36 +147,36 @@ log "Running sanity checks..."
 FAIL=0
 
 if [[ ! -d "${OUT_DIR}/apps/backend" ]]; then
-  echo "[sync-production] FAIL: production-tree/apps/backend/ does not exist" >&2
+  echo "[sync-staging] FAIL: staging-tree/apps/backend/ does not exist" >&2
   FAIL=1
 fi
 
 if [[ ! -f "${OUT_DIR}/package.json" ]]; then
-  echo "[sync-production] FAIL: production-tree/package.json does not exist" >&2
+  echo "[sync-staging] FAIL: staging-tree/package.json does not exist" >&2
   FAIL=1
 fi
 
 if [[ -f "${OUT_DIR}/CLAUDE.md" ]]; then
-  echo "[sync-production] FAIL: production-tree/CLAUDE.md still exists!" >&2
+  echo "[sync-staging] FAIL: staging-tree/CLAUDE.md still exists!" >&2
   FAIL=1
 fi
 
 LEAKED_CLAUDE=$(find "${OUT_DIR}" -name "CLAUDE.md" 2>/dev/null)
 if [[ -n "${LEAKED_CLAUDE}" ]]; then
-  echo "[sync-production] FAIL: CLAUDE.md found in production tree:" >&2
+  echo "[sync-staging] FAIL: CLAUDE.md found in staging tree:" >&2
   echo "${LEAKED_CLAUDE}" >&2
   FAIL=1
 fi
 
 LEAKED_AGENTS=$(find "${OUT_DIR}" -name "AGENTS.md" 2>/dev/null)
 if [[ -n "${LEAKED_AGENTS}" ]]; then
-  echo "[sync-production] FAIL: AGENTS.md found in production tree:" >&2
+  echo "[sync-staging] FAIL: AGENTS.md found in staging tree:" >&2
   echo "${LEAKED_AGENTS}" >&2
   FAIL=1
 fi
 
 if [[ ${FAIL} -ne 0 ]]; then
-  error "Sanity checks failed — aborting. Production tree is NOT safe to deploy."
+  error "Sanity checks failed — aborting. Staging tree is NOT safe to deploy."
 fi
 
 log "All sanity checks passed."
@@ -185,7 +185,7 @@ log "All sanity checks passed."
 if [[ -z "${IS_CI}" ]]; then
   echo ""
   echo "═══════════════════════════════════════════════════════"
-  echo "  Production Tree Summary"
+  echo "  Staging Tree Summary"
   echo "═══════════════════════════════════════════════════════"
 
   FILE_COUNT=$(find "${OUT_DIR}" -type f | wc -l | tr -d ' ')
@@ -212,4 +212,4 @@ if [[ -z "${IS_CI}" ]]; then
   echo ""
 fi
 
-log "Done. Production tree ready at: ${OUT_DIR}"
+log "Done. Staging tree ready at: ${OUT_DIR}"
