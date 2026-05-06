@@ -51,6 +51,7 @@ import { OrgsWithoutOwnerCron } from './admin/orgs-without-owner/orgs-without-ow
 import { ListSubscriptionsHandler } from './admin/list-subscriptions/list-subscriptions.handler';
 import { GetOrgBillingHandler } from './admin/get-org-billing/get-org-billing.handler';
 import { ListSubscriptionInvoicesHandler } from './admin/list-subscription-invoices/list-subscription-invoices.handler';
+import { ListZohoSaasInvoicesHandler } from './admin/list-zoho-saas-invoices/list-zoho-saas-invoices.handler';
 import { GetBillingMetricsHandler } from './admin/get-billing-metrics/get-billing-metrics.handler';
 import { AdminWaiveInvoiceHandler } from './admin/admin-waive-invoice/admin-waive-invoice.handler';
 import { AdminGrantCreditHandler } from './admin/admin-grant-credit/admin-grant-credit.handler';
@@ -105,6 +106,7 @@ const ADMIN_HANDLERS = [
   ListSubscriptionsHandler,
   GetOrgBillingHandler,
   ListSubscriptionInvoicesHandler,
+  ListZohoSaasInvoicesHandler,
   GetBillingMetricsHandler,
   AdminWaiveInvoiceHandler,
   AdminGrantCreditHandler,

@@ -21,6 +21,7 @@ import { SendZohoInvoiceHandler } from './invoices/send-invoice.handler';
 import { VoidZohoInvoiceHandler } from './invoices/void-invoice.handler';
 import { PaymentCapturedEventHandler } from './invoices/payment-captured.event-handler';
 import { RecordPaymentHandler } from './payments/record-payment.handler';
+import { ListPaymentMirrorsHandler } from './payments/list-payment-mirrors.handler';
 import { CreateCreditNoteHandler } from './credit-notes/create-credit-note.handler';
 import { RefundCompletedEventHandler } from './credit-notes/refund-completed.event-handler';
 import { HandleZohoWebhookHandler } from './webhooks/handle-event.handler';
@@ -41,6 +42,7 @@ const handlers = [
   SendZohoInvoiceHandler,
   VoidZohoInvoiceHandler,
   RecordPaymentHandler,
+  ListPaymentMirrorsHandler,
   CreateCreditNoteHandler,
   HandleZohoWebhookHandler,
   PaymentCapturedEventHandler,

@@ -27,6 +27,7 @@ import { ApiStandardResponses } from '../../common/swagger';
 import { ListSubscriptionsHandler } from '../../modules/platform/admin/list-subscriptions/list-subscriptions.handler';
 import { GetOrgBillingHandler } from '../../modules/platform/admin/get-org-billing/get-org-billing.handler';
 import { ListSubscriptionInvoicesHandler } from '../../modules/platform/admin/list-subscription-invoices/list-subscription-invoices.handler';
+import { ListZohoSaasInvoicesHandler } from '../../modules/platform/admin/list-zoho-saas-invoices/list-zoho-saas-invoices.handler';
 import { GetBillingMetricsHandler } from '../../modules/platform/admin/get-billing-metrics/get-billing-metrics.handler';
 import { AdminWaiveInvoiceHandler } from '../../modules/platform/admin/admin-waive-invoice/admin-waive-invoice.handler';
 import { AdminGrantCreditHandler } from '../../modules/platform/admin/admin-grant-credit/admin-grant-credit.handler';
@@ -69,6 +70,7 @@ export class AdminBillingController {
     private readonly listSubs: ListSubscriptionsHandler,
     private readonly getOrgBilling: GetOrgBillingHandler,
     private readonly listInvoices: ListSubscriptionInvoicesHandler,
+    private readonly listZohoSaasInvoices: ListZohoSaasInvoicesHandler,
     private readonly getMetrics: GetBillingMetricsHandler,
     private readonly waiveInvoice: AdminWaiveInvoiceHandler,
     private readonly grantCredit: AdminGrantCreditHandler,
@@ -138,6 +140,38 @@ export class AdminBillingController {
   @ApiOkResponse({ type: AdminBillingMetricsDto, description: 'Platform-wide billing metrics' })
   metrics() {
     return this.getMetrics.execute();
+  }
+
+  @Get('zoho/invoices')
+  @ApiOperation({
+    summary:
+      'List subscription invoices joined with their Zoho SaaS-billing mirror status (admin Zoho schedule view)',
+  })
+  @ApiOkResponse({
+    description: 'Paginated invoices + Zoho mirror metadata',
+    schema: {
+      type: 'object',
+      required: ['items', 'meta'],
+      properties: {
+        items: { type: 'array' },
+        meta: { $ref: getSchemaPath(PaginationMetaDto) },
+      },
+    },
+  })
+  zohoInvoices(
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('status') status?: string,
+    @Query('zohoMirrored') zohoMirrored?: 'yes' | 'no',
+  ) {
+    return this.listZohoSaasInvoices.execute({
+      page: page ? Number(page) : 1,
+      perPage: perPage ? Number(perPage) : 20,
+      organizationId,
+      status: status as never,
+      zohoMirrored,
+    });
   }
 
   @Post('invoices/:id/waive')

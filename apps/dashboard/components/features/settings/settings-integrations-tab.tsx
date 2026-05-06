@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import { ZoomSettingsForm } from "@/components/features/zoom/zoom-settings-form"
 import { EmailConfigForm } from "@/components/features/email-config/email-config-form"
+import { ZohoSettingsForm } from "@/components/features/zoho/zoho-settings-form"
 
-type IntegrationId = "zoom" | "email"
+type IntegrationId = "zoom" | "email" | "zoho"
 
 export function SettingsIntegrationsTab() {
   const { t } = useLocale()
@@ -16,6 +17,7 @@ export function SettingsIntegrationsTab() {
   const integrations: { id: IntegrationId; label: string }[] = [
     { id: "zoom", label: "Zoom" },
     { id: "email", label: t("emailConfig.menuLabel") },
+    { id: "zoho", label: t("zoho.menuLabel") },
   ]
 
   return (
@@ -61,6 +63,7 @@ export function SettingsIntegrationsTab() {
         <div className="flex flex-1 flex-col overflow-y-auto bg-surface-muted/50 p-5">
           {activeId === "zoom" && <ZoomSettingsForm />}
           {activeId === "email" && <EmailConfigForm />}
+          {activeId === "zoho" && <ZohoSettingsForm />}
         </div>
       </div>
     </Card>

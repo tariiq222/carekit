@@ -30,9 +30,14 @@ export default function BillingSubscriptionsPage() {
             Every SaaS subscription on the platform. Open a row to see invoices, usage, and credits.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/billing/invoices">All invoices →</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/billing/invoices">All invoices →</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/billing/zoho">Zoho schedule →</Link>
+          </Button>
+        </div>
       </div>
 
       {error ? (

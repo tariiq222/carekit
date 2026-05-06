@@ -34,6 +34,7 @@ import { GetZohoConfigHandler } from '../../modules/integrations/zoho-invoice/co
 import { UpdateZohoConfigHandler } from '../../modules/integrations/zoho-invoice/config/update-zoho-config.handler';
 import { TestZohoConfigHandler } from '../../modules/integrations/zoho-invoice/config/test-zoho-config.handler';
 import { ListZohoInvoicesHandler } from '../../modules/integrations/zoho-invoice/invoices/list-invoices.handler';
+import { ListPaymentMirrorsHandler } from '../../modules/integrations/zoho-invoice/payments/list-payment-mirrors.handler';
 import { GetZohoInvoiceHandler } from '../../modules/integrations/zoho-invoice/invoices/get-invoice.handler';
 import { SendZohoInvoiceHandler } from '../../modules/integrations/zoho-invoice/invoices/send-invoice.handler';
 import { VoidZohoInvoiceHandler } from '../../modules/integrations/zoho-invoice/invoices/void-invoice.handler';
@@ -61,6 +62,7 @@ export class DashboardZohoController {
     private readonly updateConfig: UpdateZohoConfigHandler,
     private readonly testConfig: TestZohoConfigHandler,
     private readonly listInvoices: ListZohoInvoicesHandler,
+    private readonly listPaymentMirrors: ListPaymentMirrorsHandler,
     private readonly getInvoice: GetZohoInvoiceHandler,
     private readonly sendInvoice: SendZohoInvoiceHandler,
     private readonly voidInvoice: VoidZohoInvoiceHandler,
@@ -197,5 +199,26 @@ export class DashboardZohoController {
   @ApiOperation({ summary: 'Void a Zoho invoice' })
   void(@Param('id') id: string) {
     return this.voidInvoice.execute(id);
+  }
+
+  // ───────── Payments ↔ Zoho mirror ─────────
+
+  @Get('payments-mirror')
+  @UseGuards(JwtGuard, CaslGuard)
+  @RequireFeature(FEATURE)
+  @ApiOperation({
+    summary:
+      'List captured Moyasar payments with their Zoho invoice mirror (URL/PDF/status) — used by the dashboard to show a per-client invoice link',
+  })
+  paymentMirrors(
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
+    @Query('clientId') clientId?: string,
+  ) {
+    return this.listPaymentMirrors.execute({
+      page: page ? Number(page) : 1,
+      perPage: perPage ? Number(perPage) : 25,
+      clientId,
+    });
   }
 }
