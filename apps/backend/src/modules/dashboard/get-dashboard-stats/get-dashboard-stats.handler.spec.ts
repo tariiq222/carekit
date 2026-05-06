@@ -14,6 +14,9 @@ const buildPrisma = () => ({
     count: jest.fn(),
     aggregate: jest.fn(),
   },
+  employee: {
+    findFirst: jest.fn(),
+  },
 });
 
 const buildTenant = () => ({
@@ -50,7 +53,7 @@ describe("GetDashboardStatsHandler", () => {
       prisma.payment.count.mockResolvedValue(0);
       prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: null } });
 
-      await handler.execute();
+      await handler.execute({ membershipRole: 'OWNER', userId: 'u-test' });
 
       expect(prisma.booking.count).toHaveBeenCalledTimes(4);
       // todayBookings
@@ -128,7 +131,7 @@ describe("GetDashboardStatsHandler", () => {
         _sum: { amount: { toString: () => "1500.00" } },
       });
 
-      const result = await handler.execute();
+      const result = await handler.execute({ membershipRole: 'OWNER', userId: 'u-test' });
 
       expect(result).toEqual({
         todayBookings: 5,
@@ -145,7 +148,7 @@ describe("GetDashboardStatsHandler", () => {
       prisma.payment.count.mockResolvedValue(0);
       prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: null } });
 
-      const result = await handler.execute();
+      const result = await handler.execute({ membershipRole: 'OWNER', userId: 'u-test' });
 
       expect(result.todayRevenue).toBe(0);
     });
@@ -155,9 +158,39 @@ describe("GetDashboardStatsHandler", () => {
       prisma.payment.count.mockResolvedValue(0);
       prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: null } });
 
-      await handler.execute();
+      await handler.execute({ membershipRole: 'OWNER', userId: 'u-test' });
 
       expect(tenant.requireOrganizationIdOrDefault).toHaveBeenCalled();
+    });
+
+    it('filters todayBookings by employee.userId when membershipRole is EMPLOYEE', async () => {
+      prisma.employee.findFirst.mockResolvedValueOnce({ id: 'emp-1' } as never);
+      prisma.booking.count.mockResolvedValue(0);
+      await handler.execute({ membershipRole: 'EMPLOYEE', userId: 'user-emp-1' });
+      expect(prisma.booking.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ employeeId: 'emp-1' }),
+        }),
+      );
+    });
+
+    it('returns zeroed stats when EMPLOYEE has no matching Employee row', async () => {
+      prisma.employee.findFirst.mockResolvedValueOnce(null as never);
+      const result = await handler.execute({ membershipRole: 'EMPLOYEE', userId: 'orphan-user' });
+      expect(result).toEqual({
+        todayBookings: 0,
+        confirmedToday: 0,
+        pendingToday: 0,
+        cancelRequests: 0,
+      });
+      expect(prisma.booking.count).not.toHaveBeenCalled();
+    });
+
+    it('omits payment-related fields for roles without Payment:read', async () => {
+      prisma.booking.count.mockResolvedValue(0);
+      const result = await handler.execute({ membershipRole: 'RECEPTIONIST', userId: 'u' });
+      expect(result.todayRevenue).toBeUndefined();
+      expect(result.pendingPayments).toBeUndefined();
     });
   });
 });

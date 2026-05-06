@@ -3,14 +3,21 @@ import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { BookingStatus, PaymentStatus, PaymentMethod } from '@prisma/client';
 
+export interface DashboardStatsCommand {
+  membershipRole: string | null;
+  userId: string;
+}
+
 export interface DashboardStats {
   todayBookings: number;
   confirmedToday: number;
   pendingToday: number;
-  pendingPayments: number;
   cancelRequests: number;
-  todayRevenue: number;
+  pendingPayments?: number;
+  todayRevenue?: number;
 }
+
+const PAYMENT_READ_ROLES = new Set(['OWNER', 'ADMIN', 'ACCOUNTANT']);
 
 @Injectable()
 export class GetDashboardStatsHandler {
@@ -19,7 +26,7 @@ export class GetDashboardStatsHandler {
     private readonly tenant: TenantContextService,
   ) {}
 
-  async execute(): Promise<DashboardStats> {
+  async execute(cmd: DashboardStatsCommand): Promise<DashboardStats> {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
     const today = new Date();
@@ -27,75 +34,80 @@ export class GetDashboardStatsHandler {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [
-      todayBookingsCount,
-      confirmedCount,
-      pendingCount,
-      cancelRequestedCount,
-      pendingPaymentsCount,
-      revenueResult,
-    ] = await Promise.all([
-      // Total bookings scheduled today
-      this.prisma.booking.count({
-        where: {
-          organizationId,
-          scheduledAt: { gte: today, lt: tomorrow },
-        },
-      }),
+    let employeeFilter: { employeeId: string } | object = {};
+    if (cmd.membershipRole === 'EMPLOYEE') {
+      const emp = await this.prisma.employee.findFirst({
+        where: { organizationId, userId: cmd.userId },
+        select: { id: true },
+      });
+      if (!emp) {
+        // EMPLOYEE membership without a linked Employee row → nothing to show.
+        return {
+          todayBookings: 0,
+          confirmedToday: 0,
+          pendingToday: 0,
+          cancelRequests: 0,
+        };
+      }
+      employeeFilter = { employeeId: emp.id };
+    }
 
-      // Confirmed bookings scheduled today
-      this.prisma.booking.count({
-        where: {
-          organizationId,
-          scheduledAt: { gte: today, lt: tomorrow },
-          status: BookingStatus.CONFIRMED,
-        },
-      }),
+    const baseWhere = { organizationId, ...employeeFilter };
+    const includePayments = PAYMENT_READ_ROLES.has(cmd.membershipRole ?? '');
 
-      // Pending bookings scheduled today
-      this.prisma.booking.count({
-        where: {
-          organizationId,
-          scheduledAt: { gte: today, lt: tomorrow },
-          status: BookingStatus.PENDING,
-        },
-      }),
+    const [todayBookingsCount, confirmedCount, pendingCount, cancelRequestedCount] =
+      await Promise.all([
+        this.prisma.booking.count({
+          where: { ...baseWhere, scheduledAt: { gte: today, lt: tomorrow } },
+        }),
+        this.prisma.booking.count({
+          where: {
+            ...baseWhere,
+            scheduledAt: { gte: today, lt: tomorrow },
+            status: BookingStatus.CONFIRMED,
+          },
+        }),
+        this.prisma.booking.count({
+          where: {
+            ...baseWhere,
+            scheduledAt: { gte: today, lt: tomorrow },
+            status: BookingStatus.PENDING,
+          },
+        }),
+        this.prisma.booking.count({
+          where: { ...baseWhere, status: BookingStatus.CANCEL_REQUESTED },
+        }),
+      ]);
 
-      // Cancel-requested bookings
-      this.prisma.booking.count({
-        where: {
-          organizationId,
-          status: BookingStatus.CANCEL_REQUESTED,
-        },
-      }),
-
-      // Pending bank transfer payments
-      this.prisma.payment.count({
-        where: {
-          invoice: { organizationId },
-          method: PaymentMethod.BANK_TRANSFER,
-          status: PaymentStatus.PENDING_VERIFICATION,
-        },
-      }),
-
-      // Today's revenue: sum of COMPLETED payments processed today
-      this.prisma.payment.aggregate({
-        where: {
-          invoice: { organizationId },
-          status: PaymentStatus.COMPLETED,
-          processedAt: { gte: today, lt: tomorrow },
-        },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    return {
+    const result: DashboardStats = {
       todayBookings: todayBookingsCount,
       confirmedToday: confirmedCount,
       pendingToday: pendingCount,
       cancelRequests: cancelRequestedCount,
-      pendingPayments: pendingPaymentsCount,
-      todayRevenue: Number(revenueResult._sum.amount?.toString() ?? 0),
     };
+
+    if (includePayments) {
+      const [pendingPaymentsCount, revenueResult] = await Promise.all([
+        this.prisma.payment.count({
+          where: {
+            invoice: { organizationId },
+            method: PaymentMethod.BANK_TRANSFER,
+            status: PaymentStatus.PENDING_VERIFICATION,
+          },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            invoice: { organizationId },
+            status: PaymentStatus.COMPLETED,
+            processedAt: { gte: today, lt: tomorrow },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+      result.pendingPayments = pendingPaymentsCount;
+      result.todayRevenue = Number(revenueResult._sum.amount?.toString() ?? 0);
+    }
+
+    return result;
   }
 }

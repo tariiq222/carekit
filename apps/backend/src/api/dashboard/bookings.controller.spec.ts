@@ -50,9 +50,10 @@ describe('DashboardBookingsController', () => {
 
   it('listBookings — passes default pagination', async () => {
     const { controller, list } = buildController();
-    await controller.listBookings({} as never);
+    const user = { sub: USER, membershipRole: 'OWNER' } as never;
+    await controller.listBookings(user, {} as never);
     expect(list.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1 }),
+      expect.objectContaining({ page: 1, membershipRole: 'OWNER', userId: USER }),
     );
   });
 
