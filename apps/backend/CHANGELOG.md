@@ -1,5 +1,11 @@
 # backend
 
+## 2.1.3
+
+### Patch Changes
+
+- [`0e32005`](https://github.com/tariiq222/deqah/commit/0e32005f889c760ba4d7bc1caf145f030437db31) - Drop the production-only requirement for `CAPTCHA_PROVIDER` so `noop` is a valid value in any environment. Per-account lockout (5 attempts → 15-minute lock) remains the primary brute-force defense until Cloudflare Turnstile lands. Adds a `TurnstileCaptchaVerifier` stub + `TURNSTILE_SECRET` env slot so flipping `CAPTCHA_PROVIDER=turnstile` later is a config change, not a code change.
+
 ## 2.1.2
 
 ### Patch Changes
