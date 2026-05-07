@@ -57,6 +57,12 @@ jobs:
 
       - name: Consume pending changesets (version bump + CHANGELOG)
         id: consume
+        env:
+          # @changesets/changelog-github calls the GitHub API to resolve commit
+          # SHAs → author handles + clickable PR links in CHANGELOG entries.
+          # Requires a token with read:user + repo:status; GITHUB_TOKEN has both
+          # at job-level by default but must be explicitly forwarded into the step env.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           CHANGESET_COUNT=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null | wc -l | tr -d ' ')
