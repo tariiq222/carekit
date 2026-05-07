@@ -7,3 +7,4 @@ See `apps/<app>/CHANGELOG.md` for the change details behind each version.
 |---|---|---|---|---|---|
 | 2026-05-06 (pre-Changesets) | v2.0.0 | v0.5.0 | v0.3.0 | v0.2.0 | initial Hostinger deployment |
 | 2026-05-07 03:11 UTC | v2.1.0 | v0.6.0 | v0.4.0 | v0.2.1 | 5fae4885 |
+| 2026-05-07 03:41 UTC | v2.1.0 | v0.6.1 | v0.4.0 | v0.2.1 | 5f8921a5 |
