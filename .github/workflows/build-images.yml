@@ -44,10 +44,29 @@ jobs:
       fail-fast: false
       matrix:
         app:
-          - { name: backend,   dockerfile: apps/backend/Dockerfile,   target: runner }
-          - { name: dashboard, dockerfile: apps/dashboard/Dockerfile, target: runner }
-          - { name: admin,     dockerfile: apps/admin/Dockerfile,     target: runner }
-          - { name: website,   dockerfile: apps/website/Dockerfile,   target: runner }
+          - name: backend
+            dockerfile: apps/backend/Dockerfile
+            target: runner
+            build_args: ""
+          - name: dashboard
+            dockerfile: apps/dashboard/Dockerfile
+            target: runner
+            build_args: |
+              NEXT_PUBLIC_API_URL=https://api.deqah.net/api/v1
+              NEXT_PUBLIC_HCAPTCHA_SITE_KEY=8c765c14-831e-4a76-a1c0-0e3eac06c7f6
+          - name: admin
+            dockerfile: apps/admin/Dockerfile
+            target: runner
+            build_args: |
+              NEXT_PUBLIC_API_URL=https://api.deqah.net/api/v1
+              NEXT_PUBLIC_HCAPTCHA_SITE_KEY=8c765c14-831e-4a76-a1c0-0e3eac06c7f6
+          - name: website
+            dockerfile: apps/website/Dockerfile
+            target: runner
+            build_args: |
+              NEXT_PUBLIC_API_URL=https://api.deqah.net
+              NEXT_PUBLIC_DEFAULT_ORG_ID=00000000-0000-0000-0000-000000000001
+              NEXT_PUBLIC_HCAPTCHA_SITE_KEY=8c765c14-831e-4a76-a1c0-0e3eac06c7f6
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,6 +96,18 @@ jobs:
             # date tag — useful for identifying daily deploys (includes run number to disambiguate)
             type=raw,value={{date 'YYYY-MM-DD'}}-{{run_number}},enable={{is_default_branch}}
 
+      # Resolve Moyasar key with a shell fallback (secrets context is not
+      # available inside matrix definitions, only inside step inputs/env).
+      - name: Resolve build args
+        id: build_args
+        shell: bash
+        run: |
+          MOYASAR_KEY="${{ secrets.MOYASAR_PUBLISHABLE_KEY }}"
+          if [ -z "$MOYASAR_KEY" ]; then
+            MOYASAR_KEY="pk_test_replace_me"
+          fi
+          echo "moyasar_key=$MOYASAR_KEY" >> "$GITHUB_OUTPUT"
+
       - name: Build & push
         uses: docker/build-push-action@v5
         with:
@@ -87,5 +118,8 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ matrix.app.build_args }}
+            ${{ matrix.app.name == 'dashboard' && format('NEXT_PUBLIC_MOYASAR_PLATFORM_PUBLISHABLE_KEY={0}', steps.build_args.outputs.moyasar_key) || '' }}
           cache-from: type=gha,scope=${{ matrix.app.name }}
           cache-to: type=gha,scope=${{ matrix.app.name }},mode=max

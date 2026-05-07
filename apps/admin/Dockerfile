@@ -75,6 +75,13 @@ RUN ARCH=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/') \
       lightningcss-linux-${ARCH}-gnu \
       @tailwindcss/oxide-linux-${ARCH}-gnu
 
+# Next.js bakes NEXT_PUBLIC_* into the JS bundle at build time.
+# These ARGs are passed via --build-arg from the GitHub Actions workflow.
+ARG NEXT_PUBLIC_API_URL=http://localhost:5100/api/v1
+ARG NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_HCAPTCHA_SITE_KEY=$NEXT_PUBLIC_HCAPTCHA_SITE_KEY
+
 RUN pnpm --filter=admin run build
 
 # ── Stage 4: runner ──────────────────────────────────────────────────────────

@@ -56,8 +56,7 @@ RUN mkdir -p /app/node_modules/@deqah \
 # ── Stage 3: app-build ───────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS app-build
 WORKDIR /app
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
 COPY --from=shared-build /app/node_modules ./node_modules
@@ -70,6 +69,15 @@ RUN ARCH=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/') \
  && pnpm add -w --ignore-scripts=false \
       lightningcss-linux-${ARCH}-gnu \
       @tailwindcss/oxide-linux-${ARCH}-gnu
+
+# Next.js bakes NEXT_PUBLIC_* into the JS bundle at build time.
+# These ARGs are passed via --build-arg from the GitHub Actions workflow.
+ARG NEXT_PUBLIC_API_URL=http://localhost:5100
+ARG NEXT_PUBLIC_DEFAULT_ORG_ID=
+ARG NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_DEFAULT_ORG_ID=$NEXT_PUBLIC_DEFAULT_ORG_ID
+ENV NEXT_PUBLIC_HCAPTCHA_SITE_KEY=$NEXT_PUBLIC_HCAPTCHA_SITE_KEY
 
 RUN pnpm --filter=website run build
 
