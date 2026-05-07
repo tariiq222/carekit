@@ -62,26 +62,44 @@ function panic(msg) {
   process.exit(2);
 }
 
-// 1. Make sure origin/main is fetched
-const fetched = shOk("git fetch origin main --depth=50");
-if (!fetched.ok) {
-  panic(`could not fetch origin/main: ${fetched.stderr}`);
+// 1. Find the baseline to diff against.
+//
+// We CANNOT use origin/main — the sanitizer produces an orphan tree on every
+// promote, so there's no merge base, and the two-dot diff falsely flags every
+// stripped file (CLAUDE.md, e2e/, .changeset/, …) as "changed since main".
+//
+// Instead, the previous "promoted state" is the last `chore(release): version
+// packages` commit on the current branch — that's the commit the promote
+// workflow writes after consuming changesets. Anything between that commit
+// and HEAD is genuine new work that needs a changeset (or a version bump).
+//
+// First promote ever has no such commit; we fall through to "everything is new"
+// and trust the developer authored a covering changeset.
+shOk("git fetch origin develop --depth=200");
+const lastReleaseCommit = shOk(
+  "git log --grep='^chore(release): version packages' --format=%H -n 1"
+);
+
+let baseline;
+if (lastReleaseCommit.ok && lastReleaseCommit.stdout) {
+  baseline = lastReleaseCommit.stdout;
+  console.log(`[verify-changesets] baseline: last release commit ${baseline.slice(0, 8)}`);
+} else {
+  // First-promote bootstrap: no prior release commit. Diff against the merge
+  // base with origin/main if available; otherwise treat all current files as
+  // "new" and require a covering changeset.
+  console.log("[verify-changesets] no prior release commit — first-promote bootstrap mode");
+  shOk("git fetch origin main --depth=50");
+  const mergeBase = shOk("git merge-base origin/main HEAD");
+  baseline = mergeBase.ok && mergeBase.stdout ? mergeBase.stdout : "HEAD~1";
 }
 
-// 2. List changed files
-// Try three-dot diff first (excludes changes on origin/main itself).
-// Falls back to two-dot diff when there is no merge base (e.g. orphan main
-// produced by the sanitize/promote workflow).
-let changedFiles = "";
-let diff = shOk("git diff --name-only origin/main...HEAD");
+// 2. List changed files between baseline and HEAD
+const diff = shOk(`git diff --name-only ${baseline} HEAD`);
 if (!diff.ok) {
-  console.log("[verify-changesets] no merge base with origin/main — falling back to two-dot diff");
-  diff = shOk("git diff --name-only origin/main HEAD");
-  if (!diff.ok) {
-    panic(`git diff failed: ${diff.stderr}`);
-  }
+  panic(`git diff ${baseline}..HEAD failed: ${diff.stderr}`);
 }
-changedFiles = diff.stdout;
+const changedFiles = diff.stdout;
 
 if (!changedFiles) {
   console.log("[verify-changesets] no changes vs origin/main — nothing to verify.");
@@ -122,17 +140,17 @@ function changesetBumpsApp(app) {
   return pendingChangesets.some((cs) => re.test(cs.content));
 }
 
-// Helper: did this app's package.json version change vs origin/main?
+// Helper: did this app's package.json version change vs baseline?
 function appVersionChanged(app) {
   const pkgPath = `apps/${app}/package.json`;
   const headVersion = readJSON(pkgPath).version;
-  const mainPkgRaw = shOk(`git show origin/main:${pkgPath}`);
-  if (!mainPkgRaw.ok) {
-    // app's package.json doesn't exist on main — counts as a version change
+  const basePkgRaw = shOk(`git show ${baseline}:${pkgPath}`);
+  if (!basePkgRaw.ok) {
+    // app's package.json doesn't exist at baseline — counts as a version change
     return true;
   }
-  const mainVersion = JSON.parse(mainPkgRaw.stdout).version;
-  return headVersion !== mainVersion;
+  const baseVersion = JSON.parse(basePkgRaw.stdout).version;
+  return headVersion !== baseVersion;
 }
 
 // 5. Verify each touched app
