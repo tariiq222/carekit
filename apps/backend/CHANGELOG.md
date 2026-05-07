@@ -1,5 +1,11 @@
 # backend
 
+## 2.1.1
+
+### Patch Changes
+
+- [`c4b7714`](https://github.com/tariiq222/deqah/commit/c4b771422f67c9e29af611958b82755f78024957) - Add `RELAX_PROD_VALIDATION` env flag — temporary escape hatch that downgrades Zoho + hCaptcha env validation to optional in production, so the platform can boot before real credentials are populated. All other prod safety (JWT, Moyasar tenant key, encryption keys, placeholder rejection) remains strict. Remove once real keys land in Dokploy.
+
 ## 2.1.0
 
 ### Minor Changes
