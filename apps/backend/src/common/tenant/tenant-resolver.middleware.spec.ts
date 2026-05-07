@@ -212,6 +212,21 @@ describe('TenantResolverMiddleware', () => {
       ).toThrow(TenantResolutionError);
     });
 
+    // Regression: confirm the boundary is explicit — /public routes without header
+    // still throw, auth-bootstrap routes next to them do NOT.
+    it('strict mode: /api/v1/public/services/departments without X-Org-Id still throws (boundary regression)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      expect(() =>
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/api/v1/public/services/departments' }),
+            {} as never,
+            () => undefined,
+          ),
+        ),
+      ).toThrow(TenantResolutionError);
+    });
+
     it('strict mode: ignores invalid UUID, throws (no fallback)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       expect(() =>
@@ -245,6 +260,84 @@ describe('TenantResolverMiddleware', () => {
           ),
         );
       });
+    });
+  });
+
+  describe('auth-bootstrap route bypass', () => {
+    it('strict mode: passes through /auth/login without X-Org-Id and without JWT', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/api/v1/auth/login' }),
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          ),
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('strict mode: passes through /auth/refresh without X-Org-Id', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/api/v1/auth/refresh' }),
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          ),
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('strict mode: passes through /auth/logout without X-Org-Id', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/api/v1/auth/logout' }),
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          ),
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('strict mode: passes through bare /auth/login (no global prefix) without X-Org-Id', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({ originalUrl: '/auth/login' }),
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          ),
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
     });
   });
 

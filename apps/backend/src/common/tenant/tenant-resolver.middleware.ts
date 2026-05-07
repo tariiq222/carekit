@@ -57,6 +57,28 @@ export class TenantResolverMiddleware implements NestMiddleware {
   }
 
   /**
+   * Auth-bootstrap routes that have no JWT and no org context yet — the
+   * handlers themselves resolve or issue the tenant context after
+   * authenticating the caller. Bypasses tenant resolution entirely so
+   * strict mode does not reject requests before the controller runs.
+   *
+   * Scope: @Controller('auth') endpoints under global prefix api/v1.
+   * - /auth/login    — LoginHandler resolves org from Membership after auth
+   * - /auth/refresh  — issues new token pair; uses $allTenants internally
+   * - /auth/logout   — revokes token; uses $allTenants internally
+   *
+   * NOT included: /public/auth/* (client auth — requires X-Org-Id from
+   * mobile tenant-lock) and /mobile/auth/* (mobile — sends X-Org-Id header).
+   */
+  private isAuthBootstrapRoute(path: string): boolean {
+    return (
+      path.endsWith('/auth/login') ||
+      path.endsWith('/auth/refresh') ||
+      path.endsWith('/auth/logout')
+    );
+  }
+
+  /**
    * Validates a header value as a well-formed UUID (RFC 4122, any version
    * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
    * Returns the trimmed value when valid, undefined otherwise.
@@ -80,6 +102,10 @@ export class TenantResolverMiddleware implements NestMiddleware {
 
     const path = req.originalUrl ?? req.url ?? req.path ?? '';
     if (this.isTenantBootstrapRoute(path)) {
+      return next();
+    }
+
+    if (this.isAuthBootstrapRoute(path)) {
       return next();
     }
 
