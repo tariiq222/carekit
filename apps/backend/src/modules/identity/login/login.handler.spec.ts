@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { LoginHandler } from './login.handler';
 import { PasswordService } from '../shared/password.service';
 import { TokenService } from '../shared/token.service';
@@ -29,8 +30,11 @@ describe('LoginHandler', () => {
   let prisma: any;
   let passwordService: jest.Mocked<PasswordService>;
   let tokenService: jest.Mocked<TokenService>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let clsService: any;
 
   beforeEach(async () => {
+    const allTenantsMembership = { findMany: jest.fn().mockResolvedValue([]) };
     const module = await Test.createTestingModule({
       providers: [
         LoginHandler,
@@ -38,7 +42,7 @@ describe('LoginHandler', () => {
           provide: PrismaService,
           useValue: {
             user: { findUnique: jest.fn(), update: jest.fn().mockResolvedValue({}) },
-            membership: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
+            $allTenants: { membership: allTenantsMembership },
           } as unknown as PrismaService,
         },
         { provide: PasswordService, useValue: { verify: jest.fn() } },
@@ -48,6 +52,13 @@ describe('LoginHandler', () => {
             issueTokenPair: jest.fn().mockResolvedValue({ accessToken: 'acc', refreshToken: 'ref' }),
           },
         },
+        {
+          provide: ClsService,
+          useValue: {
+            run: jest.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
+            set: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -55,6 +66,7 @@ describe('LoginHandler', () => {
     prisma = module.get(PrismaService);
     passwordService = module.get(PasswordService);
     tokenService = module.get(TokenService);
+    clsService = module.get(ClsService);
   });
 
   it('returns token pair for valid credentials', async () => {
@@ -101,7 +113,7 @@ describe('LoginHandler', () => {
     it('passes the active membership to TokenService.issueTokenPair', async () => {
       prisma.user.findUnique.mockResolvedValue({ ...mockUser, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findMany.mockResolvedValue([{
+      prisma.$allTenants.membership.findMany.mockResolvedValue([{
         id: 'mem-1',
         organizationId: '00000000-0000-0000-0000-000000000001',
         role: 'ADMIN',
@@ -123,7 +135,7 @@ describe('LoginHandler', () => {
     it('falls back to DEFAULT_ORGANIZATION_ID when user has no membership row', async () => {
       prisma.user.findUnique.mockResolvedValue({ ...mockUser, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findMany.mockResolvedValue([]);
+      prisma.$allTenants.membership.findMany.mockResolvedValue([]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
 
@@ -139,7 +151,7 @@ describe('LoginHandler', () => {
     it('marks isSuperAdmin true when user.isSuperAdmin is true', async () => {
       prisma.user.findUnique.mockResolvedValue({ ...mockUser, isSuperAdmin: true, lastActiveOrganizationId: null } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findMany.mockResolvedValue([]);
+      prisma.$allTenants.membership.findMany.mockResolvedValue([]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
 
@@ -217,7 +229,7 @@ describe('LoginHandler', () => {
         lockedUntil: pastDate,
       } as never);
       passwordService.verify.mockResolvedValue(true);
-      prisma.membership.findMany.mockResolvedValue([]);
+      prisma.$allTenants.membership.findMany.mockResolvedValue([]);
 
       await handler.execute({ email: 'admin@clinic.sa', password: 'correct' });
 

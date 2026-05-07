@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
-import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
+import { DEFAULT_ORGANIZATION_ID, SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant';
 import { PasswordService } from '../shared/password.service';
 import { TokenService, TokenPair } from '../shared/token.service';
 import type { LoginCommand } from './login.command';
@@ -14,6 +15,7 @@ export class LoginHandler {
     private readonly prisma: PrismaService,
     private readonly password: PasswordService,
     private readonly tokens: TokenService,
+    private readonly cls: ClsService,
   ) {}
 
   async execute(cmd: LoginCommand): Promise<TokenPair> {
@@ -67,10 +69,13 @@ export class LoginHandler {
     // chosen tenant. Otherwise fall back to canonical ordering. Final
     // fallback to DEFAULT_ORGANIZATION_ID keeps legacy users (no
     // backfilled membership) able to log in without crashing.
-    const activeMemberships = await this.prisma.membership.findMany({
-      where: { userId: user.id, isActive: true },
-      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, organizationId: true, role: true },
+    const activeMemberships = await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.prisma.$allTenants.membership.findMany({
+        where: { userId: user.id, isActive: true },
+        orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+        select: { id: true, organizationId: true, role: true },
+      });
     });
     const sticky = user.lastActiveOrganizationId
       ? activeMemberships.find(

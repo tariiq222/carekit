@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
-import { GetBookingSettingsHandler } from '../../bookings/get-booking-settings/get-booking-settings.handler';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
+import { DEFAULT_BOOKING_SETTINGS } from '../../bookings/get-booking-settings/get-booking-settings.handler';
 
 @Injectable()
 export class BookingNoShowCron {
@@ -9,30 +11,33 @@ export class BookingNoShowCron {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly cls: ClsService,
   ) {}
 
-  /**
-   * Mark CONFIRMED bookings as NO_SHOW using the global autoNoShowAfterMinutes setting.
-   */
   async execute(): Promise<void> {
-    const settings = await this.settingsHandler.execute({ branchId: null });
-    const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      const globalRow = await this.prisma.$allTenants.bookingSettings.findFirst({
+        where: { branchId: null },
+      });
+      const minutes = globalRow?.autoNoShowAfterMinutes ?? DEFAULT_BOOKING_SETTINGS.autoNoShowAfterMinutes;
+      const cutoff = new Date(Date.now() - minutes * 60_000);
 
-    const result = await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.CONFIRMED,
-        scheduledAt: { lte: cutoff },
-        checkedInAt: null,
-      },
-      data: {
-        status: BookingStatus.NO_SHOW,
-        noShowAt: new Date(),
-      },
+      const result = await this.prisma.$allTenants.booking.updateMany({
+        where: {
+          status: BookingStatus.CONFIRMED,
+          scheduledAt: { lte: cutoff },
+          checkedInAt: null,
+        },
+        data: {
+          status: BookingStatus.NO_SHOW,
+          noShowAt: new Date(),
+        },
+      });
+
+      if (result.count > 0) {
+        this.logger.log(`marked ${result.count} as NO_SHOW`);
+      }
     });
-
-    if (result.count > 0) {
-      this.logger.log(`marked ${result.count} as NO_SHOW`);
-    }
   }
 }

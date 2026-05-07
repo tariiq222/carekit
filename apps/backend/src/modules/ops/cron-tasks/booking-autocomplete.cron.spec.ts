@@ -5,41 +5,47 @@ import { RefreshTokenCleanupCron } from './refresh-token-cleanup.cron';
 import { AppointmentRemindersCron } from './appointment-reminders.cron';
 import { BookingStatus } from '@prisma/client';
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
+  set: jest.fn(),
+});
+
 const buildPrisma = () => ({
-  booking: {
-    findMany: jest.fn().mockResolvedValue([{}]),
-    updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-  },
-  refreshToken: {
-    deleteMany: jest.fn().mockResolvedValue({ count: 5 }),
+  $allTenants: {
+    booking: {
+      findMany: jest.fn().mockResolvedValue([{}]),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    bookingSettings: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
+    refreshToken: {
+      deleteMany: jest.fn().mockResolvedValue({ count: 5 }),
+    },
+    waitlistEntry: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    groupSession: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
   },
   passwordResetToken: {
     deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
-  waitlistEntry: {
-    findMany: jest.fn().mockResolvedValue([]),
-  },
-});
-
-const buildSettingsHandler = () => ({
-  execute: jest.fn().mockResolvedValue({
-    autoCompleteAfterHours: 24,
-    autoNoShowAfterMinutes: 60,
-  }),
 });
 
 describe('BookingAutocompleteCron', () => {
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new BookingAutocompleteCron(prisma as never, buildSettingsHandler() as never);
+    const cron = new BookingAutocompleteCron(prisma as never, buildCls() as never);
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
   it('calls updateMany with CONFIRMED status and cutoff', async () => {
     const prisma = buildPrisma();
-    const cron = new BookingAutocompleteCron(prisma as never, buildSettingsHandler() as never);
+    const cron = new BookingAutocompleteCron(prisma as never, buildCls() as never);
     await cron.execute();
-    expect(prisma.booking.updateMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
         data: expect.objectContaining({ status: BookingStatus.COMPLETED }),
@@ -52,7 +58,6 @@ describe('BookingExpiryCron', () => {
   // Legacy path (flag off) preserves the pre-launch-readiness behavior.
   // Enhanced-path coverage lives in booking-expiry.cron.spec.ts.
   const buildFlags = () => ({ bookingExpiryEnabled: false });
-  const buildCls = () => ({ run: jest.fn(), set: jest.fn() });
 
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
@@ -66,14 +71,14 @@ describe('BookingExpiryCron', () => {
 
   it('updates pending bookings that have expired', async () => {
     const prisma = buildPrisma();
-    prisma.booking.updateMany = jest.fn().mockResolvedValue({ count: 3 });
+    prisma.$allTenants.booking.updateMany = jest.fn().mockResolvedValue({ count: 3 });
     const cron = new BookingExpiryCron(
       prisma as never,
       buildFlags() as never,
       buildCls() as never,
     );
     await cron.execute();
-    expect(prisma.booking.updateMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           status: BookingStatus.PENDING,
@@ -87,16 +92,16 @@ describe('BookingExpiryCron', () => {
 describe('BookingNoShowCron', () => {
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new BookingNoShowCron(prisma as never, buildSettingsHandler() as never);
+    const cron = new BookingNoShowCron(prisma as never, buildCls() as never);
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
   it('marks confirmed bookings past cutoff as NO_SHOW', async () => {
     const prisma = buildPrisma();
-    prisma.booking.updateMany = jest.fn().mockResolvedValue({ count: 2 });
-    const cron = new BookingNoShowCron(prisma as never, buildSettingsHandler() as never);
+    prisma.$allTenants.booking.updateMany = jest.fn().mockResolvedValue({ count: 2 });
+    const cron = new BookingNoShowCron(prisma as never, buildCls() as never);
     await cron.execute();
-    expect(prisma.booking.updateMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           status: BookingStatus.CONFIRMED,
@@ -112,9 +117,9 @@ describe('BookingNoShowCron', () => {
 describe('RefreshTokenCleanupCron', () => {
   it('deletes expired tokens', async () => {
     const prisma = buildPrisma();
-    const cron = new RefreshTokenCleanupCron(prisma as never);
+    const cron = new RefreshTokenCleanupCron(prisma as never, buildCls() as never);
     await cron.execute();
-    expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.refreshToken.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           OR: expect.arrayContaining([
@@ -127,8 +132,8 @@ describe('RefreshTokenCleanupCron', () => {
 
   it('executes without throwing when no tokens to delete', async () => {
     const prisma = buildPrisma();
-    prisma.refreshToken.deleteMany = jest.fn().mockResolvedValue({ count: 0 });
-    const cron = new RefreshTokenCleanupCron(prisma as never);
+    prisma.$allTenants.refreshToken.deleteMany = jest.fn().mockResolvedValue({ count: 0 });
+    const cron = new RefreshTokenCleanupCron(prisma as never, buildCls() as never);
     await expect(cron.execute()).resolves.not.toThrow();
   });
 });
@@ -136,16 +141,16 @@ describe('RefreshTokenCleanupCron', () => {
 describe('AppointmentRemindersCron', () => {
   it('executes without throwing', async () => {
     const prisma = buildPrisma();
-    const cron = new AppointmentRemindersCron(prisma as never);
+    const cron = new AppointmentRemindersCron(prisma as never, buildCls() as never);
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
   it('checks waitlist entries', async () => {
     const prisma = buildPrisma();
-    prisma.waitlistEntry.findMany = jest.fn().mockResolvedValue([{ id: 'w-1' }, { id: 'w-2' }]);
-    const cron = new AppointmentRemindersCron(prisma as never);
+    prisma.$allTenants.waitlistEntry.findMany = jest.fn().mockResolvedValue([{ id: 'w-1' }, { id: 'w-2' }]);
+    const cron = new AppointmentRemindersCron(prisma as never, buildCls() as never);
     await cron.execute();
-    expect(prisma.waitlistEntry.findMany).toHaveBeenCalledWith(
+    expect(prisma.$allTenants.waitlistEntry.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: 'WAITING' }),
         take: 50,
