@@ -170,40 +170,36 @@ See the "Manual Deploy in Dokploy" section below.
 
 ---
 
-## Releasing a Versioned Release
+## Versioning & Releases (Changesets)
 
-For semver-tagged milestones (e.g., public launch, major feature delivery):
+Each deployable app (`backend`, `dashboard`, `admin`, `website`) carries its own semver
+in `apps/<app>/package.json`. Versions auto-bump on promote based on `.changeset/*.md`
+files authored alongside code changes.
 
-```bash
-# Make sure develop is up to date and tests pass
-git checkout develop
-git pull origin develop
-npm run test
-
-# Release version 0.1.0
-./scripts/release.sh 0.1.0
-```
-
-`scripts/release.sh` will:
-1. Validate you are on `develop` with a clean working tree
-2. Bump `package.json` version to `0.1.0`
-3. Append a row to `docs/operations/version-history.md`
-4. Commit with message: `chore(release): v0.1.0`
-5. Tag: `v0.1.0`
-6. Push `develop` and the `v0.1.0` tag
-
-The tag push triggers `build-images.yml` on the tag ref. It produces images tagged:
-- `v0.1.0` — permanent, pinned to this release
-- `<sha>` — the commit SHA
-- (not `latest` — tag builds don't update `latest`)
-
-Then promote to get `latest` updated too:
+**Day-to-day flow:**
 
 ```bash
+# After making a change
+pnpm changeset                                 # interactive: pick apps + bump types + summary
+git add . && git commit -m "fix: <what>"
+git push origin develop
 gh workflow run promote-to-main.yml -f confirm=promote
 ```
 
-After build completes, deploy in Dokploy.
+The promote workflow:
+1. Verifies all touched apps have a changeset (blocks if missing).
+2. Runs `pnpm changeset version` — bumps `apps/<x>/package.json` and writes
+   `apps/<x>/CHANGELOG.md` entries.
+3. Pushes the version-bump commit back to `develop`.
+4. Appends a row to `docs/operations/version-history.md` with the new versions.
+5. Sanitizes develop → main.
+6. Triggers `build-images.yml`, which tags each image with `v<semver>` from
+   `apps/<app>/package.json`.
+
+Full operator guide: [`changeset-workflow.md`](./changeset-workflow.md).
+
+**Legacy `scripts/release.sh`:** Deprecated. Kept for emergencies only.
+Run with `FORCE_LEGACY=1 bash scripts/release.sh <version>` if absolutely needed.
 
 ---
 
