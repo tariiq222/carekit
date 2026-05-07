@@ -122,9 +122,10 @@ find "${OUT_DIR}" \( \
 \) -delete
 
 # Remove *.md files inside apps/ and packages/ (internal architecture docs)
-# Exception: keep root README.md (already at top level, not under apps/)
-find "${OUT_DIR}/apps" -name "*.md" -delete 2>/dev/null || true
-find "${OUT_DIR}/packages" -name "*.md" -delete 2>/dev/null || true
+# Exception: keep root README.md and CHANGELOG.md files (the latter is the
+# author-written change history that ships to production for traceability).
+find "${OUT_DIR}/apps" -name "*.md" ! -name "CHANGELOG.md" -delete 2>/dev/null || true
+find "${OUT_DIR}/packages" -name "*.md" ! -name "CHANGELOG.md" -delete 2>/dev/null || true
 
 # Remove scripts/kiwi/ (QA-sync tooling, not needed in main)
 rm -rf "${OUT_DIR}/scripts/kiwi" 2>/dev/null || true
@@ -213,6 +214,15 @@ if [[ -n "${OTHER_GITHUB}" ]]; then
   echo "${OTHER_GITHUB}" >&2
   FAIL=1
 fi
+
+# Verify per-app CHANGELOG.md files survived (the deployed tree should carry
+# its own change history; if these are missing, the sanitizer over-stripped).
+for app in backend dashboard admin website; do
+  if [[ ! -f "${OUT_DIR}/apps/${app}/CHANGELOG.md" ]]; then
+    echo "[sync-main] FAIL: apps/${app}/CHANGELOG.md missing from main tree!" >&2
+    FAIL=1
+  fi
+done
 
 if [[ ${FAIL} -ne 0 ]]; then
   error "Sanity checks failed — aborting. Main tree is NOT safe to deploy."
