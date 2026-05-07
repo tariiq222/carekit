@@ -70,11 +70,60 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # Path-based filter: skip building this app if no relevant files changed.
+      # Triggers a build when:
+      #   - apps/<this-app>/** changed
+      #   - packages/** changed (shared code can affect any app)
+      #   - root config changed (lockfile, workspace, ci, dockerfile defaults)
+      #   - manual workflow_dispatch (always builds — author override)
+      #   - tag push (always builds — explicit release)
+      - name: Decide if this app needs to build
+        id: filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Always build on workflow_dispatch or tag pushes
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "push" -a "${{ github.ref_type }}" = "tag" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Reason: ${{ github.event_name }} (${{ github.ref_type }})"
+            exit 0
+          fi
+
+          # Determine changed files vs the previous commit
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            # First push to branch — build everything
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Reason: first push (no before SHA)"
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "$BEFORE" HEAD || echo "")
+          echo "Changed files:"
+          echo "$CHANGED" | sed 's/^/  /'
+
+          APP="${{ matrix.app.name }}"
+          # Match patterns that should trigger this app's build:
+          #   - apps/<app>/**
+          #   - packages/** (shared deps)
+          #   - root config files that affect all builds
+          if echo "$CHANGED" | grep -qE "^(apps/${APP}/|packages/|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|package\.json$|\.npmrc$|\.github/workflows/build-images\.yml$)"; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Reason: paths matched for app=$APP"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "Reason: no relevant paths changed for app=$APP — skipping"
+          fi
 
       - name: Set up Docker Buildx
+        if: steps.filter.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
+        if: steps.filter.outputs.should_build == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -82,6 +131,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
+        if: steps.filter.outputs.should_build == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -100,6 +150,7 @@ jobs:
       # available inside matrix definitions, only inside step inputs/env).
       - name: Resolve build args
         id: build_args
+        if: steps.filter.outputs.should_build == 'true'
         shell: bash
         run: |
           MOYASAR_KEY="${{ secrets.MOYASAR_PUBLISHABLE_KEY }}"
@@ -109,6 +160,7 @@ jobs:
           echo "moyasar_key=$MOYASAR_KEY" >> "$GITHUB_OUTPUT"
 
       - name: Build & push
+        if: steps.filter.outputs.should_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
