@@ -28,17 +28,20 @@ export class BookingExpiryCron {
    * that activates the new cross-tenant cron.
    */
   private async legacyExpire(): Promise<void> {
-    const now = new Date();
-    const result = await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.PENDING,
-        expiresAt: { lte: now },
-      },
-      data: { status: BookingStatus.EXPIRED },
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      const now = new Date();
+      const result = await this.prisma.$allTenants.booking.updateMany({
+        where: {
+          status: BookingStatus.PENDING,
+          expiresAt: { lte: now },
+        },
+        data: { status: BookingStatus.EXPIRED },
+      });
+      if (result.count > 0) {
+        this.logger.log(`expired ${result.count} bookings (legacy)`);
+      }
     });
-    if (result.count > 0) {
-      this.logger.log(`expired ${result.count} bookings (legacy)`);
-    }
   }
 
   private async enhancedExpire(): Promise<void> {

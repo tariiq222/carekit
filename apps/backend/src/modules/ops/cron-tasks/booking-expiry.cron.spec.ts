@@ -2,30 +2,39 @@ import { BookingExpiryCron } from './booking-expiry.cron';
 
 describe('BookingExpiryCron', () => {
   describe('legacy path (flag off)', () => {
-    it('expires PENDING bookings past expiresAt with simple updateMany', async () => {
+    const buildCls = () => ({
+      run: jest.fn().mockImplementation((fn: () => Promise<void>) => fn()),
+      set: jest.fn(),
+    });
+
+    it('expires PENDING bookings past expiresAt via $allTenants', async () => {
       const prisma = {
-        booking: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
+        $allTenants: {
+          booking: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
+        },
       };
       const flags = { bookingExpiryEnabled: false };
-      const cls = { run: jest.fn(), set: jest.fn() };
+      const cls = buildCls();
       const cron = new BookingExpiryCron(prisma as never, flags as never, cls as never);
       await cron.execute();
-      expect(prisma.booking.updateMany).toHaveBeenCalledWith({
+      expect(cls.run).toHaveBeenCalledTimes(1);
+      expect(prisma.$allTenants.booking.updateMany).toHaveBeenCalledWith({
         where: { status: 'PENDING', expiresAt: { lte: expect.any(Date) } },
         data: { status: 'EXPIRED' },
       });
-      expect(cls.run).not.toHaveBeenCalled();
     });
 
     it('legacy path silent when no rows match', async () => {
       const prisma = {
-        booking: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+        $allTenants: {
+          booking: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+        },
       };
       const flags = { bookingExpiryEnabled: false };
-      const cls = { run: jest.fn(), set: jest.fn() };
+      const cls = buildCls();
       const cron = new BookingExpiryCron(prisma as never, flags as never, cls as never);
       await cron.execute();
-      expect(prisma.booking.updateMany).toHaveBeenCalledTimes(1);
+      expect(prisma.$allTenants.booking.updateMany).toHaveBeenCalledTimes(1);
     });
   });
 

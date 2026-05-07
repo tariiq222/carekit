@@ -1,21 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WaitlistStatus } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 
 @Injectable()
 export class AppointmentRemindersCron {
   private readonly logger = new Logger(AppointmentRemindersCron.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cls: ClsService,
+  ) {}
 
   async execute(): Promise<void> {
-    const waiting = await this.prisma.waitlistEntry.findMany({
-      where: { status: WaitlistStatus.WAITING },
-      orderBy: { createdAt: 'asc' },
-      take: 50,
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      const waiting = await this.prisma.$allTenants.waitlistEntry.findMany({
+        where: { status: WaitlistStatus.WAITING },
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+      });
+      if (waiting.length > 0) {
+        this.logger.log(`${waiting.length} waitlist entries checked`);
+      }
     });
-    if (waiting.length > 0) {
-      this.logger.log(`${waiting.length} waitlist entries checked`);
-    }
   }
 }

@@ -20,13 +20,15 @@ describe('ZohoCredentialsService — per-tenant AAD isolation', () => {
     return new ZohoCredentialsService(cfg as ConfigService);
   }
 
-  it('refuses to construct without ZOHO_PROVIDER_ENCRYPTION_KEY', () => {
-    expect(() => makeService('')).toThrow('ZOHO_PROVIDER_ENCRYPTION_KEY missing');
+  it('throws on encrypt without ZOHO_PROVIDER_ENCRYPTION_KEY', () => {
+    const svc = makeService('');
+    expect(() => svc.encrypt({ foo: 'bar' }, TENANT_A)).toThrow('ZOHO_PROVIDER_ENCRYPTION_KEY missing');
   });
 
-  it('refuses to construct when the key does not decode to 32 bytes', () => {
+  it('throws on encrypt when the key does not decode to 32 bytes', () => {
     const shortKey = Buffer.alloc(16, 1).toString('base64');
-    expect(() => makeService(shortKey)).toThrow('must decode to 32 bytes');
+    const svc = makeService(shortKey);
+    expect(() => svc.encrypt({ foo: 'bar' }, TENANT_A)).toThrow('must decode to 32 bytes');
   });
 
   it('round-trips a payload bound to a single tenant id', () => {
