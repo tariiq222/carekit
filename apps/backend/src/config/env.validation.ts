@@ -1,5 +1,8 @@
 import * as Joi from 'joi';
 
+// TEMPORARY (2026-05-07): RELAX_PROD_VALIDATION=true downgrades Zoho + hCaptcha to optional in prod
+// so the platform can boot before real credentials land. Remove once those keys are populated.
+
 /**
  * Boot-time validation for process.env.
  *
@@ -95,28 +98,36 @@ export const envValidationSchema = Joi.object({
   // Zoho Invoice integration (Phase Z) — encrypts the per-tenant OAuth refresh
   // token + zoho_organization_id + webhook secret stored in `Integration.config`.
   // Generate: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-  ZOHO_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
+  ZOHO_PROVIDER_ENCRYPTION_KEY: process.env.RELAX_PROD_VALIDATION === 'true'
+    ? Joi.string().base64().length(44).allow('').optional()
+    : Joi.string().base64().length(44).required(),
   // Shared OAuth client used by Deqah's Zoho integration. Same client_id/secret
   // serves all tenants — Zoho rate-limits per Zoho organization, not per OAuth
   // client, so pooling is safe. Required in production; optional in dev so a
   // developer who hasn't created a Zoho client can still boot the app.
-  ZOHO_OAUTH_CLIENT_ID: Joi.when('NODE_ENV', {
-    is: 'production',
-    then: Joi.string().min(8).required(),
-    otherwise: Joi.string().allow('').optional(),
-  }),
-  ZOHO_OAUTH_CLIENT_SECRET: Joi.when('NODE_ENV', {
-    is: 'production',
-    then: Joi.string().min(8).required(),
-    otherwise: Joi.string().allow('').optional(),
-  }),
+  ZOHO_OAUTH_CLIENT_ID: process.env.RELAX_PROD_VALIDATION === 'true'
+    ? Joi.string().allow('').optional()
+    : Joi.when('NODE_ENV', {
+        is: 'production',
+        then: Joi.string().min(8).required(),
+        otherwise: Joi.string().allow('').optional(),
+      }),
+  ZOHO_OAUTH_CLIENT_SECRET: process.env.RELAX_PROD_VALIDATION === 'true'
+    ? Joi.string().allow('').optional()
+    : Joi.when('NODE_ENV', {
+        is: 'production',
+        then: Joi.string().min(8).required(),
+        otherwise: Joi.string().allow('').optional(),
+      }),
   // Public origin used to build the Zoho OAuth redirect URI. Must be HTTPS in
   // prod; localhost in dev.
-  ZOHO_OAUTH_REDIRECT_URI: Joi.when('NODE_ENV', {
-    is: 'production',
-    then: Joi.string().uri({ scheme: ['https'] }).required(),
-    otherwise: Joi.string().uri().allow('').optional(),
-  }),
+  ZOHO_OAUTH_REDIRECT_URI: process.env.RELAX_PROD_VALIDATION === 'true'
+    ? Joi.string().uri().allow('').optional()
+    : Joi.when('NODE_ENV', {
+        is: 'production',
+        then: Joi.string().uri({ scheme: ['https'] }).required(),
+        otherwise: Joi.string().uri().allow('').optional(),
+      }),
   // SaaS→tenant invoicing: Deqah's own Zoho organization. All optional so
   // self-hosters who don't use Zoho for SaaS billing can leave them blank.
   ZOHO_PLATFORM_ORGANIZATION_ID: Joi.string().allow('').optional(),
@@ -211,11 +222,13 @@ export const envValidationSchema = Joi.object({
 
   // CAPTCHA (auth bot protection on OTP endpoints).
   // 'noop' is the dev default; production REQUIRES 'hcaptcha' or 'turnstile'.
-  CAPTCHA_PROVIDER: Joi.when('NODE_ENV', {
-    is: 'production',
-    then: Joi.string().valid('hcaptcha', 'turnstile').required(),
-    otherwise: Joi.string().valid('noop', 'hcaptcha', 'turnstile').default('noop'),
-  }),
+  CAPTCHA_PROVIDER: process.env.RELAX_PROD_VALIDATION === 'true'
+    ? Joi.string().valid('noop', 'hcaptcha', 'turnstile').default('noop')
+    : Joi.when('NODE_ENV', {
+        is: 'production',
+        then: Joi.string().valid('hcaptcha', 'turnstile').required(),
+        otherwise: Joi.string().valid('noop', 'hcaptcha', 'turnstile').default('noop'),
+      }),
   HCAPTCHA_SECRET: Joi.when('CAPTCHA_PROVIDER', {
     is: 'hcaptcha',
     then: Joi.string().min(8).required(),
