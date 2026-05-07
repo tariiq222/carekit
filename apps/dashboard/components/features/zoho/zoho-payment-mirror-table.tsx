@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Badge,
   Button,
@@ -43,20 +43,18 @@ interface ZohoPaymentMirrorTableProps {
 export function ZohoPaymentMirrorTable({ lockedClientId }: ZohoPaymentMirrorTableProps = {}) {
   const { t, locale } = useLocale()
   const [page, setPage] = useState(1)
-  const [filterClientId, setFilterClientId] = useState<string | null>(lockedClientId ?? null)
+  const [pickedClientId, setPickedClientId] = useState<string | null>(null)
   const [filterClientLabel, setFilterClientLabel] = useState<string | null>(null)
 
-  // External lock wins — prop changes (rare) reset internal filter state.
-  useEffect(() => {
-    if (lockedClientId !== undefined) {
-      setFilterClientId(lockedClientId ?? null)
-    }
-  }, [lockedClientId])
+  // External lock wins; otherwise the in-table picker drives the filter.
+  // Derived state — no useEffect, no cascading renders.
+  const filterClientId = lockedClientId ?? pickedClientId
 
-  // Reset to page 1 whenever the filter changes so we don't land on a missing page.
-  useEffect(() => {
-    setPage(1)
-  }, [filterClientId])
+  const handlePickerChange = (id: string | null, label: string | null) => {
+    setPickedClientId(id)
+    setFilterClientLabel(label)
+    setPage(1) // event-handler reset: keeps us off a missing page after filter change.
+  }
 
   const { data, isLoading } = useZohoPaymentMirrors({
     page,
@@ -83,10 +81,7 @@ export function ZohoPaymentMirrorTable({ lockedClientId }: ZohoPaymentMirrorTabl
           {!lockedClientId ? (
             <ClientFilterPicker
               value={filterClientId}
-              onChange={(id, label) => {
-                setFilterClientId(id)
-                setFilterClientLabel(label)
-              }}
+              onChange={handlePickerChange}
               selectedLabel={filterClientLabel}
             />
           ) : null}
