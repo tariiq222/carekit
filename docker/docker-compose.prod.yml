@@ -27,8 +27,8 @@ services:
       NODE_ENV: production
       PORT: "5100"
 
-      # Database (Prisma)
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Database (Prisma) — runtime uses the NOBYPASSRLS app role; migrate uses OWNER
+      DATABASE_URL: postgresql://${APP_DB_USER:-deqah_app}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
 
       # Redis (BullMQ + cache + token blacklist)
       REDIS_HOST: redis
@@ -272,6 +272,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      APP_DB_USER: ${APP_DB_USER:-deqah_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-}
     ports: !override []
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
