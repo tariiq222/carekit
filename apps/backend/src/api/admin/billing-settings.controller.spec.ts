@@ -1,6 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
+import { Request } from 'express';
 import { BillingSettingsController } from './billing-settings.controller';
 import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
+import { LogPlatformSettingUpdateHandler } from '../../modules/platform/admin/log-platform-setting-update/log-platform-setting-update.handler';
 
 const ALL_BILLING_KEYS = [
   'billing.moyasar.platformSecretKey',
@@ -19,13 +21,20 @@ const SECRET_KEYS = new Set([
 describe('BillingSettingsController', () => {
   let controller: BillingSettingsController;
   let mockSettings: Partial<PlatformSettingsService>;
+  let mockLogHandler: Partial<LogPlatformSettingUpdateHandler>;
 
   beforeEach(() => {
     mockSettings = {
       get: jest.fn(),
       set: jest.fn(),
     };
-    controller = new BillingSettingsController(mockSettings as PlatformSettingsService);
+    mockLogHandler = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+    controller = new BillingSettingsController(
+      mockSettings as PlatformSettingsService,
+      mockLogHandler as LogPlatformSettingUpdateHandler,
+    );
   });
 
   describe('SECRET_KEYS constant', () => {
@@ -92,20 +101,24 @@ describe('BillingSettingsController', () => {
   });
 
   describe('updateSetting', () => {
+    const req = { ip: '1.2.3.4', socket: { remoteAddress: '1.2.3.4' }, headers: { 'user-agent': 'jest' } } as unknown as Request;
+
     it('updates a valid billing key', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('USD');
       mockSettings.set = jest.fn().mockResolvedValue(undefined);
       const user = { sub: 'user-1' } as never;
 
-      await controller.updateSetting('billing.defaults.currency', { value: 'EUR' }, user);
+      await controller.updateSetting('billing.defaults.currency', { value: 'EUR' }, user, req);
 
       expect(mockSettings.set).toHaveBeenCalledWith('billing.defaults.currency', 'EUR', 'user-1', false);
     });
 
     it('updates a secret key with isSecret=true', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('sk_live_old');
       mockSettings.set = jest.fn().mockResolvedValue(undefined);
       const user = { sub: 'user-1' } as never;
 
-      await controller.updateSetting('billing.moyasar.platformSecretKey', { value: 'sk_live_xxx' }, user);
+      await controller.updateSetting('billing.moyasar.platformSecretKey', { value: 'sk_live_xxx' }, user, req);
 
       expect(mockSettings.set).toHaveBeenCalledWith('billing.moyasar.platformSecretKey', 'sk_live_xxx', 'user-1', true);
     });
@@ -114,7 +127,7 @@ describe('BillingSettingsController', () => {
       const user = { sub: 'user-1' } as never;
 
       await expect(
-        controller.updateSetting('unknown.key', { value: 'test' }, user),
+        controller.updateSetting('unknown.key', { value: 'test' }, user, req),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -122,17 +135,76 @@ describe('BillingSettingsController', () => {
       const user = { sub: 'user-1' } as never;
 
       await expect(
-        controller.updateSetting('unknown.key', { value: 'test' }, user),
+        controller.updateSetting('unknown.key', { value: 'test' }, user, req),
       ).rejects.toThrow('Unknown billing settings key: unknown.key');
     });
 
     it('returns updated true on success', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('7');
       mockSettings.set = jest.fn().mockResolvedValue(undefined);
       const user = { sub: 'user-1' } as never;
 
-      const result = await controller.updateSetting('billing.defaults.trialDays', { value: 14 }, user);
+      const result = await controller.updateSetting('billing.defaults.trialDays', { value: 14 }, user, req);
 
       expect(result).toEqual({ updated: true });
+    });
+  });
+
+  describe('audit logging', () => {
+    it('writes a PLATFORM_SETTING_UPDATED row when a non-secret setting changes', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('15');
+      mockSettings.set = jest.fn().mockResolvedValue(undefined);
+      const user = { sub: 'user-1' } as never;
+      const req = { ip: '1.2.3.4', socket: { remoteAddress: '1.2.3.4' }, headers: { 'user-agent': 'jest' } } as unknown as Request;
+
+      await controller.updateSetting('billing.defaults.trialDays', { value: '30' }, user, req);
+
+      expect(mockLogHandler.execute).toHaveBeenCalledWith(expect.objectContaining({
+        superAdminUserId: 'user-1',
+        settingKey: 'billing.defaults.trialDays',
+        previousValue: '15',
+        nextValue: '30',
+        settingIsSecret: false,
+        ipAddress: '1.2.3.4',
+        userAgent: 'jest',
+      }));
+    });
+
+    it('passes settingIsSecret=true for moyasar platformSecretKey', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('sk_test_old');
+      mockSettings.set = jest.fn().mockResolvedValue(undefined);
+      const user = { sub: 'user-1' } as never;
+      const req = { ip: '1.2.3.4', socket: { remoteAddress: '1.2.3.4' }, headers: { 'user-agent': 'jest' } } as unknown as Request;
+
+      await controller.updateSetting('billing.moyasar.platformSecretKey', { value: 'sk_test_new' }, user, req);
+
+      expect(mockLogHandler.execute).toHaveBeenCalledWith(expect.objectContaining({
+        settingKey: 'billing.moyasar.platformSecretKey',
+        settingIsSecret: true,
+      }));
+    });
+
+    it('passes settingIsSecret=true for moyasar webhook secret', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('whsec_old');
+      mockSettings.set = jest.fn().mockResolvedValue(undefined);
+      const user = { sub: 'user-1' } as never;
+      const req = { ip: '1.2.3.4', socket: { remoteAddress: '1.2.3.4' }, headers: { 'user-agent': 'jest' } } as unknown as Request;
+
+      await controller.updateSetting('billing.moyasar.platformWebhookSecret', { value: 'whsec_new' }, user, req);
+
+      expect(mockLogHandler.execute).toHaveBeenCalledWith(expect.objectContaining({ settingIsSecret: true }));
+    });
+
+    it('skips audit log + set when previousValue === nextValue (no-op)', async () => {
+      mockSettings.get = jest.fn().mockResolvedValue('SAR');
+      mockSettings.set = jest.fn().mockResolvedValue(undefined);
+      const user = { sub: 'user-1' } as never;
+      const req = { ip: '1.2.3.4', socket: { remoteAddress: '1.2.3.4' }, headers: { 'user-agent': 'jest' } } as unknown as Request;
+
+      await controller.updateSetting('billing.defaults.currency', { value: 'SAR' }, user, req);
+
+      expect(mockSettings.set).not.toHaveBeenCalled();
+      expect(mockLogHandler.execute).not.toHaveBeenCalled();
     });
   });
 });
