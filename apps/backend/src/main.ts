@@ -8,6 +8,7 @@ import { resolve } from 'path';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
 import { LoggingInterceptor, AuditInterceptor } from './common/interceptors';
 import { PrismaService } from './infrastructure/database';
 import { TenantContextService } from './common/tenant/tenant-context.service';
@@ -93,6 +94,29 @@ async function bootstrap(): Promise<void> {
     Logger.log(`OpenAPI spec written to ${outPath}`, 'Bootstrap');
     await app.close();
     return;
+  }
+
+  // ─── Production secret assertion (defense-in-depth) ───────────────────────
+  // Joi validates at module load, but this runs after DI is fully wired so any
+  // late-binding env override (e.g. vault agent sidecar) is also caught.
+  const config = app.get(ConfigService);
+  if (config.get<string>('NODE_ENV') === 'production') {
+    const banned = ['Admin@2026', 'REPLACE_ME', 'CHANGE_ME'];
+    for (const key of [
+      'SMS_PROVIDER_ENCRYPTION_KEY',
+      'ZOOM_PROVIDER_ENCRYPTION_KEY',
+      'MOYASAR_TENANT_ENCRYPTION_KEY',
+      'EMAIL_PROVIDER_ENCRYPTION_KEY',
+      'ZOHO_PROVIDER_ENCRYPTION_KEY',
+      'SUPER_ADMIN_PASSWORD',
+    ]) {
+      const v = config.get<string>(key);
+      if (!v || banned.includes(v)) {
+        throw new Error(
+          `Refusing to boot: ${key} is missing or set to a known dev placeholder`,
+        );
+      }
+    }
   }
 
   const port = Number(process.env.PORT ?? 5100);

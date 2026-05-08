@@ -95,6 +95,8 @@ export const envValidationSchema = Joi.object({
   // Webhook base URL is the public origin registered with providers for DLR callbacks.
   SMS_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
   ZOOM_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
+  // Email provider per-tenant encryption key — 32 raw bytes base64-encoded (ASCII length 44).
+  EMAIL_PROVIDER_ENCRYPTION_KEY: Joi.string().base64().length(44).required(),
   // Zoho Invoice integration (Phase Z) — encrypts the per-tenant OAuth refresh
   // token + zoho_organization_id + webhook secret stored in `Integration.config`.
   // Generate: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
@@ -137,6 +139,14 @@ export const envValidationSchema = Joi.object({
     .default('sa'),
   ZOHO_PLATFORM_WEBHOOK_SECRET: Joi.string().allow('').optional(),
   SMS_WEBHOOK_URL_BASE: Joi.string().uri().allow('').optional(),
+
+  // Super-admin bootstrap password. Must be changed before production.
+  // Min 16 chars; placeholder values ('Admin@2026', 'admin', 'password') rejected in production.
+  SUPER_ADMIN_PASSWORD: Joi.string().min(16).when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required().disallow('Admin@2026', 'admin', 'password'),
+    otherwise: Joi.string().min(16).allow('').optional(),
+  }),
 
   // Throttle kill-switch. Must NEVER be enabled in production.
   THROTTLER_DISABLED: Joi.when('NODE_ENV', {
@@ -262,7 +272,7 @@ export const envValidationSchema = Joi.object({
   // running app with a known JWT secret is far worse than a non-running app.
   .custom((value, helpers) => {
     if (value.NODE_ENV !== 'production') return value;
-    const placeholderSubstrings = ['change-me', 'CHANGE_ME', 'dev-', 'sk_test_'];
+    const placeholderSubstrings = ['change-me', 'CHANGE_ME', 'REPLACE_ME', 'dev-', 'sk_test_'];
     const sensitiveKeys = [
       'JWT_ACCESS_SECRET',
       'JWT_REFRESH_SECRET',
@@ -270,6 +280,8 @@ export const envValidationSchema = Joi.object({
       'JWT_CLIENT_ACCESS_SECRET',
       'SMS_PROVIDER_ENCRYPTION_KEY',
       'ZOOM_PROVIDER_ENCRYPTION_KEY',
+      'MOYASAR_TENANT_ENCRYPTION_KEY',
+      'EMAIL_PROVIDER_ENCRYPTION_KEY',
       'ZOHO_PROVIDER_ENCRYPTION_KEY',
       'ZOHO_OAUTH_CLIENT_SECRET',
       'ZOHO_PLATFORM_REFRESH_TOKEN',
@@ -285,6 +297,15 @@ export const envValidationSchema = Joi.object({
       if (placeholderSubstrings.some((p) => v.includes(p))) {
         return helpers.error('any.invalid', {
           message: `${key} contains a dev placeholder and must be replaced before running in production`,
+        });
+      }
+    }
+    // Reject known bootstrap default for super-admin password
+    if (typeof value.SUPER_ADMIN_PASSWORD === 'string') {
+      const banned = ['Admin@2026', 'admin', 'password'];
+      if (banned.includes(value.SUPER_ADMIN_PASSWORD)) {
+        return helpers.error('any.invalid', {
+          message: 'SUPER_ADMIN_PASSWORD is set to a known dev default and must be changed before running in production',
         });
       }
     }
