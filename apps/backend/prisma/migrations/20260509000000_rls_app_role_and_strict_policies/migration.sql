@@ -40,7 +40,13 @@ BEGIN
 END $$;
 
 -- Grants: app role can do CRUD on every existing table + sequence, no DDL.
-GRANT CONNECT ON DATABASE CURRENT_DATABASE() TO deqah_app;
+-- GRANT CONNECT requires a literal database identifier; current_database() is
+-- a function call and not accepted in DDL identifier position. Resolve at
+-- runtime via DO/EXECUTE so the migration works on any DB name.
+DO $$
+BEGIN
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO deqah_app', current_database());
+END $$;
 GRANT USAGE ON SCHEMA public TO deqah_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO deqah_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO deqah_app;
