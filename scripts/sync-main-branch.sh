@@ -141,6 +141,12 @@ log "Nested-file stripping complete."
 # We copy ONLY build-images.yml and its composite action back in so GitHub
 # Actions can run the Docker image build on push to main.
 #
+# Note: auto-promote.yml lives ONLY on develop. The sanitizer correctly drops
+# all .github/ content except build-images.yml and the composite action;
+# auto-promote.yml is implicitly excluded. Do NOT add it to the re-injection
+# list — that would create a feedback loop on main (main push → auto-promote
+# on main → infinite loop).
+#
 # build-images.yml references .github/actions/deploy-app/action.yml via
 #   uses: ./.github/actions/deploy-app
 # GitHub Actions resolves local composite actions from the checked-out ref

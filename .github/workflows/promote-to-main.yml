@@ -1,3 +1,15 @@
+# Promote develop → main
+#
+# Triggers:
+#   - Manual: `gh workflow run promote-to-main.yml -f confirm=promote`
+#   - Automatic: dispatched by .github/workflows/auto-promote.yml on push to
+#     develop when (a) pending changesets exist and (b) ci.yml is green.
+#
+# Either trigger uses the same job logic. The `confirm` input gates accidental
+# triggers; automatic dispatches pass it programmatically.
+# When dispatched by auto-promote.yml the actor is github-actions[bot] — this
+# workflow has no actor-based guards and accepts that actor without issue.
+
 name: Promote develop → main (manual)
 
 on:
@@ -11,6 +23,10 @@ on:
 permissions:
   contents: write
   actions: write
+
+concurrency:
+  group: promote-to-main
+  cancel-in-progress: false   # never cancel an in-flight promote
 
 jobs:
   sync-staging:

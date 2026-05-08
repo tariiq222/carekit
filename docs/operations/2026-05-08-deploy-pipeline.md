@@ -1,7 +1,63 @@
-# Deploy pipeline — automated pre-deploy gates (2026-05-08)
+# Deploy pipeline — fully automated develop → production (2026-05-08)
 
 **Owner:** @tariq
-**PR:** feat/deploy-pipeline-pr1-pre-deploy-gates
+**PRs:** #174 (pre-deploy gates), #176 (self-hosted runner), #177 (auto-rollback), #178 (auto-promote)
+
+## Complete flow — `git push origin develop` → production
+
+```
+git push origin develop
+        │
+        ▼
+auto-promote.yml (on: push [develop])
+        │
+        ├── [skip auto-promote] or [skip ci] in commit msg → SKIP (silent)
+        ├── No .changeset/*.md files → SKIP (silent)
+        ├── ci.yml still running → WAIT (poll every 30s, max 30 min)
+        ├── ci.yml failed → SKIP (logs link to failed run)
+        │
+        └── changesets present + CI green → dispatch promote-to-main.yml
+                │
+                ▼
+        promote-to-main.yml (workflow_dispatch, confirm=promote)
+                │
+                ├── pnpm changeset version (consume changesets)
+                ├── Write version-history.md row
+                ├── Compute .deploy-manifest.json (which apps changed)
+                ├── Commit version bump → push to develop [skip ci]
+                ├── Run sanitizer (sync-main-branch.sh)
+                └── Force-push clean tree → main
+                        │
+                        ▼
+                build-images.yml (on: push [main])
+                        │
+                        ├── compute-matrix (read .deploy-manifest.json)
+                        ├── backup-prod-db (if BACKUP_ENABLED=true, self-hosted)
+                        ├── migrate-prod (prisma migrate deploy, self-hosted)
+                        └── build (per-app matrix, ubuntu-latest)
+                                │
+                                ▼
+                        deploy-and-verify (per-app matrix, self-hosted)
+                                │
+                                ├── Trigger Dokploy API → poll status (5 min)
+                                ├── Health check (5 × 30s)
+                                │
+                                ├── SUCCESS → update .deploy-state.json on develop
+                                │
+                                └── FAILURE → defense-in-depth rollback
+                                        ├── Swarm rollback → health check
+                                        ├── Image redeploy (previous tag) → health check
+                                        └── CATASTROPHIC → open GitHub Issue + exit 1
+```
+
+**Primary deploy command (after prep):**
+```bash
+git push origin develop
+```
+
+**Pre-requisite:** at least one `.changeset/*.md` file must be present and CI must be green.
+
+---
 
 ## What changed
 
@@ -10,6 +66,7 @@
 - **Migrations are now automated via CI** — see `migrate-prod` job in `.github/workflows/build-images.yml`.
 - **migrate-prod and backup-prod-db run on the self-hosted VPS runner** (`deqah-vps-prod`) — no external DB exposure, no SSH required.
 - **PR #2**: `notify-dokploy` (fire-and-forget webhook) replaced by `deploy-and-verify` — full API-triggered deploy, health checks, and auto-rollback.
+- **PR #3**: `auto-promote.yml` added — `git push develop` with a changeset + green CI now triggers the entire pipeline automatically.
 
 ## Automated migration (replaces manual Dokploy config)
 
@@ -78,6 +135,75 @@ docker restart deqah-gh-runner
 - ~~`PROD_DATABASE_URL`~~ — replaced by `POSTGRES_PASSWORD` + in-Swarm DNS
 - ~~`PROD_VPS_SSH_KEY`~~ — runner has Docker socket access, SSH not needed
 - ~~`PROD_VPS_HOST`~~ — same reason
+
+## Auto-promote on push to develop (PR #3)
+
+`.github/workflows/auto-promote.yml` watches `push: branches: [develop]` and automatically dispatches `promote-to-main.yml` when two conditions are met:
+
+1. **Pending changesets exist** — at least one `.changeset/*.md` file (other than `README.md`) is present on develop.
+2. **`ci.yml` passed on this SHA** — the workflow polls the GitHub API every 30 seconds for up to 30 minutes.
+
+### Operator escape hatches
+
+Include either marker (case-insensitive substring) in the commit message to skip auto-promote for that push:
+
+| Marker | Effect |
+|--------|--------|
+| `[skip auto-promote]` | Skip this auto-promote run. Does NOT skip CI. |
+| `[skip ci]` | Skip CI entirely. Auto-promote will also be skipped (no CI to wait for). |
+
+Example:
+```bash
+git commit -m "docs: update internal runbook [skip auto-promote]"
+```
+
+### How to disable auto-promote temporarily
+
+Two options:
+
+1. **GitHub UI (recommended):** Go to **Actions → Auto-promote develop → main** → kebab menu → **Disable workflow**. Re-enable the same way.
+2. **Commit message:** add `[skip auto-promote]` to individual commits where you want to suppress it.
+
+### How to deploy manually (escape hatch)
+
+Manual promotion remains available at any time and is independent of `auto-promote.yml`:
+
+```bash
+gh workflow run promote-to-main.yml -f confirm=promote
+```
+
+This is the primary escape hatch when:
+- You need to promote without a changeset (emergency)
+- `auto-promote.yml` is temporarily disabled
+- You want to force a promote without waiting for CI
+
+### How it works internally
+
+`auto-promote.yml` dispatches `promote-to-main.yml` via `gh workflow run` (not `uses:`) because `promote-to-main.yml` is `workflow_dispatch` only. The `confirm=promote` input is passed programmatically. The actor for the dispatched run will be `github-actions[bot]` — `promote-to-main.yml` has no actor-based guards and accepts this.
+
+Both workflows use `concurrency.cancel-in-progress: false` — if a new push arrives while a promote is in-flight, the new auto-promote run queues rather than cancelling the in-flight promote.
+
+### Rollback if auto-promote went wrong
+
+If a bad commit made it through auto-promote to production:
+
+1. **Auto-recovery (first ~5 min):** `deploy-and-verify` runs health checks. If the health check fails, defense-in-depth rollback runs automatically (Swarm rollback → image redeploy to last-known-good). A GitHub Issue is opened with diagnostics.
+
+2. **Check the Issue:** GitHub will open an Issue labelled `incident`, `deploy-failure` on catastrophic failure. The Issue body includes the SHA, health check logs, and rollback result.
+
+3. **Manual rollback (if auto-recovery failed):**
+   ```bash
+   # On the VPS — force rollback to previous Swarm state
+   docker service update --rollback deqah-<app>-<id>
+
+   # Or redeploy a specific image tag
+   docker service update --image ghcr.io/tariiq222/deqah-<app>:<prev-tag> deqah-<app>-<id>
+   ```
+   Previous image tags are stored in `.deploy-state.json` on the develop branch (`lastKnownGood.<app>.image`).
+
+4. **Prevent future auto-promotes** while incident is active: disable `auto-promote.yml` in the GitHub UI (Actions tab).
+
+See `docs/operations/rollback-runbook.md` for the full step-by-step rollback procedure.
 
 ## Auto-rollback flow (PR #2)
 

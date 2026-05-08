@@ -114,6 +114,10 @@ permissions:
   packages: write
   issues: write     # deploy-and-verify opens GitHub Issues on failure
 
+concurrency:
+  group: build-images-${{ github.ref_name }}
+  cancel-in-progress: false   # never cancel an in-flight deploy operation
+
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: ${{ github.repository_owner }}

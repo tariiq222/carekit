@@ -1,0 +1,284 @@
+# Auto-promote develop → main
+#
+# This workflow watches for pushes to develop and automatically dispatches
+# promote-to-main.yml when two conditions are met:
+#   1. Pending changesets exist (.changeset/*.md other than README.md)
+#   2. The ci.yml workflow on this SHA completed successfully
+#
+# Operator escape hatches:
+#   [skip auto-promote]  — include in the commit message to bypass this run
+#   [skip ci]            — also honored (implies [skip auto-promote])
+#
+# Manual promotion remains available at any time:
+#   gh workflow run promote-to-main.yml -f confirm=promote
+#
+# This workflow NEVER calls promote-to-main.yml via `uses:` — only via
+# `gh workflow run` because promote-to-main.yml is workflow_dispatch only.
+#
+# concurrency.cancel-in-progress is false — if a promote is in-flight when
+# a new push arrives, the new run queues rather than cancelling the in-flight one.
+
+name: Auto-promote develop → main
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+  actions: write   # needed to dispatch promote-to-main.yml
+
+concurrency:
+  group: auto-promote-develop
+  cancel-in-progress: false   # never cancel an in-flight promote
+
+jobs:
+  # ─── Job 1: decide ───────────────────────────────────────────────────────────
+  # Checks conditions and sets should_promote output.
+  decide:
+    name: Decide whether to promote
+    runs-on: ubuntu-latest
+    outputs:
+      should_promote: ${{ steps.gate.outputs.should_promote }}
+      skip_reason: ${{ steps.gate.outputs.skip_reason }}
+      changeset_count: ${{ steps.gate.outputs.changeset_count }}
+      ci_run_url: ${{ steps.wait_ci.outputs.ci_run_url }}
+
+    steps:
+      - name: Checkout develop (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: develop
+
+      - name: Check operator escape hatches
+        id: escape
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMMIT_MSG=$(git log -1 --pretty=%B HEAD)
+          echo "Last commit message:"
+          echo "$COMMIT_MSG"
+          echo ""
+
+          # Case-insensitive substring check for escape markers
+          MSG_LOWER=$(echo "$COMMIT_MSG" | tr '[:upper:]' '[:lower:]')
+          if echo "$MSG_LOWER" | grep -qF "[skip auto-promote]"; then
+            echo "opted_out=true" >> "$GITHUB_OUTPUT"
+            echo "reason=[skip auto-promote] found in commit message — operator opted out"  >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if echo "$MSG_LOWER" | grep -qF "[skip ci]"; then
+            echo "opted_out=true" >> "$GITHUB_OUTPUT"
+            echo "reason=[skip ci] found in commit message — skipping auto-promote" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "opted_out=false" >> "$GITHUB_OUTPUT"
+          echo "reason=" >> "$GITHUB_OUTPUT"
+
+      - name: Count pending changesets
+        id: count_changesets
+        if: steps.escape.outputs.opted_out == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          COUNT=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null | wc -l | tr -d ' ')
+          echo "changeset_count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "Found $COUNT pending changeset(s)"
+
+      - name: Wait for ci.yml to complete on this SHA
+        id: wait_ci
+        if: steps.escape.outputs.opted_out == 'false' && steps.count_changesets.outputs.changeset_count > 0
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+          MAX_WAIT=1800   # 30 minutes
+          POLL_INTERVAL=30
+          ELAPSED=0
+
+          echo "Waiting for ci.yml to complete on SHA: $SHA"
+          echo "Max wait: ${MAX_WAIT}s, poll interval: ${POLL_INTERVAL}s"
+          echo ""
+
+          while true; do
+            # Query runs for this SHA filtered to ci.yml
+            RESPONSE=$(gh api \
+              "repos/${REPO}/actions/workflows/ci.yml/runs?head_sha=${SHA}&per_page=5" \
+              --jq '{runs: [.workflow_runs[] | {id, status, conclusion, html_url}]}' 2>/dev/null || echo '{"runs":[]}')
+
+            # Get the most recent run
+            STATUS=$(echo "$RESPONSE" | node -e "
+              let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+                try {
+                  const r=JSON.parse(d);
+                  const runs=r.runs||[];
+                  if(runs.length===0){console.log('not_found');return;}
+                  // Sort by id descending (most recent first)
+                  runs.sort((a,b)=>b.id-a.id);
+                  const run=runs[0];
+                  console.log(run.status+'|'+run.conclusion+'|'+run.html_url+'|'+run.id);
+                }catch(e){console.log('error');}
+              });
+            " 2>/dev/null || echo "error")
+
+            echo "CI status query result: $STATUS"
+
+            if [[ "$STATUS" == "not_found" || "$STATUS" == "error" ]]; then
+              if [[ $ELAPSED -ge $MAX_WAIT ]]; then
+                echo "ci_run_url=" >> "$GITHUB_OUTPUT"
+                echo "ci_timed_out=true" >> "$GITHUB_OUTPUT"
+                echo "::warning::CI run not found after ${MAX_WAIT}s — skipping auto-promote"
+                exit 0
+              fi
+              echo "CI run not yet found — waiting ${POLL_INTERVAL}s... (${ELAPSED}s elapsed)"
+              sleep $POLL_INTERVAL
+              ELAPSED=$((ELAPSED + POLL_INTERVAL))
+              continue
+            fi
+
+            RUN_STATUS=$(echo "$STATUS" | cut -d'|' -f1)
+            RUN_CONCLUSION=$(echo "$STATUS" | cut -d'|' -f2)
+            RUN_URL=$(echo "$STATUS" | cut -d'|' -f3)
+            RUN_ID=$(echo "$STATUS" | cut -d'|' -f4)
+
+            echo "ci_run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
+            echo "ci_run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+            if [[ "$RUN_STATUS" == "completed" ]]; then
+              if [[ "$RUN_CONCLUSION" == "success" ]]; then
+                echo "ci_passed=true" >> "$GITHUB_OUTPUT"
+                echo "CI passed — proceeding to promote"
+              else
+                echo "ci_passed=false" >> "$GITHUB_OUTPUT"
+                echo "::warning::CI failed (conclusion=$RUN_CONCLUSION) — skipping auto-promote"
+                echo "Failed run: $RUN_URL"
+              fi
+              exit 0
+            fi
+
+            # Still in_progress or queued
+            if [[ $ELAPSED -ge $MAX_WAIT ]]; then
+              echo "ci_passed=false" >> "$GITHUB_OUTPUT"
+              echo "ci_timed_out=true" >> "$GITHUB_OUTPUT"
+              echo "::warning::CI did not complete within ${MAX_WAIT}s — skipping auto-promote"
+              echo "Pending run: $RUN_URL"
+              exit 0
+            fi
+
+            echo "CI still running (status=$RUN_STATUS) — waiting ${POLL_INTERVAL}s... (${ELAPSED}s elapsed)"
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+      - name: Evaluate gate
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Pass through outputs from earlier steps
+          CHANGESET_COUNT="${{ steps.count_changesets.outputs.changeset_count }}"
+          OPTED_OUT="${{ steps.escape.outputs.opted_out }}"
+          OPTED_OUT_REASON="${{ steps.escape.outputs.reason }}"
+
+          # Steps may have been skipped (empty outputs) — treat skip as "no"
+          CI_PASSED="${{ steps.wait_ci.outputs.ci_passed }}"
+          CI_RUN_URL="${{ steps.wait_ci.outputs.ci_run_url }}"
+          CI_TIMED_OUT="${{ steps.wait_ci.outputs.ci_timed_out }}"
+
+          # Default to empty string if not set
+          CHANGESET_COUNT="${CHANGESET_COUNT:-0}"
+          CI_PASSED="${CI_PASSED:-}"
+          CI_RUN_URL="${CI_RUN_URL:-}"
+          CI_TIMED_OUT="${CI_TIMED_OUT:-}"
+
+          echo "changeset_count=$CHANGESET_COUNT" >> "$GITHUB_OUTPUT"
+          echo "ci_run_url=$CI_RUN_URL" >> "$GITHUB_OUTPUT"
+
+          if [[ "$OPTED_OUT" == "true" ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=$OPTED_OUT_REASON" >> "$GITHUB_OUTPUT"
+            echo "Decision: SKIP ($OPTED_OUT_REASON)"
+            exit 0
+          fi
+
+          if [[ "$CHANGESET_COUNT" == "0" ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=No pending changesets found — skipping auto-promote" >> "$GITHUB_OUTPUT"
+            echo "Decision: SKIP (no changesets)"
+            exit 0
+          fi
+
+          if [[ "$CI_TIMED_OUT" == "true" ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=CI did not complete within 30 minutes — skipping auto-promote" >> "$GITHUB_OUTPUT"
+            echo "Decision: SKIP (CI timeout)"
+            exit 0
+          fi
+
+          if [[ "$CI_PASSED" != "true" ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=CI did not pass — skipping auto-promote. See: $CI_RUN_URL" >> "$GITHUB_OUTPUT"
+            echo "Decision: SKIP (CI did not pass)"
+            exit 0
+          fi
+
+          echo "should_promote=true" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=" >> "$GITHUB_OUTPUT"
+          echo "Decision: PROMOTE ($CHANGESET_COUNT changeset(s), CI passed)"
+
+  # ─── Job 2: promote ──────────────────────────────────────────────────────────
+  # Dispatches promote-to-main.yml via gh workflow run (not uses:, as
+  # promote-to-main.yml is workflow_dispatch only — not workflow_call).
+  promote:
+    name: Dispatch promote-to-main
+    runs-on: ubuntu-latest
+    needs: decide
+    if: needs.decide.outputs.should_promote == 'true'
+    steps:
+      - name: Dispatch promote-to-main.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+
+          echo "Dispatching promote-to-main.yml with confirm=promote on ref=develop..."
+          gh workflow run promote-to-main.yml \
+            --repo "$REPO" \
+            --ref develop \
+            --field confirm=promote
+
+          echo ""
+          echo "Auto-promote dispatched successfully."
+          echo ""
+          echo "Changeset count: ${{ needs.decide.outputs.changeset_count }}"
+          echo "CI run: ${{ needs.decide.outputs.ci_run_url }}"
+          echo ""
+          echo "Watch the promote run at:"
+          echo "https://github.com/${REPO}/actions/workflows/promote-to-main.yml"
+
+  # ─── Job 3: report-skip ──────────────────────────────────────────────────────
+  # Logs the skip reason without failing the workflow.
+  report-skip:
+    name: Report skip reason
+    runs-on: ubuntu-latest
+    needs: decide
+    if: needs.decide.outputs.should_promote == 'false'
+    steps:
+      - name: Log skip reason
+        shell: bash
+        run: |
+          REASON="${{ needs.decide.outputs.skip_reason }}"
+          echo "Auto-promote skipped."
+          echo ""
+          echo "Reason: $REASON"
+          echo ""
+          echo "To promote manually:"
+          echo "  gh workflow run promote-to-main.yml -f confirm=promote"
