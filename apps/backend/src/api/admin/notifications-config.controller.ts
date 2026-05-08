@@ -39,7 +39,7 @@ export class AdminNotificationsConfigController {
     @Req() req: Request,
   ) {
     const ipAddress = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
-    const userAgent = (req.headers['user-agent'] as string | undefined) ?? 'unknown';
+    const userAgent = req.headers['user-agent'] ?? 'unknown';
     return this.updateHandler.execute({
       dto,
       superAdminUserId: user.sub,

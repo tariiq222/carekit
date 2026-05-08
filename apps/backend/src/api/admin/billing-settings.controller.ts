@@ -92,6 +92,8 @@ export class BillingSettingsController {
     const previousValue = await this.platformSettings.get(key);
     if (previousValue === body.value) return { updated: true };
 
+    // Order: set then log. If logHandler.execute throws, the setting is written but
+    // unaudited — preferred over logging an unwritten change.
     await this.platformSettings.set(key, body.value, user.sub, isSecret);
     await this.logHandler.execute({
       superAdminUserId: user.sub,
