@@ -35,6 +35,38 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
+      TEST_DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
+      REDIS_HOST: localhost
+      REDIS_PORT: "6379"
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: deqah-test
+      MINIO_USE_SSL: "false"
+      JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
+      JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
+      JWT_OTP_SECRET: ci-test-otp-secret-32chars!!!!!!
+      # All encryption keys are 32-byte base64 (43 chars + '=' padding).
+      # Test-only values, generated with `node -e "crypto.randomBytes(32).toString('base64')"`.
+      SMS_PROVIDER_ENCRYPTION_KEY: TLz/2f9V4Rs27iI+lKeoyCR7USrVq4P3ahiBNXKdvjI=
+      ZOOM_PROVIDER_ENCRYPTION_KEY: WzXHN34y+z/L+50u7XjYM0pV+XWbaIJDk4QitDqOV/A=
+      EMAIL_PROVIDER_ENCRYPTION_KEY: VrYh2xckvjMbc6mp7JBfJY385J5Rrmu1T9tB8hm2zTQ=
+      MOYASAR_TENANT_ENCRYPTION_KEY: FWH3+/2jyaECCswGyaTtLTgooSd3eQcJ0fJEi9+T9zk=
+      ZOHO_PROVIDER_ENCRYPTION_KEY: muUaXaGMQzWh1C+1DhuDdo2XIz6PCck+ql859E7S57o=
+      TENANT_ENFORCEMENT: permissive
+      DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+      BILLING_CRON_ENABLED: "false"
+      SUPER_ADMIN_PASSWORD: TestAdmin@2026CiPassword!!
+      MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
+      MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
+      PLATFORM_VAT_NUMBER: "300000000000003"
+      PLATFORM_COMPANY_NAME_AR: "اختبار CI"
+      PLATFORM_COMPANY_NAME_EN: "CI Test Company"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -72,86 +104,18 @@ jobs:
       - name: Run migrations
         working-directory: apps/backend
         run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
 
       - name: Unit tests
         working-directory: apps/backend
         run: pnpm run test
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
 
       - name: E2E tests
         working-directory: apps/backend
         run: pnpm run test:e2e
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
 
       - name: Cross-tenant penetration suite
         working-directory: apps/backend
         run: pnpm run test:security
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_test
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-test-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
 
   env-drift:
     name: Env-var drift check
@@ -183,6 +147,36 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
+      TEST_DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
+      REDIS_HOST: localhost
+      REDIS_PORT: "6379"
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: deqah-test
+      MINIO_USE_SSL: "false"
+      JWT_ACCESS_SECRET: ci-docs-access-secret-32chars!!
+      JWT_REFRESH_SECRET: ci-docs-refresh-secret-32chars!!
+      JWT_CLIENT_ACCESS_SECRET: ci-docs-client-secret-32chars!!
+      JWT_OTP_SECRET: ci-docs-otp-secret-32chars!!!!!!
+      SMS_PROVIDER_ENCRYPTION_KEY: TLz/2f9V4Rs27iI+lKeoyCR7USrVq4P3ahiBNXKdvjI=
+      ZOOM_PROVIDER_ENCRYPTION_KEY: WzXHN34y+z/L+50u7XjYM0pV+XWbaIJDk4QitDqOV/A=
+      EMAIL_PROVIDER_ENCRYPTION_KEY: VrYh2xckvjMbc6mp7JBfJY385J5Rrmu1T9tB8hm2zTQ=
+      MOYASAR_TENANT_ENCRYPTION_KEY: FWH3+/2jyaECCswGyaTtLTgooSd3eQcJ0fJEi9+T9zk=
+      ZOHO_PROVIDER_ENCRYPTION_KEY: muUaXaGMQzWh1C+1DhuDdo2XIz6PCck+ql859E7S57o=
+      TENANT_ENFORCEMENT: permissive
+      DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
+      BILLING_CRON_ENABLED: "false"
+      SUPER_ADMIN_PASSWORD: TestAdmin@2026CiPassword!!
+      MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
+      MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
+      PLATFORM_VAT_NUMBER: "300000000000003"
+      PLATFORM_COMPANY_NAME_AR: "اختبار CI"
+      PLATFORM_COMPANY_NAME_EN: "CI Test Company"
 
     steps:
       - uses: actions/checkout@v4
@@ -221,54 +215,14 @@ jobs:
       - name: Run migrations
         working-directory: apps/backend
         run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
 
       - name: Build backend
         working-directory: apps/backend
         run: pnpm run build
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-docs-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-docs-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-docs-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
-          MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
-          MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
 
       - name: Regenerate openapi.json
         working-directory: apps/backend
         run: pnpm run openapi:snapshot
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/deqah_docs
-          REDIS_HOST: localhost
-          REDIS_PORT: "6379"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: "9000"
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: deqah-test
-          MINIO_USE_SSL: "false"
-          JWT_ACCESS_SECRET: ci-docs-access-secret-32chars!!
-          JWT_REFRESH_SECRET: ci-docs-refresh-secret-32chars!!
-          JWT_CLIENT_ACCESS_SECRET: ci-docs-client-secret-32chars!!
-          SMS_PROVIDER_ENCRYPTION_KEY: Y2ktdGVzdC1zbXMta2V5LTMyLWJ5dGVzLWZpbGw=
-          TENANT_ENFORCEMENT: permissive
-          DEFAULT_ORGANIZATION_ID: "00000000-0000-0000-0000-000000000001"
-          BILLING_CRON_ENABLED: "false"
-          MOYASAR_PLATFORM_SECRET_KEY: sk_test_ci_placeholder_change_me_now
-          MOYASAR_PLATFORM_WEBHOOK_SECRET: ci_webhook_secret_placeholder_here
 
       - name: Fail if snapshot drifted
         run: git diff --exit-code apps/backend/openapi.json
