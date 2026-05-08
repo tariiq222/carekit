@@ -5,7 +5,7 @@ export enum NotificationChannel {
   EMAIL = 'EMAIL',
   SMS = 'SMS',
   PUSH = 'PUSH',
-  INAPP = 'INAPP',
+  IN_APP = 'IN_APP',
 }
 
 export class QuietHoursDto {

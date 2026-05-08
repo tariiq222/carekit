@@ -8,10 +8,9 @@ import { DirectionProvider } from '@radix-ui/react-direction';
 
 interface ProvidersProps {
   children: ReactNode;
-  dir?: 'ltr' | 'rtl';
 }
 
-export function Providers({ children, dir = 'ltr' }: ProvidersProps) {
+export function Providers({ children }: ProvidersProps) {
   const [client] = useState(
     () =>
       new QueryClient({
@@ -22,7 +21,7 @@ export function Providers({ children, dir = 'ltr' }: ProvidersProps) {
   );
 
   return (
-    <DirectionProvider dir={dir}>
+    <DirectionProvider dir="ltr">
       <QueryClientProvider client={client}>
         {children}
         <Toaster richColors position="top-right" />

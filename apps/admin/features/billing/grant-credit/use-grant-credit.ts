@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { grantCredit } from './grant-credit.api';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function useGrantCredit(orgId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:billing:grant-credit',
     mutationFn: grantCredit,
     onSuccess: () => {
       toast.success('Credit granted.');
@@ -13,5 +15,5 @@ export function useGrantCredit(orgId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : 'Failed to grant credit');
     },
-  });
+  }));
 }

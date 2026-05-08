@@ -1,6 +1,6 @@
 import { adminRequest } from '@/lib/api-client';
 
-export type NotificationChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'INAPP';
+export type NotificationChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP';
 
 export interface QuietHours {
   startHour: number;

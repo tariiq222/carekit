@@ -2,6 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
@@ -15,6 +16,8 @@ import { ImpersonateDialog } from '@/features/impersonation/start-impersonation/
 import { ChangePlanDialog } from '@/features/organizations/change-plan/change-plan-dialog';
 import { ArchiveDialog } from '@/features/organizations/archive-organization/archive-dialog';
 import { UpdateOrganizationDialog } from '@/features/organizations/update-organization/update-organization-dialog';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+import { formatSar } from '@/lib/currency';
 
 export default function OrganizationDetailPage({
   params,
@@ -22,6 +25,7 @@ export default function OrganizationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const pathname = usePathname();
   const t = useTranslations('organizations.detail');
   const statusT = useTranslations('organizations.status');
   const errorT = useTranslations('organizations.error');
@@ -48,6 +52,7 @@ export default function OrganizationDetailPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs pathname={pathname} />
       <div className="flex items-start justify-between">
         <div>
           <Link href="/organizations" className="text-xs text-muted-foreground hover:underline">
@@ -97,7 +102,7 @@ export default function OrganizationDetailPage({
         <StatCard label={t('bookings30d')} value={data.stats.bookingCount30d} />
         <StatCard
           label={t('totalRevenue')}
-          value={Number(data.stats.totalRevenue).toLocaleString()}
+          value={formatSar(data.stats.totalRevenue)}
         />
       </div>
 
@@ -151,7 +156,7 @@ export default function OrganizationDetailPage({
                   {t('monthlyPrice')}
                 </dt>
                 <dd className="mt-0.5">
-                  {t('priceSar', { amount: Number(sub.plan.priceMonthly).toLocaleString() })}
+                  {formatSar(sub.plan.priceMonthly)}
                 </dd>
               </div>
             </dl>

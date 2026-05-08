@@ -2,10 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { reinstateOrganization } from './reinstate-organization.api';
 import { organizationDetailKey } from '../get-organization/use-get-organization';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function useReinstateOrganization(organizationId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:organization:reinstate',
     mutationFn: (reason: string) =>
       reinstateOrganization({
         organizationId,
@@ -19,5 +21,5 @@ export function useReinstateOrganization(organizationId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : 'Reinstate failed');
     },
-  });
+  }));
 }

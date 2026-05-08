@@ -16,7 +16,7 @@ export class GetNotificationDefaultsHandler {
     ]);
 
     return {
-      defaultChannels: channels ?? ['EMAIL', 'INAPP'],
+      defaultChannels: channels ?? ['EMAIL', 'IN_APP'],
       quietHours: quietHours ?? { startHour: 22, endHour: 8, timezone: 'Asia/Riyadh' },
       fcm: {
         serverKey: serverKey ? '***' : '',

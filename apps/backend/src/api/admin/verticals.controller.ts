@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -19,9 +20,11 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
@@ -35,7 +38,7 @@ import {
   UpdateVerticalDto,
   DeleteVerticalDto,
 } from './dto/vertical.dto';
-import { VerticalResponseDto } from './dto/admin-response.dto';
+import { VerticalListResponseDto, VerticalResponseDto } from './dto/admin-response.dto';
 
 @ApiTags('Admin / Verticals')
 @ApiBearerAuth()
@@ -53,12 +56,21 @@ export class AdminVerticalsController {
 
   @Get()
   @ApiOperation({ summary: 'List all verticals (admin view, includes inactive)' })
-  @ApiOkResponse({ type: [VerticalResponseDto] })
-  list() {
-    return this.listHandler.execute();
+  @ApiOkResponse({ type: VerticalListResponseDto })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)', example: 1 })
+  @ApiQuery({ name: 'perPage', required: false, type: Number, description: 'Items per page, max 100 (default: 20)', example: 20 })
+  list(
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
+  ) {
+    return this.listHandler.execute({
+      page: page !== undefined ? Number(page) : undefined,
+      perPage: perPage !== undefined ? Number(perPage) : undefined,
+    });
   }
 
   @Post()
+  @Throttle({ 'admin-mutation': { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Create a vertical' })
   @ApiCreatedResponse({ type: VerticalResponseDto })
   create(
@@ -77,6 +89,7 @@ export class AdminVerticalsController {
   }
 
   @Patch(':id')
+  @Throttle({ 'admin-mutation': { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Update a vertical' })
   @ApiOkResponse({ type: VerticalResponseDto })
   @ApiParam({ name: 'id', description: 'Vertical UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
@@ -99,6 +112,7 @@ export class AdminVerticalsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ 'admin-mutation': { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Soft-delete a vertical' })
   @ApiNoContentResponse({ description: 'Vertical deleted' })
   @ApiParam({ name: 'id', description: 'Vertical UUID', format: 'uuid', example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })

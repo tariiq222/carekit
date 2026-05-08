@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetBillingMetrics } from './use-get-billing-metrics';
+import { formatSar } from '@/lib/currency';
 
 export function BillingMetricsGrid() {
   const { data, isLoading, error } = useGetBillingMetrics();
@@ -29,8 +30,8 @@ export function BillingMetricsGrid() {
           </>
         ) : (
           <>
-            <MetricCard label="MRR (⃁)" value={Number(data.mrr).toLocaleString()} tone="success" />
-            <MetricCard label="ARR (⃁)" value={Number(data.arr).toLocaleString()} tone="success" />
+            <MetricCard label="MRR (⃁)" value={formatSar(data.mrr)} tone="success" />
+            <MetricCard label="ARR (⃁)" value={formatSar(data.arr)} tone="success" />
             <MetricCard label="Active subs" value={data.counts.ACTIVE} />
             <MetricCard label="Past due" value={data.counts.PAST_DUE} tone="warning" />
           </>
@@ -127,7 +128,7 @@ function PlanBar({
           {slug} <span className="text-muted-foreground">({count} active)</span>
         </span>
         <span className="text-muted-foreground">
-          {Number(mrr).toLocaleString()} ⃁ ({pct}%)
+          {formatSar(mrr)} ({pct}%)
         </span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

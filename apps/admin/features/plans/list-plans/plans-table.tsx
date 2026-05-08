@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
@@ -11,8 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from '@deqah/ui/primitives/table';
-import Link from 'next/link';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@deqah/ui/primitives/tooltip';
 import type { PlanRow } from '../types';
+import { formatCurrency } from '@/lib/currency';
 
 interface Props {
   items: PlanRow[] | undefined;
@@ -73,10 +81,10 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {Number(plan.priceMonthly).toLocaleString()} {plan.currency}
+                    {formatCurrency(plan.priceMonthly, plan.currency)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {Number(plan.priceAnnual).toLocaleString()} {plan.currency}
+                    {formatCurrency(plan.priceAnnual, plan.currency)}
                   </TableCell>
                   <TableCell>
                     {plan.isActive ? (
@@ -91,17 +99,40 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/plans/${plan.id}/edit`}>Edit</Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => onDelete(plan)}
-                      >
-                        Delete
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-9 rounded-sm"
+                              asChild
+                              aria-label="Edit plan"
+                            >
+                              <Link href={`/plans/${plan.id}/edit`}>
+                                <Pencil className="size-4" />
+                              </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-9 rounded-sm text-destructive hover:text-destructive"
+                              onClick={() => onDelete(plan)}
+                              aria-label="Delete plan"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </TableCell>
                 </TableRow>

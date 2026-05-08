@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Put, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
@@ -30,9 +32,21 @@ export class AdminNotificationsConfigController {
   }
 
   @Put()
+  @Throttle({ 'admin-mutation': { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Update platform notification defaults' })
   @ApiOkResponse({ schema: { type: 'object', description: 'Updated notification defaults' } })
-  updateDefaults(@Body() dto: UpdateNotificationDefaultsDto, @CurrentUser() user: JwtUser) {
-    return this.updateHandler.execute(dto, user.sub);
+  updateDefaults(
+    @Body() dto: UpdateNotificationDefaultsDto,
+    @CurrentUser() user: JwtUser,
+    @Req() req: Request,
+  ) {
+    const ipAddress = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    const userAgent = req.headers['user-agent'] ?? 'unknown';
+    return this.updateHandler.execute({
+      dto,
+      superAdminUserId: user.sub,
+      ipAddress,
+      userAgent,
+    });
   }
 }
