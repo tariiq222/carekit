@@ -3,12 +3,14 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { organizationDetailKey } from '../get-organization/use-get-organization';
 import { archiveOrganization } from './archive-organization.api';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function useArchiveOrganization(organizationId: string) {
   const qc = useQueryClient();
   const t = useTranslations('organizations.archive');
 
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:organization:archive',
     mutationFn: (reason: string) => archiveOrganization({ organizationId, reason }),
     onSuccess: () => {
       toast.success(t('success'));
@@ -18,5 +20,5 @@ export function useArchiveOrganization(organizationId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : t('errorFallback'));
     },
-  });
+  }));
 }

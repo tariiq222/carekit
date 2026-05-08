@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { changePlanForOrg, listPlanOptions } from './change-plan-for-org.api';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function usePlanOptions() {
   return useQuery({
@@ -11,7 +12,8 @@ export function usePlanOptions() {
 
 export function useChangePlanForOrg(orgId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:billing:change-plan',
     mutationFn: changePlanForOrg,
     onSuccess: () => {
       toast.success('Plan changed.');
@@ -22,5 +24,5 @@ export function useChangePlanForOrg(orgId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : 'Failed to change plan');
     },
-  });
+  }));
 }

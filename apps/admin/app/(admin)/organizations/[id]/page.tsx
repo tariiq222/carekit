@@ -17,6 +17,7 @@ import { ChangePlanDialog } from '@/features/organizations/change-plan/change-pl
 import { ArchiveDialog } from '@/features/organizations/archive-organization/archive-dialog';
 import { UpdateOrganizationDialog } from '@/features/organizations/update-organization/update-organization-dialog';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { formatSar } from '@/lib/currency';
 
 export default function OrganizationDetailPage({
   params,
@@ -101,7 +102,7 @@ export default function OrganizationDetailPage({
         <StatCard label={t('bookings30d')} value={data.stats.bookingCount30d} />
         <StatCard
           label={t('totalRevenue')}
-          value={Number(data.stats.totalRevenue).toLocaleString()}
+          value={formatSar(data.stats.totalRevenue)}
         />
       </div>
 
@@ -155,7 +156,7 @@ export default function OrganizationDetailPage({
                   {t('monthlyPrice')}
                 </dt>
                 <dd className="mt-0.5">
-                  {t('priceSar', { amount: Number(sub.plan.priceMonthly).toLocaleString() })}
+                  {formatSar(sub.plan.priceMonthly)}
                 </dd>
               </div>
             </dl>

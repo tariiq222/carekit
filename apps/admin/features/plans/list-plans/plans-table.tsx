@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@deqah/ui/primitives/tooltip';
 import type { PlanRow } from '../types';
+import { formatCurrency } from '@/lib/currency';
 
 interface Props {
   items: PlanRow[] | undefined;
@@ -80,10 +81,10 @@ export function PlansTable({ items, isLoading, onDelete }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {Number(plan.priceMonthly).toLocaleString()} {plan.currency}
+                    {formatCurrency(plan.priceMonthly, plan.currency)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {Number(plan.priceAnnual).toLocaleString()} {plan.currency}
+                    {formatCurrency(plan.priceAnnual, plan.currency)}
                   </TableCell>
                   <TableCell>
                     {plan.isActive ? (

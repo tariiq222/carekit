@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetPlatformMetrics } from './use-get-platform-metrics';
+import { formatSar } from '@/lib/currency';
 
 export function MetricsGrid() {
   const { data, isLoading, error } = useGetPlatformMetrics();
@@ -49,7 +50,7 @@ export function MetricsGrid() {
             <MetricCard label="Bookings (30d)" value={data.bookings.totalLast30Days} />
             <MetricCard
               label="Lifetime revenue (⃁)"
-              value={Number(data.revenue.lifetimePaidSar).toLocaleString()}
+              value={formatSar(data.revenue.lifetimePaidSar)}
             />
           </>
         )}

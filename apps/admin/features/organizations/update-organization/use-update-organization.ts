@@ -3,12 +3,14 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { organizationDetailKey } from '../get-organization/use-get-organization';
 import { updateOrganization, type UpdateOrganizationCommand } from './update-organization.api';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function useUpdateOrganization(organizationId: string) {
   const qc = useQueryClient();
   const t = useTranslations('organizations.update');
 
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:organization:update',
     mutationFn: (cmd: Omit<UpdateOrganizationCommand, 'organizationId'>) =>
       updateOrganization({ organizationId, ...cmd }),
     onSuccess: () => {
@@ -19,5 +21,5 @@ export function useUpdateOrganization(organizationId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : t('errorFallback'));
     },
-  });
+  }));
 }

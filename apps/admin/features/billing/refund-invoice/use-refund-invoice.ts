@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refundInvoice } from './refund-invoice.api';
+import { withSentryMutation } from '@/lib/sentry-mutation';
 
 export function useRefundInvoice(orgId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(withSentryMutation({
+    context: 'admin:billing:refund-invoice',
     mutationFn: refundInvoice,
     onSuccess: () => {
       toast.success('Refund processed via Moyasar.');
@@ -15,5 +17,5 @@ export function useRefundInvoice(orgId: string) {
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : 'Refund failed');
     },
-  });
+  }));
 }
