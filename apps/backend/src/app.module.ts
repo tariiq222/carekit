@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { TenantAwareThrottlerGuard } from "./common/throttler/tenant-aware-throttler.guard";
+import { PerOrgThrottlerGuard } from "./common/throttler/per-org-throttler.guard";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_GUARD } from "@nestjs/core";
 import { ClsModule } from "nestjs-cls";
@@ -59,7 +60,8 @@ import { PublicModule } from "./api/public/public.module";
       useFactory: (config: ConfigService) => ({
         skipIf: () => config.get('THROTTLER_DISABLED') === 'true',
         throttlers: [
-          { ttl: 60_000, limit: 300 },
+          { name: 'default', ttl: 60_000, limit: 300 },
+          { name: 'per-org', ttl: 60_000, limit: 300 },
           { name: 'admin-mutation', ttl: 60_000, limit: 30 },
           { name: 'admin-mutation-slow', ttl: 60_000, limit: 5 },
         ],
@@ -101,6 +103,7 @@ import { PublicModule } from "./api/public/public.module";
   ],
   providers: [
     { provide: APP_GUARD, useClass: TenantAwareThrottlerGuard },
+    { provide: APP_GUARD, useClass: PerOrgThrottlerGuard },
     TenantResolverMiddleware,
   ],
 })
