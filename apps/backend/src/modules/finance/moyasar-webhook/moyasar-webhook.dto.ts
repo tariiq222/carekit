@@ -15,10 +15,10 @@ export class MoyasarWebhookDto {
   @IsIn(['paid', 'failed', 'refunded', 'authorized', 'captured', 'voided']) status!: 'paid' | 'failed' | 'refunded' | 'authorized' | 'captured' | 'voided';
 
   @ApiProperty({ description: 'Amount in the smallest currency unit (halalas)', example: 10000 })
-  @IsInt() @Min(0) @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value)) amount!: number;
+  @IsInt() @Min(1) @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value)) amount!: number;
 
   @ApiProperty({ description: 'ISO 4217 currency code', example: 'SAR' })
-  @IsString() currency!: string;
+  @IsString() @IsIn(['SAR']) currency!: string;
 
   @ApiPropertyOptional({ description: 'Metadata attached when the payment was initiated', type: () => MoyasarWebhookMetadataDto })
   @IsOptional() @IsObject() @ValidateNested() @Type(() => MoyasarWebhookMetadataDto)

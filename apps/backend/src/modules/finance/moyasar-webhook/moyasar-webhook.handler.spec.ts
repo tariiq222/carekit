@@ -1,5 +1,7 @@
 import { createHmac } from 'crypto';
 import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { PaymentStatus } from '@prisma/client';
 import { MoyasarWebhookHandler, MoyasarWebhookRequest } from './moyasar-webhook.handler';
 import { MoyasarWebhookDto } from './moyasar-webhook.dto';
@@ -216,6 +218,44 @@ describe('MoyasarWebhookHandler', () => {
       await handler.execute(makeReq());
       expect(cls.set).toHaveBeenCalledWith('systemContext', true);
       expect(cls.set).toHaveBeenCalledWith('tenant', expect.objectContaining({ organizationId: ORG_A }));
+    });
+
+    it('rejects payload when amount does not match invoice.total * 100', async () => {
+      // Invoice total=230 SAR → expected halalas=23000; send 100 halalas (1 SAR) instead.
+      const mismatchPayload: MoyasarWebhookDto = {
+        ...paidPayload,
+        amount: 100, // 1 SAR instead of 230 SAR
+      } as MoyasarWebhookDto;
+      const { handler, prisma } = makeHandler();
+      await expect(handler.execute(makeReq(mismatchPayload))).rejects.toThrow(BadRequestException);
+      await expect(handler.execute(makeReq(mismatchPayload))).rejects.toThrow(/amount does not match/i);
+      // Invoice must remain in DUE/ISSUED state — update must not have been called.
+      expect(prisma.invoice.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects payload when currency does not match invoice.currency', async () => {
+      // Invoice currency=SAR (from buildInvoice), payload currency=KWD, amount matches.
+      const wrongCurrencyPayload: MoyasarWebhookDto = {
+        ...paidPayload,
+        amount: 23000, // correct halala amount for 230 SAR invoice
+        currency: 'KWD',
+      } as MoyasarWebhookDto;
+      const { handler } = makeHandler();
+      await expect(handler.execute(makeReq(wrongCurrencyPayload))).rejects.toThrow(BadRequestException);
+      await expect(handler.execute(makeReq(wrongCurrencyPayload))).rejects.toThrow(/currency does not match/i);
+    });
+
+    it('rejects payload when amount is zero (DTO validation)', async () => {
+      const dto = plainToInstance(MoyasarWebhookDto, {
+        id: 'pay-zero',
+        status: 'paid',
+        amount: 0,
+        currency: 'SAR',
+        metadata: { invoiceId: 'inv-1' },
+      });
+      const errors = await validate(dto);
+      const amountErrors = errors.filter((e) => e.property === 'amount');
+      expect(amountErrors.length).toBeGreaterThan(0);
     });
   });
 });
