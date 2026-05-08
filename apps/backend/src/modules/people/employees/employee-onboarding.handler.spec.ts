@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RlsHelper } from '../../../common/tenant/rls.helper';
 import { EmployeeOnboardingHandler } from './employee-onboarding.handler';
 
 const OnboardingStatus = {
@@ -20,9 +21,15 @@ describe('EmployeeOnboardingHandler', () => {
   let handler: EmployeeOnboardingHandler;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let prisma: any;
+  let mockRls: jest.Mocked<Pick<RlsHelper, 'applyInTransaction' | 'runWithoutTenant'>>;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
+    mockRls = {
+      applyInTransaction: jest.fn().mockResolvedValue(undefined),
+      runWithoutTenant: jest.fn(),
+    };
 
     prisma = {
       employee: {
@@ -32,6 +39,7 @@ describe('EmployeeOnboardingHandler', () => {
       },
       employeeBranch: { deleteMany: jest.fn(), createMany: jest.fn() },
       employeeService: { deleteMany: jest.fn(), createMany: jest.fn() },
+      $queryRaw: jest.fn().mockResolvedValue([]),
       $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma)),
     };
 
@@ -39,6 +47,7 @@ describe('EmployeeOnboardingHandler', () => {
       providers: [
         EmployeeOnboardingHandler,
         { provide: PrismaService, useValue: prisma },
+        { provide: RlsHelper, useValue: mockRls },
       ],
     }).compile();
 

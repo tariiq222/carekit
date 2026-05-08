@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { RlsHelper } from '../../../../common/tenant/rls.helper';
 import { SetClientActiveHandler } from './set-client-active.handler';
 
 const makeClient = (overrides: Partial<{ id: string; isActive: boolean; deletedAt: Date | null }> = {}) => ({
@@ -11,6 +12,7 @@ const makeClient = (overrides: Partial<{ id: string; isActive: boolean; deletedA
 const buildPrisma = (client: ReturnType<typeof makeClient> | null) => {
   const txFn = jest.fn().mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
       client: {
         update: jest.fn().mockResolvedValue({ id: client?.id ?? 'client-1', isActive: false }),
       },
@@ -32,6 +34,11 @@ const buildPrisma = (client: ReturnType<typeof makeClient> | null) => {
 
 const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
 const buildLogActivity = () => ({ execute: jest.fn().mockResolvedValue(undefined) });
+const buildRls = () =>
+  ({
+    applyInTransaction: jest.fn().mockResolvedValue(undefined),
+    runWithoutTenant: jest.fn(),
+  }) as unknown as RlsHelper;
 
 describe('SetClientActiveHandler', () => {
   it('enables a client (happy path — isActive: true)', async () => {
@@ -41,6 +48,7 @@ describe('SetClientActiveHandler', () => {
     prisma.$transaction = jest.fn().mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => {
         const tx = {
+          $queryRaw: jest.fn().mockResolvedValue([]),
           client: {
             update: jest.fn().mockResolvedValue({ id: 'client-1', isActive: true }),
           },
@@ -59,6 +67,7 @@ describe('SetClientActiveHandler', () => {
       prisma as never,
       eventBus as never,
       logActivity as never,
+      buildRls(),
     );
 
     const result = await handler.execute({
@@ -90,6 +99,7 @@ describe('SetClientActiveHandler', () => {
     prisma.$transaction = jest.fn().mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => {
         const tx = {
+          $queryRaw: jest.fn().mockResolvedValue([]),
           client: {
             update: jest.fn().mockResolvedValue({ id: 'client-1', isActive: false }),
           },
@@ -105,6 +115,7 @@ describe('SetClientActiveHandler', () => {
       prisma as never,
       eventBus as never,
       logActivity as never,
+      buildRls(),
     );
 
     const result = await handler.execute({
@@ -135,6 +146,7 @@ describe('SetClientActiveHandler', () => {
       prisma as never,
       buildEventBus() as never,
       buildLogActivity() as never,
+      buildRls(),
     );
 
     await expect(
@@ -152,6 +164,7 @@ describe('SetClientActiveHandler', () => {
       prisma as never,
       eventBus as never,
       logActivity as never,
+      buildRls(),
     );
 
     const result = await handler.execute({ clientId: 'client-1', isActive: true });
