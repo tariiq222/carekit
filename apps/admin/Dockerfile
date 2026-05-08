@@ -98,6 +98,7 @@ COPY --from=app-build /app/packages                      ./packages
 COPY --from=app-build /app/apps/admin/package.json       ./apps/admin/package.json
 COPY --from=app-build /app/apps/admin/next.config.mjs    ./apps/admin/next.config.mjs
 COPY --from=app-build /app/apps/admin/.next              ./apps/admin/.next
+COPY --from=app-build /app/apps/admin/public             ./apps/admin/public
 
 WORKDIR /app/apps/admin
 EXPOSE 5104
