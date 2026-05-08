@@ -59,7 +59,9 @@ describe('envValidationSchema', () => {
   it('passes production env with real secrets', () => {
     const env = {
       NODE_ENV: 'production',
-      DATABASE_URL: 'postgresql://localhost:5432/test',
+      // P0 RLS cutover (2026-05-09): prod must use deqah_app + interceptor on
+      DATABASE_URL: 'postgresql://deqah_app:pass@localhost:5432/test',
+      RLS_GUC_INTERCEPTOR_ENABLED: 'true',
       REDIS_HOST: 'localhost',
       REDIS_PORT: '6379',
       MINIO_ENDPOINT: 'localhost',
