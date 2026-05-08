@@ -59,12 +59,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
-
       - name: Generate Prisma Client
         working-directory: apps/backend
         run: npx prisma generate
+
+      - name: Build shared packages (dist required by tests)
+        run: pnpm --filter "@deqah/shared" run build
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -208,12 +208,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
-
       - name: Generate Prisma Client
         working-directory: apps/backend
         run: npx prisma generate
+
+      - name: Build shared packages (dist required by tests)
+        run: pnpm --filter "@deqah/shared" run build
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_docs -c "CREATE EXTENSION IF NOT EXISTS vector;"
