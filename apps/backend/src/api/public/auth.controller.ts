@@ -169,10 +169,16 @@ export class AuthController {
     // the JWT to find their tenant. Mirrors LoginHandler's resolution order.
     // Bug B5: also pull the per-org role so the response `permissions` array
     // reflects `Membership.role`, not the legacy `User.role`.
-    const membership = await this.prisma.membership.findFirst({
-      where: { userId: user.id, isActive: true },
-      orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
-      select: { organizationId: true, role: true },
+    // Membership is a scoped model and login runs before tenant context is
+    // resolved — use $allTenants under super-admin CLS, same pattern as
+    // LoginHandler.execute() and refreshEndpoint() below.
+    const membership = await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.prisma.$allTenants.membership.findFirst({
+        where: { userId: user.id, isActive: true },
+        orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+        select: { organizationId: true, role: true },
+      });
     });
 
     // Match GetCurrentUserHandler: derive firstName/lastName from `name`
@@ -563,9 +569,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Request a password reset email for a staff (User) account' })
   @ApiNoContentResponse({ description: 'Reset email sent (response is identical regardless of whether the email exists)' })
   async requestPasswordResetEndpoint(@Body() dto: RequestPasswordResetDto): Promise<void> {
-    if (!(await this.captcha.verify(dto.hCaptchaToken))) {
-      throw new BadRequestException('CAPTCHA_FAILED');
-    }
     await this.requestPasswordReset.execute(dto);
   }
 

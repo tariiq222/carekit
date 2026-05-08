@@ -1,6 +1,8 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { Prisma, SubscriptionStatus } from '@prisma/client';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 
 /**
  * Plan limits JSON shape (mirrors the seed migration).
@@ -53,7 +55,11 @@ export class SubscriptionCacheService {
   private readonly ttlMs: number;
   private readonly clock: Clock;
 
-  constructor(private readonly prisma: PrismaService, @Optional() options?: { ttlMs?: number; clock?: Clock }) {
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() options?: { ttlMs?: number; clock?: Clock },
+    @Optional() private readonly cls?: ClsService,
+  ) {
     this.ttlMs = options?.ttlMs ?? 60_000;
     this.clock = options?.clock ?? { now: () => Date.now() };
   }
@@ -64,10 +70,20 @@ export class SubscriptionCacheService {
       return hit;
     }
 
-    const sub = await this.prisma.subscription.findFirst({
+    // Subscription is in SCOPED_MODELS but this cache is invoked from cross-
+    // tenant code paths (cron jobs, password-reset email, etc.) that have no
+    // CLS tenant context. Use $allTenants under super-admin CLS — the explicit
+    // organizationId filter below provides the tenant scoping.
+    const sub = await (this.cls ? this.cls.run(async () => {
+      this.cls!.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      return this.prisma.$allTenants.subscription.findFirst({
+        where: { organizationId },
+        include: { plan: true, planVersion: true },
+      });
+    }) : this.prisma.$allTenants.subscription.findFirst({
       where: { organizationId },
       include: { plan: true, planVersion: true },
-    });
+    }));
     if (!sub) {
       return null;
     }

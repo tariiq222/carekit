@@ -1,4 +1,5 @@
 import { Global, Module, OnModuleInit } from "@nestjs/common";
+import { ClsService } from "nestjs-cls";
 import { FeatureRegistryValidator } from "./feature-registry.validator";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "../../../infrastructure/database/database.module";
@@ -103,11 +104,14 @@ const HANDLERS = [
     SubscriptionStateMachine,
     // Factory avoids DI trying to inject the optional 'options' parameter
     // (index [1] in the constructor) — it's for unit-test injection only.
+    // ClsService (index [2]) is required so the cache can wrap its scoped-
+    // model query in $allTenants under super-admin CLS when invoked from
+    // cross-tenant code paths (cron jobs, password-reset email, etc.).
     {
       provide: SubscriptionCacheService,
-      useFactory: (prisma: PrismaService) =>
-        new SubscriptionCacheService(prisma),
-      inject: [PrismaService],
+      useFactory: (prisma: PrismaService, cls: ClsService) =>
+        new SubscriptionCacheService(prisma, undefined, cls),
+      inject: [PrismaService, ClsService],
     },
     UsageAggregatorService,
     // Expose SubscriptionCacheService under the token TenantContextService expects

@@ -26,6 +26,7 @@ describe('SubscriptionCacheService', () => {
 
   function makePrismaMock(findFirst: jest.Mock) {
     return {
+      $allTenants: { subscription: { findFirst } },
       subscription: { findFirst },
     } as unknown as PrismaService;
   }
