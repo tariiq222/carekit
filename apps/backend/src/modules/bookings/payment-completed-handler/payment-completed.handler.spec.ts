@@ -1,8 +1,16 @@
 import { PaymentCompletedEventHandler } from './payment-completed.handler';
 import { buildPrisma, buildEventBus, mockBooking } from '../testing/booking-test-helpers';
 import { BookingStatus } from '@prisma/client';
+import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 
-function buildHandler() {
+function buildCls() {
+  return {
+    run: jest.fn(async (fn: () => Promise<unknown>) => fn()),
+    set: jest.fn(),
+  };
+}
+
+function buildHandler(clsOverride?: ReturnType<typeof buildCls>) {
   const prisma = buildPrisma();
   const eb = {
     subscribe: jest.fn(),
@@ -10,9 +18,10 @@ function buildHandler() {
   };
   let subscriber: ((envelope: { payload: { bookingId: string; paymentId: string; invoiceId: string } }) => Promise<void>) | null = null;
   eb.subscribe = jest.fn((_, cb) => { subscriber = cb as typeof subscriber; });
-  const handler = new PaymentCompletedEventHandler(prisma as never, eb as never);
+  const cls = clsOverride ?? buildCls();
+  const handler = new PaymentCompletedEventHandler(prisma as never, eb as never, cls as never);
   handler.register();
-  return { prisma, eb, handler, getSubscriber: () => subscriber! };
+  return { prisma, eb, handler, cls, getSubscriber: () => subscriber! };
 }
 
 const makeEnvelope = (overrides: Partial<{ bookingId: string; paymentId: string; invoiceId: string }> = {}) => ({
@@ -78,6 +87,27 @@ describe('PaymentCompletedEventHandler', () => {
       expect.objectContaining({
         data: expect.objectContaining({ fromStatus: BookingStatus.PENDING, toStatus: 'CONFIRMED' }),
       }),
+    );
+  });
+
+  it('opens system-context CLS for booking read and tenant CLS for update', async () => {
+    const setCalls: Array<[string, unknown]> = [];
+    const cls = {
+      run: jest.fn(async (fn: () => Promise<unknown>) => fn()),
+      set: jest.fn((k: string, v: unknown) => { setCalls.push([k, v]); }),
+    };
+    const { prisma, getSubscriber } = buildHandler(cls as never);
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.PENDING, organizationId: 'org-1' });
+    prisma.booking.update = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED, organizationId: 'org-1' });
+
+    await getSubscriber()(makeEnvelope());
+
+    expect(setCalls.map(([k]) => k)).toEqual(
+      expect.arrayContaining([SYSTEM_CONTEXT_CLS_KEY, 'tenant']),
+    );
+    const tenantSet = setCalls.find(([k]) => k === 'tenant');
+    expect(tenantSet?.[1]).toEqual(
+      expect.objectContaining({ organizationId: expect.any(String) }),
     );
   });
 });
