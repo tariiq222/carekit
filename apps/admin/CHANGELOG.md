@@ -1,5 +1,11 @@
 # admin
 
+## 0.4.1
+
+### Patch Changes
+
+- [#169](https://github.com/tariiq222/deqah/pull/169) [`bcd8e6a`](https://github.com/tariiq222/deqah/commit/bcd8e6a465491de0e32984043a501fc938cfc8f3) Thanks [@tariiq222](https://github.com/tariiq222)! - Add official Deqah brand logo (دقة wordmark + blue check) and matching favicon to the super-admin shell + login card. Includes Next.js auto-discovered `app/icon.svg` + `app/apple-icon.svg`, plus dark/white logo variants under `public/logos/`.
+
 ## 0.4.0
 
 ### Minor Changes

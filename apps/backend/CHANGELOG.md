@@ -1,5 +1,11 @@
 # backend
 
+## 2.1.6
+
+### Patch Changes
+
+- [#161](https://github.com/tariiq222/deqah/pull/161) [`a7e3719`](https://github.com/tariiq222/deqah/commit/a7e3719aacc37c9a237ac1fbfe0156ddd2e4d8d8) Thanks [@tariiq222](https://github.com/tariiq222)! - Fix broken Plan UUIDs from the saas_04 seed migration. The original seed inserted Plan rows with IDs containing the literal letter `p` (not valid hex), so any admin endpoint accepting a `planId` (notably create-tenant) returned `400 planId must be a UUID` in production. New idempotent migration `20260508000000_fix_broken_plan_uuids` updates `Subscription.planId` and `PlanVersion.planId` FK rows then the `Plan.id` PK to the canonical UUIDs already used by the test seed helper.
+
 ## 2.1.5
 
 ### Patch Changes
