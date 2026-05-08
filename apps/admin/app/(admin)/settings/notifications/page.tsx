@@ -12,7 +12,7 @@ import {
   type NotificationDefaults,
 } from '@/features/notifications-settings/notifications-settings.api';
 
-const ALL_CHANNELS: NotificationChannel[] = ['EMAIL', 'SMS', 'PUSH', 'INAPP'];
+const ALL_CHANNELS: NotificationChannel[] = ['EMAIL', 'SMS', 'PUSH', 'IN_APP'];
 
 const COMMON_TIMEZONES = [
   'Asia/Riyadh',
