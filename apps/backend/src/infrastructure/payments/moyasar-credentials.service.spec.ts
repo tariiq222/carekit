@@ -17,7 +17,7 @@ describe('MoyasarCredentialsService', () => {
     expect(dec.secretKey).toBe('sk_test_abc');
   });
 
-  it('rejects ciphertext bound to a different organizationId (AAD mismatch)', () => {
+  it('rejects ciphertext when organizationId differs (per-tenant key mismatch)', () => {
     const svc = new MoyasarCredentialsService(cfgWith(validKey));
     const enc = svc.encrypt({ secretKey: 'sk_test_abc' }, 'org-1');
     expect(() => svc.decrypt(enc, 'org-2')).toThrow();
@@ -39,5 +39,18 @@ describe('MoyasarCredentialsService', () => {
     const a = svc.encrypt({ secretKey: 'sk_test_x' }, 'org-1');
     const b = svc.encrypt({ secretKey: 'sk_test_x' }, 'org-1');
     expect(a).not.toBe(b);
+  });
+
+  it('produces different ciphertexts for the same payload across orgs (per-tenant key)', () => {
+    const svc = new MoyasarCredentialsService(cfgWith(validKey));
+    const ct1 = svc.encrypt({ x: 1 }, 'org-aaaa');
+    const ct2 = svc.encrypt({ x: 1 }, 'org-bbbb');
+    expect(ct1).not.toEqual(ct2);
+  });
+
+  it('decrypt with wrong org throws', () => {
+    const svc = new MoyasarCredentialsService(cfgWith(validKey));
+    const ct = svc.encrypt({ x: 1 }, 'org-aaaa');
+    expect(() => svc.decrypt(ct, 'org-bbbb')).toThrow();
   });
 });

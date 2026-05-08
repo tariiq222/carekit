@@ -4,13 +4,12 @@ import { ZohoCredentialsService } from './zoho-credentials.service';
 /**
  * Tenant-isolation contract for Zoho credentials.
  *
- * The encryption envelope binds organizationId as AAD (Additional Authenticated
- * Data) — this means a ciphertext produced for org A cannot be decrypted with
- * org B's id, even though both tenants share the same master key. If this
- * property breaks, two tenants on the same Deqah deployment could potentially
- * read each other's Zoho refresh tokens.
+ * Per-tenant HKDF key derivation: each organization gets a unique AES-256-GCM
+ * key derived from the master key + organizationId via HKDF-SHA256. A DB dump
+ * alone cannot decrypt any tenant's credentials — the attacker needs both the
+ * master key AND the correct organizationId for each row.
  */
-describe('ZohoCredentialsService — per-tenant AAD isolation', () => {
+describe('ZohoCredentialsService — per-tenant HKDF isolation', () => {
   const KEY_B64 = Buffer.alloc(32, 0x42).toString('base64');
   const TENANT_A = 'org-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   const TENANT_B = 'org-bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
@@ -20,15 +19,15 @@ describe('ZohoCredentialsService — per-tenant AAD isolation', () => {
     return new ZohoCredentialsService(cfg as ConfigService);
   }
 
-  it('throws on encrypt without ZOHO_PROVIDER_ENCRYPTION_KEY', () => {
-    const svc = makeService('');
-    expect(() => svc.encrypt({ foo: 'bar' }, TENANT_A)).toThrow('ZOHO_PROVIDER_ENCRYPTION_KEY missing');
+  it('throws on construction without ZOHO_PROVIDER_ENCRYPTION_KEY', () => {
+    expect(() =>
+      new ZohoCredentialsService({ get: () => undefined } as unknown as ConfigService),
+    ).toThrow('ZOHO_PROVIDER_ENCRYPTION_KEY missing');
   });
 
-  it('throws on encrypt when the key does not decode to 32 bytes', () => {
+  it('throws on construction when the key does not decode to 32 bytes', () => {
     const shortKey = Buffer.alloc(16, 1).toString('base64');
-    const svc = makeService(shortKey);
-    expect(() => svc.encrypt({ foo: 'bar' }, TENANT_A)).toThrow('must decode to 32 bytes');
+    expect(() => makeService(shortKey)).toThrow('must decode to 32 bytes');
   });
 
   it('round-trips a payload bound to a single tenant id', () => {
@@ -39,11 +38,11 @@ describe('ZohoCredentialsService — per-tenant AAD isolation', () => {
     expect(decoded).toEqual(payload);
   });
 
-  it('REJECTS decryption when the AAD (organizationId) differs', () => {
+  it('REJECTS decryption when the organizationId differs (per-tenant key mismatch)', () => {
     const svc = makeService();
     const payload = { refreshToken: 'tenant-A-secret-refresh-token' };
     const blob = svc.encrypt(payload, TENANT_A);
-    // Tenant B should never be able to read Tenant A's blob.
+    // Tenant B's derived key is completely different from Tenant A's.
     expect(() => svc.decrypt(blob, TENANT_B)).toThrow();
   });
 
@@ -86,5 +85,18 @@ describe('ZohoCredentialsService — per-tenant AAD isolation', () => {
     const bobSvc = makeService(Buffer.alloc(32, 0x22).toString('base64'));
     const blob = aliceSvc.encrypt({ refreshToken: 'rt' }, TENANT_A);
     expect(() => bobSvc.decrypt(blob, TENANT_A)).toThrow();
+  });
+
+  it('produces different ciphertexts for the same payload across orgs (per-tenant key)', () => {
+    const svc = makeService();
+    const ct1 = svc.encrypt({ x: 1 }, 'org-aaaa');
+    const ct2 = svc.encrypt({ x: 1 }, 'org-bbbb');
+    expect(ct1).not.toEqual(ct2);
+  });
+
+  it('decrypt with wrong org throws', () => {
+    const svc = makeService();
+    const ct = svc.encrypt({ x: 1 }, 'org-aaaa');
+    expect(() => svc.decrypt(ct, 'org-bbbb')).toThrow();
   });
 });

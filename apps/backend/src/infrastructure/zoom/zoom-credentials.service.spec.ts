@@ -45,10 +45,10 @@ describe('ZoomCredentialsService', () => {
     expect(decrypted).toEqual(payload);
   });
 
-  it('should throw if organizationId (AAD) mismatch', () => {
+  it('should throw when organizationId differs (per-tenant key mismatch)', () => {
     const payload = { clientId: 'abc' };
     const encrypted = service.encrypt(payload, organizationId);
-    
+
     expect(() => {
       service.decrypt(encrypted, 'wrong-org');
     }).toThrow();
@@ -70,5 +70,16 @@ describe('ZoomCredentialsService', () => {
     await expect(moduleBuilder.compile()).rejects.toThrow(
       InternalServerErrorException,
     );
+  });
+
+  it('produces different ciphertexts for the same payload across orgs (per-tenant key)', () => {
+    const ct1 = service.encrypt({ x: 1 }, 'org-aaaa');
+    const ct2 = service.encrypt({ x: 1 }, 'org-bbbb');
+    expect(ct1).not.toEqual(ct2);
+  });
+
+  it('decrypt with wrong org throws', () => {
+    const ct = service.encrypt({ x: 1 }, 'org-aaaa');
+    expect(() => service.decrypt(ct, 'org-bbbb')).toThrow();
   });
 });
