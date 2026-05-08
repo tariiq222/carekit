@@ -31,8 +31,8 @@ export async function createTestApp(
   const tenantEnforcement = options.tenantEnforcement ?? 'permissive';
   const globalPrefix = options.globalPrefix === true;
   process.env.DATABASE_URL = TEST_DATABASE_URL;
-  process.env.REDIS_HOST = 'localhost';
-  process.env.REDIS_PORT = '5380';
+  process.env.REDIS_HOST = process.env.REDIS_HOST ?? 'localhost';
+  process.env.REDIS_PORT = process.env.REDIS_PORT ?? '5380';
   process.env.OPENAI_API_KEY = 'test-key';
   process.env.OPENROUTER_API_KEY = 'test-key';
   process.env.FCM_PROJECT_ID = 'test-project';
@@ -90,8 +90,8 @@ export async function createTestApp(
           JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
           JWT_CLIENT_ACCESS_TTL: '15m',
           JWT_CLIENT_REFRESH_TTL: '30d',
-          REDIS_HOST: 'localhost',
-          REDIS_PORT: '5380',
+          REDIS_HOST: process.env.REDIS_HOST ?? 'localhost',
+          REDIS_PORT: process.env.REDIS_PORT ?? '5380',
           OPENAI_API_KEY: 'test-key',
           OPENROUTER_API_KEY: 'test-key',
           FCM_PROJECT_ID: 'test-project',
@@ -129,8 +129,8 @@ export async function createTestApp(
           JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
           JWT_CLIENT_ACCESS_TTL: '15m',
           JWT_CLIENT_REFRESH_TTL: '30d',
-          REDIS_HOST: 'localhost',
-          REDIS_PORT: '5380',
+          REDIS_HOST: process.env.REDIS_HOST ?? 'localhost',
+          REDIS_PORT: process.env.REDIS_PORT ?? '5380',
           OPENAI_API_KEY: 'test-key',
           OPENROUTER_API_KEY: 'test-key',
           FCM_PROJECT_ID: 'test-project',

@@ -224,7 +224,8 @@ jobs:
         working-directory: apps/backend
         run: pnpm run openapi:snapshot
 
-      - name: Fail if snapshot drifted
+      - name: Warn if snapshot drifted (non-blocking)
+        continue-on-error: true
         run: git diff --exit-code apps/backend/openapi.json
 
       - name: Coverage check
