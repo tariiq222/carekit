@@ -25,7 +25,9 @@ export interface MoyasarWebhookRequest {
  *   3. System-context lookup of OrganizationPaymentConfig for that tenant.
  *   4. Decrypt the tenant's webhook secret (AAD = organizationId).
  *   5. Verify HMAC signature with the tenant's secret.
- *   6. Idempotency check + mutations under the resolved tenant CLS context.
+ *   6. Idempotency check.
+ *   7. Validate payload amount + currency match the invoice (anti-spoof).
+ *   8. Mutations under the resolved tenant CLS context.
  *
  * Why DB before signature: the tenant secret is per-org, so we cannot verify
  * a signature without first resolving which tenant the payload belongs to.
@@ -102,7 +104,7 @@ export class MoyasarWebhookHandler {
     // STAGE 5 — verify signature with tenant's own secret.
     this.verifySignature(req.rawBody, req.signature, webhookSecret);
 
-    // Idempotency check — also in system context. A given gatewayRef could
+    // STAGE 6 — idempotency check (system context). A given gatewayRef could
     // theoretically belong to any org; we rely on the signed payload as
     // authorization to observe it regardless of CLS.
     const existing = await this.cls.run(async () => {
@@ -114,7 +116,7 @@ export class MoyasarWebhookHandler {
     });
     if (existing) return { skipped: true };
 
-    // STAGE 5b — verify webhook payload matches the invoice it claims to pay.
+    // STAGE 7 — verify webhook payload matches the invoice it claims to pay.
     // Without this check, a 1 SAR Moyasar payment with metadata.invoiceId pointing
     // at a 1000 SAR invoice would mark the larger invoice PAID.
     const expectedHalalas = Math.round(Number(invoice.total) * 100);
@@ -131,7 +133,7 @@ export class MoyasarWebhookHandler {
       throw new BadRequestException('Payment currency does not match invoice');
     }
 
-    // STAGE 6 — run mutations inside the resolved tenant's CLS context.
+    // STAGE 8 — run mutations inside the resolved tenant's CLS context.
     return this.cls.run(async () => {
       this.cls.set('tenant', {
         organizationId: invoice.organizationId,
