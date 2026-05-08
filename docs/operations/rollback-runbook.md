@@ -11,7 +11,7 @@ Roll back immediately if you observe any of these symptoms **after a deploy**:
 
 ### Hard rollback triggers (do not wait)
 - Service not responding — `curl https://api.deqah.net/health` returns 5xx or times out for > 2 minutes
-- New errors flooding GlitchTip (`http://100.124.231.44:8000`) immediately after deploy
+- New errors flooding GlitchTip (`https://errors.webvue.pro`) immediately after deploy
 - Login completely broken — OTP sent but JWT not issued, or refresh loop
 - Payment processing broken — Moyasar webhooks failing, charges not recording
 - Booking flow broken — create/cancel/confirm returning errors
@@ -35,31 +35,30 @@ Roll back immediately if you observe any of these symptoms **after a deploy**:
 
 ### Step 1: Identify the last good image tag
 
+Each successful build pushes two tags to ghcr.io:
+- `:latest` (or `:develop` for staging) — moves on every successful deploy
+- `:<commit-sha>` — pinned forever to that specific commit
+
+To pick a known-good SHA, look at recent commits on `main`:
+
 ```bash
-# From your local machine
-./scripts/rollback-image.sh backend
-# (accepts: backend | dashboard | admin | website)
+git log --oneline origin/main | head -10
 ```
 
-Output shows recent ghcr.io tags with timestamps. Pick the tag from before the bad deploy.
-Common choices:
-- `sha-abc1234` — SHA of a specific commit (most precise)
-- `2026-05-05` — yesterday's date tag
-- `v0.9.0` — the last semver release
-
-If you do not have the script locally, query the GitHub API:
+Or query ghcr.io directly:
 
 ```bash
 gh api /users/tariiq222/packages/container/deqah-backend/versions \
   --jq '.[].metadata.container.tags'
+# (replace deqah-backend with deqah-{dashboard,admin,marketing} for other apps)
 ```
 
 ### Step 2: Roll back in Dokploy
 
-1. Open Dokploy → Services → click the failing service (e.g., `backend`)
-2. **General** tab → Image Tag field
-3. Replace `latest` with your chosen tag: `sha-abc1234`
-4. Click **Save** (top-right)
+1. Open https://dokploy.webvue.pro → `deqah` project → `production` environment → click the failing app (e.g., `backend`)
+2. **General** tab → **Provider** card → Docker Image field
+3. Replace `ghcr.io/tariiq222/deqah-backend:latest` with the pinned tag: `ghcr.io/tariiq222/deqah-backend:<commit-sha>`
+4. Click **Save**
 5. Click **Deploy**
 6. Watch **Logs** in real time — wait for clean startup:
    - Backend: `[NestApplication] Nest application successfully started`
@@ -75,7 +74,7 @@ curl https://api.deqah.net/health
 curl -H "Authorization: Bearer <token>" https://api.deqah.net/api/v1/dashboard/stats
 
 # Check GlitchTip — errors should stop arriving
-# http://100.124.231.44:8000 → deqah-backend project
+# https://errors.webvue.pro → deqah-backend project
 ```
 
 ### Step 4: Pin until fixed

@@ -1,363 +1,202 @@
-# Deqah — Deployment Guide
+# Deployment Guide
 
-## Architecture Overview
+How code reaches production at Deqah.
 
-```
-Developer Machine
-       │
-       │  git push origin develop
-       ▼
-  GitHub (develop branch)
-  [full monorepo: tests, docs, CLAUDE.md, plans]
-       │
-       │  Manual: "Promote develop → main" workflow
-       │          (gh workflow run promote-to-main.yml -f confirm=promote)
-       ▼
-  promote-to-main.yml
-  (sanitizer strips: docs/, data/, CLAUDE.md, AGENTS.md,
-   all *.test.ts, internal READMEs, .github/ except build-images.yml)
-  → force-push to main
-       │
-       ├─ dispatches ──────────────────────────────────────────────────────────┐
-       ▼                                                                       │
-  GitHub (main branch)                                              build-images.yml
-  [clean deploy source]                                       (parallel matrix: 4 apps)
-                                                                               │
-                                                                     push images to ghcr.io
-                                                                               ▼
-                                                               ghcr.io/tariiq222/
-                                                               ├── deqah-backend:{latest,sha,date,vX.Y.Z}
-                                                               ├── deqah-dashboard:{latest,sha,date,vX.Y.Z}
-                                                               ├── deqah-admin:{latest,sha,date,vX.Y.Z}
-                                                               └── deqah-website:{latest,sha,date,vX.Y.Z}
-                                                                               │
-                                                                  Manual click in Dokploy UI
-                                                                               │
-                                                                               ▼
-                                                               Hostinger KVM 2 VPS — 72.61.89.152
-                                                               (8GB RAM, 2 vCPU, Ubuntu 24.04)
-                                                               ├── backend   → api.deqah.net    :5100
-                                                               ├── dashboard → app.deqah.net    :3000
-                                                               ├── admin     → admin.deqah.net  :3000
-                                                               └── website   → deqah.net        :3000
-                                                               Internal services (Dokploy-managed):
-                                                               ├── postgres + pgvector
-                                                               ├── redis
-                                                               └── minio
-```
-
-### Key design decisions
-
-- **Builds happen on GitHub Actions (14GB RAM). Never on the VPS.** KVM 2 has ~5GB available after
-  Postgres/Redis/MinIO; a full 4-app monorepo build peaks at 3–4GB and would OOM-kill or take 30+
-  minutes on VPS.
-- **VPS only pulls pre-built images from ghcr.io.** Each image is 50–200MB pulled, not built.
-- **`develop` is the daily working branch.** It contains everything: tests, CLAUDE.md, docs, plans.
-  Push freely.
-- **`main` is the deploy source.** It is a clean orphan branch auto-produced by the sanitizer on
-  every promote. Never push to `main` directly.
-- **Deploys are always manual.** There is no auto-deploy on image push. The deliberate gate prevents
-  accidental production changes.
-
-### Monorepo structure (what gets deployed)
+## Pipeline at a glance
 
 ```
-deqah/ (tariiq222/deqah on GitHub)
-├── apps/
-│   ├── backend/     → deqah-backend image    (NestJS, port 5100)
-│   ├── dashboard/   → deqah-dashboard image  (Next.js per-tenant clinic dashboard, port 3000)
-│   ├── admin/       → deqah-admin image      (Next.js super-admin control plane, port 3000)
-│   └── website/     → deqah-website image    (Next.js public marketing site, port 3000)
-└── packages/
-    ├── shared/      → compiled into images (types, enums, i18n tokens)
-    ├── api-client/  → bundled into images  (typed fetch client)
-    └── ui/          → bundled into images  (33 design-system primitives)
-```
-
-See [docker-architecture.md](./docker-architecture.md) for the 4-stage Dockerfile pattern.
-
----
-
-## The Two Branches
-
-### `develop` — your daily work
-
-- The default branch. All feature development merges here.
-- Contains everything: tests, `docs/`, `data/`, `CLAUDE.md`, `AGENTS.md`, plans, internal READMEs.
-- CI runs on pushes to `develop` (lint, type-check, unit tests).
-- Push freely. This is where you spend 95% of your time.
-
-### `main` — the deploy source
-
-- A clean orphan branch produced entirely by the sanitizer workflow.
-- The sanitizer strips: `docs/`, `data/`, all `CLAUDE.md`, `AGENTS.md`, test files, internal
-  READMEs, and `.github/` (except `build-images.yml`).
-- **Never push to `main` directly.** Any direct push will be overwritten on the next promote.
-- `main` exists solely so `build-images.yml` can run on a clean tree.
-
----
-
-## Daily Workflow
-
-A normal working day:
-
-### 1. Start with `develop`
-
-```bash
-cd /Users/tariq/code/carekit
-git checkout develop
-git pull origin develop
-```
-
-### 2. Work and test locally
-
-```bash
-# Start infrastructure
-npm run docker:up          # PostgreSQL + pgvector, Redis, MinIO
-
-# Start the apps you need
-npm run dev:backend        # NestJS on :5100
-npm run dev:dashboard      # Next.js dashboard on :5103
-npm run dev:admin          # Next.js admin on :5104
-npm run dev:website        # Next.js website on :5105
-
-# Or all at once (heavy on RAM)
-npm run dev:all
-```
-
-Run tests before promoting:
-
-```bash
-npm run test               # all unit tests (turbo)
-npm run lint               # all linting
-```
-
-### 3. Commit and push to develop
-
-```bash
-git add -p                 # stage selectively
-git commit -m "feat(bookings): add walk-in flow"
-git push origin develop
-```
-
-### 4. Promote when ready to deploy
-
-When your work is ready for production:
-
-```bash
-# Option A: via GitHub CLI (recommended)
+git push develop
+   │
+   ▼
+[CI] typecheck + lint + 2623 unit tests
+   │ (passes)
+   ▼
+[Auto-promote] develop → staging  (fast-forward only)
+   │
+   ▼
+[Build & Deploy] :develop images for changed apps
+   ├─ Build per-app in parallel (matrix)
+   ├─ Push to ghcr.io
+   └─ Call Dokploy API → deploy staging environment
+   │
+   ▼
+🌐 *.staging.deqah.net  (test here)
+   │
+   │  ⛔ MANUAL GATE  ⛔
+   ▼
 gh workflow run promote-to-main.yml -f confirm=promote
-
-# Option B: via GitHub UI
-# → Actions → "Promote develop → main (manual)" → Run workflow → type "promote" → confirm
+   │
+   ▼
+[Promote] staging → main  (fast-forward only)
+   │
+   ▼
+[Build & Deploy] :latest images for changed apps
+   │
+   ▼
+🌐 *.deqah.net  (production)
 ```
 
-The promote workflow takes 1–2 minutes. It sanitizes `develop` and force-pushes to `main`.
+## The 4 workflows
 
-### 5. Wait for build-images to complete
+| Workflow | File | Trigger | Purpose |
+|----------|------|---------|---------|
+| CI | `.github/workflows/ci.yml` | push/PR to develop, staging, main | typecheck, lint, unit tests, env-drift, OpenAPI build |
+| Auto-promote | `.github/workflows/auto-promote.yml` | push to develop | wait for CI → fast-forward staging |
+| Build & Deploy | `.github/workflows/build-images.yml` | push to staging or main, or manual | per-app build matrix → ghcr.io → Dokploy API |
+| Promote to main | `.github/workflows/promote-to-main.yml` | manual (`workflow_dispatch`) | fast-forward main from staging |
 
-After the promote, `build-images.yml` runs automatically on `main`. It builds all 4 apps in
-parallel (matrix strategy). Typical time: **5–15 minutes** on warm cache.
+## Branches
 
-Watch at: https://github.com/tariiq222/carekit/actions
+| Branch | What it is | Who pushes |
+|--------|-----------|------------|
+| `develop` | the dev trunk; all PRs target it | every contributor (via PR) |
+| `staging` | mirror of develop after CI passes | only auto-promote workflow |
+| `main` | production code | only promote-to-main workflow |
 
-All 4 apps must turn green before you deploy. A build failure means the image was not pushed —
-do not click Deploy in Dokploy until the build passes.
+`main` and `staging` are **never written to directly**. They only advance via fast-forward from develop.
 
-### 6. Deploy in Dokploy
+## Environments
 
-See the "Manual Deploy in Dokploy" section below.
+| Environment | Hosted by | Domains | Image tag |
+|------------|-----------|---------|-----------|
+| Staging | Dokploy on Hetzner | `*.staging.deqah.net` | `:develop` |
+| Production | Dokploy on Hetzner | `*.deqah.net` | `:latest` |
 
----
+Same server (`webvue` at `178.105.84.5`), different Dokploy environments. Each environment has its own Postgres, Redis, env vars, domains, and Let's Encrypt certificates.
 
-## Versioning & Releases (Changesets)
-
-Each deployable app (`backend`, `dashboard`, `admin`, `website`) carries its own semver
-in `apps/<app>/package.json`. Versions auto-bump on promote based on `.changeset/*.md`
-files authored alongside code changes.
-
-**Day-to-day flow:**
+## Daily flow for a contributor
 
 ```bash
-# After making a change
-pnpm changeset                                 # interactive: pick apps + bump types + summary
-git add . && git commit -m "fix: <what>"
-git push origin develop
-gh workflow run promote-to-main.yml -f confirm=promote
+# 1. Branch off develop
+git checkout develop && git pull
+git checkout -b feat/my-thing
+
+# 2. Work + commit
+git push origin feat/my-thing
+
+# 3. Open PR targeting develop
+gh pr create --base develop --title "..." --body "..."
+
+# 4. CI runs on the PR. Review + merge.
+
+# 5. After merge, the rest is automatic:
+#    - CI re-runs on develop
+#    - staging fast-forwards from develop
+#    - changed apps build :develop images
+#    - Dokploy deploys staging environment
+
+# 6. Test on https://*.staging.deqah.net
+
+# 7. When ready, ship to production (manual gate):
+gh workflow run promote-to-main.yml -f confirm=promote --repo tariiq222/deqah
 ```
 
-The promote workflow:
-1. Verifies all touched apps have a changeset (blocks if missing).
-2. Runs `pnpm changeset version` — bumps `apps/<x>/package.json` and writes
-   `apps/<x>/CHANGELOG.md` entries.
-3. Pushes the version-bump commit back to `develop`.
-4. Appends a row to `docs/operations/version-history.md` with the new versions.
-5. Sanitizes develop → main.
-6. Triggers `build-images.yml`, which tags each image with `v<semver>` from
-   `apps/<app>/package.json`.
+## Per-app build matrix
 
-Full operator guide: [`changeset-workflow.md`](./changeset-workflow.md).
+`build-images.yml` only builds apps that actually changed:
 
-**Legacy `scripts/release.sh`:** Deprecated. Kept for emergencies only.
-Run with `FORCE_LEGACY=1 bash scripts/release.sh <version>` if absolutely needed.
+| Files changed | Apps rebuilt |
+|--------------|--------------|
+| `apps/backend/**` | backend |
+| `apps/dashboard/**` | dashboard |
+| `apps/admin/**` | admin |
+| `apps/marketing/**` | marketing |
+| `packages/shared/**` | **all 4** (everyone consumes shared) |
+| `packages/api-client/**` | dashboard, admin |
+| `packages/ui/**` | dashboard, admin, marketing |
+| `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `turbo.json` | **all 4** |
 
----
-
-## Manual Deploy in Dokploy (The Deliberate Gate)
-
-Deploys are intentionally manual. The deliberate gate gives you a moment to:
-- Confirm the build passed (green in GitHub Actions)
-- Choose to deploy only the services that changed (e.g., just `backend`)
-- Optionally pin to a specific tag instead of `latest` for a rollback
-
-### Step-by-step
-
-1. **Open Dokploy** — your Dokploy URL on 72.61.89.152
-2. Navigate to **Services** (or your project's environment)
-3. **For each service that changed** (backend first if schema changed):
-   a. Click the service name (e.g., `backend`)
-   b. Go to the **General** tab
-   c. Confirm the image URL: `ghcr.io/tariiq222/deqah-backend:latest`
-      - To pin a specific version: change `latest` to `sha-abc1234` or `v0.1.0`
-   d. Click **Save** (top-right corner)
-   e. Click **Deploy**
-   f. Click **Logs** — watch the deployment output in real time
-   g. Wait for: `✓ Deployment completed` or `[NestApplication] Nest application successfully started`
-4. Repeat for `dashboard`, `admin`, `website` (order matters — backend first)
-
-### Deploy order
-
-Always deploy in this order when multiple services change:
-1. `backend` — migrations run on startup; frontend apps depend on the API
-2. `dashboard`
-3. `admin`
-4. `website`
-
-If only the website changed (purely static), deploy only that.
-
-### Pinning to a specific tag (rollback or canary)
-
-Instead of `latest`, use a specific tag from the image list:
+Force-rebuild everything manually:
 
 ```bash
-# List available tags for backend
-./scripts/rollback-image.sh backend
+gh workflow run build-images.yml --ref staging -f apps=all
+gh workflow run build-images.yml --ref main -f apps=all
 ```
 
-Then set the tag in Dokploy → General → image tag before clicking Deploy.
-
----
-
-## Verifying a Deployment
-
-After deploying, run through this checklist:
-
-### 1. Health endpoint
+Rebuild specific apps:
 
 ```bash
-curl https://api.deqah.net/health
-# Expected: {"status":"ok","info":{"database":{"status":"up"},"redis":{"status":"up"}}}
+gh workflow run build-images.yml --ref staging -f apps=backend,dashboard
 ```
 
-### 2. Dokploy service status
+## Skip mechanisms
 
-- All 4 services show **Running** (green) in the Dokploy dashboard
-- No containers in restart loops
+In a commit message:
+- `[skip ci]` — skip CI on this push
+- `[skip auto-promote]` — keep CI but skip the develop → staging fast-forward
 
-### 3. GlitchTip error monitoring
+Useful for chore commits like dependency bumps that don't need a deploy.
 
-- Open GlitchTip at `http://100.124.231.44:8000` (org: webvue)
-- Check the `deqah-backend` project — no spike in errors after deploy
-- Check `deqah-dashboard`, `deqah-admin`, `deqah-website` for JS errors
+## What runs in CI
 
-### 4. Browser smoke checks
+The `backend` job in `ci.yml`:
+1. Install pnpm deps (`--frozen-lockfile`)
+2. Generate Prisma client
+3. Build `@deqah/shared` to `dist/`
+4. Run Prisma migrations against the CI Postgres service
+5. Run `pnpm test` (unit tests, ~25s, 2623 tests)
 
-- `https://deqah.net` — public website loads, no console errors
-- `https://app.deqah.net` — dashboard login page loads
-- `https://admin.deqah.net` — admin login page loads
+**E2E and security suites are NOT run in CI** — they need a fully provisioned dev stack (Postgres on :5999, Redis on :5380, MinIO on :9000) and run nightly against staging instead.
 
-### 5. Functional smoke test
+The `api-docs` job rebuilds the OpenAPI snapshot and verifies the backend type-checks.
 
-Log in to the dashboard, create a test booking, confirm it resolves. For a full QA gate,
-see `docs/superpowers/qa/` and the Playwright smoke suite:
+The `env-drift` job verifies `apps/backend/.env.prod.example` matches the Joi validation schema.
+
+## Required GitHub secrets
+
+| Secret | Value |
+|--------|-------|
+| `DOKPLOY_API_URL` | `https://dokploy.webvue.pro` |
+| `DOKPLOY_API_TOKEN` | Dokploy API token (rotate quarterly) |
+
+Stored at `.secrets/credentials.md` locally (gitignored).
+
+## Triggering deploys manually
+
+Sometimes you want to redeploy without a code change (e.g. after rotating a secret in Dokploy):
 
 ```bash
-cd apps/dashboard
-npm run e2e:smoke
+# Redeploy a single application
+curl -X POST "https://dokploy.webvue.pro/api/application.redeploy" \
+  -H "x-api-key: $DOKPLOY_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"applicationId":"<APP_ID>"}'
 ```
 
-If anything looks wrong: roll back immediately, investigate after. See
-[rollback-runbook.md](./rollback-runbook.md).
+Application IDs live in `.secrets/credentials.md`.
 
----
-
-## Installing Backup Automation (One-Time VPS Setup)
-
-Run this once on a fresh VPS to wire up the daily 03:00 backup cron.
+Or rebuild + redeploy from CI:
 
 ```bash
-# Copy scripts to VPS (run from your local machine in repo root)
-scp -r scripts/ root@72.61.89.152:/opt/deqah/scripts/
-ssh root@72.61.89.152 chmod +x /opt/deqah/scripts/*.sh
-
-# On the VPS, install the cron
-sudo bash /opt/deqah/scripts/install-backup-cron.sh
-
-# Edit the backup env file with real credentials
-sudo nano /etc/deqah/backup.env
-# Set: POSTGRES_USER, POSTGRES_DB, POSTGRES_PASSWORD, MINIO_ALIAS, BACKUP_BUCKET
-
-# Configure MinIO client alias (mc)
-mc alias set deqah-minio http://localhost:9000 <access-key> <secret-key>
-mc mb deqah-minio/deqah-backups
-
-# Test a manual backup
-sudo /opt/deqah/scripts/backup-postgres.sh
-
-# Verify it appeared in MinIO
-mc ls deqah-minio/deqah-backups/postgres/
+gh workflow run build-images.yml --ref main -f apps=all
 ```
 
-The cron will then run daily at 03:00, keeping:
-- Local: 7 days of dumps at `/var/backups/deqah/postgres/`
-- MinIO: 30 days of dumps at `deqah-backups/postgres/`
+## Pre-launch checks (one-time, before public traffic)
 
-### Pre-Deploy Safety Snapshot
+These env vars start as placeholders. Replace them in Dokploy → application → Environment before going public:
 
-In Dokploy, wire up the pre-deploy command so every deploy automatically snapshots the database:
+| Service | Variable | Where to get |
+|---------|----------|--------------|
+| hCaptcha | `HCAPTCHA_SECRET` | https://dashboard.hcaptcha.com/sites |
+| OpenAI | `OPENAI_API_KEY` | https://platform.openai.com/api-keys |
+| OpenRouter | `OPENROUTER_API_KEY` | https://openrouter.ai/keys |
+| Firebase | `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` | Firebase Console |
+| Moyasar (frontend) | `NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY` (`pk_live_*`) | Moyasar dashboard |
+| Zoho OAuth | `ZOHO_OAUTH_*` | Zoho Developer Console |
 
-- Service: `backend` → General → Pre-deploy command:
-  ```
-  /opt/deqah/scripts/backup-pre-deploy.sh
-  ```
+After updating, redeploy the affected app from Dokploy.
 
-This stores a snapshot under `deqah-backups/postgres/pre-deploy/pre-deploy-YYYY-MM-DD-HHMM.dump`
-before each deploy. Use it as the restore point if a migration goes wrong.
+## Status pages
 
----
+| Where | What |
+|-------|------|
+| https://github.com/tariiq222/deqah/actions | All workflow runs |
+| https://dokploy.webvue.pro | Server console (containers, logs, deploys) |
+| https://errors.webvue.pro | GlitchTip — runtime errors per app |
+| https://console.webvue.pro | MinIO — uploaded files per bucket |
 
-## Future: Staging Environment
+## Related runbooks
 
-**Today:** Single environment (production). All testing happens locally on `develop`.
-
-**After upgrade to KVM 8:** Add a staging tier:
-
-- Domain: `staging.deqah.net`, `app-staging.deqah.net`, `admin-staging.deqah.net`
-- Images: `:staging-<sha>` prefix produced by a new `build-images-staging.yml` workflow
-- A new `staging` branch between `develop` and `main` (separate sanitizer)
-- Dokploy second project (or service group) on the same KVM 8 VPS
-- Auto-deploy on push to `staging` (unlike production, which stays manual)
-
-The `develop` → `main` flow doesn't change. Staging will be an intermediate step:
-`develop` → `staging` (auto-deploy) → manual promote to `main` → manual deploy to prod.
-
-Until then: test locally, promote directly to production.
-
----
-
-## Cross-References
-
-- Image build details: [docker-architecture.md](./docker-architecture.md)
-- Rolling back a bad deploy: [rollback-runbook.md](./rollback-runbook.md)
-- Version history: [version-history.md](./version-history.md)
-- Disaster recovery: [disaster-recovery.md](./disaster-recovery.md)
+- [`rollback-runbook.md`](rollback-runbook.md) — how to roll back a bad deploy
+- [`disaster-recovery.md`](disaster-recovery.md) — full-server recovery scenarios
+- [`module-ownership.md`](../architecture/module-ownership.md) — what belongs where in the codebase
