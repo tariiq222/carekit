@@ -128,3 +128,11 @@ apps/bespoke/sawa/mobile/android/
 apps/bespoke/sawa/mobile/ios/
 apps/bespoke/sawa/mobile/.expo/
 apps/bespoke/sawa/mobile/node_modules/
+
+# ─── Local secrets (NEVER commit) ─────────────────────────────
+.secrets/
+secrets/
+*.secrets.md
+*.credentials.md
+credentials.local.md
+deqah-prod-secrets.md
