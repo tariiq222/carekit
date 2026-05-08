@@ -168,6 +168,11 @@ export const envValidationSchema = Joi.object({
     .pattern(/^[A-Z][A-Z0-9_]{1,31}$/)
     .default('BASIC'),
 
+  // VAT number printed on platform-issued tax invoices (PdfRendererService).
+  // Saudi VAT numbers are 15 digits starting with 3 and ending with 03. Tests
+  // and dev use 300000000000003; production must register the real number.
+  PLATFORM_VAT_NUMBER: Joi.string().pattern(/^3\d{12}03$/).required(),
+
   // Dedicated OTP-token secret. Falls back to JWT_ACCESS_SECRET in dev with a
   // warning; production REQUIRES a distinct secret so a leaked OTP token
   // cannot forge an access token.
