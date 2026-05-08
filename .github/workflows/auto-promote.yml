@@ -1,0 +1,104 @@
+# Auto-promote develop → staging
+#
+# Triggered on every push to develop. After CI passes, fast-forwards
+# the staging branch to develop. build-images.yml then takes over and
+# deploys the staging environment.
+#
+# Pipeline:
+#   develop ──[this]──▶ staging ──[build-images:develop tag]──▶ Dokploy staging env
+#                                              │
+#                                  manual gate (promote-to-main.yml)
+#                                              ▼
+#                                    main ──[build-images:latest tag]──▶ Dokploy production
+#
+# Escape hatches:
+#   [skip auto-promote]  in commit message — skip
+#   [skip ci]            in commit message — skip
+
+name: Auto-promote develop → staging
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: auto-promote-staging
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Fast-forward staging from develop
+    runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.head_commit.message, '[skip auto-promote]') &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for CI to succeed on this SHA
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          echo "Waiting for CI on $SHA..."
+          for i in $(seq 1 30); do
+            STATUS=$(gh run list --workflow=ci.yml --branch=develop --commit="$SHA" --limit=1 --json status,conclusion --jq '.[0] // {}')
+            STATE=$(echo "$STATUS" | jq -r '.status // ""')
+            CONCL=$(echo "$STATUS" | jq -r '.conclusion // ""')
+            echo "[$i/30] CI status=$STATE conclusion=$CONCL"
+            if [ "$STATE" = "completed" ]; then
+              if [ "$CONCL" = "success" ]; then
+                echo "✅ CI passed"
+                exit 0
+              else
+                echo "❌ CI failed (conclusion=$CONCL) — skipping promotion"
+                exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "::error::CI did not complete within 10 minutes"
+          exit 1
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fast-forward staging to develop
+        run: |
+          set -euo pipefail
+          git fetch origin staging:staging 2>/dev/null || git checkout -b staging
+          git checkout staging
+          if ! git merge --ff-only origin/develop; then
+            echo "::error::staging has diverged from develop — manual fix required"
+            exit 1
+          fi
+          git push origin staging
+          echo "✅ staging is now at $(git rev-parse --short HEAD)"
+
+      - name: Summary
+        run: |
+          {
+            echo "### ✅ Auto-promote develop → staging"
+            echo ""
+            echo "Staging is now at: \`$(git rev-parse --short HEAD)\`"
+            echo ""
+            echo "**Next:** \`build-images.yml\` will build \`:develop\` tags and Dokploy will deploy to staging."
+            echo ""
+            echo "**To promote staging → production (manual gate):**"
+            echo ""
+            echo '```bash'
+            echo "gh workflow run promote-to-main.yml -f confirm=promote"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

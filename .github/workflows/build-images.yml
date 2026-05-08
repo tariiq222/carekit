@@ -1,560 +1,286 @@
-# Build & Push to GitHub Container Registry (ghcr.io)
+# Build & Push Docker images to GHCR + trigger Dokploy deploy
 #
-# ─── Self-hosted runner requirement ───────────────────────────────────────────
-#   A self-hosted runner labelled [self-hosted, deqah-prod] MUST be registered
-#   and online before migrate-prod or backup-prod-db can run.
-#   Runner management: GitHub → Settings → Actions → Runners
-#   https://github.com/tariiq222/carekit/settings/actions/runners
+# Branch → Tag → Dokploy environment:
+#   staging → :develop  → Dokploy "deqah / staging"   (auto)
+#   main    → :latest   → Dokploy "deqah / production" (auto)
 #
-#   The runner runs as a Docker container on the production VPS inside the
-#   dokploy-network overlay. This gives it direct DNS access to all Swarm
-#   service names (e.g. deqah-database-jeprin, deqah-back-axbgpd) without
-#   going through the public internet. The Docker socket is mounted, so it
-#   can issue `docker exec` / `docker run` against the host daemon.
+# Per-app build matrix detects which apps actually changed using `git diff`
+# against the previous commit on the same branch. Shared package changes
+# rebuild all consuming apps.
 #
-# ─── Required GitHub Secrets ──────────────────────────────────────────────────
-#   POSTGRES_PASSWORD              The same DB password Dokploy injected into
-#                                  the backend container. Used by migrate-prod
-#                                  to construct the DATABASE_URL pointing to
-#                                  deqah-database-jeprin:5432 over dokploy-network.
-#                                  No external DB exposure required.
+# Required secrets:
+#   GITHUB_TOKEN          (auto)         — push to ghcr.io
+#   DOKPLOY_API_URL       (repo secret)  — https://dokploy.webvue.pro
+#   DOKPLOY_API_TOKEN     (repo secret)  — Dokploy API token
 #
-#   DOKPLOY_API_URL                Base URL of the Dokploy instance.
-#                                  e.g. https://admin.tomooh.cloud
-#                                  Used by deploy-and-verify to trigger deploys
-#                                  via the Dokploy REST API.
-#
-#   DOKPLOY_API_TOKEN              Dokploy API token (Settings → API Tokens).
-#                                  Used to call /api/application.deploy and poll
-#                                  deployment status. If missing/invalid, falls
-#                                  back to webhook URLs (Plan B).
-#
-#   DOKPLOY_BACKEND_WEBHOOK        Dokploy redeploy webhook URL for backend (Plan B fallback).
-#   DOKPLOY_DASHBOARD_WEBHOOK      Dokploy redeploy webhook URL for dashboard (Plan B fallback).
-#   DOKPLOY_ADMIN_WEBHOOK          Dokploy redeploy webhook URL for admin (Plan B fallback).
-#   DOKPLOY_MARKETING_WEBHOOK      Dokploy redeploy webhook URL for marketing (Plan B fallback).
-#
-#   MOYASAR_PUBLISHABLE_KEY        Live Moyasar publishable key injected into
-#                                  dashboard build. Defaults to pk_test_replace_me
-#                                  if unset.
-#
-# ─── Optional GitHub Secrets ──────────────────────────────────────────────────
-#   GHCR_VISIBILITY_PAT            Classic PAT with write:packages scope.
-#                                  Used to auto-set newly-created GHCR packages
-#                                  to public so Dokploy can pull without auth.
-#                                  GITHUB_TOKEN is tried first; GHCR_VISIBILITY_PAT
-#                                  is the fallback. If neither has the scope, the
-#                                  job logs manual-action instructions and continues
-#                                  (non-fatal).
-#
-# ─── Required GitHub Variables (repo-level) ───────────────────────────────────
-#   BACKUP_ENABLED                 Set to "true" to enable pre-deploy DB backup
-#                                  before migrations run. Uses docker exec on the
-#                                  self-hosted runner — no SSH needed.
-#                                  If unset or not "true", the backup-prod-db job
-#                                  is skipped silently.
-#
-#   DEPLOY_ROLLBACK_DISABLED       Set to "true" to skip auto-rollback steps.
-#                                  Health checks still run (visibility) and GitHub
-#                                  Issues still open on failure. Use as a kill switch
-#                                  when you need to deploy a known-broken image or
-#                                  temporarily override rollback during an incident.
-#                                  Default: unset (auto-rollback enabled).
-#
-# ─── Changeset-aware build matrix ────────────────────────────────────────────
-#   On push to main, .changeset/ is stripped by the sanitizer so this workflow
-#   cannot read changeset files directly. Instead promote-to-main.yml writes
-#   .deploy-manifest.json listing affected apps BEFORE sanitizing, and the
-#   manifest is added to the sanitizer's rsync allowlist. This preserves the
-#   "main is stripped of dev metadata" invariant while enabling selective builds.
-#
-#   force_build_all=true (workflow_dispatch input) bypasses the manifest and
-#   rebuilds all 4 apps unconditionally.
-#
-#   Example manifest written by promote-to-main:
-#     { "apps": ["backend", "dashboard"], "sha": "abc1234" }
-#   The force-rebuild-backend-pagination.md changeset would resolve to:
-#     { "apps": ["backend"] }  →  only backend is built.
-#
-# ─── Job ordering ────────────────────────────────────────────────────────────
-#   compute-matrix → backup-prod-db → migrate-prod → build (per-app matrix)
-#                                                   → deploy-and-verify (per-app matrix, self-hosted)
-#
-#   deploy-and-verify replaces the old fire-and-forget "Trigger Dokploy redeploy"
-#   step. Each app gets its own matrix job (backend rollback does not block
-#   dashboard). Each job:
-#     1. Captures pre-deploy image tag (for rollback).
-#     2. Triggers Dokploy via REST API (falls back to webhook on API failure).
-#     3. Polls Dokploy for up to 5 minutes until status = done/error.
-#     4. Runs health check (5 × 30s = 150s ceiling).
-#     5. On failure: defense-in-depth rollback (Swarm rollback → image redeploy).
-#     6. On catastrophic failure: opens GitHub Issue + exits 1.
-#     7. On success: updates .deploy-state.json (last-known-good image tag).
-#
-# ─── Sanitizer re-injection ───────────────────────────────────────────────────
-#   scripts/sync-main-branch.sh keeps ONLY this file from .github/ when
-#   sanitizing develop → main. All other workflows are stripped from main.
-#   .deploy-manifest.json is also kept (see sync-main-branch.sh allowlist).
+# Manual rebuild:
+#   gh workflow run build-images.yml -f apps=all
+#   gh workflow run build-images.yml -f apps=backend,dashboard
 
-name: Build & Push Images to GHCR
+name: Build & Deploy
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [staging, main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.github/workflows/build-images.yml'
   workflow_dispatch:
     inputs:
-      force_build_all:
-        description: 'Rebuild all 4 apps regardless of deploy manifest'
-        type: boolean
-        default: false
+      apps:
+        description: 'Comma-separated apps to build, or "all"'
+        default: 'all'
+        required: false
 
 permissions:
-  contents: write   # deploy-and-verify updates .deploy-state.json via gh api
+  contents: read
   packages: write
-  issues: write     # deploy-and-verify opens GitHub Issues on failure
 
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: ${{ github.repository_owner }}
 
-# ─── Job 1: compute-matrix ────────────────────────────────────────────────────
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  compute-matrix:
-    name: Compute build matrix
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1. Decide which apps to build
+  # ─────────────────────────────────────────────────────────────────────────
+  detect:
+    name: Detect changed apps
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.resolve.outputs.matrix }}
+      apps: ${{ steps.matrix.outputs.apps }}
+      tag: ${{ steps.tag.outputs.tag }}
+      env_name: ${{ steps.tag.outputs.env_name }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Resolve affected apps
-        id: resolve
-        shell: bash
+      - name: Resolve tag and environment
+        id: tag
         run: |
           set -euo pipefail
-
-          ALL_APPS='["backend","dashboard","admin","marketing"]'
-
-          # Semver tag push → always build all apps
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "Tag push — building all apps"
-            echo "matrix=${ALL_APPS}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Manual dispatch with force_build_all=true → build all
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && \
-                "${{ inputs.force_build_all }}" == "true" ]]; then
-            echo "force_build_all=true — building all apps"
-            echo "matrix=${ALL_APPS}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Manual dispatch without force_build_all → read manifest or build all
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            MANIFEST=".deploy-manifest.json"
-            if [[ -f "$MANIFEST" ]]; then
-              APPS=$(node -e "
-                const m = require('./${MANIFEST}');
-                console.log(JSON.stringify(m.apps || []));
-              " 2>/dev/null || echo "[]")
-              if [[ "$APPS" != "[]" && -n "$APPS" ]]; then
-                echo "Manifest found (dispatch) — building: $APPS"
-                echo "matrix=${APPS}" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-            fi
-            echo "No manifest or empty apps (dispatch) — building all"
-            echo "matrix=${ALL_APPS}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Push to main → read .deploy-manifest.json written by promote-to-main
-          MANIFEST=".deploy-manifest.json"
-          if [[ -f "$MANIFEST" ]]; then
-            APPS=$(node -e "
-              const m = require('./${MANIFEST}');
-              console.log(JSON.stringify(m.apps || []));
-            " 2>/dev/null || echo "[]")
-            if [[ "$APPS" == "[]" || -z "$APPS" ]]; then
-              echo "::warning::Manifest present but apps array empty — building all as fallback"
-              echo "matrix=${ALL_APPS}" >> "$GITHUB_OUTPUT"
-            else
-              echo "Manifest found — building: $APPS"
-              echo "matrix=${APPS}" >> "$GITHUB_OUTPUT"
-            fi
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "env_name=production" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            echo "tag=develop" >> "$GITHUB_OUTPUT"
+            echo "env_name=staging" >> "$GITHUB_OUTPUT"
           else
-            echo "No .deploy-manifest.json — building all apps as fallback"
-            echo "matrix=${ALL_APPS}" >> "$GITHUB_OUTPUT"
-          fi
-
-# ─── Job 2: backup-prod-db (conditional — runs before migrations) ────────────
-  backup-prod-db:
-    name: Backup production DB (pre-migration)
-    # Runs on the self-hosted VPS runner — has Docker socket access to exec
-    # directly into deqah-database-jeprin without SSH.
-    runs-on: [self-hosted, deqah-prod]
-    needs: compute-matrix
-    # Only run on main/tag pushes AND when BACKUP_ENABLED=true
-    if: >
-      (github.ref == 'refs/heads/main' || github.ref_type == 'tag') &&
-      vars.BACKUP_ENABLED == 'true'
-    timeout-minutes: 10
-    steps:
-      - name: Pre-deploy DB backup via docker exec
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          BACKUP_FILE="backup-${TIMESTAMP}.dump"
-
-          echo "Running pre-deploy backup into deqah-database-jeprin container..."
-
-          # pg_dump runs inside the postgres container — no password needed
-          # because the postgres user has trust/peer auth on the unix socket.
-          docker exec deqah-database-jeprin \
-            pg_dump -U deqah -d deqah \
-              --format=custom \
-              --compress=9 \
-              -f "/tmp/${BACKUP_FILE}"
-
-          echo "Dump complete. Copying to runner workspace..."
-          mkdir -p /tmp/deqah-backups
-          docker cp "deqah-database-jeprin:/tmp/${BACKUP_FILE}" \
-            "/tmp/deqah-backups/${BACKUP_FILE}"
-
-          echo "backup_file=/tmp/deqah-backups/${BACKUP_FILE}" >> "$GITHUB_ENV"
-          echo "backup_name=${BACKUP_FILE}" >> "$GITHUB_ENV"
-          echo "Pre-deploy backup complete: ${BACKUP_FILE}"
-
-      - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pre-deploy-db-backup-${{ github.run_number }}
-          path: /tmp/deqah-backups/
-          retention-days: 30
-          if-no-files-found: error
-
-# ─── Job 3: migrate-prod ─────────────────────────────────────────────────────
-  migrate-prod:
-    name: Run production migrations
-    # Runs on the self-hosted VPS runner — connects to deqah-database-jeprin:5432
-    # over dokploy-network without any external DB exposure.
-    runs-on: [self-hosted, deqah-prod]
-    # Wait for backup if it ran; if backup was skipped, proceed immediately.
-    needs: [compute-matrix, backup-prod-db]
-    if: >
-      always() &&
-      needs.compute-matrix.result == 'success' &&
-      (needs.backup-prod-db.result == 'success' || needs.backup-prod-db.result == 'skipped') &&
-      (github.ref == 'refs/heads/main' || github.ref_type == 'tag')
-    timeout-minutes: 5
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run prisma migrate deploy
-        shell: bash
-        env:
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
-            echo "::error::POSTGRES_PASSWORD secret is not set."
-            echo "::error::Add it under GitHub → Settings → Secrets → Actions."
-            echo "::error::Value: the same Postgres password Dokploy injected into the backend container."
+            echo "::error::Unsupported branch: ${{ github.ref }}"
             exit 1
           fi
 
-          # Construct DATABASE_URL using the in-Swarm service name.
-          # The runner is inside dokploy-network, so deqah-database-jeprin resolves by DNS.
-          DATABASE_URL="postgresql://deqah:${POSTGRES_PASSWORD}@deqah-database-jeprin:5432/deqah"
+      - name: Compute affected apps
+        id: matrix
+        run: |
+          set -euo pipefail
+          ALL_APPS='["backend","dashboard","admin","marketing"]'
 
-          # :latest is pushed on every main run by the build job. Since migrate-prod
-          # runs BEFORE build (see job ordering), we use the previous :latest here.
-          # This is intentional — migrate deploy is idempotent and the schema is
-          # forward-compatible. The new image is deployed by Dokploy after build succeeds.
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-backend:latest"
-          echo "Running migrations with image: ${IMAGE}"
+          # Manual override
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT="${{ inputs.apps }}"
+            if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
+              echo "apps=$ALL_APPS" >> "$GITHUB_OUTPUT"
+            else
+              JSON=$(echo "$INPUT" | tr ',' '\n' | jq -R . | jq -s -c .)
+              echo "apps=$JSON" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
 
-          docker run --rm \
-            --network dokploy-network \
-            -e DATABASE_URL="${DATABASE_URL}" \
-            "${IMAGE}" \
-            npx prisma migrate deploy --schema=prisma/schema
+          # First commit (no parent) → build everything
+          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+            echo "apps=$ALL_APPS" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          echo "Migrations complete — proceeding to build & deploy."
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
 
-# ─── Job 4: build (per-app matrix) ───────────────────────────────────────────
+          # If shared package or lockfile changed → rebuild all consumers
+          # backend depends on packages/shared
+          # dashboard/admin depend on packages/shared, packages/api-client, packages/ui
+          # marketing depends on packages/shared, packages/ui
+          REBUILD_ALL=false
+          if echo "$CHANGED_FILES" | grep -qE '^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$|^turbo\.json$|^\.github/workflows/build-images\.yml$'; then
+            REBUILD_ALL=true
+          fi
+
+          # Per-package impact
+          if echo "$CHANGED_FILES" | grep -qE '^packages/shared/'; then
+            REBUILD_ALL=true
+          fi
+
+          if [ "$REBUILD_ALL" = true ]; then
+            echo "Shared change → rebuilding all apps"
+            echo "apps=$ALL_APPS" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          AFFECTED='[]'
+          add_app() { AFFECTED=$(echo "$AFFECTED" | jq -c ". + [\"$1\"] | unique"); }
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/backend/'; then add_app backend; fi
+          if echo "$CHANGED_FILES" | grep -qE '^apps/dashboard/'; then add_app dashboard; fi
+          if echo "$CHANGED_FILES" | grep -qE '^apps/admin/'; then add_app admin; fi
+          if echo "$CHANGED_FILES" | grep -qE '^apps/marketing/'; then add_app marketing; fi
+
+          # api-client / ui only affect frontends
+          if echo "$CHANGED_FILES" | grep -qE '^packages/(api-client|ui)/'; then
+            add_app dashboard; add_app admin
+            if echo "$CHANGED_FILES" | grep -qE '^packages/ui/'; then
+              add_app marketing
+            fi
+          fi
+
+          if [ "$AFFECTED" = "[]" ]; then
+            echo "No app changes detected — skipping build"
+            echo "apps=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "apps=$AFFECTED" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2. Build & push each affected app
+  # ─────────────────────────────────────────────────────────────────────────
   build:
     name: Build ${{ matrix.app }}
+    needs: detect
+    if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
-    # Build waits for migrations. For non-main/tag (e.g. direct tag push before
-    # promote is wired) migrate-prod is skipped; still allow build in that case.
-    needs: [compute-matrix, migrate-prod]
-    if: >
-      always() &&
-      needs.compute-matrix.result == 'success' &&
-      (needs.migrate-prod.result == 'success' || needs.migrate-prod.result == 'skipped')
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        app: ${{ fromJson(needs.compute-matrix.outputs.matrix) }}
+        app: ${{ fromJSON(needs.detect.outputs.apps) }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Resolve app config
-        id: cfg
-        shell: bash
+      - name: Resolve Dockerfile path
+        id: dockerfile
         run: |
-          set -euo pipefail
-          APP="${{ matrix.app }}"
-          case "$APP" in
-            backend)
-              echo "dockerfile=apps/backend/Dockerfile" >> "$GITHUB_OUTPUT"
-              echo "pkg=apps/backend/package.json" >> "$GITHUB_OUTPUT"
-              echo "target=runner" >> "$GITHUB_OUTPUT"
-              echo "extra_build_args=" >> "$GITHUB_OUTPUT"
-              ;;
-            dashboard)
-              echo "dockerfile=apps/dashboard/Dockerfile" >> "$GITHUB_OUTPUT"
-              echo "pkg=apps/dashboard/package.json" >> "$GITHUB_OUTPUT"
-              echo "target=runner" >> "$GITHUB_OUTPUT"
-              {
-                echo "extra_build_args<<EOF"
-                echo "NEXT_PUBLIC_API_URL=https://api.deqah.net/api/v1"
-                echo "NEXT_PUBLIC_HCAPTCHA_SITE_KEY=8c765c14-831e-4a76-a1c0-0e3eac06c7f6"
-                echo "EOF"
-              } >> "$GITHUB_OUTPUT"
-              ;;
-            admin)
-              echo "dockerfile=apps/admin/Dockerfile" >> "$GITHUB_OUTPUT"
-              echo "pkg=apps/admin/package.json" >> "$GITHUB_OUTPUT"
-              echo "target=runner" >> "$GITHUB_OUTPUT"
-              {
-                echo "extra_build_args<<EOF"
-                echo "NEXT_PUBLIC_API_URL=https://api.deqah.net/api/v1"
-                echo "NEXT_PUBLIC_HCAPTCHA_SITE_KEY=8c765c14-831e-4a76-a1c0-0e3eac06c7f6"
-                echo "EOF"
-              } >> "$GITHUB_OUTPUT"
-              ;;
-            marketing)
-              echo "dockerfile=apps/marketing/Dockerfile" >> "$GITHUB_OUTPUT"
-              echo "pkg=apps/marketing/package.json" >> "$GITHUB_OUTPUT"
-              echo "target=runner" >> "$GITHUB_OUTPUT"
-              echo "extra_build_args=" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "::error::Unknown app: $APP"
-              exit 1
-              ;;
-          esac
+          # marketing app is the public marketing site under apps/marketing
+          # all others map directly: apps/<name>/Dockerfile
+          echo "path=apps/${{ matrix.app }}/Dockerfile" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read app version
-        id: app_version
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION=$(node -p "require('./${{ steps.cfg.outputs.pkg }}').version")
-          if [ -z "$VERSION" ]; then
-            echo "::error::Could not read version from ${{ steps.cfg.outputs.pkg }}"
-            exit 1
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building ${{ matrix.app }} v$VERSION"
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}
-          tags: |
-            type=raw,value=v${{ steps.app_version.outputs.version }}
-            type=raw,value=v${{ steps.app_version.outputs.version }}-{{sha}},enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,prefix=,format=short
-            type=ref,event=tag
-            type=raw,value={{date 'YYYY-MM-DD'}}-{{run_number}},enable={{is_default_branch}}
-
-      - name: Resolve Moyasar publishable key
-        id: build_args
-        shell: bash
-        run: |
-          MOYASAR_KEY="${{ secrets.MOYASAR_PUBLISHABLE_KEY }}"
-          if [ -z "$MOYASAR_KEY" ]; then
-            MOYASAR_KEY="pk_test_replace_me"
-          fi
-          echo "moyasar_key=$MOYASAR_KEY" >> "$GITHUB_OUTPUT"
-
       - name: Build & push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ steps.cfg.outputs.dockerfile }}
-          target: ${{ steps.cfg.outputs.target }}
+          file: ${{ steps.dockerfile.outputs.path }}
           push: true
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            ${{ steps.cfg.outputs.extra_build_args }}
-            ${{ matrix.app == 'dashboard' && format('NEXT_PUBLIC_MOYASAR_PLATFORM_PUBLISHABLE_KEY={0}', steps.build_args.outputs.moyasar_key) || '' }}
-          cache-from: type=gha,scope=${{ matrix.app }}
-          cache-to: type=gha,scope=${{ matrix.app }},mode=max
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:${{ needs.detect.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.app }}-${{ needs.detect.outputs.env_name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}-${{ needs.detect.outputs.env_name }}
 
-      - name: Verify version tag was pushed
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          set -euo pipefail
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}"
-          VERSION="v${{ steps.app_version.outputs.version }}"
-          echo "Verifying $IMAGE:$VERSION exists in registry..."
-          if ! docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then
-            echo "::error::Image $IMAGE:$VERSION was not pushed successfully."
-            exit 1
-          fi
-          echo "$IMAGE:$VERSION confirmed in registry."
-
-      - name: Check and fix GHCR package visibility
-        if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
-        shell: bash
-        env:
-          # GHCR_VISIBILITY_PAT: classic PAT with write:packages scope (preferred).
-          # Falls back to GITHUB_TOKEN which may lack user-level packages patch scope.
-          GH_TOKEN: ${{ secrets.GHCR_VISIBILITY_PAT || secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          PKG_NAME="deqah-${{ matrix.app }}"
-          OWNER="${{ github.repository_owner }}"
-
-          echo "Checking GHCR visibility for ${PKG_NAME}..."
-
-          HTTP_CODE=$(curl -sS -o /tmp/pkg_resp.json -w "%{http_code}" \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/user/packages/container/${PKG_NAME}")
-
-          if [[ "$HTTP_CODE" == "404" ]]; then
-            echo "Package not yet queryable via API (first push?). Skipping visibility check."
-            exit 0
-          fi
-
-          if [[ "$HTTP_CODE" != "200" ]]; then
-            echo "::warning::Could not query package visibility (HTTP ${HTTP_CODE}) — manual check recommended."
-            cat /tmp/pkg_resp.json || true
-            exit 0
-          fi
-
-          VISIBILITY=$(node -e "
-            try { const r=require('/tmp/pkg_resp.json'); console.log(r.visibility||'unknown'); }
-            catch(e) { console.log('unknown'); }
-          " 2>/dev/null || echo "unknown")
-
-          if [[ "$VISIBILITY" == "public" ]]; then
-            echo "Package ${PKG_NAME} is already public."
-            exit 0
-          fi
-
-          echo "Package is ${VISIBILITY} — attempting to set public..."
-          PATCH_CODE=$(curl -sS -o /tmp/pkg_patch.json -w "%{http_code}" \
-            -X PATCH \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "Content-Type: application/json" \
-            -d '{"visibility":"public"}' \
-            "https://api.github.com/user/packages/container/${PKG_NAME}")
-
-          if [[ "$PATCH_CODE" == "200" ]]; then
-            echo "Package ${PKG_NAME} is now public."
-          else
-            echo "::error::Could not set ${PKG_NAME} to public (HTTP ${PATCH_CODE})."
-            cat /tmp/pkg_patch.json || true
-            echo "::error::Manual steps:"
-            echo "::error::  1. Visit https://github.com/users/${OWNER}/packages/container/${PKG_NAME}"
-            echo "::error::  2. Package Settings → Change visibility → Public"
-            echo "::error::  Or: add a GHCR_VISIBILITY_PAT secret (classic PAT, write:packages scope)."
-            exit 1
-          fi
-
-      - name: Output built image tag
-        id: built_image
-        if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Expose the versioned image tag for the deploy-and-verify job
-          VERSION="v${{ steps.app_version.outputs.version }}"
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:${VERSION}"
-          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-          echo "Built image: ${IMAGE}"
-
-
-# ─── Job 5: deploy-and-verify (per-app matrix, self-hosted) ──────────────────
-# All deploy/health/rollback/issue/state logic lives in the composite action
-# at .github/actions/deploy-app/action.yml.
-# Kill switch: set repo variable DEPLOY_ROLLBACK_DISABLED=true to skip rollback
-# steps while still running health checks and opening issues on failure.
-  deploy-and-verify:
-    name: Deploy & verify ${{ matrix.app }}
-    runs-on: [self-hosted, deqah-prod]
-    needs: [compute-matrix, build]
-    if: >
-      always() &&
-      needs.compute-matrix.result == 'success' &&
-      needs.build.result == 'success' &&
-      (github.ref == 'refs/heads/main' || github.ref_type == 'tag')
-    timeout-minutes: 15
+  # ─────────────────────────────────────────────────────────────────────────
+  # 3. Trigger Dokploy deploy for each freshly built app
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy ${{ matrix.app }} → ${{ needs.detect.outputs.env_name }}
+    needs: [detect, build]
+    if: needs.detect.outputs.apps != '[]'
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
-        app: ${{ fromJson(needs.compute-matrix.outputs.matrix) }}
-    steps:
-      - name: Checkout (for CI scripts + composite action)
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-          fetch-depth: 1
+        app: ${{ fromJSON(needs.detect.outputs.apps) }}
 
-      - name: Deploy, health-check & rollback
-        uses: ./.github/actions/deploy-app
-        with:
-          app:                       ${{ matrix.app }}
-          registry:                  ${{ env.REGISTRY }}
-          image_owner:               ${{ env.IMAGE_OWNER }}
-          repository:                ${{ github.repository }}
-          sha:                       ${{ github.sha }}
-          actor:                     ${{ github.actor }}
-          run_id:                    ${{ github.run_id }}
-          server_url:                ${{ github.server_url }}
-          dokploy_api_url:           ${{ secrets.DOKPLOY_API_URL }}
-          dokploy_api_token:         ${{ secrets.DOKPLOY_API_TOKEN }}
-          dokploy_backend_webhook:   ${{ secrets.DOKPLOY_BACKEND_WEBHOOK }}
-          dokploy_dashboard_webhook: ${{ secrets.DOKPLOY_DASHBOARD_WEBHOOK }}
-          dokploy_admin_webhook:     ${{ secrets.DOKPLOY_ADMIN_WEBHOOK }}
-          dokploy_marketing_webhook: ${{ secrets.DOKPLOY_MARKETING_WEBHOOK }}
-          github_token:              ${{ secrets.GITHUB_TOKEN }}
-          rollback_disabled:         ${{ vars.DEPLOY_ROLLBACK_DISABLED }}
+    steps:
+      - name: Resolve Dokploy application ID
+        id: appid
+        env:
+          ENV_NAME: ${{ needs.detect.outputs.env_name }}
+          APP: ${{ matrix.app }}
+        run: |
+          set -euo pipefail
+          # Production app IDs
+          declare -A PROD=(
+            [backend]=cL9a6MswF-OmV1uhoZtIY
+            [dashboard]=wu-vMb74JemIU3ZfyYkWw
+            [admin]=9AjwlCKwfefGuTjU6Aazc
+            [marketing]=xqkKTaQ8vAdU1dqqs6A6v
+          )
+          declare -A STAG=(
+            [backend]=2MiejKDecN5qEMdNWBPX1
+            [dashboard]=XIZupg4zULX6Y8U7WOLaa
+            [admin]=rv1tgeQLqrCskvcxvTQDN
+            [marketing]=Efo6d99tYxNXiZi1HadWD
+          )
+          if [ "$ENV_NAME" = "production" ]; then
+            ID=${PROD[$APP]}
+          else
+            ID=${STAG[$APP]}
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Dokploy deploy
+        env:
+          DOKPLOY_API_URL: ${{ secrets.DOKPLOY_API_URL }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+          APP_ID: ${{ steps.appid.outputs.id }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST "$DOKPLOY_API_URL/api/application.deploy" \
+            -H "x-api-key: $DOKPLOY_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"applicationId\":\"$APP_ID\"}" | head -c 500
+          echo ""
+          echo "✅ Deploy triggered for ${{ matrix.app }} → ${{ needs.detect.outputs.env_name }}"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 4. Summary
+  # ─────────────────────────────────────────────────────────────────────────
+  summary:
+    name: Summary
+    needs: [detect, build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write summary
+        env:
+          APPS: ${{ needs.detect.outputs.apps }}
+          TAG: ${{ needs.detect.outputs.tag }}
+          ENV_NAME: ${{ needs.detect.outputs.env_name }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          {
+            echo "### Build & Deploy"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Branch | \`${{ github.ref_name }}\` |"
+            echo "| Tag | \`$TAG\` |"
+            echo "| Environment | \`$ENV_NAME\` |"
+            echo "| Apps | \`$APPS\` |"
+            echo "| Build | $BUILD_RESULT |"
+            echo "| Deploy | $DEPLOY_RESULT |"
+          } >> "$GITHUB_STEP_SUMMARY"
