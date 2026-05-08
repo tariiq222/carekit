@@ -29,6 +29,9 @@ export const envValidationSchema = Joi.object({
 
   // Database (Prisma)
   DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
+  APP_DB_USER: Joi.string().optional(),
+  APP_DB_PASSWORD: Joi.string().optional(),
+  RLS_GUC_INTERCEPTOR_ENABLED: Joi.string().valid('true', 'false').default('false'),
 
   // Redis (BullMQ + cache + token blacklist)
   REDIS_HOST: Joi.string().hostname().required(),

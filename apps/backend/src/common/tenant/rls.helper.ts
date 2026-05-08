@@ -1,17 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { TenantContextService } from './tenant-context.service';
 
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 /**
- * Sets `app.current_org_id` on the current transaction so RLS policies see
- * the right tenant. Call this at the start of any transaction that touches
- * tenant-scoped tables once Plan 02 enables policies.
+ * Sets `app.current_org_id` (and optionally `app.bypass_rls`) on the current
+ * transaction so RLS policies see the right tenant.
  *
- * Usage:
- *   await prisma.$transaction(async (tx) => {
- *     await rls.applyInTransaction(tx);
- *     // ... tenant-scoped queries
- *   });
+ * The 2026-05-09 hardening migration tightened policies from
+ *   "organizationId = app_current_org_id() OR app_current_org_id() IS NULL"
+ * to
+ *   "organizationId = app_current_org_id() OR app_rls_bypassed()"
+ * so a missing GUC now fails CLOSED. Use `runWithoutTenant` for
+ * super-admin / cron / webhook paths that legitimately need cross-tenant reach.
  */
 @Injectable()
 export class RlsHelper {
@@ -20,17 +23,32 @@ export class RlsHelper {
     private readonly ctx: TenantContextService,
   ) {}
 
-  async applyInTransaction(tx: {
-    $executeRawUnsafe: (sql: string) => Promise<unknown>;
-  }): Promise<void> {
+  /**
+   * Set app.current_org_id for the current transaction. No-op when the CLS
+   * context has no tenant — callers that need a guaranteed tenant should call
+   * `ctx.requireOrganizationId()` themselves before invoking this.
+   *
+   * Uses parameterized `set_config(...)` instead of `SET LOCAL` so the orgId
+   * never reaches SQL via string interpolation.
+   */
+  async applyInTransaction(tx: Prisma.TransactionClient): Promise<void> {
     const orgId = this.ctx.getOrganizationId();
-    if (!orgId) return; // no tenant set — leave GUC empty; Plan 02 policies allow this for system jobs.
-    // SET LOCAL applies only to the current transaction. Quote the literal
-    // to prevent injection — orgId is trusted (from JWT) but we defend anyway.
-    // All policies read `app_current_org_id()` (defined in saas01_rls_scaffolding),
-    // which is backed by `app.current_org_id`. The legacy `app.current_organization_id`
-    // GUC was retired in saas_rls_hardening (2026-04-25).
-    const safe = orgId.replace(/'/g, "''");
-    await tx.$executeRawUnsafe(`SET LOCAL app.current_org_id = '${safe}'`);
+    if (!orgId) return;
+    if (!UUID_RE.test(orgId)) {
+      throw new Error(`RlsHelper: invalid orgId shape rejected before set_config`);
+    }
+    await tx.$queryRaw`SELECT set_config('app.current_org_id', ${orgId}, true)`;
+  }
+
+  /**
+   * Run the given callback inside a transaction with `app.bypass_rls = 'on'`.
+   * Use ONLY for super-admin / cron / webhook flows that legitimately need
+   * cross-tenant reach. Every call must be greppable.
+   */
+  async runWithoutTenant<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+      return fn(tx);
+    });
   }
 }
