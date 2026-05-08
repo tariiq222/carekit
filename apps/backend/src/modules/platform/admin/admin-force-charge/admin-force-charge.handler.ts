@@ -58,17 +58,9 @@ export class AdminForceChargeHandler {
       throw new BadRequestException('no failed or due invoice to retry');
     }
 
-    const result = await this.dunning.retryInvoice({
-      subscription: {
-        id: subscription.id,
-        organizationId: subscription.organizationId,
-        dunningRetryCount: subscription.dunningRetryCount,
-      },
-      invoice,
-      now: new Date(),
-      manual: true,
-    });
-
+    // Write audit log BEFORE invoking dunning so the attempt is recorded
+    // even if the external Moyasar call fails. The dunning result is observable
+    // separately via invoice.status / subscription.dunningRetryCount changes.
     await this.prisma.$allTenants.superAdminActionLog.create({
       data: {
         superAdminUserId: cmd.superAdminUserId,
@@ -78,12 +70,22 @@ export class AdminForceChargeHandler {
         metadata: {
           subscriptionId: subscription.id,
           invoiceId: invoice.id,
-          result: result.status,
-          attemptNumber: result.attemptNumber,
+          action: 'FORCE_CHARGE_ATTEMPTED',
         },
         ipAddress: cmd.ipAddress,
         userAgent: cmd.userAgent,
       },
+    });
+
+    const result = await this.dunning.retryInvoice({
+      subscription: {
+        id: subscription.id,
+        organizationId: subscription.organizationId,
+        dunningRetryCount: subscription.dunningRetryCount,
+      },
+      invoice,
+      now: new Date(),
+      manual: true,
     });
 
     return { success: true, message: 'Retry initiated', result };

@@ -59,4 +59,72 @@ describe('AdminForceChargeHandler', () => {
     const handler = build(buildPrisma(PAST_DUE_SUB, null));
     await expect(handler.execute(CMD)).rejects.toThrow(BadRequestException);
   });
+
+  it('throws BadRequestException when no failed or due invoice exists', async () => {
+    const subNoInvoice = { ...PAST_DUE_SUB, invoices: [] };
+    const handler = build(buildPrisma(subNoInvoice));
+    await expect(handler.execute(CMD)).rejects.toThrow(BadRequestException);
+  });
+
+  it('writes audit log with FORCE_CHARGE_ATTEMPTED metadata (no result/attemptNumber)', async () => {
+    const mockPrisma = buildPrisma();
+    const handler = build(mockPrisma);
+    await handler.execute(CMD);
+
+    expect(mockPrisma.$allTenants.superAdminActionLog.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.$allTenants.superAdminActionLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          superAdminUserId: CMD.superAdminUserId,
+          actionType: 'BILLING_FORCE_CHARGE',
+          organizationId: CMD.organizationId,
+          metadata: expect.objectContaining({
+            subscriptionId: PAST_DUE_SUB.id,
+            invoiceId: PAST_DUE_SUB.invoices[0].id,
+            action: 'FORCE_CHARGE_ATTEMPTED',
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('writes the audit-log row even when dunning.retryInvoice throws (logged before dunning)', async () => {
+    const mockPrisma = buildPrisma();
+    const mockDunning = {
+      retryInvoice: jest.fn().mockRejectedValue(new Error('moyasar 503')),
+    };
+    const handler = build(mockPrisma, mockDunning);
+
+    await expect(handler.execute(CMD)).rejects.toThrow('moyasar 503');
+
+    expect(mockPrisma.$allTenants.superAdminActionLog.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.$allTenants.superAdminActionLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          actionType: 'BILLING_FORCE_CHARGE',
+          metadata: expect.objectContaining({ action: 'FORCE_CHARGE_ATTEMPTED' }),
+        }),
+      }),
+    );
+  });
+
+  it('writes audit log BEFORE calling dunning (call ordering)', async () => {
+    const order: string[] = [];
+    const mockPrisma = buildPrisma();
+    mockPrisma.$allTenants.superAdminActionLog.create.mockImplementation(async () => {
+      order.push('log');
+      return {};
+    });
+    const mockDunning = {
+      retryInvoice: jest.fn().mockImplementation(async () => {
+        order.push('dunning');
+        return { ok: true, status: 'PAID', attemptNumber: 2 };
+      }),
+    };
+    const handler = build(mockPrisma, mockDunning);
+
+    await handler.execute(CMD);
+
+    expect(order).toEqual(['log', 'dunning']);
+  });
 });
