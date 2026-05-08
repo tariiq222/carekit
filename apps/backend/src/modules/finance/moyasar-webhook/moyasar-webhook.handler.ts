@@ -114,6 +114,23 @@ export class MoyasarWebhookHandler {
     });
     if (existing) return { skipped: true };
 
+    // STAGE 5b — verify webhook payload matches the invoice it claims to pay.
+    // Without this check, a 1 SAR Moyasar payment with metadata.invoiceId pointing
+    // at a 1000 SAR invoice would mark the larger invoice PAID.
+    const expectedHalalas = Math.round(Number(invoice.total) * 100);
+    if (payload.amount !== expectedHalalas) {
+      this.logger.error(
+        `Webhook amount mismatch for invoice ${invoice.id}: expected=${expectedHalalas} got=${payload.amount}`,
+      );
+      throw new BadRequestException('Payment amount does not match invoice total');
+    }
+    if (payload.currency.toUpperCase() !== invoice.currency.toUpperCase()) {
+      this.logger.error(
+        `Webhook currency mismatch for invoice ${invoice.id}: expected=${invoice.currency} got=${payload.currency}`,
+      );
+      throw new BadRequestException('Payment currency does not match invoice');
+    }
+
     // STAGE 6 — run mutations inside the resolved tenant's CLS context.
     return this.cls.run(async () => {
       this.cls.set('tenant', {
