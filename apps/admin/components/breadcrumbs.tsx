@@ -20,8 +20,8 @@ export function Breadcrumbs({ pathname }: { pathname: string }) {
   return (
     <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
       <ol className="flex items-center gap-1.5">
-        {trail.map((seg, i) => (
-          <li key={i} className="flex items-center gap-1.5">
+        {trail.map((seg) => (
+          <li key={seg.href || seg.label} className="flex items-center gap-1.5">
             {seg.href ? (
               <Link href={seg.href} className="hover:text-foreground transition-colors">
                 {seg.label}
@@ -31,7 +31,7 @@ export function Breadcrumbs({ pathname }: { pathname: string }) {
                 {seg.label}
               </span>
             )}
-            {i < trail.length - 1 && <span aria-hidden>/</span>}
+            {seg !== trail[trail.length - 1] && <span aria-hidden>/</span>}
           </li>
         ))}
       </ol>

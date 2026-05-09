@@ -24,8 +24,8 @@ export function StatsGrid({
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((s, i) => (
-        <Card key={i} className={`p-4 ${VARIANT_CLASS[s.variant]}`}>
+      {stats.map((s) => (
+        <Card key={s.label} className={`p-4 ${VARIANT_CLASS[s.variant]}`}>
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</div>
           <div className="mt-1 text-2xl font-semibold tabular-nums">
             {isLoading ? <Skeleton className="h-7 w-16" /> : s.value}

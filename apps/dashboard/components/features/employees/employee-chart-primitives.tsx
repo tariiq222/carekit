@@ -102,8 +102,8 @@ export function DonutChart({
         </text>
       </svg>
       <div className="grid w-full grid-cols-2 gap-x-4 gap-y-1.5">
-        {segments.filter((s) => s.value > 0).map((s, i) => (
-          <div key={i} className="flex items-center justify-between gap-1.5">
+        {segments.filter((s) => s.value > 0).map((s) => (
+          <div key={s.label} className="flex items-center justify-between gap-1.5">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
               <span className="truncate text-xs text-muted-foreground">{s.label}</span>
@@ -157,8 +157,8 @@ export function LineChart({
       </defs>
       <path d={areaD} fill={`url(#${id})`} />
       <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {mapped.map((p, i) => (
-        <circle key={i} cx={p.sx} cy={p.sy} r="1.5" fill={color}>
+      {mapped.map((p) => (
+        <circle key={p.label} cx={p.sx} cy={p.sy} r="1.5" fill={color}>
           <title>{`${p.label}: ${formatValue(p.value)}`}</title>
         </circle>
       ))}
