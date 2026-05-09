@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 
 export interface ClientBookingItem {
   id: string;
@@ -28,19 +29,23 @@ export interface ListClientBookingsResult {
 
 @Injectable()
 export class ListClientBookingsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(clientId: string, page = 1, pageSize = 10): Promise<ListClientBookingsResult> {
+    const organizationId = this.tenant.requireOrganizationId();
     const skip = (page - 1) * pageSize;
 
     const [bookings, total] = await Promise.all([
       this.prisma.booking.findMany({
-        where: { clientId },
+        where: { clientId, organizationId },
         orderBy: { scheduledAt: 'desc' },
         skip,
         take: pageSize,
       }),
-      this.prisma.booking.count({ where: { clientId } }),
+      this.prisma.booking.count({ where: { clientId, organizationId } }),
     ]);
 
     if (bookings.length === 0) {
@@ -53,15 +58,15 @@ export class ListClientBookingsHandler {
     const bookingIds = bookings.map((b) => b.id);
 
     const [employees, services, branches, invoices] = await Promise.all([
-      this.prisma.employee.findMany({ where: { id: { in: employeeIds } } }),
-      this.prisma.service.findMany({ where: { id: { in: serviceIds } } }),
-      this.prisma.branch.findMany({ where: { id: { in: branchIds } } }),
-      this.prisma.invoice.findMany({ where: { bookingId: { in: bookingIds } } }),
+      this.prisma.employee.findMany({ where: { id: { in: employeeIds }, organizationId } }),
+      this.prisma.service.findMany({ where: { id: { in: serviceIds }, organizationId } }),
+      this.prisma.branch.findMany({ where: { id: { in: branchIds }, organizationId } }),
+      this.prisma.invoice.findMany({ where: { bookingId: { in: bookingIds }, organizationId } }),
     ]);
 
     const invoiceIds = invoices.map((i) => i.id);
     const payments = invoiceIds.length > 0
-      ? await this.prisma.payment.findMany({ where: { invoiceId: { in: invoiceIds } } })
+      ? await this.prisma.payment.findMany({ where: { invoiceId: { in: invoiceIds }, organizationId } })
       : [];
 
     const employeesById = new Map(employees.map((e) => [e.id, e]));

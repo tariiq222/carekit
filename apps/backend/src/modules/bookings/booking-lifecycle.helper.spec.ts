@@ -3,12 +3,14 @@ import { BookingStatus } from '@prisma/client';
 import { fetchBookingOrFail } from './booking-lifecycle.helper';
 import { buildPrisma, mockBooking } from './testing/booking-test-helpers';
 
+const ORG_ID = 'org-test';
+
 describe('fetchBookingOrFail', () => {
   it('returns booking when found and status allowed', async () => {
     const prisma = buildPrisma();
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.PENDING });
 
-    const result = await fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'cancelled');
+    const result = await fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'cancelled', ORG_ID);
 
     expect(result).toMatchObject({ id: 'book-1', status: BookingStatus.PENDING });
   });
@@ -18,7 +20,7 @@ describe('fetchBookingOrFail', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
 
     await expect(
-      fetchBookingOrFail(prisma as never, 'bad-id', [BookingStatus.PENDING], 'cancelled'),
+      fetchBookingOrFail(prisma as never, 'bad-id', [BookingStatus.PENDING], 'cancelled', ORG_ID),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -27,7 +29,7 @@ describe('fetchBookingOrFail', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
 
     await expect(
-      fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'cancelled'),
+      fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'cancelled', ORG_ID),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -36,7 +38,7 @@ describe('fetchBookingOrFail', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
 
     await expect(
-      fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'confirmed'),
+      fetchBookingOrFail(prisma as never, 'book-1', [BookingStatus.PENDING], 'confirmed', ORG_ID),
     ).rejects.toThrow(/CANCELLED/);
   });
 });

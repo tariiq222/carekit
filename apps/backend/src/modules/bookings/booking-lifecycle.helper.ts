@@ -7,9 +7,10 @@ export async function fetchBookingOrFail(
   bookingId: string,
   allowedStatuses: BookingStatus[],
   actionLabel: string,
+  organizationId: string,
 ) {
   const booking = await prisma.booking.findFirst({
-    where: { id: bookingId },
+    where: { id: bookingId, organizationId },
   });
   if (!booking) {
     throw new NotFoundException(`Booking ${bookingId} not found`);
