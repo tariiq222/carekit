@@ -87,6 +87,19 @@ jobs:
           git push origin staging
           echo "✅ staging is now at $(git rev-parse --short HEAD)"
 
+      - name: Trigger build-images workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Triggering build-images.yml for staging..."
+          gh workflow run build-images.yml \
+            --repo ${{ github.repository }} \
+            --ref staging \
+            -f apps=all \
+            -f confirm=yes
+          echo "✅ build-images.yml triggered"
+
       - name: Summary
         run: |
           {
@@ -94,7 +107,7 @@ jobs:
             echo ""
             echo "Staging is now at: \`$(git rev-parse --short HEAD)\`"
             echo ""
-            echo "**Next:** \`build-images.yml\` will build \`:develop\` tags and Dokploy will deploy to staging."
+            echo "**Next:** \`build-images.yml\` was triggered to build \`:develop\` tags and Dokploy will deploy to staging."
             echo ""
             echo "**To promote staging → production (manual gate):**"
             echo ""
