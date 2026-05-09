@@ -69,10 +69,10 @@ export function ScheduleSection({ employeeId }: ScheduleSectionProps) {
         </p>
       ) : (
         <div className="flex flex-col gap-1.5">
-          {slots.map((slot, i) => {
+          {slots.map((slot) => {
             const dayBreaks = breaksByDay[slot.dayOfWeek] ?? []
             return (
-              <div key={`${slot.dayOfWeek}-${i}`} className="flex flex-col">
+              <div key={slot.dayOfWeek} className="flex flex-col">
                 {/* Day row */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">

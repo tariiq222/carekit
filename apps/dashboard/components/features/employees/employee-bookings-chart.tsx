@@ -221,8 +221,8 @@ export function EmployeeBookingsChart({ employeeId }: Props) {
             ) : (
               <>
                 <div className="flex items-end gap-0.5" style={{ height: 100 }}>
-                  {barByDay.map((d, i) => (
-                    <div key={i} className="flex flex-1 flex-col" style={{ height: "100%" }}>
+                  {barByDay.map((d) => (
+                    <div key={d.date} className="flex flex-1 flex-col" style={{ height: "100%" }}>
                       <div
                         title={`${fmtDate(d.date, locale, barPeriod)}: ${d.count} ${t("employees.chart.bookings")}`}
                         className="w-full rounded-t-sm bg-primary/60 transition-all hover:bg-primary cursor-default"

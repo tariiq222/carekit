@@ -40,9 +40,9 @@ export function BreaksSection({ employeeId }: BreaksSectionProps) {
         </p>
       ) : (
         <div className="flex flex-col gap-1">
-          {breaks.map((b, i) => (
+          {breaks.map((b) => (
             <div
-              key={b.id ?? `${b.dayOfWeek}-${i}`}
+              key={b.id ?? String(b.dayOfWeek)}
               className="flex items-center justify-between text-sm"
             >
               <span className="text-muted-foreground">

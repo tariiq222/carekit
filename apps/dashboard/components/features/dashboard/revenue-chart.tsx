@@ -70,12 +70,12 @@ export function RevenueChart() {
         </p>
       ) : (
         <div className="flex h-[180px] items-end gap-3">
-          {days.map((day, i) => {
+          {days.map((day) => {
             const heightPct = maxAmount > 0
               ? Math.max(4, Math.round((day.amount / maxAmount) * 100))
               : 4
             return (
-              <div key={i} className="flex flex-1 flex-col items-center gap-2">
+              <div key={day.date} className="flex flex-1 flex-col items-center gap-2">
                 <div
                   title={`${day.amount} SAR`}
                   className="w-full cursor-default rounded-t-md bg-primary/75"

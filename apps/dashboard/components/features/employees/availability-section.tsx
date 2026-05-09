@@ -58,9 +58,9 @@ export function AvailabilitySection({
         </p>
       ) : (
         <div className="flex flex-col gap-1">
-          {slots.map((slot, i) => (
+          {slots.map((slot) => (
             <div
-              key={`${slot.dayOfWeek}-${i}`}
+              key={slot.dayOfWeek}
               className="flex items-center justify-between text-sm"
             >
               <span className="text-muted-foreground">
