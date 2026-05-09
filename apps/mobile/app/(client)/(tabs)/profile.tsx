@@ -157,8 +157,8 @@ export default function ProfileScreen() {
             </View>
 
             <View style={[styles.statsRow, { flexDirection: dir.row }]}>
-              {stats.map((s, i) => (
-                <View key={i} style={styles.statBox}>
+              {stats.map((s) => (
+                <View key={s.en} style={styles.statBox}>
                   <Text style={[styles.statN, { fontFamily: f700 }]} numberOfLines={1}>
                     {s.value}
                   </Text>
@@ -173,9 +173,9 @@ export default function ProfileScreen() {
 
         <Animated.View entering={FadeInDown.delay(220).duration(700).easing(Easing.out(Easing.cubic))}>
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.settingsCard}>
-            {settingsItems.map((it, i) => (
+            {settingsItems.map((it) => (
               <Pressable
-                key={i}
+                key={it.label.en}
                 onPress={it.onToggle ?? it.onPress}
                 style={[
                   styles.settingRow,

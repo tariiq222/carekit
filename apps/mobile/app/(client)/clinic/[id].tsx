@@ -102,8 +102,8 @@ export default function ClinicDetailScreen() {
         {/* 3 stats row */}
         <Animated.View entering={FadeInDown.delay(160).duration(700).easing(Easing.out(Easing.cubic))}>
           <View style={[styles.statsRow, { flexDirection: dir.row }]}>
-            {stats.map((s, i) => (
-              <Glass key={i} variant="regular" radius={16} style={styles.statBox}>
+            {stats.map((s) => (
+              <Glass key={s.en} variant="regular" radius={16} style={styles.statBox}>
                 <Text style={[styles.statN, { fontFamily: f700 }]}>
                   {dir.isRTL ? s.nAr : s.nEn}
                 </Text>
@@ -140,9 +140,9 @@ export default function ClinicDetailScreen() {
             {dir.isRTL ? 'التخصصات' : 'Specialties'}
           </Text>
           <View style={[styles.tagRow, { flexDirection: dir.row }]}>
-            {SPECIALTIES.map((s, i) => (
+            {SPECIALTIES.map((s) => (
               <View
-                key={i}
+                key={s.en}
                 style={[
                   styles.tag,
                   { backgroundColor: `${s.color}1e`, borderColor: `${s.color}33` },

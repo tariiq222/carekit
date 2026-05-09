@@ -188,6 +188,7 @@ export function VacationManager({ employeeId }: VacationManagerProps) {
                       minDate={new Date().toISOString().split("T")[0]}
                       error={!!form.formState.errors.startDate}
                       required
+                      suppressHydrationWarning
                     />
                   )}
                 />
@@ -209,6 +210,7 @@ export function VacationManager({ employeeId }: VacationManagerProps) {
                       minDate={form.watch("startDate") || new Date().toISOString().split("T")[0]}
                       error={!!form.formState.errors.endDate}
                       required
+                      suppressHydrationWarning
                     />
                   )}
                 />

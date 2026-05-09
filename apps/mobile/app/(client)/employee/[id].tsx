@@ -108,8 +108,8 @@ export default function EmployeeProfileScreen() {
             </View>
 
             <View style={[styles.statsRow, { flexDirection: dir.row }]}>
-              {stats.map((s, i) => (
-                <View key={i} style={styles.statBox}>
+              {stats.map((s) => (
+                <View key={s.en} style={styles.statBox}>
                   <Text style={[styles.statN, { fontFamily: f700 }]}>
                     {dir.isRTL ? s.nAr : s.nEn}
                   </Text>
@@ -136,9 +136,9 @@ export default function EmployeeProfileScreen() {
             {dir.isRTL ? 'التخصصات' : 'Expertise'}
           </Text>
           <View style={[styles.tagRow, { flexDirection: dir.row }]}>
-            {SPECIALTIES.map((s, i) => (
+            {SPECIALTIES.map((s) => (
               <View
-                key={i}
+                key={s.en}
                 style={[
                   styles.tag,
                   { backgroundColor: `${s.color}1e`, borderColor: `${s.color}33` },
@@ -156,8 +156,8 @@ export default function EmployeeProfileScreen() {
           <Text style={[styles.sectionTitle, { fontFamily: f700, textAlign: dir.textAlign }]}>
             {dir.isRTL ? 'آراء العملاء' : 'Reviews'}
           </Text>
-          {REVIEWS.map((r, i) => (
-            <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.reviewCard}>
+          {REVIEWS.map((r) => (
+            <Glass key={r.byEn} variant="strong" radius={sawaaRadius.xl} style={styles.reviewCard}>
               <View style={[styles.reviewHead, { flexDirection: dir.row }]}>
                 <View style={[styles.stars, { flexDirection: dir.row }]}>
                   {[0, 1, 2, 3, 4].map((k) => (

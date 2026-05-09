@@ -136,6 +136,7 @@ export function ClientFormFields({ form, errors, mode }: ClientFormFieldsProps) 
                     onChange={field.onChange}
                     maxDate={new Date().toISOString().split("T")[0]}
                     error={!!errors.dateOfBirth}
+                    suppressHydrationWarning
                   />
                 )}
               />

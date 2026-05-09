@@ -261,10 +261,10 @@ export function Footer({ clinics = [] }: FooterProps) {
           className="py-7 flex flex-col md:flex-row items-center justify-between gap-2 text-[0.75rem]"
           style={{ color: 'var(--sw-neutral-500)' }}
         >
-          <span>
+          <span suppressHydrationWarning>
             جميع الحقوق محفوظة لـ{brandName} © {new Date().getFullYear()}
           </span>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5" suppressHydrationWarning>
             صنع بحب <span style={{ color: '#ef4444' }}>♥</span> {new Date().getFullYear()}
           </span>
         </div>
