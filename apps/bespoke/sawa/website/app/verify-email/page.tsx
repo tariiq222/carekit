@@ -24,9 +24,10 @@ export default function VerifyEmailPage() {
       })
       .then(() => {
         setResult({ status: "ok" })
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           window.location.href = "deqah://settings?verified=1"
         }, 800)
+        return () => clearTimeout(timeout)
       })
       .catch((e: Error) => {
         setResult({ status: "error", error: e?.message ?? "Network error" })

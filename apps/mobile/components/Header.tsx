@@ -48,7 +48,10 @@ export const Header = ({
         LayoutAnimation.create(DURATION, "easeInEaseOut", "opacity")
       );
     }
-    if (open) setTimeout(() => inputRef.current?.focus(), DURATION);
+    if (open) {
+      const timeout = setTimeout(() => inputRef.current?.focus(), DURATION);
+      return () => clearTimeout(timeout);
+    }
   }, [open]);
 
   const webTransition: Record<string, string> | null =
