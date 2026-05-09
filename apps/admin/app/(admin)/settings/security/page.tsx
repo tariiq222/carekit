@@ -76,7 +76,7 @@ export default function SecuritySettingsPage() {
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="h-16 rounded-lg border border-border bg-muted animate-pulse"
           />
         ))}

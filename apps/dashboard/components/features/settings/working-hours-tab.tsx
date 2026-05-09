@@ -120,7 +120,7 @@ function WorkingHoursPanel({ t, branchId }: Props & { branchId: string }) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+        {Array.from({ length: 7 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-12 rounded-lg" />)}
       </div>
     )
   }

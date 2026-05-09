@@ -53,7 +53,7 @@ export function EmployeeAvailabilitySection({ employeeId }: WithId) {
         {isLoading ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 rounded-md" />
+              <Skeleton key={`skeleton-${i}`} className="h-8 rounded-md" />
             ))}
           </div>
         ) : activeSlots.length === 0 ? (
@@ -104,7 +104,7 @@ export function EmployeeVacationsSection({ employeeId }: WithId) {
         {isLoading ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 rounded-md" />
+              <Skeleton key={`skeleton-${i}`} className="h-12 rounded-md" />
             ))}
           </div>
         ) : upcoming.length === 0 ? (

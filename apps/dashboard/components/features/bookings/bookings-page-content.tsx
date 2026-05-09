@@ -93,7 +93,7 @@ export function BookingsPageContent({
       {statsLoading ? (
         <StatsGrid>
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] w-full rounded-xl" />
+            <Skeleton key={`skeleton-${i}`} className="h-[100px] w-full rounded-xl" />
           ))}
         </StatsGrid>
       ) : (

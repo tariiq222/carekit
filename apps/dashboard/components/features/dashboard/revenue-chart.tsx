@@ -51,7 +51,7 @@ export function RevenueChart() {
       {isLoading ? (
         <div className="flex h-[180px] items-end gap-3">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="flex flex-1 flex-col items-center gap-2">
+            <div key={`bar-${i}`} className="flex flex-1 flex-col items-center gap-2">
               <Skeleton
                 className="mt-auto w-full rounded-t-md"
                 style={{ height: `${40 + (i % 3) * 20}%` }}

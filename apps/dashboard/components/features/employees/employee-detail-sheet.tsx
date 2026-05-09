@@ -44,7 +44,7 @@ export function EmployeeDetailSheet({
               <Skeleton className="h-4 w-32" />
               <Separator />
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-6 w-full" />
+                <Skeleton key={`skeleton-${i}`} className="h-6 w-full" />
               ))}
             </div>
           </SheetBody>

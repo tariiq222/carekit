@@ -135,7 +135,7 @@ export function ConfigTab() {
     return (
       <div className="flex flex-col gap-4 pt-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-40 w-full" />
+          <Skeleton key={`skeleton-${i}`} className="h-40 w-full" />
         ))}
       </div>
     )

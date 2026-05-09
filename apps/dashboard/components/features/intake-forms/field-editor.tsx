@@ -207,7 +207,7 @@ export function FieldEditor({
         <div className="flex flex-col gap-2">
           <Label className="text-xs">{t("intakeForms.field.options")}</Label>
           {field.options.map((opt, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={`option-${i}`} className="flex items-center gap-2">
               <Input
                 value={opt}
                 onChange={(e) => updateOption(i, e.target.value)}

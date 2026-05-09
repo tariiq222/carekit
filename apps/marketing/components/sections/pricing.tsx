@@ -53,7 +53,7 @@ function PricingCard({
 
       <ul className="space-y-3 mb-8 flex-1">
         {features.map((feature: string, i: number) => (
-          <li key={i} className="flex items-center gap-2.5 text-sm text-slate-700">
+          <li key={`feature-${i}`} className="flex items-center gap-2.5 text-sm text-slate-700">
             <Check
               className="size-4 text-[#82CC17] shrink-0"
               aria-hidden="true"

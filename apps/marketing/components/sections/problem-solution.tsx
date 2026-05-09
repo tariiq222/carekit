@@ -34,7 +34,7 @@ export function ProblemSolution() {
             </h3>
             <ul className="space-y-4">
               {painPoints.map((point, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-700">
+                <li key={`pain-point-${i}`} className="flex items-start gap-3 text-slate-700">
                   <span className="mt-0.5 size-5 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 text-xs font-bold">
                     ✕
                   </span>
@@ -52,7 +52,7 @@ export function ProblemSolution() {
             </h3>
             <ul className="space-y-4">
               {gains.map((gain, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-700">
+                <li key={`gain-${i}`} className="flex items-start gap-3 text-slate-700">
                   <span className="mt-0.5 size-5 rounded-full bg-[#82CC17]/15 text-[#6aaa12] flex items-center justify-center shrink-0 text-xs font-bold">
                     ✓
                   </span>

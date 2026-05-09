@@ -59,7 +59,7 @@ export function CouponListPage() {
 
       {isLoading && !meta ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid>
@@ -95,7 +95,7 @@ export function CouponListPage() {
 
       {isLoading && coupons.length === 0 ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
         </div>
       ) : (
         <DataTable columns={columns} data={coupons} emptyTitle={t("coupons.empty.title")} emptyDescription={t("coupons.empty.description")} emptyAction={{ label: t("coupons.addCoupon"), onClick: () => router.push("/coupons/create") }} />

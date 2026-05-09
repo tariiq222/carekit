@@ -65,7 +65,7 @@ export function InvoicesTable({ invoices, isLoading }: Props) {
         </TableHeader>
         <TableBody>
           {skeletonRows.map((_, i) => (
-            <TableRow key={i}>
+            <TableRow key={`skeleton-row-${i}`}>
               <TableCell colSpan={6}>
                 <Skeleton className="h-12 w-full" />
               </TableCell>

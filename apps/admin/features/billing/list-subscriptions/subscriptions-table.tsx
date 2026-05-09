@@ -60,7 +60,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
       <TableBody>
         {isLoading && !items
           ? Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
+              <TableRow key={`skeleton-row-${i}`}>
                 <TableCell colSpan={7}>
                   <Skeleton className="h-6" />
                 </TableCell>

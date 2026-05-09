@@ -142,7 +142,7 @@ export default function AppointmentDetailScreen() {
           <Glass variant="strong" radius={sawaaRadius.xl} style={styles.card}>
             {rows.map((r, i) => (
               <View
-                key={i}
+                key={`row-${i}`}
                 style={[
                   styles.row,
                   { flexDirection: dir.row },

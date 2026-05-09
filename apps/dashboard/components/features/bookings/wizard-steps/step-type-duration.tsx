@@ -57,7 +57,7 @@ function StepTypeDurationSkeleton() {
       <div className="h-5 w-32 animate-pulse rounded bg-muted" />
       <div className="grid grid-cols-3 gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+          <div key={`skeleton-${i}`} className="h-20 animate-pulse rounded-xl bg-muted" />
         ))}
       </div>
     </div>

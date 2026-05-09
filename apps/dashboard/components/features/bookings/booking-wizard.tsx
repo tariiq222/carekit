@@ -37,7 +37,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
     <div className="flex items-center justify-center gap-1.5">
       {Array.from({ length: total }, (_, i) => (
         <span
-          key={i}
+          key={`dot-${i}`}
           className={cn(
             "block rounded-full transition-all duration-200",
             i + 1 === current
@@ -275,11 +275,11 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
         <div className="h-6 w-48 animate-pulse rounded bg-muted mx-auto" />
         <div className="flex justify-center gap-1.5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-2 w-2 animate-pulse rounded-full bg-muted" />
+            <div key={`dot-${i}`} className="h-2 w-2 animate-pulse rounded-full bg-muted" />
           ))}
         </div>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />
+          <div key={`skeleton-${i}`} className="h-16 animate-pulse rounded-xl bg-muted" />
         ))}
       </div>
     )

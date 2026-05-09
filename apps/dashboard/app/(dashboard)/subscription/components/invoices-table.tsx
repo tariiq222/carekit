@@ -35,7 +35,7 @@ export function InvoicesTable({ invoices, isLoading }: InvoicesTableProps) {
       <Card className="space-y-4 p-6">
         <Skeleton className="h-5 w-36" />
         {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-12 w-full" />
+          <Skeleton key={`skeleton-${index}`} className="h-12 w-full" />
         ))}
       </Card>
     )

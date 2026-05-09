@@ -36,7 +36,7 @@ export function VerticalsTable({ items, isLoading, onEdit, onDelete }: Props) {
       <TableBody>
         {isLoading && !items
           ? Array.from({ length: 4 }).map((_, i) => (
-              <TableRow key={i}>
+              <TableRow key={`skeleton-row-${i}`}>
                 <TableCell colSpan={5}>
                   <Skeleton className="h-6" />
                 </TableCell>

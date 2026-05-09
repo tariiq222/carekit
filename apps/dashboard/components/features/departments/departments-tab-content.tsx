@@ -57,7 +57,7 @@ export function DepartmentsTabContent({
     <>
       {isLoading && !meta ? (
         <div className="grid gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid className="sm:grid-cols-3 lg:grid-cols-3">
@@ -91,7 +91,7 @@ export function DepartmentsTabContent({
 
       {isLoading && departments.length === 0 ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
         </div>
       ) : (
         <DataTable

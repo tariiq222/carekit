@@ -144,7 +144,7 @@ export function CancellationTab({ t }: Props) {
     return (
       <div className="flex gap-0 overflow-hidden rounded-xl border border-border">
         <div className="w-64 space-y-1 border-e border-border bg-surface-muted p-2">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+          {[1, 2, 3].map((i) => <Skeleton key={`skeleton-${i}`} className="h-14 rounded-lg" />)}
         </div>
         <div className="flex-1 space-y-4 p-6">
           <Skeleton className="h-32 rounded-lg" />

@@ -41,7 +41,7 @@ export function FeaturesTab({ onSwitchToPlans }: FeaturesTabProps) {
     return (
       <div className="space-y-4">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+          <div key={`skeleton-${i}`} className="h-12 animate-pulse rounded-lg bg-muted" />
         ))}
       </div>
     )

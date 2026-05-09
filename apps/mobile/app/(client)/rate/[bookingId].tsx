@@ -152,7 +152,7 @@ export default function RateScreen() {
             {QUICK_TAGS.map((t, i) => {
               const isActive = tags.has(i);
               return (
-                <Pressable key={i} onPress={() => toggleTag(i)}>
+                <Pressable key={`tag-${i}`} onPress={() => toggleTag(i)}>
                   <Glass
                     variant={isActive ? 'strong' : 'regular'}
                     radius={14}

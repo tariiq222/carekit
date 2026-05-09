@@ -43,7 +43,7 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
+          <Skeleton key={`skeleton-${i}`} className="h-14 w-full" />
         ))}
       </div>
     );

@@ -154,7 +154,7 @@ export default function EmailLogsPage() {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse rounded bg-muted" />
+            <div key={`skeleton-${i}`} className="h-10 animate-pulse rounded bg-muted" />
           ))}
         </div>
       )}

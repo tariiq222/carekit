@@ -153,7 +153,7 @@ export function LegalContentTab() {
         <div className="flex min-h-[520px]">
           <div className="w-56 shrink-0 border-e border-border bg-surface-muted p-3 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 rounded-lg" />
+              <Skeleton key={`skeleton-${i}`} className="h-10 rounded-lg" />
             ))}
           </div>
           <div className="flex-1 p-6 space-y-4">

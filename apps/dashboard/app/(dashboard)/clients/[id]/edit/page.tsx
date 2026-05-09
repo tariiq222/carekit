@@ -67,7 +67,7 @@ export default function EditClientPage() {
         <Breadcrumbs />
         <div className="flex flex-col gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[240px] rounded-xl" />
+            <Skeleton key={`skeleton-${i}`} className="h-[240px] rounded-xl" />
           ))}
         </div>
       </ListPageShell>

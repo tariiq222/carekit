@@ -133,7 +133,7 @@ export default function RecordsScreen() {
           <View style={styles.skeletonWrap}>
             {[0, 1, 2].map((i) => (
               <Glass
-                key={i}
+                key={`skeleton-${i}`}
                 variant="regular"
                 radius={sawaaRadius.xl}
                 style={styles.skeletonCard}

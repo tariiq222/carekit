@@ -68,7 +68,7 @@ export function EmployeeRatingsSection({
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <HugeiconsIcon
-                  key={i}
+                  key={`rating-star-${i}`}
                   icon={StarIcon}
                   size={14}
                   className={
@@ -114,7 +114,7 @@ export function EmployeeRatingsSection({
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
+              <Skeleton key={`skeleton-${i}`} className="h-16 rounded-lg" />
             ))}
           </div>
         ) : ratings.length === 0 ? (
@@ -143,7 +143,7 @@ export function EmployeeRatingsSection({
                     <div className="flex gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <HugeiconsIcon
-                          key={i}
+                          key={`review-star-${i}`}
                           icon={StarIcon}
                           size={12}
                           className={i < r.stars ? "text-warning" : "text-muted-foreground/30"}

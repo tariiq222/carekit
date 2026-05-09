@@ -99,7 +99,7 @@ export function UserFormPage(props: Props) {
       <ListPageShell>
         <Skeleton className="h-8 w-48" />
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-64 w-full rounded-xl" />)}
+          {Array.from({ length: 2 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-64 w-full rounded-xl" />)}
         </div>
       </ListPageShell>
     )

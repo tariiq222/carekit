@@ -87,7 +87,7 @@ export function UserListPage() {
         <TabsContent value="users" className="mt-6 flex flex-col gap-6">
           {isLoading && !meta ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-24 rounded-lg" />)}
             </div>
           ) : (
             <StatsGrid>
@@ -109,7 +109,7 @@ export function UserListPage() {
 
           {isLoading && users.length === 0 ? (
             <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
             </div>
           ) : (
             <DataTable columns={columns} data={users} emptyTitle={t("users.empty.title")} emptyDescription={t("users.empty.description")} emptyAction={{ label: t("users.addUser"), onClick: () => router.push("/users/create") }} />

@@ -45,7 +45,7 @@ function StepServiceSkeleton() {
     <div className="flex flex-col gap-3">
       <div className="h-12 animate-pulse rounded-2xl bg-muted" />
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted" />
+        <div key={`skeleton-${i}`} className="h-20 animate-pulse rounded-2xl bg-muted" />
       ))}
     </div>
   )

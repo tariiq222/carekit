@@ -44,7 +44,7 @@ export function SupportSessions({ dir, f400, f700 }: SupportSessionsProps) {
       contentContainerStyle={[styles.hScrollContent, { flexDirection: dir.row }]}
     >
       {SESSIONS.map((s, i) => (
-        <Glass key={i} variant="strong" radius={sawaaRadius.xl} style={styles.supportCard}>
+        <Glass key={`session-${i}`} variant="strong" radius={sawaaRadius.xl} style={styles.supportCard}>
           <View style={[styles.supportInner, { flexDirection: dir.row }]}>
             <View style={[styles.supportIcon, { backgroundColor: `${s.color}22` }]}>
               <Users size={18} color={s.color} strokeWidth={1.75} />

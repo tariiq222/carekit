@@ -9,7 +9,7 @@ export function ClientPageSkeleton() {
       <Skeleton className="h-16 w-80 rounded-xl" />
       <div className="flex flex-col gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-[160px] rounded-xl" />
+          <Skeleton key={`skeleton-${i}`} className="h-[160px] rounded-xl" />
         ))}
       </div>
     </ListPageShell>

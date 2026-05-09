@@ -152,7 +152,7 @@ export function FieldInput({
       <div className="flex items-center gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
           <button
-            key={i}
+            key={`rating-star-${i}`}
             type="button"
             onClick={() => onChange(String(i + 1))}
             className="focus:outline-none"

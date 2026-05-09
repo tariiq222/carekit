@@ -84,7 +84,7 @@ export function DonutChart({
           const dash = (s.value / total) * C
           const gap = C - dash
           const el = (
-            <circle key={i} cx={cx} cy={cy} r={R} fill="none"
+            <circle key={`segment-${i}`} cx={cx} cy={cy} r={R} fill="none"
               stroke={s.color} strokeWidth={14}
               strokeDasharray={`${dash} ${gap}`}
               strokeDashoffset={-state.acc}

@@ -102,7 +102,7 @@ export default function NotificationsSettingsPage() {
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="h-32 rounded-lg border border-border bg-muted animate-pulse"
           />
         ))}

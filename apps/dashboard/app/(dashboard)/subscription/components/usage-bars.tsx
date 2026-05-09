@@ -64,7 +64,7 @@ export function UsageBars() {
       <Card className="space-y-5 p-6">
         <Skeleton className="h-5 w-40" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="space-y-2">
+          <div key={`bar-${i}`} className="space-y-2">
             <div className="flex justify-between">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-4 w-16" />

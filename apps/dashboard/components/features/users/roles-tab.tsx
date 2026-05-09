@@ -43,7 +43,7 @@ export function RolesTab() {
     return (
       <div className="flex flex-col gap-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <PermissionMatrixSkeleton key={i} />
+          <PermissionMatrixSkeleton key={`skeleton-${i}`} />
         ))}
       </div>
     )

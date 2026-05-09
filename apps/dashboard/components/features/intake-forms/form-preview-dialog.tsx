@@ -106,7 +106,7 @@ export function FormPreviewDialog({ form, open, onClose }: FormPreviewDialogProp
           ) : fieldsLoading ? (
             <div className="flex flex-col gap-3 py-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-14 rounded-md bg-muted" />
+                <div key={`skeleton-${i}`} className="h-14 rounded-md bg-muted" />
               ))}
             </div>
           ) : fields.length === 0 ? (

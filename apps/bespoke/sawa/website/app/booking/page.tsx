@@ -25,7 +25,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
       {Array.from({ length: total }).map((_, i) => (
         <div
-          key={i}
+          key={`progress-${i}`}
           style={{
             flex: 1,
             height: '4px',

@@ -80,7 +80,7 @@ export function BranchListPage() {
 
       {isLoading && !meta ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid>
@@ -115,7 +115,7 @@ export function BranchListPage() {
 
       {isLoading && branches.length === 0 ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
         </div>
       ) : (
         <DataTable columns={columns} data={branches} serverPaginated emptyTitle={t("branches.empty.title")} emptyDescription={t("branches.empty.description")} emptyAction={{ label: t("branches.addBranch"), onClick: () => router.push("/branches/create") }} />

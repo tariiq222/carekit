@@ -87,7 +87,7 @@ export function EmailTemplatesTab() {
         <EmailFallbackQuotaBanner />
         <div className="flex gap-0 rounded-xl border border-border overflow-hidden">
           <div className="w-64 border-e border-border bg-surface-muted space-y-1 p-2">
-            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-14 rounded-lg" />)}
           </div>
           <div className="flex-1 p-6"><Skeleton className="h-48 rounded-lg" /></div>
         </div>

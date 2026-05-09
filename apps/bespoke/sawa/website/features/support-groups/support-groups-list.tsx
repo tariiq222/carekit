@@ -22,7 +22,7 @@ export function SupportGroupsList({
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className="animate-pulse rounded-2xl border border-border bg-card p-6"
           >
             <div className="mb-4 h-6 w-24 rounded bg-muted" />

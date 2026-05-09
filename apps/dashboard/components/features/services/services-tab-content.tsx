@@ -84,7 +84,7 @@ export function ServicesTabContent() {
       {isLoading && !meta ? (
         <StatsGrid>
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] rounded-lg" />
+            <Skeleton key={`skeleton-${i}`} className="h-[100px] rounded-lg" />
           ))}
         </StatsGrid>
       ) : (
@@ -161,7 +161,7 @@ export function ServicesTabContent() {
       {isLoading && services.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
+            <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />
           ))}
         </div>
       ) : (

@@ -39,7 +39,7 @@ export function BookingStatusLog({ bookingId }: BookingStatusLogProps) {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 rounded-lg" />
+          <Skeleton key={`skeleton-${i}`} className="h-14 rounded-lg" />
         ))}
       </div>
     )

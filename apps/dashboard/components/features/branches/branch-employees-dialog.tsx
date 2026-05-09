@@ -89,7 +89,7 @@ export function BranchEmployeesDialog({ branch, open, onOpenChange }: Props) {
             {loadingAssigned ? (
               <div className="space-y-2">
                 {Array.from({ length: 2 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  <Skeleton key={`skeleton-${i}`} className="h-12 w-full rounded-md" />
                 ))}
               </div>
             ) : assigned.length === 0 ? (
@@ -137,7 +137,7 @@ export function BranchEmployeesDialog({ branch, open, onOpenChange }: Props) {
             {loadingAll ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  <Skeleton key={`skeleton-${i}`} className="h-12 w-full rounded-md" />
                 ))}
               </div>
             ) : available.length === 0 ? (

@@ -111,7 +111,7 @@ export function ActivityLogTab() {
       {isLoading && logs.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 rounded-lg" />
+            <Skeleton key={`skeleton-${i}`} className="h-10 rounded-lg" />
           ))}
         </div>
       ) : (

@@ -92,7 +92,7 @@ export function PaymentDetailSheet({
           <SheetBody>
             <div className="flex flex-col gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-lg" />
+                <Skeleton key={`skeleton-${i}`} className="h-16 rounded-lg" />
               ))}
             </div>
           </SheetBody>

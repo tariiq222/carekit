@@ -220,7 +220,7 @@ export function PermissionMatrixSkeleton() {
       <CardContent>
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full" />
+            <Skeleton key={`skeleton-${i}`} className="h-8 w-full" />
           ))}
         </div>
       </CardContent>

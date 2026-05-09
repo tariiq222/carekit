@@ -113,7 +113,7 @@ export function CouponFormPage(props: Props) {
         <Skeleton className="h-8 w-48" />
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-xl" />
+            <Skeleton key={`skeleton-${i}`} className="h-48 w-full rounded-xl" />
           ))}
         </div>
       </ListPageShell>

@@ -28,7 +28,7 @@ function _StarRating({ rating }: { rating: number }) {
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <HugeiconsIcon
-            key={i}
+            key={`star-${i}`}
             icon={StarIcon}
             size={16}
             className={cn(

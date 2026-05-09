@@ -29,7 +29,7 @@ export function BookingsTab({ dateFrom, dateTo }: BookingsTabProps) {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-lg" />
+            <Skeleton key={`skeleton-${i}`} className="h-40 rounded-lg" />
           ))}
         </div>
       ) : data ? (

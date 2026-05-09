@@ -127,7 +127,7 @@ export default function EmailDeliveryLogPage() {
           <tbody>
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-t border-border/40">
+                  <tr key={`row-${i}`} className="border-t border-border/40">
                     <td colSpan={6} className="px-4 py-3">
                       <Skeleton className="h-5 w-full" />
                     </td>

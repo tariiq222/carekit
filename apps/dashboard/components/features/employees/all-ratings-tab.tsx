@@ -100,7 +100,7 @@ export function AllRatingsTab({ employees }: AllRatingsTabProps) {
       ) : isLoading ? (
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
+            <Skeleton key={`skeleton-${i}`} className="h-20 rounded-lg" />
           ))}
         </div>
       ) : ratings.length === 0 ? (
@@ -131,7 +131,7 @@ export function AllRatingsTab({ employees }: AllRatingsTabProps) {
                       <div className="flex gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <HugeiconsIcon
-                            key={i}
+                            key={`review-star-${i}`}
                             icon={StarIcon}
                             size={14}
                             className={

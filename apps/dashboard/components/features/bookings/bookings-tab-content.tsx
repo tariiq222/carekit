@@ -185,7 +185,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
       {loading && (!bookings || bookings.length === 0) ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
+            <Skeleton key={`skeleton-${i}`} className="h-12 rounded-lg" />
           ))}
         </div>
       ) : (

@@ -84,7 +84,7 @@ export function RecentPayments() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between">
+            <div key={`row-${i}`} className="flex items-center justify-between">
               <Skeleton className="h-4 w-32 rounded" />
               <Skeleton className="h-4 w-16 rounded" />
               <Skeleton className="h-4 w-20 rounded" />

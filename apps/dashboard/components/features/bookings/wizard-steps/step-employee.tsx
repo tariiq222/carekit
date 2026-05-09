@@ -26,7 +26,7 @@ function StepEmployeeSkeleton() {
   return (
     <div className="flex flex-col gap-2">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />
+        <div key={`skeleton-${i}`} className="h-16 animate-pulse rounded-xl bg-muted" />
       ))}
     </div>
   )

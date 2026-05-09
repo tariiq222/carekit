@@ -148,7 +148,7 @@ export function NotificationDropdown() {
             {isLoading ? (
               <div className="flex flex-col gap-2 p-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-md" />
+                  <Skeleton key={`skeleton-${i}`} className="h-14 rounded-md" />
                 ))}
               </div>
             ) : recentNotifications.length === 0 ? (

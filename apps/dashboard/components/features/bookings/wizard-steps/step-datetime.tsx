@@ -91,7 +91,7 @@ export function StepDatetime({
           {slotsLoading ? (
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded-lg bg-muted" />
+                <div key={`skeleton-${i}`} className="h-10 animate-pulse rounded-lg bg-muted" />
               ))}
             </div>
           ) : slots.length === 0 ? (

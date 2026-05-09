@@ -87,7 +87,7 @@ export function ClientListPage() {
 
       {stats.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[100px] rounded-lg" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-[100px] rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
@@ -123,7 +123,7 @@ export function ClientListPage() {
       {isLoading && clients.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
+            <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />
           ))}
         </div>
       ) : (
