@@ -1,4 +1,5 @@
-import { PlatformEmailController, PlatformEmailLogStatus } from './platform-email.controller';
+import { PlatformEmailController } from './platform-email.controller';
+import { PlatformEmailLogStatus } from '../../modules/platform/email/list-platform-email-logs/list-platform-email-logs.handler';
 import { ListPlatformEmailTemplatesHandler } from '../../modules/platform/email/list-platform-email-templates/list-platform-email-templates.handler';
 import { GetPlatformEmailTemplateHandler } from '../../modules/platform/email/get-platform-email-template/get-platform-email-template.handler';
 import { UpdatePlatformEmailTemplateHandler } from '../../modules/platform/email/update-platform-email-template/update-platform-email-template.handler';

@@ -14,6 +14,8 @@ export interface MockedPayment {
     organizationId: string;
   };
   organizationId?: string;
+  failureReason?: string | null;
+  processedAt?: Date | null;
 }
 
 export interface MockedInvoice {

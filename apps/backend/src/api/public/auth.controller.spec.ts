@@ -56,7 +56,7 @@ function buildController() {
   const requestPasswordReset = fn({ ok: true });
   const performPasswordReset = fn({ ok: true });
   const updateMembershipProfile = fn({});
-  const uploadMembershipAvatar = fn({ membershipId: 'm-1', avatarUrl: 'https://m/avatar.jpg' });
+  const uploadMembershipAvatar = fn({ membershipId: 'm-1', membershipAvatarUrl: 'https://m/avatar.jpg' });
   const inviteUser = fn({ invitationId: 'inv-1', status: 'PENDING' as const, expiresAt: new Date() });
   const acceptInvitation = fn({ membershipId: 'm-1', organizationId: 'org-1', userPreExisting: false });
   const tenant = { requireOrganizationId: jest.fn().mockReturnValue('org-1') } as never;
@@ -67,6 +67,12 @@ function buildController() {
     set: jest.fn(),
     get: jest.fn(),
   } as never;
+  const redisClient = {
+    incr: jest.fn().mockResolvedValue(1),
+    expire: jest.fn().mockResolvedValue(1),
+    del: jest.fn().mockResolvedValue(1),
+  };
+  const redis = { getClient: jest.fn().mockReturnValue(redisClient) };
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
@@ -85,18 +91,19 @@ describe('AuthController', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('loginEndpoint', () => {
-    it('passes email and password to login handler', async () => {
+    it('passes email, password and ip to login handler', async () => {
       const { controller, login } = buildController();
-      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, buildRes());
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, '127.0.0.1', buildRes());
       expect(login.execute).toHaveBeenCalledWith({
         email: 'a@b.com',
         password: 'pass123',
+        ip: '127.0.0.1',
       });
     });
 
     it('returns token pair plus user and expiresIn from login handler', async () => {
       const { controller } = buildController();
-      const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, buildRes());
+      const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, '127.0.0.1', buildRes());
       expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
     });
 
@@ -109,7 +116,7 @@ describe('AuthController', () => {
       });
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
       const res = buildRes();
-      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, res);
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123', hCaptchaToken: 'tok' } as never, '127.0.0.1', res);
       expect(res.cookie).toHaveBeenCalledWith('ck_refresh', 'refresh', expect.objectContaining({ httpOnly: true, sameSite: 'lax', path: '/' }));
     });
 
@@ -117,7 +124,7 @@ describe('AuthController', () => {
       const { controller, captcha, login } = buildController();
       (captcha.verify as jest.Mock).mockResolvedValue(false);
 
-      const promise = controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'bad' } as never, buildRes());
+      const promise = controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'bad' } as never, '127.0.0.1', buildRes());
 
       await expect(promise).rejects.toThrow(BadRequestException);
       expect(login.execute).not.toHaveBeenCalled();
@@ -126,7 +133,7 @@ describe('AuthController', () => {
     it('calls captcha.verify with the request token before delegating to login handler', async () => {
       const { controller, captcha, login } = buildController();
 
-      await controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'tok-123' } as never, buildRes());
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pw', hCaptchaToken: 'tok-123' } as never, '127.0.0.1', buildRes());
 
       expect(captcha.verify).toHaveBeenCalledWith('tok-123');
       const captchaOrder = (captcha.verify as jest.Mock).mock.invocationCallOrder[0];
@@ -153,7 +160,7 @@ describe('AuthController', () => {
       });
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue({ organizationId: 'org_1' });
 
-      const result = await controller.loginEndpoint({ email: 'admin@c.sa', password: 'pw', hCaptchaToken: 'tok' } as never, buildRes());
+      const result = await controller.loginEndpoint({ email: 'admin@c.sa', password: 'pw', hCaptchaToken: 'tok' } as never, '127.0.0.1', buildRes());
 
       expect(result.user).toMatchObject({
         firstName: 'Tariq',
@@ -181,7 +188,7 @@ describe('AuthController', () => {
       });
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const result = await controller.loginEndpoint({ email: 'a@b.c', password: 'pw', hCaptchaToken: 'tok' } as never, buildRes());
+      const result = await controller.loginEndpoint({ email: 'a@b.c', password: 'pw', hCaptchaToken: 'tok' } as never, '127.0.0.1', buildRes());
 
       expect(result.user).toMatchObject({
         firstName: 'Solo',

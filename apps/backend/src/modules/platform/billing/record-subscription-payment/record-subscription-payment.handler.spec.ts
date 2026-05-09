@@ -62,6 +62,10 @@ const buildIssueInvoice = () => ({
   execute: jest.fn().mockResolvedValue({}),
 });
 
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('RecordSubscriptionPaymentHandler', () => {
   it('throws NotFoundException for unknown invoice', async () => {
     const prisma = buildPrisma();
@@ -73,6 +77,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await expect(
@@ -95,6 +100,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -121,6 +127,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -146,6 +153,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-abc' });
@@ -172,6 +180,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -198,6 +207,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -229,6 +239,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -252,6 +263,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       mailer as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -291,6 +303,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -326,6 +339,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });
@@ -363,6 +377,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     const beforeExecute = Date.now();
@@ -395,6 +410,7 @@ describe('RecordSubscriptionPaymentHandler', () => {
       buildMailer() as never,
       buildConfig() as never,
       buildIssueInvoice() as never,
+      buildEventBus() as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-1' });

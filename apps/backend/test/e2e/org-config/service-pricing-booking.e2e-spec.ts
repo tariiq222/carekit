@@ -9,6 +9,7 @@ import {
   seedEmployeeService,
 } from '../../setup/seed.helper';
 import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.helper';
+import type { PrismaClient } from '@prisma/client';
 
 describe('Service Pricing & Duration in Booking (e2e)', () => {
   let req: SuperTest.Agent;
@@ -34,7 +35,7 @@ describe('Service Pricing & Duration in Booking (e2e)', () => {
     ]);
 
     const [client, employee, service, branch] = await Promise.all([
-      seedClient(testPrisma as never),
+      seedClient(testPrisma as unknown as PrismaClient),
       seedEmployee(testPrisma as never, { name: 'Dr. Pricing' }),
       seedService(testPrisma as never, {
         nameAr: 'استشارة التسعير',
@@ -83,7 +84,7 @@ describe('Service Pricing & Duration in Booking (e2e)', () => {
     expect(bookingRes.body.price).toBe(100);
     expect(bookingRes.body.durationMins).toBe(30);
 
-    const inDb = await (testPrisma as never).booking.findUnique({
+    const inDb = await (testPrisma as unknown as PrismaClient).booking.findUnique({
       where: { id: bookingRes.body.id },
       select: { price: true, durationMins: true },
     });
@@ -92,10 +93,12 @@ describe('Service Pricing & Duration in Booking (e2e)', () => {
   });
 
   it('[PRICE-002][Service/pricing][P1-High] booking with duration option uses option price and duration', async () => {
-    const option = await (testPrisma as never).serviceDurationOption.create({
+    const option = await (testPrisma as unknown as PrismaClient).serviceDurationOption.create({
       data: {
         organizationId: '00000000-0000-0000-0000-000000000001',
         serviceId,
+        label: 'Extended Session',
+        labelAr: 'جلسة ممتدة',
         durationMins: 90,
         price: 250,
         currency: 'SAR',
@@ -139,7 +142,7 @@ describe('Service Pricing & Duration in Booking (e2e)', () => {
     expect(bookingRes.status).toBe(201);
     const bookingId = bookingRes.body.id;
 
-    const invoice = await (testPrisma as never).invoice.findUnique({
+    const invoice = await (testPrisma as unknown as PrismaClient).invoice.findUnique({
       where: { bookingId },
       select: { subtotal: true, vatAmt: true, total: true, vatRate: true },
     });

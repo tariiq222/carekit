@@ -4,6 +4,8 @@ import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-
 import { PlanLimitsGuard } from '../../../src/modules/platform/billing/enforce-limits.guard';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
 import { ENFORCE_LIMIT_KEY, LimitKind } from '../../../src/modules/platform/billing/plan-limits.decorator';
+import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
+import { LaunchFlags } from '../../../src/modules/platform/billing/feature-flags/launch-flags';
 
 /**
  * SaaS-04 Task 14B — PlanLimitsGuard enforcement e2e.
@@ -35,7 +37,8 @@ describe('SaaS-04 — PlanLimitsGuard enforcement', () => {
       h.app.get(Reflector),
       h.prisma,
       h.app.get(SubscriptionCacheService),
-      { read: jest.fn().mockResolvedValue(null) } as any,
+      h.app.get(UsageCounterService),
+      { isEnabled: jest.fn().mockReturnValue(false) } as unknown as LaunchFlags,
     );
   });
 

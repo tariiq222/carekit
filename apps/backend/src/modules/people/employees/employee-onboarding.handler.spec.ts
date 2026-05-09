@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { RlsHelper } from '../../../common/tenant/rls.helper';
+import { TenantContextService } from '../../../common/tenant';
 import { EmployeeOnboardingHandler } from './employee-onboarding.handler';
 
 const OnboardingStatus = {
@@ -48,6 +49,7 @@ describe('EmployeeOnboardingHandler', () => {
         EmployeeOnboardingHandler,
         { provide: PrismaService, useValue: prisma },
         { provide: RlsHelper, useValue: mockRls },
+        { provide: TenantContextService, useValue: { requireOrganizationId: () => 'org-test' } },
       ],
     }).compile();
 

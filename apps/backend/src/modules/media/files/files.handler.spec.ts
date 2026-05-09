@@ -158,7 +158,7 @@ describe('Media files handlers', () => {
     it('returns file by id', async () => {
       const result = await getHandler.execute('f1');
       expect(prisma.file.findFirst).toHaveBeenCalledWith({
-        where: { id: 'f1', isDeleted: false },
+        where: { id: 'f1', isDeleted: false, organizationId: 'org-A' },
       });
       expect(result).toEqual(mockFile);
     });
