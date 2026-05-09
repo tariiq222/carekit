@@ -181,6 +181,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const ext = buildTenantScopingExtension(this.tenantCtx, mode, SCOPED_MODELS);
     this.extended = this.$extends(ext as unknown as Parameters<typeof this.$extends>[0]) as unknown as PrismaClient;
 
+    this._setupScopedTransactionProxy();
+
     // Proxy reads for model accessors and $-methods go to the extended client;
     // lifecycle + internal fields stay on the base class.
     const self = this;
