@@ -1,11 +1,13 @@
-import { PrismockClient, createPrismock } from 'prismock';
+import { PrismockClient } from 'prismock';
 import type { PrismaService } from '../../src/infrastructure/database';
 
-let prismockInstance: ReturnType<typeof PrismockClient> | null = null;
+type PrismockInstance = InstanceType<typeof PrismockClient>;
 
-export function getPrismock(): ReturnType<typeof PrismockClient> {
+let prismockInstance: PrismockInstance | null = null;
+
+export function getPrismock(): PrismockInstance {
   if (!prismockInstance) {
-    prismockInstance = new PrismockClient() as ReturnType<typeof PrismockClient>;
+    prismockInstance = new PrismockClient() as PrismockInstance;
   }
   return prismockInstance;
 }
@@ -18,7 +20,7 @@ export function createPrismockService(): PrismaService {
   return getPrismock() as unknown as PrismaService;
 }
 
-export function buildPrismaOverride(overrides: Partial<ReturnType<typeof PrismockClient>>) {
+export function buildPrismaOverride(overrides: Partial<PrismockInstance>) {
   const base = getPrismock();
   return { ...base, ...overrides } as unknown as PrismaService;
 }

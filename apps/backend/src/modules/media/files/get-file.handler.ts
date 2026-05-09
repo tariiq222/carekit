@@ -1,13 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 
 @Injectable()
 export class GetFileHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(fileId: string) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     const file = await this.prisma.file.findFirst({
-      where: { id: fileId, isDeleted: false },
+      where: { id: fileId, isDeleted: false, organizationId },
     });
     if (!file) throw new NotFoundException('File not found');
     return file;

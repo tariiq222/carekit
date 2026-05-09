@@ -1,5 +1,5 @@
-import type { PrismaService } from '../../../infrastructure/database';
-import type { ZohoApiClient, ZohoIntegrationConfig } from '../../../infrastructure/zoho';
+import type { PrismaService } from '../../src/infrastructure/database';
+import type { ZohoApiClient, ZohoIntegrationConfig } from '../../src/infrastructure/zoho';
 
 export const ZOHO_TEST_CONFIG: ZohoIntegrationConfig = {
   refreshToken: 'rt_test',

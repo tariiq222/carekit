@@ -45,7 +45,7 @@ describe('DashboardContentController', () => {
 
   describe('upsert', () => {
     it('calls bulkUpsert.execute with dto', () => {
-      const dto = { settings: [{ key: 'site.title', valueAr: 'عنوان', valueEn: 'Title' }] };
+      const dto = { entries: [{ key: 'site.title', valueAr: 'عنوان', valueEn: 'Title' }] };
       (mockBulkUpsert.execute as jest.Mock).mockResolvedValue({ count: 1 });
 
       controller.upsert(dto);
@@ -54,7 +54,7 @@ describe('DashboardContentController', () => {
     });
 
     it('returns result from handler', async () => {
-      const dto = { settings: [{ key: 'site.title', valueAr: 'عنوان' }] };
+      const dto = { entries: [{ key: 'site.title', valueAr: 'عنوان' }] };
       const result = { count: 1 };
       (mockBulkUpsert.execute as jest.Mock).mockResolvedValue(result);
 

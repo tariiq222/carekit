@@ -9,6 +9,7 @@ import {
   seedEmployeeService,
 } from '../../setup/seed.helper';
 import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.helper';
+import type { PrismaClient } from '@prisma/client';
 
 describe('Service Pricing & Duration in Booking (e2e)', () => {
   let req: SuperTest.Agent;

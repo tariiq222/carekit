@@ -11,6 +11,7 @@ import {
 } from '../../setup/seed.helper';
 import { createTestToken, adminUser, ensureTestUsers } from '../../setup/auth.helper';
 import { NotificationType, RecipientType } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 
 describe('Notifications API Flow (e2e)', () => {
   let req: SuperTest.Agent;
@@ -39,7 +40,7 @@ describe('Notifications API Flow (e2e)', () => {
     ]);
 
     const [client, employee, service, branch] = await Promise.all([
-      seedClient(testPrisma as never),
+      seedClient(testPrisma as unknown as PrismaClient),
       seedEmployee(testPrisma as never, { name: 'Dr. Notifications' }),
       seedService(testPrisma as never, { nameAr: 'خدمة الإشعارات', price: 200 }),
       seedBranch(testPrisma as never, { nameAr: 'فرع الإشعارات' }),
@@ -80,7 +81,7 @@ describe('Notifications API Flow (e2e)', () => {
   });
 
   it('[NOTIF-002][Notifications][P1-High] unread count returns correct number', async () => {
-    await (testPrisma as never).notification.create({
+    await (testPrisma as unknown as PrismaClient).notification.create({
       data: {
         organizationId: '00000000-0000-0000-0000-000000000001',
         recipientId: userId,
@@ -102,7 +103,7 @@ describe('Notifications API Flow (e2e)', () => {
   });
 
   it('[NOTIF-003][Notifications][P1-High] mark single notification as read', async () => {
-    const notification = await (testPrisma as never).notification.create({
+    const notification = await (testPrisma as unknown as PrismaClient).notification.create({
       data: {
         organizationId: '00000000-0000-0000-0000-000000000001',
         recipientId: userId,
@@ -121,7 +122,7 @@ describe('Notifications API Flow (e2e)', () => {
 
     expect(res.status).toBe(204);
 
-    const updated = await (testPrisma as never).notification.findUnique({
+    const updated = await (testPrisma as unknown as PrismaClient).notification.findUnique({
       where: { id: notification.id },
       select: { isRead: true, readAt: true },
     });
@@ -130,7 +131,7 @@ describe('Notifications API Flow (e2e)', () => {
   });
 
   it('[NOTIF-004][Notifications][P2-Medium] mark all notifications as read', async () => {
-    await (testPrisma as never).notification.createMany({
+    await (testPrisma as unknown as PrismaClient).notification.createMany({
       data: [
         {
           organizationId: '00000000-0000-0000-0000-000000000001',
@@ -160,14 +161,14 @@ describe('Notifications API Flow (e2e)', () => {
 
     expect(res.status).toBe(204);
 
-    const unreadCount = await (testPrisma as never).notification.count({
+    const unreadCount = await (testPrisma as unknown as PrismaClient).notification.count({
       where: { recipientId: userId, isRead: false },
     });
     expect(unreadCount).toBe(0);
   });
 
   it('[NOTIF-005][Notifications][P1-High] filter notifications by unread only', async () => {
-    await (testPrisma as never).notification.create({
+    await (testPrisma as unknown as PrismaClient).notification.create({
       data: {
         organizationId: '00000000-0000-0000-0000-000000000001',
         recipientId: userId,
@@ -196,7 +197,7 @@ describe('Notifications API Flow (e2e)', () => {
   });
 
   it('[NOTIF-007][Notifications][P2-Medium] creating booking creates notification entry in DB', async () => {
-    const beforeCount = await (testPrisma as never).notification.count({
+    const beforeCount = await (testPrisma as unknown as PrismaClient).notification.count({
       where: { recipientType: RecipientType.EMPLOYEE },
     });
 
@@ -213,7 +214,7 @@ describe('Notifications API Flow (e2e)', () => {
       });
 
     if (bookingRes.status === 201) {
-      const afterCount = await (testPrisma as never).notification.count({
+      const afterCount = await (testPrisma as unknown as PrismaClient).notification.count({
         where: { recipientType: RecipientType.EMPLOYEE },
       });
       expect(afterCount).toBeGreaterThanOrEqual(beforeCount);
@@ -250,7 +251,7 @@ describe('Notifications API Flow (e2e)', () => {
       .send({ invoiceId: invRes.body.id, amount: 150, method: 'CASH' });
 
     if (payRes.status === 201) {
-      const logCount = await (testPrisma as never).notificationDeliveryLog.count();
+      const logCount = await (testPrisma as unknown as PrismaClient).notificationDeliveryLog.count();
       expect(logCount).toBeGreaterThanOrEqual(0);
     }
   });
