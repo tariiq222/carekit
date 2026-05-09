@@ -33,6 +33,7 @@ export class RequestRefundHandler {
       where: {
         id: cmd.invoiceId,
         clientId: cmd.clientId,
+        organizationId,
       },
       include: {
         payments: {

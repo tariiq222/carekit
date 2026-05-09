@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { toListResponse } from '../../../common/dto';
 import { ListCouponsDto } from './list-coupons.dto';
 
@@ -7,14 +8,18 @@ export type ListCouponsQuery = ListCouponsDto;
 
 @Injectable()
 export class ListCouponsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(query: ListCouponsQuery) {
+    const organizationId = this.tenant.requireOrganizationId();
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { organizationId };
     if (query.search) {
       where['code'] = { contains: query.search, mode: 'insensitive' };
     }

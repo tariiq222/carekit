@@ -4,6 +4,7 @@ import { RefundPaymentHandler } from './refund-payment.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { RlsHelper } from '../../../common/tenant/rls.helper';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { MoyasarApiClient } from '../moyasar-api/moyasar-api.client';
 
 describe('RefundPaymentHandler', () => {
@@ -22,12 +23,14 @@ describe('RefundPaymentHandler', () => {
     prisma.$transaction = jest.fn(async (fn: any) => fn(prisma));
     eventBus = { publish: jest.fn().mockResolvedValue(undefined) };
     const rls = { applyInTransaction: jest.fn() };
+    const tenant = { requireOrganizationId: () => 'org_1' };
 
     const module = await Test.createTestingModule({
       providers: [
         RefundPaymentHandler,
         { provide: PrismaService, useValue: prisma },
         { provide: EventBusService, useValue: eventBus },
+        { provide: TenantContextService, useValue: tenant },
         { provide: RlsHelper, useValue: rls },
         { provide: MoyasarApiClient, useValue: moyasar },
       ],

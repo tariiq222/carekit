@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { MoyasarApiClient } from '../moyasar-api/moyasar-api.client';
 import { RefundCompletedEvent } from '../events/refund-completed.event';
 
@@ -27,13 +28,16 @@ export class ApproveRefundHandler {
     private readonly prisma: PrismaService,
     private readonly moyasarClient: MoyasarApiClient,
     private readonly eventBus: EventBusService,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(cmd: ApproveRefundCommand): Promise<RefundApprovalResult> {
+    const organizationId = this.tenant.requireOrganizationId();
     const refundRequest = await this.prisma.refundRequest.findFirst({
       where: {
         id: cmd.refundRequestId,
         status: 'PENDING_REVIEW',
+        organizationId,
       },
     });
 

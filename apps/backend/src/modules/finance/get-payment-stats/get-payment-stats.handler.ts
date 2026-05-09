@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 
 export interface PaymentStats {
   total: number;
@@ -18,11 +19,16 @@ export interface PaymentStats {
 
 @Injectable()
 export class GetPaymentStatsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(): Promise<PaymentStats> {
+    const organizationId = this.tenant.requireOrganizationId();
     const rows = await this.prisma.payment.groupBy({
       by: ['status'],
+      where: { organizationId },
       _count: { id: true },
       _sum: { amount: true },
     });

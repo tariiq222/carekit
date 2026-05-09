@@ -245,6 +245,54 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     this.logger.log('Prisma disconnected');
   }
 
+  /**
+   * Override $transaction to ensure the scoping extension is applied to the
+   * transaction client. Without this, $transaction bypasses the proxy and
+   * the tx client has no tenant scoping — a serious security gap.
+   *
+   * Strategy:
+   * - Interactive transactions: wrap the callback to apply the scoping
+   *   extension to tx before passing it to the user's callback.
+   * - Array transactions (parallel): pass through unchanged — no org context needed
+   *   since they're fire-and-forget parallel writes with explicit data.
+   *
+   * P1.2 fix (2026-05-09): previously the extension comment warned that
+   * $transaction bypasses the extension and developers must add organizationId
+   * manually. This override closes that gap at the framework layer.
+   */
+  private _setupScopedTransactionProxy(): void {
+    const self = this as unknown as PrismaService & {
+      $transaction: typeof PrismaClient.prototype.$transaction;
+    };
+
+    const originalTransaction = self.$transaction.bind(this);
+
+    const mode = this.config?.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict') ?? 'strict';
+
+    Object.defineProperty(this, '$transaction', {
+      value: async function (
+        options: Parameters<typeof originalTransaction>[0],
+      ): Promise<unknown> {
+        if (typeof options === 'function') {
+          const callback = options;
+          return originalTransaction(async (tx: Prisma.TransactionClient) => {
+            if (mode !== 'off' && self.tenantCtx) {
+              const ext = buildTenantScopingExtension(self.tenantCtx, mode, SCOPED_MODELS);
+              const scopedTx = (tx as PrismaClient).$extends(
+                ext as unknown as Parameters<PrismaClient['$extends']>[0],
+              ) as unknown as Prisma.TransactionClient;
+              return callback(scopedTx);
+            }
+            return callback(tx);
+          });
+        }
+        return originalTransaction(options);
+      },
+      writable: true,
+      configurable: true,
+    });
+  }
+
   get $allTenants(): PrismaClient {
     if (this.cls?.get<boolean | undefined>(SUPER_ADMIN_CONTEXT_CLS_KEY) !== true) {
       throw new ForbiddenException('super_admin_context_required');

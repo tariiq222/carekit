@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { toListResponse } from '../../../common/dto';
 import { ListPaymentsDto } from './list-payments.dto';
 
@@ -10,12 +11,17 @@ export type ListPaymentsQuery = Omit<ListPaymentsDto, 'fromDate' | 'toDate'> & {
 
 @Injectable()
 export class ListPaymentsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(query: ListPaymentsQuery) {
+    const organizationId = this.tenant.requireOrganizationId();
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const where = {
+      organizationId,
       ...(query.invoiceId ? { invoiceId: query.invoiceId } : {}),
       ...(query.method ? { method: query.method } : {}),
       ...(query.status ? { status: query.status } : {}),
