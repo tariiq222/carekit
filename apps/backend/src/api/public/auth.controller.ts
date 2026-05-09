@@ -1,6 +1,6 @@
 import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
-  Req, Res, Param, UseInterceptors, UploadedFile,
+  Req, Res, Param, UseInterceptors, UploadedFile, Ip,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -95,7 +95,6 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiOkResponse({
@@ -128,15 +127,17 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials', type: ApiErrorDto })
+  @ApiResponse({ status: 429, description: 'Too many attempts, try again later', type: ApiErrorDto })
   async loginEndpoint(
     @Body() body: LoginDto,
+    @Ip() ip: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!(await this.captcha.verify(body.hCaptchaToken))) {
       throw new BadRequestException('Invalid captcha token');
     }
 
-    const tokens = await this.login.execute({ email: body.email, password: body.password });
+    const tokens = await this.login.execute({ email: body.email, password: body.password, ip });
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
       select: {

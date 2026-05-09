@@ -5,6 +5,7 @@ import { LoginHandler } from './login.handler';
 import { PasswordService } from '../shared/password.service';
 import { TokenService } from '../shared/token.service';
 import { PrismaService } from '../../../infrastructure/database';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 
 const mockUser = {
   id: 'user-1',
@@ -32,8 +33,17 @@ describe('LoginHandler', () => {
   let tokenService: jest.Mocked<TokenService>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let clsService: any;
+  let redisClient: { incr: jest.Mock; expire: jest.Mock; del: jest.Mock };
 
   beforeEach(async () => {
+    redisClient = {
+      incr: jest.fn().mockResolvedValue(1),
+      expire: jest.fn().mockResolvedValue(1),
+      del: jest.fn().mockResolvedValue(1),
+    };
+    const redisService = {
+      getClient: jest.fn().mockReturnValue(redisClient),
+    };
     const allTenantsMembership = { findMany: jest.fn().mockResolvedValue([]) };
     const module = await Test.createTestingModule({
       providers: [
@@ -59,6 +69,7 @@ describe('LoginHandler', () => {
             set: jest.fn(),
           },
         },
+        { provide: RedisService, useValue: redisService },
       ],
     }).compile();
 

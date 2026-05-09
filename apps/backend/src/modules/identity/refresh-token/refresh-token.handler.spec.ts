@@ -46,6 +46,45 @@ describe('RefreshTokenHandler', () => {
 
     const result = await handler.execute({ userId: 'user-1', rawToken: 'raw' });
     expect(result.accessToken).toBe('new-acc');
+    expect(result.refreshToken).toBe('new-ref');
+  });
+
+  it('ROTATION: old refresh token is revoked when used to get new tokens', async () => {
+    prisma.refreshToken.findMany.mockResolvedValue([
+      { id: 'rt-old', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+    ]);
+    jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null, isActive: true });
+    prisma.refreshToken.updateMany.mockResolvedValue({ count: 1 });
+    tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+
+    await handler.execute({ userId: 'user-1', rawToken: 'raw-old' });
+
+    expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: { id: 'rt-old', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+  });
+
+  it('ROTATION: stolen old refresh token cannot be reused after rotation', async () => {
+    prisma.refreshToken.findMany.mockResolvedValue([
+      { id: 'rt-old', userId: 'user-1', organizationId: 'org-A', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
+    ]);
+    jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null, isActive: true });
+    prisma.refreshToken.updateMany.mockResolvedValue({ count: 1 });
+    tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+
+    await handler.execute({ userId: 'user-1', rawToken: 'raw-old' });
+
+    // Simulate attacker trying to use the OLD token after rotation
+    // After rotation, the old token has revokedAt set, so findMany with revokedAt: null
+    // will NOT return it (Prisma filters it out at DB level)
+    prisma.refreshToken.findMany.mockResolvedValue([]);
+
+    await expect(
+      handler.execute({ userId: 'user-1', rawToken: 'raw-old' }),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('throws UnauthorizedException when no valid token found', async () => {
