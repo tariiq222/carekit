@@ -1,6 +1,6 @@
 # @deqah/ui — Shared UI Primitives
 
-This package holds **presentation-only** UI primitives (shadcn/ui derivatives) reused across `apps/dashboard` (today) and `apps/admin`/`apps/landing`/`apps/website` (future plans 05b, 06, 07, 08).
+This package holds **presentation-only** UI primitives (shadcn/ui derivatives) reused across `apps/dashboard`, `apps/admin`, `apps/marketing`, and `apps/bespoke/sawa/website`. Mobile (`apps/mobile`) does not consume this package — it has its own React Native primitives.
 
 ## What belongs here
 

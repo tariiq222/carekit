@@ -43,7 +43,7 @@ function getFieldType(key: string): string {
 }
 
 export default function BillingSettingsPage() {
-  const [settings, setSettings] = useState<BillingSettingEntry[]>([]);
+  const [, setSettings] = useState<BillingSettingEntry[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState<Record<string, boolean>>({});

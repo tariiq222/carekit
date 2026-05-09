@@ -1,163 +1,133 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetBillingMetrics } from './use-get-billing-metrics';
 import { formatSar } from '@/lib/currency';
+
+interface KpiCell {
+  label: string;
+  value: string | number;
+  tone?: 'success' | 'warning';
+  mono?: boolean;
+}
 
 export function BillingMetricsGrid() {
   const { data, isLoading, error } = useGetBillingMetrics();
 
   if (error) {
     return (
-      <Card className="border-destructive/40 bg-destructive/5">
-        <CardContent className="p-4 text-sm text-destructive">
-          Failed to load billing metrics: {(error as Error).message}
-        </CardContent>
-      </Card>
+      <p className="text-sm text-destructive">
+        Failed to load billing metrics: {(error as Error).message}
+      </p>
     );
   }
 
-  const isEmpty = data && Number(data.mrr) === 0 && data.counts.ACTIVE === 0 && data.counts.TRIALING === 0;
+  if (isLoading || !data) {
+    return <Skeleton className="h-[88px] w-full rounded-sm" />;
+  }
+
+  const isEmpty =
+    Number(data.mrr) === 0 &&
+    data.counts.ACTIVE === 0 &&
+    data.counts.TRIALING === 0;
+
+  const cells: KpiCell[] = [
+    { label: 'Committed MRR', value: formatSar(data.mrr), tone: 'success', mono: true },
+    { label: 'Realized MRR', value: formatSar(data.realizedMrr), mono: true },
+    { label: 'ARR', value: formatSar(data.arr), tone: 'success', mono: true },
+    { label: 'Active', value: data.counts.ACTIVE },
+    { label: 'Trialing', value: data.counts.TRIALING },
+    { label: 'Past due', value: data.counts.PAST_DUE, tone: 'warning' },
+    { label: 'Suspended', value: data.counts.SUSPENDED, tone: 'warning' },
+    { label: 'At-risk MRR', value: formatSar(data.atRiskMrr), tone: 'warning', mono: true },
+    { label: 'Churn 30d', value: data.churn30d, tone: 'warning' },
+  ];
 
   return (
     <div className="space-y-6">
-      {isEmpty && !isLoading && (
-        <div className="rounded-lg border border-muted bg-muted/10 p-4 text-center text-sm text-muted-foreground">
-          No subscriptions yet — MRR will appear once organizations subscribe to a plan.
-        </div>
+      {isEmpty && (
+        <p className="text-sm text-muted-foreground">
+          No subscriptions yet. MRR will appear once organizations subscribe to a plan.
+        </p>
       )}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {isLoading || !data ? (
-          <>
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-          </>
-        ) : (
-          <>
-            <MetricCard label="Committed MRR (⃁)" value={formatSar(data.mrr)} tone="success" />
-            <MetricCard label="Realized MRR (⃁)" value={formatSar(data.realizedMrr)} />
-            <MetricCard label="Active subs" value={data.counts.ACTIVE} />
-            <MetricCard label="Past due" value={data.counts.PAST_DUE} tone="warning" />
-          </>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {isLoading || !data ? (
-          <>
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-          </>
-        ) : (
-          <>
-            <MetricCard label="ARR (⃁)" value={formatSar(data.arr)} tone="success" />
-            <MetricCard label="Trialing" value={data.counts.TRIALING} />
-            <MetricCard label="Suspended" value={data.counts.SUSPENDED} tone="warning" />
-            <MetricCard label="At-risk MRR (⃁)" value={formatSar(data.atRiskMrr)} tone="warning" />
-          </>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {isLoading || !data ? (
-          <>
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-          </>
-        ) : (
-          <>
-            <MetricCard label="Churn (30d)" value={data.churn30d} tone="warning" />
-            <MetricCard label="Scheduled downgrades" value={data.scheduledDowngrades} tone="warning" />
-            <MetricCard label="Canceled" value={data.counts.CANCELED} tone="warning" />
-          </>
-        )}
+
+      {/* KPI strip — vertical hairlines between cells, no card wrappers */}
+      <div className="flex overflow-x-auto rounded-sm border border-border">
+        {cells.map((cell, i) => (
+          <div
+            key={cell.label}
+            className={[
+              'flex min-w-[120px] flex-1 flex-col gap-1.5 px-5 py-4',
+              i > 0 ? 'border-s border-border' : '',
+            ].join(' ')}
+          >
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+              {cell.label}
+            </p>
+            <p
+              className={[
+                'text-xl font-semibold tabular-nums leading-none',
+                cell.mono ? 'font-mono' : '',
+                cell.tone === 'success'
+                  ? 'text-success'
+                  : cell.tone === 'warning'
+                    ? 'text-warning'
+                    : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {cell.value}
+            </p>
+          </div>
+        ))}
       </div>
 
-      {data && data.byPlan.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">MRR by plan</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.byPlan.map((p) => (
-              <PlanBar
-                key={p.planId}
-                slug={p.planSlug}
-                count={p.activeCount}
-                mrr={p.mrr}
-                total={data.mrr}
-              />
-            ))}
-          </CardContent>
-        </Card>
+      {/* MRR by plan — bare table, no card wrapper */}
+      {data.byPlan.length > 0 ? (
+        <div>
+          <p className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">
+            MRR by plan
+          </p>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="pb-2 text-start text-xs font-medium text-muted-foreground">Plan</th>
+                <th className="pb-2 text-end text-xs font-medium text-muted-foreground">Active</th>
+                <th className="pb-2 text-end text-xs font-medium text-muted-foreground">MRR</th>
+                <th className="pb-2 text-end text-xs font-medium text-muted-foreground">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.byPlan.map((p) => {
+                const totalNum = Number(data.mrr);
+                const pct =
+                  totalNum === 0
+                    ? 0
+                    : Math.round((Number(p.mrr) / totalNum) * 100);
+                return (
+                  <tr key={p.planId} className="border-b border-border/50 last:border-0">
+                    <td className="py-2">
+                      <span className="font-mono text-xs uppercase tracking-wide">
+                        {p.planSlug}
+                      </span>
+                    </td>
+                    <td className="py-2 text-end tabular-nums text-muted-foreground">
+                      {p.activeCount}
+                    </td>
+                    <td className="py-2 text-end font-mono tabular-nums">
+                      {formatSar(p.mrr)}
+                    </td>
+                    <td className="py-2 text-end tabular-nums text-muted-foreground">
+                      {pct}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
-    </div>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone?: 'success' | 'warning';
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <span
-          className={
-            tone === 'success'
-              ? 'text-2xl font-semibold text-success'
-              : tone === 'warning'
-                ? 'text-2xl font-semibold text-warning'
-                : 'text-2xl font-semibold'
-          }
-        >
-          {value}
-        </span>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PlanBar({
-  slug,
-  count,
-  mrr,
-  total,
-}: {
-  slug: string;
-  count: number;
-  mrr: string;
-  total: string;
-}) {
-  const totalNum = Number(total);
-  const pct = totalNum === 0 ? 0 : Math.round((Number(mrr) / totalNum) * 100);
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span className="font-medium">
-          {slug} <span className="text-muted-foreground">({count} active)</span>
-        </span>
-        <span className="text-muted-foreground">
-          {formatSar(mrr)} ({pct}%)
-        </span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-      </div>
     </div>
   );
 }

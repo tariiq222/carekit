@@ -25,7 +25,8 @@ export function changePlanForOrg({
 
 export async function listPlanOptions(): Promise<PlanOption[]> {
   const res = await adminRequest<{ items: PlanOption[] } | PlanOption[]>(
-    '/plans?perPage=100',
+    '/plans',
+    {},
   );
   return Array.isArray(res) ? res : (res?.items ?? []);
 }

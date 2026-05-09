@@ -1,8 +1,7 @@
 'use client';
-// TODO Phase 6.7 follow-up: convert action buttons to icon-only + Tooltip (size-9 rounded-sm)
 
 import { useSyncExternalStore } from 'react';
-import { Badge } from '@deqah/ui/primitives/badge';
+import { LogOut } from 'lucide-react';
 import { Button } from '@deqah/ui/primitives/button';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@deqah/ui/primitives/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@deqah/ui/primitives/tooltip';
 import { useEndImpersonation } from '../end-impersonation/use-end-impersonation';
 import type { ImpersonationSession } from '../types';
 
@@ -21,7 +21,6 @@ interface Props {
   isLoading: boolean;
 }
 
-// Re-render once a minute so expired sessions flip status without a manual refresh.
 function subscribeToMinute(callback: () => void): () => void {
   const id = setInterval(callback, 60_000);
   return () => clearInterval(id);
@@ -31,84 +30,206 @@ function useNow(): number {
   return useSyncExternalStore(
     subscribeToMinute,
     () => Date.now(),
-    () => 0, // SSR snapshot — every session renders as not-expired on the server
+    () => 0,
   );
 }
+
+function monoTimestamp(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-GB');
+}
+
+function durationLabel(startedAt: string, endedAt: string | null): string {
+  const end = endedAt ? new Date(endedAt).getTime() : Date.now();
+  const ms = end - new Date(startedAt).getTime();
+  const totalSecs = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSecs / 60);
+  const hours = Math.floor(mins / 60);
+  if (hours > 0) return `${hours}h ${mins % 60}m`;
+  if (mins > 0) return `${mins}m`;
+  return `${totalSecs}s`;
+}
+
+interface SessionRowProps {
+  session: ImpersonationSession;
+  active: boolean;
+  endMutation: ReturnType<typeof useEndImpersonation>;
+}
+
+function SessionRow({ session: s, active, endMutation }: SessionRowProps) {
+  return (
+    <TableRow key={s.id}>
+      {/* Status dot */}
+      <TableCell className="w-6 pr-0">
+        {active ? (
+          <span
+            className="inline-block size-1.5 rounded-full bg-primary animate-pulse"
+            aria-label="Active"
+          />
+        ) : (
+          <span className="inline-block size-1.5 rounded-full bg-muted-foreground/30" />
+        )}
+      </TableCell>
+
+      {/* Actor */}
+      <TableCell>
+        <span className="font-mono text-[12px]">{s.superAdminUserId}</span>
+      </TableCell>
+
+      {/* Target */}
+      <TableCell>
+        <span className="font-mono text-[12px]">{s.targetUserId}</span>
+      </TableCell>
+
+      {/* Org */}
+      <TableCell>
+        <span className="font-mono text-[12px]">{s.organizationId}</span>
+      </TableCell>
+
+      {/* Started */}
+      <TableCell>
+        <span className="font-mono tabular-nums text-[12px] text-muted-foreground">
+          {monoTimestamp(s.startedAt)}
+        </span>
+      </TableCell>
+
+      {/* Ended */}
+      <TableCell>
+        <span className="font-mono tabular-nums text-[12px] text-muted-foreground">
+          {monoTimestamp(s.endedAt)}
+        </span>
+      </TableCell>
+
+      {/* Duration */}
+      <TableCell>
+        <span className="tabular-nums text-[12px] text-muted-foreground">
+          {durationLabel(s.startedAt, s.endedAt)}
+        </span>
+      </TableCell>
+
+      {/* End action */}
+      <TableCell className="text-right">
+        {active ? (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={endMutation.isPending}
+                  onClick={() => endMutation.mutate(s.id)}
+                  aria-label="End impersonation session"
+                >
+                  <LogOut size={14} strokeWidth={1.75} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">End session</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : null}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+const TABLE_COLS = 8;
 
 export function SessionsTable({ items, isLoading }: Props) {
   const endMutation = useEndImpersonation();
   const now = useNow();
 
+  const activeSessions = items?.filter((s) => {
+    const expired = new Date(s.expiresAt).getTime() <= now;
+    return !s.endedAt && !expired;
+  }) ?? [];
+
+  const pastSessions = items?.filter((s) => {
+    const expired = new Date(s.expiresAt).getTime() <= now;
+    return s.endedAt !== null || expired;
+  }) ?? [];
+
+  const colHeaders = (
+    <TableRow>
+      <TableHead className="w-6" />
+      <TableHead>Actor</TableHead>
+      <TableHead>Target user</TableHead>
+      <TableHead>Organization</TableHead>
+      <TableHead>Started</TableHead>
+      <TableHead>Ended</TableHead>
+      <TableHead>Duration</TableHead>
+      <TableHead className="text-right w-16" />
+    </TableRow>
+  );
+
+  if (isLoading && !items) {
+    return (
+      <Table>
+        <TableHeader>{colHeaders}</TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <TableRow key={`skeleton-${i}`}>
+              <TableCell colSpan={TABLE_COLS}>
+                <Skeleton className="h-5" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  }
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Started</TableHead>
-          <TableHead>Super-admin</TableHead>
-          <TableHead>Target user</TableHead>
-          <TableHead>Organization</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading && !items
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={`skeleton-row-${i}`}>
-                <TableCell colSpan={6}>
-                  <Skeleton className="h-6" />
-                </TableCell>
-              </TableRow>
-            ))
-          : items?.map((s) => {
-              const expired = new Date(s.expiresAt).getTime() <= now;
-              const active = !s.endedAt && !expired;
-              return (
-                <TableRow key={s.id}>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                    {new Date(s.startedAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{s.superAdminUserId}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.targetUserId}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.organizationId}</TableCell>
-                  <TableCell>
-                    {active ? (
-                      <Badge variant="outline" className="border-success/40 bg-success/10 text-success">
-                        Active
-                      </Badge>
-                    ) : s.endedAt ? (
-                      <Badge variant="outline" className="text-muted-foreground">
-                        Ended ({s.endedReason ?? 'manual'})
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning">
-                        Expired
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {active ? (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={endMutation.isPending}
-                        onClick={() => endMutation.mutate(s.id)}
-                      >
-                        End now
-                      </Button>
-                    ) : null}
+    <div className="space-y-6">
+      {/* Active now section */}
+      <div>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+          Active now
+        </p>
+        <div className="border-t border-border">
+          <Table>
+            <TableHeader>{colHeaders}</TableHeader>
+            <TableBody>
+              {activeSessions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={TABLE_COLS} className="py-6 text-center text-sm text-muted-foreground">
+                    No active sessions.
                   </TableCell>
                 </TableRow>
-              );
-            })}
-        {!isLoading && items?.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-              No impersonation sessions match the current filters.
-            </TableCell>
-          </TableRow>
-        ) : null}
-      </TableBody>
-    </Table>
+              ) : (
+                activeSessions.map((s) => (
+                  <SessionRow key={s.id} session={s} active={true} endMutation={endMutation} />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Past sessions section */}
+      <div>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+          Past sessions
+        </p>
+        <div className="border-t border-border">
+          <Table>
+            <TableHeader>{colHeaders}</TableHeader>
+            <TableBody>
+              {pastSessions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={TABLE_COLS} className="py-6 text-center text-sm text-muted-foreground">
+                    No past sessions.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pastSessions.map((s) => (
+                  <SessionRow key={s.id} session={s} active={false} endMutation={endMutation} />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
   );
 }

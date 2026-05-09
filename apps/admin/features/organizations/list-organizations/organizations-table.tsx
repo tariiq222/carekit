@@ -3,9 +3,8 @@
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
-import { Badge } from '@deqah/ui/primitives/badge';
-import { Button } from '@deqah/ui/primitives/button';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
+import { Button } from '@deqah/ui/primitives/button';
 import {
   Table,
   TableBody,
@@ -27,6 +26,24 @@ interface Props {
   isLoading: boolean;
 }
 
+const STATUS_DOT: Record<string, string> = {
+  TRIALING: 'bg-primary',
+  ACTIVE: 'bg-success',
+  PAST_DUE: 'bg-warning',
+  SUSPENDED: 'bg-warning',
+  ARCHIVED: 'bg-muted-foreground',
+};
+
+function StatusDot({ status, label }: { status: string; label: string }) {
+  const dot = STATUS_DOT[status] ?? 'bg-muted-foreground';
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
+}
+
 export function OrganizationsTable({ items, isLoading }: Props) {
   const locale = useLocale();
   const t = useTranslations('organizations.table');
@@ -36,44 +53,51 @@ export function OrganizationsTable({ items, isLoading }: Props) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>{t('slug')}</TableHead>
-          <TableHead>{t('name')}</TableHead>
-          <TableHead>{t('plan')}</TableHead>
-          <TableHead>{t('status')}</TableHead>
-          <TableHead>{t('created')}</TableHead>
-          <TableHead className="text-end">{t('actions')}</TableHead>
+        <TableRow className="h-10">
+          <TableHead className="text-[11px] uppercase tracking-[0.06em]">{t('slug')}</TableHead>
+          <TableHead className="text-[11px] uppercase tracking-[0.06em]">{t('name')}</TableHead>
+          <TableHead className="text-[11px] uppercase tracking-[0.06em]">{t('plan')}</TableHead>
+          <TableHead className="text-[11px] uppercase tracking-[0.06em]">{t('status')}</TableHead>
+          <TableHead className="text-[11px] uppercase tracking-[0.06em]">{t('created')}</TableHead>
+          <TableHead className="text-end text-[11px] uppercase tracking-[0.06em]">
+            {t('actions')}
+          </TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="divide-y divide-border">
         {isLoading && !items
           ? Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={`skeleton-row-${i}`}>
+              <TableRow key={`skeleton-row-${i}`} className="h-10">
                 <TableCell colSpan={6}>
-                  <Skeleton className="h-6" />
+                  <Skeleton className="h-5" />
                 </TableCell>
               </TableRow>
             ))
           : items?.map((org) => (
-              <TableRow key={org.id}>
-                <TableCell className="font-mono text-xs">{org.slug}</TableCell>
+              <TableRow
+                key={org.id}
+                className="h-10 hover:bg-surface-muted/60 transition-colors"
+              >
+                <TableCell className="mono text-xs text-muted-foreground">{org.slug}</TableCell>
                 <TableCell>
-                  <div className="font-medium">{org.nameAr}</div>
+                  <div className="text-sm font-medium">{org.nameAr}</div>
                   {org.nameEn ? (
                     <div className="text-xs text-muted-foreground">{org.nameEn}</div>
                   ) : null}
                 </TableCell>
                 <TableCell>
                   {org.subscription ? (
-                    <span className="font-mono text-xs">{org.subscription.plan.slug}</span>
+                    <span className="mono text-xs text-muted-foreground">
+                      {org.subscription.plan.slug}
+                    </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">{t('noPlan')}</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <OrgStatusBadge status={org.status} label={statusT(org.status)} />
+                  <StatusDot status={org.status} label={statusT(org.status)} />
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="tabular text-xs text-muted-foreground">
                   {new Date(org.createdAt).toLocaleDateString(dateLocale, {
                     year: 'numeric',
                     month: 'short',
@@ -88,11 +112,11 @@ export function OrganizationsTable({ items, isLoading }: Props) {
                           asChild
                           variant="ghost"
                           size="icon"
-                          className="size-9 rounded-sm"
+                          className="size-8 rounded-sm"
                           aria-label={t('open')}
                         >
                           <Link href={`/organizations/${org.id}`}>
-                            <ExternalLink className="size-4" />
+                            <ExternalLink className="size-3.5" strokeWidth={1.75} />
                           </Link>
                         </Button>
                       </TooltipTrigger>
@@ -104,27 +128,12 @@ export function OrganizationsTable({ items, isLoading }: Props) {
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
               {t('empty')}
             </TableCell>
           </TableRow>
         ) : null}
       </TableBody>
     </Table>
-  );
-}
-
-function OrgStatusBadge({ status, label }: { status: string; label: string }) {
-  const map: Record<string, string> = {
-    TRIALING: 'border-primary/40 bg-primary/10 text-primary',
-    ACTIVE: 'border-success/40 bg-success/10 text-success',
-    PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
-    SUSPENDED: 'border-warning/40 bg-warning/10 text-warning',
-    ARCHIVED: 'border-muted/40 bg-muted/10 text-muted-foreground',
-  };
-  return (
-    <Badge variant="outline" className={map[status] ?? 'border-border bg-muted/10'}>
-      {label}
-    </Badge>
   );
 }

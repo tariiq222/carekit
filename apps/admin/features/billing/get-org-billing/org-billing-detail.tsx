@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import {
   Table,
@@ -13,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from '@deqah/ui/primitives/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@deqah/ui/primitives/tabs';
 import type {
   DunningLogRow,
   SubscriptionInvoiceRow,
@@ -25,7 +23,7 @@ import { GrantCreditDialog } from '../grant-credit/grant-credit-dialog';
 import { RefundInvoiceDialog } from '../refund-invoice/refund-invoice-dialog';
 import { WaiveInvoiceDialog } from '../waive-invoice/waive-invoice-dialog';
 import { BillingHealthCard } from '../billing-health-card/billing-health-card';
-import { formatAdminDate } from '@/lib/date';
+import { formatAdminDate, formatAdminDateTime } from '@/lib/date';
 import { useGetOrgBilling } from './use-get-org-billing';
 
 const WAIVABLE: SubscriptionInvoiceStatus[] = ['DUE', 'FAILED'];
@@ -51,7 +49,6 @@ const INV_TONE: Record<SubscriptionInvoiceStatus, string> = {
   DRAFT: 'border-muted bg-muted text-muted-foreground',
 };
 
-
 interface Props {
   orgId: string;
 }
@@ -65,287 +62,250 @@ export function OrgBillingDetail({ orgId }: Props) {
 
   if (error) {
     return (
-      <Card className="border-destructive/40 bg-destructive/5">
-        <CardContent className="p-4 text-sm text-destructive">
-          Failed to load: {(error as Error).message}
-        </CardContent>
-      </Card>
+      <p className="text-sm text-destructive">
+        Failed to load: {(error as Error).message}
+      </p>
     );
   }
 
   if (isLoading || !data) return <Skeleton className="h-[400px]" />;
 
   const dunningLogs: DunningLogRow[] = data.dunningLogs ?? [];
+  const sub = data.subscription;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {data.org.nameAr}
-            {data.org.nameEn ? (
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                · {data.org.nameEn}
-              </span>
-            ) : null}
-          </CardTitle>
-          <p className="text-xs text-muted-foreground font-mono">
-            {data.org.slug} · {data.org.id}
-          </p>
-        </CardHeader>
-      </Card>
+    <div className="space-y-0">
+      {/* Subscription summary — dense two-column definition list */}
+      {sub ? (
+        <section className="pb-12">
+          <BillingHealthCard orgId={orgId} subscription={sub} dunningLogs={dunningLogs} />
 
-      {data.subscription ? (
-        <BillingHealthCard
-          orgId={orgId}
-          subscription={data.subscription}
-          dunningLogs={dunningLogs}
-        />
+          <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-4 text-sm md:grid-cols-3">
+            <SummaryField label="Plan">
+              <span className="font-mono text-xs uppercase tracking-wide">{sub.plan.slug}</span>
+              {' — '}
+              {sub.plan.nameEn}
+            </SummaryField>
+            <SummaryField label="Status">
+              <Badge variant="outline" className={SUB_TONE[sub.status]}>
+                {sub.status.replace('_', ' ')}
+              </Badge>
+            </SummaryField>
+            <SummaryField label="Cycle">{sub.billingCycle}</SummaryField>
+            <SummaryField label="Period">
+              <span className="font-mono text-xs">
+                {formatAdminDate(sub.currentPeriodStart, 'en')} →{' '}
+                {formatAdminDate(sub.currentPeriodEnd, 'en')}
+              </span>
+            </SummaryField>
+            <SummaryField label="MRR">
+              <span className="tabular-nums font-mono">
+                {Number(sub.plan.priceMonthly).toFixed(2)}{' '}
+                <span className="text-xs text-muted-foreground">SAR/mo</span>
+              </span>
+            </SummaryField>
+            <SummaryField label="Last payment">
+              <span className="font-mono text-xs">{formatAdminDate(sub.lastPaymentAt, 'en')}</span>
+            </SummaryField>
+            {sub.trialEndsAt ? (
+              <SummaryField label="Trial ends">
+                <span className="font-mono text-xs">{formatAdminDate(sub.trialEndsAt, 'en')}</span>
+              </SummaryField>
+            ) : null}
+            {sub.pastDueSince ? (
+              <SummaryField label="Past due since">
+                <span className="font-mono text-xs text-warning">
+                  {formatAdminDate(sub.pastDueSince, 'en')}
+                </span>
+              </SummaryField>
+            ) : null}
+            {sub.lastFailureReason ? (
+              <SummaryField label="Last failure">
+                <span className="text-destructive">{sub.lastFailureReason}</span>
+              </SummaryField>
+            ) : null}
+          </div>
+        </section>
+      ) : (
+        <section className="pb-12">
+          <p className="text-sm text-muted-foreground">No subscription on file for this organization.</p>
+        </section>
+      )}
+
+      {/* Recent invoices */}
+      <section className="border-t border-border pt-12 pb-12">
+        <SectionHeader title="Recent invoices" count={data.invoices.length}>
+          {sub ? (
+            <Button variant="ghost" size="sm" onClick={() => setChangePlanOpen(true)}>
+              Change plan…
+            </Button>
+          ) : null}
+        </SectionHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Refunded</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Period</TableHead>
+              <TableHead>Due</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  No invoices.
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.invoices.map((inv) => (
+                <TableRow key={inv.id}>
+                  <TableCell className="font-mono text-xs">{inv.id.slice(0, 8)}…</TableCell>
+                  <TableCell className="tabular-nums font-mono text-sm">
+                    {Number(inv.amount).toFixed(2)}{' '}
+                    <span className="text-xs text-muted-foreground">{inv.currency}</span>
+                  </TableCell>
+                  <TableCell className="tabular-nums font-mono text-sm text-muted-foreground">
+                    {inv.refundedAmount ? `−${Number(inv.refundedAmount).toFixed(2)}` : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={INV_TONE[inv.status]}>
+                      {inv.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {formatAdminDate(inv.periodStart, 'en')} → {formatAdminDate(inv.periodEnd, 'en')}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {formatAdminDate(inv.dueDate, 'en')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {WAIVABLE.includes(inv.status) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setWaiveTarget(inv)}
+                      >
+                        Waive
+                      </Button>
+                    ) : inv.status === 'PAID' && !isFullyRefunded(inv) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRefundTarget(inv)}
+                      >
+                        Refund
+                      </Button>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </section>
+
+      {/* Credits */}
+      <section className="border-t border-border pt-12 pb-12">
+        <SectionHeader title="Credits" count={data.credits.length}>
+          <Button variant="ghost" size="sm" onClick={() => setGrantCreditOpen(true)}>
+            Grant credit…
+          </Button>
+        </SectionHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Amount</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead>Granted</TableHead>
+              <TableHead>Consumed</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.credits.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                  No credits granted.
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.credits.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="tabular-nums font-mono text-sm">
+                    {Number(c.amount).toFixed(2)}{' '}
+                    <span className="text-xs text-muted-foreground">{c.currency}</span>
+                  </TableCell>
+                  <TableCell className="text-sm">{c.reason ?? '—'}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {formatAdminDate(c.grantedAt, 'en')}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {c.consumedAt ? formatAdminDate(c.consumedAt, 'en') : 'unused'}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </section>
+
+      {/* Usage */}
+      <section className="border-t border-border pt-12 pb-12">
+        <SectionHeader title="Usage" count={data.usage.length} />
+        {data.usage.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No usage records for the current billing period.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <tbody>
+              {data.usage.map((u) => (
+                <tr key={`${u.metric}-${u.periodStart}`} className="border-b border-border/50 last:border-0">
+                  <td className="py-2 font-medium">{u.metric.replace(/_/g, ' ')}</td>
+                  <td className="py-2 text-right font-mono tabular-nums">{u.count.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      {/* Dunning audit trail */}
+      {dunningLogs.length > 0 ? (
+        <section className="border-t border-border pt-12 pb-12">
+          <SectionHeader title="Dunning attempts" count={dunningLogs.length} />
+          <ol className="space-y-3">
+            {dunningLogs.map((log) => (
+              <li key={log.id} className="flex items-start gap-4 text-sm">
+                <span className="font-mono text-xs text-muted-foreground w-20 shrink-0 pt-0.5">
+                  {formatAdminDateTime(log.executedAt)}
+                </span>
+                <span className="text-muted-foreground shrink-0">#{log.attemptNumber}</span>
+                <Badge
+                  variant="outline"
+                  className={
+                    log.status === 'succeeded'
+                      ? 'border-success/40 bg-success/10 text-success shrink-0'
+                      : log.status === 'failed'
+                        ? 'border-destructive/40 bg-destructive/10 text-destructive shrink-0'
+                        : 'border-muted bg-muted text-muted-foreground shrink-0'
+                  }
+                >
+                  {log.status}
+                </Badge>
+                {log.failureReason ? (
+                  <span className="text-muted-foreground">{log.failureReason}</span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : null}
 
-      <Tabs defaultValue="subscription">
-        <TabsList>
-          <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices ({data.invoices.length})</TabsTrigger>
-          <TabsTrigger value="usage">Usage ({data.usage.length})</TabsTrigger>
-          <TabsTrigger value="credits">Credits ({data.credits.length})</TabsTrigger>
-          <TabsTrigger value="dunning">Dunning ({dunningLogs.length})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="subscription" className="mt-4">
-          {data.subscription ? (
-            <Card>
-              <CardContent className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
-                <Field label="Plan">
-                  {data.subscription.plan.nameEn}{' '}
-                  <span className="text-muted-foreground">
-                    ({Number(data.subscription.plan.priceMonthly).toFixed(2)} ⃁/mo)
-                  </span>
-                </Field>
-                <Field label="Status">
-                  <Badge variant="outline" className={SUB_TONE[data.subscription.status]}>
-                    {data.subscription.status.replace('_', ' ')}
-                  </Badge>
-                </Field>
-                <Field label="Cycle">{data.subscription.billingCycle}</Field>
-                <Field label="Period">
-                  {formatAdminDate(data.subscription.currentPeriodStart, 'en')} →{' '}
-                  {formatAdminDate(data.subscription.currentPeriodEnd, 'en')}
-                </Field>
-                <Field label="Trial ends">{formatAdminDate(data.subscription.trialEndsAt, 'en')}</Field>
-                <Field label="Last payment">{formatAdminDate(data.subscription.lastPaymentAt, 'en')}</Field>
-                {data.subscription.pastDueSince ? (
-                  <Field label="Past due since">{formatAdminDate(data.subscription.pastDueSince, 'en')}</Field>
-                ) : null}
-                {data.subscription.lastFailureReason ? (
-                  <Field label="Last failure">{data.subscription.lastFailureReason}</Field>
-                ) : null}
-              </CardContent>
-              <CardContent className="border-t border-border pt-4">
-                <Button variant="outline" size="sm" onClick={() => setChangePlanOpen(true)}>
-                  Change plan…
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground">
-                No subscription on file for this organization.
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="invoices" className="mt-4">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Refunded</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.invoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      No invoices.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.invoices.map((inv) => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="font-mono text-xs">{inv.id.slice(0, 8)}…</TableCell>
-                      <TableCell className="font-medium">
-                        {Number(inv.amount).toFixed(2)} {inv.currency}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {inv.refundedAmount ? `−${Number(inv.refundedAmount).toFixed(2)}` : '—'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={INV_TONE[inv.status]}>
-                          {inv.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatAdminDate(inv.periodStart, 'en')} → {formatAdminDate(inv.periodEnd, 'en')}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatAdminDate(inv.dueDate, 'en')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {WAIVABLE.includes(inv.status) ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setWaiveTarget(inv)}
-                          >
-                            Waive
-                          </Button>
-                        ) : inv.status === 'PAID' && !isFullyRefunded(inv) ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setRefundTarget(inv)}
-                          >
-                            Refund
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="usage" className="mt-4">
-          <Card>
-            <CardContent className="p-6">
-              {data.usage.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No usage records for the current billing period.
-                </p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {data.usage.map((u) => (
-                    <li
-                      key={`${u.metric}-${u.periodStart}`}
-                      className="flex items-center justify-between border-b border-border pb-2 last:border-0"
-                    >
-                      <span className="font-medium">{u.metric.replace(/_/g, ' ')}</span>
-                      <span className="font-mono">{u.count.toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="credits" className="mt-4">
-          <Card>
-            <CardContent className="flex justify-end border-b border-border py-3">
-              <Button variant="outline" size="sm" onClick={() => setGrantCreditOpen(true)}>
-                Grant credit…
-              </Button>
-            </CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Granted</TableHead>
-                  <TableHead>Consumed</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.credits.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                      No credits granted to this organization.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.credits.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">
-                        {Number(c.amount).toFixed(2)} {c.currency}
-                      </TableCell>
-                      <TableCell className="text-sm">{c.reason}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatAdminDate(c.grantedAt, 'en')}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {c.consumedAt ? formatAdminDate(c.consumedAt, 'en') : 'unused'}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="dunning" className="mt-4">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Attempt #</TableHead>
-                  <TableHead>Executed</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Failure reason</TableHead>
-                  <TableHead>Scheduled for</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dunningLogs.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                      No dunning attempts recorded.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  dunningLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-mono text-sm">{log.attemptNumber}</TableCell>
-                      <TableCell className="text-sm">{formatAdminDate(log.executedAt, 'en')}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            log.status === 'succeeded'
-                              ? 'border-success/40 bg-success/10 text-success'
-                              : log.status === 'failed'
-                                ? 'border-destructive/40 bg-destructive/10 text-destructive'
-                                : 'border-muted bg-muted text-muted-foreground'
-                          }
-                        >
-                          {log.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {log.failureReason ?? '—'}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatAdminDate(log.scheduledFor, 'en')}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
+      {/* Sheets */}
       {waiveTarget ? (
         <WaiveInvoiceDialog
           open={Boolean(waiveTarget)}
@@ -370,24 +330,46 @@ export function OrgBillingDetail({ orgId }: Props) {
         organizationId={orgId}
       />
 
-      {data.subscription ? (
+      {sub ? (
         <ChangePlanDialog
           open={changePlanOpen}
           onOpenChange={setChangePlanOpen}
           organizationId={orgId}
-          currentPlanId={data.subscription.planId}
-          currentPlanLabel={`${data.subscription.plan.nameEn} (${data.subscription.plan.slug}) · ${Number(data.subscription.plan.priceMonthly).toFixed(2)} ⃁/mo`}
+          currentPlanId={sub.planId}
+          currentPlanLabel={`${sub.plan.nameEn} (${sub.plan.slug}) · ${Number(sub.plan.priceMonthly).toFixed(2)} SAR/mo`}
         />
       ) : null}
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function SummaryField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <div className="text-sm">{children}</div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: number;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex items-center justify-between">
+      <h3 className="text-sm font-semibold">
+        {title}
+        {count !== undefined ? (
+          <span className="ml-2 font-mono text-xs text-muted-foreground">({count})</span>
+        ) : null}
+      </h3>
+      {children}
     </div>
   );
 }

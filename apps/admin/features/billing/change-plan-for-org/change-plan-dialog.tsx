@@ -2,15 +2,8 @@
 
 import { useState } from 'react';
 import { Button } from '@deqah/ui/primitives/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@deqah/ui/primitives/dialog';
 import { Label } from '@deqah/ui/primitives/label';
+import { Textarea } from '@deqah/ui/primitives/textarea';
 import {
   Select,
   SelectContent,
@@ -18,6 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@deqah/ui/primitives/select';
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@deqah/ui/primitives/sheet';
 import { useChangePlanForOrg, usePlanOptions } from './use-change-plan-for-org';
 
 interface Props {
@@ -36,14 +38,17 @@ export function ChangePlanDialog({
   currentPlanLabel,
 }: Props) {
   const [newPlanId, setNewPlanId] = useState('');
+  const [reason, setReason] = useState('');
   const { data: plans, isLoading: loadingPlans } = usePlanOptions();
   const mutation = useChangePlanForOrg(organizationId);
 
   const validPlan = newPlanId && newPlanId !== currentPlanId;
-  const canSubmit = validPlan;
+  const validReason = reason.trim().length >= 10;
+  const canSubmit = validPlan && validReason;
 
   const reset = () => {
     setNewPlanId('');
+    setReason('');
   };
 
   const submit = () => {
@@ -60,46 +65,80 @@ export function ChangePlanDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Change plan</DialogTitle>
-          <DialogDescription>
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        onOpenChange(o);
+      }}
+    >
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>Change plan</SheetTitle>
+          <SheetDescription>
             Switch this organization to a different plan. Change is{' '}
-            <span className="font-semibold">immediate, with no proration</span> — the next
-            invoice will reflect the new plan's price. Audited.
-          </DialogDescription>
-        </DialogHeader>
+            <span className="font-semibold">immediate, no proration</span> — next invoice
+            reflects the new plan price. Audited.
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="space-y-4">
+        <SheetBody className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Current plan</Label>
-            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+            <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              Current plan
+            </Label>
+            <div className="rounded-sm border border-border bg-muted/30 px-3 py-2 font-mono text-xs">
               {currentPlanLabel}
             </div>
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="cp-newplan">New plan</Label>
+            <Label htmlFor="cp-newplan" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              New plan <span className="text-destructive">*</span>
+            </Label>
             <Select value={newPlanId} onValueChange={setNewPlanId}>
               <SelectTrigger id="cp-newplan">
-                <SelectValue placeholder={loadingPlans ? 'Loading…' : 'Pick a plan'} />
+                <SelectValue placeholder={loadingPlans ? 'Loading…' : 'Select a plan'} />
               </SelectTrigger>
               <SelectContent>
                 {(plans ?? [])
                   .filter((p) => p.isActive && p.id !== currentPlanId)
                   .map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.nameEn} ({p.slug}) · {Number(p.priceMonthly).toFixed(2)} ⃁/mo
+                      <span className="font-mono text-xs uppercase">{p.slug}</span>
+                      {' — '}
+                      {p.nameEn}{' '}
+                      <span className="tabular-nums text-muted-foreground">
+                        · {Number(p.priceMonthly).toFixed(2)} SAR/mo
+                      </span>
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        <DialogFooter>
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-reason" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              Reason <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="cp-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Explain why this plan change is being made (min 10 chars)"
+              rows={4}
+            />
+            {reason.length > 0 && !validReason ? (
+              <p className="text-xs text-destructive">
+                Reason must be at least 10 characters ({reason.length}/10).
+              </p>
+            ) : null}
+          </div>
+        </SheetBody>
+
+        <SheetFooter>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               onOpenChange(false);
               reset();
@@ -108,11 +147,16 @@ export function ChangePlanDialog({
           >
             Cancel
           </Button>
-          <Button onClick={submit} disabled={mutation.isPending || !canSubmit}>
+          <Button
+            variant="outline"
+            className="border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive"
+            onClick={submit}
+            disabled={mutation.isPending || !canSubmit}
+          >
             {mutation.isPending ? 'Changing…' : 'Change plan'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

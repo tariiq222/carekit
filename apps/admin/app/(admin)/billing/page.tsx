@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Button } from '@deqah/ui/primitives/button';
 import { useListSubscriptions } from '@/features/billing/list-subscriptions/use-list-subscriptions';
 import {
@@ -11,11 +10,9 @@ import {
 } from '@/features/billing/list-subscriptions/subscriptions-filter-bar';
 import { SubscriptionsTable } from '@/features/billing/list-subscriptions/subscriptions-table';
 import { BillingMetricsGrid } from '@/features/billing/get-billing-metrics/billing-metrics-grid';
-import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ErrorBanner } from '@/components/error-banner';
 
 export default function BillingSubscriptionsPage() {
-  const pathname = usePathname();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('all');
 
@@ -26,21 +23,24 @@ export default function BillingSubscriptionsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <Breadcrumbs pathname={pathname} />
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Billing — Subscriptions</h2>
+    <div className="space-y-8">
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold">Billing</h2>
           <p className="text-sm text-muted-foreground">
-            Every SaaS subscription on the platform. Open a row to see invoices, usage, and credits.
+            SaaS subscriptions across all tenants.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/billing/invoices">All invoices →</Link>
+            <Link href="/billing/invoices">Invoices</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link href="/billing/zoho">Zoho schedule →</Link>
+            <Link href="/billing/metrics">Metrics</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/billing/zoho">Zoho schedule</Link>
           </Button>
         </div>
       </div>
@@ -49,8 +49,10 @@ export default function BillingSubscriptionsPage() {
         <ErrorBanner error={error} onRetry={() => void refetch()} context="page:billing" />
       ) : null}
 
+      {/* KPI strip */}
       <BillingMetricsGrid />
 
+      {/* Filter + table */}
       <SubscriptionsFilterBar
         status={status}
         onStatusChange={(v) => {
@@ -67,7 +69,7 @@ export default function BillingSubscriptionsPage() {
 
       {data && data.meta.totalPages > 1 ? (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
+          <span className="tabular-nums">
             Page {data.meta.page} of {data.meta.totalPages} · {data.meta.total} total
           </span>
           <div className="flex gap-2">

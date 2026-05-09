@@ -1,5 +1,6 @@
 'use client';
 
+import { Mail, MessageSquare, Bell } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -18,122 +19,142 @@ interface DeliveryLogTableProps {
   isLoading: boolean;
 }
 
-const STATUS_CLASS: Record<DeliveryStatus, string> = {
-  SENT: 'bg-green-500/10 text-green-700 border-green-500/30',
-  FAILED: 'bg-red-500/10 text-red-700 border-red-500/30',
-  PENDING: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/30',
-  SKIPPED: 'bg-gray-500/10 text-gray-600 border-gray-500/30',
+// ─── Status dot + label ───────────────────────────────────────────────────────
+
+const STATUS_DOT: Record<DeliveryStatus, string> = {
+  SENT: 'bg-success',
+  FAILED: 'bg-destructive',
+  PENDING: 'bg-warning',
+  SKIPPED: 'bg-muted-foreground/40',
+};
+
+const STATUS_LABEL: Record<DeliveryStatus, string> = {
+  SENT: 'Sent',
+  FAILED: 'Failed',
+  PENDING: 'Pending',
+  SKIPPED: 'Skipped',
+};
+
+function StatusCell({ status }: { status: DeliveryStatus }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-foreground">
+      <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+// ─── Channel badge with leading icon ─────────────────────────────────────────
+
+const CHANNEL_ICON: Record<DeliveryChannel, React.ElementType> = {
+  EMAIL: Mail,
+  SMS: MessageSquare,
+  PUSH: Bell,
+  IN_APP: Bell,
 };
 
 const CHANNEL_CLASS: Record<DeliveryChannel, string> = {
-  EMAIL: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
-  SMS: 'bg-purple-500/10 text-purple-700 border-purple-500/30',
-  PUSH: 'bg-orange-500/10 text-orange-700 border-orange-500/30',
-  IN_APP: 'bg-gray-500/10 text-gray-600 border-gray-500/30',
+  EMAIL: 'border-primary/30 bg-primary/5 text-primary',
+  SMS: 'border-border bg-muted/30 text-foreground',
+  PUSH: 'border-border bg-muted/30 text-foreground',
+  IN_APP: 'border-border bg-muted/30 text-foreground',
 };
 
-const COLUMN_COUNT = 11;
+function ChannelBadge({ channel }: { channel: DeliveryChannel }) {
+  const Icon = CHANNEL_ICON[channel] ?? Bell;
+  return (
+    <Badge variant="outline" className={`gap-1 ${CHANNEL_CLASS[channel]}`}>
+      <Icon size={11} strokeWidth={1.75} />
+      <span className="text-[11px]">{channel}</span>
+    </Badge>
+  );
+}
 
+// ─── Table ────────────────────────────────────────────────────────────────────
+
+const COLUMN_COUNT = 7;
 
 export function DeliveryLogTable({ items, isLoading }: DeliveryLogTableProps) {
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Channel</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Recipient</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Attempts</TableHead>
-            <TableHead>Sent At</TableHead>
-            <TableHead>Error</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading &&
-            Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={`skeleton-${index}`}>
-                <TableCell colSpan={COLUMN_COUNT}>
-                  <Skeleton className="h-5 w-full" />
-                </TableCell>
-              </TableRow>
-            ))}
-
-          {!isLoading && (!items || items.length === 0) && (
-            <TableRow>
-              <TableCell
-                colSpan={COLUMN_COUNT}
-                className="py-10 text-center text-sm text-muted-foreground"
-              >
-                No delivery log entries match the current filters.
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Type</TableHead>
+          <TableHead>Channel</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Recipient</TableHead>
+          <TableHead>Organization</TableHead>
+          <TableHead>Error</TableHead>
+          <TableHead className="text-right tabular-nums">Time</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading &&
+          Array.from({ length: 8 }).map((_, index) => (
+            <TableRow key={`skeleton-${index}`}>
+              <TableCell colSpan={COLUMN_COUNT}>
+                <Skeleton className="h-5 w-full" />
               </TableCell>
             </TableRow>
-          )}
+          ))}
 
-          {!isLoading &&
-            items?.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-mono text-xs">{item.type}</TableCell>
+        {!isLoading && (!items || items.length === 0) && (
+          <TableRow>
+            <TableCell
+              colSpan={COLUMN_COUNT}
+              className="py-10 text-center text-sm text-muted-foreground"
+            >
+              No delivery log entries match the current filters.
+            </TableCell>
+          </TableRow>
+        )}
 
-                <TableCell>
-                  <Badge variant="outline" className={CHANNEL_CLASS[item.channel]}>
-                    {item.channel}
-                  </Badge>
-                </TableCell>
+        {!isLoading &&
+          items?.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell>
+                <span className="font-mono text-[12px] text-foreground">{item.type}</span>
+              </TableCell>
 
-                <TableCell>
-                  <Badge variant="outline" className={STATUS_CLASS[item.status]}>
-                    {item.status}
-                  </Badge>
-                </TableCell>
+              <TableCell>
+                <ChannelBadge channel={item.channel} />
+              </TableCell>
 
-                <TableCell>
-                  {item.priority === 'CRITICAL' ? (
-                    <Badge variant="destructive" className="border">
-                      {item.priority}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">{item.priority}</Badge>
-                  )}
-                </TableCell>
+              <TableCell>
+                <StatusCell status={item.status} />
+              </TableCell>
 
-                <TableCell className="font-mono text-xs">{item.organizationId}</TableCell>
+              <TableCell>
+                <span className="font-mono text-[12px]">{item.toAddress ?? item.recipientId}</span>
+              </TableCell>
 
-                <TableCell className="font-mono text-xs">{item.recipientId}</TableCell>
+              <TableCell>
+                <span className="font-mono text-[12px] text-muted-foreground">
+                  {item.organizationId}
+                </span>
+              </TableCell>
 
-                <TableCell className="text-xs">{item.toAddress ?? '—'}</TableCell>
+              <TableCell>
+                {item.errorMessage ? (
+                  <span
+                    className="block max-w-[200px] truncate font-mono text-[11px] text-destructive"
+                    title={item.errorMessage}
+                  >
+                    {item.errorMessage}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </TableCell>
 
-                <TableCell className="text-center">{item.attempts}</TableCell>
-
-                <TableCell className="whitespace-nowrap text-xs">
-                  {formatAdminDateTime(item.sentAt)}
-                </TableCell>
-
-                <TableCell>
-                  {item.errorMessage ? (
-                    <span
-                      className="block max-w-xs truncate text-xs text-red-600"
-                      title={item.errorMessage}
-                    >
-                      {item.errorMessage}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="whitespace-nowrap text-xs">
-                  {formatAdminDateTime(item.createdAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-        </TableBody>
-      </Table>
-    </div>
+              <TableCell className="text-right">
+                <span className="font-mono tabular-nums text-[12px] text-muted-foreground">
+                  {formatAdminDateTime(item.sentAt ?? item.createdAt)}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+      </TableBody>
+    </Table>
   );
 }

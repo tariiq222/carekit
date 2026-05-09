@@ -3,6 +3,7 @@ import { Badge } from '@deqah/ui/primitives/badge';
 import { Input } from '@deqah/ui/primitives/input';
 import { Switch } from '@deqah/ui/primitives/switch';
 import type { FeatureKey } from '@deqah/shared';
+import { InfoTooltip } from './info-tooltip';
 import type { CatalogEntry } from './filter';
 
 function parseInputNumber(s: string): number {
@@ -23,6 +24,7 @@ type Props = {
   quotaValue?: number;
   onQuotaChange?: (next: number) => void;
   quotaHint?: string;
+  quotaTooltip?: string;
 };
 
 export function FeatureRow({
@@ -35,12 +37,16 @@ export function FeatureRow({
   quotaValue,
   onQuotaChange,
   quotaHint,
+  quotaTooltip,
 }: Props) {
   return (
     <div className="flex items-start justify-between gap-4 py-3 border-b border-border/50 last:border-b-0">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{entry.nameEn}</span>
+          {quotaTooltip !== undefined && (
+            <InfoTooltip content={quotaTooltip} ariaLabel={`Info: ${entry.nameEn} quota`} />
+          )}
           <Badge
             variant={entry.tier === 'ENTERPRISE' ? 'default' : 'secondary'}
             className={entry.tier === 'ENTERPRISE' ? 'bg-primary/15 text-primary' : undefined}

@@ -3,7 +3,7 @@ import { ErrorBanner } from '@/components/error-banner';
 
 export default function RouteError({ error, reset }: { error: Error; reset: () => void }) {
   return (
-    <div className="p-6">
+    <div className="pt-8">
       <ErrorBanner error={error} onRetry={reset} context="route:/billing" />
     </div>
   );

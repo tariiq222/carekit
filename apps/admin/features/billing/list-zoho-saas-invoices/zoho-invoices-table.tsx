@@ -39,11 +39,12 @@ interface Props {
 
 export function ZohoInvoicesTable({ items, isLoading }: Props) {
   const locale = useLocale();
+
   if (isLoading) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={`skeleton-${i}`} className="h-14 w-full" />
+          <Skeleton key={`skeleton-${i}`} className="h-10 w-full" />
         ))}
       </div>
     );
@@ -51,9 +52,7 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
 
   if (!items?.length) {
     return (
-      <p className="rounded-lg border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-        No invoices found.
-      </p>
+      <p className="py-6 text-center text-sm text-muted-foreground">No invoices found.</p>
     );
   }
 
@@ -66,7 +65,7 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
             <TableHead>Invoice</TableHead>
             <TableHead>Period</TableHead>
             <TableHead>Cycle</TableHead>
-            <TableHead>Amount</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Zoho mirror</TableHead>
             <TableHead>Next charge</TableHead>
@@ -84,7 +83,7 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
                   >
                     {row.organization.nameAr || row.organization.nameEn || row.organization.slug}
                   </Link>
-                  <p className="text-xs text-muted-foreground">{row.organization.slug}</p>
+                  <p className="font-mono text-xs text-muted-foreground">{row.organization.slug}</p>
                 </div>
               </TableCell>
               <TableCell>
@@ -92,12 +91,17 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
                   {row.invoiceNumber ?? row.id.slice(0, 8) + '…'}
                 </span>
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+              <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                 {formatAdminDate(row.periodStart, locale)} → {formatAdminDate(row.periodEnd, locale)}
               </TableCell>
-              <TableCell className="text-xs">{row.billingCycle}</TableCell>
-              <TableCell className="text-sm font-medium">
-                {Number(row.amount).toFixed(2)} {row.currency}
+              <TableCell className="font-mono text-xs text-muted-foreground">
+                {row.billingCycle}
+              </TableCell>
+              <TableCell className="text-right">
+                <span className="tabular-nums font-mono text-sm">
+                  {Number(row.amount).toFixed(2)}
+                </span>
+                <span className="ml-1 text-xs text-muted-foreground">{row.currency}</span>
               </TableCell>
               <TableCell>
                 <Badge variant="outline" className={INV_TONE[row.status]}>
@@ -114,16 +118,14 @@ export function ZohoInvoicesTable({ items, isLoading }: Props) {
                       {row.zohoMirror.status}
                     </Badge>
                     {row.zohoMirror.viewedAt ? (
-                      <span className="text-xs text-muted-foreground" title="Viewed by tenant">
-                        ✓ viewed
-                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">viewed</span>
                     ) : null}
                   </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">— not mirrored</span>
+                  <span className="text-xs text-muted-foreground">—</span>
                 )}
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+              <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                 {row.subscriptionStatus === 'ACTIVE' || row.subscriptionStatus === 'TRIALING'
                   ? formatAdminDate(row.nextChargeAt, locale)
                   : '—'}

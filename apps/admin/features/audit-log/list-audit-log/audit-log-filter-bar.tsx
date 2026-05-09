@@ -33,30 +33,36 @@ export function AuditLogFilterBar({
   onOrganizationIdChange,
   onReset,
 }: Props) {
+  const isFiltered = actionType !== 'all' || organizationId !== '';
+
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-2 border-y border-border py-2">
       <Select value={actionType} onValueChange={onActionTypeChange}>
-        <SelectTrigger className="w-[220px]">
+        <SelectTrigger className="h-8 w-[200px] text-[13px]">
           <SelectValue placeholder="Action type" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All action types</SelectItem>
           {ACTION_TYPES.map((t) => (
-            <SelectItem key={t} value={t}>
+            <SelectItem key={t} value={t} className="font-mono text-xs">
               {t}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+
       <Input
-        placeholder="Organization ID (UUID)"
+        placeholder="Organization ID"
         value={organizationId}
         onChange={(e) => onOrganizationIdChange(e.target.value)}
-        className="max-w-sm font-mono text-xs"
+        className="h-8 w-56 font-mono text-[13px]"
       />
-      <Button variant="ghost" size="sm" onClick={onReset}>
-        Reset
-      </Button>
+
+      {isFiltered && (
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReset}>
+          Reset
+        </Button>
+      )}
     </div>
   );
 }

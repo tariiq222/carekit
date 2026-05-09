@@ -14,7 +14,6 @@ import {
 import { OrganizationsTable } from '@/features/organizations/list-organizations/organizations-table';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ErrorBanner } from '@/components/error-banner';
-import { StatsGrid, type StatsGridStat } from '@/components/stats-grid';
 
 export default function OrganizationsListPage() {
   const t = useTranslations('organizations');
@@ -37,23 +36,26 @@ export default function OrganizationsListPage() {
     planId: planId.trim() || undefined,
   });
 
-  const stats: StatsGridStat[] = [
-    { label: 'Total', value: data?.meta.total ?? 0, variant: 'primary' },
-  ];
-
   return (
     <div className="space-y-6">
       <Breadcrumbs pathname={pathname} />
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold">{t('title')}</h2>
-          <p className="max-w-3xl text-sm text-muted-foreground">{t('description')}</p>
+          <h1 className="text-[22px] font-semibold tracking-tight">{t('title')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('description')}</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>{t('create.button')}</Button>
+        <div className="flex items-center gap-2">
+          {data ? (
+            <span className="tabular text-sm text-muted-foreground">
+              {data.meta.total} total
+            </span>
+          ) : null}
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            {t('create.button')}
+          </Button>
+        </div>
       </div>
-
-      <StatsGrid stats={stats} isLoading={isLoading} />
-      {/* TODO Phase 6.4 follow-up: extend BE list endpoint to return status breakdown (totalActive, totalSuspended, totalNew) for richer StatsGrid */}
 
       <OrganizationsFilterBar
         search={search}
@@ -102,8 +104,8 @@ export default function OrganizationsListPage() {
       <OrganizationsTable items={data?.items} isLoading={isLoading} />
 
       {data && data.meta.totalPages > 1 ? (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="tabular">
             {t('pagination.summary', {
               page: data.meta.page,
               totalPages: data.meta.totalPages,
@@ -114,6 +116,7 @@ export default function OrganizationsListPage() {
             <Button
               variant="outline"
               size="sm"
+              className="h-8"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
@@ -122,6 +125,7 @@ export default function OrganizationsListPage() {
             <Button
               variant="outline"
               size="sm"
+              className="h-8"
               disabled={page >= data.meta.totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
@@ -130,6 +134,7 @@ export default function OrganizationsListPage() {
           </div>
         </div>
       ) : null}
+
       <CreateTenantDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );

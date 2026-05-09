@@ -3,7 +3,13 @@
 import { useTranslations } from 'next-intl';
 import { Button } from '@deqah/ui/primitives/button';
 import { Input } from '@deqah/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@deqah/ui/primitives/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@deqah/ui/primitives/select';
 import type { OrganizationStatus } from '../types';
 
 export type SuspendedFilter = 'all' | 'true' | 'false';
@@ -40,15 +46,15 @@ export function OrganizationsFilterBar({
   const statusT = useTranslations('organizations.status');
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-2 border-y border-border py-2">
       <Input
-        placeholder={t('search')}
+        placeholder="org_…"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="max-w-sm"
+        className="mono h-8 max-w-[200px] text-xs placeholder:text-muted-foreground/60"
       />
       <Select value={suspended} onValueChange={(v) => onSuspendedChange(v as SuspendedFilter)}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="h-8 w-[150px] text-xs">
           <SelectValue placeholder={t('suspended')} />
         </SelectTrigger>
         <SelectContent>
@@ -58,7 +64,7 @@ export function OrganizationsFilterBar({
         </SelectContent>
       </Select>
       <Select value={status} onValueChange={(v) => onStatusChange(v as LifecycleStatusFilter)}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="h-8 w-[150px] text-xs">
           <SelectValue placeholder={t('status')} />
         </SelectTrigger>
         <SelectContent>
@@ -71,18 +77,23 @@ export function OrganizationsFilterBar({
         </SelectContent>
       </Select>
       <Input
-        placeholder={t('verticalId')}
+        placeholder="vertical_id…"
         value={verticalId}
         onChange={(e) => onVerticalIdChange(e.target.value)}
-        className="max-w-[180px]"
+        className="mono h-8 w-[160px] text-xs placeholder:text-muted-foreground/60"
       />
       <Input
-        placeholder={t('planId')}
+        placeholder="plan_id…"
         value={planId}
         onChange={(e) => onPlanIdChange(e.target.value)}
-        className="max-w-[180px]"
+        className="mono h-8 w-[140px] text-xs placeholder:text-muted-foreground/60"
       />
-      <Button variant="ghost" size="sm" onClick={onReset}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+        onClick={onReset}
+      >
         {t('reset')}
       </Button>
     </div>

@@ -5,11 +5,11 @@ import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { ComparePlansMatrix } from '@/features/plans/compare-plans/compare-plans-matrix';
 
-export default function PlansEditPage() {
-  const { data, isLoading, error } = useListPlans();
+export default function ComparePlansPage() {
+  const { data, isLoading } = useListPlans();
 
   return (
-    <div className="flex flex-col gap-8 h-full">
+    <div className="space-y-8">
       <div className="space-y-1">
         <Link
           href="/plans"
@@ -17,23 +17,20 @@ export default function PlansEditPage() {
         >
           ← Plans
         </Link>
-        <h2 className="mt-2 text-xl font-semibold">Edit plans</h2>
+        <h2 className="mt-2 text-xl font-semibold">Compare plans</h2>
         <p className="text-sm text-muted-foreground">
-          Configure features and limits across every plan in one view.
+          Feature limits across all plans side by side. Edit any cell to stage a change.
         </p>
       </div>
 
-      {error ? (
-        <p className="text-sm text-destructive">
-          Failed to load: {(error as Error).message}
-        </p>
-      ) : null}
-
-      {isLoading && !data ? (
-        <Skeleton className="h-96" />
-      ) : data ? (
-        <ComparePlansMatrix plans={data} />
-      ) : null}
+      {isLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-12 w-full rounded-sm" />
+          <Skeleton className="h-64 w-full rounded-sm" />
+        </div>
+      ) : (
+        <ComparePlansMatrix plans={data ?? []} />
+      )}
     </div>
   );
 }

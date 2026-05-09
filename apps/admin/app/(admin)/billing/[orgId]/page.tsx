@@ -2,10 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from '@deqah/ui/primitives/button';
 import { OrgBillingDetail } from '@/features/billing/get-org-billing/org-billing-detail';
-import { Breadcrumbs } from '@/components/breadcrumbs';
 
 export default function OrgBillingPage({
   params,
@@ -13,20 +10,27 @@ export default function OrgBillingPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = use(params);
-  const pathname = usePathname();
 
   return (
-    <div className="space-y-6">
-      <Breadcrumbs pathname={pathname} />
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Organization billing</h2>
-          <p className="text-sm text-muted-foreground font-mono">{orgId}</p>
+    <div className="space-y-8">
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Tenant billing
+          </p>
+          <h2 className="text-xl font-semibold">
+            <span className="font-mono text-sm text-muted-foreground">{orgId}</span>
+          </h2>
         </div>
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/billing">← Back to subscriptions</Link>
-        </Button>
+        <Link
+          href="/billing"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Subscriptions
+        </Link>
       </div>
+
       <OrgBillingDetail orgId={orgId} />
     </div>
   );

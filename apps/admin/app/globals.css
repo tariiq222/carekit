@@ -37,58 +37,84 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --surface-solid: oklch(1 0 0);
-  --surface-muted: oklch(0.97 0 0);
-  --overlay: oklch(0 0 0 / 0.5);
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.42 0.19 266);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.82 0.18 131);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.62 0.17 145);
-  --warning: oklch(0.75 0.16 75);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.42 0.19 266);
+  --radius: 0.5rem;
+
+  /* Surfaces — near-white tinted toward blue (chroma 0.005) */
+  --background:     oklch(0.985 0.003 255);
+  --surface-solid:  oklch(1 0 0);
+  --surface-muted:  oklch(0.965 0.004 255);
+  --card:           oklch(1 0 0);
+  --card-foreground:oklch(0.18 0.02 260);
+  --popover:        oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
+  --overlay:        oklch(0.18 0.02 260 / 0.45);
+
+  /* Text */
+  --foreground:        oklch(0.18 0.02 260);
+  --muted:             oklch(0.96 0.004 255);
+  --muted-foreground:  oklch(0.48 0.01 258);
+
+  /* Accent — electric blue. Higher chroma, true blue (~250-260 hue). */
+  --primary:           oklch(0.58 0.22 258);
+  --primary-foreground:oklch(0.99 0 0);
+  --ring:              oklch(0.58 0.22 258);
+
+  /* Secondary surfaces stay neutral, no second accent */
+  --secondary:           oklch(0.96 0.004 255);
+  --secondary-foreground:oklch(0.22 0.02 260);
+
+  /* Accent slot retained for downstream primitives but mapped to primary */
+  --accent:           oklch(0.58 0.22 258);
+  --accent-foreground:oklch(0.99 0 0);
+
+  /* Semantic only — never decorative */
+  --destructive:           oklch(0.55 0.22 27);
+  --destructive-foreground:oklch(0.99 0 0);
+  --success:               oklch(0.62 0.15 155);
+  --warning:               oklch(0.74 0.16 75);
+
+  /* Borders — slightly tinted */
+  --border:           oklch(0.92 0.005 255);
+  --input:            oklch(0.92 0.005 255);
+
+  /* Typography stack vars — used by body/utility classes */
+  --font-sans:    var(--font-mona-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .dark {
-  --surface-solid: oklch(0.18 0.01 260);
-  --surface-muted: oklch(0.22 0.01 260);
-  --overlay: oklch(0 0 0 / 0.7);
-  --background: oklch(0.14 0.01 260);
-  --foreground: oklch(0.96 0 0);
-  --card: oklch(0.18 0.01 260);
-  --card-foreground: oklch(0.96 0 0);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.96 0 0);
-  --primary: oklch(0.7 0.18 266);
-  --primary-foreground: oklch(0.14 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.82 0.18 131);
-  --accent-foreground: oklch(0.14 0.01 260);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.72 0.17 145);
-  --warning: oklch(0.8 0.16 75);
-  --border: oklch(0.25 0.01 260);
-  --input: oklch(0.25 0.01 260);
-  --ring: oklch(0.7 0.18 266);
+  /* True near-black tinted toward blue, NOT navy */
+  --background:        oklch(0.13 0.012 258);
+  --surface-solid:     oklch(0.16 0.012 258);
+  --surface-muted:     oklch(0.18 0.012 258);
+  --card:              oklch(0.16 0.012 258);
+  --card-foreground:   oklch(0.96 0.004 255);
+  --popover:           oklch(0.17 0.012 258);
+  --popover-foreground:oklch(0.96 0.004 255);
+  --overlay:           oklch(0 0 0 / 0.65);
+
+  --foreground:        oklch(0.96 0.004 255);
+  --muted:             oklch(0.20 0.012 258);
+  --muted-foreground:  oklch(0.66 0.01 258);
+
+  /* Brighter blue against black for the same perceived contrast */
+  --primary:           oklch(0.72 0.20 258);
+  --primary-foreground:oklch(0.13 0.012 258);
+  --ring:              oklch(0.72 0.20 258);
+
+  --secondary:           oklch(0.20 0.012 258);
+  --secondary-foreground:oklch(0.96 0.004 255);
+
+  --accent:           oklch(0.72 0.20 258);
+  --accent-foreground:oklch(0.13 0.012 258);
+
+  --destructive:           oklch(0.66 0.22 27);
+  --destructive-foreground:oklch(0.99 0 0);
+  --success:               oklch(0.74 0.15 155);
+  --warning:               oklch(0.80 0.16 75);
+
+  --border:           oklch(0.24 0.012 258);
+  --input:            oklch(0.24 0.012 258);
 }
 
 * {
@@ -98,5 +124,21 @@
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-feature-settings: "rlig" 1, "calt" 1;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "ss02", "cv11", "calt", "rlig";
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numerics — applied via utility class on numbers/ids/money cells */
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "ss01"; }
+.mono    { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Subtle focus ring tuned for the blue accent */
+:where(:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }

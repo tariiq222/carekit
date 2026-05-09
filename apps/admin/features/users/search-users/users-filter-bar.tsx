@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import { Button } from '@deqah/ui/primitives/button';
 import { Input } from '@deqah/ui/primitives/input';
 
@@ -18,23 +19,38 @@ export function UsersFilterBar({
   onOrganizationIdChange,
   onReset,
 }: Props) {
+  const isFiltered = search !== '' || organizationId !== '';
+
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-2 border-y border-border py-2">
+      {/* Search — cmd+k style, 32px tall, monospaced placeholder */}
+      <div className="relative flex-1 min-w-[240px] max-w-sm">
+        <Search
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          size={14}
+          strokeWidth={1.75}
+        />
+        <Input
+          placeholder="email@…"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="h-8 pl-8 font-mono text-[13px] placeholder:text-muted-foreground/60"
+        />
+      </div>
+
+      {/* Org ID filter */}
       <Input
-        placeholder="Search by email or name"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="max-w-sm"
-      />
-      <Input
-        placeholder="Organization ID (UUID, optional)"
+        placeholder="Organization ID"
         value={organizationId}
         onChange={(e) => onOrganizationIdChange(e.target.value)}
-        className="max-w-sm font-mono text-xs"
+        className="h-8 w-52 font-mono text-[13px]"
       />
-      <Button variant="ghost" size="sm" onClick={onReset}>
-        Reset
-      </Button>
+
+      {isFiltered && (
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReset}>
+          Reset
+        </Button>
+      )}
     </div>
   );
 }

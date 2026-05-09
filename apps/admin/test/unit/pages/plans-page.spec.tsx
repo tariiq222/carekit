@@ -93,9 +93,9 @@ describe('PlansPage', () => {
     expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
   });
 
-  it('renders links to create and edit pages', () => {
+  it('renders links to create and compare pages', () => {
     render(<PlansPage />, { wrapper });
-    expect(screen.getByRole('link', { name: /edit features & limits/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /compare plans/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /\+ create plan/i })).toBeInTheDocument();
   });
 });

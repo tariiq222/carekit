@@ -12,38 +12,140 @@ import type { VerticalRow } from '@/features/verticals/types';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ErrorBanner } from '@/components/error-banner';
 
+// ─── Terminology detail panel ─────────────────────────────────────────────────
+
+const TERMINOLOGY_KEYS = [
+  'client', 'clients', 'employee', 'employees',
+  'booking', 'bookings', 'service', 'services',
+  'department', 'departments', 'branch', 'branches',
+] as const;
+
+function DetailPanel({
+  vertical,
+  onEdit,
+}: {
+  vertical: VerticalRow;
+  onEdit: (v: VerticalRow) => void;
+}) {
+  const verticalRecord = vertical as unknown as Record<string, string | null>;
+  const rows = TERMINOLOGY_KEYS.map((k) => {
+    const capKey = k.charAt(0).toUpperCase() + k.slice(1);
+    return {
+      key: k,
+      ar: verticalRecord[`terminology${capKey}Ar`] ?? null,
+      en: verticalRecord[`terminology${capKey}En`] ?? null,
+    };
+  });
+
+  const hasTerminology = rows.some((r) => r.ar || r.en);
+
+  return (
+    <div className="flex flex-col gap-4 border-l border-border pl-6">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            Selected
+          </p>
+          <h3 className="mt-1 text-base font-semibold">{vertical.nameEn}</h3>
+          <p className="text-[13px] text-muted-foreground">{vertical.nameAr}</p>
+          <p className="mt-1 font-mono text-[11px] text-muted-foreground">{vertical.slug}</p>
+        </div>
+        <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={() => onEdit(vertical)}>
+          Edit
+        </Button>
+      </div>
+
+      {vertical.descriptionEn ? (
+        <p className="text-[13px] text-muted-foreground">{vertical.descriptionEn}</p>
+      ) : null}
+
+      <div>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+          Terminology pack
+        </p>
+        {hasTerminology ? (
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="pb-1 pr-4 text-left font-medium text-muted-foreground">Key</th>
+                <th className="pb-1 pr-4 text-left font-medium text-muted-foreground">AR</th>
+                <th className="pb-1 text-left font-medium text-muted-foreground">EN</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows
+                .filter((r) => r.ar || r.en)
+                .map((r) => (
+                  <tr key={r.key} className="border-b border-border/50 last:border-0">
+                    <td className="py-1.5 pr-4 font-mono text-[11px] text-muted-foreground">{r.key}</td>
+                    <td className="py-1.5 pr-4">{r.ar ?? '—'}</td>
+                    <td className="py-1.5">{r.en ?? '—'}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-[13px] text-muted-foreground">
+            No terminology overrides — using defaults.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function VerticalsPage() {
   const pathname = usePathname();
   const { data, isLoading, error, refetch } = useListVerticals();
   const items = data?.items;
+
   const [createOpen, setCreateOpen] = useState(false);
+  const [selected, setSelected] = useState<VerticalRow | null>(null);
   const [editVertical, setEditVertical] = useState<VerticalRow | null>(null);
   const [deleteVertical, setDeleteVertical] = useState<VerticalRow | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Breadcrumbs pathname={pathname} />
-      {/* TODO Phase 6.4 follow-up: wire stats once BE list endpoint exposes counts */}
-      <div className="flex items-start justify-between">
+
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">Verticals</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold tracking-tight">Verticals</h2>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             Clinic archetypes that drive terminology and seed content.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>+ Create Vertical</Button>
+        <Button size="sm" className="h-8" onClick={() => setCreateOpen(true)}>
+          Create vertical
+        </Button>
       </div>
 
       {error ? (
         <ErrorBanner error={error} onRetry={() => void refetch()} context="page:verticals" />
       ) : null}
 
-      <VerticalsTable
-        items={items}
-        isLoading={isLoading}
-        onEdit={(vertical) => setEditVertical(vertical)}
-        onDelete={(vertical) => setDeleteVertical(vertical)}
-      />
+      {/* 2-pane layout — list left, detail right when a row is selected */}
+      <div className={`grid gap-0 ${selected ? 'grid-cols-[1fr_320px]' : 'grid-cols-1'}`}>
+        <div>
+          <VerticalsTable
+            items={items}
+            isLoading={isLoading}
+            selectedId={selected?.id}
+            onSelect={(v) => setSelected((prev) => (prev?.id === v.id ? null : v))}
+            onEdit={(v) => setEditVertical(v)}
+            onDelete={(v) => setDeleteVertical(v)}
+          />
+        </div>
+
+        {selected ? (
+          <DetailPanel
+            vertical={selected}
+            onEdit={(v) => setEditVertical(v)}
+          />
+        ) : null}
+      </div>
 
       <CreateVerticalDialog open={createOpen} onOpenChange={setCreateOpen} />
 

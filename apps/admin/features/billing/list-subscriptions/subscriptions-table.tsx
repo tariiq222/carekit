@@ -1,5 +1,4 @@
 'use client';
-// TODO Phase 6.7 follow-up: convert action buttons to icon-only + Tooltip (size-9 rounded-sm)
 
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
@@ -17,13 +16,22 @@ import {
 import { formatAdminDate } from '@/lib/date';
 import type { OrganizationBillingIdentity, SubscriptionRow, SubscriptionStatus } from '../types';
 
-const STATUS_TONE: Record<SubscriptionStatus, string> = {
+const STATUS_DOT: Record<SubscriptionStatus, string> = {
+  ACTIVE: 'bg-success',
+  TRIALING: 'bg-info',
+  PAST_DUE: 'bg-warning',
+  SUSPENDED: 'bg-destructive',
+  CANCELED: 'bg-muted-foreground',
+};
+
+const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
   TRIALING: 'border-info/40 bg-info/10 text-info',
   PAST_DUE: 'border-warning/40 bg-warning/10 text-warning',
   SUSPENDED: 'border-destructive/40 bg-destructive/10 text-destructive',
   CANCELED: 'border-destructive/40 bg-destructive/10 text-destructive',
 };
+
 const ORG_STATUS_TONE: Record<string, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
   TRIALING: 'border-primary/40 bg-primary/10 text-primary',
@@ -36,7 +44,6 @@ interface Props {
   items: SubscriptionRow[] | undefined;
   isLoading: boolean;
 }
-
 
 export function SubscriptionsTable({ items, isLoading }: Props) {
   const locale = useLocale();
@@ -53,6 +60,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
           <TableHead>{t('status')}</TableHead>
           <TableHead>{t('cycle')}</TableHead>
           <TableHead>{t('periodEnds')}</TableHead>
+          <TableHead className="text-right tabular-nums">MRR</TableHead>
           <TableHead>{t('lastPayment')}</TableHead>
           <TableHead className="text-end">{t('actions')}</TableHead>
         </TableRow>
@@ -61,36 +69,49 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
         {isLoading && !items
           ? Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={`skeleton-row-${i}`}>
-                <TableCell colSpan={7}>
-                  <Skeleton className="h-6" />
+                <TableCell colSpan={8}>
+                  <Skeleton className="h-5" />
                 </TableCell>
               </TableRow>
             ))
           : items?.map((s) => (
               <TableRow key={s.id}>
                 <TableCell>
-                  <OrganizationCell
+                  <OrgCell
                     organization={s.organization}
                     fallbackId={s.organizationId}
                     statusLabel={s.organization ? orgStatusT(s.organization.status) : undefined}
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="font-medium">{s.plan.nameEn}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t('priceMonthly', { amount: Number(s.plan.priceMonthly).toFixed(2) })}
-                  </div>
+                  <span className="font-mono text-xs uppercase tracking-wide">
+                    {s.plan.slug ?? s.plan.nameEn}
+                  </span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={STATUS_TONE[s.status]}>
-                    {statusT(s.status)}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={[
+                        'inline-block size-1.5 rounded-full shrink-0',
+                        STATUS_DOT[s.status],
+                      ].join(' ')}
+                    />
+                    <Badge variant="outline" className={STATUS_LABEL[s.status]}>
+                      {statusT(s.status)}
+                    </Badge>
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.billingCycle}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="font-mono text-xs text-muted-foreground">
                   {formatAdminDate(s.currentPeriodEnd, locale)}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-right">
+                  <span className="tabular-nums font-mono text-sm">
+                    {Number(s.plan.priceMonthly).toFixed(2)}
+                  </span>
+                  <span className="ml-1 text-xs text-muted-foreground">SAR</span>
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
                   {formatAdminDate(s.lastPaymentAt, locale)}
                 </TableCell>
                 <TableCell className="text-end">
@@ -102,7 +123,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
             ))}
         {!isLoading && items?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
               {t('emptySubscriptions')}
             </TableCell>
           </TableRow>
@@ -112,7 +133,7 @@ export function SubscriptionsTable({ items, isLoading }: Props) {
   );
 }
 
-function OrganizationCell({
+function OrgCell({
   organization,
   fallbackId,
   statusLabel,
@@ -122,13 +143,15 @@ function OrganizationCell({
   statusLabel?: string;
 }) {
   if (!organization) {
-    return <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}...</span>;
+    return (
+      <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}…</span>
+    );
   }
 
   return (
-    <div className="space-y-1">
-      <div className="font-medium">{organization.nameAr}</div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+    <div className="space-y-0.5">
+      <div className="font-medium text-sm">{organization.nameAr}</div>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
         {organization.nameEn ? <span>{organization.nameEn}</span> : null}
         <span className="font-mono">{organization.slug}</span>
         <Badge
@@ -138,7 +161,6 @@ function OrganizationCell({
           {statusLabel ?? organization.status}
         </Badge>
       </div>
-      <div className="font-mono text-xs text-muted-foreground">{organization.id}</div>
     </div>
   );
 }

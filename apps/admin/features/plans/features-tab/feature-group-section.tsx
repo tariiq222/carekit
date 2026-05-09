@@ -2,11 +2,15 @@
 import { useState } from 'react';
 import type { FeatureKey } from '@deqah/shared';
 import { FeatureRow } from './feature-row';
+import { InfoTooltip } from './info-tooltip';
 import type { CatalogEntry } from './filter';
 import type { PlanLimits } from '../plan-limits';
 import { QUANT_FIELD_MAP } from '../plan-limits';
 
-// Quota hints per quantitative key
+const QUOTA_TOOLTIP =
+  'Set to -1 for unlimited. Set 0 to disable this feature entirely.';
+
+// Quota hints per quantitative key (kept as inline helper text below the input)
 const QUANT_HINTS: Partial<Record<FeatureKey, string>> = {
   branches: '-1 = unlimited',
   employees: '-1 = unlimited',
@@ -65,6 +69,7 @@ export function FeatureGroupSection({
             const fieldMap = QUANT_FIELD_MAP as Partial<Record<string, keyof PlanLimits>>;
             const field = fieldMap[key];
             const quotaValue = field !== undefined ? (limits[field] as number | undefined) : undefined;
+            const hasHint = key in QUANT_HINTS;
             return (
               <FeatureRow
                 key={key}
@@ -75,6 +80,7 @@ export function FeatureGroupSection({
                 quotaValue={quotaValue}
                 onQuotaChange={field !== undefined ? (v) => onNumberChange(field, v) : undefined}
                 quotaHint={QUANT_HINTS[key]}
+                quotaTooltip={hasHint ? QUOTA_TOOLTIP : undefined}
               />
             );
           }

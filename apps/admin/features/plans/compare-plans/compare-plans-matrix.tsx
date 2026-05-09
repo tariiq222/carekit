@@ -6,7 +6,6 @@ import { Badge } from '@deqah/ui/primitives/badge';
 import { Button } from '@deqah/ui/primitives/button';
 import { Input } from '@deqah/ui/primitives/input';
 import { Switch } from '@deqah/ui/primitives/switch';
-import { Label } from '@deqah/ui/primitives/label';
 import { FEATURE_CATALOG } from '@deqah/shared';
 import type { PlanRow } from '../types';
 import { QUANT_FIELD_MAP, hydrateLimits, type PlanLimits } from '../plan-limits';

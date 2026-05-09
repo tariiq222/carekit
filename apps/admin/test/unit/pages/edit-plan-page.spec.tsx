@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -6,10 +6,12 @@ import userEvent from '@testing-library/user-event';
 import EditPlanPage from '@/app/(admin)/plans/[id]/edit/page';
 
 const mockUseListPlans = vi.hoisted(() => vi.fn());
-const mockUseUpdatePlan = vi.hoisted(() => vi.fn(() => ({
-  mutate: vi.fn(),
-  isPending: false,
-})));
+const mockUseUpdatePlan = vi.hoisted(() =>
+  vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+);
 
 vi.mock('@/features/plans/list-plans/use-list-plans', () => ({
   useListPlans: mockUseListPlans,
@@ -19,24 +21,10 @@ vi.mock('@/features/plans/update-plan/use-update-plan', () => ({
   useUpdatePlan: mockUseUpdatePlan,
 }));
 
-vi.mock('@/features/plans/plan-form-tabs', () => ({
-  PlanFormTabs: function MockPlanFormTabs({
-    general,
-    activeTab,
-    onActiveTabChange,
-  }: {
-    general: React.ReactNode;
-    activeTab: string;
-    onActiveTabChange: (tab: string) => void;
-  }) {
-    return (
-      <div data-testid="plan-form-tabs">
-        <div data-testid="active-tab">{activeTab}</div>
-        <button type="button" onClick={() => onActiveTabChange('general')}>General</button>
-        <button type="button" onClick={() => onActiveTabChange('limits')}>Limits</button>
-        <div data-testid="general-tab">{general}</div>
-      </div>
-    );
+// Mock FeaturesTab so step 2 renders a simple placeholder
+vi.mock('@/features/plans/features-tab/features-tab', () => ({
+  FeaturesTab: function MockFeaturesTab() {
+    return <div data-testid="features-tab">Features Step</div>;
   },
 }));
 
@@ -106,10 +94,9 @@ describe('EditPlanPage', () => {
     expect(screen.getByText(/Plan not found/i)).toBeInTheDocument();
   });
 
-  it('renders page title and form when plan found', () => {
+  it('renders page title when plan found', () => {
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByText('Edit plan')).toBeInTheDocument();
-    expect(screen.getByTestId('plan-form-tabs')).toBeInTheDocument();
   });
 
   it('renders back link to plans', () => {
@@ -117,26 +104,62 @@ describe('EditPlanPage', () => {
     expect(screen.getByRole('link', { name: /← back to plans/i })).toBeInTheDocument();
   });
 
-  it('renders form fields with plan data', () => {
+  it('renders step 1 basics with plan data pre-filled', () => {
     render(<EditPlanPage />, { wrapper });
+    // Slug shown as read-only in edit mode
     expect(screen.getByDisplayValue('BASIC')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('الأساسية')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Basic')).toBeInTheDocument();
   });
 
-  it('renders active checkbox', () => {
+  it('renders Active switch in step 1 edit mode', () => {
     render(<EditPlanPage />, { wrapper });
     expect(screen.getByLabelText(/^Active$/i)).toBeInTheDocument();
   });
 
-  it('enables submit button when form is valid', async () => {
+  it('advances to step 2 after clicking Next on pre-filled form', async () => {
     const user = userEvent.setup();
     render(<EditPlanPage />, { wrapper });
 
-    await user.clear(screen.getByLabelText(/Name \(Arabic\)/i));
-    await user.type(screen.getByLabelText(/Name \(Arabic\)/i), 'Updated Plan');
-    await user.clear(screen.getByLabelText(/Name \(English\)/i));
-    await user.type(screen.getByLabelText(/Name \(English\)/i), 'Updated Plan EN');
+    const nextButton = screen.getByRole('button', { name: /^next$/i });
+    expect(nextButton).not.toBeDisabled();
+    await user.click(nextButton);
 
-    const submitButton = screen.getByRole('button', { name: /save changes/i });
-    expect(submitButton).not.toBeDisabled();
+    expect(screen.getByTestId('features-tab')).toBeInTheDocument();
+  });
+
+  it('advances to step 3 and shows Save changes button', async () => {
+    const user = userEvent.setup();
+    render(<EditPlanPage />, { wrapper });
+
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
+  });
+
+  it('calls mutation on submit from step 3', async () => {
+    const mockMutate = vi.fn();
+    mockUseUpdatePlan.mockReturnValue({ mutate: mockMutate, isPending: false });
+
+    const user = userEvent.setup();
+    render(<EditPlanPage />, { wrapper });
+
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        planId: 'plan-1',
+        nameAr: 'الأساسية',
+        nameEn: 'Basic',
+        priceMonthly: 99,
+        priceAnnual: 990,
+        currency: 'SAR',
+        isActive: true,
+      }),
+      expect.any(Object),
+    );
   });
 });

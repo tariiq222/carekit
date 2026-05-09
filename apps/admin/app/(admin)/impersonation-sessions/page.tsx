@@ -23,25 +23,20 @@ export default function ImpersonationSessionsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Breadcrumbs pathname={pathname} />
-      {/* TODO Phase 6.4 follow-up: wire stats once BE list endpoint exposes counts */}
-      <div>
-        <h2 className="text-2xl font-semibold">Impersonation sessions</h2>
-        <p className="text-sm text-muted-foreground">
-          Active + historical impersonation sessions. End any active session immediately.
-        </p>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
-        <Select
-          value={active}
-          onValueChange={(v) => {
-            setActive(v as ActiveFilter);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[200px]">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Impersonation sessions</h2>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            Active and historical shadow sessions. End any active session immediately.
+          </p>
+        </div>
+
+        {/* Filter inline in header area */}
+        <Select value={active} onValueChange={(v) => { setActive(v as ActiveFilter); setPage(1); }}>
+          <SelectTrigger className="h-8 w-[160px] text-[13px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -53,35 +48,23 @@ export default function ImpersonationSessionsPage() {
       </div>
 
       {error ? (
-        <ErrorBanner
-          error={error}
-          onRetry={() => void refetch()}
-          context="page:impersonation-sessions"
-        />
+        <ErrorBanner error={error} onRetry={() => void refetch()} context="page:impersonation-sessions" />
       ) : null}
 
       <SessionsTable items={data?.items} isLoading={isLoading} />
 
       {data && data.meta.totalPages > 1 ? (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {data.meta.page} of {data.meta.totalPages} · {data.meta.total} total
+        <div className="flex items-center justify-between text-[13px] text-muted-foreground">
+          <span className="tabular-nums">
+            Page {data.meta.page} of {data.meta.totalPages}
           </span>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
+            <Button variant="outline" size="sm" disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}>
               Previous
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= data.meta.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
+            <Button variant="outline" size="sm" disabled={page >= data.meta.totalPages}
+              onClick={() => setPage((p) => p + 1)}>
               Next
             </Button>
           </div>

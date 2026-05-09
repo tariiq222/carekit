@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { WifiOff } from 'lucide-react';
 
 export function OfflineBanner() {
   const [offline, setOffline] = useState(false);
@@ -17,9 +18,12 @@ export function OfflineBanner() {
   return (
     <div
       role="alert"
-      className="bg-warning/10 border-b border-warning text-warning text-center text-sm py-2"
+      className="sticky top-0 z-50 flex h-7 w-full items-center justify-center gap-1.5 bg-warning/12 text-foreground"
     >
-      You are offline — changes will not save.
+      <WifiOff aria-hidden size={12} strokeWidth={1.75} className="shrink-0" />
+      <span className="text-[12px] font-medium">
+        Offline · changes will sync when reconnected
+      </span>
     </div>
   );
 }

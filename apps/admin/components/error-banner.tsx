@@ -1,5 +1,6 @@
 'use client';
 import { useEffect } from 'react';
+import { AlertOctagon } from 'lucide-react';
 import * as Sentry from '@sentry/nextjs';
 
 export function ErrorBanner({
@@ -27,14 +28,22 @@ export function ErrorBanner({
   return (
     <div
       role="alert"
-      className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 flex items-center justify-between gap-4"
+      className="rounded-md border border-destructive/30 bg-destructive/8 px-4 py-3 flex items-start justify-between gap-4"
     >
-      <p className="text-sm text-destructive">{message}</p>
+      <div className="flex items-start gap-3 min-w-0">
+        <AlertOctagon
+          aria-hidden
+          size={14}
+          strokeWidth={1.75}
+          className="text-destructive shrink-0 mt-0.5"
+        />
+        <p className="text-sm text-destructive/80 leading-snug">{message}</p>
+      </div>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="text-sm font-medium text-destructive hover:underline"
+          className="text-sm font-medium text-destructive hover:text-destructive/80 transition-colors shrink-0"
         >
           Retry
         </button>

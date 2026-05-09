@@ -1,19 +1,11 @@
 'use client';
-import { Card } from '@deqah/ui/primitives/card';
-import { Skeleton } from '@deqah/ui/primitives/skeleton';
 
 export interface StatsGridStat {
   label: string;
   value: number | string;
+  subLabel?: string;
   variant: 'primary' | 'success' | 'warning' | 'accent';
 }
-
-const VARIANT_CLASS: Record<StatsGridStat['variant'], string> = {
-  primary: 'border-primary/20 bg-primary/5',
-  success: 'border-success/20 bg-success/5',
-  warning: 'border-warning/20 bg-warning/5',
-  accent: 'border-accent/20 bg-accent/5',
-};
 
 export function StatsGrid({
   stats,
@@ -23,14 +15,23 @@ export function StatsGrid({
   isLoading?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border border-y border-border">
       {stats.map((s) => (
-        <Card key={s.label} className={`p-4 ${VARIANT_CLASS[s.variant]}`}>
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : s.value}
+        <div key={s.label} className="p-4 flex flex-col gap-1">
+          <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            {s.label}
           </div>
-        </Card>
+          <div className="text-[28px] font-medium leading-none tabular text-foreground">
+            {isLoading ? (
+              <span className="block h-7 w-24 rounded-sm bg-muted animate-pulse" />
+            ) : (
+              s.value
+            )}
+          </div>
+          {s.subLabel && !isLoading && (
+            <div className="text-[11px] text-muted-foreground">{s.subLabel}</div>
+          )}
+        </div>
       ))}
     </div>
   );

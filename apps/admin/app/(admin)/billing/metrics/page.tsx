@@ -2,11 +2,11 @@ import { BillingMetricsGrid } from '@/features/billing/get-billing-metrics/billi
 
 export default function BillingMetricsPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Billing — Metrics</h2>
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold">Metrics</h2>
         <p className="text-sm text-muted-foreground">
-          MRR, ARR, churn, and per-plan revenue breakdown across all tenants.
+          MRR, ARR, churn, and per-plan revenue across all tenants.
         </p>
       </div>
       <BillingMetricsGrid />

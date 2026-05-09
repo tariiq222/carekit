@@ -1,93 +1,56 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@deqah/ui/primitives/card';
-import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useGetPlatformMetrics } from './use-get-platform-metrics';
 import { formatSar } from '@/lib/currency';
+
+interface KpiCellProps {
+  label: string;
+  value: string | number;
+  tone?: 'success' | 'warning';
+}
+
+function KpiCell({ label, value, tone }: KpiCellProps) {
+  const numClass = [
+    'mt-2 text-[28px] font-semibold leading-none tabular',
+    tone === 'success' ? 'text-success' : tone === 'warning' ? 'text-warning' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className="px-5 py-4 first:ps-0">
+      <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+        {label}
+      </p>
+      <p className={numClass}>{value}</p>
+    </div>
+  );
+}
 
 export function MetricsGrid() {
   const { data, isLoading, error } = useGetPlatformMetrics();
 
   if (error) {
     return (
-      <Card className="border-destructive/40 bg-destructive/5">
-        <CardContent className="p-4 text-sm text-destructive">
-          Failed to load metrics: {(error as Error).message}
-        </CardContent>
-      </Card>
+      <p className="text-sm text-destructive">
+        Failed to load metrics: {(error as Error).message}
+      </p>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {isLoading || !data ? (
-          <>
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-          </>
-        ) : (
-          <>
-            <MetricCard label="Organizations" value={data.organizations.total} />
-            <MetricCard label="Active" value={data.organizations.active} tone="success" />
-            <MetricCard label="Suspended" value={data.organizations.suspended} tone="warning" />
-            <MetricCard label="New this month" value={data.organizations.newThisMonth} />
-          </>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {isLoading || !data ? (
-          <>
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-            <Skeleton className="h-[100px]" />
-          </>
-        ) : (
-          <>
-            <MetricCard label="Users (all tenants)" value={data.users.total} />
-            <MetricCard label="Bookings (30d)" value={data.bookings.totalLast30Days} />
-            <MetricCard
-              label="Lifetime revenue (⃁)"
-              value={formatSar(data.revenue.lifetimePaidSar)}
-            />
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+  if (isLoading || !data) {
+    return <div className="animate-pulse h-16 rounded-md bg-muted" />;
+  }
 
-function MetricCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone?: 'success' | 'warning';
-}) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <span
-          className={
-            tone === 'success'
-              ? 'text-2xl font-semibold text-success'
-              : tone === 'warning'
-                ? 'text-2xl font-semibold text-warning'
-                : 'text-2xl font-semibold'
-          }
-        >
-          {value}
-        </span>
-      </CardContent>
-    </Card>
+    <div className="flex divide-x divide-border overflow-hidden rounded-md border border-border">
+      <KpiCell label="Orgs" value={data.organizations.total} />
+      <KpiCell label="Active" value={data.organizations.active} tone="success" />
+      <KpiCell label="Suspended" value={data.organizations.suspended} tone="warning" />
+      <KpiCell label="New this month" value={data.organizations.newThisMonth} />
+      <KpiCell label="Users" value={data.users.total} />
+      <KpiCell label="Bookings 30d" value={data.bookings.totalLast30Days} />
+      <KpiCell label="Lifetime revenue" value={formatSar(data.revenue.lifetimePaidSar)} />
+    </div>
   );
 }

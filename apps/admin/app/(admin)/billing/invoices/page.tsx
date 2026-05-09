@@ -26,18 +26,18 @@ export default function BillingInvoicesPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Billing — Invoices</h2>
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold">Invoices</h2>
         <p className="text-sm text-muted-foreground">
-          Cross-tenant SaaS invoices. Drafts are hidden by default.
+          Cross-tenant SaaS invoices. Drafts hidden by default.
         </p>
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+        <p className="text-sm text-destructive">
           Failed to load: {(error as Error).message}
-        </div>
+        </p>
       ) : null}
 
       <InvoicesFilterBar
@@ -74,7 +74,7 @@ export default function BillingInvoicesPage() {
 
       {data && data.meta.totalPages > 1 ? (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
+          <span className="tabular-nums">
             Page {data.meta.page} of {data.meta.totalPages} · {data.meta.total} total
           </span>
           <div className="flex gap-2">

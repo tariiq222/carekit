@@ -27,6 +27,7 @@ const STATUS_TONE: Record<SubscriptionInvoiceStatus, string> = {
   VOID: 'border-destructive/40 bg-destructive/10 text-destructive',
   DRAFT: 'border-muted bg-muted text-muted-foreground',
 };
+
 const ORG_STATUS_TONE: Record<string, string> = {
   ACTIVE: 'border-success/40 bg-success/10 text-success',
   TRIALING: 'border-primary/40 bg-primary/10 text-primary',
@@ -40,7 +41,6 @@ interface Props {
   isLoading: boolean;
 }
 
-
 export function InvoicesTable({ items, isLoading }: Props) {
   const locale = useLocale();
   const t = useTranslations('billing.tables');
@@ -53,8 +53,8 @@ export function InvoicesTable({ items, isLoading }: Props) {
         <TableRow>
           <TableHead>{t('invoice')}</TableHead>
           <TableHead>{t('organization')}</TableHead>
-          <TableHead>{t('amountSar')}</TableHead>
-          <TableHead>{t('refunded')}</TableHead>
+          <TableHead className="text-right">{t('amountSar')}</TableHead>
+          <TableHead className="text-right">{t('refunded')}</TableHead>
           <TableHead>{t('status')}</TableHead>
           <TableHead>{t('period')}</TableHead>
           <TableHead>{t('due')}</TableHead>
@@ -66,7 +66,7 @@ export function InvoicesTable({ items, isLoading }: Props) {
           ? Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={`skeleton-row-${i}`}>
                 <TableCell colSpan={8}>
-                  <Skeleton className="h-6" />
+                  <Skeleton className="h-5" />
                 </TableCell>
               </TableRow>
             ))
@@ -74,16 +74,17 @@ export function InvoicesTable({ items, isLoading }: Props) {
               <TableRow key={inv.id}>
                 <TableCell className="font-mono text-xs">{inv.id.slice(0, 8)}…</TableCell>
                 <TableCell>
-                  <OrganizationCell
+                  <OrgCell
                     organization={inv.organization}
                     fallbackId={inv.organizationId}
                     statusLabel={inv.organization ? orgStatusT(inv.organization.status) : undefined}
                   />
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell className="text-right tabular-nums font-mono text-sm">
                   {Number(inv.amount).toFixed(2)}
+                  <span className="ml-1 text-xs text-muted-foreground">SAR</span>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-right tabular-nums font-mono text-sm text-muted-foreground">
                   {inv.refundedAmount ? `−${Number(inv.refundedAmount).toFixed(2)}` : '—'}
                 </TableCell>
                 <TableCell>
@@ -91,10 +92,10 @@ export function InvoicesTable({ items, isLoading }: Props) {
                     {statusT(inv.status)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                   {formatAdminDate(inv.periodStart, locale)} → {formatAdminDate(inv.periodEnd, locale)}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                   {formatAdminDate(inv.dueDate, locale)}
                 </TableCell>
                 <TableCell className="text-end">
@@ -116,7 +117,7 @@ export function InvoicesTable({ items, isLoading }: Props) {
   );
 }
 
-function OrganizationCell({
+function OrgCell({
   organization,
   fallbackId,
   statusLabel,
@@ -126,13 +127,15 @@ function OrganizationCell({
   statusLabel?: string;
 }) {
   if (!organization) {
-    return <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}...</span>;
+    return (
+      <span className="font-mono text-xs text-muted-foreground">{fallbackId.slice(0, 8)}…</span>
+    );
   }
 
   return (
-    <div className="space-y-1">
-      <div className="font-medium">{organization.nameAr}</div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+    <div className="space-y-0.5">
+      <div className="font-medium text-sm">{organization.nameAr}</div>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
         {organization.nameEn ? <span>{organization.nameEn}</span> : null}
         <span className="font-mono">{organization.slug}</span>
         <Badge
@@ -142,7 +145,6 @@ function OrganizationCell({
           {statusLabel ?? organization.status}
         </Badge>
       </div>
-      <div className="font-mono text-xs text-muted-foreground">{organization.id}</div>
     </div>
   );
 }

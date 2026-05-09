@@ -8,7 +8,6 @@ import { UsersFilterBar } from '@/features/users/search-users/users-filter-bar';
 import { UsersTable } from '@/features/users/search-users/users-table';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ErrorBanner } from '@/components/error-banner';
-import { StatsGrid, type StatsGridStat } from '@/components/stats-grid';
 
 export default function UsersPage() {
   const pathname = usePathname();
@@ -23,39 +22,30 @@ export default function UsersPage() {
     organizationId,
   });
 
-  const stats: StatsGridStat[] = [
-    { label: 'Total', value: data?.meta.total ?? 0, variant: 'primary' },
-  ];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Breadcrumbs pathname={pathname} />
-      <div>
-        <h2 className="text-2xl font-semibold">Users</h2>
-        <p className="text-sm text-muted-foreground">
-          Cross-tenant user search. Issue temporary passwords when support requires it.
-        </p>
-      </div>
 
-      <StatsGrid stats={stats} isLoading={isLoading} />
-      {/* TODO Phase 6.4 follow-up: extend BE search-users endpoint to return role/status breakdown for richer StatsGrid */}
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Users</h2>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            Cross-tenant user search. Issue temporary passwords when support requires it.
+          </p>
+        </div>
+        {data ? (
+          <span className="tabular-nums text-[13px] text-muted-foreground">
+            {data.meta.total} total
+          </span>
+        ) : null}
+      </div>
 
       <UsersFilterBar
         search={search}
-        onSearchChange={(v) => {
-          setSearch(v);
-          setPage(1);
-        }}
+        onSearchChange={(v) => { setSearch(v); setPage(1); }}
         organizationId={organizationId}
-        onOrganizationIdChange={(v) => {
-          setOrganizationId(v);
-          setPage(1);
-        }}
-        onReset={() => {
-          setSearch('');
-          setOrganizationId('');
-          setPage(1);
-        }}
+        onOrganizationIdChange={(v) => { setOrganizationId(v); setPage(1); }}
+        onReset={() => { setSearch(''); setOrganizationId(''); setPage(1); }}
       />
 
       {error ? (
@@ -65,25 +55,17 @@ export default function UsersPage() {
       <UsersTable items={data?.items} isLoading={isLoading} />
 
       {data && data.meta.totalPages > 1 ? (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {data.meta.page} of {data.meta.totalPages} · {data.meta.total} total
+        <div className="flex items-center justify-between text-[13px] text-muted-foreground">
+          <span className="tabular-nums">
+            Page {data.meta.page} of {data.meta.totalPages}
           </span>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
+            <Button variant="outline" size="sm" disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}>
               Previous
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= data.meta.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
+            <Button variant="outline" size="sm" disabled={page >= data.meta.totalPages}
+              onClick={() => setPage((p) => p + 1)}>
               Next
             </Button>
           </div>
