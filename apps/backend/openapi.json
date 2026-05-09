@@ -128,6 +128,11 @@
             "example": "150000.00",
             "type": "string"
           },
+          "atRiskMrr": {
+            "description": "MRR at risk from SUSPENDED subscriptions in SAR",
+            "example": "500.00",
+            "type": "string"
+          },
           "byPlan": {
             "items": {
               "$ref": "#/components/schemas/AdminBillingMetricsByPlanDto"
@@ -150,16 +155,28 @@
             "type": "string"
           },
           "mrr": {
-            "description": "Monthly Recurring Revenue in SAR (string decimal)",
+            "description": "Monthly Recurring Revenue in SAR (string decimal) — based on plan prices",
             "example": "12500.00",
             "type": "string"
+          },
+          "realizedMrr": {
+            "description": "Realized MRR in SAR — actual revenue from PAID invoices this month",
+            "example": "11800.00",
+            "type": "string"
+          },
+          "scheduledDowngrades": {
+            "description": "Count of ACTIVE subscriptions with a scheduled downgrade pending",
+            "type": "number"
           }
         },
         "required": [
           "mrr",
+          "realizedMrr",
           "arr",
           "currency",
           "churn30d",
+          "atRiskMrr",
+          "scheduledDowngrades",
           "counts",
           "byPlan"
         ],
@@ -735,16 +752,7 @@
         "type": "object"
       },
       "ArchiveOrganizationDto": {
-        "properties": {
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       },
       "AssignEmployeeToBranchDto": {
@@ -1188,16 +1196,10 @@
         "properties": {
           "newPlanId": {
             "type": "string"
-          },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
           }
         },
         "required": [
-          "newPlanId",
-          "reason"
+          "newPlanId"
         ],
         "type": "object"
       },
@@ -1277,8 +1279,8 @@
             "type": "string"
           },
           "hCaptchaToken": {
-            "description": "hCaptcha token from the login form",
-            "example": "<hCaptcha token>",
+            "description": "Captcha token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
+            "example": "<captcha token>",
             "type": "string"
           },
           "password": {
@@ -1289,8 +1291,7 @@
         },
         "required": [
           "email",
-          "password",
-          "hCaptchaToken"
+          "password"
         ],
         "type": "object"
       },
@@ -2264,10 +2265,6 @@
           "priceMonthly": {
             "type": "number"
           },
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          },
           "slug": {
             "description": "Uppercase letters, digits, underscores. 2–32 chars. Example: STARTER, TEAM_ANNUAL.",
             "example": "STARTER",
@@ -2284,8 +2281,7 @@
           "nameEn",
           "priceMonthly",
           "priceAnnual",
-          "limits",
-          "reason"
+          "limits"
         ],
         "type": "object"
       },
@@ -2748,10 +2744,6 @@
           "nameEn": {
             "type": "string"
           },
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          },
           "slug": {
             "description": "kebab-case unique slug",
             "type": "string"
@@ -2762,6 +2754,7 @@
           "templateFamily": {
             "enum": [
               "MEDICAL",
+              "THERAPY",
               "CONSULTING",
               "SALON",
               "FITNESS"
@@ -2773,33 +2766,16 @@
           "slug",
           "nameAr",
           "nameEn",
-          "templateFamily",
-          "reason"
+          "templateFamily"
         ],
         "type": "object"
       },
       "DeletePlanDto": {
-        "properties": {
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       },
       "DeleteVerticalDto": {
-        "properties": {
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       },
       "DenyRefundDto": {
@@ -3201,17 +3177,11 @@
           },
           "organizationId": {
             "type": "string"
-          },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
           }
         },
         "required": [
           "organizationId",
-          "amount",
-          "reason"
+          "amount"
         ],
         "type": "object"
       },
@@ -3527,7 +3497,7 @@
             "type": "string"
           },
           "hCaptchaToken": {
-            "description": "hCaptcha verification token",
+            "description": "Captcha verification token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
             "type": "string"
           },
           "password": {
@@ -3539,8 +3509,7 @@
         },
         "required": [
           "email",
-          "password",
-          "hCaptchaToken"
+          "password"
         ],
         "type": "object"
       },
@@ -4507,70 +4476,6 @@
         ],
         "type": "object"
       },
-      "PlanWithCountDto": {
-        "properties": {
-          "_count": {
-            "type": "object"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "currency": {
-            "example": "SAR",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "limits": {
-            "type": "object"
-          },
-          "nameAr": {
-            "type": "string"
-          },
-          "nameEn": {
-            "type": "string"
-          },
-          "priceAnnual": {
-            "type": "number"
-          },
-          "priceMonthly": {
-            "type": "number"
-          },
-          "slug": {
-            "example": "STARTER",
-            "type": "string"
-          },
-          "sortOrder": {
-            "type": "number"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "nameAr",
-          "nameEn",
-          "priceMonthly",
-          "priceAnnual",
-          "currency",
-          "limits",
-          "isActive",
-          "sortOrder",
-          "createdAt",
-          "updatedAt",
-          "_count"
-        ],
-        "type": "object"
-      },
       "PlatformEmailLogItemDto": {
         "properties": {
           "createdAt": {
@@ -4934,16 +4839,8 @@
             "description": "Amount in SAR. Omit for full refund of remaining balance.",
             "minimum": 0.01,
             "type": "number"
-          },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
           }
         },
-        "required": [
-          "reason"
-        ],
         "type": "object"
       },
       "RefundPaymentDto": {
@@ -4976,8 +4873,8 @@
       "RegisterDto": {
         "properties": {
           "hCaptchaToken": {
-            "description": "hCaptcha token from the registration form",
-            "example": "<hCaptcha token>",
+            "description": "Captcha token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
+            "example": "<captcha token>",
             "type": "string"
           },
           "name": {
@@ -4992,8 +4889,7 @@
           }
         },
         "required": [
-          "password",
-          "hCaptchaToken"
+          "password"
         ],
         "type": "object"
       },
@@ -5099,13 +4995,7 @@
         "type": "object"
       },
       "ReinstateOrganizationDto": {
-        "properties": {
-          "reason": {
-            "maxLength": 1000,
-            "minLength": 5,
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "RequestDashboardOtpDto": {
@@ -5146,7 +5036,7 @@
             "type": "string"
           },
           "hCaptchaToken": {
-            "description": "hCaptcha token",
+            "description": "Captcha token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
             "example": "10000000-aaaa-bbbb-cccc-000000000001",
             "type": "string"
           },
@@ -5176,8 +5066,7 @@
         "required": [
           "channel",
           "identifier",
-          "purpose",
-          "hCaptchaToken"
+          "purpose"
         ],
         "type": "object"
       },
@@ -5235,8 +5124,8 @@
       "ResetPasswordDto": {
         "properties": {
           "hCaptchaToken": {
-            "description": "hCaptcha token from the reset-password form",
-            "example": "<hCaptcha token>",
+            "description": "Captcha token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
+            "example": "<captcha token>",
             "type": "string"
           },
           "newPassword": {
@@ -5252,22 +5141,12 @@
         },
         "required": [
           "sessionToken",
-          "newPassword",
-          "hCaptchaToken"
+          "newPassword"
         ],
         "type": "object"
       },
       "ResetUserPasswordDto": {
-        "properties": {
-          "reason": {
-            "maxLength": 1000,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       },
       "SecuritySettingsDto": {
@@ -5310,6 +5189,18 @@
         },
         "required": [
           "verticalSlug"
+        ],
+        "type": "object"
+      },
+      "SelectOrganizationDto": {
+        "properties": {
+          "zohoOrganizationId": {
+            "description": "Zoho organization_id chosen by the tenant.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zohoOrganizationId"
         ],
         "type": "object"
       },
@@ -5500,14 +5391,22 @@
         ],
         "type": "object"
       },
+      "StartConnectResponseDto": {
+        "properties": {
+          "authUrl": {
+            "description": "Authorization URL the dashboard should redirect to.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authUrl"
+        ],
+        "type": "object"
+      },
       "StartImpersonationDto": {
         "properties": {
           "organizationId": {
             "format": "uuid",
-            "type": "string"
-          },
-          "reason": {
-            "minLength": 10,
             "type": "string"
           },
           "targetUserId": {
@@ -5517,8 +5416,7 @@
         },
         "required": [
           "organizationId",
-          "targetUserId",
-          "reason"
+          "targetUserId"
         ],
         "type": "object"
       },
@@ -5573,16 +5471,7 @@
         "type": "object"
       },
       "SuspendOrganizationDto": {
-        "properties": {
-          "reason": {
-            "maxLength": 1000,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       },
       "SwitchOrganizationDto": {
@@ -5938,6 +5827,27 @@
         },
         "type": "object"
       },
+      "UpdateConfigDto": {
+        "properties": {
+          "branchId": {
+            "description": "Optional Zoho branch id (multi-branch Zoho orgs only).",
+            "type": "string"
+          },
+          "itemId": {
+            "description": "Default Zoho item id for ad-hoc booking line items.",
+            "type": "string"
+          },
+          "paymentTerms": {
+            "description": "Free-text payment terms appended to invoices.",
+            "type": "string"
+          },
+          "sendOnCreate": {
+            "description": "When true, every newly created invoice is emailed automatically.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "UpdateContactMessageStatusDto": {
         "properties": {
           "status": {
@@ -6267,11 +6177,6 @@
             "nullable": true,
             "type": "object"
           },
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
-          },
           "trialEndsAt": {
             "format": "date-time",
             "nullable": true,
@@ -6282,9 +6187,6 @@
             "type": "object"
           }
         },
-        "required": [
-          "reason"
-        ],
         "type": "object"
       },
       "UpdatePlanDto": {
@@ -6310,17 +6212,10 @@
           "priceMonthly": {
             "type": "number"
           },
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          },
           "sortOrder": {
             "type": "number"
           }
         },
-        "required": [
-          "reason"
-        ],
         "type": "object"
       },
       "UpdatePlatformBrandDto": {
@@ -6631,16 +6526,13 @@
           "nameEn": {
             "type": "string"
           },
-          "reason": {
-            "minLength": 10,
-            "type": "string"
-          },
           "sortOrder": {
             "type": "number"
           },
           "templateFamily": {
             "enum": [
               "MEDICAL",
+              "THERAPY",
               "CONSULTING",
               "SALON",
               "FITNESS"
@@ -6648,9 +6540,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "reason"
-        ],
         "type": "object"
       },
       "UploadAvatarResponseDto": {
@@ -7205,78 +7094,6 @@
         ],
         "type": "object"
       },
-      "UpsertSeedDepartmentDto": {
-        "properties": {
-          "nameAr": {
-            "description": "اسم القسم بالعربية",
-            "example": "قسم الطوارئ",
-            "type": "string"
-          },
-          "nameEn": {
-            "description": "Department name in English",
-            "example": "Emergency Department",
-            "type": "string"
-          },
-          "sortOrder": {
-            "description": "Display sort order (ascending)",
-            "example": 0,
-            "type": "number"
-          }
-        },
-        "required": [
-          "nameAr",
-          "nameEn"
-        ],
-        "type": "object"
-      },
-      "UpsertSeedServiceCategoryDto": {
-        "properties": {
-          "departmentId": {
-            "description": "UUID of the parent seed department",
-            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-            "type": "string"
-          },
-          "nameAr": {
-            "description": "اسم الفئة بالعربية",
-            "example": "خدمات الطوارئ",
-            "type": "string"
-          },
-          "nameEn": {
-            "description": "Service category name in English",
-            "example": "Emergency Services",
-            "type": "string"
-          },
-          "sortOrder": {
-            "description": "Display sort order (ascending)",
-            "example": 0,
-            "type": "number"
-          }
-        },
-        "required": [
-          "nameAr",
-          "nameEn"
-        ],
-        "type": "object"
-      },
-      "UpsertTerminologyOverrideDto": {
-        "properties": {
-          "valueAr": {
-            "description": "قيمة المصطلح بالعربية",
-            "example": "مريض",
-            "type": "string"
-          },
-          "valueEn": {
-            "description": "Term value in English",
-            "example": "Patient",
-            "type": "string"
-          }
-        },
-        "required": [
-          "valueAr",
-          "valueEn"
-        ],
-        "type": "object"
-      },
       "UpsertZoomConfigDto": {
         "properties": {
           "zoomAccountId": {
@@ -7323,6 +7140,7 @@
               "services",
               "monthly_bookings",
               "zoom_integration",
+              "zoho_invoice_integration",
               "walk_in_bookings",
               "bank_transfer_payments",
               "multi_branch",
@@ -7464,8 +7282,8 @@
             "type": "string"
           },
           "hCaptchaToken": {
-            "description": "hCaptcha token from the OTP verify form",
-            "example": "<hCaptcha token>",
+            "description": "Captcha token (ignored — kept for client compatibility until Cloudflare Turnstile lands)",
+            "example": "<captcha token>",
             "type": "string"
           },
           "identifier": {
@@ -7495,8 +7313,7 @@
           "channel",
           "identifier",
           "code",
-          "purpose",
-          "hCaptchaToken"
+          "purpose"
         ],
         "type": "object"
       },
@@ -7519,6 +7336,24 @@
         },
         "required": [
           "action"
+        ],
+        "type": "object"
+      },
+      "VerticalListResponseDto": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VerticalResponseDto"
+            },
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AdminPaginationMetaDto"
+          }
+        },
+        "required": [
+          "items",
+          "meta"
         ],
         "type": "object"
       },
@@ -7587,16 +7422,7 @@
         "type": "string"
       },
       "WaiveInvoiceDto": {
-        "properties": {
-          "reason": {
-            "maxLength": 500,
-            "minLength": 10,
-            "type": "string"
-          }
-        },
-        "required": [
-          "reason"
-        ],
+        "properties": {},
         "type": "object"
       }
     },
@@ -8690,6 +8516,126 @@
           }
         ],
         "summary": "Change an organization plan immediately (no proration; audited)",
+        "tags": [
+          "Admin / Billing"
+        ]
+      }
+    },
+    "/api/v1/admin/billing/zoho/invoices": {
+      "get": {
+        "operationId": "AdminBillingController_zohoInvoices",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "zohoMirrored",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "items": {
+                      "type": "array"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMetaDto"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Paginated invoices + Zoho mirror metadata"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List subscription invoices joined with their Zoho SaaS-billing mirror status (admin Zoho schedule view)",
         "tags": [
           "Admin / Billing"
         ]
@@ -9918,20 +9864,31 @@
     "/api/v1/admin/plans": {
       "get": {
         "operationId": "AdminPlansController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Page number (default 1)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Items per page (default 20, max 100)",
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PlanWithCountDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
+            "description": "Paginated list of plans"
           },
           "400": {
             "content": {
@@ -11585,16 +11542,34 @@
     "/api/v1/admin/verticals": {
       "get": {
         "operationId": "AdminVerticalsController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Page number (default: 1)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Items per page, max 100 (default: 20)",
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/VerticalResponseDto"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/VerticalListResponseDto"
                 }
               }
             },
@@ -12196,6 +12171,16 @@
               }
             },
             "description": "Invalid credentials"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Too many attempts, try again later"
           },
           "500": {
             "content": {
@@ -21812,6 +21797,802 @@
         ]
       }
     },
+    "/api/v1/dashboard/integrations/zoho": {
+      "delete": {
+        "operationId": "DashboardZohoController_removeConnection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disconnect Zoho — revokes the refresh token and deletes the integration row",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardZohoController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Configured + active flags + selected Zoho organization"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Zoho Invoice integration status (no secrets)",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/config": {
+      "put": {
+        "operationId": "DashboardZohoController_update",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update tenant defaults (sendOnCreate, item id, payment terms, ...)",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/connect": {
+      "get": {
+        "operationId": "DashboardZohoController_connect",
+        "parameters": [
+          {
+            "description": "Zoho data center: com|sa|eu|in|au|jp|ca",
+            "in": "query",
+            "name": "dc",
+            "required": true,
+            "schema": {
+              "enum": [
+                "com",
+                "sa",
+                "eu",
+                "in",
+                "au",
+                "jp",
+                "ca"
+              ],
+              "example": "sa",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartConnectResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Build the Zoho OAuth consent URL",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/invoices": {
+      "get": {
+        "operationId": "DashboardZohoController_list",
+        "parameters": [
+          {
+            "description": "Filter by status: draft|sent|paid|partially_paid|void|overdue",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by Zoho contact id",
+            "in": "query",
+            "name": "customerId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number (1-based)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Page size, max 200",
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "example": 25,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List invoices in the connected Zoho organization",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/invoices/{id}": {
+      "get": {
+        "operationId": "DashboardZohoController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch a Zoho invoice by id",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/invoices/{id}/send": {
+      "post": {
+        "operationId": "DashboardZohoController_send",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Re-send a Zoho invoice via email",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/invoices/{id}/void": {
+      "post": {
+        "operationId": "DashboardZohoController_void",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Void a Zoho invoice",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/payments-mirror": {
+      "get": {
+        "operationId": "DashboardZohoController_paymentMirrors",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List captured Moyasar payments with their Zoho invoice mirror (URL/PDF/status) — used by the dashboard to show a per-client invoice link",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/select-organization": {
+      "post": {
+        "operationId": "DashboardZohoController_selectOrg",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectOrganizationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Select the Zoho organization to use (required when the connected user has more than one SAR org)",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
+    "/api/v1/dashboard/integrations/zoho/test": {
+      "post": {
+        "operationId": "DashboardZohoController_test",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Validate the stored Zoho credentials",
+        "tags": [
+          "Dashboard / Integrations / Zoho"
+        ]
+      }
+    },
     "/api/v1/dashboard/integrations/zoom": {
       "get": {
         "operationId": "DashboardIntegrationsController_getZoom",
@@ -22079,12 +22860,6 @@
                   "ownerType": {
                     "description": "Entity type that owns the file",
                     "example": "Employee",
-                    "type": "string"
-                  },
-                  "uploadedBy": {
-                    "description": "UUID of the user uploading the file",
-                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    "format": "uuid",
                     "type": "string"
                   },
                   "visibility": {
@@ -22401,7 +23176,7 @@
             "required": false,
             "schema": {
               "example": 3600,
-              "maximum": 86400,
+              "maximum": 900,
               "minimum": 60,
               "type": "number"
             }
@@ -30022,449 +30797,6 @@
         ]
       }
     },
-    "/api/v1/dashboard/verticals": {
-      "post": {
-        "operationId": "DashboardVerticalsController_create",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateVerticalDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a vertical (super-admin)",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
-    "/api/v1/dashboard/verticals/{id}": {
-      "delete": {
-        "operationId": "DashboardVerticalsController_delete",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a vertical",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      },
-      "patch": {
-        "operationId": "DashboardVerticalsController_update",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateVerticalDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a vertical",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
-    "/api/v1/dashboard/verticals/{id}/seed-departments": {
-      "put": {
-        "operationId": "DashboardVerticalsController_upsertSeedDepartment",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertSeedDepartmentDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upsert a seed department for a vertical",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
-    "/api/v1/dashboard/verticals/{id}/seed-service-categories": {
-      "put": {
-        "operationId": "DashboardVerticalsController_upsertSeedServiceCategory",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertSeedServiceCategoryDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upsert a seed service category for a vertical",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
-    "/api/v1/dashboard/verticals/{id}/terminology/{tokenKey}": {
-      "put": {
-        "operationId": "DashboardVerticalsController_upsertOverride",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "tokenKey",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertTerminologyOverrideDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Missing or invalid authentication"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Action denied by permission policy"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            },
-            "description": "Unhandled server error"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upsert a terminology override for a vertical",
-        "tags": [
-          "Dashboard / Platform"
-        ]
-      }
-    },
     "/api/v1/health": {
       "get": {
         "operationId": "PublicHealthController_check",
@@ -36207,6 +36539,42 @@
         "summary": "Get merged terminology pack (base family + vertical overrides)",
         "tags": [
           "Public / Platform"
+        ]
+      }
+    },
+    "/api/v1/public/webhooks/zoho/{tenantToken}": {
+      "post": {
+        "operationId": "PublicZohoWebhookController_handle",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenantToken",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Receive Zoho Invoice webhook events (mirror-only)",
+        "tags": [
+          "Public / Zoho"
         ]
       }
     },

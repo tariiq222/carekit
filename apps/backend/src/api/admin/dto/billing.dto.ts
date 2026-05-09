@@ -11,9 +11,7 @@ import {
   IsOptional,
   IsString,
   Max,
-  MaxLength,
   Min,
-  MinLength,
 } from 'class-validator';
 
 export class ListSubscriptionsQueryDto {
@@ -88,13 +86,7 @@ export class ListSubscriptionInvoicesQueryDto {
   includeDrafts?: boolean;
 }
 
-export class WaiveInvoiceDto {
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
-}
+export class WaiveInvoiceDto {}
 
 export class GrantCreditDto {
   @ApiProperty()
@@ -113,12 +105,6 @@ export class GrantCreditDto {
   @IsString()
   @IsIn(['SAR'])
   currency?: string;
-
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
 }
 
 export class RefundInvoiceDto {
@@ -131,24 +117,12 @@ export class RefundInvoiceDto {
   @IsNumber()
   @Min(0.01)
   amount?: number;
-
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
 }
 
 export class ChangePlanForOrgDto {
   @ApiProperty()
   @IsString()
   newPlanId!: string;
-
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
 }
 
 // ─── Response DTOs ────────────────────────────────────────────────────────────

@@ -88,7 +88,6 @@ describe('AdminOrganizationsController', () => {
       slug: 'riyadh-clinic',
       nameAr: 'عيادة الرياض',
       ownerUserId: 'owner-1',
-      reason: 'Create tenant for onboarding',
     };
 
     await controller.create(body, user, req);
@@ -107,7 +106,6 @@ describe('AdminOrganizationsController', () => {
       nameAr: 'اسم محدث',
       nameEn: null,
       verticalSlug: null,
-      reason: 'Update tenant metadata',
     };
 
     await controller.update('org-1', body, user, req);

@@ -31,12 +31,6 @@ export class CreateVerticalDto {
   @ApiPropertyOptional() @IsOptional() @IsUrl() iconUrl?: string;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsInt() sortOrder?: number;
-
-  @ApiProperty({ minLength: 10 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(1000)
-  reason!: string;
 }
 
 export class UpdateVerticalDto {
@@ -53,18 +47,6 @@ export class UpdateVerticalDto {
   @ApiPropertyOptional() @IsOptional() @IsUrl() iconUrl?: string;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsInt() sortOrder?: number;
-
-  @ApiProperty({ minLength: 10 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(1000)
-  reason!: string;
 }
 
-export class DeleteVerticalDto {
-  @ApiProperty({ minLength: 10 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(1000)
-  reason!: string;
-}
+export class DeleteVerticalDto {}

@@ -133,18 +133,6 @@ export class UpdateOrganizationDto {
   @Type(() => Date)
   @IsDate()
   trialEndsAt?: Date | null;
-
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
 }
 
-export class ArchiveOrganizationDto {
-  @ApiProperty({ minLength: 10, maxLength: 500 })
-  @IsString()
-  @MinLength(10)
-  @MaxLength(500)
-  reason!: string;
-}
+export class ArchiveOrganizationDto {}

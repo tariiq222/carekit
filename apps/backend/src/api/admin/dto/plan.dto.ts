@@ -65,12 +65,6 @@ export class CreatePlanDto {
   @IsOptional()
   @IsInt()
   sortOrder?: number;
-
-  @ApiProperty({ minLength: 3 })
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  reason!: string;
 }
 
 export class UpdatePlanDto {
@@ -82,18 +76,6 @@ export class UpdatePlanDto {
   @ApiPropertyOptional() @IsOptional() @IsObject() limits?: Record<string, unknown>;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsInt() sortOrder?: number;
-
-  @ApiProperty({ minLength: 3 })
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  reason!: string;
 }
 
-export class DeletePlanDto {
-  @ApiProperty({ minLength: 3 })
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  reason!: string;
-}
+export class DeletePlanDto {}
