@@ -1,10 +1,8 @@
 import { getRequestConfig } from 'next-intl/server';
+import { readLocaleCookie } from '@/lib/locale.server';
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
-  if (!locale || !['en', 'ar'].includes(locale)) {
-    locale = 'ar';
-  }
+export default getRequestConfig(async () => {
+  const locale = await readLocaleCookie();
   return {
     locale,
     messages: (await import(`./messages/${locale}.json`)).default,

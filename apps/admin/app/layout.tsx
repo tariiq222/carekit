@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { readThemeCookie } from '@/lib/theme.server';
+import { readLocaleCookie } from '@/lib/locale.server';
 import './globals.css';
 
 const plexArabic = IBM_Plex_Sans_Arabic({
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const messages = await getMessages();
   const theme = await readThemeCookie();
+  const locale = await readLocaleCookie();
 
   const htmlClass = [
     plexArabic.variable,
@@ -48,7 +50,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     .join(' ');
 
   return (
-    <html lang="ar" dir="rtl" className={htmlClass} suppressHydrationWarning>
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={htmlClass} suppressHydrationWarning>
       <head>
         {theme === 'system' && (
           <script
@@ -59,7 +61,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         )}
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>

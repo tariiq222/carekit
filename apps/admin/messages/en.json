@@ -77,6 +77,11 @@
     "system": "System",
     "toggle": "Toggle theme"
   },
+  "locale": {
+    "toggle": "Toggle language",
+    "ar": "Arabic",
+    "en": "English"
+  },
   "breadcrumbs": {
     "home": "Home",
     "organizations": "Organizations",

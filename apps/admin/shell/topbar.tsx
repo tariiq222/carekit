@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@deqah/ui/primitives/button';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ThemeToggle } from '@/shell/theme-toggle';
+import { LocaleToggle } from '@/shell/locale-toggle';
 
 function SignOutButton() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export function Topbar() {
         <Breadcrumbs pathname={pathname} />
       </div>
       <div className="flex items-center gap-2">
+        <LocaleToggle />
         <ThemeToggle />
         <SignOutButton />
       </div>
