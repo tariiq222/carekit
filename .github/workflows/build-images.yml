@@ -161,6 +161,7 @@ jobs:
     if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: ${{ needs.detect.outputs.env_name }}
     strategy:
       fail-fast: false
       matrix:
@@ -196,6 +197,10 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:${{ needs.detect.outputs.tag }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ vars.NEXT_PUBLIC_HCAPTCHA_SITE_KEY }}
+            NEXT_PUBLIC_MOYASAR_PLATFORM_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_MOYASAR_PLATFORM_PUBLISHABLE_KEY }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:buildcache-${{ needs.detect.outputs.env_name }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/deqah-${{ matrix.app }}:buildcache-${{ needs.detect.outputs.env_name }},mode=max
 
