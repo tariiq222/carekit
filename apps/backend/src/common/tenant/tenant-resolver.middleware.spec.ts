@@ -199,37 +199,50 @@ describe('TenantResolverMiddleware', () => {
       });
     });
 
-    it('strict mode: public routes without a valid X-Org-Id still fail closed', async () => {
+    it('strict mode: public routes without X-Org-Id pass through (handlers use requireOrganizationIdOrDefault)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
+      let nextCalled = false;
+      await new Promise<void>((done) => {
         cls.run(() =>
           mw.use(
             req({ originalUrl: '/api/v1/public/services/departments' }),
             {} as never,
-            () => undefined,
+            () => {
+              nextCalled = true;
+              done();
+            },
           ),
-        ),
-      ).toThrow(TenantResolutionError);
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined(); // No tenant context set - handler decides
     });
 
     // Regression: confirm the boundary is explicit — /public routes without header
-    // still throw, auth-bootstrap routes next to them do NOT.
-    it('strict mode: /api/v1/public/services/departments without X-Org-Id still throws (boundary regression)', async () => {
+    // pass through, auth-bootstrap routes next to them do NOT.
+    it('strict mode: /api/v1/public/services/departments without X-Org-Id passes through (boundary regression)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
+      let nextCalled = false;
+      await new Promise<void>((done) => {
         cls.run(() =>
           mw.use(
             req({ originalUrl: '/api/v1/public/services/departments' }),
             {} as never,
-            () => undefined,
+            () => {
+              nextCalled = true;
+              done();
+            },
           ),
-        ),
-      ).toThrow(TenantResolutionError);
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
     });
 
-    it('strict mode: ignores invalid UUID, throws (no fallback)', async () => {
+    it('strict mode: invalid UUID on public route treated as "not provided" — passes through', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
+      let nextCalled = false;
+      await new Promise<void>((done) => {
         cls.run(() =>
           mw.use(
             req({
@@ -237,10 +250,15 @@ describe('TenantResolverMiddleware', () => {
               headers: { 'x-org-id': 'not-a-uuid' },
             }),
             {} as never,
-            () => undefined,
+            () => {
+              nextCalled = true;
+              done();
+            },
           ),
-        ),
-      ).toThrow(TenantResolutionError);
+        );
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
     });
 
     it('strict mode: ignores X-Org-Id on /webhooks/ public route and defers to webhook guards', async () => {

@@ -74,7 +74,9 @@ export class TenantResolverMiddleware implements NestMiddleware {
     return (
       path.endsWith('/auth/login') ||
       path.endsWith('/auth/refresh') ||
-      path.endsWith('/auth/logout')
+      path.endsWith('/auth/logout') ||
+      path.endsWith('/auth/otp/request-dashboard') ||
+      path.endsWith('/auth/otp/verify-dashboard')
     );
   }
 
@@ -147,6 +149,13 @@ export class TenantResolverMiddleware implements NestMiddleware {
         : undefined;
 
     const organizationId = fromSuperAdminHeader ?? fromJwt ?? fromPublicHeader ?? fromDefault;
+
+    // Public routes (e.g. /public/branding, /public/auth/*) are designed to work
+    // without a tenant context — handlers use requireOrganizationIdOrDefault() which
+    // falls back gracefully. Allow them through even in strict mode when no header/JWT.
+    if (!organizationId && isPublicRoute) {
+      return next();
+    }
 
     if (!organizationId) {
       throw new TenantResolutionError(
