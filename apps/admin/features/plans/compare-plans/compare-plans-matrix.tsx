@@ -293,7 +293,7 @@ export function ComparePlansMatrix({ plans }: Props) {
               </p>
             )}
             <div className="space-y-1">
-              <Label htmlFor="cmp-reason">Reason (min 10 chars)</Label>
+              <Label htmlFor="cmp-reason">Reason (min 3 chars)</Label>
               <Textarea
                 id="cmp-reason"
                 rows={2}

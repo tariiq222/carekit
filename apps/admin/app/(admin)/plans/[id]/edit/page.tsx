@@ -10,6 +10,7 @@ import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
 import { PlanFormTabs } from '@/features/plans/plan-form-tabs';
+import { FeaturesTab } from '@/features/plans/features-tab/features-tab';
 import { DEFAULT_PLAN_LIMITS, type PlanLimits } from '@/features/plans/plan-limits';
 import { useUpdatePlan } from '@/features/plans/update-plan/use-update-plan';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -67,7 +68,7 @@ export default function EditPlanPage() {
     form.nameEn.trim().length > 0 &&
     form.priceMonthly !== '' &&
     form.priceAnnual !== '' &&
-    form.reason.trim().length >= 10;
+    form.reason.trim().length >= 3;
 
   const set =
     (field: keyof Omit<EditForm, 'isActive'>) => (value: string) =>
@@ -205,7 +206,7 @@ export default function EditPlanPage() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="ep-reason">Reason (min 10 chars)</Label>
+        <Label htmlFor="ep-reason">Reason (min 3 chars)</Label>
         <Textarea
           id="ep-reason"
           rows={3}
@@ -215,6 +216,14 @@ export default function EditPlanPage() {
         />
       </div>
     </>
+  );
+
+  const features = (
+    <FeaturesTab
+      flatLimits={limits}
+      onFlatLimitsChange={setLimits}
+      idPrefix="ep"
+    />
   );
 
   return (
@@ -233,8 +242,12 @@ export default function EditPlanPage() {
       <div className="rounded-lg border border-border bg-card p-6">
         <PlanFormTabs
           general={general}
+          features={features}
           activeTab={activeTab}
           onActiveTabChange={setActiveTab}
+          flatLimits={limits}
+          onFlatLimitsChange={setLimits}
+          idPrefix="ep"
         />
       </div>
 

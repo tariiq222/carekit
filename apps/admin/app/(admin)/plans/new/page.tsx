@@ -9,6 +9,7 @@ import { Label } from '@deqah/ui/primitives/label';
 import { Textarea } from '@deqah/ui/primitives/textarea';
 import { useCreatePlan } from '@/features/plans/create-plan/use-create-plan';
 import { PlanFormTabs } from '@/features/plans/plan-form-tabs';
+import { FeaturesTab } from '@/features/plans/features-tab/features-tab';
 import { DEFAULT_PLAN_LIMITS, type PlanLimits } from '@/features/plans/plan-limits';
 
 const SLUG_REGEX = /^[A-Z][A-Z0-9_]{1,31}$/;
@@ -37,7 +38,7 @@ export default function CreatePlanPage() {
     form.nameEn.trim().length > 0 &&
     form.priceMonthly !== '' &&
     form.priceAnnual !== '' &&
-    form.reason.trim().length >= 10;
+    form.reason.trim().length >= 3;
 
   const set = (field: keyof typeof DEFAULT_FORM) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -136,7 +137,7 @@ export default function CreatePlanPage() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="cp-reason">Reason (min 10 chars)</Label>
+        <Label htmlFor="cp-reason">Reason (min 3 chars)</Label>
         <Textarea
           id="cp-reason"
           rows={3}
@@ -146,6 +147,14 @@ export default function CreatePlanPage() {
         />
       </div>
     </>
+  );
+
+  const features = (
+    <FeaturesTab
+      flatLimits={limits}
+      onFlatLimitsChange={setLimits}
+      idPrefix="cp"
+    />
   );
 
   return (
@@ -166,8 +175,12 @@ export default function CreatePlanPage() {
       <div className="rounded-lg border border-border bg-card p-6">
         <PlanFormTabs
           general={general}
+          features={features}
           activeTab={activeTab}
           onActiveTabChange={setActiveTab}
+          flatLimits={limits}
+          onFlatLimitsChange={setLimits}
+          idPrefix="cp"
         />
       </div>
 
