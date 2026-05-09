@@ -8,7 +8,7 @@ function makeCfg(value: string | undefined): ConfigService {
 }
 
 describe('SmsCredentialsService', () => {
-  it('round-trips a payload using organizationId as AAD', () => {
+  it('round-trips a payload for the same organizationId', () => {
     const svc = new SmsCredentialsService(makeCfg(KEY_32_BYTES_BASE64));
     const cipher = svc.encrypt({ apiKey: 'abc', appSid: 'xyz' }, 'org-1');
     expect(typeof cipher).toBe('string');
@@ -19,7 +19,7 @@ describe('SmsCredentialsService', () => {
     });
   });
 
-  it('fails to decrypt when organizationId AAD differs', () => {
+  it('fails to decrypt when organizationId differs (per-tenant key mismatch)', () => {
     const svc = new SmsCredentialsService(makeCfg(KEY_32_BYTES_BASE64));
     const cipher = svc.encrypt({ apiKey: 'abc' }, 'org-1');
     expect(() => svc.decrypt(cipher, 'org-2')).toThrow();
@@ -43,5 +43,18 @@ describe('SmsCredentialsService', () => {
     const a = svc.encrypt({ k: 'v' }, 'org-1');
     const b = svc.encrypt({ k: 'v' }, 'org-1');
     expect(a).not.toEqual(b);
+  });
+
+  it('produces different ciphertexts for the same payload across orgs (per-tenant key)', () => {
+    const svc = new SmsCredentialsService(makeCfg(KEY_32_BYTES_BASE64));
+    const ct1 = svc.encrypt({ x: 1 }, 'org-aaaa');
+    const ct2 = svc.encrypt({ x: 1 }, 'org-bbbb');
+    expect(ct1).not.toEqual(ct2);
+  });
+
+  it('decrypt with wrong org throws', () => {
+    const svc = new SmsCredentialsService(makeCfg(KEY_32_BYTES_BASE64));
+    const ct = svc.encrypt({ x: 1 }, 'org-aaaa');
+    expect(() => svc.decrypt(ct, 'org-bbbb')).toThrow();
   });
 });

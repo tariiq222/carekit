@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { PrismaService } from '../../../../infrastructure/database';
+import { RlsHelper } from '../../../../common/tenant/rls.helper';
 import { PasswordService } from '../../shared/password.service';
 import { PerformPasswordResetDto } from './perform-password-reset.dto';
 
@@ -11,6 +12,7 @@ export class PerformPasswordResetHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwords: PasswordService,
+    private readonly rls: RlsHelper,
   ) {}
 
   async execute(dto: PerformPasswordResetDto): Promise<void> {
@@ -46,6 +48,10 @@ export class PerformPasswordResetHandler {
     const now = new Date();
 
     await this.prisma.$transaction(async (tx) => {
+      // Pre-auth flow: caller has only the reset token, no tenant context.
+      // Bypass RLS so User + RefreshToken lookups work cross-tenant.
+      // The token itself is the proof of identity (single-use, time-limited).
+      await tx.$queryRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
       await tx.user.update({
         where: { id: record.userId },
         data: { passwordHash },
