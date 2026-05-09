@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist), var(--font-plex-arabic), 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-sans: var(--font-plex-arabic), var(--font-geist), 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -80,7 +80,7 @@
   --input:            oklch(0.92 0.005 255);
 
   /* Typography stack vars — used by body/utility classes */
-  --font-sans:    var(--font-geist), var(--font-plex-arabic), 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-sans:    var(--font-plex-arabic), var(--font-geist), 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-mono:    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
