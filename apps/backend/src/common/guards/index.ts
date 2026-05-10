@@ -5,3 +5,5 @@ export * from './client-session.guard';
 export * from './super-admin.guard';
 export * from './owner-only.guard';
 export * from './allow-during-suspension.decorator';
+export * from './ip-allowlist.guard';
+export * from './internal-bearer.guard';

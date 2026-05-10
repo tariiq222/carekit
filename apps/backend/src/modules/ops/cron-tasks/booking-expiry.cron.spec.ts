@@ -7,12 +7,17 @@ describe('BookingExpiryCron', () => {
       set: jest.fn(),
     });
 
+    const buildPrisma = () => ({
+      $queryRaw: jest.fn()
+        .mockResolvedValueOnce([{ v: BigInt(12345) }])
+        .mockResolvedValueOnce([{ acquired: true }]),
+      $allTenants: {
+        booking: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
+      },
+    });
+
     it('expires PENDING bookings past expiresAt via $allTenants', async () => {
-      const prisma = {
-        $allTenants: {
-          booking: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
-        },
-      };
+      const prisma = buildPrisma();
       const flags = { bookingExpiryEnabled: false };
       const cls = buildCls();
       const cron = new BookingExpiryCron(prisma as never, flags as never, cls as never);
@@ -25,11 +30,7 @@ describe('BookingExpiryCron', () => {
     });
 
     it('legacy path silent when no rows match', async () => {
-      const prisma = {
-        $allTenants: {
-          booking: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
-        },
-      };
+      const prisma = buildPrisma();
       const flags = { bookingExpiryEnabled: false };
       const cls = buildCls();
       const cron = new BookingExpiryCron(prisma as never, flags as never, cls as never);
@@ -48,20 +49,26 @@ describe('BookingExpiryCron', () => {
       set: jest.fn(),
     });
 
+    const buildPrisma = () => ({
+      $queryRaw: jest.fn()
+        .mockResolvedValueOnce([{ v: BigInt(12345) }])
+        .mockResolvedValueOnce([{ acquired: true }]),
+      $allTenants: {
+        booking: {
+          findMany: jest.fn().mockResolvedValue([]),
+          updateMany: jest.fn().mockResolvedValue({ count: 2 }),
+        },
+        coupon: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      },
+    });
+
     it('expires PENDING/AWAITING_PAYMENT/PENDING_GROUP_FILL using $allTenants', async () => {
       const stale = [
         { id: 'b1', status: 'PENDING', couponCode: 'PROMO', organizationId: 'o1' },
         { id: 'b2', status: 'AWAITING_PAYMENT', couponCode: null, organizationId: 'o1' },
       ];
-      const prisma = {
-        $allTenants: {
-          booking: {
-            findMany: jest.fn().mockResolvedValue(stale),
-            updateMany: jest.fn().mockResolvedValue({ count: 2 }),
-          },
-          coupon: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-        },
-      };
+      const prisma = buildPrisma();
+      prisma.$allTenants.booking.findMany.mockResolvedValue(stale);
       const flags = { bookingExpiryEnabled: true };
       const cron = new BookingExpiryCron(prisma as never, flags as never, buildCls() as never);
       await cron.execute();
@@ -84,9 +91,7 @@ describe('BookingExpiryCron', () => {
     });
 
     it('idempotent: empty result is a no-op', async () => {
-      const prisma = {
-        $allTenants: { booking: { findMany: jest.fn().mockResolvedValue([]) } },
-      };
+      const prisma = buildPrisma();
       const flags = { bookingExpiryEnabled: true };
       const cron = new BookingExpiryCron(prisma as never, flags as never, buildCls() as never);
       await cron.execute();
@@ -99,15 +104,8 @@ describe('BookingExpiryCron', () => {
         { id: 'b2', status: 'PENDING', couponCode: 'X', organizationId: 'o1' },
         { id: 'b3', status: 'PENDING', couponCode: 'Y', organizationId: 'o2' },
       ];
-      const prisma = {
-        $allTenants: {
-          booking: {
-            findMany: jest.fn().mockResolvedValue(stale),
-            updateMany: jest.fn().mockResolvedValue({ count: 3 }),
-          },
-          coupon: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-        },
-      };
+      const prisma = buildPrisma();
+      prisma.$allTenants.booking.findMany.mockResolvedValue(stale);
       const flags = { bookingExpiryEnabled: true };
       const cron = new BookingExpiryCron(prisma as never, flags as never, buildCls() as never);
       await cron.execute();

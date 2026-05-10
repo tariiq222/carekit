@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { withCronLeader } from '../../../../common/helpers/cron-leader.helper';
 import { DunningRetryService } from './dunning-retry.service';
 
 @Injectable()
@@ -16,43 +17,45 @@ export class DunningRetryCron {
   async execute(now = new Date()): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
-    const subscriptions = await this.prisma.$allTenants.subscription.findMany({
-      where: {
-        status: 'PAST_DUE',
-        nextRetryAt: { lte: now },
-      },
-      select: {
-        id: true,
-        organizationId: true,
-        dunningRetryCount: true,
-        invoices: {
-          where: { status: { in: ['FAILED', 'DUE'] } },
-          orderBy: { dueDate: 'desc' },
-          take: 1,
-          select: { id: true, amount: true },
+    await withCronLeader(this.prisma, 'dunning-retry', async () => {
+      const subscriptions = await this.prisma.$allTenants.subscription.findMany({
+        where: {
+          status: 'PAST_DUE',
+          nextRetryAt: { lte: now },
         },
-      },
-    });
-
-    let processed = 0;
-    for (const subscription of subscriptions) {
-      const [invoice] = subscription.invoices;
-      if (!invoice) continue;
-      await this.retryService.retryInvoice({
-        subscription: {
-          id: subscription.id,
-          organizationId: subscription.organizationId,
-          dunningRetryCount: subscription.dunningRetryCount,
+        select: {
+          id: true,
+          organizationId: true,
+          dunningRetryCount: true,
+          invoices: {
+            where: { status: { in: ['FAILED', 'DUE'] } },
+            orderBy: { dueDate: 'desc' },
+            take: 1,
+            select: { id: true, amount: true },
+          },
         },
-        invoice,
-        now,
-        manual: false,
       });
-      processed += 1;
-    }
 
-    if (processed > 0) {
-      this.logger.log(`Processed ${processed} dunning retry attempts`);
-    }
+      let processed = 0;
+      for (const subscription of subscriptions) {
+        const [invoice] = subscription.invoices;
+        if (!invoice) continue;
+        await this.retryService.retryInvoice({
+          subscription: {
+            id: subscription.id,
+            organizationId: subscription.organizationId,
+            dunningRetryCount: subscription.dunningRetryCount,
+          },
+          invoice,
+          now,
+          manual: false,
+        });
+        processed += 1;
+      }
+
+      if (processed > 0) {
+        this.logger.log(`Processed ${processed} dunning retry attempts`);
+      }
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
+import { withCronLeader } from '../../../../common/helpers/cron-leader.helper';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
@@ -52,7 +53,9 @@ export class ChargeDueSubscriptionsCron {
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
       this.logger.log('systemContext: charge-due-subscriptions tick');
-      await this.runCharge();
+      await withCronLeader(this.prisma, 'charge-due-subscriptions', async () => {
+        await this.runCharge();
+      });
     });
   }
 
@@ -167,13 +170,26 @@ export class ChargeDueSubscriptionsCron {
       },
     });
 
-    // Stamp consumed credits with the new invoice id.
+    // Stamp consumed credits with the new invoice id — atomically to prevent
+    // double-consumption in concurrent cron ticks.
     if (creditsApplied.length > 0) {
       for (const c of creditsApplied) {
-        await this.prisma.$allTenants.billingCredit.update({
-          where: { id: c.id, consumedAt: null },
-          data: { consumedInvoiceId: invoice.id, consumedAt: new Date() },
+        const result = await this.prisma.$allTenants.billingCredit.updateMany({
+          where: {
+            id: c.id,
+            consumedAt: null,
+          },
+          data: {
+            consumedInvoiceId: invoice.id,
+            consumedAt: new Date(),
+          },
         });
+        if (result.count === 0) {
+          // Credit was already consumed by another concurrent request — skip.
+          this.logger.warn(
+            `BillingCredit ${c.id} was already consumed; skipping for invoice ${invoice.id}`,
+          );
+        }
       }
     }
 

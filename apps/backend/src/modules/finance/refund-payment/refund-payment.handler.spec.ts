@@ -15,9 +15,11 @@ describe('RefundPaymentHandler', () => {
   beforeEach(async () => {
     moyasar = { createRefund: jest.fn() };
     prisma = {
+      $transaction: jest.fn().mockImplementation(async (fn: (tx: any) => Promise<unknown>) => fn(prisma)),
+      $queryRaw: jest.fn().mockResolvedValue([]),
       payment: { findFirst: jest.fn(), update: jest.fn() },
       refundRequest: { create: jest.fn(), update: jest.fn() },
-      invoice: { update: jest.fn() },
+      invoice: { findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'inv_1', bookingId: 'bk_1', clientId: 'cli_1', currency: 'SAR', organizationId: 'org_1' }), update: jest.fn() },
     };
     eventBus = { publish: jest.fn().mockResolvedValue(undefined) };
 
@@ -48,9 +50,18 @@ describe('RefundPaymentHandler', () => {
     ...overrides,
   });
 
+  const buildPaymentRow = (overrides: any = {}) => ({
+    id: 'pay_1',
+    status: 'COMPLETED',
+    gatewayRef: 'moyasar_pay_abc',
+    amount: 100,
+    invoiceId: 'inv_1',
+    ...overrides,
+  });
+
   it('records RefundRequest in PROCESSING BEFORE calling Moyasar (breadcrumb for reconciliation)', async () => {
     const callOrder: string[] = [];
-    prisma.payment.findFirst.mockResolvedValue(completedPayment());
+    prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockImplementation(async () => { callOrder.push('refundRequest.create'); return { id: 'rr_1' }; });
     moyasar.createRefund.mockImplementation(async () => {
       callOrder.push('moyasar');
@@ -70,7 +81,7 @@ describe('RefundPaymentHandler', () => {
   });
 
   it('forwards Idempotency-Key as refund:<paymentId>:<amount> to Moyasar', async () => {
-    prisma.payment.findFirst.mockResolvedValue(completedPayment());
+    prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
     prisma.refundRequest.update.mockResolvedValue({});
     moyasar.createRefund.mockResolvedValue({ id: 'ref_xyz', amount: 10000, currency: 'SAR', status: 'refunded', paymentId: 'moyasar_pay_abc', createdAt: new Date().toISOString() });
@@ -87,7 +98,7 @@ describe('RefundPaymentHandler', () => {
   });
 
   it('persists gatewayRef from Moyasar onto RefundRequest in finalize step', async () => {
-    prisma.payment.findFirst.mockResolvedValue(completedPayment());
+    prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
     moyasar.createRefund.mockResolvedValue({ id: 'ref_xyz', amount: 10000, currency: 'SAR', status: 'refunded', paymentId: 'moyasar_pay_abc', createdAt: new Date().toISOString() });
     prisma.refundRequest.update.mockResolvedValue({});
@@ -96,21 +107,18 @@ describe('RefundPaymentHandler', () => {
 
     await handler.execute({ paymentId: 'pay_1', reason: 'test' });
 
-    // gatewayRef is persisted on the FINALIZE update, not on the initial create
     expect(prisma.refundRequest.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'COMPLETED', gatewayRef: 'ref_xyz' }),
     }));
   });
 
   it('marks RefundRequest FAILED if Moyasar throws (no money moved)', async () => {
-    prisma.payment.findFirst.mockResolvedValue(completedPayment());
+    prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
     prisma.refundRequest.update.mockResolvedValue({});
     moyasar.createRefund.mockRejectedValue(new Error('Moyasar 502'));
 
     await expect(handler.execute({ paymentId: 'pay_1', reason: 'test' })).rejects.toThrow('Moyasar 502');
-    // The pre-Moyasar PROCESSING row was created; finalize never ran;
-    // catch block flips it to FAILED so it's safe to retry.
     expect(prisma.refundRequest.create).toHaveBeenCalled();
     expect(prisma.refundRequest.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'FAILED' }),
@@ -120,19 +128,16 @@ describe('RefundPaymentHandler', () => {
   });
 
   it('preserves gatewayRef on partial-success (Moyasar OK, finalize tx fails)', async () => {
-    prisma.payment.findFirst.mockResolvedValue(completedPayment());
+    prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
     moyasar.createRefund.mockResolvedValue({ id: 'ref_partial', amount: 10000, currency: 'SAR', status: 'refunded', paymentId: 'moyasar_pay_abc', createdAt: new Date().toISOString() });
-    // Make the finalize transaction fail — money already moved at Moyasar
     rlsTx.withTransaction = jest.fn().mockRejectedValue(new Error('DB unavailable'));
     prisma.refundRequest.update.mockResolvedValue({});
 
     await expect(handler.execute({ paymentId: 'pay_1', reason: 'test' })).rejects.toThrow('DB unavailable');
-    // gatewayRef must be persisted so reconciliation can finalize the row
     expect(prisma.refundRequest.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ gatewayRef: 'ref_partial' }),
     }));
-    // Row is left in PROCESSING (not FAILED) because money DID move
     const failedCalls = (prisma.refundRequest.update as jest.Mock).mock.calls.filter(
       (c: any[]) => c[0]?.data?.status === 'FAILED',
     );
@@ -140,19 +145,19 @@ describe('RefundPaymentHandler', () => {
   });
 
   it('throws NotFound if payment is missing', async () => {
-    prisma.payment.findFirst.mockResolvedValue(null);
+    prisma.$queryRaw.mockResolvedValueOnce([]);
     await expect(handler.execute({ paymentId: 'missing', reason: 'x' })).rejects.toThrow(NotFoundException);
     expect(moyasar.createRefund).not.toHaveBeenCalled();
   });
 
   it('throws BadRequest if payment is not COMPLETED', async () => {
-    prisma.payment.findFirst.mockResolvedValue({ ...completedPayment(), status: 'PENDING' });
+    prisma.$queryRaw.mockResolvedValueOnce([{ ...buildPaymentRow(), status: 'PENDING' }]);
     await expect(handler.execute({ paymentId: 'pay_1', reason: 'x' })).rejects.toThrow(BadRequestException);
     expect(moyasar.createRefund).not.toHaveBeenCalled();
   });
 
   it('throws BadRequest if payment has no gatewayRef', async () => {
-    prisma.payment.findFirst.mockResolvedValue(completedPayment({ gatewayRef: null }));
+    prisma.$queryRaw.mockResolvedValueOnce([{ ...buildPaymentRow(), gatewayRef: null }]);
     await expect(handler.execute({ paymentId: 'pay_1', reason: 'x' })).rejects.toThrow(/gateway reference/i);
     expect(moyasar.createRefund).not.toHaveBeenCalled();
   });

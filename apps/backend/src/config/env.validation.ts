@@ -28,7 +28,28 @@ export const envValidationSchema = Joi.object({
   CORS_ORIGINS: Joi.string().allow('').optional(),
 
   // Database (Prisma)
-  DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
+  DATABASE_URL: Joi.string()
+    .uri({ scheme: ['postgresql', 'postgres'] })
+    .required()
+    .custom((url: string, helpers) => {
+      if (process.env.NODE_ENV === 'production') {
+        try {
+          const u = new URL(url);
+          if (!u.searchParams.has('connection_limit')) {
+            return helpers.error('any.invalid', { message: 'DATABASE_URL must include connection_limit in production' });
+          }
+          if (!u.searchParams.has('pool_timeout')) {
+            return helpers.error('any.invalid', { message: 'DATABASE_URL must include pool_timeout in production' });
+          }
+        } catch {
+          return helpers.error('any.invalid', { message: 'DATABASE_URL is not a valid URL' });
+        }
+      }
+      return url;
+    }, 'production pool config'),
+  DB_STATEMENT_TIMEOUT_MS: Joi.number().integer().default(30_000),
+  DB_POOL_TIMEOUT_S: Joi.number().integer().default(20),
+  DB_CONNECTION_LIMIT: Joi.number().integer().default(10),
   APP_DB_USER: Joi.string().optional(),
   APP_DB_PASSWORD: Joi.string().optional(),
   RLS_GUC_INTERCEPTOR_ENABLED: Joi.string().valid('true', 'false').default('false'),
@@ -93,15 +114,6 @@ export const envValidationSchema = Joi.object({
   //   off        → no scoping. Legacy single-tenant mode. Never in multi-tenant prod.
   TENANT_ENFORCEMENT: Joi.string().valid('off', 'permissive', 'strict').default('strict'),
   DEFAULT_ORGANIZATION_ID: Joi.string().uuid().default('00000000-0000-0000-0000-000000000001'),
-
-  // Subdomain-based tenant routing (CR-4).
-  // PLATFORM_ROOT_DOMAIN: the apex domain (e.g. deqah.net). Requests arriving on
-  // <slug>.deqah.net are resolved to that organization's ID. Defaults to 'deqah.net'
-  // for production; override in dev/test if needed.
-  PLATFORM_ROOT_DOMAIN: Joi.string().hostname().default('deqah.net'),
-  // RESERVED_SUBDOMAINS: comma-separated additional subdomains to block from
-  // tenant slug resolution (on top of the built-in list in subdomain.utils.ts).
-  RESERVED_SUBDOMAINS: Joi.string().allow('').optional(),
 
   // SMS per-tenant (SaaS-02g-sms) — encryption key is REQUIRED; 32 raw bytes base64-encoded (ASCII length 44).
   // Webhook base URL is the public origin registered with providers for DLR callbacks.
@@ -274,6 +286,17 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.string().allow('').optional(),
   }),
 
+  INTERNAL_METRICS_ALLOWED_IPS: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().required(),
+    otherwise: Joi.string().default('127.0.0.1,::1'),
+  }),
+  INTERNAL_METRICS_TOKEN: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
+
   // Optional CSV of additional reserved subdomains merged with the built-in list.
   // Example: "ops,beta" — prevents tenants from registering those slugs.
   RESERVED_SUBDOMAINS: Joi.string().allow('').optional(),
@@ -339,10 +362,41 @@ export const envValidationSchema = Joi.object({
     // RLS policies are fail-closed (post 2026-05-09) — leaving the interceptor off either
     // (a) breaks every authenticated query if the role is deqah_app, or (b) silently
     // bypasses RLS if the role is the OWNER. Both are unacceptable.
-    if (value.RLS_GUC_INTERCEPTOR_ENABLED !== 'true') {
+if (value.RLS_GUC_INTERCEPTOR_ENABLED !== 'true') {
       return helpers.error('any.invalid', {
         message: 'RLS_GUC_INTERCEPTOR_ENABLED must be "true" in production. Setting it false disables the per-request tenant GUC and leaves the database with no enforced tenant boundary.',
       });
     }
+    // P0-8: production secret banlist - reject weak/default values at startup
+    const BANNED_IN_PRODUCTION: Array<{ key: string; bannedValues?: string[]; bannedSubstrings?: string[] }> = [
+      { key: 'JWT_SECRET', bannedValues: ['secret', 'change-me', 'development-secret', ''] },
+      { key: 'APP_DB_PASSWORD', bannedValues: ['postgres', 'password', ''] },
+      { key: 'MINIO_SECRET_KEY', bannedValues: ['minioadmin', ''] },
+    ];
+    for (const { key, bannedValues, bannedSubstrings } of BANNED_IN_PRODUCTION) {
+      const v = (value as Record<string, unknown>)[key] as string | undefined;
+      if (typeof v !== 'string') continue;
+      if (bannedValues?.includes(v)) {
+        return helpers.error('any.invalid', {
+          message: `${key} must not use default/weak value in production`,
+        });
+      }
+      if (bannedSubstrings?.some((s) => v.includes(s))) {
+        return helpers.error('any.invalid', {
+          message: `${key} must not contain '${bannedSubstrings}' in production`,
+        });
+      }
+    }
+    // P0-8: prevent sk_live_ keys in test-only env vars
+    const liveKeyCheck = ['MOYASAR_TEST_SECRET_KEY'];
+    for (const key of liveKeyCheck) {
+      const v = (value as Record<string, unknown>)[key] as string | undefined;
+      if (typeof v === 'string' && v.includes('sk_live_')) {
+        return helpers.error('any.invalid', {
+          message: `${key} must not use live key (sk_live_) in test config`,
+        });
+      }
+    }
+
     return value;
   }, 'placeholder rejection in production');

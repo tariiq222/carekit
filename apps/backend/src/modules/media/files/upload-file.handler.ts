@@ -2,6 +2,20 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
+const IMAGE_SIGNATURES = [
+  { mime: 'image/jpeg', magic: [0xFF, 0xD8, 0xFF] },
+  { mime: 'image/png', magic: [0x89, 0x50, 0x4E, 0x47] },
+  { mime: 'image/webp', magic: [0x57, 0x45, 0x42, 0x50] },
+];
+
+function detectMimeType(buffer: Buffer): string | null {
+  for (const sig of IMAGE_SIGNATURES) {
+    if (sig.magic.every((byte, i) => buffer[i] === byte)) {
+      return sig.mime;
+    }
+  }
+  return null;
+}
 import { File, FileVisibility } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
@@ -24,15 +38,12 @@ export const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
   'text/csv',
 ]);
 
+const IMAGE_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+
 export type UploadFileCommand = UploadFileDto & {
   filename: string;
   mimetype: string;
   size: number;
-  /**
-   * Identity of the uploader. MUST be set by the controller from
-   * `req.user.sub` (the authenticated JWT) — never accept this from a
-   * request body or query parameter.
-   */
   uploadedBy?: string;
 };
 
@@ -64,7 +75,10 @@ export class UploadFileHandler {
       throw new BadRequestException(`Mime type not allowed: ${cmd.mimetype}`);
     }
 
+    await this.validateFileType(buffer, cmd.mimetype, cmd.filename);
+
     const ext = extname(cmd.filename).toLowerCase();
+    const safeFilename = cmd.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storageKey = `${randomUUID()}${ext}`;
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
@@ -77,7 +91,7 @@ export class UploadFileHandler {
           organizationId,
           bucket: this.defaultBucket,
           storageKey,
-          filename: cmd.filename,
+          filename: safeFilename,
           mimetype: cmd.mimetype,
           size: cmd.size,
           visibility: cmd.visibility ?? FileVisibility.PRIVATE,
@@ -87,7 +101,6 @@ export class UploadFileHandler {
         },
       });
     } catch (err) {
-      // If DB insert fails, delete the orphan MinIO object.
       await this.storage
         .deleteFile(this.defaultBucket, storageKey)
         .catch(() => undefined);
@@ -102,5 +115,19 @@ export class UploadFileHandler {
     this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => {});
 
     return Object.assign(file, { url });
+  }
+
+  private async validateFileType(buffer: Buffer, claimedMimeType: string, filename: string): Promise<void> {
+    if (IMAGE_ALLOWED_MIME_TYPES.includes(claimedMimeType as typeof IMAGE_ALLOWED_MIME_TYPES[number])) {
+      const detected = detectMimeType(buffer);
+      if (!detected) {
+        throw new BadRequestException('Cannot determine file type');
+      }
+      if (detected !== claimedMimeType) {
+        throw new BadRequestException(
+          `Content-Type mismatch: claimed ${claimedMimeType}, detected ${detected}`,
+        );
+      }
+    }
   }
 }

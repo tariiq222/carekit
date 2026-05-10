@@ -3,6 +3,7 @@ import { WaitlistStatus } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
+import { withCronLeader } from '../../../common/helpers/cron-leader.helper';
 
 @Injectable()
 export class AppointmentRemindersCron {
@@ -16,14 +17,16 @@ export class AppointmentRemindersCron {
   async execute(): Promise<void> {
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
-      const waiting = await this.prisma.$allTenants.waitlistEntry.findMany({
-        where: { status: WaitlistStatus.WAITING },
-        orderBy: { createdAt: 'asc' },
-        take: 50,
+      await withCronLeader(this.prisma, 'appointment-reminders', async () => {
+        const waiting = await this.prisma.$allTenants.waitlistEntry.findMany({
+          where: { status: WaitlistStatus.WAITING },
+          orderBy: { createdAt: 'asc' },
+          take: 50,
+        });
+        if (waiting.length > 0) {
+          this.logger.log(`${waiting.length} waitlist entries checked`);
+        }
       });
-      if (waiting.length > 0) {
-        this.logger.log(`${waiting.length} waitlist entries checked`);
-      }
     });
   }
 }

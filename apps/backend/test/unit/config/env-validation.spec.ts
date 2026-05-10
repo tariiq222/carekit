@@ -48,6 +48,8 @@ describe('envValidationSchema', () => {
       ZOHO_OAUTH_CLIENT_SECRET: 'zoho-client-secret',
       ZOHO_OAUTH_REDIRECT_URI: 'https://api.example.com/zoho/callback',
       PLATFORM_ROOT_DOMAIN: 'deqah.net',
+      INTERNAL_METRICS_ALLOWED_IPS: '127.0.0.1',
+      INTERNAL_METRICS_TOKEN: 'metrics-token-123-must-be-long-enough-32chars',
     };
     const r = envValidationSchema.validate(env, { abortEarly: false });
     expect(r.error).toBeDefined();
@@ -91,6 +93,8 @@ describe('envValidationSchema', () => {
       ZOHO_OAUTH_CLIENT_SECRET: 'zoho-client-secret-long',
       ZOHO_OAUTH_REDIRECT_URI: 'https://api.example.com/zoho/callback',
       PLATFORM_ROOT_DOMAIN: 'deqah.net',
+      INTERNAL_METRICS_ALLOWED_IPS: '127.0.0.1',
+      INTERNAL_METRICS_TOKEN: 'metrics-token-123-must-be-long-enough-32chars',
     };
     const r = envValidationSchema.validate(env, { abortEarly: false });
     expect(r.error).toBeUndefined();

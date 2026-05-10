@@ -5,8 +5,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
+import * as express from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { LoggingInterceptor, AuditInterceptor, TenantGucInterceptor } from './common/interceptors';
@@ -14,6 +16,7 @@ import { PrismaService } from './infrastructure/database';
 import { TenantContextService } from './common/tenant/tenant-context.service';
 import { ClsService } from 'nestjs-cls';
 import { configureCors } from './cors';
+import { setShuttingDown } from './common/shutdown.state';
 
 async function bootstrap(): Promise<void> {
   // rawBody: true preserves the untouched request body buffer on req.rawBody,
@@ -26,6 +29,20 @@ async function bootstrap(): Promise<void> {
 
   app.use(helmet());
   app.use(cookieParser());
+  app.use(express.json({ limit: '100kb' }));
+  app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+
+  app.use('/api/v1/dashboard', rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    message: 'Too many requests, please try again later',
+  }));
+
+  app.use('/api/v1/auth', rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: 'Too many authentication attempts',
+  }));
 
   app.setGlobalPrefix('api/v1');
 
@@ -117,8 +134,45 @@ async function bootstrap(): Promise<void> {
   }
 
   const port = Number(process.env.PORT ?? 5100);
+
+  app.enableShutdownHooks();
+
+  let requestCount = 0;
+  const server = app.getHttpServer();
+
+  server.on('request', (req: any, res: any) => {
+    requestCount++;
+    res.on('finish', () => { requestCount--; });
+    res.on('close', () => { requestCount--; });
+  });
+
   await app.listen(port);
   Logger.log(`Deqah Backend listening on http://localhost:${port}`, 'Bootstrap');
+
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received — starting graceful shutdown');
+    setShuttingDown();
+    server.close(() => console.log('HTTP server closed'));
+    const deadline = Date.now() + 30_000;
+    while (requestCount > 0 && Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    console.log(`SIGTERM: ${requestCount} requests still in-flight, proceeding shutdown`);
+    await app.close();
+    process.exit(0);
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received — starting graceful shutdown');
+    setShuttingDown();
+    server.close(() => console.log('HTTP server closed'));
+    const deadline = Date.now() + 30_000;
+    while (requestCount > 0 && Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    await app.close();
+    process.exit(0);
+  });
 }
 
 void bootstrap();

@@ -131,7 +131,7 @@ describe('SwitchOrganizationHandler', () => {
 
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user-1' },
-      data: { lastActiveOrganizationId: 'org-g' },
+      data: { lastActiveOrganizationId: 'org-g', tokenVersion: { increment: 1 } },
     });
   });
 

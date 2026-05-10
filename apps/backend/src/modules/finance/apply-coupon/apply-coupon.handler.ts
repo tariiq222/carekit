@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { FeatureCheckService } from '../../platform/billing/feature-check.service';
@@ -49,7 +50,6 @@ export class ApplyCouponHandler {
     });
     if (existing) throw new BadRequestException(`Coupon already applied to this invoice`);
 
-    // maxUsesPerUser enforcement: count this user's redemptions of this coupon
     if (coupon.maxUsesPerUser !== null) {
       const userRedemptionCount = await this.prisma.couponRedemption.count({
         where: { couponId: coupon.id, clientId: cmd.clientId },
@@ -61,20 +61,24 @@ export class ApplyCouponHandler {
       }
     }
 
+    const invoiceSubtotal = new Prisma.Decimal(invoice.subtotal.toString());
+    const invoiceDiscountAmt = new Prisma.Decimal(invoice.discountAmt.toString());
+    const invoiceVatRate = new Prisma.Decimal(invoice.vatRate.toString());
+    const couponDiscountValue = new Prisma.Decimal(coupon.discountValue.toString());
+
     const discount =
       coupon.discountType === 'PERCENTAGE'
-        ? parseFloat(((Number(invoice.subtotal) * Number(coupon.discountValue)) / 100).toFixed(2))
-        : Math.min(Number(coupon.discountValue), Number(invoice.subtotal));
+        ? invoiceSubtotal.times(couponDiscountValue).div(100).toDecimalPlaces(2).toNumber()
+        : Prisma.Decimal.min(couponDiscountValue, invoiceSubtotal).toNumber();
 
-    const newDiscountAmt = parseFloat((Number(invoice.discountAmt) + discount).toFixed(2));
-    const newVatBase = Math.max(0, Number(invoice.subtotal) - newDiscountAmt);
-    const newVatAmt = parseFloat((newVatBase * Number(invoice.vatRate)).toFixed(2));
-    const newTotal = parseFloat((newVatBase + newVatAmt).toFixed(2));
+    const discountDecimal = new Prisma.Decimal(discount);
+    const newDiscountAmt = invoiceDiscountAmt.plus(discountDecimal).toDecimalPlaces(2).toNumber();
+    const newDiscountAmtDec = new Prisma.Decimal(newDiscountAmt);
+    const newVatBase = Prisma.Decimal.max(invoiceSubtotal.minus(newDiscountAmtDec), new Prisma.Decimal(0));
+    const newVatAmt = newVatBase.times(invoiceVatRate).toDecimalPlaces(2).toNumber();
+    const newTotal = newVatBase.plus(newVatAmt).toDecimalPlaces(2).toNumber();
 
     return this.rlsTx.withTransaction(async (tx) => {
-      // Atomic guard: increment usedCount only if still below maxUses.
-      // updateMany returns { count: 0 } if the WHERE predicate fails — prevents race condition.
-      // organizationId included in all tx.* calls because tx bypasses the tenant Proxy.
       if (coupon.maxUses !== null) {
         const { count } = await tx.coupon.updateMany({
           where: { id: coupon.id, organizationId, usedCount: { lt: coupon.maxUses } },
@@ -82,8 +86,6 @@ export class ApplyCouponHandler {
         });
         if (count === 0) throw new BadRequestException(`Coupon ${cmd.code} has reached its usage limit`);
       } else {
-        // UUID-targeted update: assert row belongs to this org before mutating to prevent
-        // cross-org blind updates (tx bypasses Proxy auto-scoping).
         const owned = await tx.coupon.findFirst({ where: { id: coupon.id, organizationId } });
         if (!owned) throw new NotFoundException(`Coupon ${cmd.code} not found`);
         await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });

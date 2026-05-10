@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
+import { withCronLeader } from '../../../../common/helpers/cron-leader.helper';
 
 @Injectable()
 export class ProcessScheduledCancellationsCron {
@@ -16,30 +17,32 @@ export class ProcessScheduledCancellationsCron {
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
-    const now = new Date();
-    const due = await this.prisma.$allTenants.subscription.findMany({
-      where: {
-        status: { in: ['ACTIVE', 'PAST_DUE'] },
-        cancelAtPeriodEnd: true,
-        scheduledCancellationDate: { lte: now },
-      },
-      select: { id: true, organizationId: true },
-    });
-
-    for (const sub of due) {
-      await this.prisma.$allTenants.subscription.update({
-        where: { id: sub.id },
-        data: {
-          status: 'CANCELED',
-          canceledAt: now,
-          cancelAtPeriodEnd: false,
+    await withCronLeader(this.prisma, 'process-scheduled-cancellations', async () => {
+      const now = new Date();
+      const due = await this.prisma.$allTenants.subscription.findMany({
+        where: {
+          status: { in: ['ACTIVE', 'PAST_DUE'] },
+          cancelAtPeriodEnd: true,
+          scheduledCancellationDate: { lte: now },
         },
+        select: { id: true, organizationId: true },
       });
-      this.cache.invalidate(sub.organizationId);
-    }
 
-    if (due.length > 0) {
-      this.logger.log(`Processed ${due.length} scheduled subscription cancellations`);
-    }
+      for (const sub of due) {
+        await this.prisma.$allTenants.subscription.update({
+          where: { id: sub.id },
+          data: {
+            status: 'CANCELED',
+            canceledAt: now,
+            cancelAtPeriodEnd: false,
+          },
+        });
+        this.cache.invalidate(sub.organizationId);
+      }
+
+      if (due.length > 0) {
+        this.logger.log(`Processed ${due.length} scheduled subscription cancellations`);
+      }
+    });
   }
 }

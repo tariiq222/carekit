@@ -17,7 +17,6 @@ const ADMIN_ROUTES = [
   '/metrics',
   '/notifications',
   '/settings/email',
-  '/settings/branding',
   '/settings/security',
   '/settings/health',
   '/settings/notifications',

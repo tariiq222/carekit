@@ -2,13 +2,14 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testMatch": ["<rootDir>/test/smoke/**/*.smoke-spec.ts"],
+  "testMatch": ["<rootDir>/test/smoke/**/*.spec.ts"],
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "<rootDir>/test/tsconfig-e2e.json", "isolatedModules": false, "diagnostics": false }]
   },
   "setupFiles": ["<rootDir>/test/jest.setup.ts"],
   "testTimeout": 60000,
   "maxWorkers": 1,
+  "transformIgnorePatterns": ["node_modules/(?!(uuid)/)"],
   "moduleNameMapper": {
     "^@deqah/shared$": "<rootDir>/../../packages/shared/index.ts",
     "^@deqah/shared/(.*)$": "<rootDir>/../../packages/shared/$1"

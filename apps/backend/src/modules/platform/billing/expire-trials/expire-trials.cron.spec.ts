@@ -108,6 +108,11 @@ const buildPrisma = ({
     organization: {
       update: orgUpdate,
     },
+    $queryRaw: jest.fn().mockImplementation((strings: TemplateStringsArray, ...values: unknown[]) => {
+      if (strings[0].includes('hashtext')) return Promise.resolve([{ v: BigInt(12345) }]);
+      if (strings[0].includes('pg_try_advisory_lock')) return Promise.resolve([{ acquired: true }]);
+      return Promise.resolve([]);
+    }),
     $allTenants: allTenantsMock,
     __tx: {
       organizationUpdate: txOrgUpdate,

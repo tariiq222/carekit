@@ -107,7 +107,7 @@ export class CronTasksService implements OnModuleInit {
       queue
         .add(
           name,
-          {},
+          {}, // platform-level cron; no per-org context needed
           {
             repeat: { pattern: cron },
             jobId: `repeat:${name}`,

@@ -85,11 +85,11 @@ function buildMocks(txOverrides: Parameters<typeof buildTx>[0] = {}) {
 
 describe('CreateZoomMeetingHandler', () => {
   it('throws NotFoundException when booking not found', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -101,7 +101,7 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('skips if already CREATED (idempotency) — re-read inside tx returns CREATED', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks({
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks({
       bookingFindFirst: jest.fn().mockResolvedValue({
         ...onlineBooking,
         zoomMeetingId: '99',
@@ -110,7 +110,7 @@ describe('CreateZoomMeetingHandler', () => {
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -127,7 +127,7 @@ describe('CreateZoomMeetingHandler', () => {
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -148,7 +148,7 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -173,7 +173,7 @@ describe('CreateZoomMeetingHandler', () => {
     zoomApi.createMeeting.mockRejectedValue(new Error('Zoom Outage'));
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -215,14 +215,14 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('throws BadRequestException when booking is not ONLINE type', async () => {
-    const { prisma, zoomApi, zoomCredentials } = buildMocks();
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     prisma.booking.findFirst = jest.fn().mockResolvedValue({
       ...onlineBooking,
       bookingType: 'INDIVIDUAL',
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -244,10 +244,10 @@ describe('CreateZoomMeetingHandler', () => {
       return Promise.resolve(onlineBooking);
     });
 
-    const { prisma, zoomApi, zoomCredentials } = buildMocks({ executeRaw, bookingFindFirst });
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks({ executeRaw, bookingFindFirst });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -265,7 +265,7 @@ describe('CreateZoomMeetingHandler', () => {
 
   it('re-reads booking inside transaction and skips Zoom API if status flipped to CREATED between outer read and lock acquisition', async () => {
     // Outer read returns PENDING; tx re-read returns CREATED (race won by another worker)
-    const { prisma, zoomApi, zoomCredentials } = buildMocks({
+    const { prisma, tx, zoomApi, zoomCredentials } = buildMocks({
       bookingFindFirst: jest.fn().mockResolvedValue({
         ...onlineBooking,
         zoomMeetingId: '42',
@@ -277,7 +277,7 @@ describe('CreateZoomMeetingHandler', () => {
 
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
-      buildRlsTx(prisma) as never,
+      buildRlsTx(prisma, tx) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,

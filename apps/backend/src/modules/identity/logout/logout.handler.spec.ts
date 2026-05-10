@@ -14,7 +14,7 @@ describe('LogoutHandler', () => {
     const module = await Test.createTestingModule({
       providers: [
         LogoutHandler,
-        { provide: PrismaService, useValue: { refreshToken: { updateMany: jest.fn() } } },
+        { provide: PrismaService, useValue: { refreshToken: { updateMany: jest.fn() }, user: { update: jest.fn() } } },
         {
           provide: TenantContextService,
           useValue: {

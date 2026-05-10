@@ -105,6 +105,9 @@ model Booking {
   @@index([employeeId, endsAt])
   @@index([recurringGroupId])
   @@index([organizationId])
+  @@index([organizationId, scheduledAt])
+  @@index([organizationId, status])
+  @@index([organizationId, clientId])
 }
 
 // ─── Waitlist ─────────────────────────────────────────────────────────────────

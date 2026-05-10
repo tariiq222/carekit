@@ -10,6 +10,11 @@ const buildConfig = (enabled: boolean) => ({
 });
 
 const buildPrisma = (subscriptions: unknown[] = []) => ({
+  $queryRaw: jest.fn().mockImplementation((strings: TemplateStringsArray, ...values: unknown[]) => {
+    if (strings[0].includes('hashtext')) return Promise.resolve([{ v: BigInt(12345) }]);
+    if (strings[0].includes('pg_try_advisory_lock')) return Promise.resolve([{ acquired: true }]);
+    return Promise.resolve([]);
+  }),
   $allTenants: {
     subscription: {
       findMany: jest.fn().mockResolvedValue(subscriptions),

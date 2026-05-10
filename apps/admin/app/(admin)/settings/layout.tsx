@@ -10,7 +10,6 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     { href: '/settings/email', label: tb('email') },
     { href: '/settings/notifications', label: tb('notifications') },
     { href: '/settings/billing', label: tb('billing') },
-    { href: '/settings/branding', label: tb('branding') },
     { href: '/settings/health', label: sh('health.title') },
     { href: '/settings/security', label: tb('security') },
   ];

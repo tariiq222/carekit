@@ -31,6 +31,8 @@ export class AdminRefundInvoiceHandler {
   async execute(cmd: AdminRefundInvoiceCommand) {
     // Fetch + validate OUTSIDE the transaction so we don't hold a row lock
     // while talking to Moyasar over the network.
+    // SAFE: super-admin refund action — reads invoice across all orgs to build UI,
+    // $allTenants guard enforces SUPER_ADMIN_CONTEXT
     const invoice = await this.prisma.$allTenants.subscriptionInvoice.findUnique({
       where: { id: cmd.invoiceId },
       select: {
@@ -97,6 +99,8 @@ export class AdminRefundInvoiceHandler {
     // Records the Moyasar refund acknowledgement on a foreign tenant's SubscriptionInvoice
     // (updates refundedAmount/status) + appends the audit log; runs after the network call so
     // the row lock is held only during the DB mutation, not the Moyasar roundtrip.
+    // SAFE: super-admin mutation — cross-org transaction for refund recording,
+    // $allTenants guard enforces SUPER_ADMIN_CONTEXT
     return this.prisma.$allTenants.$transaction(async (tx) => {
       const fullyRefunded = newRefundedTotal.gte(totalAmount);
       const updated = await tx.subscriptionInvoice.update({

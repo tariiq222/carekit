@@ -4,6 +4,7 @@ import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { DEFAULT_BOOKING_SETTINGS } from '../../bookings/get-booking-settings/get-booking-settings.handler';
+import { withCronLeader } from '../../../common/helpers/cron-leader.helper';
 
 /**
  * Auto-flips CONFIRMED bookings whose `endsAt` is older than each tenant's
@@ -27,38 +28,40 @@ export class BookingAutocompleteCron {
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
 
-      const orgs = await this.prisma.$allTenants.organization.findMany({
-        where: { status: 'ACTIVE' },
-        select: { id: true },
+      await withCronLeader(this.prisma, 'booking-autocomplete', async () => {
+        const orgs = await this.prisma.$allTenants.organization.findMany({
+          where: { status: 'ACTIVE' },
+          select: { id: true },
+        });
+
+        let totalCompleted = 0;
+        for (const { id: organizationId } of orgs) {
+          const settings = await this.prisma.$allTenants.bookingSettings.findFirst({
+            where: { organizationId, branchId: null },
+            select: { autoCompleteAfterHours: true },
+          });
+          const hours =
+            settings?.autoCompleteAfterHours ?? DEFAULT_BOOKING_SETTINGS.autoCompleteAfterHours;
+          const cutoff = new Date(Date.now() - hours * 3_600_000);
+
+          const result = await this.prisma.$allTenants.booking.updateMany({
+            where: {
+              organizationId,
+              status: BookingStatus.CONFIRMED,
+              endsAt: { lte: cutoff },
+            },
+            data: {
+              status: BookingStatus.COMPLETED,
+              completedAt: new Date(),
+            },
+          });
+          totalCompleted += result.count;
+        }
+
+        if (totalCompleted > 0) {
+          this.logger.log(`completed ${totalCompleted} bookings across ${orgs.length} tenants`);
+        }
       });
-
-      let totalCompleted = 0;
-      for (const { id: organizationId } of orgs) {
-        const settings = await this.prisma.$allTenants.bookingSettings.findFirst({
-          where: { organizationId, branchId: null },
-          select: { autoCompleteAfterHours: true },
-        });
-        const hours =
-          settings?.autoCompleteAfterHours ?? DEFAULT_BOOKING_SETTINGS.autoCompleteAfterHours;
-        const cutoff = new Date(Date.now() - hours * 3_600_000);
-
-        const result = await this.prisma.$allTenants.booking.updateMany({
-          where: {
-            organizationId,
-            status: BookingStatus.CONFIRMED,
-            endsAt: { lte: cutoff },
-          },
-          data: {
-            status: BookingStatus.COMPLETED,
-            completedAt: new Date(),
-          },
-        });
-        totalCompleted += result.count;
-      }
-
-      if (totalCompleted > 0) {
-        this.logger.log(`completed ${totalCompleted} bookings across ${orgs.length} tenants`);
-      }
     });
   }
 }

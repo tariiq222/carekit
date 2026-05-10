@@ -77,11 +77,6 @@ export const BREADCRUMB_TRAILS: Record<string, Array<{ key: string; href?: strin
     { key: 'settings', href: '/settings' },
     { key: 'billing' },
   ],
-  '/settings/branding': [
-    { key: 'home', href: '/' },
-    { key: 'settings', href: '/settings' },
-    { key: 'branding' },
-  ],
   '/settings/health': [
     { key: 'home', href: '/' },
     { key: 'settings', href: '/settings' },

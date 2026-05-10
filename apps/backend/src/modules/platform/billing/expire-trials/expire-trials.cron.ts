@@ -6,6 +6,7 @@ import { PlatformMailerService } from '../../../../infrastructure/mail';
 import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-subscription.client';
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
+import { withCronLeader } from '../../../../common/helpers/cron-leader.helper';
 
 const TRIAL_REMINDER_WINDOW_DAYS = 7;
 const TRIAL_REMINDER_MILESTONES = [7, 3, 1] as const;
@@ -53,17 +54,18 @@ export class ExpireTrialsCron {
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
 
-    const now = new Date();
-    const billingUrl = this.billingUrl();
+    await withCronLeader(this.prisma, 'expire-trials', async () => {
+      const now = new Date();
+      const billingUrl = this.billingUrl();
 
-    await this.notifyTrialMilestones(now, billingUrl);
-    await this.processExpiredTrials(now, billingUrl);
+      await this.notifyTrialMilestones(now, billingUrl);
+      await this.processExpiredTrials(now, billingUrl);
 
-    // Write heartbeat — upsert so the row is created on first run.
-    await this.prisma.$allTenants.cronHeartbeat.upsert({
-      where: { cronName: HEARTBEAT_CRON_NAME },
-      create: { cronName: HEARTBEAT_CRON_NAME, lastRunAt: now },
-      update: { lastRunAt: now },
+      await this.prisma.$allTenants.cronHeartbeat.upsert({
+        where: { cronName: HEARTBEAT_CRON_NAME },
+        create: { cronName: HEARTBEAT_CRON_NAME, lastRunAt: now },
+        update: { lastRunAt: now },
+      });
     });
   }
 

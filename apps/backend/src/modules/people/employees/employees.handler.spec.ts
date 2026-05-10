@@ -74,8 +74,8 @@ describe('Employees handlers', () => {
         {
           provide: RlsTransactionService,
           useValue: {
-            withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
-            withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
+            withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+            withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
           },
         },
       ],

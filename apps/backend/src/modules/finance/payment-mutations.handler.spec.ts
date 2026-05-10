@@ -4,6 +4,21 @@ import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 import { RlsTransactionService } from '../../infrastructure/database';
 
+const buildPaymentRow = (overrides: Partial<{
+  id: string;
+  status: string;
+  gatewayRef: string | null;
+  amount: unknown;
+  invoiceId: string;
+}> = {}) => ({
+  id: 'pay-1',
+  status: 'COMPLETED',
+  gatewayRef: 'pay_test_gw_123',
+  amount: 100,
+  invoiceId: 'inv-1',
+  ...overrides,
+});
+
 const buildPrisma = () => {
   const prisma: {
     payment: {
@@ -20,6 +35,7 @@ const buildPrisma = () => {
       update: jest.Mock;
     };
     $transaction: jest.Mock;
+    $queryRaw: jest.Mock;
   } = {
     payment: {
       findFirst: jest.fn(),
@@ -29,12 +45,14 @@ const buildPrisma = () => {
     invoice: {
       findFirst: jest.fn(),
       update: jest.fn(),
+      findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'inv-1', bookingId: 'book-1', clientId: 'client-1', currency: 'SAR', organizationId: 'org-1' }),
     },
     refundRequest: {
       create: jest.fn().mockResolvedValue({ id: 'rr-1' }),
       update: jest.fn().mockResolvedValue({ id: 'rr-1' }),
     },
     $transaction: jest.fn(async (fn) => fn(prisma)),
+    $queryRaw: jest.fn().mockResolvedValue([buildPaymentRow()]),
   };
   return prisma;
 };
@@ -71,9 +89,7 @@ describe('RefundPaymentHandler', () => {
     const prisma = buildPrisma();
     const eventBus = buildEventBus();
     const moyasar = buildMoyasar();
-    const completedPayment = { ...PAYMENT_BASE, status: PaymentStatus.COMPLETED };
-    const refunded = { ...completedPayment, status: PaymentStatus.REFUNDED, failureReason: 'client request' };
-    prisma.payment.findFirst.mockResolvedValue(completedPayment);
+    const refunded = { id: PAY_ID, status: PaymentStatus.REFUNDED, failureReason: 'client request' };
     prisma.payment.update.mockResolvedValue(refunded);
     prisma.invoice.update.mockResolvedValue({ id: 'inv-1' });
 
@@ -81,7 +97,6 @@ describe('RefundPaymentHandler', () => {
     const result = await handler.execute({ paymentId: PAY_ID, reason: 'client request' });
 
     expect(result.status).toBe(PaymentStatus.REFUNDED);
-    // The pre-Moyasar breadcrumb row is created in PROCESSING.
     expect(prisma.refundRequest.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -90,7 +105,6 @@ describe('RefundPaymentHandler', () => {
         }),
       }),
     );
-    // The finalize step flips it to COMPLETED with the gateway reference.
     expect(prisma.refundRequest.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'COMPLETED', gatewayRef: 'refund-gw-1' }),
@@ -117,7 +131,7 @@ describe('RefundPaymentHandler', () => {
   it('throws NotFoundException when payment not found', async () => {
     const prisma = buildPrisma();
     const eventBus = buildEventBus();
-    prisma.payment.findFirst.mockResolvedValue(null);
+    prisma.$queryRaw.mockResolvedValueOnce([]);
 
     await expect(
       new RefundPaymentHandler(prisma as never, eventBus as never, buildRlsTx(prisma), buildMoyasar() as never).execute({ paymentId: 'bad', reason: 'x' }),
@@ -127,7 +141,7 @@ describe('RefundPaymentHandler', () => {
   it('throws BadRequestException when payment is not COMPLETED', async () => {
     const prisma = buildPrisma();
     const eventBus = buildEventBus();
-    prisma.payment.findFirst.mockResolvedValue({ ...PAYMENT_BASE, status: PaymentStatus.PENDING });
+    prisma.$queryRaw.mockResolvedValueOnce([{ ...buildPaymentRow(), status: PaymentStatus.PENDING }]);
 
     await expect(
       new RefundPaymentHandler(prisma as never, eventBus as never, buildRlsTx(prisma), buildMoyasar() as never).execute({ paymentId: PAY_ID, reason: 'x' }),

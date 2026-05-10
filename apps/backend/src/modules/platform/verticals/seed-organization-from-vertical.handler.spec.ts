@@ -64,8 +64,8 @@ describe('SeedOrganizationFromVerticalHandler', () => {
         {
           provide: RlsTransactionService,
           useValue: {
-            withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
-            withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+            withTransaction: jest.fn(async (fn: (tx: typeof txMock) => Promise<unknown>) => fn(txMock)),
+            withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(txMock)),
           },
         },
       ],

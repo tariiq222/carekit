@@ -98,7 +98,9 @@ describe('Media files handlers', () => {
 
   describe('upload-file', () => {
     it('uploads buffer and persists metadata', async () => {
-      const buffer = Buffer.from('hello world!');
+      // PNG magic bytes header so detectMimeType correctly identifies image/png
+      const pngHeader = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const buffer = Buffer.concat([pngHeader, Buffer.from('fake-png-data')]);
       const result = await uploadHandler.execute(
         {
           filename: 'photo.png',

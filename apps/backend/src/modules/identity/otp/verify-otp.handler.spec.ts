@@ -17,9 +17,10 @@ describe('VerifyOtpHandler', () => {
       otpCode: {
         findFirst: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       client: {
-        updateMany: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
     };
 
@@ -44,6 +45,7 @@ describe('VerifyOtpHandler', () => {
 
   it('rejects code from a different org', async () => {
     prismaMock.otpCode.findFirst.mockResolvedValue(null);
+    prismaMock.otpCode.updateMany.mockResolvedValue({ count: 0 });
     await expect(handler.execute({
       channel: OtpChannel.EMAIL,
       identifier: 'test@example.com',
@@ -53,7 +55,7 @@ describe('VerifyOtpHandler', () => {
       hCaptchaToken: 'test-token',
     })).rejects.toThrow('Invalid or expired OTP code');
 
-    expect(prismaMock.otpCode.findFirst).toHaveBeenCalledWith(
+    expect(prismaMock.otpCode.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ organizationId: 'org-B' }),
       }),
@@ -78,6 +80,7 @@ describe('VerifyOtpHandler', () => {
       createdAt: new Date(),
     });
     prismaMock.otpCode.update.mockResolvedValue({} as never);
+    prismaMock.otpCode.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.client.updateMany.mockResolvedValue({ count: 0 });
 
     const result = await handler.execute({
@@ -114,6 +117,7 @@ describe('VerifyOtpHandler', () => {
       createdAt: new Date(),
     });
     prismaMock.otpCode.update.mockResolvedValue({} as never);
+    prismaMock.otpCode.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.client.updateMany.mockResolvedValue({ count: 0 });
 
     const result = await handler.execute({

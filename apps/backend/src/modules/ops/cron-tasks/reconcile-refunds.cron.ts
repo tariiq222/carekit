@@ -3,6 +3,7 @@ import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../infrastructure/database';
 import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 import { MoyasarApiClient } from '../../finance/moyasar-api/moyasar-api.client';
+import { withCronLeader } from '../../../common/helpers/cron-leader.helper';
 
 /**
  * Reconciles RefundRequest rows that are stuck in PROCESSING.
@@ -41,40 +42,42 @@ export class ReconcileRefundsCron {
   }
 
   private async reconcile(): Promise<void> {
-    const cutoff = new Date(Date.now() - ReconcileRefundsCron.STALE_THRESHOLD_MS);
+    await withCronLeader(this.prisma, 'reconcile-refunds', async () => {
+      const cutoff = new Date(Date.now() - ReconcileRefundsCron.STALE_THRESHOLD_MS);
 
-    const stuckRows = await this.prisma.$allTenants.refundRequest.findMany({
-      where: {
-        status: 'PROCESSING',
-        updatedAt: { lt: cutoff },
-        gatewayRef: { not: null },
-      },
-      select: {
-        id: true,
-        organizationId: true,
-        paymentId: true,
-        invoiceId: true,
-        gatewayRef: true,
-      },
-    });
+      const stuckRows = await this.prisma.$allTenants.refundRequest.findMany({
+        where: {
+          status: 'PROCESSING',
+          updatedAt: { lt: cutoff },
+          gatewayRef: { not: null },
+        },
+        select: {
+          id: true,
+          organizationId: true,
+          paymentId: true,
+          invoiceId: true,
+          gatewayRef: true,
+        },
+      });
 
-    if (stuckRows.length === 0) return;
+      if (stuckRows.length === 0) return;
 
-    this.logger.log(`reconcile-refunds: found ${stuckRows.length} stuck row(s)`);
+      this.logger.log(`reconcile-refunds: found ${stuckRows.length} stuck row(s)`);
 
-    for (const row of stuckRows) {
-      // gatewayRef is guaranteed non-null by the query filter above
-      const gatewayRef = row.gatewayRef as string;
-      try {
-        await this.processRow(row.id, row.organizationId, row.paymentId, row.invoiceId, gatewayRef);
-      } catch (err) {
-        this.logger.error(
-          `reconcile-refunds: failed to process RefundRequest ${row.id}`,
-          err instanceof Error ? err.stack : err,
-        );
-        // Continue with next row — don't let one failure abort the whole batch.
+      for (const row of stuckRows) {
+        // gatewayRef is guaranteed non-null by the query filter above
+        const gatewayRef = row.gatewayRef as string;
+        try {
+          await this.processRow(row.id, row.organizationId, row.paymentId, row.invoiceId, gatewayRef);
+        } catch (err) {
+          this.logger.error(
+            `reconcile-refunds: failed to process RefundRequest ${row.id}`,
+            err instanceof Error ? err.stack : err,
+          );
+          // Continue with next row — don't let one failure abort the whole batch.
+        }
       }
-    }
+    });
   }
 
   private async processRow(

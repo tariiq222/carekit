@@ -94,8 +94,11 @@ model OutboxEvent {
   aggregateId String
   eventType   String
   payload     Json
+  status      String    @default("PENDING") // PENDING | PUBLISHED | FAILED
+  lockedUntil DateTime? @db.Timestamptz(3)
   publishedAt DateTime? @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
 
   @@index([publishedAt], map: "OutboxEvent_publishedAt_idx")
+  @@index([status, lockedUntil], map: "OutboxEvent_status_locked_idx")
 }

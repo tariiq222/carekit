@@ -90,6 +90,10 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
 
+  // Incremented on every auth-changing event (logout, switch-org, membership disable)
+  // to invalidate all outstanding JWTs in a single hop.
+  tokenVersion Int @default(0)
+
   @@index([isSuperAdmin])
   @@index([phone])
 }

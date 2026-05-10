@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { DbMetricsService } from '../../../infrastructure/telemetry/db-metrics.service';
+import { withCronLeader } from '../../../common/helpers/cron-leader.helper';
 
 /**
  * DB-12 — partition candidate tables.
@@ -37,22 +38,24 @@ export class DbRowCountCron {
    * not exact but is sufficient for threshold alerting at 5M rows.
    */
   async execute(): Promise<void> {
-    const tableList = PARTITION_CANDIDATES.map((t) => `'${t}'`).join(', ');
+    await withCronLeader(this.prisma, 'db-row-count', async () => {
+      const tableList = PARTITION_CANDIDATES.map((t) => `'${t}'`).join(', ');
 
-    const rows = await this.prisma.$queryRaw<PgStatRow[]>(
-      Prisma.sql`
-        SELECT relname, n_live_tup
-        FROM pg_stat_user_tables
-        WHERE relname IN (${Prisma.raw(tableList)})
-      `,
-    );
+      const rows = await this.prisma.$queryRaw<PgStatRow[]>(
+        Prisma.sql`
+          SELECT relname, n_live_tup
+          FROM pg_stat_user_tables
+          WHERE relname IN (${Prisma.raw(tableList)})
+        `,
+      );
 
-    for (const row of rows) {
-      const count = Number(row.n_live_tup);
-      this.metrics.tableRowCount.labels({ table: row.relname }).set(count);
-      this.logger.debug(`table=${row.relname} rows=${count}`);
-    }
+      for (const row of rows) {
+        const count = Number(row.n_live_tup);
+        this.metrics.tableRowCount.labels({ table: row.relname }).set(count);
+        this.logger.debug(`table=${row.relname} rows=${count}`);
+      }
 
-    this.logger.log(`DB-12 row-count metrics updated for ${rows.length} tables`);
+      this.logger.log(`DB-12 row-count metrics updated for ${rows.length} tables`);
+    });
   }
 }

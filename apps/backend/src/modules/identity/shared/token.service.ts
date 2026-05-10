@@ -42,6 +42,9 @@ export interface JwtPayload {
   isSuperAdmin?: boolean;
   scope?: string;
   impersonationSessionId?: string;
+  // P0-6: Session invalidation via tokenVersion. If the JWT's tokenVersion
+  // does not match the User.tokenVersion in the DB, the session is stale.
+  tokenVersion?: number;
 }
 
 @Injectable()
@@ -59,6 +62,7 @@ export class TokenService {
       role: string;
       customRoleId: string | null;
       customRole: { permissions: Array<{ action: string; subject: string }> } | null;
+      tokenVersion: number;
     },
     tenantClaims: TenantClaims,
   ): Promise<TokenPair> {
@@ -66,8 +70,8 @@ export class TokenService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.role,                              // kept for rollout backward compat
-      membershipRole: tenantClaims.membershipRole,  // phase-A dual-carry
+      role: user.role,
+      membershipRole: tenantClaims.membershipRole,
       customRoleId: user.customRoleId,
       permissions,
       features: [],
@@ -75,6 +79,7 @@ export class TokenService {
       membershipId: tenantClaims.membershipId,
       isSuperAdmin: tenantClaims.isSuperAdmin ?? false,
       scope: tenantClaims.scope,
+      tokenVersion: user.tokenVersion,
     };
 
     const accessToken = this.jwt.sign(payload, {

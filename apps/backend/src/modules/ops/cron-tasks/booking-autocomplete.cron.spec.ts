@@ -11,6 +11,9 @@ const buildCls = () => ({
 });
 
 const buildPrisma = () => ({
+  $queryRaw: jest.fn()
+    .mockResolvedValueOnce([{ v: BigInt(12345) }])
+    .mockResolvedValueOnce([{ acquired: true }]),
   $allTenants: {
     organization: {
       findMany: jest.fn().mockResolvedValue([{ id: 'org-1' }, { id: 'org-2' }]),

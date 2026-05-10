@@ -27,7 +27,7 @@ export class VerifyOtpHandler {
       this.logger.warn('systemContext bypass activated', { context: 'VerifyOtpHandler' });
       this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
 
-      const otpRecord = await this.prisma.otpCode.findFirst({
+      const result = await this.prisma.otpCode.updateMany({
         where: {
           organizationId: orgId,
           identifier: dto.identifier,
@@ -35,7 +35,16 @@ export class VerifyOtpHandler {
           consumedAt: null,
           expiresAt: { gt: new Date() },
         },
-        orderBy: { createdAt: 'desc' },
+        data: { consumedAt: new Date() },
+      });
+
+      if (result.count === 0) {
+        throw new BadRequestException('Invalid or expired OTP code');
+      }
+
+      const otpRecord = await this.prisma.otpCode.findFirst({
+        where: { organizationId: orgId, identifier: dto.identifier, consumedAt: { not: null } },
+        orderBy: { consumedAt: 'desc' },
       });
 
       if (!otpRecord) {
@@ -51,28 +60,15 @@ export class VerifyOtpHandler {
         throw new BadRequestException('Too many failed attempts. Please request a new code.');
       }
 
-      const nextAttempts = otpRecord.attempts + 1;
-      const shouldLock = nextAttempts >= otpRecord.maxAttempts;
-
       await this.prisma.otpCode.update({
         where: { id: otpRecord.id },
-        data: {
-          attempts: { increment: 1 },
-          ...(shouldLock
-            ? { lockedUntil: new Date(now.getTime() + LOCKOUT_WINDOW_MINUTES * 60 * 1000) }
-            : {}),
-        },
+        data: { attempts: { increment: 1 } },
       });
 
       const codeMatch = await bcrypt.compare(dto.code, otpRecord.codeHash);
       if (!codeMatch) {
         throw new UnauthorizedException('Invalid OTP code');
       }
-
-      await this.prisma.otpCode.update({
-        where: { id: otpRecord.id },
-        data: { consumedAt: new Date() },
-      });
 
       // Verification marks the client as verified for this org (SaaS-02h)
       if (otpRecord.channel === 'EMAIL') {

@@ -28,6 +28,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
+    // P0-6: If the JWT carries a tokenVersion, verify it matches the DB value.
+    // Stale tokenVersion means the session was revoked (logout/switch-org/password change).
+    if (typeof payload.tokenVersion === 'number' && user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException('Session has been revoked');
+    }
+
     // Build CASL ability against the canonical per-org role from the JWT.
     // `user.role` (the global User.role) is legacy and must NOT drive tenant
     // authz — see Role precedence in apps/backend/CLAUDE.md. The factory

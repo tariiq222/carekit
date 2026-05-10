@@ -13,7 +13,13 @@ describe('OutboxPublisherCron', () => {
     ];
 
     const prisma = {
+      $queryRaw: jest.fn()
+        .mockResolvedValueOnce([{ v: 12345n }])
+        .mockResolvedValueOnce([{ acquired: true }]),
+      $executeRaw: jest.fn().mockResolvedValue(1),
       $allTenants: {
+        $queryRaw: jest.fn().mockResolvedValue(rows),
+        $executeRaw: jest.fn().mockResolvedValue(2),
         outboxEvent: {
           findMany: jest.fn().mockResolvedValue(rows),
           updateMany: jest.fn().mockResolvedValue({ count: 2 }),
@@ -31,15 +37,20 @@ describe('OutboxPublisherCron', () => {
     expect(eventBus.publish).toHaveBeenCalledWith('bookings.booking.created', rows[0].payload);
     expect(eventBus.publish).toHaveBeenCalledWith('bookings.booking.created', rows[1].payload);
 
+    expect(prisma.$allTenants.$executeRaw).toHaveBeenCalled();
     expect(prisma.$allTenants.outboxEvent.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['evt-1', 'evt-2'] } },
-      data: { publishedAt: expect.any(Date) },
+      data: { status: 'PUBLISHED', publishedAt: expect.any(Date), lockedUntil: null },
     });
   });
 
   it('is a no-op when no pending events exist', async () => {
     const prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([{ v: 12345n }]),
+      $executeRaw: jest.fn().mockResolvedValue(1),
       $allTenants: {
+        $queryRaw: jest.fn().mockResolvedValue([]),
+        $executeRaw: jest.fn().mockResolvedValue(0),
         outboxEvent: {
           findMany: jest.fn().mockResolvedValue([]),
           updateMany: jest.fn(),
@@ -63,7 +74,13 @@ describe('OutboxPublisherCron', () => {
     ];
 
     const prisma = {
+      $queryRaw: jest.fn()
+        .mockResolvedValueOnce([{ v: 12345n }])
+        .mockResolvedValueOnce([{ acquired: true }]),
+      $executeRaw: jest.fn().mockResolvedValue(1),
       $allTenants: {
+        $queryRaw: jest.fn().mockResolvedValue(rows),
+        $executeRaw: jest.fn().mockResolvedValue(1),
         outboxEvent: {
           findMany: jest.fn().mockResolvedValue(rows),
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -81,16 +98,20 @@ describe('OutboxPublisherCron', () => {
     const cron = new OutboxPublisherCron(prisma as never, eventBus as never, cls as never);
     await cron.execute();
 
-    // Only the successful event should be stamped
+    expect(prisma.$allTenants.$executeRaw).toHaveBeenCalled();
     expect(prisma.$allTenants.outboxEvent.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['evt-ok'] } },
-      data: { publishedAt: expect.any(Date) },
+      data: { status: 'PUBLISHED', publishedAt: expect.any(Date), lockedUntil: null },
     });
   });
 
   it('runs inside CLS super-admin context', async () => {
     const prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([{ v: 12345n }]),
+      $executeRaw: jest.fn().mockResolvedValue(1),
       $allTenants: {
+        $queryRaw: jest.fn().mockResolvedValue([]),
+        $executeRaw: jest.fn().mockResolvedValue(0),
         outboxEvent: {
           findMany: jest.fn().mockResolvedValue([]),
           updateMany: jest.fn(),
@@ -105,7 +126,7 @@ describe('OutboxPublisherCron', () => {
 
     expect(cls.run).toHaveBeenCalledTimes(1);
     expect(cls.set).toHaveBeenCalledWith(
-      expect.any(String), // SUPER_ADMIN_CONTEXT_CLS_KEY
+      expect.any(String),
       true,
     );
   });

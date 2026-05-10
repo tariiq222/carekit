@@ -1,7 +1,23 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue, QueueEvents, Worker, type Processor, type WorkerOptions } from 'bullmq';
 import type { RedisOptions } from 'ioredis';
+
+const DEFAULT_JOB_OPTIONS = {
+  attempts: 5,
+  backoff: {
+    type: 'exponential' as const,
+    delay: 2000,
+  },
+  removeOnComplete: {
+    age: 24 * 3600,
+    count: 100,
+  },
+  removeOnFail: {
+    age: 7 * 24 * 3600,
+    count: 500,
+  },
+};
 
 /**
  * Factory and lifecycle manager for BullMQ queues and workers.
@@ -17,13 +33,17 @@ import type { RedisOptions } from 'ioredis';
  * of reusing {@link RedisService}.
  */
 @Injectable()
-export class BullMqService implements OnModuleDestroy {
+export class BullMqService implements OnModuleDestroy, OnModuleInit {
   private readonly logger = new Logger(BullMqService.name);
   private readonly queues = new Map<string, Queue>();
   private readonly workers = new Map<string, Worker>();
   private readonly queueEvents = new Map<string, QueueEvents>();
 
   constructor(private readonly config: ConfigService) {}
+
+  async onModuleInit(): Promise<void> {
+    this.logger.log('BullMQ service initialized');
+  }
 
   /**
    * Get (or lazily create) a queue by name. Safe to call repeatedly —
@@ -52,8 +72,10 @@ export class BullMqService implements OnModuleDestroy {
       throw new Error(`Worker already registered for queue "${name}"`);
     }
     const worker = new Worker<TData, TResult>(name, processor, {
+      ...DEFAULT_JOB_OPTIONS,
       ...options,
       connection: this.buildConnection(),
+      maxStalledCount: 3,
     });
     this.workers.set(name, worker as unknown as Worker);
     this.logger.log(`Worker created: ${name}`);

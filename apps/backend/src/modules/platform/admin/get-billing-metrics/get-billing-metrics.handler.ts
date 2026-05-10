@@ -23,7 +23,9 @@ export class GetBillingMetricsHandler {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [
+    // SAFE: admin billing dashboard — reads all org subscriptions for MRR/ARR metrics,
+  // runs under SUPER_ADMIN_CONTEXT (enforced by $allTenants getter guard)
+  const [
       subs,
       suspendedSubs,
       scheduledDowngradeSubs,

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { LaunchFlags } from '../feature-flags/launch-flags';
 
@@ -39,7 +40,7 @@ export class ComputeOverageCron {
     planVersionLimits?: Record<string, number | boolean>;
   }): Promise<{ lines: OverageLine[]; totalOverage: number }> {
     const lines: OverageLine[] = [];
-    let totalOverage = 0;
+    let totalOverage = new Prisma.Decimal(0);
 
     const limitSource =
       this.flags.planVersioningEnabled && params.planVersionLimits
@@ -48,7 +49,7 @@ export class ComputeOverageCron {
 
     for (const { metric, limitKey, rateKey } of METRIC_CONFIGS) {
       const included = Number(limitSource[limitKey] ?? 0);
-      if (included === -1) continue; // unlimited, no overage
+      if (included === -1) continue;
 
       const record = await this.prisma.usageRecord.findFirst({
         where: {
@@ -61,18 +62,18 @@ export class ComputeOverageCron {
       const overage = Math.max(0, used - included);
       const rate = Number(limitSource[rateKey] ?? 0);
 
-      const amount = parseFloat((overage * rate).toFixed(2));
+      const amount = new Prisma.Decimal(overage * rate).toDecimalPlaces(2).toNumber();
 
       if (overage > 0) {
         lines.push({ metric, included, used, overage, rate, amount });
-        totalOverage += amount;
+        totalOverage = totalOverage.plus(amount);
       }
     }
 
     this.logger.debug(
-      `Overage for sub ${params.subscriptionId}: ${lines.length} lines, total ${totalOverage} SAR`,
+      `Overage for sub ${params.subscriptionId}: ${lines.length} lines, total ${totalOverage.toNumber()} SAR`,
     );
 
-    return { lines, totalOverage: parseFloat(totalOverage.toFixed(2)) };
+    return { lines, totalOverage: totalOverage.toDecimalPlaces(2).toNumber() };
   }
 }

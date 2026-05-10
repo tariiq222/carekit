@@ -39,9 +39,12 @@ function writeCookie(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  // Lazy initializer — reads cookie synchronously on first render (client only).
-  const [active, setActive] = useState<Theme>(() => readCurrentTheme());
+  const [active, setActive] = useState<Theme>('system');
   const t = useTranslations('theme');
+
+  useEffect(() => {
+    setActive(readCurrentTheme());
+  }, []);
 
   // When system is active, keep in sync with OS changes
   useEffect(() => {

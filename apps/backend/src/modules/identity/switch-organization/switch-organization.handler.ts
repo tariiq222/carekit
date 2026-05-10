@@ -61,7 +61,10 @@ export class SwitchOrganizationHandler {
     // organization without forcing the user to re-pick.
     await this.prisma.user.update({
       where: { id: cmd.userId },
-      data: { lastActiveOrganizationId: membership.organizationId },
+      data: {
+        lastActiveOrganizationId: membership.organizationId,
+        tokenVersion: { increment: 1 },
+      },
     });
 
     return this.tokens.issueTokenPair(user, {

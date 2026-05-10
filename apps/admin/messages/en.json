@@ -102,7 +102,6 @@
     "email": "Email",
     "templates": "Templates",
     "logs": "Logs",
-    "branding": "Branding",
     "health": "Health",
     "security": "Security",
     "organization": "Organization",
@@ -829,7 +828,7 @@
   "settings": {
     "hub": {
       "title": "Settings",
-      "description": "Platform configuration — email, notifications, billing, branding, security, and system health.",
+      "description": "Platform configuration — email, notifications, billing, security, and system health.",
       "cards": {
         "email": {
           "title": "Email",
@@ -850,10 +849,6 @@
         "billing": {
           "title": "Billing",
           "description": "Moyasar platform credentials and billing defaults."
-        },
-        "branding": {
-          "title": "Branding",
-          "description": "Platform logo, colors, and locale defaults."
         },
         "health": {
           "title": "System Health",
@@ -996,31 +991,6 @@
         "failed": "Save failed"
       },
       "loadError": "Failed to load billing settings."
-    },
-    "branding": {
-      "title": "Branding",
-      "description": "Platform brand defaults — logo, colors, and locale settings stored in PlatformSetting.",
-      "brandIdentity": {
-        "title": "Brand Identity",
-        "description": "Platform logo URL and default brand colors shown in admin and email templates.",
-        "logoUrl": "Logo URL",
-        "logoUrlPlaceholder": "https://cdn.example.com/logo.svg",
-        "primaryColor": "Primary Color",
-        "accentColor": "Accent Color"
-      },
-      "localeDefaults": {
-        "title": "Locale Defaults",
-        "description": "Default locale settings applied to new tenants and platform-level emails.",
-        "defaultLocale": "Default Locale",
-        "currencyFormat": "Currency Format",
-        "dateFormat": "Date Format",
-        "rtlDefault": "RTL by default"
-      },
-      "save": "Save branding settings",
-      "saving": "Saving...",
-      "saveSuccess": "Branding settings saved.",
-      "loadError": "Failed to load branding settings.",
-      "saveFailed": "Save failed."
     },
     "system": {
       "title": "System Health",

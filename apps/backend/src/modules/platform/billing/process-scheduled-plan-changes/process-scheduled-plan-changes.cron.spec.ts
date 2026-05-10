@@ -11,6 +11,9 @@ const buildConfig = (enabled: boolean) => ({
 });
 
 const buildPrisma = (subs: unknown[] = []) => ({
+  $queryRaw: jest.fn()
+    .mockResolvedValueOnce([{ v: BigInt(12345) }])
+    .mockResolvedValueOnce([{ acquired: true }]),
   $allTenants: {
     subscription: {
       findMany: jest.fn().mockResolvedValue(subs),

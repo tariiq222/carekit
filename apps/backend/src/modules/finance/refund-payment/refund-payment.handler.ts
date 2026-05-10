@@ -39,41 +39,72 @@ export class RefundPaymentHandler {
   ) {}
 
   async execute(cmd: RefundPaymentCommand) {
-    const payment = await this.prisma.payment.findFirst({
-      where: { id: cmd.paymentId },
-      include: { invoice: { select: { id: true, bookingId: true, clientId: true, currency: true, organizationId: true } } },
-    });
-    if (!payment) throw new NotFoundException('Payment not found');
-    if (payment.status !== PaymentStatus.COMPLETED) {
-      throw new BadRequestException('Only completed payments can be refunded');
-    }
-    if (!payment.gatewayRef) {
-      throw new BadRequestException('Payment has no gateway reference; use manual refund path');
-    }
+    // ── Locking transaction: read + validate + persist in-flight record ──
+    // SELECT FOR UPDATE prevents two concurrent requests from both reading
+    // Payment.status=COMPLETED and proceeding to issue a double-refund.
+    const { payment, refundAmount, refundRequestId, idempotencyKey } =
+      await this.prisma.$transaction(async (tx) => {
+        // Lock the payment row for the duration of this transaction.
+        const rows = await tx.$queryRaw<
+          Array<{
+            id: string;
+            status: string;
+            gatewayRef: string | null;
+            amount: unknown;
+            invoiceId: string;
+          }>
+        >`SELECT id, status, "gatewayRef", amount, "invoiceId"
+            FROM "Payment"
+            WHERE id = ${cmd.paymentId}
+            FOR UPDATE`;
 
-    const refundAmount = cmd.amount ?? Number(payment.amount);
-    const refundRequestId = randomUUID();
-    const idempotencyKey = `refund:${payment.id}:${Number(refundAmount).toFixed(2)}`;
+        const row = rows[0];
+        if (!row) throw new NotFoundException('Payment not found');
+        if (row.status !== PaymentStatus.COMPLETED) {
+          throw new BadRequestException('Only completed payments can be refunded');
+        }
+        if (!row.gatewayRef) {
+          throw new BadRequestException('Payment has no gateway reference; use manual refund path');
+        }
 
-    // Step 1 — record the in-flight refund BEFORE calling Moyasar. If we
-    // crash between Moyasar success and step 3, this row (with its
-    // idempotencyKey) is the breadcrumb reconciliation needs to know
-    // a refund is owed and avoid double-issuing.
-    await this.prisma.refundRequest.create({
-      data: {
-        id: refundRequestId,
-        organizationId: payment.invoice.organizationId,
-        invoiceId: payment.invoice.id,
-        paymentId: payment.id,
-        clientId: payment.invoice.clientId,
-        amount: refundAmount,
-        reason: cmd.reason,
-        status: 'PROCESSING',
-        processedAt: new Date(),
-        processedBy: cmd.performedBy ?? 'system',
-      },
-      select: { id: true },
-    });
+        // Fetch invoice relation (needed for org/client/booking context).
+        const invoice = await tx.invoice.findUniqueOrThrow({
+          where: { id: row.invoiceId },
+          select: { id: true, bookingId: true, clientId: true, currency: true, organizationId: true },
+        });
+
+        const lockedPayment = {
+          id: row.id,
+          status: row.status as PaymentStatus,
+          gatewayRef: row.gatewayRef,
+          amount: row.amount,
+          invoice,
+        };
+
+        const refAmt = cmd.amount ?? Number(lockedPayment.amount);
+        const reqId = randomUUID();
+        const iKey = `refund:${lockedPayment.id}:${Number(refAmt).toFixed(2)}`;
+
+        // Step 1 — persist in-flight refund record inside the lock so no
+        // concurrent request can slip past the status check before this row exists.
+        await tx.refundRequest.create({
+          data: {
+            id: reqId,
+            organizationId: invoice.organizationId,
+            invoiceId: invoice.id,
+            paymentId: lockedPayment.id,
+            clientId: invoice.clientId,
+            amount: refAmt,
+            reason: cmd.reason,
+            status: 'PROCESSING',
+            processedAt: new Date(),
+            processedBy: cmd.performedBy ?? 'system',
+          },
+          select: { id: true },
+        });
+
+        return { payment: lockedPayment, refundAmount: refAmt, refundRequestId: reqId, idempotencyKey: iKey };
+      });
 
     // Step 2 — gateway round-trip OUTSIDE any DB transaction. Never hold a
     // transaction across an external HTTP call.
@@ -110,7 +141,11 @@ export class RefundPaymentHandler {
         });
         const updated = await tx.payment.update({
           where: { id: cmd.paymentId },
-          data: { status: PaymentStatus.REFUNDED, failureReason: cmd.reason },
+          data: {
+            status: PaymentStatus.REFUNDED,
+            failureReason: cmd.reason,
+            refundedAmount: { increment: refundAmount },
+          },
         });
         await tx.invoice.update({
           where: { id: payment.invoice.id },

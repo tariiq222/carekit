@@ -17,6 +17,10 @@ const buildCls = () => ({
 });
 
 const buildPrisma = (subs: unknown[] = []) => ({
+  $queryRaw: jest.fn()
+    .mockResolvedValueOnce([{ v: BigInt(1) }])       // hashtext → lock id
+    .mockResolvedValueOnce([{ acquired: true }])      // pg_try_advisory_lock
+    .mockResolvedValueOnce([{ pg_advisory_unlock: true }]), // pg_advisory_unlock
   $allTenants: {
     subscription: {
       findMany: jest.fn().mockResolvedValue(subs),
@@ -281,6 +285,10 @@ describe('ChargeDueSubscriptionsCron', () => {
       plan: makeMonthlyPlan(),
     };
     const prisma = {
+      $queryRaw: jest.fn()
+        .mockResolvedValueOnce([{ v: BigInt(1) }])
+        .mockResolvedValueOnce([{ acquired: true }])
+        .mockResolvedValueOnce([{ pg_advisory_unlock: true }]),
       $allTenants: {
         subscription: {
           findMany: jest.fn().mockImplementation(({ where }: { where: Record<string, unknown> }) => {
@@ -515,6 +523,10 @@ describe('ChargeDueSubscriptionsCron', () => {
     it('consumes oldest BillingCredit before charging the card (FIFO)', async () => {
       const creditUpdateCalls: Array<{ where: unknown; data: unknown }> = [];
       const prisma = {
+        $queryRaw: jest.fn()
+          .mockResolvedValueOnce([{ v: BigInt(1) }])
+          .mockResolvedValueOnce([{ acquired: true }])
+          .mockResolvedValueOnce([{ pg_advisory_unlock: true }]),
         $allTenants: {
           subscription: {
             findMany: jest.fn().mockResolvedValue([makeSub()]),
@@ -533,9 +545,9 @@ describe('ChargeDueSubscriptionsCron', () => {
                 grantedAt: new Date('2026-03-01'),
               },
             ]),
-            update: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
+            updateMany: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
               creditUpdateCalls.push(args);
-              return Promise.resolve({});
+              return Promise.resolve({ count: 1 });
             }),
           },
         },
@@ -568,6 +580,10 @@ describe('ChargeDueSubscriptionsCron', () => {
     it('consumes multiple credits FIFO until total is exhausted', async () => {
       const creditUpdateCalls: Array<{ where: unknown; data: unknown }> = [];
       const prisma = {
+        $queryRaw: jest.fn()
+          .mockResolvedValueOnce([{ v: BigInt(1) }])
+          .mockResolvedValueOnce([{ acquired: true }])
+          .mockResolvedValueOnce([{ pg_advisory_unlock: true }]),
         $allTenants: {
           subscription: {
             findMany: jest.fn().mockResolvedValue([makeSub()]),
@@ -593,9 +609,9 @@ describe('ChargeDueSubscriptionsCron', () => {
                 grantedAt: new Date('2026-03-01'),
               },
             ]),
-            update: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
+            updateMany: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
               creditUpdateCalls.push(args);
-              return Promise.resolve({});
+              return Promise.resolve({ count: 1 });
             }),
           },
         },
@@ -629,6 +645,10 @@ describe('ChargeDueSubscriptionsCron', () => {
     it('caps consumption at invoice total (no negative invoices)', async () => {
       const creditUpdateCalls: Array<{ where: unknown; data: unknown }> = [];
       const prisma = {
+        $queryRaw: jest.fn()
+          .mockResolvedValueOnce([{ v: BigInt(1) }])
+          .mockResolvedValueOnce([{ acquired: true }])
+          .mockResolvedValueOnce([{ pg_advisory_unlock: true }]),
         $allTenants: {
           subscription: {
             findMany: jest.fn().mockResolvedValue([makeSub()]),
@@ -647,9 +667,9 @@ describe('ChargeDueSubscriptionsCron', () => {
                 grantedAt: new Date('2026-01-01'),
               },
             ]),
-            update: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
+            updateMany: jest.fn().mockImplementation((args: { where: unknown; data: unknown }) => {
               creditUpdateCalls.push(args);
-              return Promise.resolve({});
+              return Promise.resolve({ count: 1 });
             }),
           },
         },
