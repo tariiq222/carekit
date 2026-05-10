@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { RecordSubscriptionPaymentFailureHandler } from './record-subscription-payment-failure.handler';
 import { SubscriptionStateMachine } from '../subscription-state-machine';
+import { RlsTransactionService } from '../../../../infrastructure/database';
 
 const buildTxPrisma = () => ({
   subscriptionInvoice: {
@@ -39,6 +40,11 @@ const buildMailer = () => ({
 const buildConfig = () => ({
   get: jest.fn().mockImplementation((_key: string, def: unknown) => def),
 });
+const buildRlsTxFromPrisma = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma._txPrisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma._txPrisma)),
+  } as unknown as RlsTransactionService);
 
 const baseCmd = {
   invoiceId: 'inv-1',
@@ -56,6 +62,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await expect(handler.execute(baseCmd)).rejects.toThrow(NotFoundException);
@@ -80,6 +87,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -110,6 +118,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -145,6 +154,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -178,6 +188,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -206,6 +217,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -233,6 +245,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -267,6 +280,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -306,6 +320,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       buildMailer() as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute(baseCmd);
@@ -333,6 +348,7 @@ describe('RecordSubscriptionPaymentFailureHandler', () => {
       new SubscriptionStateMachine(),
       mailer as never,
       buildConfig() as never,
+      buildRlsTxFromPrisma(prisma) as never,
     );
 
     await handler.execute({ invoiceId: 'inv-1', moyasarPaymentId: 'pay-fail-1', reason: 'Card declined' });

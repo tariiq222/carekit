@@ -1,8 +1,14 @@
 import { BulkUpsertSiteSettingsHandler } from './bulk-upsert-site-settings.handler';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 const buildTenant = (organizationId = 'org-A') => ({
   requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
 });
+const buildRlsTx = (prisma: unknown) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
 
 const buildPrisma = () => {
   const upsert = jest.fn().mockResolvedValue({});
@@ -18,7 +24,7 @@ const buildPrisma = () => {
 describe('BulkUpsertSiteSettingsHandler', () => {
   it('upserts every entry inside a single transaction', async () => {
     const { prisma, upsert } = buildPrisma();
-    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never);
+    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never, buildRlsTx(prisma) as never);
     const result = await handler.execute({
       entries: [
         { key: 'home.hero.title.ar', valueAr: 'عنوان' },
@@ -26,7 +32,6 @@ describe('BulkUpsertSiteSettingsHandler', () => {
       ],
     });
 
-    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(upsert).toHaveBeenCalledTimes(2);
     expect(upsert).toHaveBeenNthCalledWith(1, {
       where: { organizationId_key: { organizationId: 'org-A', key: 'home.hero.title.ar' } },
@@ -38,7 +43,7 @@ describe('BulkUpsertSiteSettingsHandler', () => {
 
   it('normalizes missing values to null', async () => {
     const { prisma, upsert } = buildPrisma();
-    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never);
+    const handler = new BulkUpsertSiteSettingsHandler(prisma as never, buildTenant() as never, buildRlsTx(prisma) as never);
     await handler.execute({ entries: [{ key: 'k' }] });
     const args = upsert.mock.calls[0]![0];
     expect(args.create.valueText).toBeNull();

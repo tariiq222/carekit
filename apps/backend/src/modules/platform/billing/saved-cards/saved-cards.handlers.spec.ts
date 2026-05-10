@@ -3,6 +3,7 @@ import { AddSavedCardHandler } from './add-saved-card.handler';
 import { ListSavedCardsHandler } from './list-saved-cards.handler';
 import { RemoveSavedCardHandler } from './remove-saved-card.handler';
 import { SetDefaultSavedCardHandler } from './set-default-saved-card.handler';
+import { RlsTransactionService } from '../../../../infrastructure/database';
 
 const tokenMeta = {
   id: 'token_abc',
@@ -43,6 +44,11 @@ const buildConfig = () => ({
     return fallback;
   }),
 });
+const buildRlsTx = (prisma: unknown) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
 
 function buildAddHarness() {
   const prisma = {
@@ -73,6 +79,7 @@ function buildAddHarness() {
     cache as never,
     moyasar as never,
     buildConfig() as never,
+    buildRlsTx(prisma) as never,
   );
   return { handler, prisma, cache, moyasar };
 }
@@ -107,6 +114,7 @@ function buildSetDefaultHarness() {
     prisma as never,
     buildTenant() as never,
     cache as never,
+    buildRlsTx(prisma) as never,
   );
   return { handler, prisma, cache };
 }
@@ -153,6 +161,7 @@ function buildRemoveHarness(options?: {
     buildTenant() as never,
     cache as never,
     moyasar as never,
+    buildRlsTx(prisma) as never,
   );
   return { handler, prisma, cache, moyasar };
 }

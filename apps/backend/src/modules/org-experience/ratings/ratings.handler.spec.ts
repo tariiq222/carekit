@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { SubmitRatingHandler } from './submit-rating.handler';
 import { ListRatingsHandler } from './list-ratings.handler';
 import { TenantContextService } from '../../../common/tenant';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
@@ -31,6 +32,11 @@ const buildTenant = (organizationId = DEFAULT_ORG) =>
   ({
     requireOrganizationId: jest.fn().mockReturnValue(organizationId),
   }) as unknown as TenantContextService;
+const buildRlsTx = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
 
 const validDto = { bookingId: 'booking-1', clientId: 'client-1', employeeId: 'emp-1', score: 5 };
 
@@ -63,7 +69,7 @@ describe('SubmitRatingHandler', () => {
 describe('ListRatingsHandler', () => {
   it('returns paginated ratings scoped by org', async () => {
     const prisma = buildPrisma();
-    const handler = new ListRatingsHandler(prisma as never, buildTenant());
+    const handler = new ListRatingsHandler(prisma as never, buildTenant(), buildRlsTx(prisma) as never);
     const result = await handler.execute({});
     expect(prisma.rating.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ organizationId: DEFAULT_ORG }) }),
@@ -74,7 +80,7 @@ describe('ListRatingsHandler', () => {
 
   it('filters by employeeId within org', async () => {
     const prisma = buildPrisma();
-    const handler = new ListRatingsHandler(prisma as never, buildTenant());
+    const handler = new ListRatingsHandler(prisma as never, buildTenant(), buildRlsTx(prisma) as never);
     await handler.execute({ employeeId: 'emp-1' });
     const call = (prisma.rating.findMany as jest.Mock).mock.calls[0][0];
     expect(call.where.employeeId).toBe('emp-1');

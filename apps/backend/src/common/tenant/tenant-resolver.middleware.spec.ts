@@ -574,47 +574,54 @@ describe('TenantResolverMiddleware', () => {
       });
     });
 
-    it('X-Org-Id on public route (priority #3) beats subdomain (priority #4)', async () => {
+    it('X-Org-Id on public route (priority #3) beats subdomain (priority #4) — mismatching header throws 400', async () => {
+      // CR-4: when subdomain resolves to SUBDOMAIN_ORG and X-Org-Id sends a different org,
+      // the middleware throws BadRequestException to block cross-tenant header injection.
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, SUBDOMAIN_ORG);
-      await new Promise<void>((done) => {
-        cls.run(async () => {
-          await mw.use(
-            req({
-              originalUrl: '/api/v1/public/services/departments',
-              hostname: 'myclinic.deqah.net',
-              headers: { 'x-org-id': VALID_HEADER_ORG },
-            }),
-            {} as never,
-            () => {
-              expect(ctx.getOrganizationId()).toBe(VALID_HEADER_ORG);
-              done();
-            },
-          );
-        });
-      });
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({
+                  originalUrl: '/api/v1/public/services/departments',
+                  hostname: 'myclinic.deqah.net',
+                  headers: { 'x-org-id': VALID_HEADER_ORG },
+                }),
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow('X-Org-Id does not match the resolved subdomain organization');
     });
 
-    it('subdomain null → passes through on public route (handlers use requireOrganizationIdOrDefault)', async () => {
+    it('subdomain null + no X-Org-Id header on public route → TenantResolutionError in strict mode', async () => {
+      // When no subdomain resolves and no X-Org-Id header is present, strict mode
+      // throws TenantResolutionError because there is no way to identify the tenant.
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
-      let nextCalled = false;
-      await new Promise<void>((done) => {
-        cls.run(async () => {
-          await mw.use(
-            req({
-              originalUrl: '/api/v1/public/services/departments',
-              hostname: 'localhost',
-              headers: {},
-            }),
-            {} as never,
-            () => {
-              nextCalled = true;
-              done();
-            },
-          );
-        });
-      });
-      expect(nextCalled).toBe(true);
-      expect(ctx.get()).toBeUndefined();
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({
+                  originalUrl: '/api/v1/public/services/departments',
+                  hostname: 'localhost',
+                  headers: {},
+                }),
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
     });
 
     it('uses x-forwarded-host header over req.hostname when present', async () => {

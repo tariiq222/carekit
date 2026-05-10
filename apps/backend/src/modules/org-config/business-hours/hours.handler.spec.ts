@@ -10,6 +10,7 @@ import { AddHolidayDto } from './add-holiday.dto';
 import { ListHolidaysDto } from './list-holidays.dto';
 import { SetBusinessHoursDto } from './set-business-hours.dto';
 import { TenantContextService } from '../../../common/tenant';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
@@ -39,11 +40,16 @@ const buildTenant = (organizationId = DEFAULT_ORG) =>
   ({
     requireOrganizationId: jest.fn().mockReturnValue(organizationId),
   }) as unknown as TenantContextService;
+const buildRlsTx = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
 
 describe('SetBusinessHoursHandler', () => {
   it('upserts schedule and returns hours', async () => {
     const prisma = buildPrisma();
-    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant());
+    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant(), buildRlsTx(prisma) as never);
     const result = await handler.execute({ branchId: 'branch-1', schedule });
     expect(result).toEqual([mockHour]);
   });
@@ -51,13 +57,13 @@ describe('SetBusinessHoursHandler', () => {
   it('throws NotFoundException when branch not found', async () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
-    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant());
+    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant(), buildRlsTx(prisma) as never);
     await expect(handler.execute({ branchId: 'missing', schedule })).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException for invalid dayOfWeek', async () => {
     const prisma = buildPrisma();
-    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant());
+    const handler = new SetBusinessHoursHandler(prisma as never, buildTenant(), buildRlsTx(prisma) as never);
     await expect(
       handler.execute({ branchId: 'branch-1', schedule: [{ dayOfWeek: 9, startTime: '09:00', endTime: '17:00', isOpen: true }] }),
     ).rejects.toThrow(BadRequestException);

@@ -1,6 +1,6 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateZoomMeetingHandler } from './create-zoom-meeting.handler';
-import { buildPrisma, mockBooking } from '../testing/booking-test-helpers';
+import { buildPrisma, buildRlsTx, mockBooking } from '../testing/booking-test-helpers';
 import { ZoomMeetingStatus } from '@prisma/client';
 
 const buildFeatureCheck = (enabled = true) => ({ isEnabled: jest.fn().mockResolvedValue(enabled) });
@@ -89,6 +89,7 @@ describe('CreateZoomMeetingHandler', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -109,6 +110,7 @@ describe('CreateZoomMeetingHandler', () => {
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -125,6 +127,7 @@ describe('CreateZoomMeetingHandler', () => {
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -145,6 +148,7 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, tx, zoomApi, zoomCredentials } = buildMocks();
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -169,6 +173,7 @@ describe('CreateZoomMeetingHandler', () => {
     zoomApi.createMeeting.mockRejectedValue(new Error('Zoom Outage'));
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -190,6 +195,7 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks();
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck(false) as never,
@@ -216,6 +222,7 @@ describe('CreateZoomMeetingHandler', () => {
     });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -240,6 +247,7 @@ describe('CreateZoomMeetingHandler', () => {
     const { prisma, zoomApi, zoomCredentials } = buildMocks({ executeRaw, bookingFindFirst });
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,
@@ -269,6 +277,7 @@ describe('CreateZoomMeetingHandler', () => {
 
     const handler = new CreateZoomMeetingHandler(
       prisma as never,
+      buildRlsTx(prisma) as never,
       zoomApi as never,
       zoomCredentials as never,
       buildFeatureCheck() as never,

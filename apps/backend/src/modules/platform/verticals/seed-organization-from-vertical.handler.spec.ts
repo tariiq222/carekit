@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { SeedOrganizationFromVerticalHandler } from './seed-organization-from-vertical.handler';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 import { TemplateFamily } from '@prisma/client';
 
 const mockSeedDepts = [
@@ -61,6 +61,13 @@ describe('SeedOrganizationFromVerticalHandler', () => {
       providers: [
         SeedOrganizationFromVerticalHandler,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: RlsTransactionService,
+          useValue: {
+            withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+            withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+          },
+        },
       ],
     }).compile();
     handler = module.get(SeedOrganizationFromVerticalHandler);

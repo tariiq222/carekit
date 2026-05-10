@@ -8,7 +8,7 @@ import {
 import { CreateGuestBookingHandler, CreateGuestBookingCommand } from './create-guest-booking.handler';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant';
 import { SubscriptionCacheService } from '../../platform/billing/subscription-cache.service';
 import { ClientGender } from '@prisma/client';
@@ -65,6 +65,13 @@ describe('CreateGuestBookingHandler', () => {
         { provide: PriceResolverService, useValue: mockPriceResolver },
         { provide: GetBookingSettingsHandler, useValue: mockSettingsHandler },
         { provide: SubscriptionCacheService, useValue: { get: jest.fn().mockResolvedValue(null) } },
+        {
+          provide: RlsTransactionService,
+          useValue: {
+            withTransaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => mockPrisma.$transaction(fn)),
+            withBypassTransaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => mockPrisma.$transaction(fn)),
+          },
+        },
       ],
     }).compile();
 

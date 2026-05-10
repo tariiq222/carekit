@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { TenantContextService } from '../../../common/tenant';
 import { ListEmployeeRatingsHandler } from './list-employee-ratings.handler';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
@@ -32,10 +33,16 @@ const buildTenant = (organizationId = DEFAULT_ORG) =>
     requireOrganizationId: jest.fn().mockReturnValue(organizationId),
   }) as unknown as TenantContextService;
 
+const buildRlsTx = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
+
 const buildHandler = (
   prisma: ReturnType<typeof buildPrisma>,
   tenant: TenantContextService,
-) => new ListEmployeeRatingsHandler(prisma as never, tenant);
+) => new ListEmployeeRatingsHandler(prisma as never, tenant, buildRlsTx(prisma) as never);
 
 describe('ListEmployeeRatingsHandler', () => {
   it('returns paginated employee ratings scoped by organization', async () => {

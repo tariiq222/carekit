@@ -3,7 +3,7 @@ import { HttpException, HttpStatus, ServiceUnavailableException } from '@nestjs/
 import { OtpChannel } from '@prisma/client';
 import { RequestDashboardOtpHandler } from './request-dashboard-otp.handler';
 import { NotificationChannelRegistry } from '../../comms/notification-channel/notification-channel-registry';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 
 describe('RequestDashboardOtpHandler', () => {
   let handler: RequestDashboardOtpHandler;
@@ -43,6 +43,13 @@ describe('RequestDashboardOtpHandler', () => {
           provide: NotificationChannelRegistry,
           useValue: {
             resolve: jest.fn().mockReturnValue(mockChannelService),
+          },
+        },
+        {
+          provide: RlsTransactionService,
+          useValue: {
+            withTransaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => prismaMock.$transaction(fn)),
+            withBypassTransaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => prismaMock.$transaction(fn)),
           },
         },
       ],

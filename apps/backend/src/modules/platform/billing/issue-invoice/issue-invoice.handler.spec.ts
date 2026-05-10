@@ -1,6 +1,7 @@
 import { IssueInvoiceHandler } from './issue-invoice.handler';
 import { InvoiceNumberingService } from './invoice-numbering.service';
 import { computeInvoiceHash } from './invoice-hash.util';
+import { RlsTransactionService } from '../../../../infrastructure/database';
 
 interface InvoiceRow {
   id: string;
@@ -66,6 +67,11 @@ const buildPrisma = (rows: Map<string, InvoiceRow>) => {
     _tx: tx,
   };
 };
+const buildRlsTx = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma._tx)),
+  } as unknown as RlsTransactionService);
 
 describe('IssueInvoiceHandler', () => {
   it('first invoice receives previousHash="0" and issuedAt+invoiceNumber become non-null', async () => {
@@ -75,7 +81,7 @@ describe('IssueInvoiceHandler', () => {
     const numbering = new InvoiceNumberingService({} as never);
     jest.spyOn(numbering, 'allocate').mockResolvedValue('INV-2026-000001');
 
-    const handler = new IssueInvoiceHandler(prisma as never, numbering);
+    const handler = new IssueInvoiceHandler(prisma as never, numbering, buildRlsTx(prisma) as never);
     const now = new Date('2026-04-30T12:00:00.000Z');
 
     const result = await handler.execute('inv_1', now);
@@ -116,7 +122,7 @@ describe('IssueInvoiceHandler', () => {
     const numbering = new InvoiceNumberingService({} as never);
     jest.spyOn(numbering, 'allocate').mockResolvedValue('INV-2026-000002');
 
-    const handler = new IssueInvoiceHandler(prisma as never, numbering);
+    const handler = new IssueInvoiceHandler(prisma as never, numbering, buildRlsTx(prisma) as never);
     const result = await handler.execute('inv_2', new Date('2026-04-30T12:00:00.000Z'));
 
     expect(result.invoiceNumber).toBe('INV-2026-000002');
@@ -140,7 +146,7 @@ describe('IssueInvoiceHandler', () => {
     const numbering = new InvoiceNumberingService({} as never);
     const allocSpy = jest.spyOn(numbering, 'allocate');
 
-    const handler = new IssueInvoiceHandler(prisma as never, numbering);
+    const handler = new IssueInvoiceHandler(prisma as never, numbering, buildRlsTx(prisma) as never);
     const result = await handler.execute('inv_1', new Date('2026-05-01T00:00:00.000Z'));
 
     expect(allocSpy).not.toHaveBeenCalled();
@@ -156,7 +162,7 @@ describe('IssueInvoiceHandler', () => {
     const numbering = new InvoiceNumberingService({} as never);
     jest.spyOn(numbering, 'allocate').mockResolvedValue('INV-2026-000001');
 
-    const handler = new IssueInvoiceHandler(prisma as never, numbering);
+    const handler = new IssueInvoiceHandler(prisma as never, numbering, buildRlsTx(prisma) as never);
     const result = await handler.execute('inv_paid', new Date('2026-04-30T00:00:00.000Z'));
 
     expect(result.status).toBe('PAID');

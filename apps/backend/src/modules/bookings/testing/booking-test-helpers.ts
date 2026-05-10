@@ -1,4 +1,5 @@
 import { BookingStatus } from '@prisma/client';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 const future = new Date(Date.now() + 86400_000);
 
@@ -82,7 +83,8 @@ const buildPrismaRaw = () => ({
 //   prisma.$transaction([promise1, promise2])   -> array form
 //   prisma.$transaction(async (tx) => { ... })  -> interactive form
 export const buildPrisma = () => {
-  const p = buildPrismaRaw() as ReturnType<typeof buildPrismaRaw> & { $transaction: jest.Mock };
+  const p = buildPrismaRaw() as ReturnType<typeof buildPrismaRaw> & { $transaction: jest.Mock; $executeRaw: jest.Mock };
+  p.$executeRaw = jest.fn().mockResolvedValue(undefined);
   p.$transaction = jest.fn(
     (arg: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) => {
       if (typeof arg === 'function') return arg(p);
@@ -102,6 +104,13 @@ export const buildPrisma = () => {
 };
 
 export const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
+
+/** Minimal RlsTransactionService mock — runs the callback with the prisma mock as tx. */
+export const buildRlsTx = (prisma: ReturnType<typeof buildPrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  } as unknown as RlsTransactionService);
 
 export const buildZoomHandler = () => ({
   execute: jest.fn().mockResolvedValue({ joinUrl: 'https://zoom.example/join' }),
