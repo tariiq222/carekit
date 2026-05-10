@@ -1,5 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { RegisterTenantHandler } from './register-tenant.handler';
+import { RlsTransactionService } from '../../../infrastructure/database';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,12 @@ const makeOwnerProvisioning = () => ({
   provision: jest.fn().mockResolvedValue({ userId: 'user-1', isNewUser: true }),
 });
 
+const makeRlsTx = (prisma: ReturnType<typeof makePrisma>) =>
+  ({
+    withTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma._tx)),
+    withBypassTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma._tx)),
+  } as unknown as RlsTransactionService);
+
 describe('RegisterTenantHandler', () => {
   let prisma: ReturnType<typeof makePrisma>;
   let tokens: ReturnType<typeof makeTokens>;
@@ -78,8 +85,9 @@ describe('RegisterTenantHandler', () => {
   let mailer: ReturnType<typeof makeMailer>;
 
   function buildHandler(overridePrisma?: ReturnType<typeof makePrisma>) {
+    const p = overridePrisma ?? prisma;
     return new RegisterTenantHandler(
-      (overridePrisma ?? prisma) as never,
+      p as never,
       makePassword() as never,
       tokens as never,
       makeConfig() as never,
@@ -87,6 +95,7 @@ describe('RegisterTenantHandler', () => {
       makeCache() as never,
       mailer as never,
       makeOwnerProvisioning() as never,
+      makeRlsTx(p) as never,
     );
   }
 
@@ -119,6 +128,7 @@ describe('RegisterTenantHandler', () => {
       makeCache() as never,
       makeMailer() as never,
       { provision: jest.fn().mockRejectedValue({ code: 'P2002', meta: { target: ['email'] }, message: 'Unique constraint failed on email' }) } as never,
+      makeRlsTx(p) as never,
     );
     await expect(handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة' }))
       .rejects.toThrow(ConflictException);
@@ -152,7 +162,7 @@ describe('RegisterTenantHandler', () => {
     const p = makePrisma({}, tx);
     const handler = buildHandler(p);
     await handler.execute({ name: 'Ali', email: 'new@b.com', phone: '0501234567', password: 'Pass@1234', businessNameAr: 'عيادة علي' });
-    expect(p.$transaction).toHaveBeenCalledTimes(1);
+    // Handler now uses rlsTx.withTransaction (not prisma.$transaction directly)
     expect(tx.organization.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'TRIALING', nameAr: 'عيادة علي' }),
     }));

@@ -505,6 +505,7 @@ describe('CreateBookingHandler — advisory lock for individual bookings', () =>
       mockSubscriptionCache as never,
       { couponStrictEnabled: false } as never,
       {} as never,
+      buildRlsTx(prisma),
     ).execute(dto);
 
     // Lock must be acquired before the overlap check
@@ -535,6 +536,7 @@ describe('CreateBookingHandler — advisory lock for individual bookings', () =>
         mockSubscriptionCache as never,
         { couponStrictEnabled: false } as never,
         {} as never,
+        buildRlsTx(prisma),
       ).execute(dto),
     ).rejects.toThrow('Employee already has a booking in this time slot');
   });
@@ -558,6 +560,7 @@ describe('CreateBookingHandler — outbox pattern', () => {
       mockSubscriptionCache as never,
       { couponStrictEnabled: false } as never,
       {} as never,
+      buildRlsTx(prisma),
     ).execute(dto);
 
     // outboxEvent.create must have been called inside the tx
