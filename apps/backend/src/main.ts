@@ -1,5 +1,5 @@
 import './instrument';
-import { NestFactory, Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -14,6 +14,7 @@ import { PrismaService } from './infrastructure/database';
 import { TenantContextService } from './common/tenant/tenant-context.service';
 import { ClsService } from 'nestjs-cls';
 import { HttpExceptionFilter } from './common/filters';
+import { configureCors } from './cors';
 
 async function bootstrap(): Promise<void> {
   // rawBody: true preserves the untouched request body buffer on req.rawBody,
@@ -29,14 +30,7 @@ async function bootstrap(): Promise<void> {
 
   app.setGlobalPrefix('api/v1');
 
-  app.enableCors({
-    origin: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',')
-      : ['http://localhost:3000', 'http://localhost:5103', 'http://localhost:5104', 'http://localhost:5105'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-Org-Id'],
-  });
+  configureCors(app);
 
   app.useGlobalPipes(
     new ValidationPipe({
