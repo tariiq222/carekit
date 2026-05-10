@@ -63,7 +63,7 @@ export class BankTransferUploadHandler {
     }
 
     const ext = cmd.filename.split('.').pop() ?? 'bin';
-    const key = `${cmd.invoiceId}/${Date.now()}.${ext}`;
+    const key = `${organizationId}/${cmd.invoiceId}/${Date.now()}.${ext}`;
 
     const receiptUrl = await this.storage.uploadFile(RECEIPTS_BUCKET, key, cmd.fileBuffer, cmd.mimetype);
 
