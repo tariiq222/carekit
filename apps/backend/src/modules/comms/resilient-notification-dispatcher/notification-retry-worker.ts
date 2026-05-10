@@ -8,6 +8,8 @@ import {
   ResilientNotificationDispatcher,
   type RetryJobData,
 } from './resilient-notification-dispatcher.service';
+import { ClsService } from 'nestjs-cls';
+import { TENANT_CLS_KEY } from '../../../common/tenant/tenant.constants';
 
 @Injectable()
 export class NotificationRetryWorker implements OnModuleInit {
@@ -16,6 +18,7 @@ export class NotificationRetryWorker implements OnModuleInit {
   constructor(
     private readonly bullmq: BullMqService,
     private readonly dispatcher: ResilientNotificationDispatcher,
+    private readonly cls: ClsService,
   ) {}
 
   onModuleInit(): void {
@@ -23,10 +26,25 @@ export class NotificationRetryWorker implements OnModuleInit {
       NOTIFICATION_RETRY_QUEUE,
       async (job) => {
         const { logId, channel, payload, attempt } = job.data;
-        this.logger.log(
-          `Retrying [${channel}] delivery for log ${logId} (attempt #${attempt})`,
-        );
-        await this.dispatcher.attemptSend(logId, channel, payload, attempt);
+
+        if (!payload?.organizationId) {
+          throw new Error(`NotificationRetryWorker: job missing organizationId in payload`);
+        }
+
+        await this.cls.run(async () => {
+          this.cls.set(TENANT_CLS_KEY, {
+            organizationId: payload.organizationId,
+            membershipId: '',
+            id: '',
+            role: '',
+            isSuperAdmin: false,
+          });
+
+          this.logger.log(
+            `Retrying [${channel}] delivery for log ${logId} (attempt #${attempt}, org: ${payload.organizationId})`,
+          );
+          await this.dispatcher.attemptSend(logId, channel, payload, attempt);
+        });
       },
     );
     this.logger.log(`Worker registered for queue: ${NOTIFICATION_RETRY_QUEUE}`);

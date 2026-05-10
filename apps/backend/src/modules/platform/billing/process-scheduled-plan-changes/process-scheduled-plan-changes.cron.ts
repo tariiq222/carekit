@@ -24,7 +24,7 @@ export class ProcessScheduledPlanChangesCron {
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
-
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
       this.logger.log('systemContext: process-scheduled-plan-changes tick');

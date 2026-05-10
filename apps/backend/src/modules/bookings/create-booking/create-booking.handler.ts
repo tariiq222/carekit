@@ -228,8 +228,10 @@ export class CreateBookingHandler {
             if (coupon.minOrderAmt !== null && Number(price) < Number(coupon.minOrderAmt)) {
               throw new BadRequestException(`Order total does not meet minimum for coupon`);
             }
+            const priceDec = new Prisma.Decimal(price);
+            const discountValueDec = new Prisma.Decimal(coupon.discountValue.toString());
             const discount = coupon.discountType === 'PERCENTAGE'
-              ? Number(price) * Number(coupon.discountValue) / 100
+              ? priceDec.times(discountValueDec).div(100).toDecimalPlaces(2).toNumber()
               : Math.min(Number(coupon.discountValue), Number(price));
             discountedPrice = parseFloat((Number(price) - discount).toFixed(2));
           }

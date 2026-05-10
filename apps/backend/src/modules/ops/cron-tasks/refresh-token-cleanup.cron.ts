@@ -14,6 +14,7 @@ export class RefreshTokenCleanupCron {
   ) {}
 
   async execute(): Promise<void> {
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
     await this.cls.run(async () => {
       this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
       await withCronLeader(this.prisma, 'refresh-token-cleanup', async () => {

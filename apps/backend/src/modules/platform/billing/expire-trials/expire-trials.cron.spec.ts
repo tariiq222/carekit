@@ -127,6 +127,13 @@ const buildPrisma = ({
 
 const buildCache = () => ({ invalidate: jest.fn() });
 
+const buildCls = () => ({
+  run: jest.fn().mockImplementation(async (fn: () => Promise<void>) => {
+    await fn();
+  }),
+  set: jest.fn(),
+});
+
 type CronDeps = {
   enabled?: boolean;
   cache?: ReturnType<typeof buildCache>;
@@ -134,6 +141,7 @@ type CronDeps = {
   moyasar?: unknown;
   recordPayment?: unknown;
   recordFailure?: unknown;
+  cls?: ReturnType<typeof buildCls>;
 };
 
 function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) {
@@ -144,12 +152,14 @@ function buildCron(prisma: ReturnType<typeof buildPrisma>, deps: CronDeps = {}) 
     moyasar,
     recordPayment,
     recordFailure,
+    cls = buildCls(),
   } = deps;
   return new ExpireTrialsCron(
     prisma as never,
     buildConfig(enabled) as never,
     cache as never,
     mailer as never,
+    cls as never,
     moyasar as never,
     recordPayment as never,
     recordFailure as never,

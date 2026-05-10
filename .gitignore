@@ -121,6 +121,11 @@ graphify-out/
 testsprite_tests/
 test-results/
 
+# ─── Deqah Orchestrator runtime state (local-only) ────────────
+.kilo/orchestrator/tasks/
+.kilo/orchestrator/pending/
+.kilo/orchestrator/trace.jsonl
+
 # ─── Bespoke/Sawa mobile native build artifacts (from `expo prebuild`) ─
 # These directories are generated locally and must never enter the pipeline.
 # Sawa mobile is currently paused from production (CLAUDE.md note: 2026-05-08).

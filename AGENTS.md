@@ -1,387 +1,221 @@
 # Deqah AI Engineering Runtime
 
-> **Status:** Active — Event-Driven Orchestration
-> **Last Updated:** 2026-05-09
+> **Status:** Active — Kilo-Native Orchestration
+> **Last Updated:** 2026-05-11
+> **Architecture:** [ADR-002](./docs/ai/ADR-002-KILO-NATIVE-ORCHESTRATION.md)
 
 ---
 
 ## Philosophy
 
-**No module-to-agent binding.** Any agent can execute any task if it has the right capability. Selection is automatic based on capability matching. System is event-driven — parallel services, not linear pipeline.
+**Linear pipeline, role-specialized models.** The orchestrator delegates each stage to the cheapest model that can do the job well:
+
+- **Opus 4.7** — Orchestrator + Planner (STANDARD path) + Validator (HIGH risk only)
+- **Sonnet 4.6** — Risk Classifier, default Validator, Tests Analyzer, PR Author, Executor wrapper
+- **MiniMax-M2.7-highspeed** — Heavy generative work inside Executor (called via `mmx` CLI)
+
+Target token distribution: **10% Opus / 25% Sonnet / 65% MiniMax**.
 
 ---
 
-## 1. Architecture Overview
+## 1. Pipeline
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        EVENT-DRIVEN ORCHESTRATION                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│   │  Policy     │  │  Tracing     │  │  Budget      │  │  Graph       │  │
-│   │  Engine     │  │  Service     │  │  Governor    │  │  Engine      │  │
-│   └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  │
-│          │                  │                  │                  │          │
-│          └──────────────────┼──────────────────┼──────────────────┘          │
-│                             │                  │                             │
-│                    ┌────────┴──────────────────┴────────┐                   │
-│                    │         EVENT BUS (Internal)        │                   │
-│                    └──────────────────┬──────────────────┘                   │
-│                                       │                                      │
-│                    ┌──────────────────┴──────────────────┐                   │
-│                    │       Temporal (Workflow Engine)    │                   │
-│                    └──────────────────┬──────────────────┘                   │
-│                                       │                                      │
-│          ┌────────────────────────────┼────────────────────────────┐         │
-│          │                            │                            │         │
-│   ┌──────┴──────┐          ┌────────┴────────┐          ┌────────┴────────┐  │
-│   │  Sandbox    │          │   Agent Pool    │          │  Memory Store  │  │
-│   │  Service   │          │                 │          │   (Runtime)   │  │
-│   └────────────┘          └─────────────────┘          └────────────────┘  │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 2. Task Lifecycle — 3 Tracks
-
-### Automated Gates Track
-
-```
-TASK_CREATED
-    │
-    ▼
-IMPACT_ANALYZED ──▶ ANALYZER_ERROR ──▶ ESCALATED
-    │
-    ▼
-ROUTED
-    │
-    ▼
-PLANNED ──▶ PLAN_ERROR ──▶ ESCALATED
-    │
-    ▼
-SANDBOX_APPROVED
-    │
-    ├──▶ BLOCKED ──▶ ESCALATED (destructive edit detected)
-    │
-    ▼
-EXECUTING
-    │
-    ├──▶ EXECUTION_ERROR ──▶ RETRYING (max 3)
-    │                              │
-    │                              ├──▶ RETRY_EXHAUSTED ──▶ ESCALATED
-    │                              └──▶ RECOVERED ──▶ EXECUTING
-    │
-    ▼
-TESTING ──▶ TEST_ERROR ──▶ EXECUTING (re-run)
-    │
-    ▼
-LINT_PASSED
-    │
-    ▼
-TYPECHECK_PASSED
-    │
-    ▼
-READY_FOR_APPROVAL
-```
-
-### Approval Track (Normal Flow — NOT a failure)
-
-```
-PENDING_APPROVAL
-    │
-    ├──▶ APPROVED ──▶ READY_FOR_DEPLOY
-    ├──▶ CHANGES_REQUESTED ──▶ EXECUTING (with feedback)
-    └──▶ TIMEOUT ──▶ ESCALATED (auto-escalate)
-```
-
-### Deployment Track
-
-```
-READY_FOR_DEPLOY
-    │
-    ▼
-PRE_DEPLOY_CHECKS
-    │
-    ├──▶ CAN_ROLLBACK? = NO ──▶ ESCALATED (requires manual approval)
-    │
-    ▼
-DEPLOYING
-    │
-    ├──▶ DEPLOY_ERROR ──▶ ROLLING_BACK
-    │                              │
-    │                              ├──▶ ROLLBACK_SUCCESS ──▶ DEPLOYED
-    │                              └──▶ ROLLBACK_FAILED ──▶ ESCALATED
-    │
-    ▼
-DEPLOYED ──▶ COMPLETED
-```
-
-### Escalation Track (Abnormal State)
-
-```
-ESCALATED
-    │
-    ▼
-HUMAN_REVIEW
-    │
-    ├──▶ APPROVE ──▶ RESUME (back to normal track)
-    ├──▶ REJECT ──▶ FAILED
-    └──▶ REQUEST_CHANGE ──▶ EXECUTING (with feedback)
+Request
+  ↓
+Pre-classifier (deterministic — no LLM)
+  ↓
+Planner ─── Opus (STANDARD path)
+          └ Sonnet (FAST path — single file, < 200 char, no danger keywords)
+  ↓
+Risk Classifier ─── Sonnet
+  ↓
+Execution Decision (deterministic)
+  ├─ LOW/MEDIUM     → Auto Execute
+  ├─ HIGH           → Human Approval → Auto Execute
+  └─ blocking_patterns → BLOCKED
+  ↓
+Executor ─── Sonnet wrapper → MiniMax-M2.7 via `mmx text chat`
+  ↓
+Validator ─── Sonnet (default) → Opus (HIGH risk or low confidence)
+  │  Step 1: deterministic — apps/runtime/src/audit/detector.ts
+  │  Step 2: LLM review + sandbox checks (destructive/schema/deps)
+  ↓
+Tests ─── Bash (lint/typecheck/jest) → Sonnet Tests Analyzer (on failure)
+  ↓
+PR Author ─── Sonnet (git branch + commit + gh pr create)
+  ↓
+Staging Deploy ─── GitHub Actions (existing auto-promote.yml)
 ```
 
 ---
 
-## 3. Pre-Execution Sandbox
+## 2. Running a Task
 
-**Before any EXECUTING, sandbox validates:**
-
-```typescript
-interface SandboxChecks {
-  // Destructive edits
-  willDeleteFiles: string[];
-  willDropTables: string[];
-  willTruncateData: boolean;
-
-  // Schema disasters
-  willRemoveRequiredField: string[];
-  willChangeRelation: string[];
-
-  // Dependency explosions
-  willBreakImports: string[];
-  willCreateCircularDeps: boolean;
-
-  // Hallucinations
-  willCreateConflictingFiles: string[];
-}
-
-interface SandboxResult {
-  safe: boolean;
-  warnings: string[];
-  blockers: SandboxBlocker[];
-  canRollback: boolean;
-}
-```
-
-**Blocking types:**
-- `DESTRUCTIVE_EDIT` — delete operations
-- `SCHEMA_DISASTER` — dangerous Prisma changes
-- `DEPENDENCY_EXPLOSION` — will break imports
-- `HALLUCINATION` — file conflicts
-
----
-
-## 4. Rollback Validation
-
-**CAN_ROLLBACK? check before DEPLOYING:**
-
-| Risk Level | Check | Action |
-|------------|-------|--------|
-| **IMPOSSIBLE** | Cannot rollback | Block deploy + manual approval required |
-| **HIGH** | Risky rollback | Block deploy + senior approval |
-| **MEDIUM** | Standard rollback | Proceed with rollback plan |
-| **LOW** | Easy rollback | Proceed |
-
-**Non-reversible operations (IMPOSSIBLE):**
-- `prisma.migration.delete`
-- `tenant.data.delete`
-- `payment.processed`
-- `schema.column.drop`
-
----
-
-## 5. Runtime Memory
-
-**System learns from experience:**
+### From inside Kilo Code
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                      MEMORY QUERIES                             │
-├────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  "Which files always break tests?" ──▶ FileHotspot[]           │
-│  "Which agents succeed on NestJS?" ──▶ AgentPerf               │
-│  "What caused last 5 escalations?" ──▶ FailurePattern[]       │
-│  "What is average cost per task type?" ──▶ CostEstimate        │
-│                                                                 │
-└────────────────────────────────────────────────────────────────┘
+/orchestrate "Add a /health endpoint to apps/backend with a tenant-scoped DB ping"
 ```
 
-**Memory types:**
-- **Failure Memory** — why tasks fail, how fixed, retry counts
-- **Task Patterns** — common flows, file hotspots
-- **Agent Performance** — success rate, cost, latency per agent
-- **Decision Log** — why tasks were routed, gates passed/failed
+### Dry-run (Plan + Risk only)
 
----
-
-## 6. Event Bus
-
-**Events are first-class citizens:**
-
-```typescript
-type RuntimeEvent =
-  | 'TASK_SUBMITTED'
-  | 'POLICY_MATCHED'
-  | 'SANDBOX_RESULT'
-  | 'EXECUTION_STARTED'
-  | 'EXECUTION_COMPLETED'
-  | 'GATE_PASSED'
-  | 'GATE_FAILED'
-  | 'BUDGET_EXCEEDED'
-  | 'ESCALATION_TRIGGERED'
-  | 'HUMAN_DECISION'
-  | 'DEPLOYMENT_STARTED'
-  | 'DEPLOYMENT_COMPLETED'
-  | 'MEMORY_UPDATED';
+```
+/orchestrate --dry-run "Refactor finance/payments service to use the new Moyasar SDK"
 ```
 
-All services subscribe to events and react in parallel.
+### Resume an approved HIGH-risk task
 
----
+```bash
+# inspect the plan + risk
+cat .kilo/orchestrator/pending/tsk_2026_05_11_001.md
 
-## 7. Policy Engine (from Git)
+# approve
+touch .kilo/orchestrator/pending/tsk_2026_05_11_001.approved
+```
 
-**Policies in YAML — no hardcoded rules:**
-
-```yaml
-# Example: payments policy
-- id: payments-require-security
-  risk: CRITICAL
-  when:
-    files:
-      - modules/finance/payments/**
-  requires:
-    - SECURITY_REVIEW
-    - ROLLBACK_VALIDATION
-  approver: security-team
-  sandbox:
-    blocking:
-      - DESTRUCTIVE_EDIT
-      - SCHEMA_DISASTER
+```
+/orchestrate --resume tsk_2026_05_11_001
 ```
 
 ---
 
-## 8. Capability-Based Agent Selection
+## 3. Where the Agents Live
 
-**No named agents. Selection by capability match:**
+| Stage | File | Model |
+|---|---|---|
+| Slash command | `.kilo/command/orchestrate.md` | Opus (orchestrator) |
+| Planner (STANDARD) | `.kilo/agent/deqah-planner.md` | Opus |
+| Planner (FAST) | `.kilo/agent/deqah-planner-inline.md` | Sonnet |
+| Risk Classifier | `.kilo/agent/deqah-risk-classifier.md` | Sonnet |
+| Executor | `.kilo/agent/deqah-executor.md` | Sonnet → MiniMax |
+| Validator (default) | `.kilo/agent/deqah-validator.md` | Sonnet |
+| Validator (HIGH) | `.kilo/agent/deqah-validator-opus.md` | Opus |
+| Tests Analyzer | `.kilo/agent/deqah-tests-analyzer.md` | Sonnet |
+| PR Author | `.kilo/agent/deqah-pr-author.md` | Sonnet |
+| Rescue (fallback) | `.kilo/agent/deqah-rescue.md` | Sonnet |
 
-| Required | Selected by |
-|----------|-------------|
-| `coding` + NestJS | Best available coding agent |
-| `analysis` + large context | Analysis agent |
-| `security` + payments | Security-capable agent |
-| `execution` + LOW risk | Fast/cheap agent |
-| `audit` | Orchestration Audit Agent |
-
-**Selection criteria:**
-1. Capability match (type + specialization)
-2. Risk level compatibility
-3. File scope permissions
-4. Cost + latency optimization
+Runtime state: `.kilo/orchestrator/` (gitignored).
 
 ---
 
-## 9. Orchestration Audit Agent
+## 4. Risk Classification
 
-**Type:** Monitoring & Compliance (read-only)
+A task is **HIGH** risk if any of these triggers fire (deterministic, no LLM needed):
+
+- `touches.payments === true` (any file under `modules/finance/payments/**`)
+- `touches.schema` or `touches.migrations === true`
+- Any `affected_files` matches `**/migrations/**`
+- `estimated_diff_lines > 300`
+- Any file under `apps/backend/src/core/auth/`
+- Files like `tenant-resolver.middleware.ts` or `prisma.service.ts`
+- `description` contains `delete|drop|truncate|reset|destroy`
+
+HIGH risk requires human approval. Other levels (LOW, MEDIUM) auto-execute.
+
+---
+
+## 5. Blocking Patterns (always blocked, even after approval)
+
+- `rm -rf`
+- `git push --force` / `git reset --hard`
+- `prisma db push` (use migrations)
+- Modifying an existing `migrations/*/migration.sql`
+- Deleting `ActivityLog` / `SuperAdminActionLog` rows
+
+Detected by the Risk Classifier and re-checked by the Validator.
+
+---
+
+## 6. Forbidden Code Patterns
+
+Validator rejects diffs that introduce any of these:
+
+- `: any` without justification comment
+- `@ts-ignore` (use `@ts-expect-error` with issue link)
+- `console.log` / `console.error` in production code
+- Hardcoded secrets
+- `SELECT *` raw queries
+- N+1 queries
+- UI text without i18n keys
+- Missing RTL (left/right CSS) — use `start`/`end` logical properties
+- Hex colors in code — use semantic tokens
+- Magic numbers without `const`
+- Commented-out code
+- Files > 350 lines
+- Editing existing migrations
+
+---
+
+## 7. Source of Truth
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    ORCHESTRATION AUDIT AGENT                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│   Subscribes to Event Bus — observes all events                              │
-│   Reads: ActivityLog, SuperAdminActionLog, Runtime DB                       │
-│   Generates: Daily Reports, Alerts, Compliance Evidence                      │
-│                                                                              │
-│   Audits:                                                                   │
-│   ├── Orchestration Flow Integrity    ← Are tasks following correct path?     │
-│   ├── Data Integrity                ← Are audit logs append-only?           │
-│   ├── Security Posture               ← Any unauthorized access attempts?      │
-│   ├── Agent Behavior                ← Are agents behaving correctly?         │
-│   └── User Flow Compliance          ← Did users follow correct flows?         │
-│                                                                              │
-│   Commands:                                                                  │
-│   /audit daily          ← Daily audit report                                 │
-│   /audit security       ← Security posture audit                             │
-│   /audit flow          ← Orchestration flow audit                           │
-│   /audit integrity     ← Data integrity audit                               │
-│   /audit compliance    ← Generate compliance evidence                        │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+Git ──────────────▶ .kilo/orchestrator/tasks/<id>.json ──────────────▶ GitHub PR
+(code + agents)     (execution state, gitignored)                      (review + deploy)
 ```
 
-**Forbidden Actions (read-only):**
-- ❌ Executes code
-- ❌ Modifies any file or database record
-- ❌ Overrides policies or security controls
-- ❌ Deletes audit logs
-
-**Full spec:** `docs/ai/ORCHESTRATION_AUDIT_AGENT.md`
+| Source | Responsibility |
+|---|---|
+| **Git** | Code, agent prompts, ADRs, CODEOWNERS, Prisma schemas |
+| **`.kilo/orchestrator/`** | Per-task state, trace log, pending approvals (local only) |
+| **GitHub PR + Actions** | Review, staging deploy, production promotion |
 
 ---
 
-## 10. Execution Paths
+## 8. Trace & Audit
 
-| Path | When | Budget |
-|------|------|--------|
-| **FAST** | Single file, LOW risk | 5K–15K tokens |
-| **STANDARD** | Multi-file, moderate impact | 30K–80K tokens |
-| **DEEP** | Schema, security, multi-tenant | 150K–500K tokens |
+Every stage writes an event to `.kilo/orchestrator/trace.jsonl`:
 
----
-
-## 11. Approval vs Escalation
-
-> **Critical: These are NOT the same**
-
-| Approval (Normal) | Escalation (Abnormal) |
-|-------------------|----------------------|
-| Task waiting for human | Something went wrong |
-| Expected in workflow | Unexpected failure |
-| PENDING_APPROVAL | ESCALATED |
-| CHANGES_REQUESTED | HUMAN_REVIEW |
-| TIMEOUT → auto-escalate | System needs help |
-
----
-
-## 12. Forbidden Patterns
-
-- ❌ `any` without justification
-- ❌ `@ts-ignore` — use `@ts-expect-error` with issue link
-- ❌ `console.log` in production
-- ❌ Hardcoded secrets
-- ❌ `SELECT *` without `select:`
-- ❌ N+1 queries
-- ❌ UI text without i18n key
-- ❌ Missing RTL support (logical properties only)
-- ❌ Hex colors in code (semantic tokens only)
-- ❌ Magic numbers without constants
-- ❌ Commented-out code
-- ❌ Files > 350 lines
-- ❌ `prisma db push` (migrations only)
-- ❌ Editing existing migrations
-- ❌ **Execution without sandbox approval**
-
----
-
-## 13. Source of Truth
-
-```
-Git ──────────────▶ Temporal ──────────────▶ Runtime DB
-(Source of Truth)   (Execution State)       (Operational)
+```jsonl
+{"ts":"2026-05-11T01:30:00Z","task_id":"tsk_...","stage":"planner","event":"completed","model":"opus","tokens":8123,"duration_ms":12000}
 ```
 
-| System | Responsibility |
-|--------|---------------|
-| **Git** | Code, policies, schemas, CODEOWNERS |
-| **Temporal** | Workflow state, durable execution, retries |
-| **Runtime DB** | Metrics, cost, failure history, memory |
+Query examples:
+
+```bash
+# all events for a task
+grep '"task_id":"tsk_2026_05_11_001"' .kilo/orchestrator/trace.jsonl | jq .
+
+# token usage by model today
+jq -s '[.[] | select(.tokens) | { model, tokens }] | group_by(.model) | map({ model: .[0].model, total: (map(.tokens) | add) })' .kilo/orchestrator/trace.jsonl
+```
 
 ---
 
-*Architecture details: `docs/ai/ADR-001-DEQAH-RUNTIME-CORE.md`*
+## 9. Failure Handling
+
+| Failure | Action |
+|---|---|
+| Executor (MiniMax) returns malformed patch | Retry once; if still bad → escalate to human |
+| Executor produces files outside `affected_files` | Reject patch, force re-execution with feedback |
+| Validator finds critical issues | Re-execute (max 3 retries) → escalate |
+| Sonnet Validator returns `confidence: "low"` | Re-run Validator with Opus |
+| Tests fail | Tests Analyzer decides: retry executor / rerun flaky / escalate |
+| MiniMax CLI unreachable (auth/network) | Fall back to `deqah-rescue` (Sonnet) for the executor stage |
+| Validator/Executor loop (same bad output 3× in a row) | Hand task + context to `deqah-rescue` |
+| Kilo Anthropic provider unreachable (proxy or direct API) | Hard stop — orchestrator cannot proceed |
+
+Max retries: Executor 2, Validator 3, Tests 2. After exhaustion → `status: "FAILED"`.
+
+---
+
+## 10. What Was Removed (from ADR-001)
+
+The original ADR-001 design proposed Temporal + event bus + policy YAML + memory store + a separate Sandbox stage + an Orchestration Audit Agent + a 3-track state machine. **None of it was implemented in 6 months.** ADR-002 deletes those concepts in favor of:
+
+- Linear pipeline (no event bus, no parallel stages)
+- Sandbox merged into Validator
+- Audit replaced by `grep | jq` on `trace.jsonl`
+- State in JSON files (no Temporal, no Postgres)
+- Risk rules in agent prompts + reused `apps/runtime/src/audit/detector.ts`
+
+Full migration map: [ADR-002 §9](./docs/ai/ADR-002-KILO-NATIVE-ORCHESTRATION.md#9-migration-from-adr-001).
+
+---
+
+## 11. References
+
+- **[ADR-002 — Kilo-Native Orchestration](./docs/ai/ADR-002-KILO-NATIVE-ORCHESTRATION.md)** (active)
+- **[ADR-001 — Deqah Runtime Core](./docs/ai/ADR-001-DEQAH-RUNTIME-CORE.md)** (superseded, historical)
+- **Global rules:** `~/.config/kilo/AGENTS.md` — Opus = orchestrator only, 10/25/65 token split
+- **[Plan: Orchestration v2](./.kilo/plans/1778452249264-stellar-eagle.md)** — design rationale

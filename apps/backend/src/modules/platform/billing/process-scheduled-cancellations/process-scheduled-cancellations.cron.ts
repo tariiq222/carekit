@@ -16,7 +16,7 @@ export class ProcessScheduledCancellationsCron {
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
-
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
     await withCronLeader(this.prisma, 'process-scheduled-cancellations', async () => {
       const now = new Date();
       const due = await this.prisma.$allTenants.subscription.findMany({

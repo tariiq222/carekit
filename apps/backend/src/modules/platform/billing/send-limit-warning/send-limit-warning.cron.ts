@@ -33,7 +33,7 @@ export class SendLimitWarningCron {
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
-
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
     const subscriptions = await this.prisma.$allTenants.subscription.findMany({
       where: { status: { in: ['ACTIVE', 'TRIALING'] } },
       include: { plan: true },

@@ -16,7 +16,7 @@ export class DunningRetryCron {
 
   async execute(now = new Date()): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
-
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
     await withCronLeader(this.prisma, 'dunning-retry', async () => {
       const subscriptions = await this.prisma.$allTenants.subscription.findMany({
         where: {

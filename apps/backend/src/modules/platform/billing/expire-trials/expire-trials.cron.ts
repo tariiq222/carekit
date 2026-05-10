@@ -1,5 +1,6 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SubscriptionCacheService } from '../subscription-cache.service';
 import { PlatformMailerService } from '../../../../infrastructure/mail';
@@ -7,6 +8,7 @@ import { MoyasarSubscriptionClient } from '../../../finance/moyasar-api/moyasar-
 import { RecordSubscriptionPaymentHandler } from '../record-subscription-payment/record-subscription-payment.handler';
 import { RecordSubscriptionPaymentFailureHandler } from '../record-subscription-payment-failure/record-subscription-payment-failure.handler';
 import { withCronLeader } from '../../../../common/helpers/cron-leader.helper';
+import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../../common/tenant/tenant.constants';
 
 const TRIAL_REMINDER_WINDOW_DAYS = 7;
 const TRIAL_REMINDER_MILESTONES = [7, 3, 1] as const;
@@ -46,6 +48,7 @@ export class ExpireTrialsCron {
     private readonly config: ConfigService,
     private readonly cache: SubscriptionCacheService,
     private readonly mailer: PlatformMailerService,
+    private readonly cls: ClsService,
     @Optional() private readonly moyasar?: MoyasarSubscriptionClient,
     @Optional() private readonly recordPayment?: RecordSubscriptionPaymentHandler,
     @Optional() private readonly recordFailure?: RecordSubscriptionPaymentFailureHandler,
@@ -53,18 +56,21 @@ export class ExpireTrialsCron {
 
   async execute(): Promise<void> {
     if (!this.config.get<boolean>('BILLING_CRON_ENABLED', false)) return;
+    // SAFE: cron job running as platform-level op; uses $allTenants for cross-org billing/ops
+    await this.cls.run(async () => {
+      this.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      await withCronLeader(this.prisma, 'expire-trials', async () => {
+        const now = new Date();
+        const billingUrl = this.billingUrl();
 
-    await withCronLeader(this.prisma, 'expire-trials', async () => {
-      const now = new Date();
-      const billingUrl = this.billingUrl();
+        await this.notifyTrialMilestones(now, billingUrl);
+        await this.processExpiredTrials(now, billingUrl);
 
-      await this.notifyTrialMilestones(now, billingUrl);
-      await this.processExpiredTrials(now, billingUrl);
-
-      await this.prisma.$allTenants.cronHeartbeat.upsert({
-        where: { cronName: HEARTBEAT_CRON_NAME },
-        create: { cronName: HEARTBEAT_CRON_NAME, lastRunAt: now },
-        update: { lastRunAt: now },
+        await this.prisma.$allTenants.cronHeartbeat.upsert({
+          where: { cronName: HEARTBEAT_CRON_NAME },
+          create: { cronName: HEARTBEAT_CRON_NAME, lastRunAt: now },
+          update: { lastRunAt: now },
+        });
       });
     });
   }
