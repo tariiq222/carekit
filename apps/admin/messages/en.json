@@ -221,6 +221,7 @@
       "title": "Create tenant",
       "description": "Create an organization, owner membership, and tenant defaults.",
       "slug": "Slug",
+      "slugLabel": "Subdomain (used in tenant URL)",
       "slugPlaceholder": "riyadh-clinic",
       "nameAr": "Arabic name",
       "nameEn": "English name",
