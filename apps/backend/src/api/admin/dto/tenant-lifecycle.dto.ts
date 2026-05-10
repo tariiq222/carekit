@@ -8,21 +8,46 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Length,
   Matches,
   Max,
   MaxLength,
   Min,
   MinLength,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
 } from 'class-validator';
+import { DEFAULT_RESERVED_SUBDOMAINS } from '../../../common/tenant/subdomain.utils';
+import {
+  SLUG_MAX_LEN,
+  SLUG_MIN_LEN,
+  SLUG_REGEX,
+} from '../../../common/tenant/slug-generator.util';
 
-export const TENANT_SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+@ValidatorConstraint({ name: 'NotReservedSubdomain', async: false })
+class NotReservedSubdomainConstraint implements ValidatorConstraintInterface {
+  validate(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+    return !DEFAULT_RESERVED_SUBDOMAINS.has(value.toLowerCase());
+  }
+  defaultMessage(): string {
+    return 'slug is reserved';
+  }
+}
 
 export class CreateTenantDto {
-  @ApiProperty({ description: 'Lowercase kebab-case tenant slug', example: 'riyadh-clinic' })
+  @ApiProperty({
+    example: 'sawa-clinic',
+    description:
+      'Subdomain slug; 3–30 chars, lowercase, [a-z0-9-], no leading/trailing hyphen, not reserved',
+  })
   @IsString()
-  @MinLength(2)
-  @MaxLength(64)
-  @Matches(TENANT_SLUG_REGEX, { message: 'slug must be lowercase kebab-case' })
+  @Length(SLUG_MIN_LEN, SLUG_MAX_LEN, {
+    message: `slug must be ${SLUG_MIN_LEN}–${SLUG_MAX_LEN} chars`,
+  })
+  @Matches(SLUG_REGEX, { message: 'slug must match subdomain regex' })
+  @Validate(NotReservedSubdomainConstraint)
   slug!: string;
 
   @ApiProperty({ minLength: 2, maxLength: 120 })
@@ -39,14 +64,16 @@ export class CreateTenantDto {
 
   @ApiPropertyOptional({
     format: 'uuid',
-    description: 'UUID of an existing active user to make owner. Mutually exclusive with ownerEmail.',
+    description:
+      'UUID of an existing active user to make owner. Mutually exclusive with ownerEmail.',
   })
   @IsOptional()
   @IsUUID()
   ownerUserId?: string;
 
   @ApiPropertyOptional({
-    description: 'Full name of the new owner to create. Required when ownerEmail is provided and no existing user matches.',
+    description:
+      'Full name of the new owner to create. Required when ownerEmail is provided and no existing user matches.',
     example: 'Ahmed Al-Zahrani',
   })
   @IsOptional()
@@ -56,7 +83,8 @@ export class CreateTenantDto {
   ownerName?: string;
 
   @ApiPropertyOptional({
-    description: 'Email of the owner. If an existing active user matches, they are linked; otherwise a new user is created.',
+    description:
+      'Email of the owner. If an existing active user matches, they are linked; otherwise a new user is created.',
     example: 'ahmed@example.com',
   })
   @IsOptional()
@@ -64,7 +92,8 @@ export class CreateTenantDto {
   ownerEmail?: string;
 
   @ApiPropertyOptional({
-    description: 'Phone number of the new owner. Required when creating a new user via ownerEmail.',
+    description:
+      'Phone number of the new owner. Required when creating a new user via ownerEmail.',
     example: '+966501234567',
   })
   @IsOptional()
@@ -72,7 +101,8 @@ export class CreateTenantDto {
   ownerPhone?: string;
 
   @ApiPropertyOptional({
-    description: 'Password for the new owner. If omitted, a strong password is auto-generated and emailed.',
+    description:
+      'Password for the new owner. If omitted, a strong password is auto-generated and emailed.',
     example: 'SecurePass1',
   })
   @IsOptional()
