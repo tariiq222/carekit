@@ -3,12 +3,18 @@ import { ClsModule, ClsService } from 'nestjs-cls';
 import { ConfigModule } from '@nestjs/config';
 import { TenantContextService } from './tenant-context.service';
 import { TenantResolverMiddleware } from './tenant-resolver.middleware';
+import { SubdomainResolverService } from './subdomain-resolver.service';
 import { TenantResolutionError } from './tenant.errors';
 import { DEFAULT_ORGANIZATION_ID } from './tenant.constants';
 
 describe('TenantResolverMiddleware', () => {
   let cls: ClsService;
   let ctx: TenantContextService;
+
+  const mockSubdomainResolver = {
+    resolve: jest.fn().mockResolvedValue(null),
+    invalidate: jest.fn(),
+  };
 
   const build = async (envOverrides: Record<string, string> = {}) => {
     const mod = await Test.createTestingModule({
@@ -20,12 +26,21 @@ describe('TenantResolverMiddleware', () => {
           load: [() => ({ TENANT_ENFORCEMENT: 'off', DEFAULT_ORGANIZATION_ID, ...envOverrides })],
         }),
       ],
-      providers: [TenantContextService, TenantResolverMiddleware],
+      providers: [
+        TenantContextService,
+        TenantResolverMiddleware,
+        { provide: SubdomainResolverService, useValue: mockSubdomainResolver },
+      ],
     }).compile();
     cls = mod.get(ClsService);
     ctx = mod.get(TenantContextService);
     return mod.get(TenantResolverMiddleware);
   };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSubdomainResolver.resolve.mockResolvedValue(null);
+  });
 
   const req = (
     overrides: Partial<{
@@ -50,52 +65,52 @@ describe('TenantResolverMiddleware', () => {
   it('off mode: does not set context, does not throw when unresolved', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'off' });
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(req(), {} as never, () => {
+      cls.run(async () => {
+        await mw.use(req(), {} as never, () => {
           expect(ctx.get()).toBeUndefined();
           done();
-        }),
-      );
+        });
+      });
     });
   });
 
   it('permissive mode: falls back to default org when unresolved', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'permissive' });
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(req(), {} as never, () => {
+      cls.run(async () => {
+        await mw.use(req(), {} as never, () => {
           expect(ctx.getOrganizationId()).toBe(DEFAULT_ORGANIZATION_ID);
           done();
-        }),
-      );
+        });
+      });
     });
   });
 
   it('permissive mode: prefers JWT claim over default', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'permissive' });
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(
+      cls.run(async () => {
+        await mw.use(
           req({ user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'ADMIN' } }),
           {} as never,
           () => {
             expect(ctx.getOrganizationId()).toBe('org-jwt');
             done();
           },
-        ),
-      );
+        );
+      });
     });
   });
 
   it('strict mode: private authenticated routes defer tenant resolution to JwtGuard', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(req({ originalUrl: '/api/v1/dashboard/bookings' }), {} as never, () => {
+      cls.run(async () => {
+        await mw.use(req({ originalUrl: '/api/v1/dashboard/bookings' }), {} as never, () => {
           expect(ctx.get()).toBeUndefined();
           done();
-        }),
-      );
+        });
+      });
     });
   });
 
@@ -103,8 +118,8 @@ describe('TenantResolverMiddleware', () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
     const headerOrg = '550e8400-e29b-41d4-a716-446655440000';
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(
+      cls.run(async () => {
+        await mw.use(
           req({
             user: { id: 'u1', role: 'SUPER_ADMIN', isSuperAdmin: true },
             headers: { 'x-org-id': headerOrg },
@@ -114,16 +129,16 @@ describe('TenantResolverMiddleware', () => {
             expect(ctx.getOrganizationId()).toBe(headerOrg);
             done();
           },
-        ),
-      );
+        );
+      });
     });
   });
 
   it('strict mode: ignores x-org-id from non-super-admin (security)', async () => {
     const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
     await new Promise<void>((done) => {
-      cls.run(() =>
-        mw.use(
+      cls.run(async () => {
+        await mw.use(
           req({
             user: { id: 'u1', organizationId: 'org-jwt', role: 'ADMIN' },
             headers: { 'x-org-id': 'org-attacker' },
@@ -133,8 +148,8 @@ describe('TenantResolverMiddleware', () => {
             expect(ctx.getOrganizationId()).toBe('org-jwt'); // JWT wins
             done();
           },
-        ),
-      );
+        );
+      });
     });
   });
 
@@ -144,8 +159,8 @@ describe('TenantResolverMiddleware', () => {
     it('strict mode: accepts X-Org-Id on unauthenticated public route', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({
               originalUrl: '/api/v1/public/services/departments',
               headers: { 'x-org-id': VALID },
@@ -155,16 +170,16 @@ describe('TenantResolverMiddleware', () => {
               expect(ctx.getOrganizationId()).toBe(VALID);
               done();
             },
-          ),
-        );
+          );
+        });
       });
     });
 
     it('strict mode: ignores X-Org-Id on authenticated public route (JWT wins)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({
               user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'CLIENT' },
               originalUrl: '/api/v1/public/services/departments',
@@ -175,16 +190,16 @@ describe('TenantResolverMiddleware', () => {
               expect(ctx.getOrganizationId()).toBe('org-jwt');
               done();
             },
-          ),
-        );
+          );
+        });
       });
     });
 
     it('strict mode: ignores X-Org-Id on private route when unauthenticated and defers to JwtGuard', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({
               originalUrl: '/api/v1/dashboard/bookings',
               headers: { 'x-org-id': VALID },
@@ -194,8 +209,8 @@ describe('TenantResolverMiddleware', () => {
               expect(ctx.get()).toBeUndefined();
               done();
             },
-          ),
-        );
+          );
+        });
       });
     });
 
@@ -203,16 +218,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/api/v1/public/services/departments' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined(); // No tenant context set - handler decides
@@ -224,16 +239,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/api/v1/public/services/departments' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -243,8 +258,8 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({
               originalUrl: '/api/v1/public/services/departments',
               headers: { 'x-org-id': 'not-a-uuid' },
@@ -254,8 +269,8 @@ describe('TenantResolverMiddleware', () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -264,8 +279,8 @@ describe('TenantResolverMiddleware', () => {
     it('strict mode: ignores X-Org-Id on /webhooks/ public route and defers to webhook guards', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({
               originalUrl: '/api/v1/public/sms/webhooks/unifonic/org-1',
               headers: { 'x-org-id': VALID },
@@ -275,8 +290,8 @@ describe('TenantResolverMiddleware', () => {
               expect(ctx.get()).toBeUndefined();
               done();
             },
-          ),
-        );
+          );
+        });
       });
     });
   });
@@ -286,16 +301,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/api/v1/auth/login' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -305,16 +320,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/api/v1/auth/refresh' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -324,16 +339,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/api/v1/auth/logout' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -343,16 +358,16 @@ describe('TenantResolverMiddleware', () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
       let nextCalled = false;
       await new Promise<void>((done) => {
-        cls.run(() =>
-          mw.use(
+        cls.run(async () => {
+          await mw.use(
             req({ originalUrl: '/auth/login' }),
             {} as never,
             () => {
               nextCalled = true;
               done();
             },
-          ),
-        );
+          );
+        });
       });
       expect(nextCalled).toBe(true);
       expect(ctx.get()).toBeUndefined();
@@ -409,6 +424,123 @@ describe('TenantResolverMiddleware', () => {
 
     it('trims whitespace', () => {
       expect(parse('  550e8400-e29b-41d4-a716-446655440000  ')).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+  });
+
+  describe('TenantResolverMiddleware — subdomain priority', () => {
+    const SUBDOMAIN_ORG = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    const VALID_HEADER_ORG = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('strict mode: resolves tenant from subdomain when no JWT and no X-Org-Id header', async () => {
+      mockSubdomainResolver.resolve.mockResolvedValue(SUBDOMAIN_ORG);
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            req({
+              originalUrl: '/api/v1/public/branding',
+              hostname: 'myclinic.deqah.net',
+              headers: {},
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(SUBDOMAIN_ORG);
+              done();
+            },
+          );
+        });
+      });
+      expect(mockSubdomainResolver.resolve).toHaveBeenCalledWith('myclinic.deqah.net');
+    });
+
+    it('subdomain is skipped when user is authenticated (JWT takes priority)', async () => {
+      mockSubdomainResolver.resolve.mockResolvedValue(SUBDOMAIN_ORG);
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            req({
+              user: { id: 'u1', organizationId: 'org-jwt', membershipId: 'm1', role: 'ADMIN' },
+              hostname: 'myclinic.deqah.net',
+              headers: {},
+              originalUrl: '/api/v1/dashboard/bookings',
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe('org-jwt');
+              done();
+            },
+          );
+        });
+      });
+      expect(mockSubdomainResolver.resolve).not.toHaveBeenCalled();
+    });
+
+    it('X-Org-Id on public route (priority #3) beats subdomain (priority #4)', async () => {
+      mockSubdomainResolver.resolve.mockResolvedValue(SUBDOMAIN_ORG);
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              hostname: 'myclinic.deqah.net',
+              headers: { 'x-org-id': VALID_HEADER_ORG },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(VALID_HEADER_ORG);
+              done();
+            },
+          );
+        });
+      });
+    });
+
+    it('subdomain null → passes through on public route (handlers use requireOrganizationIdOrDefault)', async () => {
+      mockSubdomainResolver.resolve.mockResolvedValue(null);
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              hostname: 'localhost',
+              headers: {},
+            }),
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          );
+        });
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('uses x-forwarded-host header over req.hostname when present', async () => {
+      mockSubdomainResolver.resolve.mockResolvedValue(SUBDOMAIN_ORG);
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            req({
+              originalUrl: '/api/v1/public/branding',
+              hostname: 'localhost',
+              headers: { 'x-forwarded-host': 'myclinic.deqah.net' },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(SUBDOMAIN_ORG);
+              done();
+            },
+          );
+        });
+      });
+      expect(mockSubdomainResolver.resolve).toHaveBeenCalledWith('myclinic.deqah.net');
     });
   });
 });
