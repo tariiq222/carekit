@@ -85,7 +85,10 @@ export class RegisterTenantHandler {
       attempt += 1;
       const slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
       try {
-        result = await this.prisma.$transaction(async (tx) => {
+        // bypassRls: true — tenant registration runs before any CLS org context
+        // is established (the org doesn't exist yet). Every write below explicitly
+        // provides organizationId, so RLS enforcement is not applicable here.
+        result = await this.rlsTx.withTransaction(async (tx) => {
           const org = await tx.organization.create({
             data: {
               slug,
@@ -172,7 +175,7 @@ export class RegisterTenantHandler {
           }
 
           return { orgId: org.id, userId: ownerResult.userId, membershipId: membership.id, subscriptionId: sub.id };
-        });
+        }, { bypassRls: true });
         break;
       } catch (err: unknown) {
         if (isPrismaUniqueOn(err, 'email')) {

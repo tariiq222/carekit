@@ -28,11 +28,14 @@ export class SeedOrganizationFromVerticalHandler {
       return { skipped: true, reason: 'already-seeded' };
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    // bypassRls: true — called during tenant bootstrap (seeding vertical data into
+    // an org that was just created). CLS tenant context is not established at this
+    // point; the organizationId is supplied explicitly on every write below.
+    return this.rlsTx.withTransaction(async (tx) => {
       for (const seed of vertical.seedDepartments) {
         await tx.department.create({
           data: {
-            organizationId: cmd.organizationId, // Lesson 11 — tx bypasses CLS Proxy
+            organizationId: cmd.organizationId,
             nameAr: seed.nameAr,
             nameEn: seed.nameEn ?? undefined,
             sortOrder: seed.sortOrder,
@@ -42,7 +45,7 @@ export class SeedOrganizationFromVerticalHandler {
       for (const seed of vertical.seedServiceCategories) {
         await tx.serviceCategory.create({
           data: {
-            organizationId: cmd.organizationId, // Lesson 11 — tx bypasses CLS Proxy
+            organizationId: cmd.organizationId,
             nameAr: seed.nameAr,
             nameEn: seed.nameEn ?? undefined,
             sortOrder: seed.sortOrder,
@@ -58,6 +61,6 @@ export class SeedOrganizationFromVerticalHandler {
         seededDepartments: vertical.seedDepartments.length,
         seededCategories: vertical.seedServiceCategories.length,
       };
-    });
+    }, { bypassRls: true });
   }
 }

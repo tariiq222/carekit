@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-syntax -- this file IS the RLS transaction helper; $transaction is used here to inject set_config before delegating to callers
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
@@ -78,7 +77,6 @@ export class RlsTransactionService {
     if (options?.maxWait !== undefined) txOptions.maxWait = options.maxWait;
     if (options?.isolationLevel !== undefined) txOptions.isolationLevel = options.isolationLevel;
 
-    // eslint-disable-next-line no-restricted-syntax -- RlsTransactionService is the one place that wraps $transaction with set_config
     return this.prisma.$transaction(async (tx) => {
       if (options?.bypassRls) {
         await tx.$queryRaw`SELECT set_config('app.bypass_rls', 'on', true)`;

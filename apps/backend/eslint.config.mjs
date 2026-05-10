@@ -92,9 +92,9 @@ export default defineConfig([
             "Use PrismaService.$allTenants only inside a SuperAdminContextInterceptor-protected request. $allTenantsUnsafe is reserved for seed/scripts code.",
         },
         {
-          selector: "CallExpression[callee.property.name='$transaction']",
+          selector: "CallExpression[callee.property.name='$transaction']:not([callee.object.property.name='$allTenants'])",
           message:
-            "Use RlsTransactionService.withTransaction() or .withBypassTransaction() instead of prisma.$transaction() to ensure RLS context is injected. Pass { bypassRls: true } only with a justification comment for super-admin/cron/webhook paths.",
+            "Use RlsTransactionService.withTransaction() instead of prisma.$transaction() to ensure RLS context is injected. $allTenants.$transaction is allowed for super-admin/cron with a justification comment.",
         },
       ],
     },
@@ -106,6 +106,20 @@ export default defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "deqah/require-api-operation": "off",
+      // Test helpers and e2e fixtures legitimately call $transaction directly for
+      // database setup/teardown; they are not application code subject to RLS rules.
+      "no-restricted-syntax": "off",
     },
+  },
+
+  {
+    // Infrastructure-internal files that implement the $transaction wrappers are
+    // exempt from the no-restricted-syntax/$transaction rule — they ARE the wrapper.
+    files: [
+      "src/common/database/rls-transaction.ts",
+      "src/common/tenant/rls.helper.ts",
+      "src/common/interceptors/tenant-guc.interceptor.ts",
+    ],
+    rules: { "no-restricted-syntax": "off" },
   },
 ]);

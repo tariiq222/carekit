@@ -66,10 +66,15 @@ describe('RlsTransactionService', () => {
       expect(prismaTransactionMock).toHaveBeenCalledTimes(1);
       // set_config was called on the tx BEFORE fn
       expect(txMock.$queryRaw).toHaveBeenCalledTimes(1);
-      const rawCall = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as Prisma.Sql;
+      // When $queryRaw is called as a tagged template on a jest.fn(), calls[0][0] is
+      // the TemplateStringsArray (the strings portion), and calls[0][1..n] are the
+      // interpolated values. There is no Prisma.Sql wrapper on a plain mock.
+      const rawStrings = (txMock.$queryRaw as jest.Mock).mock.calls[0] as unknown[];
+      const sqlStrings = rawStrings[0] as string[];
+      const sqlValues = rawStrings.slice(1);
       // The tagged-template interpolates orgId as a value
-      expect(rawCall.values).toContain(ORG_ID);
-      expect(rawCall.strings.join('')).toContain('set_config');
+      expect(sqlValues).toContain(ORG_ID);
+      expect(sqlStrings.join('')).toContain('set_config');
       // fn was called with the tx and returned its value
       expect(fn).toHaveBeenCalledWith(txMock);
       expect(result).toBe(fnResult);
@@ -85,9 +90,10 @@ describe('RlsTransactionService', () => {
       const fn = jest.fn().mockResolvedValue('ok');
       await service.withTransaction(fn, { organizationId: overrideOrgId });
 
-      const rawCall = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as Prisma.Sql;
-      expect(rawCall.values).toContain(overrideOrgId);
-      expect(rawCall.values).not.toContain(ORG_ID);
+      const rawStrings2 = (txMock.$queryRaw as jest.Mock).mock.calls[0] as unknown[];
+      const sqlValues2 = rawStrings2.slice(1);
+      expect(sqlValues2).toContain(overrideOrgId);
+      expect(sqlValues2).not.toContain(ORG_ID);
     });
   });
 
@@ -122,10 +128,10 @@ describe('RlsTransactionService', () => {
       expect(result).toBe('bypass-result');
       expect(fn).toHaveBeenCalledWith(txMock);
 
-      const rawCall = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as Prisma.Sql;
-      expect(rawCall.strings.join('')).toContain('bypass_rls');
+      const bypassStrings = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as string[];
+      expect(bypassStrings.join('')).toContain('bypass_rls');
       // Must NOT set app.current_org_id
-      expect(rawCall.strings.join('')).not.toContain('current_org_id');
+      expect(bypassStrings.join('')).not.toContain('current_org_id');
     });
   });
 
@@ -136,8 +142,8 @@ describe('RlsTransactionService', () => {
       const fn = jest.fn().mockResolvedValue('bypass');
       await service.withBypassTransaction(fn);
 
-      const rawCall = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as Prisma.Sql;
-      expect(rawCall.strings.join('')).toContain('bypass_rls');
+      const bypassStrings2 = (txMock.$queryRaw as jest.Mock).mock.calls[0][0] as string[];
+      expect(bypassStrings2.join('')).toContain('bypass_rls');
       expect(fn).toHaveBeenCalledWith(txMock);
     });
   });
