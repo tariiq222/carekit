@@ -3,6 +3,7 @@ import { ClsModule, ClsService } from 'nestjs-cls';
 import { ConfigModule } from '@nestjs/config';
 import { TenantContextService } from './tenant-context.service';
 import { TenantResolverMiddleware } from './tenant-resolver.middleware';
+import { SubdomainResolverService } from './subdomain-resolver.service';
 import { TenantResolutionError } from './tenant.errors';
 import { DEFAULT_ORGANIZATION_ID } from './tenant.constants';
 
@@ -10,7 +11,20 @@ describe('TenantResolverMiddleware', () => {
   let cls: ClsService;
   let ctx: TenantContextService;
 
-  const build = async (envOverrides: Record<string, string> = {}) => {
+  /**
+   * Build a middleware instance with an optional mock for the subdomain resolver.
+   * By default the resolver returns null (no subdomain match) so existing tests
+   * continue to exercise the X-Org-Id / JWT paths without change.
+   */
+  const build = async (
+    envOverrides: Record<string, string> = {},
+    subdomainResolveResult: string | null = null,
+  ) => {
+    const mockSubdomainResolver: Partial<SubdomainResolverService> = {
+      resolve: jest.fn().mockResolvedValue(subdomainResolveResult),
+      invalidate: jest.fn(),
+    };
+
     const mod = await Test.createTestingModule({
       imports: [
         ClsModule.forRoot({ global: true, middleware: { mount: false } }),
@@ -20,7 +34,11 @@ describe('TenantResolverMiddleware', () => {
           load: [() => ({ TENANT_ENFORCEMENT: 'off', DEFAULT_ORGANIZATION_ID, ...envOverrides })],
         }),
       ],
-      providers: [TenantContextService, TenantResolverMiddleware],
+      providers: [
+        TenantContextService,
+        TenantResolverMiddleware,
+        { provide: SubdomainResolverService, useValue: mockSubdomainResolver },
+      ],
     }).compile();
     cls = mod.get(ClsService);
     ctx = mod.get(TenantContextService);
@@ -201,46 +219,67 @@ describe('TenantResolverMiddleware', () => {
 
     it('strict mode: public routes without a valid X-Org-Id still fail closed', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
-        cls.run(() =>
-          mw.use(
-            req({ originalUrl: '/api/v1/public/services/departments' }),
-            {} as never,
-            () => undefined,
-          ),
-        ),
-      ).toThrow(TenantResolutionError);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({ originalUrl: '/api/v1/public/services/departments' }),
+                {} as never,
+                () => undefined,
+              );
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
     });
 
     // Regression: confirm the boundary is explicit — /public routes without header
     // still throw, auth-bootstrap routes next to them do NOT.
     it('strict mode: /api/v1/public/services/departments without X-Org-Id still throws (boundary regression)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
-        cls.run(() =>
-          mw.use(
-            req({ originalUrl: '/api/v1/public/services/departments' }),
-            {} as never,
-            () => undefined,
-          ),
-        ),
-      ).toThrow(TenantResolutionError);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({ originalUrl: '/api/v1/public/services/departments' }),
+                {} as never,
+                () => undefined,
+              );
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
     });
 
     it('strict mode: ignores invalid UUID, throws (no fallback)', async () => {
       const mw = await build({ TENANT_ENFORCEMENT: 'strict' });
-      expect(() =>
-        cls.run(() =>
-          mw.use(
-            req({
-              originalUrl: '/api/v1/public/services/departments',
-              headers: { 'x-org-id': 'not-a-uuid' },
-            }),
-            {} as never,
-            () => undefined,
-          ),
-        ),
-      ).toThrow(TenantResolutionError);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({
+                  originalUrl: '/api/v1/public/services/departments',
+                  headers: { 'x-org-id': 'not-a-uuid' },
+                }),
+                {} as never,
+                () => undefined,
+              );
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
     });
 
     it('strict mode: ignores X-Org-Id on /webhooks/ public route and defers to webhook guards', async () => {
@@ -255,6 +294,98 @@ describe('TenantResolverMiddleware', () => {
             {} as never,
             () => {
               expect(ctx.get()).toBeUndefined();
+              done();
+            },
+          ),
+        );
+      });
+    });
+  });
+
+  describe('CR-4: X-Org-Id binding to subdomain on public routes', () => {
+    const ORG_A_ID = '550e8400-e29b-41d4-a716-446655440000';
+    const ORG_B_ID = '660e8400-e29b-41d4-a716-446655440001';
+
+    it('subdomain resolved + matching X-Org-Id header → 200, uses subdomain org', async () => {
+      // clinic-a.deqah.net resolves to ORG_A_ID; header also sends ORG_A_ID
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, ORG_A_ID);
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              hostname: 'clinic-a.deqah.net',
+              headers: { host: 'clinic-a.deqah.net', 'x-org-id': ORG_A_ID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(ORG_A_ID);
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('subdomain resolved + mismatching X-Org-Id header → 400 BadRequest (cross-tenant attempt)', async () => {
+      // clinic-a.deqah.net resolves to ORG_A_ID; header sends ORG_B_ID (attacker forged it)
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, ORG_A_ID);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                req({
+                  originalUrl: '/api/v1/public/services/departments',
+                  hostname: 'clinic-a.deqah.net',
+                  headers: { host: 'clinic-a.deqah.net', 'x-org-id': ORG_B_ID },
+                }),
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow('X-Org-Id does not match the resolved subdomain organization');
+    });
+
+    it('no subdomain (mobile hits raw API domain) + valid X-Org-Id → 200, mobile path preserved', async () => {
+      // No subdomain resolves (resolver returns null) — mobile uses X-Org-Id only
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              hostname: 'api.deqah.net',
+              headers: { host: 'api.deqah.net', 'x-org-id': ORG_A_ID },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(ORG_A_ID);
+              done();
+            },
+          ),
+        );
+      });
+    });
+
+    it('subdomain resolved + no X-Org-Id header → 200, subdomain org used silently', async () => {
+      // Dashboard/website hitting clinic-a.deqah.net without sending a header
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, ORG_A_ID);
+      await new Promise<void>((done) => {
+        cls.run(() =>
+          mw.use(
+            req({
+              originalUrl: '/api/v1/public/services/departments',
+              hostname: 'clinic-a.deqah.net',
+              headers: { host: 'clinic-a.deqah.net' },
+            }),
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(ORG_A_ID);
               done();
             },
           ),
