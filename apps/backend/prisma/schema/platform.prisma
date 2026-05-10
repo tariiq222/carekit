@@ -82,7 +82,9 @@ enum SuperAdminActionType {
 
 model Organization {
   id                    String             @id @default(uuid())
-  slug                  String             @unique
+  /// Subdomain-safe slug. Format enforced by DB CHECK "Organization_slug_subdomain_chk":
+  /// ^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$ (3–30 chars, lowercase, hyphens allowed mid-string only).
+  slug                  String             @unique @db.VarChar(30)
   nameAr                String
   nameEn                String?
   status                OrganizationStatus @default(ACTIVE)
