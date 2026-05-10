@@ -45,7 +45,9 @@ BEGIN
   END LOOP;
 END $$;
 
--- 3) Add the CHECK constraint.
+-- 3) Add the CHECK constraint (idempotent — drop if exists, then add).
+ALTER TABLE "Organization"
+  DROP CONSTRAINT IF EXISTS "Organization_slug_subdomain_chk";
 ALTER TABLE "Organization"
   ADD CONSTRAINT "Organization_slug_subdomain_chk"
   CHECK ("slug" ~ '^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$');
