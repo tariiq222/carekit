@@ -9,17 +9,12 @@ import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/cache';
 import { TenantContextService } from '../tenant/tenant-context.service';
+import { parseUuidHeader } from '../tenant/uuid-header.util';
 import { ALLOW_DURING_SUSPENSION_KEY } from './allow-during-suspension.decorator';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 const ORG_SUSPENSION_CACHE_TTL_SECONDS = 30;
 const ACTIVE_ORG_CACHE_SENTINEL = 'active';
-
-// RFC 4122 UUID (any version, including the all-zero placeholder used as
-// DEFAULT_ORGANIZATION_ID). Used to validate the X-Org-Id super-admin
-// override header before honoring it.
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const SUSPENSION_HINT_AR =
   'حسابك معلّق. صاحب الحساب يمكنه تحديث طريقة الدفع لإعادة التفعيل.';
@@ -73,14 +68,21 @@ export class JwtGuard extends AuthGuard('jwt') {
       user?: AuthenticatedReqUser;
       headers?: Record<string, string | string[] | undefined>;
     }>();
-    this.stampTenantContext(req.user, req.headers);
+
+    // TAR-10: Resolve the effective tenant once (honoring super-admin
+    // X-Org-Id override) and use it for BOTH the tenant-context stamp
+    // AND the suspension check. Otherwise a super-admin overriding into
+    // a suspended tenant would silently bypass the ORG_SUSPENDED guard
+    // because the suspension check would target their own platform org.
+    const effectiveOrgId = this.resolveEffectiveOrgId(req.user, req.headers);
+    this.stampTenantContext(req.user, effectiveOrgId);
 
     const allowDuringSuspension = this.reflector.getAllAndOverride<boolean>(
       ALLOW_DURING_SUSPENSION_KEY,
       [ctx.getHandler(), ctx.getClass()],
     );
     await this.assertOrganizationIsActive(
-      req.user?.organizationId,
+      effectiveOrgId,
       {
         allowDuringSuspension: allowDuringSuspension === true,
         membershipRole: req.user?.membershipRole,
@@ -198,10 +200,10 @@ export class JwtGuard extends AuthGuard('jwt') {
   }
 
   /**
-   * Stamps the per-request tenant context from the authenticated user.
+   * Resolves the effective tenant org for the current request (TAR-10).
    *
    * Runs after Passport has populated `req.user`, so this is the canonical
-   * point to resolve tenant for authenticated requests (TAR-10). The
+   * point to resolve tenant for authenticated requests. The
    * TenantResolverMiddleware now only handles unauthenticated paths
    * (public routes, subdomain binding, auth-bootstrap bypass).
    *
@@ -211,38 +213,33 @@ export class JwtGuard extends AuthGuard('jwt') {
    * operators inspect / act on a specific tenant. The header is ignored
    * for non-super-admin users (security: never trust caller-supplied org).
    */
-  private stampTenantContext(
-    user?: AuthenticatedReqUser,
-    headers?: Record<string, string | string[] | undefined>,
-  ): void {
-    if (!user) return;
-
+  private resolveEffectiveOrgId(
+    user: AuthenticatedReqUser | undefined,
+    headers: Record<string, string | string[] | undefined> | undefined,
+  ): string | undefined {
+    if (!user) return undefined;
     const overrideOrgId =
-      user.isSuperAdmin === true
-        ? this.parseUuidHeader(headers?.['x-org-id'])
-        : undefined;
-    const organizationId = overrideOrgId ?? user.organizationId;
+      user.isSuperAdmin === true ? parseUuidHeader(headers?.['x-org-id']) : undefined;
+    return overrideOrgId ?? user.organizationId;
+  }
 
-    if (!organizationId) return;
+  /**
+   * Stamps the per-request tenant context using the already-resolved
+   * effective org id. Kept as a thin setter so `canActivate` can use the
+   * same org for both context-stamping and the suspension check.
+   */
+  private stampTenantContext(
+    user: AuthenticatedReqUser | undefined,
+    effectiveOrgId: string | undefined,
+  ): void {
+    if (!user || !effectiveOrgId) return;
 
     this.tenantContext.set({
-      organizationId,
+      organizationId: effectiveOrgId,
       membershipId: user.membershipId ?? '',
       id: user.id ?? user.sub ?? '',
       role: user.role ?? '',
       isSuperAdmin: user.isSuperAdmin === true,
     });
-  }
-
-  /**
-   * Validates a header value as a well-formed UUID. Mirrors the helper in
-   * TenantResolverMiddleware — duplicated here to keep guard tenant
-   * resolution self-contained (avoids a cross-module import cycle with
-   * the tenant module, which depends on guards transitively).
-   */
-  private parseUuidHeader(value: unknown): string | undefined {
-    if (typeof value !== 'string') return undefined;
-    const trimmed = value.trim();
-    return UUID_REGEX.test(trimmed) ? trimmed : undefined;
   }
 }

@@ -245,6 +245,28 @@ describe('JwtGuard', () => {
       expect(tenantContext.set).not.toHaveBeenCalled();
     });
 
+    it('super-admin overriding into a SUSPENDED target tenant is rejected (suspension check uses effective org)', async () => {
+      // TAR-10 follow-up: stampTenantContext AND assertOrganizationIsActive
+      // must operate on the same effective org id. Otherwise a super-admin
+      // could write to a suspended tenant because the suspension check
+      // would target their own (non-suspended) platform org.
+      redisClient.get.mockResolvedValue('2026-04-22T10:00:00.000Z'); // suspended
+
+      const ctx = makeCtx({}, {}, {
+        user: {
+          id: 'admin-1',
+          organizationId: 'platform-org',
+          role: 'SUPER_ADMIN',
+          isSuperAdmin: true,
+        },
+        headers: { 'x-org-id': VALID_UUID },
+      });
+
+      await expect(guard.canActivate(ctx)).rejects.toThrow('ORG_SUSPENDED');
+      // Cache key was built from the OVERRIDE org, not the JWT org.
+      expect(redisClient.get).toHaveBeenCalledWith(`org-suspension:${VALID_UUID}`);
+    });
+
     it('header in array form (Express multi-value): rejected as invalid UUID', async () => {
       // Express may surface duplicate headers as string[]; parseUuidHeader
       // only accepts strings, so multi-value headers fall through to JWT.

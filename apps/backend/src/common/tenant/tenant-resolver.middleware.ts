@@ -5,6 +5,7 @@ import { TenantContextService } from './tenant-context.service';
 import { SubdomainResolverService } from './subdomain-resolver.service';
 import { DEFAULT_ORGANIZATION_ID, TenantEnforcementMode } from './tenant.constants';
 import { TenantResolutionError } from './tenant.errors';
+import { parseUuidHeader } from './uuid-header.util';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -82,21 +83,6 @@ export class TenantResolverMiddleware implements NestMiddleware {
     );
   }
 
-  /**
-   * Validates a header value as a well-formed UUID (RFC 4122, any version
-   * including the all-zero placeholder used as DEFAULT_ORGANIZATION_ID).
-   * Returns the trimmed value when valid, undefined otherwise.
-   */
-  private parseUuidHeader(value: unknown): string | undefined {
-    if (typeof value !== 'string') return undefined;
-    const trimmed = value.trim();
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      trimmed,
-    )
-      ? trimmed
-      : undefined;
-  }
-
   async use(req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> {
     const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
@@ -156,7 +142,7 @@ export class TenantResolverMiddleware implements NestMiddleware {
 
       if (fromSubdomain) {
         // Subdomain resolved — validate X-Org-Id header consistency.
-        const headerOrgId = this.parseUuidHeader(req.headers['x-org-id']);
+        const headerOrgId = parseUuidHeader(req.headers['x-org-id']);
         if (headerOrgId !== undefined && headerOrgId !== fromSubdomain) {
           // A forged / mismatched X-Org-Id is an attempted cross-tenant bypass.
           throw new BadRequestException('X-Org-Id does not match the resolved subdomain organization');
@@ -169,7 +155,7 @@ export class TenantResolverMiddleware implements NestMiddleware {
     // (i.e. mobile hitting the raw API domain without a tenant subdomain).
     const fromPublicHeader =
       !req.user && isPublicRoute && !fromSubdomain
-        ? this.parseUuidHeader(req.headers['x-org-id'])
+        ? parseUuidHeader(req.headers['x-org-id'])
         : undefined;
 
     const fromDefault =

@@ -505,39 +505,8 @@ describe('TenantResolverMiddleware', () => {
     });
   });
 
-  describe('parseUuidHeader()', () => {
-    let mw: TenantResolverMiddleware;
-    beforeEach(async () => {
-      mw = await build({ TENANT_ENFORCEMENT: 'permissive' });
-    });
-
-    const parse = (v: unknown) =>
-      (mw as unknown as { parseUuidHeader(v: unknown): string | undefined }).parseUuidHeader(v);
-
-    it('accepts well-formed UUID', () => {
-      expect(parse('550e8400-e29b-41d4-a716-446655440000')).toBe('550e8400-e29b-41d4-a716-446655440000');
-    });
-
-    it('accepts the all-zero DEFAULT_ORGANIZATION_ID', () => {
-      expect(parse('00000000-0000-0000-0000-000000000001')).toBe('00000000-0000-0000-0000-000000000001');
-    });
-
-    it('rejects non-string values', () => {
-      expect(parse(undefined)).toBeUndefined();
-      expect(parse(123)).toBeUndefined();
-      expect(parse(null)).toBeUndefined();
-    });
-
-    it('rejects malformed UUIDs', () => {
-      expect(parse('not-a-uuid')).toBeUndefined();
-      expect(parse('550e8400-e29b-41d4-a716')).toBeUndefined();
-      expect(parse('550e8400e29b41d4a716446655440000')).toBeUndefined();
-    });
-
-    it('trims whitespace', () => {
-      expect(parse('  550e8400-e29b-41d4-a716-446655440000  ')).toBe('550e8400-e29b-41d4-a716-446655440000');
-    });
-  });
+  // parseUuidHeader() unit tests moved to uuid-header.util.spec.ts after
+  // the helper was extracted to a shared utility (TAR-10 follow-up).
 
   describe('TenantResolverMiddleware — subdomain priority', () => {
     const SUBDOMAIN_ORG = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
