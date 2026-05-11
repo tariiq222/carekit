@@ -32,6 +32,7 @@ const buildPrisma = () => {
       findUniqueOrThrow: jest.Mock;
     };
     refundRequest: {
+      findFirst: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
     };
@@ -49,6 +50,7 @@ const buildPrisma = () => {
       findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'inv-1', bookingId: 'book-1', clientId: 'client-1', currency: 'SAR', organizationId: 'org-1' }),
     },
     refundRequest: {
+      findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ id: 'rr-1' }),
       update: jest.fn().mockResolvedValue({ id: 'rr-1' }),
     },
