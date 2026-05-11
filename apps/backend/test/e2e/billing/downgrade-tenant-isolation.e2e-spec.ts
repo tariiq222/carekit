@@ -13,7 +13,10 @@ import { DowngradePrecheckFailedException } from '../../../src/modules/platform/
 import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
 import { EPOCH } from '../../../src/modules/platform/billing/usage-counter/period.util';
 import { SubscriptionCacheService } from '../../../src/modules/platform/billing/subscription-cache.service';
-import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
+import {
+  SUPER_ADMIN_CONTEXT_CLS_KEY,
+  SYSTEM_CONTEXT_CLS_KEY,
+} from '../../../src/common/tenant/tenant.constants';
 
 describe('Phase 5 / Task 5.5 — Tenant isolation in downgrade flow', () => {
   let h: IsolationHarness;
@@ -33,6 +36,11 @@ describe('Phase 5 / Task 5.5 — Tenant isolation in downgrade flow', () => {
   function runAsSuperAdmin<T>(fn: () => Promise<T>): Promise<T> {
     return h.cls.run(() => {
       h.cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      // SUPER_ADMIN context unlocks $allTenants but does not bypass the
+      // strict-mode tenant scoping extension on SCOPED_MODELS — only
+      // SYSTEM_CONTEXT does. Set both so platform-wide setup queries
+      // (Plan / Subscription / UsageCounter writes) succeed.
+      h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return fn();
     });
   }
@@ -179,8 +187,12 @@ describe('Phase 5 / Task 5.5 — Tenant isolation in downgrade flow', () => {
       h.prisma.$allTenants.plan.findFirst({ where: { id: proPlanId } }),
     );
 
-    // Check org A — should have QUANTITATIVE violation with current=12
-    const resultA = await safetyService.checkDowngrade(currentPlan!, targetPlan!, orgA.id);
+    // Check org A — should have QUANTITATIVE violation with current=12.
+    // checkDowngrade reads UsageCounter (a SCOPED_MODEL); it must run inside
+    // the target org's CLS context or the strict-tenant extension fail-closes.
+    const resultA = await h.runAs({ organizationId: orgA.id }, () =>
+      safetyService.checkDowngrade(currentPlan!, targetPlan!, orgA.id),
+    );
     expect(resultA.ok).toBe(false);
     expect(resultA.violations).toEqual(
       expect.arrayContaining([
@@ -189,17 +201,22 @@ describe('Phase 5 / Task 5.5 — Tenant isolation in downgrade flow', () => {
     );
 
     // Check org B — should be clean (3 employees ≤ cap 5)
-    const resultB = await safetyService.checkDowngrade(currentPlan!, targetPlan!, orgB.id);
+    const resultB = await h.runAs({ organizationId: orgB.id }, () =>
+      safetyService.checkDowngrade(currentPlan!, targetPlan!, orgB.id),
+    );
     expect(resultB.ok).toBe(true);
     expect(resultB.violations).toHaveLength(0);
 
-    // Verify org B violations don't bleed into org A result
-    const orgBEmployeeIds = await h.runAs({ organizationId: orgB.id }, () =>
-      h.prisma.employee.findMany({
+    // Verify org B violations don't bleed into org A result.
+    // The callback returns a Prisma promise — wrap it in async/await so the
+    // CLS context survives the scoped-model query.
+    let orgBEmployeeIds: { id: string }[] = [];
+    await h.runAs({ organizationId: orgB.id }, async () => {
+      orgBEmployeeIds = await h.prisma.employee.findMany({
         where: { organizationId: orgB.id },
         select: { id: true },
-      }),
-    );
+      });
+    });
     const orgAViolationSampleIds = resultA.violations
       .filter(v => v.kind === 'BOOLEAN')
       .flatMap(v => (v as { blockingResources: { sampleIds: string[] } }).blockingResources.sampleIds);

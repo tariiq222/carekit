@@ -184,9 +184,16 @@ describe('Subdomain isolation — /public/branding', () => {
       .get('/public/branding')
       .set('X-Forwarded-Host', 'admin.deqah.net');
     // Reserved subdomains return null from SubdomainResolverService.
-    // The middleware allows public routes through even with no resolved org.
-    // The handler then falls back to the default branding shape (colorPrimary: null).
-    expect([200, 404]).toContain(res.status);
+    // Acceptable outcomes:
+    //  - 400: strict-mode TenantResolver fail-closes when the subdomain looks
+    //    valid but resolves to a reserved name with no tenant. This is the new
+    //    default and the most secure behaviour.
+    //  - 404: handler-level not-found when the route is reachable but no org
+    //    branding exists.
+    //  - 200: legacy fall-through to default branding shape (colorPrimary: null).
+    // The isolation contract — neither seeded org's colour leaks — is asserted
+    // below regardless of the status code.
+    expect([200, 400, 404]).toContain(res.status);
     if (res.status === 200) {
       expect(res.body.colorPrimary).not.toBe('#ff0000');
       expect(res.body.colorPrimary).not.toBe('#00ff00');

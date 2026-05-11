@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 import { bootHarness, IsolationHarness } from './isolation-harness';
+import { SYSTEM_CONTEXT_CLS_KEY } from '../../src/common/tenant';
 
 describe('SaaS-02a — identity cluster isolation', () => {
   let h: IsolationHarness;
@@ -140,9 +141,14 @@ describe('SaaS-02a — identity cluster isolation', () => {
       await h.prisma.customRole.delete({ where: { id: roleAId! } });
     });
 
-    // Org B's role must still exist
-    const surviving = await h.prisma.customRole.findUnique({
-      where: { id: roleBId! },
+    // Org B's role must still exist. Read inside org B's CLS context — strict-mode
+    // tenant scoping rejects reads of SCOPED_MODELS (CustomRole) without one.
+    let surviving: { name: string } | null = null;
+    await h.runAs({ organizationId: orgB.id }, async () => {
+      surviving = await h.prisma.customRole.findUnique({
+        where: { id: roleBId! },
+        select: { name: true },
+      });
     });
     expect(surviving).not.toBeNull();
     expect(surviving!.name).toBe(roleName);
@@ -254,9 +260,11 @@ describe('SaaS-02a — identity cluster isolation', () => {
       });
     });
 
-    // Super-admin should see >= 1 role across all orgs
+    // System context bypasses scoping — super-admin context alone does NOT
+    // (strict-mode scoping requires either a tenant or systemContext flag).
     let count = 0;
-    await h.runAs({ isSuperAdmin: true }, async () => {
+    await h.cls.run(async () => {
+      h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       const roles = await h.prisma.customRole.findMany();
       count = roles.length;
     });

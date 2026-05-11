@@ -16,7 +16,10 @@ import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { ClsService } from 'nestjs-cls';
 import { UsageCounterService } from '../../../src/modules/platform/billing/usage-counter/usage-counter.service';
 import { EPOCH } from '../../../src/modules/platform/billing/usage-counter/period.util';
-import { SUPER_ADMIN_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
+import {
+  SUPER_ADMIN_CONTEXT_CLS_KEY,
+  SYSTEM_CONTEXT_CLS_KEY,
+} from '../../../src/common/tenant/tenant.constants';
 
 describe('Phase 5 / Task 12 — UsageCounter tenant isolation', () => {
   let h: SecurityHarness;
@@ -41,6 +44,10 @@ describe('Phase 5 / Task 12 — UsageCounter tenant isolation', () => {
   const withSuperAdmin = <T>(fn: () => Promise<T>): Promise<T> =>
     cls.run(async () => {
       cls.set(SUPER_ADMIN_CONTEXT_CLS_KEY, true);
+      // SUPER_ADMIN context alone does NOT bypass the strict-mode tenant scoping
+      // extension on SCOPED_MODELS — only SYSTEM_CONTEXT does. Set both so the
+      // helper can both reach $allTenants and run model accessors safely.
+      cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       return fn();
     });
 

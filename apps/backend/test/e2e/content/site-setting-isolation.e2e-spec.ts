@@ -24,16 +24,16 @@ describe('SaaS-02g — site-setting isolation', () => {
     const b = await h.createOrg(`ss-iso-b-${ts}`, 'إعدادات موقع ب');
     const key = `home.hero.title.ar-${ts}`;
 
-    await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.siteSetting.create({
+    await h.runAs({ organizationId: a.id }, async () => {
+      await h.prisma.siteSetting.create({
         data: { organizationId: a.id, key, valueText: 'عنوان-أ' },
-      }),
-    );
-    await h.runAs({ organizationId: b.id }, () =>
-      h.prisma.siteSetting.create({
+      });
+    });
+    await h.runAs({ organizationId: b.id }, async () => {
+      await h.prisma.siteSetting.create({
         data: { organizationId: b.id, key, valueText: 'عنوان-ب' },
-      }),
-    );
+      });
+    });
 
     let readA: { valueText: string | null } | null = null;
     let readB: { valueText: string | null } | null = null;
@@ -59,26 +59,31 @@ describe('SaaS-02g — site-setting isolation', () => {
     const b = await h.createOrg(`ss-upd-b-${ts}`, 'إعداد تحديث ب');
     const key = `home.cta.ctaPrimary-${ts}`;
 
-    await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.siteSetting.create({ data: { organizationId: a.id, key, valueText: 'A-v1' } }),
-    );
-    await h.runAs({ organizationId: b.id }, () =>
-      h.prisma.siteSetting.create({ data: { organizationId: b.id, key, valueText: 'B-v1' } }),
-    );
+    await h.runAs({ organizationId: a.id }, async () => {
+      await h.prisma.siteSetting.create({
+        data: { organizationId: a.id, key, valueText: 'A-v1' },
+      });
+    });
+    await h.runAs({ organizationId: b.id }, async () => {
+      await h.prisma.siteSetting.create({
+        data: { organizationId: b.id, key, valueText: 'B-v1' },
+      });
+    });
 
-    await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.siteSetting.update({
+    await h.runAs({ organizationId: a.id }, async () => {
+      await h.prisma.siteSetting.update({
         where: { organizationId_key: { organizationId: a.id, key } },
         data: { valueText: 'A-v2' },
-      }),
-    );
+      });
+    });
 
-    const after = await h.runAs({ organizationId: b.id }, () =>
-      h.prisma.siteSetting.findUnique({
+    let after: { valueText: string | null } | null = null;
+    await h.runAs({ organizationId: b.id }, async () => {
+      after = await h.prisma.siteSetting.findUnique({
         where: { organizationId_key: { organizationId: b.id, key } },
         select: { valueText: true },
-      }),
-    );
+      });
+    });
     expect(after!.valueText).toBe('B-v1');
   });
 });

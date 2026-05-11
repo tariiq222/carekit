@@ -19,8 +19,8 @@ describe('SaaS-02g — problem-report isolation', () => {
     const a = await h.createOrg(`pr-iso-a-${ts}`, 'بلاغات أ');
     const b = await h.createOrg(`pr-iso-b-${ts}`, 'بلاغات ب');
 
-    await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.problemReport.create({
+    await h.runAs({ organizationId: a.id }, async () => {
+      await h.prisma.problemReport.create({
         data: {
           organizationId: a.id,
           reporterId: 'user-A',
@@ -28,8 +28,8 @@ describe('SaaS-02g — problem-report isolation', () => {
           title: 'only-in-A',
           description: 'secret',
         },
-      }),
-    );
+      });
+    });
 
     let fromBCount = -1;
     await h.runAs({ organizationId: b.id }, async () => {
@@ -43,8 +43,9 @@ describe('SaaS-02g — problem-report isolation', () => {
     const a = await h.createOrg(`pr-upd-a-${ts}`, 'تحديث بلاغ أ');
     const b = await h.createOrg(`pr-upd-b-${ts}`, 'تحديث بلاغ ب');
 
-    const report = await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.problemReport.create({
+    let report: { id: string } = { id: '' };
+    await h.runAs({ organizationId: a.id }, async () => {
+      report = await h.prisma.problemReport.create({
         data: {
           organizationId: a.id,
           reporterId: 'user-A',
@@ -53,8 +54,8 @@ describe('SaaS-02g — problem-report isolation', () => {
           description: 'd',
         },
         select: { id: true },
-      }),
-    );
+      });
+    });
 
     await h.runAs({ organizationId: b.id }, async () => {
       const res = await h.prisma.problemReport.updateMany({
@@ -64,9 +65,13 @@ describe('SaaS-02g — problem-report isolation', () => {
       expect(res.count).toBe(0);
     });
 
-    const after = await h.runAs({ organizationId: a.id }, () =>
-      h.prisma.problemReport.findUnique({ where: { id: report.id }, select: { status: true } }),
-    );
+    let after: { status: string } | null = null;
+    await h.runAs({ organizationId: a.id }, async () => {
+      after = await h.prisma.problemReport.findUnique({
+        where: { id: report.id },
+        select: { status: true },
+      });
+    });
     expect(after!.status).toBe('OPEN');
   });
 });

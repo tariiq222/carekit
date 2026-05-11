@@ -14,6 +14,7 @@
  *      trip independently per organization for the SAME user.
  */
 import { bootSecurityHarness, SecurityHarness } from './harness';
+import { SYSTEM_CONTEXT_CLS_KEY } from '../../../src/common/tenant/tenant.constants';
 
 describe('Per-membership-profile — tenant isolation', () => {
   let h: SecurityHarness;
@@ -29,9 +30,13 @@ describe('Per-membership-profile — tenant isolation', () => {
   it('round-trips per-org display profile for the same user (no cross-org bleed)', async () => {
     const { orgA, orgB } = await h.seedTwoOrgs('mem-profile-roundtrip');
 
-    // User + Memberships are platform-level — write under super-admin context
-    // so the strict-tenant Prisma extension permits the unscoped writes.
-    const result = await h.runAs({ isSuperAdmin: true }, async () => {
+    // User + Memberships are platform-level — write under SYSTEM context so
+    // the strict-tenant Prisma extension permits unscoped writes. The harness
+    // `runAs` with only `isSuperAdmin: true` leaves organizationId empty,
+    // which the scoping extension treats as "no tenant" and fail-closes in
+    // strict mode (see foundation.e2e-spec.ts:30-45 for the canonical pattern).
+    const result = await h.cls.run(async () => {
+      h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
       const user = await h.prisma.user.create({
         data: {
           email: `multi-${Date.now()}@example.com`,
@@ -89,8 +94,9 @@ describe('Per-membership-profile — tenant isolation', () => {
   it('lastActiveOrganizationId on User is per-account, not org-scoped', async () => {
     const { orgA } = await h.seedTwoOrgs('last-active-scope');
 
-    const user = await h.runAs({ isSuperAdmin: true }, () =>
-      h.prisma.user.create({
+    const user = await h.cls.run(async () => {
+      h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+      return h.prisma.user.create({
         data: {
           email: `sticky-${Date.now()}@example.com`,
           name: 'Sara',
@@ -99,8 +105,8 @@ describe('Per-membership-profile — tenant isolation', () => {
           lastActiveOrganizationId: orgA.id,
         },
         select: { id: true, lastActiveOrganizationId: true },
-      }),
-    );
+      });
+    });
 
     expect(user.lastActiveOrganizationId).toBe(orgA.id);
   });

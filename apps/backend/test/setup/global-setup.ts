@@ -141,6 +141,19 @@ export default async function globalSetup() {
       [SUPER_ADMIN_USER_ID],
     );
 
+    // OWNER membership for the super-admin user in the default org.
+    // SaaS-01 invariant (foundation.e2e-spec.ts) requires every non-CLIENT user
+    // to have at least one active Membership. The backfill block above (lines
+    // 99-124) already covers this user — the explicit insert here is defensive
+    // and self-documenting so the dependency survives any future narrowing of
+    // the backfill predicate. ON CONFLICT DO NOTHING keeps it idempotent.
+    await pool.query(
+      `INSERT INTO "Membership" (id, "userId", "organizationId", role, "isActive", "acceptedAt", "createdAt", "updatedAt")
+       VALUES (gen_random_uuid(), $1, $2, 'OWNER'::"MembershipRole", TRUE, NOW(), NOW(), NOW())
+       ON CONFLICT ("userId", "organizationId") DO NOTHING`,
+      [SUPER_ADMIN_USER_ID, DEFAULT_ORG_ID],
+    );
+
     // Jeddah owner user.
     await pool.query(
       `INSERT INTO "User" (id, email, name, "passwordHash", role, "isSuperAdmin", "isActive", "createdAt", "updatedAt")

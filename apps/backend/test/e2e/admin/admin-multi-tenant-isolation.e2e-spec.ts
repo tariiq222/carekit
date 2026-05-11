@@ -38,13 +38,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     ({ request: req } = await createTestApp({ globalPrefix: true, tenantEnforcement: 'strict' }));
     harness = await bootHarness();
 
-    await cleanTables([
-      'SuperAdminActionLog',
-      'Subscription',
-      'Branch',
-      'SavedCard',
-      'Plan',
-    ]);
+    await cleanTables(['SuperAdminActionLog', 'Subscription', 'Branch', 'SavedCard', 'Plan']);
     await reseedPlans();
 
     const upsertUser = (email: string, name: string, isSuperAdmin: boolean) =>
@@ -138,13 +132,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
       await harness.prisma.organization.delete({ where: { id: orgB.id } });
       await harness.close();
     }
-    await cleanTables([
-      'SuperAdminActionLog',
-      'Subscription',
-      'Branch',
-      'SavedCard',
-      'Plan',
-    ]);
+    await cleanTables(['SuperAdminActionLog', 'Subscription', 'Branch', 'SavedCard', 'Plan']);
     await reseedPlans();
     await closeTestApp();
   });
@@ -173,6 +161,19 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
         .set('Authorization', `Bearer ${superadminToken()}`)
         .set('Host', ADMIN_HOST);
 
+      // CI-only diagnostic for the 401 we cannot reproduce locally.
+      if (res.status === 401) {
+        console.error(
+          '[debug-401]',
+          JSON.stringify({
+            url: (res.request as { url?: string } | undefined)?.url ?? '?',
+            status: res.status,
+            body: res.body,
+            text: res.text,
+            headers: res.headers,
+          }),
+        );
+      }
       expect(res.status).toBe(200);
       expect(res.body.subscription.organizationId).toBe(orgA.id);
     });
