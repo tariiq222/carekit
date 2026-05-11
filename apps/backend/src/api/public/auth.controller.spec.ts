@@ -73,6 +73,7 @@ function buildController() {
     del: jest.fn().mockResolvedValue(1),
   };
   const redis = { getClient: jest.fn().mockReturnValue(redisClient) };
+  const settings = { get: jest.fn().mockResolvedValue(null) } as never;
   const controller = new AuthController(
     login as never, logout as never, prisma, tokens,
     getCurrentUser as never, changePassword as never,
@@ -82,7 +83,7 @@ function buildController() {
     uploadMembershipAvatar as never,
     inviteUser as never, acceptInvitation as never, tenant,
     requestDashboardOtp as never, verifyDashboardOtp as never,
-    cls,
+    cls, settings,
   );
   return { controller, login, logout, prisma, tokens, listMemberships, switchOrganization, captcha, requestPasswordReset, performPasswordReset, requestDashboardOtp, verifyDashboardOtp };
 }

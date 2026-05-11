@@ -8,6 +8,7 @@ describe('Admin controllers guard invariants', () => {
     .filter((f) => f.endsWith('.controller.ts') && !f.endsWith('.spec.ts'));
 
   const REQUIRED = [
+    'AdminIpAllowlistGuard',
     'AdminHostGuard',
     'JwtGuard',
     'SuperAdminGuard',

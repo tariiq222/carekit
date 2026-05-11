@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
-import { AdminHostGuard, JwtGuard, OwnerOnlyGuard, SuperAdminGuard } from '../../common/guards';
+import { AdminHostGuard, AdminIpAllowlistGuard, JwtGuard, OwnerOnlyGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { ApiStandardResponses } from '../../common/swagger';
@@ -59,7 +59,7 @@ import { PaginationMetaDto } from '../../common/swagger/api-paginated.dto';
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/billing')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 @ApiExtraModels(
   PaginationMetaDto,

@@ -28,6 +28,7 @@ import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import {
   AdminHostGuard,
+  AdminIpAllowlistGuard,
   JwtGuard,
   SuperAdminGuard,
 } from '../../common/guards';
@@ -68,7 +69,7 @@ import {
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/organizations')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminOrganizationsController {
   constructor(

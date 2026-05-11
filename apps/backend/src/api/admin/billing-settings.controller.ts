@@ -4,6 +4,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { ApiStandardResponses } from '../../common/swagger';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
+import { AdminIpAllowlistGuard } from '../../common/guards/admin-ip-allowlist.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { OwnerOnlyGuard } from '../../common/guards/owner-only.guard';
@@ -31,7 +32,7 @@ const ALL_BILLING_KEYS = [
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/settings/billing')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard, OwnerOnlyGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard, OwnerOnlyGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class BillingSettingsController {
   constructor(

@@ -54,6 +54,7 @@ import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
 import { Inject, BadRequestException } from '@nestjs/common';
 import { CAPTCHA_VERIFIER, CaptchaVerifier } from '../../modules/comms/contact-messages/captcha.verifier';
+import { PlatformSettingsService } from '../../modules/platform/settings/platform-settings.service';
 
 class ChangePasswordDto {
   @ApiProperty({ description: 'Current account password', example: 'P@ssw0rd123' })
@@ -92,16 +93,18 @@ export class AuthController {
     private readonly requestDashboardOtp: RequestDashboardOtpHandler,
     private readonly verifyDashboardOtp: VerifyDashboardOtpHandler,
     private readonly cls: ClsService,
+    private readonly settings: PlatformSettingsService,
   ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiOkResponse({
-    description: 'Access token with user profile (refresh token delivered as httpOnly cookie ck_refresh)',
+    description: 'Access token with user profile (refresh token delivered as httpOnly cookie ck_refresh), or a 2FA challenge when super-admin login requires OTP',
     schema: {
       type: 'object',
       properties: {
+        requiresOtp: { type: 'boolean', description: 'True when 2FA is required — use OTP flow to complete login' },
         accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
         expiresIn: { type: 'number', example: 900 },
         user: {
@@ -155,6 +158,14 @@ export class AuthController {
         updatedAt: true,
       },
     });
+
+    // If 2FA required and user is super-admin → require OTP step
+    if (user?.isSuperAdmin) {
+      const require2fa = await this.settings.get<boolean>('security.twoFactor.required');
+      if (require2fa) {
+        return { requiresOtp: true };
+      }
+    }
 
     if (!user) {
       this.setRefreshCookie(res, tokens.refreshToken);

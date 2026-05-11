@@ -1,4 +1,5 @@
 export * from './admin-host.guard';
+export * from './admin-ip-allowlist.guard';
 export * from './jwt.guard';
 export * from './casl.guard';
 export * from './client-session.guard';

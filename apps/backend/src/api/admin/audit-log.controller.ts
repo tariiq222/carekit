@@ -13,7 +13,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SuperAdminActionType } from '@prisma/client';
-import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
+import { AdminHostGuard, AdminIpAllowlistGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { ApiStandardResponses } from '../../common/swagger';
 import { ListAuditLogHandler } from '../../modules/platform/admin/list-audit-log/list-audit-log.handler';
@@ -25,7 +25,7 @@ const VALID_ACTION_TYPES = new Set<string>(Object.values(SuperAdminActionType));
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/audit-log')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminAuditLogController {
   constructor(private readonly handler: ListAuditLogHandler) {}

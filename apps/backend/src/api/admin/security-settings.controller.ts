@@ -4,6 +4,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { ApiStandardResponses } from '../../common/swagger';
 import { AdminHostGuard } from '../../common/guards/admin-host.guard';
+import { AdminIpAllowlistGuard } from '../../common/guards/admin-ip-allowlist.guard';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { SuperAdminContextInterceptor } from '../../common/interceptors/super-admin-context.interceptor';
@@ -16,7 +17,7 @@ import { LogPlatformSettingUpdateHandler } from '../../modules/platform/admin/lo
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/settings/security')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class SecuritySettingsController {
   constructor(

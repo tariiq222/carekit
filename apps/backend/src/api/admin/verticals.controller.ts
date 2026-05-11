@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
-import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
+import { AdminHostGuard, AdminIpAllowlistGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { ApiStandardResponses } from '../../common/swagger';
@@ -44,7 +44,7 @@ import { VerticalListResponseDto, VerticalResponseDto } from './dto/admin-respon
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/verticals')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminVerticalsController {
   constructor(

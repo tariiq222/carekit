@@ -13,7 +13,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { DeliveryChannel, DeliveryStatus } from '@prisma/client';
-import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
+import { AdminHostGuard, AdminIpAllowlistGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { ApiStandardResponses } from '../../common/swagger';
 import { ListNotificationDeliveryLogHandler } from '../../modules/platform/admin/list-notification-delivery-log/list-notification-delivery-log.handler';
@@ -26,7 +26,7 @@ const VALID_CHANNELS = new Set<string>(Object.values(DeliveryChannel));
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/notifications')
-@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminIpAllowlistGuard, AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminNotificationsController {
   constructor(private readonly handler: ListNotificationDeliveryLogHandler) {}
