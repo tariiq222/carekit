@@ -2,6 +2,7 @@
 
 import { Logger } from '@nestjs/common';
 import type { EmailProvider, EmailSendPayload, EmailSendResult } from './email-provider.interface';
+import { fetchWithTimeout } from '../http';
 
 export type SendGridCredentials = {
   apiKey: string;
@@ -21,21 +22,25 @@ export class SendGridEmailAdapter implements EmailProvider {
     const fromEmail = payload.fromEmail ?? 'noreply@deqah.sa';
     const fromName = payload.fromName;
 
-    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.creds.apiKey}`,
-        'Content-Type': 'application/json',
+    const res = await fetchWithTimeout(
+      'https://api.sendgrid.com/v3/mail/send',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.creds.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: payload.to }] }],
+          from: fromName
+            ? { email: fromEmail, name: fromName }
+            : { email: fromEmail },
+          subject: payload.subject,
+          content: [{ type: 'text/html', value: payload.html }],
+        }),
       },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: payload.to }] }],
-        from: fromName
-          ? { email: fromEmail, name: fromName }
-          : { email: fromEmail },
-        subject: payload.subject,
-        content: [{ type: 'text/html', value: payload.html }],
-      }),
-    });
+      8_000,
+    );
 
     if (!res.ok) {
       const body = await res.text();

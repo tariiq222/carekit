@@ -128,10 +128,12 @@ describe('ZoomApiClient', () => {
       jest.useFakeTimers();
       const promise = (client as unknown as { fetchWithRetry: (url: string, init?: RequestInit) => Promise<Response> }).fetchWithRetry('http://test.com');
 
-      // First call
+      // Drain microtasks + advance past both the fetchWithTimeout deadline (10s)
+      // and the 250ms retry backoff so the second fetch attempt can proceed.
       await Promise.resolve();
-      jest.advanceTimersByTime(250);
-      // Second call
+      jest.advanceTimersByTime(10_500);
+      await Promise.resolve();
+      jest.advanceTimersByTime(10_500);
       await Promise.resolve();
 
       const res = await promise;
@@ -150,14 +152,15 @@ describe('ZoomApiClient', () => {
       jest.useFakeTimers();
       const promise = (client as unknown as { fetchWithRetry: (url: string, init?: RequestInit) => Promise<Response> }).fetchWithRetry('http://test.com');
 
+      // Each attempt: fetchWithTimeout sets a 10s timer; each retry also has a
+      // backoff timer (250ms, 750ms, 1500ms). Advance past all of them.
       for (let i = 0; i < 4; i++) {
         // Allow fetch promise to resolve
         await Promise.resolve();
-        // Allow the retry logic to proceed to setTimeout
-        await Promise.resolve();
-        // Run the timer
+        // Run all pending timers (fetchWithTimeout deadline + backoff)
         jest.runAllTimers();
-        // Allow the backoff promise to resolve
+        // Allow backoff / continuation microtasks to settle
+        await Promise.resolve();
         await Promise.resolve();
       }
 

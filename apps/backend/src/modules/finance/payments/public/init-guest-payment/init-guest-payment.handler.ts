@@ -82,6 +82,7 @@ export class InitGuestPaymentHandler {
         invoiceId: invoice.id,
         bookingId: dto.bookingId,
       },
+      idempotencyKey: `payment:${organizationId}:${invoice.id}`,
     });
 
     const updatedPayment = await this.prisma.payment.update({

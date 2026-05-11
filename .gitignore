@@ -88,10 +88,6 @@ scripts/performance/results/
 .playwright-mcp/
 .chrome-devtools-mcp/
 
-# ─── Maestro / orchestration scratch ──────────────────────────
-IMPLEMENTATION_PLAN.md
-.orchestration/
-
 # ─── Runtime artifacts ────────────────────────────────────────
 .runtime/
 

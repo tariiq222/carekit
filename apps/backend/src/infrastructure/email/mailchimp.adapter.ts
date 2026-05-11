@@ -2,6 +2,7 @@
 
 import { Logger } from '@nestjs/common';
 import type { EmailProvider, EmailSendPayload, EmailSendResult } from './email-provider.interface';
+import { fetchWithTimeout } from '../http';
 
 export type MailchimpCredentials = {
   /** Mailchimp Transactional (Mandrill) API key */
@@ -22,20 +23,24 @@ export class MailchimpEmailAdapter implements EmailProvider {
     const fromEmail = payload.fromEmail ?? 'noreply@deqah.sa';
     const fromName = payload.fromName ?? '';
 
-    const res = await fetch('https://mandrillapp.com/api/1.0/messages/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        key: this.creds.apiKey,
-        message: {
-          html: payload.html,
-          subject: payload.subject,
-          from_email: fromEmail,
-          from_name: fromName,
-          to: [{ email: payload.to, type: 'to' }],
-        },
-      }),
-    });
+    const res = await fetchWithTimeout(
+      'https://mandrillapp.com/api/1.0/messages/send',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: this.creds.apiKey,
+          message: {
+            html: payload.html,
+            subject: payload.subject,
+            from_email: fromEmail,
+            from_name: fromName,
+            to: [{ email: payload.to, type: 'to' }],
+          },
+        }),
+      },
+      8_000,
+    );
 
     if (!res.ok) {
       const body = await res.text();

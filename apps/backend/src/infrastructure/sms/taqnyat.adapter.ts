@@ -1,6 +1,7 @@
 // SaaS-02g-sms — Taqnyat REST adapter.
 
 import { createHmac, timingSafeEqual } from 'crypto';
+import { fetchWithTimeout } from '../http';
 import type {
   DlrPayload,
   ParsedDlr,
@@ -41,14 +42,18 @@ export class TaqnyatAdapter implements SmsProvider {
     };
     if (senderId) payload.sender = senderId;
 
-    const res = await fetch(TAQNYAT_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.creds.apiToken}`,
+    const res = await fetchWithTimeout(
+      TAQNYAT_ENDPOINT,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.creds.apiToken}`,
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      8_000,
+    );
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw new Error(`Taqnyat HTTP ${res.status}: ${text}`);

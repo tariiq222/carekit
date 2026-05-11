@@ -109,6 +109,7 @@ export class InitClientPaymentHandler {
           bookingId: invoice.bookingId,
           source: 'mobile-client',
         },
+        idempotencyKey: `payment:${organizationId}:${invoice.id}`,
       });
     } catch (error) {
       await this.deleteFailedPaymentInit(payment.id);

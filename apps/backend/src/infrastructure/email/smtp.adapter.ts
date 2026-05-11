@@ -23,6 +23,9 @@ export class SmtpEmailAdapter implements EmailProvider {
       port: creds.port,
       secure: creds.secure ?? creds.port === 465,
       auth: { user: creds.user, pass: creds.pass },
+      connectionTimeout: 10_000,  // 10s to establish TCP connection
+      greetingTimeout: 8_000,     // 8s for server greeting (EHLO/HELO)
+      socketTimeout: 10_000,      // 10s for socket inactivity (DATA command)
     });
   }
 

@@ -68,6 +68,17 @@ export async function createTestApp(
   process.env.ZOHO_PROVIDER_ENCRYPTION_KEY =
     process.env.ZOHO_PROVIDER_ENCRYPTION_KEY ??
     Buffer.alloc(32, 5).toString('base64');
+  process.env.MOYASAR_PLATFORM_SECRET_KEY =
+    process.env.MOYASAR_PLATFORM_SECRET_KEY ?? 'test-moyasar-platform-key';
+  process.env.MOYASAR_PLATFORM_WEBHOOK_SECRET =
+    process.env.MOYASAR_PLATFORM_WEBHOOK_SECRET ?? 'test-moyasar-webhook-secret';
+  process.env.ADMIN_HOSTS = process.env.ADMIN_HOSTS ?? 'admin.localhost,localhost';
+  process.env.DEFAULT_ORGANIZATION_ID =
+    process.env.DEFAULT_ORGANIZATION_ID ?? '00000000-0000-0000-0000-000000000001';
+  process.env.INTERNAL_METRICS_ALLOWED_IPS =
+    process.env.INTERNAL_METRICS_ALLOWED_IPS ?? '127.0.0.1,::1,::ffff:127.0.0.1';
+  process.env.INTERNAL_METRICS_TOKEN =
+    process.env.INTERNAL_METRICS_TOKEN ?? 'test-internal-metrics-token-32chars-min';
 
   await ensureTestUsers();
 
@@ -82,83 +93,18 @@ export async function createTestApp(
   })
     .overrideProvider(ConfigService)
     .useValue({
-      get: (key: string) => {
-        const map: Record<string, string> = {
-          DATABASE_URL: TEST_DATABASE_URL,
-          JWT_ACCESS_SECRET: TEST_JWT_ACCESS_SECRET,
-          JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
-          JWT_ACCESS_TTL: '15m',
-          JWT_REFRESH_TTL: '30d',
-          JWT_CLIENT_ACCESS_SECRET: 'test-client-access-secret-32chars',
-          JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
-          JWT_CLIENT_ACCESS_TTL: '15m',
-          JWT_CLIENT_REFRESH_TTL: '30d',
-          REDIS_HOST: process.env.REDIS_HOST ?? 'localhost',
-          REDIS_PORT: process.env.REDIS_PORT ?? '5380',
-          OPENAI_API_KEY: 'test-key',
-          OPENROUTER_API_KEY: 'test-key',
-          FCM_PROJECT_ID: 'test-project',
-          SMTP_HOST: 'localhost',
-          SMTP_PORT: '1025',
-          LICENSE_SERVER_URL: 'http://localhost:9999',
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: '9000',
-          MINIO_ACCESS_KEY: 'minioadmin',
-          MINIO_SECRET_KEY: 'minioadmin123',
-          MINIO_BUCKET: 'deqah',
-          SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
-          ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
-          MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
-          EMAIL_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 4).toString('base64'),
-          ZOHO_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 5).toString('base64'),
-          MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
-          MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
-          ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
-          TENANT_ENFORCEMENT: tenantEnforcement,
-          DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
-        };
-        return map[key];
+      get: (key: string, defaultValue?: unknown) => {
+        const v = process.env[key];
+        return v !== undefined ? v : defaultValue;
       },
       getOrThrow: (key: string) => {
-        const map: Record<string, string | undefined> = {
-          DATABASE_URL: TEST_DATABASE_URL,
-          JWT_ACCESS_SECRET: TEST_JWT_ACCESS_SECRET,
-          JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
-          JWT_ACCESS_TTL: '15m',
-          JWT_REFRESH_TTL: '30d',
-          JWT_CLIENT_ACCESS_SECRET: 'test-client-access-secret-32chars',
-          JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
-          JWT_CLIENT_ACCESS_TTL: '15m',
-          JWT_CLIENT_REFRESH_TTL: '30d',
-          REDIS_HOST: process.env.REDIS_HOST ?? 'localhost',
-          REDIS_PORT: process.env.REDIS_PORT ?? '5380',
-          OPENAI_API_KEY: 'test-key',
-          OPENROUTER_API_KEY: 'test-key',
-          FCM_PROJECT_ID: 'test-project',
-          SMTP_HOST: 'localhost',
-          SMTP_PORT: '1025',
-          LICENSE_SERVER_URL: 'http://localhost:9999',
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: '9000',
-          MINIO_ACCESS_KEY: 'minioadmin',
-          MINIO_SECRET_KEY: 'minioadmin123',
-          MINIO_BUCKET: 'deqah',
-          SMS_PROVIDER_ENCRYPTION_KEY: process.env.SMS_PROVIDER_ENCRYPTION_KEY!,
-          ZOOM_PROVIDER_ENCRYPTION_KEY: process.env.ZOOM_PROVIDER_ENCRYPTION_KEY!,
-          MOYASAR_TENANT_ENCRYPTION_KEY: process.env.MOYASAR_TENANT_ENCRYPTION_KEY!,
-          EMAIL_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 4).toString('base64'),
-          ZOHO_PROVIDER_ENCRYPTION_KEY: Buffer.alloc(32, 5).toString('base64'),
-          MOYASAR_PLATFORM_SECRET_KEY: 'test-moyasar-platform-key',
-          MOYASAR_PLATFORM_WEBHOOK_SECRET: 'test-moyasar-webhook-secret',
-          ADMIN_HOSTS: process.env.ADMIN_HOSTS!,
-          TENANT_ENFORCEMENT: tenantEnforcement,
-          DEFAULT_ORGANIZATION_ID: '00000000-0000-0000-0000-000000000001',
-        };
-        const val = map[key];
-        if (!val) throw new Error(`Config key ${key} not found`);
-        return val;
+        const v = process.env[key];
+        if (v === undefined || v === '') {
+          throw new Error(`Config key ${key} not found in process.env`);
+        }
+        return v;
       },
-    })
+    } as unknown as ConfigService)
     .overrideProvider(FcmService)
     .useValue({ sendPush: jest.fn().mockResolvedValue(undefined) })
     .overrideProvider(SmtpService)

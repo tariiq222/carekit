@@ -1,9 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { JwtStrategy } from './jwt.strategy';
 import { PrismaService } from '../../infrastructure/database';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
+
+/** Minimal ClsService mock: run() executes the callback, set() is a no-op. */
+const makeClsMock = () => ({
+  run: jest.fn().mockImplementation((cb: () => unknown) => cb()),
+  set: jest.fn(),
+});
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -16,6 +23,7 @@ describe('JwtStrategy', () => {
         { provide: ConfigService, useValue: { getOrThrow: jest.fn().mockReturnValue('secret-key') } },
         { provide: PrismaService, useValue: { user: { findUnique: jest.fn() } } },
         { provide: CaslAbilityFactory, useValue: { buildForUser: jest.fn().mockReturnValue({ rules: [] }) } },
+        { provide: ClsService, useValue: makeClsMock() },
       ],
     }).compile();
 
@@ -140,6 +148,7 @@ describe('JwtStrategy', () => {
           provide: CaslAbilityFactory,
           useValue: { buildForUser: jest.fn().mockReturnValue({ rules: [] }) },
         },
+        { provide: ClsService, useValue: makeClsMock() },
       ],
     }).compile();
 

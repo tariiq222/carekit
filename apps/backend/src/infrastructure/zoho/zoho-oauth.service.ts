@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchWithTimeout } from '../http';
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import {
   isZohoDataCenter,
@@ -168,11 +169,11 @@ export class ZohoOAuthService implements OnModuleInit, OnModuleDestroy {
     });
 
     const url = `${zohoAccountsBaseUrl(opts.dataCenter)}/oauth/v2/token`;
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
-    });
+    }, 10_000);
 
     if (!res.ok) {
       const text = await res.text();
@@ -216,13 +217,14 @@ export class ZohoOAuthService implements OnModuleInit, OnModuleDestroy {
       client_secret: clientSecret,
     });
 
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `${zohoAccountsBaseUrl(opts.dataCenter)}/oauth/v2/token`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
       },
+      10_000,
     );
     if (!res.ok) {
       const text = await res.text();
@@ -258,11 +260,9 @@ export class ZohoOAuthService implements OnModuleInit, OnModuleDestroy {
     dataCenter: ZohoDataCenter;
   }): Promise<void> {
     const url = `${zohoAccountsBaseUrl(opts.dataCenter)}/oauth/v2/token/revoke?token=${encodeURIComponent(opts.refreshToken)}`;
-    try {
-      await fetch(url, { method: 'POST' });
-    } catch (err) {
-      this.logger.warn(`Zoho revoke failed (non-fatal): ${(err as Error).message}`);
-    }
+    await fetchWithTimeout(url, { method: 'POST' }, 5_000).catch((err: unknown) => {
+      this.logger.warn(`Zoho token revoke failed (non-fatal): ${(err as Error).message}`);
+    });
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────

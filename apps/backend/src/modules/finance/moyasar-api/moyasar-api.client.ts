@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { fetchWithTimeout } from '../../../infrastructure/http';
 import { MoyasarCredentialsService } from '../../../infrastructure/payments/moyasar-credentials.service';
 
 export const MOYASAR_API_CLIENT = Symbol('MOYASAR_API_CLIENT');
@@ -11,6 +12,8 @@ export interface MoyasarCreatePaymentParams {
   description: string;
   callbackUrl: string;
   metadata: Record<string, string>;
+  /** Idempotency key — prevents duplicate payment creation on network retries. Must be unique per invoice. */
+  idempotencyKey: string;
 }
 
 export interface MoyasarPayment {
@@ -122,14 +125,18 @@ export class MoyasarApiClient {
     options: RequestInit,
   ): Promise<T> {
     const apiKey = await this.getApiKeyForOrg(organizationId);
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}${path}`,
+      {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
       },
-    });
+      15_000,  // 15s for payment operations
+    );
 
     if (!response.ok) {
       const error = (await response.json().catch(() => ({ message: response.statusText }))) as MoyasarErrorResponse;
@@ -157,6 +164,7 @@ export class MoyasarApiClient {
     const data = await this.request<MoyasarApiResponse>(organizationId, '/payments', {
       method: 'POST',
       body: JSON.stringify(body),
+      headers: { 'Idempotency-Key': params.idempotencyKey },
     });
 
     return {

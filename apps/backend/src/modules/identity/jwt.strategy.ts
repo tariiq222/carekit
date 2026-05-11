@@ -1,17 +1,22 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
 import { PrismaService } from '../../infrastructure/database';
+import { SYSTEM_CONTEXT_CLS_KEY } from '../../common/tenant/tenant.constants';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
 import type { JwtPayload } from './shared/token.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(
     config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly casl: CaslAbilityFactory,
+    private readonly cls: ClsService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -21,12 +26,44 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      include: { customRole: { include: { permissions: true } } },
+    // Auth bootstrap chicken-and-egg: the tenant context isn't established
+    // until *after* this strategy resolves the user, but the nested include
+    // touches CustomRole + Permission (both in SCOPED_MODELS — see
+    // apps/backend/src/infrastructure/database/prisma.service.ts). Under
+    // strict mode the scoping extension would throw because no tenant is in
+    // CLS yet. Mirror the documented bypass used by webhook/OTP handlers
+    // (e.g. verify-email.handler.ts): run the lookup inside a *fresh* CLS
+    // child scope with `systemContext = true`, so the bypass flag stays
+    // contained and never bleeds into a parent request store. The
+    // cross-tenant check below restores the guarantee that the scoping
+    // extension was previously providing.
+    this.logger.debug(`systemContext bypass for JWT bootstrap (sub=${payload.sub})`);
+    const user = await this.cls.run(async () => {
+      this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+      return this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        include: { customRole: { include: { permissions: true } } },
+      });
     });
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
+
+    // Cross-tenant safety: the bypass above disables tenant scoping for the
+    // lookup, so we must re-assert that the loaded customRole belongs to the
+    // org the JWT claims. Super-admins are exempt (they legitimately operate
+    // across orgs). Any non-super-admin token carrying a customRole MUST
+    // also carry an organizationId — pre-rollout tokens without an org
+    // claim are rejected outright rather than silently trusted.
+    // Use the DB-authoritative `user.isSuperAdmin` flag (not the JWT claim)
+    // so a revoked super-admin token cannot bypass this check.
+    if (user.customRole && user.isSuperAdmin !== true) {
+      if (
+        !payload.organizationId ||
+        user.customRole.organizationId !== payload.organizationId
+      ) {
+        throw new UnauthorizedException('Custom role does not belong to the token org');
+      }
+    }
 
     // P0-6: If the JWT carries a tokenVersion, verify it matches the DB value.
     // Stale tokenVersion means the session was revoked (logout/switch-org/password change).

@@ -1,5 +1,5 @@
 import { bootHarness, IsolationHarness } from './isolation-harness';
-import { DEFAULT_ORGANIZATION_ID } from '../../src/common/tenant';
+import { DEFAULT_ORGANIZATION_ID, SYSTEM_CONTEXT_CLS_KEY } from '../../src/common/tenant';
 
 describe('SaaS-01 — foundation isolation', () => {
   let h: IsolationHarness;
@@ -24,18 +24,25 @@ describe('SaaS-01 — foundation isolation', () => {
     // CLIENT users are excluded from backfill by design (see
     // 20260421112140_saas01_backfill_memberships/migration.sql) — the
     // invariant applies to clinic-staff users only.
-    const users = await h.prisma.user.findMany({
-      where: { role: { not: 'CLIENT' } },
-      select: { id: true },
+    //
+    // `Membership` is in SCOPED_MODELS — strict-mode tenant scoping would
+    // throw without an active CLS context. Run as system context so the
+    // platform-wide invariant check can read across all tenants.
+    await h.cls.run(async () => {
+      h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+      const users = await h.prisma.user.findMany({
+        where: { role: { not: 'CLIENT' } },
+        select: { id: true },
+      });
+      if (users.length === 0) return; // empty db — nothing to assert
+      const memberships = await h.prisma.membership.findMany({
+        where: { userId: { in: users.map((u) => u.id) }, isActive: true },
+        select: { userId: true },
+      });
+      const withMembership = new Set(memberships.map((m) => m.userId));
+      const missing = users.filter((u) => !withMembership.has(u.id));
+      expect(missing).toEqual([]);
     });
-    if (users.length === 0) return; // empty db — nothing to assert
-    const memberships = await h.prisma.membership.findMany({
-      where: { userId: { in: users.map((u) => u.id) }, isActive: true },
-      select: { userId: true },
-    });
-    const withMembership = new Set(memberships.map((m) => m.userId));
-    const missing = users.filter((u) => !withMembership.has(u.id));
-    expect(missing).toEqual([]);
   });
 
   it('tenant context propagates through a CLS run', async () => {

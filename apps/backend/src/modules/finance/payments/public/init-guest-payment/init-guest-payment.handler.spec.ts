@@ -113,6 +113,7 @@ describe('InitGuestPaymentHandler', () => {
           description: 'Booking payment - booking-1',
           callbackUrl: 'https://clinic.example.com/booking/payment-callback?bookingId=booking-1',
           metadata: { invoiceId: 'inv-1', bookingId: 'booking-1' },
+          idempotencyKey: 'payment:00000000-0000-0000-0000-000000000001:inv-1',
         },
       );
       expect(prisma.payment.update).toHaveBeenCalledWith({

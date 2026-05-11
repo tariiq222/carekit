@@ -5,7 +5,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard, SuperAdminGuard, IpAllowlistGuard, InternalBearerGuard } from '../../common/guards';
+import { AdminHostGuard, JwtGuard, SuperAdminGuard } from '../../common/guards';
 import { SuperAdminContextInterceptor } from '../../common/interceptors';
 import { ApiStandardResponses } from '../../common/swagger';
 import { GetPlatformMetricsHandler } from '../../modules/platform/admin/get-platform-metrics/get-platform-metrics.handler';
@@ -15,7 +15,7 @@ import { PlatformMetricsDto } from './dto/admin-response.dto';
 @ApiBearerAuth()
 @ApiStandardResponses()
 @Controller('admin/metrics')
-@UseGuards(IpAllowlistGuard, InternalBearerGuard, JwtGuard, SuperAdminGuard)
+@UseGuards(AdminHostGuard, JwtGuard, SuperAdminGuard)
 @UseInterceptors(SuperAdminContextInterceptor)
 export class AdminMetricsController {
   constructor(private readonly handler: GetPlatformMetricsHandler) {}

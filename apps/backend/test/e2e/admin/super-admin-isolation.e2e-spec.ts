@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
+import { DEFAULT_ORGANIZATION_ID } from '../../../src/common/tenant';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
 
@@ -64,6 +65,31 @@ describe('Super-admin isolation (e2e)', () => {
       },
     });
     superAdminUserId = superAdmin.id;
+
+    // SaaS-01 invariant — every non-CLIENT staff user must have ≥1 active
+    // Membership. The cleanTables call above wipes Membership+User, so we
+    // must seed memberships here (otherwise foundation.e2e-spec.ts will
+    // catch these as orphans). DEFAULT_ORGANIZATION_ID is seeded by
+    // globalSetup and survives this suite's cleanup.
+    await testPrisma.membership.createMany({
+      data: [
+        {
+          userId: regularUserId,
+          organizationId: DEFAULT_ORGANIZATION_ID,
+          role: 'RECEPTIONIST',
+          isActive: true,
+          acceptedAt: new Date(),
+        },
+        {
+          userId: superAdminUserId,
+          organizationId: DEFAULT_ORGANIZATION_ID,
+          role: 'OWNER',
+          isActive: true,
+          acceptedAt: new Date(),
+        },
+      ],
+      skipDuplicates: true,
+    });
 
     await testPrisma.impersonationSession.create({
       data: {

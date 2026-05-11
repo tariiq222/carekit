@@ -15,6 +15,7 @@ import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables, reseedPlans } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
+import { DEFAULT_ORGANIZATION_ID } from '../../../src/common/tenant';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
 const ADMIN_HOST = 'admin.isolation.test';
@@ -46,61 +47,36 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     ]);
     await reseedPlans();
 
-    const user = await testPrisma.user.upsert({
-      where: { email: 'isolation-super@e2e.test' },
-      update: {},
-      create: {
-        email: 'isolation-super@e2e.test',
-        name: 'Isolation Super Admin',
-        passwordHash: 'dummy',
-        role: 'ADMIN',
-        isActive: true,
-        isSuperAdmin: true,
-      },
-    });
-    superAdminUserId = user.id;
+    const upsertUser = (email: string, name: string, isSuperAdmin: boolean) =>
+      testPrisma.user.upsert({
+        where: { email },
+        update: {},
+        create: { email, name, passwordHash: 'dummy', role: 'ADMIN', isActive: true, isSuperAdmin },
+      });
 
-    const regularUser = await testPrisma.user.upsert({
-      where: { email: 'regular-tenant-iso@e2e.test' },
-      update: {},
-      create: {
-        email: 'regular-tenant-iso@e2e.test',
-        name: 'Regular Tenant User',
-        passwordHash: 'dummy',
-        role: 'ADMIN',
-        isActive: true,
-        isSuperAdmin: false,
-      },
-    });
-    regularUserId = regularUser.id;
+    [superAdminUserId, regularUserId, userOrgAId, userOrgBId] = (
+      await Promise.all([
+        upsertUser('isolation-super@e2e.test', 'Isolation Super Admin', true),
+        upsertUser('regular-tenant-iso@e2e.test', 'Regular Tenant User', false),
+        upsertUser('user-org-a-iso@e2e.test', 'User Org A', false),
+        upsertUser('user-org-b-iso@e2e.test', 'User Org B', false),
+      ])
+    ).map((u) => u.id) as [string, string, string, string];
 
-    const userOrgA = await testPrisma.user.upsert({
-      where: { email: 'user-org-a-iso@e2e.test' },
-      update: {},
-      create: {
-        email: 'user-org-a-iso@e2e.test',
-        name: 'User Org A',
-        passwordHash: 'dummy',
-        role: 'ADMIN',
+    // SaaS-01 invariant — every non-CLIENT staff user needs ≥1 active
+    // Membership or foundation.e2e-spec.ts flags them as orphans. Attach
+    // all four to DEFAULT_ORGANIZATION_ID — these users authenticate via
+    // JWT-supplied org in HTTP tests so the membership org is irrelevant.
+    await testPrisma.membership.createMany({
+      data: [superAdminUserId, regularUserId, userOrgAId, userOrgBId].map((userId) => ({
+        userId,
+        organizationId: DEFAULT_ORGANIZATION_ID,
+        role: 'ADMIN' as const,
         isActive: true,
-        isSuperAdmin: false,
-      },
+        acceptedAt: new Date(),
+      })),
+      skipDuplicates: true,
     });
-    userOrgAId = userOrgA.id;
-
-    const userOrgB = await testPrisma.user.upsert({
-      where: { email: 'user-org-b-iso@e2e.test' },
-      update: {},
-      create: {
-        email: 'user-org-b-iso@e2e.test',
-        name: 'User Org B',
-        passwordHash: 'dummy',
-        role: 'ADMIN',
-        isActive: true,
-        isSuperAdmin: false,
-      },
-    });
-    userOrgBId = userOrgB.id;
 
     const plans = await testPrisma.plan.findMany({ where: { slug: { in: ['BASIC'] } } });
     BASIC_PLAN_ID = plans.find((p) => p.slug === 'BASIC')!.id;
@@ -110,45 +86,54 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
 
     const now = new Date();
 
-    await harness.prisma.subscription.create({
-      data: {
-        organizationId: orgA.id,
-        planId: BASIC_PLAN_ID,
-        status: 'ACTIVE',
-        billingCycle: 'MONTHLY',
-        currentPeriodStart: now,
-        currentPeriodEnd: new Date(now.getTime() + 30 * 86_400_000),
-      },
-    });
+    // Subscription/Branch/SavedCard are in SCOPED_MODELS — wrap creates in
+    // a CLS tenant context so the strict-mode scoping extension allows them.
+    await harness.runAs({ organizationId: orgA.id }, async () => {
+      await harness.prisma.subscription.create({
+        data: {
+          organizationId: orgA.id,
+          planId: BASIC_PLAN_ID,
+          status: 'ACTIVE',
+          billingCycle: 'MONTHLY',
+          currentPeriodStart: now,
+          currentPeriodEnd: new Date(now.getTime() + 30 * 86_400_000),
+        },
+      });
 
-    await harness.prisma.branch.create({
-      data: {
-        organizationId: orgA.id,
-        nameAr: 'فرع أ',
-        nameEn: 'Branch A',
-        phone: '+966500000001',
-        isActive: true,
-      },
-    });
+      await harness.prisma.branch.create({
+        data: {
+          organizationId: orgA.id,
+          nameAr: 'فرع أ',
+          nameEn: 'Branch A',
+          phone: '+966500000001',
+          isActive: true,
+        },
+      });
 
-    await harness.prisma.savedCard.create({
-      data: {
-        organizationId: orgA.id,
-        moyasarTokenId: `tok_test_${Date.now()}`,
-        last4: '1111',
-        brand: 'VISA',
-        isDefault: true,
-        expiryMonth: 12,
-        expiryYear: 2027,
-      },
+      await harness.prisma.savedCard.create({
+        data: {
+          organizationId: orgA.id,
+          moyasarTokenId: `tok_test_${Date.now()}`,
+          last4: '1111',
+          brand: 'VISA',
+          isDefault: true,
+          expiryMonth: 12,
+          expiryYear: 2027,
+        },
+      });
     });
   });
 
   afterAll(async () => {
     if (harness) {
-      await harness.prisma.branch.deleteMany({ where: { organizationId: orgA.id } });
-      await harness.prisma.savedCard.deleteMany({ where: { organizationId: orgA.id } });
-      await harness.prisma.subscription.deleteMany({ where: { organizationId: orgA.id } });
+      // Branch/SavedCard/Subscription are in SCOPED_MODELS — strict-mode
+      // scoping requires an active CLS tenant context for deleteMany.
+      // Organization itself is a root model and stays outside the run.
+      await harness.runAs({ organizationId: orgA.id }, async () => {
+        await harness.prisma.branch.deleteMany({ where: { organizationId: orgA.id } });
+        await harness.prisma.savedCard.deleteMany({ where: { organizationId: orgA.id } });
+        await harness.prisma.subscription.deleteMany({ where: { organizationId: orgA.id } });
+      });
       await harness.prisma.organization.delete({ where: { id: orgA.id } });
       await harness.prisma.organization.delete({ where: { id: orgB.id } });
       await harness.close();

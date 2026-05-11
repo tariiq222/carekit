@@ -1,6 +1,7 @@
 // SaaS-02g-sms — Unifonic REST adapter.
 
 import { createHmac, timingSafeEqual } from 'crypto';
+import { fetchWithTimeout } from '../http';
 import type {
   DlrPayload,
   ParsedDlr,
@@ -43,14 +44,18 @@ export class UnifonicAdapter implements SmsProvider {
     };
     if (senderId) payload.SenderID = senderId;
 
-    const res = await fetch(UNIFONIC_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.creds.apiKey}`,
+    const res = await fetchWithTimeout(
+      UNIFONIC_ENDPOINT,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.creds.apiKey}`,
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      8_000,
+    );
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw new Error(`Unifonic HTTP ${res.status}: ${text}`);

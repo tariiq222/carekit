@@ -1,5 +1,6 @@
 import { Injectable, Logger, InternalServerErrorException, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { createHash } from 'crypto';
+import { fetchWithTimeout } from '../http';
 
 export interface ZoomMeetingRequest {
   topic: string;
@@ -188,7 +189,7 @@ export class ZoomApiClient implements OnModuleInit, OnModuleDestroy {
 
     for (let i = 0; i <= retries; i++) {
       try {
-        const res = await fetch(url, init);
+        const res = await fetchWithTimeout(url, init, 10_000);
         // Retry on 429 or 5xx
         if (res.status === 429 || (res.status >= 500 && res.status <= 599)) {
           if (i < retries) {

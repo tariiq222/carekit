@@ -87,6 +87,7 @@ describe('InitClientPaymentHandler', () => {
       description: `Invoice payment - ${invoiceId}`,
       callbackUrl: `http://localhost:3000/booking/payment-callback?bookingId=${bookingId}&invoiceId=${invoiceId}`,
       metadata: { invoiceId, bookingId, source: 'mobile-client' },
+      idempotencyKey: `payment:${organizationId}:${invoiceId}`,
     });
     expect(prisma.payment.update).toHaveBeenCalledWith({
       where: { id: 'payment-1' },
@@ -183,6 +184,7 @@ describe('InitClientPaymentHandler', () => {
       description: `Invoice payment - ${invoiceId}`,
       callbackUrl: `http://localhost:3000/booking/payment-callback?bookingId=${bookingId}&invoiceId=${invoiceId}`,
       metadata: { invoiceId, bookingId, source: 'mobile-client' },
+      idempotencyKey: `payment:${organizationId}:${invoiceId}`,
     });
     expect(prisma.payment.update).toHaveBeenCalledWith({
       where: { id: 'payment-1' },

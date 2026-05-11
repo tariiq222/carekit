@@ -5,6 +5,7 @@ import {
   Optional,
   UnauthorizedException,
 } from '@nestjs/common';
+import { fetchWithTimeout } from '../http';
 import { ZohoOAuthService } from './zoho-oauth.service';
 import { ZohoAuditService } from './zoho-audit.service';
 import { zohoApiBaseUrl, type ZohoDataCenter } from './zoho-dc';
@@ -342,7 +343,7 @@ export class ZohoApiClient {
     let lastError: unknown;
     for (let i = 0; i <= retries; i++) {
       try {
-        const res = await fetch(url, init);
+        const res = await fetchWithTimeout(url, init, 10_000);
         // Honour Zoho's Retry-After when present, else exponential backoff.
         if (res.status === 429 || (res.status >= 500 && res.status <= 599)) {
           if (i < retries) {
