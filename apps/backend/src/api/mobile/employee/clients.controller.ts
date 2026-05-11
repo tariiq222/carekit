@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -61,9 +61,10 @@ export class MobileEmployeeClientsController {
   ) {
     const page = q.page ?? 1;
     const limit = q.limit ?? 20;
+    const employeeId = await this.resolveEmployeeId(user);
 
     const clientIdRows = await this.prisma.booking.findMany({
-      where: { employeeId: user.sub },
+      where: { employeeId },
       select: { clientId: true },
       distinct: ['clientId'],
     });
@@ -116,14 +117,33 @@ export class MobileEmployeeClientsController {
     },
   })
   @ApiNotFoundResponse({ description: 'Client not found' })
-  clientHistory(
+  async clientHistory(
     @CurrentUser() user: JwtUser,
     @Param('clientId', ParseUUIDPipe) clientId: string,
   ) {
+    const employeeId = await this.resolveEmployeeId(user);
+
     return this.prisma.booking.findMany({
-      where: { employeeId: user.sub, clientId },
+      where: { employeeId, clientId },
       orderBy: { scheduledAt: 'desc' },
       take: 20,
     });
+  }
+
+  private async resolveEmployeeId(user: JwtUser): Promise<string> {
+    if (user.employeeId) {
+      return user.employeeId;
+    }
+
+    const employee = await this.prisma.employee.findFirst({
+      where: { userId: user.sub, isActive: true },
+      select: { id: true },
+    });
+
+    if (!employee) {
+      throw new ForbiddenException('employee_profile_not_found');
+    }
+
+    return employee.id;
   }
 }
