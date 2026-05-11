@@ -2,20 +2,6 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
-const IMAGE_SIGNATURES = [
-  { mime: 'image/jpeg', magic: [0xFF, 0xD8, 0xFF] },
-  { mime: 'image/png', magic: [0x89, 0x50, 0x4E, 0x47] },
-  { mime: 'image/webp', magic: [0x57, 0x45, 0x42, 0x50] },
-];
-
-function detectMimeType(buffer: Buffer): string | null {
-  for (const sig of IMAGE_SIGNATURES) {
-    if (sig.magic.every((byte, i) => buffer[i] === byte)) {
-      return sig.mime;
-    }
-  }
-  return null;
-}
 import { File, FileVisibility } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
@@ -23,6 +9,7 @@ import { TenantContextService } from '../../../common/tenant';
 import { EventBusService } from '../../../infrastructure/events';
 import { FileUploadedEvent } from '../events/file-uploaded.event';
 import { UploadFileDto } from './upload-file.dto';
+import { validateMagicBytes } from '../../../common/security/magic-byte-validator';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
@@ -38,7 +25,7 @@ export const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
   'text/csv',
 ]);
 
-const IMAGE_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+const ALLOWED_MIME_ARRAY = [...ALLOWED_MIME_TYPES] as const;
 
 export type UploadFileCommand = UploadFileDto & {
   filename: string;
@@ -75,7 +62,12 @@ export class UploadFileHandler {
       throw new BadRequestException(`Mime type not allowed: ${cmd.mimetype}`);
     }
 
-    await this.validateFileType(buffer, cmd.mimetype, cmd.filename);
+    const check = await validateMagicBytes(buffer, cmd.mimetype, ALLOWED_MIME_ARRAY);
+    if (!check.ok) {
+      throw new BadRequestException(
+        `File content validation failed: ${check.reason ?? 'content does not match declared type'}`,
+      );
+    }
 
     const ext = extname(cmd.filename).toLowerCase();
     const safeFilename = cmd.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -115,19 +107,5 @@ export class UploadFileHandler {
     this.eventBus.publish(event.eventName, event.toEnvelope()).catch(() => {});
 
     return Object.assign(file, { url });
-  }
-
-  private async validateFileType(buffer: Buffer, claimedMimeType: string, filename: string): Promise<void> {
-    if (IMAGE_ALLOWED_MIME_TYPES.includes(claimedMimeType as typeof IMAGE_ALLOWED_MIME_TYPES[number])) {
-      const detected = detectMimeType(buffer);
-      if (!detected) {
-        throw new BadRequestException('Cannot determine file type');
-      }
-      if (detected !== claimedMimeType) {
-        throw new BadRequestException(
-          `Content-Type mismatch: claimed ${claimedMimeType}, detected ${detected}`,
-        );
-      }
-    }
   }
 }

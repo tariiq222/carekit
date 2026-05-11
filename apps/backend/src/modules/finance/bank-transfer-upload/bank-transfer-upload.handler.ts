@@ -4,6 +4,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { BankTransferUploadDto } from './bank-transfer-upload.dto';
+import { validateMagicBytes } from '../../../common/security/magic-byte-validator';
 
 const RECEIPTS_BUCKET = 'finance-receipts';
 const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
@@ -12,6 +13,8 @@ const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
   'image/webp',
   'application/pdf',
 ]);
+
+const ALLOWED_MIME_ARRAY = [...ALLOWED_MIME_TYPES] as const;
 
 export type BankTransferUploadCommand = BankTransferUploadDto & {
   fileBuffer: Buffer;
@@ -31,6 +34,13 @@ export class BankTransferUploadHandler {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
     if (!ALLOWED_MIME_TYPES.has(cmd.mimetype)) {
       throw new BadRequestException(`File type ${cmd.mimetype} not allowed. Use JPEG, PNG, WebP, or PDF.`);
+    }
+
+    const check = await validateMagicBytes(cmd.fileBuffer, cmd.mimetype, ALLOWED_MIME_ARRAY);
+    if (!check.ok) {
+      throw new BadRequestException(
+        `Receipt content validation failed: ${check.reason ?? 'content does not match declared type'}`,
+      );
     }
 
     const invoice = await this.prisma.invoice.findFirst({

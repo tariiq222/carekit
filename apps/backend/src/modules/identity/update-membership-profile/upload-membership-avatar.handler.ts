@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { extname } from 'node:path';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
+import { validateMagicBytes } from '../../../common/security/magic-byte-validator';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_MIMES: ReadonlySet<string> = new Set([
@@ -15,6 +16,8 @@ const ALLOWED_AVATAR_MIMES: ReadonlySet<string> = new Set([
   'image/png',
   'image/webp',
 ]);
+
+const ALLOWED_AVATAR_MIMES_ARRAY = [...ALLOWED_AVATAR_MIMES] as const;
 
 export interface UploadMembershipAvatarCommand {
   /** Caller user id (from JWT). Authorization: must own the membership. */
@@ -61,6 +64,13 @@ export class UploadMembershipAvatarHandler {
     }
     if (!ALLOWED_AVATAR_MIMES.has(cmd.mimetype)) {
       throw new BadRequestException(`Mime type not allowed for avatar: ${cmd.mimetype}`);
+    }
+
+    const check = await validateMagicBytes(cmd.buffer, cmd.mimetype, ALLOWED_AVATAR_MIMES_ARRAY);
+    if (!check.ok) {
+      throw new BadRequestException(
+        `Avatar content validation failed: ${check.reason ?? 'content does not match declared type'}`,
+      );
     }
 
     const membership = await this.prisma.membership.findUnique({

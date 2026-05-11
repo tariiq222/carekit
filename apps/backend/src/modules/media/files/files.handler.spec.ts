@@ -29,6 +29,31 @@ const mockFile = {
   updatedAt: new Date(),
 };
 
+// ── Magic-byte fixtures ──────────────────────────────────────────────────────
+
+/** Valid PNG: signature bytes (8) + minimal body */
+const PNG_BUFFER = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  Buffer.from('fake-png-body'),
+]);
+
+/** Valid JPEG: SOI + JFIF APP0 marker */
+const JPEG_BUFFER = Buffer.from([
+  0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46,
+  0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x01, 0x00, 0x00, 0xff, 0xd9,
+]);
+
+/** Valid PDF: %PDF- magic */
+const PDF_BUFFER = Buffer.from('%PDF-1.4\n1 0 obj\n<</Type /Catalog>>\nendobj\nstartxref\n0\n%%EOF\n');
+
+/** MP4 ftyp box — spoofing attempts */
+const MP4_BUFFER = Buffer.from([
+  0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70,
+  0x6d, 0x70, 0x34, 0x32, 0x00, 0x00, 0x00, 0x00,
+  0x6d, 0x70, 0x34, 0x32, 0x69, 0x73, 0x6f, 0x6d,
+]);
+
 describe('Media files handlers', () => {
   let uploadHandler: UploadFileHandler;
   let getHandler: GetFileHandler;
@@ -97,17 +122,14 @@ describe('Media files handlers', () => {
   });
 
   describe('upload-file', () => {
-    it('uploads buffer and persists metadata', async () => {
-      // PNG magic bytes header so detectMimeType correctly identifies image/png
-      const pngHeader = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-      const buffer = Buffer.concat([pngHeader, Buffer.from('fake-png-data')]);
+    it('uploads PNG buffer and persists metadata', async () => {
       const result = await uploadHandler.execute(
         {
           filename: 'photo.png',
           mimetype: 'image/png',
-          size: buffer.length,
+          size: PNG_BUFFER.length,
         },
-        buffer,
+        PNG_BUFFER,
       );
       expect(storage.uploadFile).toHaveBeenCalledTimes(1);
       expect(prisma.file.create).toHaveBeenCalledTimes(1);
@@ -115,6 +137,65 @@ describe('Media files handlers', () => {
       expect(createArg.bucket).toBe('deqah');
       expect(createArg.storageKey).toMatch(/^[0-9a-f-]+\.png$/);
       expect(result).toEqual(mockFile);
+    });
+
+    it('uploads JPEG buffer claimed as image/jpeg', async () => {
+      prisma.file.create.mockResolvedValueOnce({ ...mockFile, mimetype: 'image/jpeg' });
+      const result = await uploadHandler.execute(
+        { filename: 'photo.jpg', mimetype: 'image/jpeg', size: JPEG_BUFFER.length },
+        JPEG_BUFFER,
+      );
+      expect(result.mimetype).toBe('image/jpeg');
+    });
+
+    it('uploads PDF buffer claimed as application/pdf', async () => {
+      prisma.file.create.mockResolvedValueOnce({ ...mockFile, mimetype: 'application/pdf' });
+      const result = await uploadHandler.execute(
+        { filename: 'doc.pdf', mimetype: 'application/pdf', size: PDF_BUFFER.length },
+        PDF_BUFFER,
+      );
+      expect(result.mimetype).toBe('application/pdf');
+    });
+
+    it('accepts text/plain buffer (no magic bytes) claimed as text/plain', async () => {
+      const txtBuf = Buffer.from('Plain text content');
+      prisma.file.create.mockResolvedValueOnce({ ...mockFile, mimetype: 'text/plain' });
+      await expect(
+        uploadHandler.execute(
+          { filename: 'readme.txt', mimetype: 'text/plain', size: txtBuf.length },
+          txtBuf,
+        ),
+      ).resolves.toBeDefined();
+    });
+
+    it('accepts text/csv buffer claimed as text/csv', async () => {
+      const csvBuf = Buffer.from('col1,col2\nval1,val2\n');
+      prisma.file.create.mockResolvedValueOnce({ ...mockFile, mimetype: 'text/csv' });
+      await expect(
+        uploadHandler.execute(
+          { filename: 'data.csv', mimetype: 'text/csv', size: csvBuf.length },
+          csvBuf,
+        ),
+      ).resolves.toBeDefined();
+    });
+
+    it('rejects MP4 bytes claimed as image/png (magic-byte mismatch)', async () => {
+      await expect(
+        uploadHandler.execute(
+          { filename: 'evil.png', mimetype: 'image/png', size: MP4_BUFFER.length },
+          MP4_BUFFER,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(storage.uploadFile).not.toHaveBeenCalled();
+    });
+
+    it('rejects PNG bytes claimed as application/pdf', async () => {
+      await expect(
+        uploadHandler.execute(
+          { filename: 'spoof.pdf', mimetype: 'application/pdf', size: PNG_BUFFER.length },
+          PNG_BUFFER,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('rejects empty buffer', async () => {
