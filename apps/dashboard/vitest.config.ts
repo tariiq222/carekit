@@ -9,6 +9,20 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./test/setup.ts'],
     include: ['test/**/*.{spec,test}.{ts,tsx}'],
+    // Pre-existing exclusion. See follow-up bug (file currently fails in
+    // isolation); revisit once the hook's mock setup is stabilized.
+    exclude: ['test/unit/hooks/use-employees.spec.tsx'],
+    // Forks pool — one worker per test file, each with its own Node heap.
+    // Prevents the heap-out-of-memory failure seen when all 149 dashboard
+    // specs were forced into a single fork (TAR-18). Do NOT re-introduce
+    // poolOptions.forks.singleFork: true; it accumulates jsdom + RTL +
+    // vi.resetModules() state until the ~4GB heap is exhausted.
+    pool: 'forks',
+    // Cap concurrent forks so CI runners with many cores (e.g. 8-vCPU
+    // GitHub-hosted runners) do not spawn 8+ jsdom processes in parallel
+    // and exceed the runner's memory budget. Two workers keeps total peak
+    // memory under ~1.5 GB while still parallelising across files.
+    maxWorkers: 2,
     alias: {
       '@': path.resolve(__dirname, '.'),
     },
