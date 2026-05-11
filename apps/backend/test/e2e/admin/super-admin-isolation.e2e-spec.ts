@@ -2,7 +2,7 @@ import SuperTest from 'supertest';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 
 const ACCESS_SECRET = 'test-access-secret-32chars-min';
 
@@ -30,6 +30,12 @@ describe('Super-admin isolation (e2e)', () => {
 
   beforeAll(async () => {
     process.env.ADMIN_HOSTS = ADMIN_HOST;
+    // This suite bursts ~31 requests through a single IP/anon tracker, which
+    // collides with throttle counters left in Redis by earlier suites and
+    // produces spurious 429s. Disable the throttler and flush Redis before
+    // building the app.
+    process.env.THROTTLER_DISABLED = 'true';
+    await flushTestRedis();
     ({ request: req } = await createTestApp({ globalPrefix: true }));
     await cleanTables(['SuperAdminActionLog', 'ImpersonationSession', 'RefreshToken', 'Membership', 'User']);
 
@@ -75,6 +81,7 @@ describe('Super-admin isolation (e2e)', () => {
 
   afterAll(async () => {
     await cleanTables(['SuperAdminActionLog', 'ImpersonationSession', 'RefreshToken', 'Membership', 'User']);
+    delete process.env.THROTTLER_DISABLED;
     await closeTestApp();
   });
 

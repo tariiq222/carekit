@@ -12,14 +12,55 @@ import { ApplyCouponHandler } from '../../../src/modules/finance/apply-coupon/ap
  */
 describe('SaaS-02e — coupon isolation', () => {
   let h: IsolationHarness;
+  let couponsEnabledPlanId: string;
 
   beforeAll(async () => {
     h = await bootHarness();
+
+    // Resolve a plan whose `limits.coupons === true` so the COUPONS feature-gate
+    // in ApplyCouponHandler doesn't fire before the tenant-isolation lookup.
+    // global-setup.ts seeds BASIC (no coupons), PRO (coupons:true), ENTERPRISE
+    // (coupons:true). ENTERPRISE has all features → safest pick. See
+    // apps/backend/test/setup/global-setup.ts:171-173.
+    const plan = await h.prisma.plan.findUnique({
+      where: { slug: 'ENTERPRISE' },
+      select: { id: true },
+    });
+    if (!plan) {
+      throw new Error(
+        "ENTERPRISE plan not found — global-setup.ts should seed it " +
+          '(see apps/backend/test/setup/global-setup.ts:171-173). ' +
+          'Did a sibling suite TRUNCATE the Plan table?',
+      );
+    }
+    couponsEnabledPlanId = plan.id;
   });
 
   afterAll(async () => {
     if (h) await h.close();
   });
+
+  /**
+   * Attach an ACTIVE ENTERPRISE subscription to the given org so feature-gated
+   * handlers (e.g. ApplyCouponHandler) can reach the tenant-isolation logic
+   * under test. Mirrors the shape used by global-setup.ts:186-196.
+   */
+  const seedActiveSubscription = (orgId: string) =>
+    h.runAs({ organizationId: orgId }, () =>
+      h.prisma.subscription.create({
+        data: {
+          organizationId: orgId,
+          planId: couponsEnabledPlanId,
+          status: 'ACTIVE',
+          billingCycle: 'MONTHLY',
+          currentPeriodStart: new Date(),
+          // 365d to insulate the suite from any expire-trials / scheduled-cancellation
+          // cron interaction during long CI runs. The handler only checks status === ACTIVE.
+          currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        },
+        select: { id: true },
+      }),
+    );
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. Same coupon code in two orgs — both inserts succeed, each org sees
@@ -93,6 +134,12 @@ describe('SaaS-02e — coupon isolation', () => {
     const ts = Date.now();
     const a = await h.createOrg(`cpn-redeem-a-${ts}`, 'منظمة استرداد أ');
     const b = await h.createOrg(`cpn-redeem-b-${ts}`, 'منظمة استرداد ب');
+    // ApplyCouponHandler runs the COUPONS feature-gate before the coupon lookup.
+    // Without an active subscription it would throw BadRequestException("Coupons
+    // are not available on your current plan") and mask the NotFoundException
+    // this test is asserting on.
+    await seedActiveSubscription(a.id);
+    await seedActiveSubscription(b.id);
     const codeA = `ONLY-IN-A-${ts}`;
 
     // Create coupon ONLY in Org A

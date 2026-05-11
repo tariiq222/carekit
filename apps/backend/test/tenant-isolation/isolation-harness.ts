@@ -89,6 +89,21 @@ export async function bootHarness(): Promise<IsolationHarness> {
   const ctx = app.get(TenantContextService);
 
   const createOrg = async (slug: string, nameAr: string) => {
+    // Organization.slug is VARCHAR(30) with CHECK ^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$
+    // (migration 20260510120000_organization_slug_subdomain_safe). Fail loudly here
+    // so the test author fixes the call site instead of getting a cryptic Prisma error.
+    if (slug.length > 30) {
+      throw new Error(
+        `createOrg slug too long (${slug.length}>30): ${slug}. ` +
+          `Tighten the prefix — Date.now() adds 13 chars, leaving 17 for the prefix.`,
+      );
+    }
+    if (!/^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$/.test(slug)) {
+      throw new Error(
+        `createOrg slug fails subdomain CHECK constraint: ${slug}. ` +
+          `Must match ^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$`,
+      );
+    }
     const row = await prisma.organization.upsert({
       where: { slug },
       update: {},

@@ -38,7 +38,7 @@ describe('Bug B8 — Downgrade pre-check e2e (employees over BASIC cap)', () => 
     downgrade = h.app.get(DowngradePlanHandler);
     cacheService = h.app.get(SubscriptionCacheService);
 
-    org = await h.createOrg(`downgrade-precheck-${ts}`, 'منظمة اختبار التخفيض');
+    org = await h.createOrg(`dg-precheck-${ts}`, 'منظمة اختبار التخفيض');
 
     const limitsPro = {
       recurring_bookings: true,

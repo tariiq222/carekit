@@ -95,8 +95,8 @@ describe('SaaS-02c — singleton conversion isolation (BrandingConfig + Organiza
   // ──────────────────────────────────────────────────────────────────────────
 
   it('organization settings created in org A are invisible from org B', async () => {
-    const a = await h.createOrg(`sg-settings-vis-a-${Date.now()}`, 'منظمة إعدادات رؤية أ');
-    const b = await h.createOrg(`sg-settings-vis-b-${Date.now()}`, 'منظمة إعدادات رؤية ب');
+    const a = await h.createOrg(`sg-set-vis-a-${Date.now()}`, 'منظمة إعدادات رؤية أ');
+    const b = await h.createOrg(`sg-set-vis-b-${Date.now()}`, 'منظمة إعدادات رؤية ب');
 
     const rowA = await h.runAs({ organizationId: a.id }, () =>
       h.prisma.organizationSettings.create({

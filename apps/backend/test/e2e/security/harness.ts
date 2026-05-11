@@ -56,8 +56,10 @@ export async function bootSecurityHarness(): Promise<SecurityHarness> {
 
   const seedTwoOrgs = async (suiteTag: string) => {
     const stamp = Date.now();
-    const orgA = await base.createOrg(`sec-${suiteTag}-a-${stamp}`, `منظمة أمن أ ${suiteTag}`);
-    const orgB = await base.createOrg(`sec-${suiteTag}-b-${stamp}`, `منظمة أمن ب ${suiteTag}`);
+    // Organization.slug is VARCHAR(30); stamp = 13 chars, "sec--a-" = 7 chars, → tag ≤ 10.
+    const tag = suiteTag.slice(0, 10).replace(/-+$/, '');
+    const orgA = await base.createOrg(`sec-${tag}-a-${stamp}`, `منظمة أمن أ ${suiteTag}`);
+    const orgB = await base.createOrg(`sec-${tag}-b-${stamp}`, `منظمة أمن ب ${suiteTag}`);
     return { orgA, orgB };
   };
 
