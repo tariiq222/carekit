@@ -623,4 +623,222 @@ describe('TenantResolverMiddleware', () => {
       });
     });
   });
+
+  describe('TAR-48: client-session public routes (cookie-only on raw API domain)', () => {
+    const ORG_FROM_SUBDOMAIN = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    const ORG_HEADER = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('strict mode: cookie-only client session on raw API domain → defers to ClientSessionGuard (no throw, no context)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            {
+              user: undefined,
+              headers: { host: 'api.deqah.net' },
+              hostname: 'api.deqah.net',
+              cookies: { client_access_token: 'opaque.jwt.value' },
+              originalUrl: '/api/v1/public/me',
+              url: '/api/v1/public/me',
+              path: '/api/v1/public/me',
+            } as never,
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          );
+        });
+      });
+      expect(nextCalled).toBe(true);
+      // Tenant context is left for the guard to set from the JWT — middleware must not set it.
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('strict mode: Bearer client session on raw API domain → defers to ClientSessionGuard', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      let nextCalled = false;
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            {
+              user: undefined,
+              headers: { host: 'api.deqah.net', authorization: 'Bearer opaque.jwt.value' },
+              hostname: 'api.deqah.net',
+              originalUrl: '/api/v1/public/invoices/abc',
+              url: '/api/v1/public/invoices/abc',
+              path: '/api/v1/public/invoices/abc',
+            } as never,
+            {} as never,
+            () => {
+              nextCalled = true;
+              done();
+            },
+          );
+        });
+      });
+      expect(nextCalled).toBe(true);
+      expect(ctx.get()).toBeUndefined();
+    });
+
+    it('strict mode: subdomain request still wins over client-session token (subdomain binding preserved)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, ORG_FROM_SUBDOMAIN);
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            {
+              user: undefined,
+              headers: { host: 'clinic-a.deqah.net' },
+              hostname: 'clinic-a.deqah.net',
+              cookies: { client_access_token: 'opaque.jwt.value' },
+              originalUrl: '/api/v1/public/me',
+              url: '/api/v1/public/me',
+              path: '/api/v1/public/me',
+            } as never,
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(ORG_FROM_SUBDOMAIN);
+              done();
+            },
+          );
+        });
+      });
+    });
+
+    it('strict mode: forged X-Org-Id mismatching subdomain still throws even with client-session token (security)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, ORG_FROM_SUBDOMAIN);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                {
+                  user: undefined,
+                  headers: {
+                    host: 'clinic-a.deqah.net',
+                    'x-org-id': ORG_HEADER,
+                    authorization: 'Bearer opaque.jwt.value',
+                  },
+                  hostname: 'clinic-a.deqah.net',
+                  originalUrl: '/api/v1/public/me',
+                  url: '/api/v1/public/me',
+                  path: '/api/v1/public/me',
+                } as never,
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow('X-Org-Id does not match the resolved subdomain organization');
+    });
+
+    it('strict mode: explicit X-Org-Id on raw API domain still wins over client-session token deferral', async () => {
+      // X-Org-Id present → resolves directly; we don't need to defer to the guard.
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      await new Promise<void>((done) => {
+        cls.run(async () => {
+          await mw.use(
+            {
+              user: undefined,
+              headers: { host: 'api.deqah.net', 'x-org-id': ORG_HEADER },
+              hostname: 'api.deqah.net',
+              cookies: { client_access_token: 'opaque.jwt.value' },
+              originalUrl: '/api/v1/public/me',
+              url: '/api/v1/public/me',
+              path: '/api/v1/public/me',
+            } as never,
+            {} as never,
+            () => {
+              expect(ctx.getOrganizationId()).toBe(ORG_HEADER);
+              done();
+            },
+          );
+        });
+      });
+    });
+
+    it('strict mode: unauthenticated public route with NO token still rejects (acceptance criterion preserved)', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                {
+                  user: undefined,
+                  headers: { host: 'api.deqah.net' },
+                  hostname: 'api.deqah.net',
+                  originalUrl: '/api/v1/public/me',
+                  url: '/api/v1/public/me',
+                  path: '/api/v1/public/me',
+                } as never,
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: empty cookie value is not treated as a client-session token', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                {
+                  user: undefined,
+                  headers: { host: 'api.deqah.net' },
+                  hostname: 'api.deqah.net',
+                  cookies: { client_access_token: '' },
+                  originalUrl: '/api/v1/public/me',
+                  url: '/api/v1/public/me',
+                  path: '/api/v1/public/me',
+                } as never,
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
+    });
+
+    it('strict mode: non-Bearer Authorization header is not treated as a client-session token', async () => {
+      const mw = await build({ TENANT_ENFORCEMENT: 'strict' }, null);
+      await expect(
+        new Promise<void>((resolve, reject) => {
+          cls.run(async () => {
+            try {
+              await mw.use(
+                {
+                  user: undefined,
+                  headers: { host: 'api.deqah.net', authorization: 'Basic dXNlcjpwYXNz' },
+                  hostname: 'api.deqah.net',
+                  originalUrl: '/api/v1/public/me',
+                  url: '/api/v1/public/me',
+                  path: '/api/v1/public/me',
+                } as never,
+                {} as never,
+                () => resolve(),
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+      ).rejects.toThrow(TenantResolutionError);
+    });
+  });
+
 });

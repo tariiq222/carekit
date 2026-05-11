@@ -83,6 +83,40 @@ export class TenantResolverMiddleware implements NestMiddleware {
     );
   }
 
+  /**
+   * TAR-48: Detect a client-session credential on the request.
+   *
+   * Public routes that are protected by `ClientSessionGuard` carry their
+   * tenant identity inside the client JWT (`organizationId` claim). The
+   * guard runs AFTER this middleware and sets the tenant context itself
+   * via `ClientJwtStrategy.validate()` / `ClientSessionGuard.handleRequest`.
+   *
+   * In strict mode, the middleware would otherwise reject these requests
+   * before the guard has a chance to read the JWT — breaking cookie-only
+   * client sessions on the raw API domain (no subdomain, no X-Org-Id).
+   *
+   * If a client-session token is present we defer tenant resolution to the
+   * guard. The guard rejects invalid/expired tokens with 401, and the JWT
+   * strategy sets the tenant context from the validated `organizationId`
+   * claim (cross-checked against the Client row in DB).
+   *
+   * We deliberately do NOT decode/verify the JWT here — that is the guard's
+   * job. We only check for token presence to choose the resolution strategy.
+   */
+  private hasClientSessionToken(req: AuthenticatedRequest): boolean {
+    const cookieToken = (req as Request & { cookies?: Record<string, string> })
+      .cookies?.client_access_token;
+    if (typeof cookieToken === 'string' && cookieToken.length > 0) {
+      return true;
+    }
+    const authHeader = req.headers.authorization;
+    if (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
+      return true;
+    }
+    return false;
+  }
+
+
   async use(req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> {
     const mode = this.config.get<TenantEnforcementMode>('TENANT_ENFORCEMENT', 'strict');
 
@@ -157,6 +191,28 @@ export class TenantResolverMiddleware implements NestMiddleware {
       !req.user && isPublicRoute && !fromSubdomain
         ? parseUuidHeader(req.headers['x-org-id'])
         : undefined;
+
+    // TAR-48: Client-session public routes (e.g. /public/me, /public/invoices,
+    // /public/refunds, /public/auth/refresh, /public/auth/logout, /public/bookings)
+    // carry tenant identity in the client JWT itself. When the request reaches
+    // the raw API domain with only a session cookie (no subdomain, no header),
+    // defer tenant resolution to ClientSessionGuard rather than rejecting the
+    // request here. The guard runs after this middleware, validates the JWT,
+    // and sets tenant context from the verified `organizationId` claim.
+    //
+    // Truly unauthenticated public routes (no token at all) still fall through
+    // to the strict-mode rejection below — the acceptance criterion that
+    // "unauthenticated public routes still require subdomain or X-Org-Id" is
+    // preserved.
+    if (
+      !req.user &&
+      isPublicRoute &&
+      !fromSubdomain &&
+      fromPublicHeader === undefined &&
+      this.hasClientSessionToken(req)
+    ) {
+      return next();
+    }
 
     const fromDefault =
       mode === 'permissive'

@@ -12,6 +12,8 @@ export interface BookingCancelledPayload {
   zoomMeetingId?: string | null;
   refundType: BookingRefundType;
   paymentId: string | null;
+  refundRequestId?: string | null;
+  idempotencyKey?: string | null;
 }
 
 /**

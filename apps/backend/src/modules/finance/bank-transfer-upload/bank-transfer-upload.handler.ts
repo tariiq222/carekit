@@ -54,7 +54,9 @@ export class BankTransferUploadHandler {
       throw new ForbiddenException('Invoice does not belong to this client');
     }
 
-    if (cmd.amount !== Number(invoice.total)) {
+    const invoiceTotal = Number(invoice.total);
+    const tolerance = 0.01;
+    if (Math.abs(cmd.amount - invoiceTotal) > tolerance) {
       throw new BadRequestException(
         `Transfer amount ${cmd.amount} does not match invoice total ${invoice.total}`,
       );

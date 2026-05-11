@@ -7,6 +7,7 @@ import { EventBusService } from '../../../infrastructure/events';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { ClientCancelBookingDto } from './client-cancel-booking.dto';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
+import { RefundPaymentHandler } from '../../finance/refund-payment/refund-payment.handler';
 
 export type ClientCancelCommand = ClientCancelBookingDto & {
   bookingId: string;
@@ -21,6 +22,7 @@ export class ClientCancelBookingHandler {
     private readonly tenant: TenantContextService,
     private readonly settingsHandler: GetBookingSettingsHandler,
     private readonly eventBus: EventBusService,
+    private readonly refundHandler: RefundPaymentHandler,
   ) {}
 
   async execute(cmd: ClientCancelCommand) {
@@ -76,8 +78,10 @@ export class ClientCancelBookingHandler {
       ? settings.freeCancelRefundType
       : RefundType.NONE;
 
-    const [updated] = await this.rlsTx.withTransaction((tx) => Promise.all([
-      tx.booking.update({
+    let refundRequestId: string | null = null;
+
+    const updated = await this.rlsTx.withTransaction(async (tx) => {
+      const cancelled = await tx.booking.update({
         where: { id: cmd.bookingId },
         data: {
           status: BookingStatus.CANCELLED,
@@ -85,8 +89,8 @@ export class ClientCancelBookingHandler {
           cancelNotes: cmd.reason ?? null,
           cancelledAt: new Date(),
         },
-      }),
-      tx.bookingStatusLog.create({
+      });
+      await tx.bookingStatusLog.create({
         data: {
           organizationId,
           bookingId: cmd.bookingId,
@@ -95,12 +99,21 @@ export class ClientCancelBookingHandler {
           changedBy: cmd.clientId,
           reason: cmd.reason ?? 'CLIENT_CANCEL',
         },
-      }),
-    ]));
-
-    const completedPayment = await this.prisma.payment.findFirst({
-      where: { invoice: { bookingId: booking.id }, status: 'COMPLETED' },
-      select: { id: true },
+      });
+      if (refundType !== RefundType.NONE) {
+        const completedPayment = await tx.payment.findFirst({
+          where: { invoice: { bookingId: cmd.bookingId }, status: 'COMPLETED' },
+          select: { id: true },
+        });
+        if (completedPayment) {
+          const created = await this.refundHandler.createRefundRequestInTx(
+            tx,
+            { paymentId: completedPayment.id, reason: `Booking ${cmd.bookingId} cancellation (${refundType})`, performedBy: cmd.clientId },
+          );
+          refundRequestId = created.refundRequestId;
+        }
+      }
+      return cancelled;
     });
 
     const event = new BookingCancelledEvent({
@@ -110,7 +123,8 @@ export class ClientCancelBookingHandler {
       reason: 'CLIENT_REQUESTED' as never,
       cancelNotes: cmd.reason ?? undefined,
       refundType,
-      paymentId: completedPayment?.id ?? null,
+      paymentId: null,
+      refundRequestId,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 

@@ -9,6 +9,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../../common/swagger';
 import { ClientResponseDto } from '../../dashboard/dto/people-response.dto';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
+import { CaslGuard, CheckPermissions } from '../../../common/guards/casl.guard';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../infrastructure/database';
 
@@ -27,11 +28,12 @@ export class EmployeeClientListQuery {
 @ApiBearerAuth()
 @ApiStandardResponses()
 @ApiExtraModels(ClientResponseDto)
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, CaslGuard)
 @Controller('mobile/employee/clients')
 export class MobileEmployeeClientsController {
   constructor(private readonly prisma: PrismaService) {}
 
+  @CheckPermissions({ action: 'read', subject: 'Client' })
   @Get()
   @ApiOperation({ summary: "List the authenticated employee's clients" })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
@@ -96,6 +98,7 @@ export class MobileEmployeeClientsController {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
+  @CheckPermissions({ action: 'read', subject: 'Client' })
   @Get(':clientId/history')
   @ApiOperation({ summary: "Get booking history for a client with the authenticated employee" })
   @ApiParam({ name: 'clientId', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })

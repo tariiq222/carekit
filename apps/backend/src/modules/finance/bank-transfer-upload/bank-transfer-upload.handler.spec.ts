@@ -182,6 +182,22 @@ describe('BankTransferUploadHandler', () => {
       expect(prisma.payment.create).not.toHaveBeenCalled();
     });
 
+    it('accepts transfer amount within tolerance of invoice total (e.g. partial payment rounding)', async () => {
+      const prisma = buildPrisma();
+      const storage = buildStorage();
+      const handler = new BankTransferUploadHandler(prisma as never, buildTenant() as never, storage as never);
+
+      await expect(
+        handler.execute({
+          ...baseCmd,
+          amount: 229.99,
+          fileBuffer: JPEG_BUFFER,
+          mimetype: 'image/jpeg',
+          filename: 'receipt.jpg',
+        }),
+      ).resolves.toHaveProperty('id', 'pay-1');
+    });
+
     it('throws BadRequestException when transfer amount does not match invoice total', async () => {
       const prisma = buildPrisma();
       const handler = new BankTransferUploadHandler(prisma as never, buildTenant() as never, buildStorage() as never);
