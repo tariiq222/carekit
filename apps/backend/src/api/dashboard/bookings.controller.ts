@@ -7,6 +7,7 @@ import {
   ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse, ApiParam, ApiResponse,
 } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
+import { CheckPermissions } from '../../common/guards/casl.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { UserId } from '../../common/auth/user-id.decorator';
 import { CurrentUser, type JwtUser } from '../../common/auth/current-user.decorator';
@@ -70,6 +71,7 @@ export class DashboardBookingsController {
   ) {}
 
   @Post()
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
   @ApiOperation({ summary: 'Create a booking' })
@@ -98,6 +100,7 @@ export class DashboardBookingsController {
   }
 
   @Post('recurring')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @RequireFeature(FeatureKey.RECURRING_BOOKINGS)
   @EnforceLimit('BOOKINGS_PER_MONTH')
   @TrackUsage('BOOKINGS_PER_MONTH')
@@ -131,6 +134,7 @@ export class DashboardBookingsController {
   }
 
   @Get()
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @ApiOperation({ summary: 'List bookings' })
   @ApiOkResponse({
     description: 'Paginated list of bookings',
@@ -158,6 +162,7 @@ export class DashboardBookingsController {
   }
 
   @Get('stats')
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @ApiOperation({ summary: 'Today\'s booking counters + revenue for the dashboard StatsGrid' })
   @ApiOkResponse({
     description: 'Today/pending counts and today revenue',
@@ -176,6 +181,7 @@ export class DashboardBookingsController {
   }
 
   @Get('availability')
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @ApiOperation({ summary: 'Check employee availability for a date' })
   @ApiOkResponse({
     description: 'Available time slots',
@@ -199,6 +205,7 @@ export class DashboardBookingsController {
   }
 
   @Get(':id/status-log')
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @ApiOperation({ summary: 'Get the status transition log for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({
@@ -222,6 +229,7 @@ export class DashboardBookingsController {
   }
 
   @Post('waitlist')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'Add a client to the waitlist' })
   @ApiCreatedResponse({
@@ -246,6 +254,7 @@ export class DashboardBookingsController {
   }
 
   @Get('waitlist')
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @RequireFeature(FeatureKey.WAITLIST)
   @ApiOperation({ summary: 'List waitlist entries' })
   @ApiOkResponse({
@@ -269,6 +278,7 @@ export class DashboardBookingsController {
   }
 
   @Delete('waitlist/:id')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @RequireFeature(FeatureKey.WAITLIST)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a waitlist entry' })
@@ -282,6 +292,7 @@ export class DashboardBookingsController {
   }
 
   @Get(':id')
+  @CheckPermissions({ action: 'read', subject: 'Booking' })
   @ApiOperation({ summary: 'Get a booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({
@@ -306,6 +317,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/cancel')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @ApiOperation({ summary: 'Cancel a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({
@@ -334,6 +346,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/reschedule')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @ApiOperation({ summary: 'Reschedule a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Booking rescheduled', schema: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, scheduledAt: { type: 'string', format: 'date-time' }, status: { type: 'string' } } } })
@@ -352,6 +365,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/confirm')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Confirm a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
@@ -365,6 +379,7 @@ export class DashboardBookingsController {
   }
 
   @Post(':id/zoom/retry')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @RequireFeature(FeatureKey.ZOOM_INTEGRATION)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Retry creating Zoom meeting for a booking' })
@@ -389,6 +404,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/check-in')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Check in a client for a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
@@ -402,6 +418,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/complete')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a booking as complete' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
@@ -420,6 +437,7 @@ export class DashboardBookingsController {
   }
 
   @Patch(':id/no-show')
+  @CheckPermissions({ action: 'manage', subject: 'Booking' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a booking as no-show' })
   @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })

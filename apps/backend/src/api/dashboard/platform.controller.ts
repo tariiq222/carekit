@@ -8,7 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
-import { CaslGuard } from '../../common/guards/casl.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { CreateProblemReportHandler } from '../../modules/platform/problem-reports/create-problem-report.handler';
 import { CreateProblemReportDto } from '../../modules/platform/problem-reports/create-problem-report.dto';
 import { ListProblemReportsHandler } from '../../modules/platform/problem-reports/list-problem-reports.handler';
@@ -36,6 +36,7 @@ export class DashboardPlatformController {
 
   @Post('problem-reports')
   @HttpCode(HttpStatus.CREATED)
+  @CheckPermissions({ action: 'manage', subject: 'Report' })
   @ApiOperation({ summary: 'Submit a problem report' })
   @ApiCreatedResponse({ description: 'Problem report created successfully' })
   createProblemReportEndpoint(@Body() body: CreateProblemReportDto) {
@@ -43,6 +44,7 @@ export class DashboardPlatformController {
   }
 
   @Get('problem-reports')
+  @CheckPermissions({ action: 'read', subject: 'Report' })
   @ApiOperation({ summary: 'List problem reports with optional status filter' })
   @ApiOkResponse({ description: 'Paginated list of problem reports' })
   listProblemReportsEndpoint(@Query() query: ListProblemReportsDto) {
@@ -50,6 +52,7 @@ export class DashboardPlatformController {
   }
 
   @Patch('problem-reports/:id/status')
+  @CheckPermissions({ action: 'manage', subject: 'Report' })
   @ApiOperation({ summary: 'Update the status of a problem report' })
   @ApiParam({ name: 'id', description: 'Problem report UUID', format: 'uuid' })
   @ApiOkResponse({ description: 'Problem report status updated' })
@@ -65,6 +68,7 @@ export class DashboardPlatformController {
 
   @Post('integrations')
   @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'manage', subject: 'Setting' })
   @ApiOperation({ summary: 'Create or update a third-party integration' })
   @ApiOkResponse({ description: 'Integration upserted successfully' })
   upsertIntegrationEndpoint(@Body() body: UpsertIntegrationDto) {
@@ -72,6 +76,7 @@ export class DashboardPlatformController {
   }
 
   @Get('integrations')
+  @CheckPermissions({ action: 'read', subject: 'Setting' })
   @ApiOperation({ summary: 'List all configured integrations' })
   @ApiOkResponse({ description: 'Array of integration records' })
   listIntegrationsEndpoint() {
@@ -79,4 +84,3 @@ export class DashboardPlatformController {
   }
 
 }
-

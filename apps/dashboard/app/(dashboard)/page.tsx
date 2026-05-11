@@ -73,7 +73,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-12">
       <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-muted" />}>
         <section className="flex flex-col gap-6">
-          <GreetingHeader userName={userName} dateLabel={dateLabel} bookingsCount={0} />
+          <GreetingHeader userName={userName} dateLabel={dateLabel} bookingsCount={dashboardStats?.todayBookings ?? 0} />
           <DashboardStats stats={dashboardStats} visibleStats={visible.stats} />
           <AttentionAlerts
             pendingPayments={dashboardStats?.pendingPayments ?? 0}

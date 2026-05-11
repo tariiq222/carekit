@@ -10,7 +10,7 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../../common/guards/jwt.guard';
-import { CaslGuard } from '../../common/guards/casl.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { CreateInvoiceHandler } from '../../modules/finance/create-invoice/create-invoice.handler';
 import { CreateInvoiceDto } from '../../modules/finance/create-invoice/create-invoice.dto';
@@ -72,6 +72,7 @@ export class DashboardFinanceController {
   // ── Invoices ──────────────────────────────────────────────────────────────
 
   @Post('invoices')
+  @CheckPermissions({ action: 'manage', subject: 'Invoice' })
   @ApiOperation({ summary: 'Create an invoice' })
   @ApiCreatedResponse({ description: 'Invoice created' })
   createInv(@Body() body: CreateInvoiceDto) {
@@ -82,6 +83,7 @@ export class DashboardFinanceController {
   }
 
   @Get('invoices/:id')
+  @CheckPermissions({ action: 'read', subject: 'Invoice' })
   @ApiOperation({ summary: 'Get an invoice by id' })
   @ApiParam({ name: 'id', description: 'Invoice UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Invoice found' })
@@ -93,6 +95,7 @@ export class DashboardFinanceController {
   // ── Payments ──────────────────────────────────────────────────────────────
 
   @Get('payments/stats')
+  @CheckPermissions({ action: 'read', subject: 'Payment' })
   @ApiOperation({ summary: 'Get payment statistics summary' })
   @ApiOkResponse({ description: 'Payment statistics' })
   getPaymentStatsEndpoint() {
@@ -100,6 +103,7 @@ export class DashboardFinanceController {
   }
 
   @Post('payments')
+  @CheckPermissions({ action: 'manage', subject: 'Payment' })
   @ApiOperation({ summary: 'Process a payment for an invoice' })
   @ApiCreatedResponse({ description: 'Payment processed' })
   processPaymentEndpoint(@Body() body: ProcessPaymentDto) {
@@ -107,6 +111,7 @@ export class DashboardFinanceController {
   }
 
   @Post('payments/bank-transfer')
+  @CheckPermissions({ action: 'manage', subject: 'Payment' })
   @RequireFeature(FeatureKey.BANK_TRANSFER_PAYMENTS)
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('receipt'))
@@ -140,6 +145,7 @@ export class DashboardFinanceController {
   }
 
   @Get('payments')
+  @CheckPermissions({ action: 'read', subject: 'Payment' })
   @ApiOperation({ summary: 'List payments with optional filters' })
   @ApiOkResponse({ description: 'Paginated payment list' })
   listPaymentsEndpoint(@Query() query: ListPaymentsDto) {
@@ -156,6 +162,7 @@ export class DashboardFinanceController {
   }
 
   @Patch('payments/:id/refund')
+  @CheckPermissions({ action: 'manage', subject: 'Payment' })
   @ApiOperation({ summary: 'Refund a payment' })
   @ApiParam({ name: 'id', description: 'Payment UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Payment refunded' })
@@ -168,6 +175,7 @@ export class DashboardFinanceController {
   }
 
   @Patch('payments/:id/verify')
+  @CheckPermissions({ action: 'manage', subject: 'Payment' })
   @ApiOperation({ summary: 'Approve or reject a pending bank transfer payment' })
   @ApiParam({ name: 'id', description: 'Payment UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({ description: 'Payment verification result' })
@@ -182,6 +190,7 @@ export class DashboardFinanceController {
   // ── Coupons apply (existing) ───────────────────────────────────────────────
 
   @Post('coupons/apply')
+  @CheckPermissions({ action: 'manage', subject: 'Coupon' })
   @HttpCode(HttpStatus.OK)
   @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Apply a coupon code to an invoice' })
@@ -193,6 +202,7 @@ export class DashboardFinanceController {
   // ── Coupons CRUD ──────────────────────────────────────────────────────────
 
   @Get('coupons')
+  @CheckPermissions({ action: 'read', subject: 'Coupon' })
   @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'List coupons' })
   @ApiOkResponse({ description: 'Paginated coupon list' })
@@ -201,6 +211,7 @@ export class DashboardFinanceController {
   }
 
   @Get('coupons/:id')
+  @CheckPermissions({ action: 'read', subject: 'Coupon' })
   @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Get a coupon by id' })
   @ApiParam({ name: 'id', description: 'Coupon UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -211,6 +222,7 @@ export class DashboardFinanceController {
   }
 
   @Post('coupons')
+  @CheckPermissions({ action: 'manage', subject: 'Coupon' })
   @RequireFeature(FeatureKey.COUPONS)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a coupon' })
@@ -220,6 +232,7 @@ export class DashboardFinanceController {
   }
 
   @Patch('coupons/:id')
+  @CheckPermissions({ action: 'manage', subject: 'Coupon' })
   @RequireFeature(FeatureKey.COUPONS)
   @ApiOperation({ summary: 'Update a coupon' })
   @ApiParam({ name: 'id', description: 'Coupon UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -233,6 +246,7 @@ export class DashboardFinanceController {
   }
 
   @Delete('coupons/:id')
+  @CheckPermissions({ action: 'manage', subject: 'Coupon' })
   @RequireFeature(FeatureKey.COUPONS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a coupon' })
@@ -246,6 +260,7 @@ export class DashboardFinanceController {
   // ── Per-tenant Moyasar credentials ────────────────────────────────────────
 
   @Get('moyasar/config')
+  @CheckPermissions({ action: 'read', subject: 'Setting' })
   @ApiOperation({ summary: 'Get the per-tenant Moyasar configuration (secret key masked)' })
   @ApiOkResponse({ description: 'Moyasar configuration or null if unconfigured' })
   getMoyasarConfigEndpoint() {
@@ -253,6 +268,7 @@ export class DashboardFinanceController {
   }
 
   @Patch('moyasar/config')
+  @CheckPermissions({ action: 'manage', subject: 'Setting' })
   @ApiOperation({ summary: 'Create or update the per-tenant Moyasar configuration' })
   @ApiOkResponse({ description: 'Moyasar configuration saved (secrets encrypted at rest)' })
   upsertMoyasarConfigEndpoint(@Body() body: UpsertMoyasarConfigDto) {
@@ -260,6 +276,7 @@ export class DashboardFinanceController {
   }
 
   @Post('moyasar/config/test')
+  @CheckPermissions({ action: 'manage', subject: 'Setting' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Probe Moyasar with the stored credentials and persist verification status' })
   @ApiOkResponse({ description: 'Connectivity test result' })

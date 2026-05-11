@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
+import { startOfMonthInTz } from '../../../common/helpers/date-tz.helper';
 
 export interface TopPerformersCommand {
   period: 'month';
@@ -24,11 +25,7 @@ export class GetTopPerformersHandler {
 
   async execute(_cmd: TopPerformersCommand): Promise<TopPerformer[]> {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
-    const start = new Date();
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 1);
+    const { start, end } = startOfMonthInTz();
 
     const rows = await this.prisma.$queryRaw<
       Array<{

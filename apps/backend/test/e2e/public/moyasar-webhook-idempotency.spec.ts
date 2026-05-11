@@ -109,11 +109,15 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
       },
       get: (key: string) => clsStore[key],
     };
+    const rlsTx = {
+      withTransaction: async (fn: (tx: typeof testPrisma) => Promise<unknown>) => fn(testPrisma),
+    };
     handler = new MoyasarWebhookHandler(
       testPrisma as never,
       buildEventBus() as never,
       cls as never,
       creds as never,
+      rlsTx as never,
     );
   });
 

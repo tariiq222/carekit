@@ -297,4 +297,9 @@ export const arMisc: Record<string, string> = {
   "login.error.network.description": "لم نتمكّن من الوصول للخادم. تحقق من اتصالك بالإنترنت وحاول مجدداً.",
   "login.error.forgotPasswordLink": "نسيت كلمة المرور؟",
   "common.back": "رجوع",
+
+  // — Error page —
+  "error.somethingWrong": "حدث خطأ",
+  "error.unexpected": "حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.",
+  "error.tryAgain": "إعادة المحاولة",
 }

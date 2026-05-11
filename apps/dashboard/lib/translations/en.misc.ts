@@ -297,4 +297,9 @@ export const enMisc: Record<string, string> = {
   "login.error.network.description": "We couldn't reach the server. Check your internet connection and try again.",
   "login.error.forgotPasswordLink": "Forgot password?",
   "common.back": "Back",
+
+  // — Error page —
+  "error.somethingWrong": "Something went wrong",
+  "error.unexpected": "An unexpected error occurred. Please try again.",
+  "error.tryAgain": "Try Again",
 }

@@ -22,17 +22,17 @@ type ZohoFixtures = {
 export const test = base.extend<ZohoFixtures>({
   backendUrl: [PWConfig.backendBaseUrl, { option: true }],
 
-  loginResult: async ({ request }, use) => {
+  loginResult: async ({ request }, runFixture) => {
     // Use admin@deqah-test.com (the seed user who owns the default org).
     const result = await loginViaApi(
       request,
       process.env.PW_OWNER_EMAIL ?? 'admin@deqah-test.com',
       process.env.PW_OWNER_PASSWORD ?? 'Admin@1234',
     );
-    await use(result);
+    await runFixture(result);
   },
 
-  apiCtx: async ({ playwright: pw, loginResult }, use) => {
+  apiCtx: async ({ playwright: pw, loginResult }, runFixture) => {
     // The default `request` context shares cookies with the browser context.
     // For API-only assertions we prefer using a separate context with the
     // Bearer header explicitly set.
@@ -43,11 +43,11 @@ export const test = base.extend<ZohoFixtures>({
         'Content-Type': 'application/json',
       },
     });
-    await use(ctx);
+    await runFixture(ctx);
     await ctx.dispose();
   },
 
-  authedPage: async ({ page, loginResult }, use) => {
+  authedPage: async ({ page, loginResult }, runFixture) => {
     // addInitScript runs on EVERY page load (including `about:blank`).
     // Set localStorage unconditionally so AuthGate picks up the token.
     // CR-9: refresh token is httpOnly cookie (ck_refresh); not stored in localStorage.
@@ -57,7 +57,7 @@ export const test = base.extend<ZohoFixtures>({
       },
       { access: loginResult.accessToken },
     );
-    await use(page);
+    await runFixture(page);
   },
 });
 

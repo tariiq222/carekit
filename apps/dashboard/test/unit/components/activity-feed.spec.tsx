@@ -2,43 +2,78 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/components/locale-provider", () => ({
-  useLocale: () => ({ t: (key: string) => key }),
+  useLocale: () => ({
+    t: (k: string) => {
+      const map: Record<string, string> = {
+        "dashboard.recentActivity": "آخر الأحداث",
+        "dashboard.activity.all": "عرض الكل",
+        "dashboard.noActivity": "لا يوجد نشاط",
+        "dashboard.timeAgo.now": "الآن",
+        "dashboard.timeAgo.minutes": "قبل {mins} دقيقة",
+        "dashboard.timeAgo.hours": "قبل {hours} ساعة",
+        "dashboard.timeAgo.days": "قبل {days} يوم",
+      }
+      return map[k] ?? k
+    },
+  }),
 }))
 
-import { ActivityFeed, type ActivityItem } from "@/components/features/activity-feed"
+vi.mock("next/link", () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
 
-const mockItems: ActivityItem[] = [
-  { id: "1", type: "booking", messageKey: "activity.booking", timeAgo: "5 دقائق", initials: "أح" },
-  { id: "2", type: "payment", messageKey: "activity.payment", timeAgo: "10 دقائق", initials: "مح" },
-  { id: "3", type: "cancellation", messageKey: "activity.cancel", timeAgo: "ساعة", initials: "سل" },
-]
+vi.mock("@deqah/ui", () => ({
+  Card: ({ children, className }: React.PropsWithChildren<{ className?: string }>) => (
+    <div className={className}>{children}</div>
+  ),
+}))
+
+import { ActivityFeed } from "@/components/features/dashboard/activity-feed"
+import type { Notification } from "@/lib/types/notification"
+
+const makeNotification = (overrides: Partial<Notification> = {}): Notification => ({
+  id: "1",
+  recipientId: "user-1",
+  recipientType: "EMPLOYEE",
+  type: "booking_confirmed",
+  title: "تم تأكيد الحجز",
+  body: "",
+  metadata: null,
+  isRead: false,
+  readAt: null,
+  createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+  updatedAt: new Date().toISOString(),
+  ...overrides,
+})
 
 describe("ActivityFeed", () => {
   it("renders title", () => {
-    render(<ActivityFeed items={mockItems} />)
-    expect(screen.getByText("dashboard.recentActivity")).toBeInTheDocument()
+    render(<ActivityFeed notifications={[]} />)
+    expect(screen.getByText("آخر الأحداث")).toBeInTheDocument()
   })
 
-  it("renders all items with initials and time", () => {
-    render(<ActivityFeed items={mockItems} />)
-    expect(screen.getByText("أح")).toBeInTheDocument()
-    expect(screen.getByText("مح")).toBeInTheDocument()
-    expect(screen.getByText("5 دقائق")).toBeInTheDocument()
+  it("renders empty state when no notifications", () => {
+    render(<ActivityFeed notifications={[]} />)
+    expect(screen.getByText("لا يوجد نشاط")).toBeInTheDocument()
   })
 
-  it("renders translated message keys", () => {
-    render(<ActivityFeed items={mockItems} />)
-    expect(screen.getByText("activity.booking")).toBeInTheDocument()
-    expect(screen.getByText("activity.payment")).toBeInTheDocument()
+  it("renders notification title", () => {
+    render(<ActivityFeed notifications={[makeNotification({ title: "حجز جديد" })]} />)
+    expect(screen.getByText("حجز جديد")).toBeInTheDocument()
   })
 
-  it("renders empty list", () => {
-    const { container } = render(<ActivityFeed items={[]} />)
-    expect(container.querySelectorAll("[class*='flex items-start']").length).toBe(0)
+  it("renders at most 5 notifications", () => {
+    const items = Array.from({ length: 8 }, (_, i) =>
+      makeNotification({ id: String(i), title: `إشعار ${i}` })
+    )
+    render(<ActivityFeed notifications={items} />)
+    expect(screen.getAllByText(/إشعار \d/).length).toBe(5)
   })
 
-  it("applies className", () => {
-    const { container } = render(<ActivityFeed items={[]} className="extra" />)
-    expect(container.querySelector(".extra")).toBeInTheDocument()
+  it("renders view all link", () => {
+    render(<ActivityFeed notifications={[]} />)
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/notifications")
   })
 })

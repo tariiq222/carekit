@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../../../../infrastructure/database';
+import { PrismaService, RlsTransactionService } from '../../../../../infrastructure/database';
 import { TenantContextService } from '../../../../../common/tenant/tenant-context.service';
 import { MoyasarApiClient } from '../../../moyasar-api/moyasar-api.client';
 import { InitGuestPaymentDto } from './init-guest-payment.dto';
@@ -15,6 +15,7 @@ export class InitGuestPaymentHandler {
     private readonly prisma: PrismaService,
     private readonly tenant: TenantContextService,
     private readonly moyasar: MoyasarApiClient,
+    private readonly rlsTx: RlsTransactionService,
   ) {}
 
   async execute(dto: InitGuestPaymentDto): Promise<InitGuestPaymentResult> {
@@ -59,38 +60,50 @@ export class InitGuestPaymentHandler {
 
     const amountHalalas = Math.round(Number(invoice.total) * 100);
 
-    const payment = await this.prisma.payment.create({
-      data: {
-        organizationId,
-        invoiceId: invoice.id,
-        amount: invoice.total,
+    const payment = await this.rlsTx.withTransaction(async (tx) => {
+      return tx.payment.create({
+        data: {
+          organizationId,
+          invoiceId: invoice.id,
+          amount: invoice.total,
+          currency: invoice.currency,
+          method: 'ONLINE_CARD',
+          status: 'PENDING',
+          idempotencyKey: `guest:${dto.bookingId}`,
+        },
+        select: { id: true },
+      });
+    }, { organizationId });
+
+    let moyasarPayment: Awaited<ReturnType<MoyasarApiClient['createPayment']>>;
+    try {
+      moyasarPayment = await this.moyasar.createPayment(organizationId, {
+        amountHalalas,
         currency: invoice.currency,
-        method: 'ONLINE_CARD',
-        status: 'PENDING',
-        idempotencyKey: `guest:${dto.bookingId}`,
-      },
-    });
+        description: `Booking payment - ${dto.bookingId}`,
+        callbackUrl: this.buildCallbackUrl(dto.bookingId),
+        metadata: {
+          invoiceId: invoice.id,
+          bookingId: dto.bookingId,
+        },
+        idempotencyKey: `payment:${organizationId}:${invoice.id}`,
+      });
+    } catch (moyasarError) {
+      await this.rlsTx.withTransaction(async (tx) => {
+        await tx.payment.delete({ where: { id: payment.id } });
+      }, { organizationId });
+      throw moyasarError;
+    }
 
-    const callbackUrl = this.buildCallbackUrl(dto.bookingId);
-
-    const moyasarPayment = await this.moyasar.createPayment(organizationId, {
-      amountHalalas,
-      currency: invoice.currency,
-      description: `Booking payment - ${dto.bookingId}`,
-      callbackUrl,
-      metadata: {
-        invoiceId: invoice.id,
-        bookingId: dto.bookingId,
-      },
-      idempotencyKey: `payment:${organizationId}:${invoice.id}`,
-    });
-
-    const updatedPayment = await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        gatewayRef: moyasarPayment.id,
-      },
-    });
+    const updatedPayment = await this.rlsTx.withTransaction(async (tx) => {
+      return tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          gatewayRef: moyasarPayment.id,
+        },
+        select: { id: true },
+      });
+    }, { organizationId });
 
     return {
       paymentId: updatedPayment.id,

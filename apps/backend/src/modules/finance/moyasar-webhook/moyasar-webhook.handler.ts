@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { ClsService } from 'nestjs-cls';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { MoyasarCredentialsService } from '../../../infrastructure/payments/moyasar-credentials.service';
 import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants';
@@ -43,6 +43,7 @@ export class MoyasarWebhookHandler {
     private readonly eventBus: EventBusService,
     private readonly cls: ClsService,
     private readonly creds: MoyasarCredentialsService,
+    private readonly rlsTx: RlsTransactionService,
   ) {}
 
   verifySignature(rawBody: string, signature: string, secret: string): void {
@@ -149,7 +150,7 @@ export class MoyasarWebhookHandler {
 
       // Wrap payment upsert + invoice update in a single transaction to ensure
       // atomicity — if either fails, both roll back and no inconsistent state is stored.
-      const paymentId = await this.prisma.$transaction(async (tx) => {
+      const paymentId = await this.rlsTx.withTransaction(async (tx) => {
         const payment = await tx.payment.upsert({
           where: { idempotencyKey: `moyasar:${payload.id}` },
           update: { status, processedAt: new Date(), failureReason: payload.message },
@@ -175,7 +176,7 @@ export class MoyasarWebhookHandler {
         }
 
         return payment.id;
-      });
+      }, { organizationId: invoice.organizationId });
 
       // Event emission is intentionally OUTSIDE the transaction:
       // - The payment and invoice are durably committed.

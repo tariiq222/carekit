@@ -7,7 +7,7 @@ import {
   ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiResponse,
 } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
-import { CaslGuard } from '../../common/guards/casl.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { RequireFeature } from '../../modules/platform/billing/feature.decorator';
 import { FeatureKey } from '@deqah/shared/constants/feature-keys';
 import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
@@ -96,6 +96,7 @@ export class DashboardIdentityController {
   // ── Users ────────────────────────────────────────────────────────────────
 
   @Get('users')
+  @CheckPermissions({ action: 'read', subject: 'User' })
   @ApiOperation({ summary: 'List users' })
   @ApiQuery({ name: 'search', required: false, description: 'Search by name or email', example: 'sara' })
   @ApiQuery({ name: 'isActive', required: false, description: 'Filter by active status', example: true })
@@ -123,6 +124,7 @@ export class DashboardIdentityController {
   }
 
   @Get('users/:id')
+  @CheckPermissions({ action: 'read', subject: 'User' })
   @ApiOperation({ summary: 'Get a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({
@@ -148,6 +150,7 @@ export class DashboardIdentityController {
   }
 
   @Post('users')
+  @CheckPermissions({ action: 'manage', subject: 'User' })
   @ApiOperation({ summary: 'Create a user' })
   @ApiCreatedResponse({
     description: 'User created',
@@ -168,6 +171,7 @@ export class DashboardIdentityController {
   }
 
   @Patch('users/:id')
+  @CheckPermissions({ action: 'read', subject: 'User' })
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiOkResponse({
@@ -193,6 +197,7 @@ export class DashboardIdentityController {
   }
 
   @Patch('users/:id/deactivate')
+  @CheckPermissions({ action: 'manage', subject: 'User' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deactivate a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -213,6 +218,7 @@ export class DashboardIdentityController {
   }
 
   @Delete('users/:id')
+  @CheckPermissions({ action: 'manage', subject: 'User' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a user' })
   @ApiParam({ name: 'id', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -223,6 +229,7 @@ export class DashboardIdentityController {
   }
 
   @Post('users/:userId/roles')
+  @CheckPermissions({ action: 'manage', subject: 'User' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Assign a role to a user' })
   @ApiParam({ name: 'userId', description: 'User UUID', example: '00000000-0000-0000-0000-000000000000' })
@@ -252,6 +259,7 @@ export class DashboardIdentityController {
   // ── Roles ────────────────────────────────────────────────────────────────
 
   @Get('roles')
+  @CheckPermissions({ action: 'read', subject: 'Role' })
   @ApiOperation({ summary: 'List custom roles' })
   @ApiOkResponse({
     description: 'List of custom roles',
@@ -272,6 +280,7 @@ export class DashboardIdentityController {
   }
 
   @Post('roles')
+  @CheckPermissions({ action: 'manage', subject: 'Role' })
   @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @ApiOperation({ summary: 'Create a custom role' })
   @ApiCreatedResponse({
@@ -291,6 +300,7 @@ export class DashboardIdentityController {
   }
 
   @Post('roles/:id/permissions')
+  @CheckPermissions({ action: 'manage', subject: 'Role' })
   @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Assign permissions to a role' })
@@ -305,6 +315,7 @@ export class DashboardIdentityController {
   }
 
   @Get('permissions')
+  @CheckPermissions({ action: 'read', subject: 'Role' })
   @ApiOperation({ summary: 'List available permissions' })
   @ApiOkResponse({
     description: 'All available CASL permissions',
@@ -324,6 +335,7 @@ export class DashboardIdentityController {
   }
 
   @Delete('roles/:id')
+  @CheckPermissions({ action: 'manage', subject: 'Role' })
   @RequireFeature(FeatureKey.CUSTOM_ROLES)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a custom role' })

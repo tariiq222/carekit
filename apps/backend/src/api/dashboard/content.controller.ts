@@ -7,6 +7,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { ApiStandardResponses } from '../../common/swagger';
 import { ListSiteSettingsHandler } from '../../modules/content/site-settings/list-site-settings.handler';
 import { BulkUpsertSiteSettingsHandler } from '../../modules/content/site-settings/bulk-upsert-site-settings.handler';
@@ -15,7 +16,7 @@ import { BulkUpsertSiteSettingsDto } from '../../modules/content/site-settings/b
 @ApiTags('Dashboard / Content')
 @ApiBearerAuth()
 @ApiStandardResponses()
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/content')
 export class DashboardContentController {
   constructor(
@@ -24,6 +25,7 @@ export class DashboardContentController {
   ) {}
 
   @Get('site-settings')
+  @CheckPermissions({ action: 'read', subject: 'Content' })
   @ApiOperation({ summary: 'List site settings (admin view)' })
   @ApiQuery({ name: 'prefix', required: false, description: 'Filter by key prefix' })
   @ApiOkResponse({
@@ -45,6 +47,7 @@ export class DashboardContentController {
   }
 
   @Post('site-settings')
+  @CheckPermissions({ action: 'manage', subject: 'Content' })
   @ApiOperation({ summary: 'Upsert one or more site settings in a single transaction' })
   @ApiOkResponse({
     description: 'Count of rows updated',

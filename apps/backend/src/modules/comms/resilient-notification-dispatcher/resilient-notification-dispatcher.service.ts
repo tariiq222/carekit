@@ -211,7 +211,7 @@ export class ResilientNotificationDispatcher {
         if (!tokens.length || !payload.pushTitle || !payload.pushBody) {
           throw new Error('Missing FCM tokens or push content');
         }
-        await Promise.allSettled(
+        const results = await Promise.allSettled(
           tokens.map((token) =>
             this.push.execute({
               token,
@@ -220,6 +220,13 @@ export class ResilientNotificationDispatcher {
             }),
           ),
         );
+        const failures = results.filter((r) => r.status === 'rejected');
+        if (failures.length > 0 && failures.length === results.length) {
+          const errors = failures.map((r) =>
+            r.status === 'rejected' ? String(r.reason?.message ?? r.reason) : '',
+          );
+          throw new Error(`All PUSH notifications failed: ${errors.join('; ')}`);
+        }
         break;
       }
       default: {

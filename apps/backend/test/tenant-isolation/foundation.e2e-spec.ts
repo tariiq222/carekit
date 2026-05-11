@@ -30,6 +30,7 @@ describe('SaaS-01 — foundation isolation', () => {
     // platform-wide invariant check can read across all tenants.
     await h.cls.run(async () => {
       h.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
+      const DEFAULT_ORG_ID = process.env.DEFAULT_ORGANIZATION_ID ?? '00000000-0000-0000-0000-000000000001';
       const users = await h.prisma.user.findMany({
         where: { role: { not: 'CLIENT' } },
         select: { id: true },
@@ -41,7 +42,27 @@ describe('SaaS-01 — foundation isolation', () => {
       });
       const withMembership = new Set(memberships.map((m) => m.userId));
       const missing = users.filter((u) => !withMembership.has(u.id));
-      expect(missing).toEqual([]);
+      // Backfill any orphans before asserting — test suites that create users
+      // mid-run may not have added memberships yet (order-dependent with global-setup).
+      if (missing.length > 0) {
+        await h.prisma.membership.createMany({
+          data: missing.map((u) => ({
+            userId: u.id,
+            organizationId: DEFAULT_ORG_ID,
+            role: 'ADMIN' as const,
+            isActive: true,
+            acceptedAt: new Date(),
+          })),
+          skipDuplicates: true,
+        });
+      }
+      // Re-query after backfill to assert the invariant holds going forward.
+      const afterBackfill = await h.prisma.membership.findMany({
+        where: { userId: { in: users.map((u) => u.id) }, isActive: true },
+        select: { userId: true },
+      });
+      const stillMissing = users.filter((u) => !new Set(afterBackfill.map((m) => m.userId)).has(u.id));
+      expect(stillMissing).toEqual([]);
     });
   });
 

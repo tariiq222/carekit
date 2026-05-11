@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, RefundStatus } from '@prisma/client';
 import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { RefundCompletedEvent } from '../events/refund-completed.event';
@@ -81,17 +81,23 @@ export class RefundPaymentHandler {
           invoice,
         };
 
-        await tx.payment.update({
-          where: { id: cmd.paymentId },
-          data: { status: 'REFUNDING' },
+        const existingInFlightRefund = await tx.refundRequest.findFirst({
+          where: {
+            paymentId: cmd.paymentId,
+            status: RefundStatus.PROCESSING,
+          },
+          select: { id: true },
         });
+        if (existingInFlightRefund) {
+          throw new BadRequestException('Payment refund is already processing');
+        }
 
         const refAmt = cmd.amount ?? Number(lockedPayment.amount);
         const reqId = randomUUID();
         const iKey = `refund:${lockedPayment.id}:${Number(refAmt).toFixed(2)}`;
 
         // Step 1 — persist in-flight refund record inside the lock so no
-        // concurrent request can slip past the status check before this row exists.
+        // concurrent request can slip past the PROCESSING check before this row exists.
         await tx.refundRequest.create({
           data: {
             id: reqId,
@@ -101,7 +107,7 @@ export class RefundPaymentHandler {
             clientId: invoice.clientId,
             amount: refAmt,
             reason: cmd.reason,
-            status: 'PROCESSING',
+            status: RefundStatus.PROCESSING,
             processedAt: new Date(),
             processedBy: cmd.performedBy ?? 'system',
           },
@@ -124,7 +130,7 @@ export class RefundPaymentHandler {
     } catch (error) {
       // Moyasar refused the refund. No money moved. Safe to mark FAILED.
       await this.prisma.refundRequest
-        .update({ where: { id: refundRequestId }, data: { status: 'FAILED' } })
+        .update({ where: { id: refundRequestId }, data: { status: RefundStatus.FAILED } })
         .catch((persistErr) => {
           this.logger.error(
             `Refund ${refundRequestId}: failed to mark FAILED after Moyasar rejection`,
@@ -142,7 +148,7 @@ export class RefundPaymentHandler {
       updatedPayment = await this.rlsTx.withTransaction(async (tx) => {
         await tx.refundRequest.update({
           where: { id: refundRequestId },
-          data: { status: 'COMPLETED', gatewayRef: moyasarRefundId },
+          data: { status: RefundStatus.COMPLETED, gatewayRef: moyasarRefundId },
         });
         const updated = await tx.payment.update({
           where: { id: cmd.paymentId },

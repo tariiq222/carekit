@@ -15,38 +15,47 @@ vi.mock("next/link", () => ({
   ),
 }))
 
-import { AttentionAlerts, type AlertItem } from "@/components/features/attention-alerts"
+import { AttentionAlerts } from "@/components/features/dashboard/attention-alerts"
 
-const FakeIcon = () => <svg data-testid="alert-icon" />
-
-const mockAlerts: AlertItem[] = [
-  { id: "1", titleKey: "alerts.waiting", descriptionKey: "alerts.waitingDesc", icon: FakeIcon as never, severity: "warning", count: 3, href: "/bookings?status=pending" },
-  { id: "2", titleKey: "alerts.failed", descriptionKey: "alerts.failedDesc", icon: FakeIcon as never, severity: "error", count: 1, href: "/payments?failed=true" },
-]
+const visibleBoth = { pendingPayments: true, cancelRequests: true }
+const visibleNone = { pendingPayments: false, cancelRequests: false }
 
 describe("AttentionAlerts", () => {
-  it("renders nothing when alerts array is empty", () => {
-    const { container } = render(<AttentionAlerts alerts={[]} />)
+  it("renders nothing when both counts are 0", () => {
+    const { container } = render(
+      <AttentionAlerts pendingPayments={0} cancelRequests={0} visible={visibleBoth} />
+    )
     expect(container.innerHTML).toBe("")
   })
 
-  it("renders alerts with title and count", () => {
-    render(<AttentionAlerts alerts={mockAlerts} />)
-    expect(screen.getByText("alerts.waiting")).toBeInTheDocument()
+  it("renders nothing when not visible", () => {
+    const { container } = render(
+      <AttentionAlerts pendingPayments={5} cancelRequests={3} visible={visibleNone} />
+    )
+    expect(container.innerHTML).toBe("")
+  })
+
+  it("renders pending payments alert when count > 0 and visible", () => {
+    render(
+      <AttentionAlerts pendingPayments={3} cancelRequests={0} visible={visibleBoth} />
+    )
+    expect(screen.getByTestId("alert-pending-payments")).toBeInTheDocument()
     expect(screen.getByText("3")).toBeInTheDocument()
-    expect(screen.getByText("alerts.failed")).toBeInTheDocument()
   })
 
-  it("renders alert descriptions", () => {
-    render(<AttentionAlerts alerts={mockAlerts} />)
-    expect(screen.getByText("alerts.waitingDesc")).toBeInTheDocument()
-    expect(screen.getByText("alerts.failedDesc")).toBeInTheDocument()
+  it("renders cancel requests alert when count > 0 and visible", () => {
+    render(
+      <AttentionAlerts pendingPayments={0} cancelRequests={2} visible={visibleBoth} />
+    )
+    expect(screen.getByTestId("alert-cancel-requests")).toBeInTheDocument()
+    expect(screen.getByText("2")).toBeInTheDocument()
   })
 
-  it("renders links with correct hrefs", () => {
-    render(<AttentionAlerts alerts={mockAlerts} />)
-    const links = screen.getAllByRole("link")
-    expect(links[0]).toHaveAttribute("href", "/bookings?status=pending")
-    expect(links[1]).toHaveAttribute("href", "/payments?failed=true")
+  it("renders both alerts", () => {
+    render(
+      <AttentionAlerts pendingPayments={4} cancelRequests={1} visible={visibleBoth} />
+    )
+    expect(screen.getByTestId("alert-pending-payments")).toBeInTheDocument()
+    expect(screen.getByTestId("alert-cancel-requests")).toBeInTheDocument()
   })
 })

@@ -17,7 +17,7 @@ import { testPrisma, cleanTables, reseedPlans } from '../../setup/db.setup';
 import { bootHarness } from '../../tenant-isolation/isolation-harness';
 import { DEFAULT_ORGANIZATION_ID } from '../../../src/common/tenant';
 
-const ACCESS_SECRET = 'test-access-secret-32chars-min';
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ?? 'test-access-secret-32chars-min';
 const ADMIN_HOST = 'admin.isolation.test';
 
 describe('Admin Multi-Tenant Isolation (e2e)', () => {
@@ -44,7 +44,7 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     const upsertUser = (email: string, name: string, isSuperAdmin: boolean) =>
       testPrisma.user.upsert({
         where: { email },
-        update: {},
+        update: { isActive: true, isSuperAdmin },
         create: { email, name, passwordHash: 'dummy', role: 'ADMIN', isActive: true, isSuperAdmin },
       });
 

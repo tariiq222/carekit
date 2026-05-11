@@ -77,7 +77,7 @@ model Payment {
   currency       String        @default("SAR")
   method         PaymentMethod
   status         PaymentStatus @default(PENDING)
-  gatewayRef     String?   @unique // Moyasar payment id
+  gatewayRef     String?       @unique // Moyasar payment id
   idempotencyKey String?       @unique // prevent duplicate webhook processing
   receiptUrl     String? // MinIO path for bank transfer receipt
   failureReason  String?

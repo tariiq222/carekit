@@ -44,7 +44,7 @@ const buildMoyasar = () => ({
 interface MockPrisma {
   booking: { findFirst: jest.Mock };
   invoice: { findFirst: jest.Mock };
-  payment: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock };
+  payment: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock; delete: jest.Mock };
 }
 
 function buildPrisma(): MockPrisma {
@@ -55,7 +55,14 @@ function buildPrisma(): MockPrisma {
       findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ ...mockPayment }),
       update: jest.fn().mockResolvedValue({ ...mockPayment, gatewayRef: 'moyasar-pay-1' }),
+      delete: jest.fn().mockResolvedValue({ ...mockPayment }),
     },
+  };
+}
+
+function buildRlsTx(prisma: MockPrisma) {
+  return {
+    withTransaction: jest.fn(async (fn: (tx: MockPrisma) => Promise<unknown>) => fn(prisma)),
   };
 }
 
@@ -79,7 +86,7 @@ describe('InitGuestPaymentHandler', () => {
     it('creates a PENDING payment and returns redirect URL from Moyasar', async () => {
       const prisma = buildPrisma();
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       const result = await handler.execute({ bookingId: 'booking-1' });
 
@@ -104,6 +111,7 @@ describe('InitGuestPaymentHandler', () => {
           status: 'PENDING',
           idempotencyKey: 'guest:booking-1',
         },
+        select: { id: true },
       });
       expect(moyasar.createPayment).toHaveBeenCalledWith(
         '00000000-0000-0000-0000-000000000001',
@@ -119,6 +127,7 @@ describe('InitGuestPaymentHandler', () => {
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 'pay-1' },
         data: { gatewayRef: 'moyasar-pay-1' },
+        select: { id: true },
       });
       expect(result).toEqual({
         paymentId: 'pay-1',
@@ -130,7 +139,7 @@ describe('InitGuestPaymentHandler', () => {
       const prisma = buildPrisma();
       prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       await expect(handler.execute({ bookingId: 'nonexistent' })).rejects.toThrow(NotFoundException);
       expect(prisma.payment.create).not.toHaveBeenCalled();
@@ -140,7 +149,7 @@ describe('InitGuestPaymentHandler', () => {
       const prisma = buildPrisma();
       prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: 'CONFIRMED' });
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       await expect(handler.execute({ bookingId: 'booking-1' })).rejects.toThrow(BadRequestException);
       expect(prisma.payment.create).not.toHaveBeenCalled();
@@ -150,7 +159,7 @@ describe('InitGuestPaymentHandler', () => {
       const prisma = buildPrisma();
       prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       await expect(handler.execute({ bookingId: 'booking-1' })).rejects.toThrow(NotFoundException);
       expect(prisma.payment.create).not.toHaveBeenCalled();
@@ -160,7 +169,7 @@ describe('InitGuestPaymentHandler', () => {
       const prisma = buildPrisma();
       prisma.payment.findFirst = jest.fn().mockResolvedValue({ ...mockPayment, status: 'COMPLETED' });
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       await expect(handler.execute({ bookingId: 'booking-1' })).rejects.toThrow(ConflictException);
       expect(moyasar.createPayment).not.toHaveBeenCalled();
@@ -170,7 +179,7 @@ describe('InitGuestPaymentHandler', () => {
       const prisma = buildPrisma();
       prisma.payment.findFirst = jest.fn().mockResolvedValue({ ...mockPayment });
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       const result = await handler.execute({ bookingId: 'booking-1' });
 
@@ -183,7 +192,7 @@ describe('InitGuestPaymentHandler', () => {
       process.env.PUBLIC_WEBSITE_URL = '';
       const prisma = buildPrisma();
       const moyasar = buildMoyasar();
-      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never);
+      const handler = new InitGuestPaymentHandler(prisma as never, buildTenant() as never, moyasar as never, buildRlsTx(prisma) as never);
 
       await handler.execute({ bookingId: 'booking-1' });
 

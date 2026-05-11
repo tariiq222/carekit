@@ -112,7 +112,8 @@ function makeHandler(overrides: HandlerOverrides = {}) {
   const eventBus = overrides.eventBus ?? buildEventBus();
   const creds = overrides.creds ?? buildCreds();
   const cls = overrides.cls ?? buildCls();
-  const handler = new MoyasarWebhookHandler(prisma as never, eventBus as never, cls as never, creds as never);
+  const rlsTx = { withTransaction: jest.fn(async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma)) };
+  const handler = new MoyasarWebhookHandler(prisma as never, eventBus as never, cls as never, creds as never, rlsTx as never);
   return { handler, prisma, eventBus, creds, cls };
 }
 

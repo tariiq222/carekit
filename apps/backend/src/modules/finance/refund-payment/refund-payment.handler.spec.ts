@@ -18,7 +18,7 @@ describe('RefundPaymentHandler', () => {
       $transaction: jest.fn(), // must NOT be called after fix#3
       $queryRaw: jest.fn().mockResolvedValue([]),
       payment: { findFirst: jest.fn(), update: jest.fn() },
-      refundRequest: { create: jest.fn(), update: jest.fn() },
+      refundRequest: { create: jest.fn(), findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() },
       invoice: { findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'inv_1', bookingId: 'bk_1', clientId: 'cli_1', currency: 'SAR', organizationId: 'org_1' }), update: jest.fn() },
     };
     eventBus = { publish: jest.fn().mockResolvedValue(undefined) };
@@ -62,8 +62,7 @@ describe('RefundPaymentHandler', () => {
   it('records RefundRequest in PROCESSING BEFORE calling Moyasar (breadcrumb for reconciliation)', async () => {
     const callOrder: string[] = [];
     prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
-    // payment.update (→REFUNDING) is called inside the locking tx before refundRequest.create
-    prisma.payment.update.mockImplementation(async () => { callOrder.push('payment.update'); return {}; });
+    prisma.refundRequest.findFirst.mockImplementation(async () => { callOrder.push('refundRequest.findFirst'); return null; });
     prisma.refundRequest.create.mockImplementation(async () => { callOrder.push('refundRequest.create'); return { id: 'rr_1' }; });
     moyasar.createRefund.mockImplementation(async () => {
       callOrder.push('moyasar');
@@ -74,7 +73,7 @@ describe('RefundPaymentHandler', () => {
 
     await handler.execute({ paymentId: 'pay_1', reason: 'test' });
 
-    // Locking tx order: payment.update (REFUNDING) → refundRequest.create
+    // Locking tx order: check existing in-flight refund → refundRequest.create
     // Then: moyasar call (outside tx)
     expect(callOrder.indexOf('refundRequest.create')).toBeLessThan(callOrder.indexOf('moyasar'));
     expect(prisma.refundRequest.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -118,7 +117,6 @@ describe('RefundPaymentHandler', () => {
     prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
     prisma.refundRequest.update.mockResolvedValue({});
-    prisma.payment.update.mockResolvedValue({}); // called inside locking tx (→REFUNDING)
     moyasar.createRefund.mockRejectedValue(new Error('Moyasar 502'));
 
     await expect(handler.execute({ paymentId: 'pay_1', reason: 'test' })).rejects.toThrow('Moyasar 502');
@@ -126,14 +124,13 @@ describe('RefundPaymentHandler', () => {
     expect(prisma.refundRequest.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'FAILED' }),
     }));
-    // payment.update IS called in locking tx (→REFUNDING); invoice.update must NOT be called
+    // invoice.update must NOT be called because no money moved.
     expect(prisma.invoice.update).not.toHaveBeenCalled();
   });
 
   it('preserves gatewayRef on partial-success (Moyasar OK, finalize tx fails)', async () => {
     prisma.$queryRaw.mockResolvedValueOnce([buildPaymentRow()]);
     prisma.refundRequest.create.mockResolvedValue({ id: 'rr_1' });
-    prisma.payment.update.mockResolvedValue({}); // locking tx sets REFUNDING
     moyasar.createRefund.mockResolvedValue({ id: 'ref_partial', amount: 10000, currency: 'SAR', status: 'refunded', paymentId: 'moyasar_pay_abc', createdAt: new Date().toISOString() });
     // First call (locking tx) succeeds; second call (finalize tx) fails
     rlsTx.withTransaction = jest.fn()

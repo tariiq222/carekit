@@ -75,12 +75,11 @@ export function useEmployees() {
 
   useEffect(() => {
     updateParams({ search: debouncedSearch || undefined, page: debouncedSearch !== urlSearch ? "1" : undefined })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch])
+  }, [debouncedSearch, updateParams, urlSearch])
 
   const setSearch = useCallback((s: string) => {
     setSearchState(s)
-  }, [])
+  }, [setSearchState])
 
   const setIsActive = useCallback(
     (v: boolean | undefined) => {
@@ -123,7 +122,7 @@ export function useEmployees() {
     setSearchState("")
     setDebouncedSearch("")
     router.replace(pathname, { scroll: false })
-  }, [pathname, router])
+  }, [pathname, router, setDebouncedSearch, setSearchState])
 
   const hasFilters = !!(debouncedSearch || urlIsActive !== undefined || urlSortBy)
 

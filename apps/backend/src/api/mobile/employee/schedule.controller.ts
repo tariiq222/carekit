@@ -1,4 +1,5 @@
 import { Controller, Get, Patch, Body, Query, UseGuards } from '@nestjs/common';
+import { todayRangeInTz } from '../../../common/helpers/date-tz.helper';
 import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -61,9 +62,7 @@ export class MobileEmployeeScheduleController {
   })
   @Get('today')
   today(@CurrentUser() user: JwtUser) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today.getTime() + 86_400_000);
+    const { start: today, end: tomorrow } = todayRangeInTz();
     return this.listBookings.execute({
       employeeId: user.sub,
       fromDate: today,

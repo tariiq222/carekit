@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { BookingStatus, PaymentStatus, PaymentMethod } from '@prisma/client';
+import { todayRangeInTz } from '../../../common/helpers/date-tz.helper';
 
 export interface DashboardStatsCommand {
   membershipRole: string | null;
@@ -29,10 +30,7 @@ export class GetDashboardStatsHandler {
   async execute(cmd: DashboardStatsCommand): Promise<DashboardStats> {
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { start: today, end: tomorrow } = todayRangeInTz();
 
     let employeeFilter: { employeeId: string } | object = {};
     if (cmd.membershipRole === 'EMPLOYEE') {

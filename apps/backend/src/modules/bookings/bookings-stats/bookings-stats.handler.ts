@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { todayRangeInTz } from '../../../common/helpers/date-tz.helper';
 
 export interface BookingsStatsResult {
   todayCount: number;
@@ -14,11 +15,7 @@ export class BookingsStatsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(): Promise<BookingsStatsResult> {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(startOfDay);
-    endOfDay.setDate(endOfDay.getDate() + 1);
-
+    const { start: startOfDay, end: endOfDay } = todayRangeInTz();
     const todayRange = { gte: startOfDay, lt: endOfDay };
 
     const [todayCount, pendingCount, completedToday, revenueAgg] = await Promise.all([

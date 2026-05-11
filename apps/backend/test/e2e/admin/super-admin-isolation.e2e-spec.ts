@@ -5,7 +5,7 @@ import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables, flushTestRedis } from '../../setup/db.setup';
 import { DEFAULT_ORGANIZATION_ID } from '../../../src/common/tenant';
 
-const ACCESS_SECRET = 'test-access-secret-32chars-min';
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ?? 'test-access-secret-32chars-min';
 
 // Plan 05b — Task 9. Asserts that the super-admin surface area is
 // reachable ONLY by users whose JWT carries isSuperAdmin=true AND whose

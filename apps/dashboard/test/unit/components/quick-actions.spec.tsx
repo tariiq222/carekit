@@ -1,7 +1,5 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { QuickActions } from "@/components/features/quick-actions"
-import { Calendar01Icon, UserAdd01Icon } from "@hugeicons/core-free-icons"
 
 vi.mock("@/components/locale-provider", () => ({
   useLocale: () => ({
@@ -12,57 +10,55 @@ vi.mock("@/components/locale-provider", () => ({
   }),
 }))
 
+vi.mock("@hugeicons/react", () => ({
+  HugeiconsIcon: () => <span data-testid="icon" />,
+}))
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [k: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}))
+
+vi.mock("@deqah/ui", () => ({
+  Card: ({ children, className }: React.PropsWithChildren<{ className?: string }>) => (
+    <div className={className}>{children}</div>
+  ),
+}))
+
+import { QuickActions } from "@/components/features/dashboard/quick-actions"
+import type { QuickActionKey } from "@/lib/dashboard-widgets"
+
 describe("QuickActions", () => {
-  const actions = [
-    {
-      titleKey: "actions.newBooking",
-      descriptionKey: "actions.newBookingDesc",
-      icon: Calendar01Icon,
-      href: "/bookings/create",
-      color: "primary" as const,
-    },
-    {
-      titleKey: "actions.newClient",
-      descriptionKey: "actions.newClientDesc",
-      icon: UserAdd01Icon,
-      href: "/clients/create",
-      color: "success" as const,
-    },
-  ]
+  it("renders nothing when actions array is empty", () => {
+    const { container } = render(<QuickActions actions={[]} />)
+    expect(container.innerHTML).toBe("")
+  })
 
-  it("renders all action titles via t()", () => {
+  it("renders a link for each action key", () => {
+    const actions: QuickActionKey[] = ["newBooking", "newClient"]
     render(<QuickActions actions={actions} />)
-    expect(screen.getByText("actions.newBooking")).toBeInTheDocument()
-    expect(screen.getByText("actions.newClient")).toBeInTheDocument()
+    expect(screen.getAllByRole("link")).toHaveLength(2)
   })
 
-  it("renders all action descriptions via t()", () => {
+  it("renders newBooking with correct href", () => {
+    render(<QuickActions actions={["newBooking"]} />)
+    expect(screen.getByTestId("quick-action-newBooking")).toHaveAttribute("href", "/bookings?new=1")
+  })
+
+  it("renders newClient with correct href", () => {
+    render(<QuickActions actions={["newClient"]} />)
+    expect(screen.getByTestId("quick-action-newClient")).toHaveAttribute("href", "/clients?new=1")
+  })
+
+  it("renders recordPayment with correct href", () => {
+    render(<QuickActions actions={["recordPayment"]} />)
+    expect(screen.getByTestId("quick-action-recordPayment")).toHaveAttribute("href", "/payments?new=1")
+  })
+
+  it("renders all three actions", () => {
+    const actions: QuickActionKey[] = ["newBooking", "newClient", "recordPayment"]
     render(<QuickActions actions={actions} />)
-    expect(screen.getByText("actions.newBookingDesc")).toBeInTheDocument()
-    expect(screen.getByText("actions.newClientDesc")).toBeInTheDocument()
-  })
-
-  it("renders correct number of action links", () => {
-    render(<QuickActions actions={actions} />)
-    const links = screen.getAllByRole("link")
-    expect(links).toHaveLength(2)
-  })
-
-  it("links point to correct hrefs", () => {
-    render(<QuickActions actions={actions} />)
-    const links = screen.getAllByRole("link")
-    expect(links[0]).toHaveAttribute("href", "/bookings/create")
-    expect(links[1]).toHaveAttribute("href", "/clients/create")
-  })
-
-  it("renders icons for each action", () => {
-    const { container } = render(<QuickActions actions={actions} />)
-    const svgs = container.querySelectorAll("svg")
-    expect(svgs.length).toBeGreaterThanOrEqual(2)
-  })
-
-  it("renders empty grid when no actions", () => {
-    render(<QuickActions actions={[]} />)
-    expect(screen.queryByRole("link")).toBeNull()
+    expect(screen.getByTestId("quick-actions").querySelectorAll("a")).toHaveLength(3)
   })
 })
