@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchWithTimeout } from '../http';
 
 export type AuthenticaChannel = 'EMAIL' | 'SMS';
 
@@ -76,7 +77,7 @@ export class AuthenticaClient {
       body: body ? JSON.stringify(body) : undefined,
     };
 
-    const res = await fetch(url, init);
+    const res = await fetchWithTimeout(url, init, 10000);
 
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));

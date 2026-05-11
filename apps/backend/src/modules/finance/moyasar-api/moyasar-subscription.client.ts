@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { fetchWithTimeout } from '../../../infrastructure/http';
 
 @Injectable()
 export class MoyasarSubscriptionClient {
@@ -16,11 +17,11 @@ export class MoyasarSubscriptionClient {
     holderName: string | null;
   }> {
     const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
-    const response = await fetch(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
+    const response = await fetchWithTimeout(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
       headers: {
         'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
       },
-    });
+    }, 15000);
 
     if (!response.ok) {
       const text = await response.text();
@@ -61,7 +62,7 @@ export class MoyasarSubscriptionClient {
     callbackUrl: string;
   }): Promise<{ id: string; status: string; transactionUrl?: string | null }> {
     const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
-    const response = await fetch('https://api.moyasar.com/v1/payments', {
+    const response = await fetchWithTimeout('https://api.moyasar.com/v1/payments', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ export class MoyasarSubscriptionClient {
         source: { type: 'token', token: params.token },
         callback_url: params.callbackUrl,
       }),
-    });
+    }, 15000);
 
     if (!response.ok) {
       const text = await response.text();
@@ -105,7 +106,7 @@ export class MoyasarSubscriptionClient {
     idempotencyKey: string;
   }): Promise<{ id: string; amount: number; status: string }> {
     const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.moyasar.com/v1/payments/${params.paymentId}/refund`,
       {
         method: 'POST',
@@ -116,6 +117,7 @@ export class MoyasarSubscriptionClient {
         },
         body: JSON.stringify({ amount: params.amountHalalas }),
       },
+      15000,
     );
 
     if (!response.ok) {
@@ -127,12 +129,12 @@ export class MoyasarSubscriptionClient {
 
   async deleteToken(tokenId: string): Promise<void> {
     const secretKey = this.config.getOrThrow<string>('MOYASAR_PLATFORM_SECRET_KEY');
-    const response = await fetch(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
+    const response = await fetchWithTimeout(`https://api.moyasar.com/v1/tokens/${tokenId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
       },
-    });
+    }, 15000);
 
     if (!response.ok && response.status !== 204) {
       const text = await response.text();
