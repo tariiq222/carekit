@@ -150,7 +150,9 @@ describe('Super-admin isolation (e2e)', () => {
       async ({ method, path }) => {
         const token = tokenFor(
           { id: regularUserId, email: 'tenant-user@e2e.test' },
-          { organizationId: 'some-org' },
+          // TAR-43: must use a real org where regularUserId has membership so JwtStrategy
+          // passes — SuperAdminGuard then rejects (no isSuperAdmin) with 403.
+          { organizationId: DEFAULT_ORGANIZATION_ID },
         );
         const res = await req[method](path)
           .set('Authorization', `Bearer ${token}`)
@@ -167,7 +169,9 @@ describe('Super-admin isolation (e2e)', () => {
           {
             scope: 'impersonation',
             impersonationSessionId: LIVE_IMPERSONATION_SESSION_ID,
-            organizationId: 'some-org',
+            // TAR-43: must use a real org where superAdminUserId has membership so JwtStrategy
+            // passes — SuperAdminGuard rejects (no isSuperAdmin on shadow JWT) with 403.
+            organizationId: DEFAULT_ORGANIZATION_ID,
           },
         );
         const res = await req[method](path)
@@ -180,7 +184,9 @@ describe('Super-admin isolation (e2e)', () => {
     it('rejects a JWT with isSuperAdmin=true claim if DB row says false (re-verification)', async () => {
       const token = tokenFor(
         { id: regularUserId, email: 'tenant-user@e2e.test' },
-        { isSuperAdmin: true, organizationId: 'some-org' },
+        // TAR-43: must use a real org where regularUserId has membership so JwtStrategy
+        // passes — SuperAdminGuard then re-verifies DB isSuperAdmin=false and returns 403.
+        { isSuperAdmin: true, organizationId: DEFAULT_ORGANIZATION_ID },
       );
       const res = await req
         .get('/api/v1/admin/organizations')

@@ -78,6 +78,30 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
     orgA = await harness.createOrg(`iso-org-a-${Date.now()}`, 'منظمة أ');
     orgB = await harness.createOrg(`iso-org-b-${Date.now()}`, 'منظمة ب');
 
+    // TAR-43: JwtStrategy now verifies that non-superadmin tokens carry an
+    // organizationId with an active membership. Dashboard tests issue tokens
+    // scoped to orgA/orgB, so seed the per-org memberships here after the
+    // orgs are created.
+    await testPrisma.membership.createMany({
+      data: [
+        {
+          userId: userOrgAId,
+          organizationId: orgA.id,
+          role: 'ADMIN' as const,
+          isActive: true,
+          acceptedAt: new Date(),
+        },
+        {
+          userId: userOrgBId,
+          organizationId: orgB.id,
+          role: 'ADMIN' as const,
+          isActive: true,
+          acceptedAt: new Date(),
+        },
+      ],
+      skipDuplicates: true,
+    });
+
     const now = new Date();
 
     // Subscription/Branch/SavedCard are in SCOPED_MODELS — wrap creates in
@@ -206,7 +230,9 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
             email: 'regular-tenant-iso@e2e.test',
             role: 'ADMIN',
             isSuperAdmin: false,
-            organizationId: orgA.id,
+            // TAR-43: must use a real org where regularUserId has membership so JwtStrategy
+            // passes — SuperAdminGuard then rejects (no isSuperAdmin) with 403.
+            organizationId: DEFAULT_ORGANIZATION_ID,
             customRoleId: null,
             permissions: [],
             features: [],
@@ -232,7 +258,9 @@ describe('Admin Multi-Tenant Isolation (e2e)', () => {
               email: 'regular-tenant-iso@e2e.test',
               role: 'ADMIN',
               isSuperAdmin: false,
-              organizationId: orgA.id,
+              // TAR-43: must use a real org where regularUserId has membership so JwtStrategy
+              // passes — SuperAdminGuard then rejects (no isSuperAdmin) with 403.
+              organizationId: DEFAULT_ORGANIZATION_ID,
               customRoleId: null,
               permissions: [],
               features: [],

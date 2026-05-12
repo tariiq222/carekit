@@ -158,6 +158,7 @@ describe('SaaS-02e — coupon isolation', () => {
 
     // Seed invoice in Org B
     const bookingIdB = crypto.randomUUID();
+    const empIdB = crypto.randomUUID();
     await h.runAs({ organizationId: b.id }, () =>
       h.prisma.booking.create({
         data: {
@@ -165,7 +166,7 @@ describe('SaaS-02e — coupon isolation', () => {
           organizationId: b.id,
           branchId: 'br-cpn-b',
           clientId: 'cli-cpn-b',
-          employeeId: 'emp-cpn-b',
+          employeeId: empIdB,
           serviceId: 'svc-cpn-b',
           scheduledAt: new Date('2031-06-01T10:00:00Z'),
           endsAt: new Date('2031-06-01T11:00:00Z'),
@@ -185,7 +186,7 @@ describe('SaaS-02e — coupon isolation', () => {
           bookingId: bookingIdB,
           branchId: 'br-cpn-b',
           clientId: 'cli-cpn-b',
-          employeeId: 'emp-cpn-b',
+          employeeId: empIdB,
           subtotal: 200,
           discountAmt: 0,
           vatRate: 0.15,

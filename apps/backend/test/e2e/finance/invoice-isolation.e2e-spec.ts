@@ -27,6 +27,7 @@ describe('SaaS-02e — invoice isolation', () => {
 
     // Seed a booking under Org A (raw — UUIDs ensure cross-org uniqueness)
     const bookingId = crypto.randomUUID();
+    const employeeId = crypto.randomUUID();
     await h.runAs({ organizationId: a.id }, () =>
       h.prisma.booking.create({
         data: {
@@ -34,7 +35,7 @@ describe('SaaS-02e — invoice isolation', () => {
           organizationId: a.id,
           branchId: 'branch-inv-a',
           clientId: 'client-inv-a',
-          employeeId: 'emp-inv-a',
+          employeeId,
           serviceId: 'svc-inv-a',
           scheduledAt: new Date('2031-01-01T10:00:00Z'),
           endsAt: new Date('2031-01-01T11:00:00Z'),
@@ -54,7 +55,7 @@ describe('SaaS-02e — invoice isolation', () => {
           bookingId,
           branchId: 'branch-inv-a',
           clientId: 'client-inv-a',
-          employeeId: 'emp-inv-a',
+          employeeId,
           subtotal: 200,
           discountAmt: 0,
           vatRate: 0.15,
@@ -85,6 +86,7 @@ describe('SaaS-02e — invoice isolation', () => {
     const b = await h.createOrg(`inv-iso-list-b-${Date.now()}`, 'منظمة قائمة ب');
 
     const bookingId = crypto.randomUUID();
+    const employeeIdList = crypto.randomUUID();
     await h.runAs({ organizationId: a.id }, () =>
       h.prisma.booking.create({
         data: {
@@ -92,7 +94,7 @@ describe('SaaS-02e — invoice isolation', () => {
           organizationId: a.id,
           branchId: 'branch-inv-list-a',
           clientId: 'client-inv-list-a',
-          employeeId: 'emp-inv-list-a',
+          employeeId: employeeIdList,
           serviceId: 'svc-inv-list-a',
           scheduledAt: new Date('2031-02-01T10:00:00Z'),
           endsAt: new Date('2031-02-01T11:00:00Z'),
@@ -112,7 +114,7 @@ describe('SaaS-02e — invoice isolation', () => {
           bookingId,
           branchId: 'branch-inv-list-a',
           clientId: 'client-inv-list-a',
-          employeeId: 'emp-inv-list-a',
+          employeeId: employeeIdList,
           subtotal: 150,
           discountAmt: 0,
           vatRate: 0.15,
@@ -144,6 +146,8 @@ describe('SaaS-02e — invoice isolation', () => {
 
     const bookingIdA = crypto.randomUUID();
     const bookingIdB = crypto.randomUUID();
+    const empIdA = crypto.randomUUID();
+    const empIdB = crypto.randomUUID();
 
     await h.runAs({ organizationId: a.id }, () =>
       h.prisma.booking.create({
@@ -152,7 +156,7 @@ describe('SaaS-02e — invoice isolation', () => {
           organizationId: a.id,
           branchId: 'br-a',
           clientId: 'cli-a',
-          employeeId: 'emp-a',
+          employeeId: empIdA,
           serviceId: 'svc-a',
           scheduledAt: new Date('2031-03-01T10:00:00Z'),
           endsAt: new Date('2031-03-01T11:00:00Z'),
@@ -172,7 +176,7 @@ describe('SaaS-02e — invoice isolation', () => {
           organizationId: b.id,
           branchId: 'br-b',
           clientId: 'cli-b',
-          employeeId: 'emp-b',
+          employeeId: empIdB,
           serviceId: 'svc-b',
           scheduledAt: new Date('2031-03-01T10:00:00Z'),
           endsAt: new Date('2031-03-01T11:00:00Z'),
@@ -192,7 +196,7 @@ describe('SaaS-02e — invoice isolation', () => {
           bookingId: bookingIdA,
           branchId: 'br-a',
           clientId: 'cli-a',
-          employeeId: 'emp-a',
+          employeeId: empIdA,
           subtotal: 100,
           discountAmt: 0,
           vatRate: 0.15,
@@ -213,7 +217,7 @@ describe('SaaS-02e — invoice isolation', () => {
           bookingId: bookingIdB,
           branchId: 'br-b',
           clientId: 'cli-b',
-          employeeId: 'emp-b',
+          employeeId: empIdB,
           subtotal: 100,
           discountAmt: 0,
           vatRate: 0.15,

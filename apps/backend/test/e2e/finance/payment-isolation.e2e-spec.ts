@@ -30,6 +30,7 @@ describe('SaaS-02e — payment isolation', () => {
 
     // Seed invoice in Org A (needed as FK for payment)
     const bookingId = crypto.randomUUID();
+    const employeeId = crypto.randomUUID();
     await h.runAs({ organizationId: a.id }, () =>
       h.prisma.booking.create({
         data: {
@@ -37,7 +38,7 @@ describe('SaaS-02e — payment isolation', () => {
           organizationId: a.id,
           branchId: 'br-pay-a',
           clientId: 'cli-pay-a',
-          employeeId: 'emp-pay-a',
+          employeeId,
           serviceId: 'svc-pay-a',
           scheduledAt: new Date('2031-04-01T10:00:00Z'),
           endsAt: new Date('2031-04-01T11:00:00Z'),
@@ -57,7 +58,7 @@ describe('SaaS-02e — payment isolation', () => {
           bookingId,
           branchId: 'br-pay-a',
           clientId: 'cli-pay-a',
-          employeeId: 'emp-pay-a',
+          employeeId,
           subtotal: 200,
           discountAmt: 0,
           vatRate: 0.15,
@@ -104,6 +105,7 @@ describe('SaaS-02e — payment isolation', () => {
     const b = await h.createOrg(`pay-verify-b-${Date.now()}`, 'منظمة تحقق ب');
 
     const bookingId = crypto.randomUUID();
+    const employeeIdVerify = crypto.randomUUID();
     await h.runAs({ organizationId: a.id }, () =>
       h.prisma.booking.create({
         data: {
@@ -111,7 +113,7 @@ describe('SaaS-02e — payment isolation', () => {
           organizationId: a.id,
           branchId: 'br-verify-a',
           clientId: 'cli-verify-a',
-          employeeId: 'emp-verify-a',
+          employeeId: employeeIdVerify,
           serviceId: 'svc-verify-a',
           scheduledAt: new Date('2031-05-01T10:00:00Z'),
           endsAt: new Date('2031-05-01T11:00:00Z'),
@@ -131,7 +133,7 @@ describe('SaaS-02e — payment isolation', () => {
           bookingId,
           branchId: 'br-verify-a',
           clientId: 'cli-verify-a',
-          employeeId: 'emp-verify-a',
+          employeeId: employeeIdVerify,
           subtotal: 300,
           discountAmt: 0,
           vatRate: 0.15,

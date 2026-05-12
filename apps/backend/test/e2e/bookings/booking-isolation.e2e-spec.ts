@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { bootHarness, IsolationHarness } from '../../tenant-isolation/isolation-harness';
 
 describe('SaaS-02d — bookings cluster isolation', () => {
@@ -18,6 +19,7 @@ describe('SaaS-02d — bookings cluster isolation', () => {
   it('booking created in org B is invisible from org A', async () => {
     const a = await h.createOrg(`bk-iso-booking-a-${Date.now()}`, 'منظمة حجوزات أ');
     const b = await h.createOrg(`bk-iso-booking-b-${Date.now()}`, 'منظمة حجوزات ب');
+    const employeeId = crypto.randomUUID();
 
     const bookingB = await h.runAs({ organizationId: b.id }, () =>
       h.prisma.booking.create({
@@ -25,7 +27,7 @@ describe('SaaS-02d — bookings cluster isolation', () => {
           organizationId: b.id,
           branchId: 'branch-b',
           clientId: 'client-b',
-          employeeId: 'emp-b',
+          employeeId,
           serviceId: 'svc-b',
           scheduledAt: new Date('2030-01-01T10:00:00Z'),
           endsAt: new Date('2030-01-01T11:00:00Z'),
@@ -116,6 +118,7 @@ describe('SaaS-02d — bookings cluster isolation', () => {
   it('booking status log created in org B is invisible from org A', async () => {
     const a = await h.createOrg(`bk-iso-bsl-a-${Date.now()}`, 'منظمة سجل الحالة أ');
     const b = await h.createOrg(`bk-iso-bsl-b-${Date.now()}`, 'منظمة سجل الحالة ب');
+    const employeeId = crypto.randomUUID();
 
     // First seed a booking in org B to reference
     const bookingB = await h.runAs({ organizationId: b.id }, () =>
@@ -124,7 +127,7 @@ describe('SaaS-02d — bookings cluster isolation', () => {
           organizationId: b.id,
           branchId: 'branch-b',
           clientId: 'client-b',
-          employeeId: 'emp-b',
+          employeeId,
           serviceId: 'svc-b',
           scheduledAt: new Date('2030-02-01T10:00:00Z'),
           endsAt: new Date('2030-02-01T11:00:00Z'),
