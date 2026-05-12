@@ -1,5 +1,5 @@
 import { Controller, Get, Header } from '@nestjs/common';
-import { ApiExcludeController } from '@nestjs/swagger';
+import { ApiExcludeController, ApiOperation } from '@nestjs/swagger';
 import { AppMetricsService } from '../../infrastructure/telemetry/app-metrics.service';
 import { DbMetricsService } from '../../infrastructure/telemetry/db-metrics.service';
 
@@ -11,6 +11,7 @@ export class PublicMetricsController {
     private readonly dbMetrics: DbMetricsService,
   ) {}
 
+  @ApiOperation({ summary: 'Prometheus metrics exposition endpoint' })
   @Get()
   @Header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
   async metrics(): Promise<string> {

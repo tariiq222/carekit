@@ -8,7 +8,13 @@
  * @see apps/dashboard/hooks/use-billing-features.ts
  */
 
-import type { SubscriptionStatus } from "@prisma/client";
+// Mirrors Prisma enum SubscriptionStatus — kept in sync manually so this package has no @prisma/client dep
+export type SubscriptionStatus =
+  | 'TRIALING'
+  | 'ACTIVE'
+  | 'PAST_DUE'
+  | 'SUSPENDED'
+  | 'CANCELED';
 
 /**
  * A single feature entry in the billing features response.
