@@ -23,6 +23,7 @@ import { Skeleton } from "@deqah/ui"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@deqah/ui"
 import { useUsers, useRoles, useUserMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
 import type { User } from "@/lib/types/user"
 
 export function UserListPage() {
@@ -30,6 +31,7 @@ export function UserListPage() {
   const searchParams = useSearchParams()
   const defaultTab = searchParams.get("tab") === "roles" ? "roles" : "users"
   const { t, locale } = useLocale()
+  const { canDo } = useAuth()
   const { users, meta, isLoading, error, search, setSearch } = useUsers()
   const { data: roles } = useRoles()
   const { activateMut, deactivateMut } = useUserMutations()
@@ -64,13 +66,13 @@ export function UserListPage() {
         title={t("users.title")}
         description={t("users.description")}
       >
-        {isUsersTab && (
+        {isUsersTab && canDo("User", "create") && (
           <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/users/create")}>
             <HugeiconsIcon icon={Add01Icon} size={16} />
             {t("users.addUser")}
           </Button>
         )}
-        {isRolesTab && (
+        {isRolesTab && canDo("User", "create") && (
           <Button className="gap-2 rounded-full px-5" onClick={() => setCreateRoleOpen(true)}>
             <HugeiconsIcon icon={Add01Icon} size={16} />
             {t("users.roles.createRole")}
@@ -112,7 +114,7 @@ export function UserListPage() {
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
             </div>
           ) : (
-            <DataTable columns={columns} data={users} emptyTitle={t("users.empty.title")} emptyDescription={t("users.empty.description")} emptyAction={{ label: t("users.addUser"), onClick: () => router.push("/users/create") }} />
+            <DataTable columns={columns} data={users} emptyTitle={t("users.empty.title")} emptyDescription={t("users.empty.description")} emptyAction={canDo("User", "create") ? { label: t("users.addUser"), onClick: () => router.push("/users/create") } : undefined} />
           )}
         </TabsContent>
 

@@ -51,6 +51,29 @@ export class ClientCancelBookingHandler {
     const settings = await this.settingsHandler.execute({ branchId: booking.branchId });
     const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / 3_600_000;
 
+    if (settings.requireCancelApproval) {
+      const [updated] = await this.rlsTx.withTransaction((tx) => Promise.all([
+        tx.booking.update({
+          where: { id: cmd.bookingId },
+          data: {
+            status: BookingStatus.CANCEL_REQUESTED,
+            cancelNotes: cmd.reason ?? null,
+          },
+        }),
+        tx.bookingStatusLog.create({
+          data: {
+            organizationId,
+            bookingId: cmd.bookingId,
+            fromStatus: booking.status,
+            toStatus: BookingStatus.CANCEL_REQUESTED,
+            changedBy: cmd.clientId,
+            reason: cmd.reason ?? 'CLIENT_CANCEL_REQUIRES_APPROVAL',
+          },
+        }),
+      ]));
+      return { status: 'CANCEL_REQUESTED', booking: updated, requiresApproval: true };
+    }
+
     if (hoursUntilBooking < settings.freeCancelBeforeHours) {
       const [updated] = await this.rlsTx.withTransaction((tx) => Promise.all([
         tx.booking.update({
@@ -122,6 +145,7 @@ export class ClientCancelBookingHandler {
 
     const event = new BookingCancelledEvent({
       organizationId,
+      scheduledAt: booking.scheduledAt,
       bookingId: booking.id,
       clientId: booking.clientId,
       employeeId: booking.employeeId,

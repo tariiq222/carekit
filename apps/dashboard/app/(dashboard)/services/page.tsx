@@ -10,10 +10,12 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Button } from "@deqah/ui"
 import { ServicesTabContent } from "@/components/features/services/services-tab-content"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
 
 export default function ServicesPage() {
   const { t } = useLocale()
   const router = useRouter()
+  const { canDo } = useAuth()
 
   return (
     <ListPageShell>
@@ -23,10 +25,12 @@ export default function ServicesPage() {
         title={t("services.title")}
         description={t("services.description")}
       >
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/services/create")}>
-          <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("services.addService")}
-        </Button>
+        {canDo("Service", "create") && (
+          <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/services/create")}>
+            <HugeiconsIcon icon={Add01Icon} size={16} />
+            {t("services.addService")}
+          </Button>
+        )}
       </PageHeader>
 
       <ServicesTabContent />

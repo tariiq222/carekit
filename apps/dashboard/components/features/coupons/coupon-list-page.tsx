@@ -19,11 +19,13 @@ import { Skeleton } from "@deqah/ui"
 import { FilterBar } from "@/components/features/filter-bar"
 import { useCoupons, useCouponMutations } from "@/hooks/use-coupons"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
 import type { Coupon } from "@/lib/types/coupon"
 
 export function CouponListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
+  const { canDo } = useAuth()
   const { coupons, meta, isLoading, error, search, setSearch, status, setStatus, page, setPage } = useCoupons()
 
   const { updateMut } = useCouponMutations()
@@ -51,10 +53,12 @@ export function CouponListPage() {
         title={t("coupons.title")}
         description={t("coupons.description")}
       >
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/coupons/create")}>
-          <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("coupons.addCoupon")}
-        </Button>
+        {canDo("Coupon", "create") && (
+          <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/coupons/create")}>
+            <HugeiconsIcon icon={Add01Icon} size={16} />
+            {t("coupons.addCoupon")}
+          </Button>
+        )}
       </PageHeader>
 
       {isLoading && !meta ? (
@@ -98,7 +102,7 @@ export function CouponListPage() {
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
         </div>
       ) : (
-        <DataTable columns={columns} data={coupons} emptyTitle={t("coupons.empty.title")} emptyDescription={t("coupons.empty.description")} emptyAction={{ label: t("coupons.addCoupon"), onClick: () => router.push("/coupons/create") }} />
+        <DataTable columns={columns} data={coupons} emptyTitle={t("coupons.empty.title")} emptyDescription={t("coupons.empty.description")} emptyAction={canDo("Coupon", "create") ? { label: t("coupons.addCoupon"), onClick: () => router.push("/coupons/create") } : undefined} />
       )}
 
       {meta && meta.totalPages > 1 && (

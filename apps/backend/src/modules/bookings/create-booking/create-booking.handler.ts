@@ -260,7 +260,7 @@ export class CreateBookingHandler {
             currency,
             bookingType: isGroupService ? 'GROUP' : (dto.bookingType ?? 'INDIVIDUAL'),
             notes: dto.notes,
-            expiresAt: dto.expiresAt,
+            expiresAt: dto.expiresAt ?? (!dto.payAtClinic ? new Date(Date.now() + 15 * 60 * 1000) : undefined),
             groupSessionId: dto.groupSessionId,
             payAtClinic: dto.payAtClinic ?? false,
             couponCode: dto.couponCode ?? null,

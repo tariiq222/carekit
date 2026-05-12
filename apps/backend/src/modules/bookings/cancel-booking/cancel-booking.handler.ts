@@ -125,6 +125,7 @@ export class CancelBookingHandler {
 
     const event = new BookingCancelledEvent({
       organizationId,
+      scheduledAt: booking.scheduledAt,
       bookingId: booking.id,
       clientId: booking.clientId,
       employeeId: booking.employeeId,

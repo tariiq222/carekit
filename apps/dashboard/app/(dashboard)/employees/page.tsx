@@ -23,7 +23,7 @@ export default function EmployeesPage() {
 function EmployeesPageInner() {
   const router = useRouter()
   const { t } = useLocale()
-  const { user } = useAuth()
+  const { user, canDo } = useAuth()
   const [attachOpen, setAttachOpen] = useState(false)
   // "الأطباء"/"Doctors" (medical), "المصففون"/"Stylists" (salon),
   // "المدربون"/"Trainers" (fitness), "المستشارون"/"Consultants" (consulting).
@@ -62,18 +62,22 @@ function EmployeesPageInner() {
           <HugeiconsIcon icon={StarIcon} size={16} />
           {t("employees.tabs.ratings")}
         </Button>
-        <Button
-          variant="outline"
-          className="gap-2 rounded-full px-5"
-          onClick={() => setAttachOpen(true)}
-        >
-          <HugeiconsIcon icon={UserGroupIcon} size={16} />
-          {t("employees.attach.button")}
-        </Button>
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/employees/create")}>
-          <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("employees.addEmployee")}
-        </Button>
+        {canDo("Employee", "create") && (
+          <Button
+            variant="outline"
+            className="gap-2 rounded-full px-5"
+            onClick={() => setAttachOpen(true)}
+          >
+            <HugeiconsIcon icon={UserGroupIcon} size={16} />
+            {t("employees.attach.button")}
+          </Button>
+        )}
+        {canDo("Employee", "create") && (
+          <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/employees/create")}>
+            <HugeiconsIcon icon={Add01Icon} size={16} />
+            {t("employees.addEmployee")}
+          </Button>
+        )}
       </PageHeader>
 
       <EmployeesListContent

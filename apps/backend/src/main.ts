@@ -115,7 +115,7 @@ async function bootstrap(): Promise<void> {
   // late-binding env override (e.g. vault agent sidecar) is also caught.
   const config = app.get(ConfigService);
   if (config.get<string>('NODE_ENV') === 'production') {
-    const banned = ['Admin@2026', 'REPLACE_ME', 'CHANGE_ME'];
+    const bannedPatterns = [/Admin@2026/i, /change.?me/i, /replace.?me/i, /dev-secret/i, /^test/i];
     for (const key of [
       'SMS_PROVIDER_ENCRYPTION_KEY',
       'ZOOM_PROVIDER_ENCRYPTION_KEY',
@@ -125,7 +125,7 @@ async function bootstrap(): Promise<void> {
       'SUPER_ADMIN_PASSWORD',
     ]) {
       const v = config.get<string>(key);
-      if (!v || banned.includes(v)) {
+      if (!v || bannedPatterns.some((p) => p.test(v))) {
         throw new Error(
           `Refusing to boot: ${key} is missing or set to a known dev placeholder`,
         );

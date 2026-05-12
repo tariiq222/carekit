@@ -21,11 +21,13 @@ import { FilterBar } from "@/components/features/filter-bar"
 import { toast } from "sonner"
 import { useBranches, useBranchMutations } from "@/hooks/use-branches"
 import { useLocale } from "@/components/locale-provider"
+import { useAuth } from "@/components/providers/auth-provider"
 import type { Branch } from "@/lib/types/branch"
 
 export function BranchListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
+  const { canDo } = useAuth()
   const { branches, meta, isLoading, error, search, setSearch, isActive, setIsActive, setPage } = useBranches()
   const { updateMut } = useBranchMutations()
 
@@ -72,10 +74,12 @@ export function BranchListPage() {
         title={t("branches.title")}
         description={t("branches.description")}
       >
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/branches/create")}>
-          <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("branches.addBranch")}
-        </Button>
+        {canDo("Branch", "create") && (
+          <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/branches/create")}>
+            <HugeiconsIcon icon={Add01Icon} size={16} />
+            {t("branches.addBranch")}
+          </Button>
+        )}
       </PageHeader>
 
       {isLoading && !meta ? (
@@ -118,7 +122,7 @@ export function BranchListPage() {
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`row-${i}`} className="h-12 rounded-lg" />)}
         </div>
       ) : (
-        <DataTable columns={columns} data={branches} serverPaginated emptyTitle={t("branches.empty.title")} emptyDescription={t("branches.empty.description")} emptyAction={{ label: t("branches.addBranch"), onClick: () => router.push("/branches/create") }} />
+        <DataTable columns={columns} data={branches} serverPaginated emptyTitle={t("branches.empty.title")} emptyDescription={t("branches.empty.description")} emptyAction={canDo("Branch", "create") ? { label: t("branches.addBranch"), onClick: () => router.push("/branches/create") } : undefined} />
       )}
 
       {meta && meta.totalPages > 1 && (

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, startTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Skeleton } from '@deqah/ui/primitives/skeleton';
 import { useListPlans } from '@/features/plans/list-plans/use-list-plans';
@@ -30,23 +30,25 @@ export default function EditPlanPage() {
   });
   const [limits, setLimits] = useState<PlanLimits>(DEFAULT_PLAN_LIMITS);
   const [isActive, setIsActive] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const seededRef = useRef(false);
 
   useEffect(() => {
-    if (plan && !initialized) {
-      setBasics({
-        slug: plan.slug,
-        nameAr: plan.nameAr,
-        nameEn: plan.nameEn,
-        priceMonthly: String(plan.priceMonthly),
-        priceAnnual: String(plan.priceAnnual),
-        currency: plan.currency,
+    if (plan && !seededRef.current) {
+      seededRef.current = true;
+      startTransition(() => {
+        setBasics({
+          slug: plan.slug,
+          nameAr: plan.nameAr,
+          nameEn: plan.nameEn,
+          priceMonthly: String(plan.priceMonthly),
+          priceAnnual: String(plan.priceAnnual),
+          currency: plan.currency,
+        });
+        setIsActive(plan.isActive);
+        setLimits({ ...DEFAULT_PLAN_LIMITS, ...(plan.limits as Partial<PlanLimits>) });
       });
-      setIsActive(plan.isActive);
-      setLimits({ ...DEFAULT_PLAN_LIMITS, ...(plan.limits as Partial<PlanLimits>) });
-      setInitialized(true);
     }
-  }, [plan, initialized]);
+  }, [plan]);
 
   if (isLoading) {
     return (
@@ -90,7 +92,7 @@ export default function EditPlanPage() {
         </p>
       </div>
 
-      {initialized && (
+      {basics.slug !== '' && (
         <PlanWizard
           mode="edit"
           initialSlug={plan.slug}

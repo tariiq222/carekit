@@ -5,6 +5,7 @@ export type BookingRefundType = 'NONE' | 'FULL' | 'PARTIAL';
 
 export interface BookingCancelledPayload {
   organizationId: string;
+  scheduledAt: Date;
   bookingId: string;
   clientId: string;
   employeeId: string;

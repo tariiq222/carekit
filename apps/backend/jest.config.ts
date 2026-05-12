@@ -24,6 +24,7 @@ const config: Config = {
   },
   setupFiles: ['<rootDir>/test/jest.setup.ts'],
   testEnvironment: 'node',
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

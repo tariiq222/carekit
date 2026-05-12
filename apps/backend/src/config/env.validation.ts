@@ -168,6 +168,18 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.string().valid('true', 'false').default('false'),
   }),
 
+  // OTP bypass flags — dev/test only, MUST never be enabled in production.
+  MOBILE_OTP_FULL_BYPASS: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().valid('false').default('false'),
+    otherwise: Joi.string().valid('true', 'false').default('false'),
+  }),
+  MOBILE_OTP_DEV_BYPASS_CODE: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.forbidden(),
+    otherwise: Joi.string().allow('').optional(),
+  }),
+
   // Billing (SaaS-04) — PLATFORM Moyasar (charges clinics for SaaS subscriptions).
   // Distinct from OrganizationPaymentConfig.moyasar* (tenant Moyasar, Plan 02e).
   // Required in production so billing webhooks are always signed and the platform

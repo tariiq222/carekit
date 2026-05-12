@@ -10,6 +10,12 @@ interface BookingCreatedPayload {
   scheduledAt: Date;
 }
 
+interface BookingCancelledPayload {
+  organizationId: string;
+  refundType: string;
+  scheduledAt: string | Date;
+}
+
 interface EmployeeCreatedPayload {
   employeeId: string;
   organizationId: string;
@@ -58,6 +64,32 @@ export class IncrementUsageListener implements OnModuleInit {
           )
           .catch((err: unknown) =>
             this.logger.error({ err, organizationId }, 'usage_counter_booking_increment_failed'),
+          );
+      },
+    );
+
+    this.eventBus.subscribe<BookingCancelledPayload>(
+      'bookings.booking.cancelled',
+      async (envelope) => {
+        const { organizationId, refundType, scheduledAt } = envelope.payload;
+        // Only decrement when refundType=NONE — FULL/PARTIAL will be decremented
+        // by decrement-on-refund.listener when refund.completed fires.
+        if (refundType !== 'NONE') return;
+        const occurredAt = scheduledAt ? new Date(scheduledAt) : new Date();
+        // Only decrement if the booking falls within the current billing period.
+        if (occurredAt < startOfMonthUTC()) return;
+        await this.counters
+          .increment(
+            organizationId,
+            FeatureKey.MONTHLY_BOOKINGS,
+            startOfMonthUTC(occurredAt),
+            -1,
+          )
+          .catch((err: unknown) =>
+            this.logger.error(
+              { err, organizationId },
+              'usage_counter_booking_cancel_decrement_failed',
+            ),
           );
       },
     );
