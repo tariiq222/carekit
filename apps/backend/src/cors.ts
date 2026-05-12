@@ -27,6 +27,8 @@ export function configureCors(app: INestApplication): void {
   app.enableCors({
     origin: (requestOrigin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
       if (!requestOrigin) return cb(null, true);
+      if (fixedAllowed.includes(requestOrigin)) return cb(null, true);
+      if (devDefaults.includes(requestOrigin)) return cb(null, true);
       if (wildcardRegex.test(requestOrigin)) {
         try {
           const url = new URL(requestOrigin);
@@ -43,8 +45,6 @@ export function configureCors(app: INestApplication): void {
         }
         return cb(null, true);
       }
-      if (fixedAllowed.includes(requestOrigin)) return cb(null, true);
-      if (devDefaults.includes(requestOrigin)) return cb(null, true);
       return cb(new Error(`CORS blocked: ${requestOrigin}`), false);
     },
     credentials: true,
