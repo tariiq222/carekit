@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../../../infrastructure/database';
+import { TenantContextService } from '../../../../../common/tenant/tenant-context.service';
 import { MoyasarApiClient } from '../../../moyasar-api/moyasar-api.client';
 import { InitClientPaymentDto } from './init-client-payment.dto';
 
@@ -32,11 +33,13 @@ export class InitClientPaymentHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly moyasar: MoyasarApiClient,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(cmd: InitClientPaymentCommand): Promise<InitClientPaymentResult> {
+    const organizationId = this.tenant.requireOrganizationId();
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: cmd.invoiceId },
+      where: { id: cmd.invoiceId, organizationId },
       select: { id: true, clientId: true, bookingId: true, total: true, currency: true, organizationId: true },
     });
 
