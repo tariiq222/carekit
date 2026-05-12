@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, createHash, timingSafeEqual } from 'crypto';
+import { Prisma } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService, RlsTransactionService } from '../../../infrastructure/database';
@@ -84,7 +85,7 @@ export class MoyasarWebhookHandler {
       });
     });
     if (!cfg) {
-      throw new BadRequestException('Tenant payment config not found');
+      throw new BadRequestException('Invalid webhook request');
     }
 
     // STAGE 4 — decrypt the tenant's webhook secret (AAD = organizationId).
@@ -99,113 +100,154 @@ export class MoyasarWebhookHandler {
       this.logger.error(
         `Failed to decrypt webhook secret for org ${invoice.organizationId}: ${err instanceof Error ? err.message : 'unknown'}`,
       );
-      throw new BadRequestException('Tenant payment config is corrupt');
+      throw new BadRequestException('Invalid webhook request');
     }
 
     // STAGE 5 — verify signature with tenant's own secret.
     this.verifySignature(req.rawBody, req.signature, webhookSecret);
 
-    // STAGE 6 — idempotency check (system context). A given gatewayRef could
-    // theoretically belong to any org; we rely on the signed payload as
-    // authorization to observe it regardless of CLS.
-    const existing = await this.cls.run(async () => {
-      this.logger.warn('systemContext bypass activated', { context: 'MoyasarWebhookHandler' });
-      this.cls.set(SYSTEM_CONTEXT_CLS_KEY, true);
-      return this.prisma.payment.findFirst({
-        where: { gatewayRef: payload.id, status: PaymentStatus.COMPLETED },
+    // STAGE 6 — idempotency dedup via WebhookEvent (covers ALL statuses, not
+    // just COMPLETED). Moyasar retries failed-payment webhooks — without this
+    // guard every retry would re-emit PaymentFailedEvent and re-run mutations.
+    // We use the optimistic-insert pattern (create → catch P2002) so the dedup
+    // is atomic under concurrent retries.  WebhookEvent is a platform-level
+    // table (no tenant scope), so plain this.prisma.webhookEvent works without
+    // a CLS bypass.
+    const webhookEventId = `${payload.id}:${payload.status}`;
+    const payloadHash = createHash('sha256').update(req.rawBody).digest('hex');
+
+    let webhookEventRowId: string;
+    try {
+      const created = await this.prisma.webhookEvent.create({
+        data: {
+          provider: 'MOYASAR_TENANT',
+          eventId: webhookEventId,
+          eventType: payload.status,
+          payloadHash,
+        },
+        select: { id: true },
       });
-    });
-    if (existing) return { skipped: true };
-
-    // STAGE 7 — verify webhook payload matches the invoice it claims to pay.
-    // Without this check, a 1 SAR Moyasar payment with metadata.invoiceId pointing
-    // at a 1000 SAR invoice would mark the larger invoice PAID.
-    const expectedHalalas = Math.round(Number(invoice.total) * 100);
-    if (payload.amount !== expectedHalalas) {
-      this.logger.error(
-        `Webhook amount mismatch for invoice ${invoice.id}: expected=${expectedHalalas} got=${payload.amount}`,
-      );
-      throw new BadRequestException('Payment amount does not match invoice total');
-    }
-    if (payload.currency.toUpperCase() !== invoice.currency.toUpperCase()) {
-      this.logger.error(
-        `Webhook currency mismatch for invoice ${invoice.id}: expected=${invoice.currency} got=${payload.currency}`,
-      );
-      throw new BadRequestException('Payment currency does not match invoice');
+      webhookEventRowId = created.id;
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        this.logger.log(
+          `Tenant webhook: skipped_duplicate provider=MOYASAR_TENANT eventId=${webhookEventId}`,
+        );
+        return { skipped: true };
+      }
+      throw err;
     }
 
-    // STAGE 8 — run mutations inside the resolved tenant's CLS context.
-    return this.cls.run(async () => {
-      this.cls.set('tenant', {
-        organizationId: invoice.organizationId,
-        membershipId: 'system',
-        id: 'system',
-        role: 'system',
-        isSuperAdmin: false,
-      });
-
-      const amountSar = payload.amount / 100;
-      const status: PaymentStatus =
-        payload.status === 'paid' ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
-
-      // Wrap payment upsert + invoice update in a single transaction to ensure
-      // atomicity — if either fails, both roll back and no inconsistent state is stored.
-      const paymentId = await this.rlsTx.withTransaction(async (tx) => {
-        const payment = await tx.payment.upsert({
-          where: { idempotencyKey: `moyasar:${payload.id}` },
-          update: { status, processedAt: new Date(), failureReason: payload.message },
-          create: {
-            organizationId: invoice.organizationId,
-            invoiceId,
-            amount: amountSar,
-            currency: payload.currency,
-            method: PaymentMethod.ONLINE_CARD,
-            status,
-            gatewayRef: payload.id,
-            idempotencyKey: `moyasar:${payload.id}`,
-            processedAt: status === PaymentStatus.COMPLETED ? new Date() : undefined,
-            failureReason: payload.message,
-          },
-        });
-
-        if (status === PaymentStatus.COMPLETED) {
-          await tx.invoice.update({
-            where: { id: invoiceId },
-            data: { status: 'PAID', paidAt: new Date() },
-          });
-        }
-
-        return payment.id;
-      }, { organizationId: invoice.organizationId });
-
-      // Event emission is intentionally OUTSIDE the transaction:
-      // - The payment and invoice are durably committed.
-      // - If eventBus.publish fails, BullMQ will retry (at-least-once semantics).
-      // - Consumers (booking confirmation, Zoho sync) are idempotent.
-      if (status === PaymentStatus.COMPLETED) {
-        const event = new PaymentCompletedEvent({
-          paymentId,
-          invoiceId: invoice.id,
-          bookingId: invoice.bookingId,
-          amount: amountSar,
-          currency: invoice.currency,
-          organizationId: invoice.organizationId,
-        });
-        await this.eventBus.publish(event.eventName, event.toEnvelope());
-      } else if (status === PaymentStatus.FAILED) {
-        const failedEvent = new PaymentFailedEvent({
-          paymentId,
-          invoiceId: invoice.id,
-          clientId: invoice.clientId,
-          amount: amountSar,
-          currency: invoice.currency,
-          reason: payload.message,
-          organizationId: invoice.organizationId,
-        });
-        await this.eventBus.publish(failedEvent.eventName, failedEvent.toEnvelope());
+    try {
+      // STAGE 7 — verify webhook payload matches the invoice it claims to pay.
+      // Without this check, a 1 SAR Moyasar payment with metadata.invoiceId pointing
+      // at a 1000 SAR invoice would mark the larger invoice PAID.
+      const expectedHalalas = Math.round(Number(invoice.total) * 100);
+      if (payload.amount !== expectedHalalas) {
+        this.logger.error(
+          `Webhook amount mismatch for invoice ${invoice.id}: expected=${expectedHalalas} got=${payload.amount}`,
+        );
+        throw new BadRequestException('Payment amount does not match invoice total');
+      }
+      if (payload.currency.toUpperCase() !== invoice.currency.toUpperCase()) {
+        this.logger.error(
+          `Webhook currency mismatch for invoice ${invoice.id}: expected=${invoice.currency} got=${payload.currency}`,
+        );
+        throw new BadRequestException('Payment currency does not match invoice');
       }
 
-      return {};
-    });
+      // STAGE 8 — run mutations inside the resolved tenant's CLS context.
+      const result = await this.cls.run(async () => {
+        this.cls.set('tenant', {
+          organizationId: invoice.organizationId,
+          membershipId: 'system',
+          id: 'system',
+          role: 'system',
+          isSuperAdmin: false,
+        });
+
+        const amountSar = payload.amount / 100;
+        const status: PaymentStatus =
+          payload.status === 'paid' ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
+
+        // Wrap payment upsert + invoice update in a single transaction to ensure
+        // atomicity — if either fails, both roll back and no inconsistent state is stored.
+        const paymentId = await this.rlsTx.withTransaction(async (tx) => {
+          const payment = await tx.payment.upsert({
+            where: { idempotencyKey: `moyasar:${payload.id}` },
+            update: { status, processedAt: new Date(), failureReason: payload.message },
+            create: {
+              organizationId: invoice.organizationId,
+              invoiceId,
+              amount: amountSar,
+              currency: payload.currency,
+              method: PaymentMethod.ONLINE_CARD,
+              status,
+              gatewayRef: payload.id,
+              idempotencyKey: `moyasar:${payload.id}`,
+              processedAt: status === PaymentStatus.COMPLETED ? new Date() : undefined,
+              failureReason: payload.message,
+            },
+          });
+
+          if (status === PaymentStatus.COMPLETED) {
+            await tx.invoice.update({
+              where: { id: invoiceId },
+              data: { status: 'PAID', paidAt: new Date() },
+            });
+          }
+
+          return payment.id;
+        }, { organizationId: invoice.organizationId });
+
+        // Event emission is intentionally OUTSIDE the transaction:
+        // - The payment and invoice are durably committed.
+        // - If eventBus.publish fails, BullMQ will retry (at-least-once semantics).
+        // - Consumers (booking confirmation, Zoho sync) are idempotent.
+        if (status === PaymentStatus.COMPLETED) {
+          const event = new PaymentCompletedEvent({
+            paymentId,
+            invoiceId: invoice.id,
+            bookingId: invoice.bookingId,
+            amount: amountSar,
+            currency: invoice.currency,
+            organizationId: invoice.organizationId,
+          });
+          await this.eventBus.publish(event.eventName, event.toEnvelope());
+        } else if (status === PaymentStatus.FAILED) {
+          const failedEvent = new PaymentFailedEvent({
+            paymentId,
+            invoiceId: invoice.id,
+            clientId: invoice.clientId,
+            amount: amountSar,
+            currency: invoice.currency,
+            reason: payload.message,
+            organizationId: invoice.organizationId,
+          });
+          await this.eventBus.publish(failedEvent.eventName, failedEvent.toEnvelope());
+        }
+
+        return {};
+      });
+
+      await this.prisma.webhookEvent.update({
+        where: { id: webhookEventRowId },
+        data: { processedAt: new Date(), result: 'processed' },
+      });
+
+      return result;
+    } catch (err) {
+      await this.prisma.webhookEvent
+        .update({
+          where: { id: webhookEventRowId },
+          data: { processedAt: new Date(), result: 'error' },
+        })
+        .catch((updateErr) => {
+          this.logger.error(
+            `Failed to mark webhook event as error (${webhookEventRowId}): ${String(updateErr)}`,
+          );
+        });
+      throw err;
+    }
   }
 }

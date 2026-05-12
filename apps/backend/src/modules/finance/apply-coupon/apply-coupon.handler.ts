@@ -50,17 +50,6 @@ export class ApplyCouponHandler {
     });
     if (existing) throw new BadRequestException(`Coupon already applied to this invoice`);
 
-    if (coupon.maxUsesPerUser !== null) {
-      const userRedemptionCount = await this.prisma.couponRedemption.count({
-        where: { couponId: coupon.id, clientId: cmd.clientId },
-      });
-      if (userRedemptionCount >= coupon.maxUsesPerUser) {
-        throw new BadRequestException(
-          `Coupon ${cmd.code} has reached its per-user limit of ${coupon.maxUsesPerUser} uses`,
-        );
-      }
-    }
-
     const invoiceSubtotal = new Prisma.Decimal(invoice.subtotal.toString());
     const invoiceDiscountAmt = new Prisma.Decimal(invoice.discountAmt.toString());
     const invoiceVatRate = new Prisma.Decimal(invoice.vatRate.toString());
@@ -89,6 +78,17 @@ export class ApplyCouponHandler {
         const owned = await tx.coupon.findFirst({ where: { id: coupon.id, organizationId } });
         if (!owned) throw new NotFoundException(`Coupon ${cmd.code} not found`);
         await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
+      }
+
+      if (coupon.maxUsesPerUser !== null) {
+        const userRedemptionCount = await tx.couponRedemption.count({
+          where: { couponId: coupon.id, clientId: cmd.clientId },
+        });
+        if (userRedemptionCount >= coupon.maxUsesPerUser) {
+          throw new BadRequestException(
+            `Coupon ${cmd.code} has reached its per-user limit of ${coupon.maxUsesPerUser} uses`,
+          );
+        }
       }
 
       const redemption = await tx.couponRedemption.create({

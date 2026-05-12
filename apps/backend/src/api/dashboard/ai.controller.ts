@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
-  ApiOkResponse, ApiNoContentResponse, ApiResponse, ApiProduces,
+  ApiOkResponse, ApiNoContentResponse, ApiResponse,
 } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../common/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -137,14 +137,8 @@ export class DashboardAiController {
   @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @Post('chat')
   @HttpCode(HttpStatus.OK)
-  @ApiProduces('text/event-stream')
-  @ApiOperation({ summary: 'Send a chat message and receive an AI reply (Server-Sent Events)' })
-  @ApiOkResponse({
-    description: 'SSE stream of the AI reply — each event is a `data: <token>` line',
-    content: {
-      'text/event-stream': { schema: { type: 'string', description: 'SSE token stream' } },
-    },
-  })
+  @ApiOperation({ summary: 'Send a chat message and receive an AI reply' })
+  @ApiOkResponse({ description: 'AI reply with session ID and sources count' })
   @CheckPermissions({ action: 'read', subject: 'Booking' })
   chatCompletionEndpoint(@Body() body: ChatCompletionDto) {
     return this.chatCompletion.execute(body);

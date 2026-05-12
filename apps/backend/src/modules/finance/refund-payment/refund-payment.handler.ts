@@ -5,6 +5,7 @@ import { PrismaService, RlsTransactionService } from '../../../infrastructure/da
 import { EventBusService } from '../../../infrastructure/events';
 import { RefundCompletedEvent } from '../events/refund-completed.event';
 import { MoyasarApiClient } from '../moyasar-api/moyasar-api.client';
+import { assertValidTransition } from '../payment-state-machine';
 
 interface CreateRefundRequestInTxResult {
   refundRequestId: string;
@@ -160,6 +161,7 @@ export class RefundPaymentHandler {
     if (row.status !== PaymentStatus.COMPLETED) {
       throw new BadRequestException('Only completed payments can be refunded');
     }
+    assertValidTransition(row.status as PaymentStatus, PaymentStatus.REFUNDED);
     if (!row.gatewayRef) {
       throw new BadRequestException('Payment has no gateway reference; use manual refund path');
     }
@@ -307,6 +309,7 @@ const moyasarRefund = await this.moyasar.createRefund(refundReq.organizationId, 
         if (row.status !== PaymentStatus.COMPLETED) {
           throw new BadRequestException('Only completed payments can be refunded');
         }
+        assertValidTransition(row.status as PaymentStatus, PaymentStatus.REFUNDED);
         if (!row.gatewayRef) {
           throw new BadRequestException('Payment has no gateway reference; use manual refund path');
         }

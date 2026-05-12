@@ -71,8 +71,8 @@ export class UploadFileHandler {
 
     const ext = extname(cmd.filename).toLowerCase();
     const safeFilename = cmd.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storageKey = `${randomUUID()}${ext}`;
     const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const storageKey = `${organizationId}/${randomUUID()}${ext}`;
 
     const url = await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
 

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { NotificationType, RecipientType } from '@prisma/client';
 import { EventBusService, type DomainEventEnvelope } from '../../../infrastructure/events';
 import { SendNotificationHandler } from '../send-notification/send-notification.handler';
@@ -55,6 +56,7 @@ export class OnBookingCancelledHandler {
         `Failed to handle bookings.booking.cancelled for booking ${payload.bookingId}`,
         err,
       );
+      Sentry.captureException(err, { tags: { event: 'bookings.booking.cancelled', bookingId: payload.bookingId } });
     }
   }
 }
