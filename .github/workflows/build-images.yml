@@ -207,11 +207,13 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   # 3. Run prisma migrate deploy — local verify then SSH to server
   #    Runs only when backend is in the affected apps list.
+  #    DISABLED: migrations are applied manually on the server until the
+  #    SSH-deploy pipeline is wired up.
   # ─────────────────────────────────────────────────────────────────────────
   migrate:
     name: Migrate DB → ${{ needs.detect.outputs.env_name }}
     needs: [detect, build]
-    if: needs.detect.outputs.apps != '[]' && contains(fromJSON(needs.detect.outputs.apps), 'backend')
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: ${{ needs.detect.outputs.env_name }}
@@ -264,7 +266,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy ${{ matrix.app }} → ${{ needs.detect.outputs.env_name }}
-    needs: [detect, build, migrate]
+    needs: [detect, build]
     if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
     strategy:
