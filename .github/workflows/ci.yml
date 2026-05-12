@@ -166,7 +166,7 @@ jobs:
 
       # Typecheck all workspaces except mobile (mobile is paused — see CLAUDE.md)
       - name: Typecheck root packages
-        run: pnpm run typecheck -- --filter='!deqah-mobile'
+        run: npx turbo run typecheck --filter='!deqah-mobile'
 
       - name: Typecheck dashboard
         run: pnpm --filter dashboard run typecheck
