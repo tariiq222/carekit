@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, Optional } from '@nestjs/common';
 import { createHmac, createHash, timingSafeEqual } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
@@ -10,6 +10,7 @@ import { SYSTEM_CONTEXT_CLS_KEY } from '../../../common/tenant/tenant.constants'
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
 import { PaymentFailedEvent } from '../events/payment-failed.event';
 import { MoyasarWebhookDto } from './moyasar-webhook.dto';
+import { AppMetricsService } from '../../../infrastructure/telemetry/app-metrics.service';
 
 export interface MoyasarWebhookRequest {
   payload: MoyasarWebhookDto;
@@ -45,6 +46,7 @@ export class MoyasarWebhookHandler {
     private readonly cls: ClsService,
     private readonly creds: MoyasarCredentialsService,
     private readonly rlsTx: RlsTransactionService,
+    @Optional() private readonly appMetrics: AppMetricsService | null = null,
   ) {}
 
   verifySignature(rawBody: string, signature: string, secret: string): void {
@@ -205,6 +207,7 @@ export class MoyasarWebhookHandler {
         // - If eventBus.publish fails, BullMQ will retry (at-least-once semantics).
         // - Consumers (booking confirmation, Zoho sync) are idempotent.
         if (status === PaymentStatus.COMPLETED) {
+          this.appMetrics?.paymentAttempts.labels({ result: 'succeeded' }).inc();
           const event = new PaymentCompletedEvent({
             paymentId,
             invoiceId: invoice.id,
@@ -215,6 +218,7 @@ export class MoyasarWebhookHandler {
           });
           await this.eventBus.publish(event.eventName, event.toEnvelope());
         } else if (status === PaymentStatus.FAILED) {
+          this.appMetrics?.paymentAttempts.labels({ result: 'failed' }).inc();
           const failedEvent = new PaymentFailedEvent({
             paymentId,
             invoiceId: invoice.id,

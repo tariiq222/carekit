@@ -85,7 +85,7 @@ const cronHandlers = [
   imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule, BillingModule, FinanceModule],
   controllers: [DashboardOpsController],
   providers: [...handlers, ...cronHandlers, RedisService, CronTasksService, DbMetricsService, RunOrphanAuditHandler],
-  exports: [...handlers, RunOrphanAuditHandler],
+  exports: [...handlers, RunOrphanAuditHandler, DbMetricsService],
 })
 export class OpsModule implements OnModuleInit {
   constructor(private readonly cronTasks: CronTasksService) {}

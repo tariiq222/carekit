@@ -37,6 +37,7 @@ import { ContentModule } from "./modules/content/content.module";
 import { MobileClientModule } from "./api/mobile/client/mobile-client.module";
 import { MobileEmployeeModule } from "./api/mobile/employee/mobile-employee.module";
 import { PublicModule } from "./api/public/public.module";
+import { AppMetricsService } from "./infrastructure/telemetry/app-metrics.service";
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { PublicModule } from "./api/public/public.module";
     PublicModule,
   ],
   providers: [
+    AppMetricsService,
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_GUARD, useClass: TenantAwareThrottlerGuard },
     { provide: APP_GUARD, useClass: PerOrgThrottlerGuard },

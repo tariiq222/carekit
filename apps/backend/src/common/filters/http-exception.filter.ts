@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as Sentry from '@sentry/node';
@@ -13,6 +14,7 @@ import { ClsService } from 'nestjs-cls';
 import { TENANT_CLS_KEY } from '../tenant/tenant.constants';
 import { TenantContext } from '../tenant/tenant-context.service';
 import { RequestContextStorage } from '../http/request-context';
+import { AppMetricsService } from '../../infrastructure/telemetry/app-metrics.service';
 
 interface ErrorResponse {
   statusCode: number;
@@ -31,7 +33,10 @@ const RESERVED_KEYS = new Set(['statusCode', 'error', 'message', 'requestId', 't
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger('ExceptionFilter');
 
-  constructor(private readonly cls: ClsService) {}
+  constructor(
+    private readonly cls: ClsService,
+    @Optional() private readonly appMetrics: AppMetricsService | null = null,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -87,6 +92,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     if (status >= 500) {
+      this.appMetrics?.httpErrors.labels({ status_class: '5xx' }).inc();
       this.logger.error(
         `${req.method} ${req.path} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception),
