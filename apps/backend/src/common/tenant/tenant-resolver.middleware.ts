@@ -169,6 +169,7 @@ export class TenantResolverMiddleware implements NestMiddleware {
     let fromSubdomain: string | null = null;
     if (!req.user && isPublicRoute) {
       const hostHeader =
+        (req.headers['x-deqah-tenant-host'] as string | undefined) ??
         (req.headers['x-forwarded-host'] as string | undefined) ??
         req.hostname ??
         (req.headers.host as string | undefined);
