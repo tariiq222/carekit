@@ -96,8 +96,7 @@ jobs:
           gh workflow run build-images.yml \
             --repo ${{ github.repository }} \
             --ref staging \
-            -f apps=all \
-            -f confirm=yes
+            -f apps=all
           echo "✅ build-images.yml triggered"
 
       - name: Summary
