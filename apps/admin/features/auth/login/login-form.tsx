@@ -107,7 +107,11 @@ function Inner() {
             <Link href="/forgot-password" className="text-sm text-primary hover:underline ms-auto">
               {tForgot("linkLabel")}
             </Link>
-            {CAPTCHA_BYPASS ? null : (
+            {CAPTCHA_BYPASS ? (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Dev mode — captcha skipped
+              </p>
+            ) : (
               <div className="flex justify-center py-2">
                 <CaptchaField
                   ref={captchaRef}

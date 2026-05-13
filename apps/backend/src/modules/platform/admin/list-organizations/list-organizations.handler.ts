@@ -67,7 +67,7 @@ export class ListOrganizationsHandler {
       this.prisma.$allTenants.organization.count({ where }),
     ]);
 
-    const mappedItems = items.map(({ memberships, ...org }) => ({
+    const mappedItems = items.map(({ memberships = [], ...org }) => ({
       ...org,
       owner: memberships[0]?.user
         ? { name: memberships[0].user.name, email: memberships[0].user.email }
