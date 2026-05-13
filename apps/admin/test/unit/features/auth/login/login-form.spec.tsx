@@ -262,7 +262,7 @@ describe('LoginForm', () => {
     expect(button).toBeDisabled();
     expect(button).toHaveTextContent('Signing in…');
 
-    resolveLogin!({ user: { id: 'u-1', isSuperAdmin: true } as LoginResponse['user'], accessToken: 'token', refreshToken: '', expiresIn: 3600 });
+    resolveLogin!({ user: { id: 'u-1', isSuperAdmin: true }, accessToken: 'token', refreshToken: '', expiresIn: 3600 } as LoginResponse);
     await waitFor(() => expect(button).not.toBeDisabled());
   });
 });
