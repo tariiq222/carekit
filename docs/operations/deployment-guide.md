@@ -222,46 +222,10 @@ After updating, redeploy the affected app from Dokploy.
 - [`rollback-runbook.md`](rollback-runbook.md) — how to roll back a bad deploy
 - [`disaster-recovery.md`](disaster-recovery.md) — full-server recovery scenarios
 - [`module-ownership.md`](../architecture/module-ownership.md) — what belongs where in the codebase
-- [Subdomain tenant routing](#subdomain-tenant-routing) — DNS, TLS, and Nginx config for `*.deqah.net`
+- [Domain routing](#domain-routing) — how dashboard, admin, API, and public tenant websites are served
 
-## Subdomain tenant routing
+## Domain routing
 
-Tenants reach the dashboard at `https://<slug>.deqah.net`. Cloudflare provides wildcard DNS + universal SSL for `*.deqah.net`. Origin Nginx must:
-
-```nginx
-server {
-  listen 443 ssl http2;
-  server_name *.deqah.net;
-
-  proxy_set_header Host $host;
-  proxy_set_header X-Forwarded-Host $host;
-  proxy_set_header X-Forwarded-Proto $scheme;
-  proxy_set_header X-Real-IP $remote_addr;
-
-  # ...existing locations (proxy_pass to dashboard:5103, backend:5100, …)
-}
-```
-
-Required env vars on backend:
-
-- `PLATFORM_ROOT_DOMAIN=deqah.net`
-- `RESERVED_SUBDOMAINS=` (optional CSV merged with the built-in reserved list)
-
-CORS automatically accepts `https://*.deqah.net` (regex check based on `PLATFORM_ROOT_DOMAIN`). The dashboard's `middleware.ts` forwards the original Host as `X-Forwarded-Host` on `/api/proxy/*` calls so the backend can resolve the tenant before any JWT exists. For the resolution chain, see `apps/backend/src/common/tenant/tenant-resolver.middleware.ts`.
-
-### DNS / TLS prerequisites
-
-- Wildcard DNS: `*.deqah.net A <vps-ip>` (we use Cloudflare proxied with orange cloud).
-- Wildcard TLS: Cloudflare Universal SSL (covers `deqah.net` + `*.deqah.net`, single label only).
-- Reserved subdomains never resolve to a tenant (e.g. `www`, `api`, `admin`). Built-in list is in `apps/backend/src/common/tenant/subdomain.utils.ts`; extend via `RESERVED_SUBDOMAINS` env.
-
-### Adding a new tenant
-
-1. Super-admin creates the org via the admin app. The wizard auto-derives a slug from the name (Arabic → ASCII transliteration) and previews `https://<slug>.deqah.net`. Operator may edit before saving.
-2. The slug must satisfy `^[a-z0-9]([a-z0-9-]{1,28}[a-z0-9])?$` (3–30 chars). Reserved names are rejected with a clear error.
-3. Once saved, the subdomain is live within seconds (DNS wildcard + cached resolver).
-4. The dashboard's `BrandingProvider` reads `/public/branding`, which the resolver scopes by Host header.
-
-### Renaming a slug
-
-Renaming breaks the old subdomain immediately. The resolver's in-memory cache flushes within 5 minutes; bookmarks pointing at the old subdomain will fail until users update them. The admin UI shows a confirmation modal explaining this before the change is committed.
+- **Dashboard, admin, API** run on single fixed domains (e.g. `app.deqah.net`, `admin.deqah.net`, `api.deqah.net`).
+- **Public tenant websites** (`apps/bespoke/<tenant>/website`) remain on `<slug>.deqah.net` — the backend's `SubdomainResolverService` resolves the tenant from the Host header for public website routes only.
+- Tenant resolution for dashboard/admin/mobile is JWT-based; no subdomain logic is required on those clients.
