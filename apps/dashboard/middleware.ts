@@ -51,6 +51,10 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   if (!forwardHeaders.has('x-forwarded-host')) {
     forwardHeaders.set('x-forwarded-host', hostname);
   }
+  // Always stamp the original hostname so it survives upstream proxy rewrites
+  // (Cloudflare → Traefik clobbers x-forwarded-host; x-deqah-tenant-host is
+  // a custom header that passes through untouched).
+  forwardHeaders.set(TENANT_HOST_HEADER, hostname);
 
   // 1. Exact root domain match — pass through (e.g. deqah.net, staging.deqah.net).
   if (hostname === rootDomain) {
