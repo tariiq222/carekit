@@ -50,8 +50,6 @@ jobs:
       JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
       JWT_CLIENT_ACCESS_SECRET: ci-test-client-secret-32chars!!
       JWT_OTP_SECRET: ci-test-otp-secret-32chars!!!!!!
-      # All encryption keys are 32-byte base64 (43 chars + '=' padding).
-      # Test-only values, generated with `node -e "crypto.randomBytes(32).toString('base64')"`.
       SMS_PROVIDER_ENCRYPTION_KEY: TLz/2f9V4Rs27iI+lKeoyCR7USrVq4P3ahiBNXKdvjI=
       ZOOM_PROVIDER_ENCRYPTION_KEY: WzXHN34y+z/L+50u7XjYM0pV+XWbaIJDk4QitDqOV/A=
       EMAIL_PROVIDER_ENCRYPTION_KEY: VrYh2xckvjMbc6mp7JBfJY385J5Rrmu1T9tB8hm2zTQ=
@@ -69,34 +67,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: npx prisma generate
-
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
+          prisma: "true"
+          shared: "minimal"
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -142,35 +116,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: npx prisma generate
-
-      # Build shared packages first so typecheck can find compiled output
-      - name: Build shared packages
-        run: pnpm --filter "@deqah/shared" run build
+          prisma: "true"
+          shared: "minimal"
 
       # Typecheck all workspaces except mobile (mobile is paused — see CLAUDE.md)
       - name: Typecheck root packages
@@ -195,27 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Lint backend
         run: pnpm --filter backend run lint
@@ -237,30 +166,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build shared packages (required by dashboard)
-        run: pnpm --filter "@deqah/shared" run build && pnpm --filter "@deqah/api-client" run build && pnpm --filter "@deqah/ui" run build
+          shared: "full"
 
       - name: Build dashboard
         working-directory: apps/dashboard
@@ -286,30 +194,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build shared packages (required by mobile)
-        run: pnpm --filter "@deqah/shared" run build
+          shared: "minimal"
 
       - name: Mobile typecheck
         run: pnpm --filter deqah-mobile run typecheck
@@ -379,34 +266,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: npx prisma generate
-
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
+          prisma: "true"
+          shared: "minimal"
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -481,34 +344,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: npx prisma generate
-
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
+          prisma: "true"
+          shared: "minimal"
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -584,34 +423,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        working-directory: apps/backend
-        run: npx prisma generate
-
-      - name: Build shared packages (dist required by tests)
-        run: pnpm --filter "@deqah/shared" run build
+          prisma: "true"
+          shared: "minimal"
 
       - name: Enable pgvector extension
         run: psql postgresql://test:test@localhost:5432/deqah_docs -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -649,30 +464,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build shared packages (required by dashboard)
-        run: pnpm --filter "@deqah/shared" run build && pnpm --filter "@deqah/api-client" run build && pnpm --filter "@deqah/ui" run build
+          shared: "full"
 
       - name: Run dashboard tests
         run: pnpm --filter dashboard run test
@@ -682,30 +476,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build shared packages (required by admin)
-        run: pnpm --filter "@deqah/shared" run build && pnpm --filter "@deqah/api-client" run build && pnpm --filter "@deqah/ui" run build
+          shared: "full"
 
       - name: Run admin tests
         run: pnpm --filter admin run test

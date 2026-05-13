@@ -1,0 +1,55 @@
+name: Setup Deqah monorepo
+description: Checkout + Node 22 + pnpm 10.10.0 + cached install. Optionally generate Prisma client and build shared packages.
+
+inputs:
+  prisma:
+    description: "Run `prisma generate` in apps/backend"
+    required: false
+    default: "false"
+  shared:
+    description: "Build @deqah/shared (set to 'full' to also build @deqah/api-client and @deqah/ui)"
+    required: false
+    default: "none"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10.10.0
+        run_install: false
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: ${{ runner.os }}-pnpm-
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma Client
+      if: inputs.prisma == 'true'
+      shell: bash
+      working-directory: apps/backend
+      run: npx prisma generate
+
+    - name: Build @deqah/shared
+      if: inputs.shared == 'minimal' || inputs.shared == 'full'
+      shell: bash
+      run: pnpm --filter "@deqah/shared" run build
+
+    - name: Build @deqah/api-client and @deqah/ui
+      if: inputs.shared == 'full'
+      shell: bash
+      run: pnpm --filter "@deqah/api-client" run build && pnpm --filter "@deqah/ui" run build
