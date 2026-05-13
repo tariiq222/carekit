@@ -32,6 +32,7 @@ const RESERVED_SUBDOMAINS = new Set([
 ]);
 
 const SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/;
+const TENANT_HOST_HEADER = 'x-deqah-tenant-host';
 
 interface TenantExistsResult {
   exists: boolean;
@@ -90,7 +91,10 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     let res: Response;
     try {
       res = await fetch(`${apiBase}/tenants/exists`, {
-        headers: { 'x-forwarded-host': hostname },
+        headers: {
+          [TENANT_HOST_HEADER]: hostname,
+          'x-forwarded-host': hostname,
+        },
         cache: 'no-store',
         signal: controller.signal,
       });
