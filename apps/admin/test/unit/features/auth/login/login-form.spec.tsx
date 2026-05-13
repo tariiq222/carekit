@@ -11,6 +11,7 @@ const mockLogin = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/auth/login/login.api', () => ({
   login: mockLogin,
+  isAuthResponse: (res: { accessToken?: unknown }) => 'accessToken' in res,
 }));
 
 vi.mock('sonner', () => ({
